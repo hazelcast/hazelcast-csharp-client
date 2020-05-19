@@ -215,11 +215,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         }
 
         /// <inheritdoc />
-        public async Task<bool> UnsubscribeAsync(Guid subscriptionId)
-        {
-            // FIXME why would it return a bool?
-            await Cluster.RemoveSubscriptionAsync(subscriptionId);
-            return true;
-        }
+        public async Task UnsubscribeAsync(Guid subscriptionId)
+            => await Cluster.RemoveSubscriptionAsync(subscriptionId);
     }
 }

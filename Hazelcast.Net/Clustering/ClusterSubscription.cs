@@ -135,6 +135,8 @@ namespace Hazelcast.Clustering
         /// <param name="client">The client.</param>
         public void AddClientSubscription(ClientMessage message, Client client)
         {
+            // FIXME: what-if it's not active anymore?
+
             var serverSubscriptionId = _subscribeResponseParser(message, State);
             var clientSubscription = new ClientSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
             ClientSubscriptions[clientSubscription.Client] = clientSubscription;
@@ -151,7 +153,13 @@ namespace Hazelcast.Clustering
         /// Handles an event message.
         /// </summary>
         /// <param name="eventMessage">The event message.</param>
-        public void Handle(ClientMessage eventMessage) => _eventHandler(eventMessage, State);
+        public void Handle(ClientMessage eventMessage)
+        {
+            if (!Active)
+                return;
+
+            _eventHandler(eventMessage, State);
+        }
 
         /// <summary>
         /// Decodes the unsubscribe response.

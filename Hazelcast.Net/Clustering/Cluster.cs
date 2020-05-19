@@ -47,6 +47,7 @@ namespace Hazelcast.Clustering
         private readonly ILoadBalancer _loadBalancer;
         private readonly IAuthenticator _authenticator;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
         private readonly RetryConfiguration _retryConfiguration;
         private readonly ISet<string> _labels;
         private readonly AddressProvider _addressProvider;
@@ -99,6 +100,7 @@ namespace Hazelcast.Clustering
             if (securityConfiguration == null) throw new ArgumentNullException(nameof(securityConfiguration));
 
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = _loggerFactory.CreateLogger<Cluster>();
             _labels = labels ?? throw new ArgumentNullException(nameof(labels));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 

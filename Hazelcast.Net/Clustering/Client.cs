@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
@@ -24,7 +25,7 @@ namespace Hazelcast.Clustering
         private readonly ConcurrentDictionary<long, Invocation> _invocations
             = new ConcurrentDictionary<long, Invocation>();
 
-        private readonly object _isConnectedLock = new object();
+        private readonly object _activeLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILogger _logger;
@@ -36,7 +37,6 @@ namespace Hazelcast.Clustering
 
         private ClientSocketConnection _socketConnection;
         private ClientMessageConnection _messageConnection;
-        private bool _isConnected;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
@@ -74,6 +74,8 @@ namespace Hazelcast.Clustering
         /// Gets the unique identifier of this client.
         /// </summary>
         public Guid Id { get; } = Guid.NewGuid();
+
+        public bool Active { get; private set; }
 
         /// <summary>
         /// Gets the unique identifier of the cluster member that this client is connected to.
@@ -163,10 +165,10 @@ namespace Hazelcast.Clustering
 
             await _socketConnection.ConnectAsync();
 
-            if (!await _socketConnection.SendAsync(ClientProtocolInitBytes))
+            if (!await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length))
                 throw new InvalidOperationException("Failed to send protocol bytes.");
 
-            lock (_isConnectedLock) _isConnected = true;
+            lock (_activeLock) Active = true;
         }
 
         /// <summary>
@@ -176,10 +178,10 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
         private void SocketShutdown(SocketConnectionBase connection)
         {
-            lock (_isConnectedLock)
+            lock (_activeLock)
             {
-                if (!_isConnected) return;
-                _isConnected = false;
+                if (!Active) return;
+                Active = false;
             }
 
             CompleteShutdown();
@@ -208,7 +210,7 @@ namespace Hazelcast.Clustering
 
                 // backup events are not supported
                 //throw new NotSupportedException("Backup events are not supported here.");
-                _logger.LogWarning($"Ignoring unsupported backup event.");
+                _logger.LogWarning("Ignoring unsupported backup event.");
                 return;
             }
 
@@ -357,9 +359,9 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public async Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, bool thisClient, int timeoutSeconds = 0)
         {
-            lock (_isConnectedLock)
+            lock (_activeLock)
             {
-                if (!_isConnected)
+                if (!Active)
                     throw new InvalidOperationException("Not connected.");
             }
 
@@ -380,7 +382,7 @@ namespace Hazelcast.Clustering
                 catch (Exception exception)
                 {
                     // if the client is not connected anymore, die
-                    if (!_isConnected)
+                    if (!Active)
                         throw new HazelcastClientNotActiveException(exception);
 
                     // if it's retryable, and can be retried (no timeout etc), retry
@@ -396,6 +398,9 @@ namespace Hazelcast.Clustering
             }
         }
 
+        /// <summary>
+        /// Determines whether an invocation could be retried.
+        /// </summary>
         private bool ShouldRetry(Invocation invocation, Exception exception)
         {
             switch (exception)
@@ -429,17 +434,22 @@ namespace Hazelcast.Clustering
                                      XConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
 
             // actually send the message
-            var timeout = invocation.RemainingMilliseconds;
-            var success = await _messageConnection.SendAsync(invocation.RequestMessage, timeout);
+            bool success;
+            using (var sendCancel = new CancellationTokenSource())
+            {
+                success = await _messageConnection
+                    .SendAsync(invocation.RequestMessage, sendCancel.Token)
+                    .WithTimeout(invocation.RemainingMilliseconds, sendCancel);
+            }
 
-            lock (_isConnectedLock)
+            lock (_activeLock)
             {
                 // if the message could not be sent, or if the client is not connected
                 // anymore, the invocation will never complete and must be removed
-                if (!success || !_isConnected)
+                if (!success || !Active)
                 {
-                    var exceptionMessage = !_isConnected
-                        ? "Client is not connected."
+                    var exceptionMessage = !Active
+                        ? "Client is not active."
                         : "Failed to send a message.";
 
                     RemoveInvocation(invocation);
@@ -452,21 +462,17 @@ namespace Hazelcast.Clustering
                 XConsole.WriteLine(this, "Wait for response...");
             }
 
-            // no timeout = just return the invocation completion task
-            if (!invocation.HasTimeout)
-                return await invocation.Task;
-
-            // timeout = wait until either the invocation completes, or the timeout is reached
-            var timeoutTask = Task.Delay(invocation.RemainingMilliseconds);
-            await Task.WhenAny(invocation.Task, timeoutTask);
-
-            // completed = return result, no need to remove the completion, it's handled elsewhere
-            if (invocation.Task.IsCompleted)
-                return await invocation.Task;
-
-            // timeout: remove the invocation and throw
-            RemoveInvocation(invocation);
-            throw new TimeoutException();
+            try
+            {
+                // in case it times out, there's not point cancelling invocation.Task as
+                // it is not a real task but just a task continuation source's task
+                return await invocation.Task.WithTimeout(invocation.RemainingMilliseconds);
+            }
+            catch (TimeoutException)
+            {
+                RemoveInvocation(invocation);
+                throw;
+            }
         }
 
         /// <summary>
@@ -479,10 +485,10 @@ namespace Hazelcast.Clustering
 
             XConsole.WriteLine(this, "Shutdown");
 
-            lock (_isConnectedLock)
+            lock (_activeLock)
             {
-                if (!_isConnected) return;
-                _isConnected = false;
+                if (!Active) return;
+                Active = false;
             }
 
             // shutdown the connection

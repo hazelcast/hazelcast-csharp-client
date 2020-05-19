@@ -104,17 +104,10 @@ namespace Hazelcast.Clustering
         public int TimeoutSeconds { get; }
 
         /// <summary>
-        /// Whether the invocation has a timeout.
-        /// </summary>
-        public bool HasTimeout => TimeoutSeconds > 0;
-
-        /// <summary>
         /// Gets the remaining time in milliseconds.
         /// </summary>
         public int RemainingMilliseconds =>
-            HasTimeout
-                ? Math.Max(0, 1000 * TimeoutSeconds - (int) (Clock.Milliseconds - StartTime))
-                : int.MaxValue;
+            Math.Max(0, 1000 * TimeoutSeconds - (int) (Clock.Milliseconds - StartTime));
 
         /// <summary>
         /// Transition the task to <see cref="TaskStatus.RanToCompletion"/>.

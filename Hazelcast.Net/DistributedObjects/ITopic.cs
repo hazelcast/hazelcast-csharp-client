@@ -43,9 +43,8 @@ namespace Hazelcast.DistributedObjects
         ///     Stops receiving messages for the given message listener. If the given listener already removed,
         ///     this method does nothing.
         /// </remarks>
-        /// <param name="registrationId">Id of listener registration.</param>
-        /// <returns>true if registration is removed, false otherwise</returns>
-        Task<bool> UnsubscribeAsync(Guid subscriptionId);
+        /// <param name="subscriptionId">Id of listener registration.</param>
+        Task UnsubscribeAsync(Guid subscriptionId);
 
         //        /// <summary>Returns the name of this ITopic instance</summary>
         //        /// <returns>name of this instance</returns>

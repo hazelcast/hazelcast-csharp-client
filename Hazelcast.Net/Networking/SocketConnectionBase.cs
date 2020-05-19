@@ -225,19 +225,18 @@ namespace Hazelcast.Networking
         /// Sends bytes.
         /// </summary>
         /// <param name="bytes">The bytes to send.</param>
-        /// <param name="length">The number of bytes to send, or zero to send everything.</param>
+        /// <param name="length">The number of bytes to send.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the message bytes have been sent.</returns>
-        public async ValueTask<bool> SendAsync(byte[] bytes, int length = 0)
+        public async ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
         {
             if (_isActive == 0)
                 return false;
 
-            var count = length <= 0 ? bytes.Length : length;
-
             // send bytes
             try
             {
-                await _stream.WriteAsync(bytes, 0, count, CancellationToken.None);
+                await _stream.WriteAsync(bytes, 0, length, cancellationToken);
                 LastWriteTime = DateTime.Now;
             }
             catch (Exception e)
@@ -249,7 +248,7 @@ namespace Hazelcast.Networking
                 return false;
             }
 
-            XConsole.WriteLine(this, $"Sent {count} bytes" + XConsole.Lines(this, 1 , bytes.Dump(count)));
+            XConsole.WriteLine(this, $"Sent {length} bytes" + XConsole.Lines(this, 1 , bytes.Dump(length)));
             return true;
         }
 

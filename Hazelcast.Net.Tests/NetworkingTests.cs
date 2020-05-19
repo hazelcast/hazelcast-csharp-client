@@ -85,12 +85,12 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Responded");
         }
 
-        private ClientMessage CreateErrorMessage()
+        private ClientMessage CreateErrorMessage(ClientProtocolErrors error)
         {
             // can we prepare server messages?
             var errorHolders = new List<ErrorHolder>
             {
-                new ErrorHolder(ClientProtocolErrors.RetryableHazelcast, "className", "message", Enumerable.Empty<StackTraceElement>())
+                new ErrorHolder(error, "className", "message", Enumerable.Empty<StackTraceElement>())
             };
             return ErrorsServerCodec.EncodeResponse(errorHolders);
         }
@@ -98,7 +98,7 @@ namespace Hazelcast.Tests
 
         [Test]
         [Timeout(10_000)]
-        public async Task RetryAndTimeout()
+        public async Task CanRetryAndTimeout()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
@@ -110,9 +110,8 @@ namespace Hazelcast.Tests
             server = new Server(address, async (conn, msg) =>
             {
                 XConsole.WriteLine(server, "Respond with error.");
-                var response = CreateErrorMessage();
+                var response = CreateErrorMessage(ClientProtocolErrors.RetryableHazelcast);
                 response.CorrelationId = msg.CorrelationId;
-                response.MessageType = 0x00; // 0x00 means exception
                 response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                 await conn.SendAsync(response);
             });
@@ -137,7 +136,7 @@ namespace Hazelcast.Tests
 
         [Test]
         [Timeout(10_000)]
-        public async Task RetryAndSucceed()
+        public async Task CanRetryAndSucceed()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
@@ -159,8 +158,7 @@ namespace Hazelcast.Tests
                 else
                 {
                     XConsole.WriteLine(server, "Respond with error.");
-                    response = CreateErrorMessage();
-                    response.MessageType = 0x00; // 0x00 means exception
+                    response = CreateErrorMessage(ClientProtocolErrors.RetryableHazelcast);
                     response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                 }
                 response.CorrelationId = msg.CorrelationId;
@@ -182,6 +180,49 @@ namespace Hazelcast.Tests
             await client1.SendAsync(message, 3); // default is 120s
 
             NUnit.Framework.Assert.AreEqual(4, count);
+
+            // TODO dispose the client, the server
+            await server.StopAsync();
+        }
+
+        [Test]
+        [Timeout(10_000)]
+        public async Task TimeoutsIfServerIsTooSlow()
+        {
+            var address = NetworkAddress.Parse("127.0.0.1:11001");
+
+            XConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            XConsole.WriteLine(this, "Begin");
+
+            XConsole.WriteLine(this, "Start server");
+            Server server = null;
+            server = new Server(address, async (conn, msg) =>
+            {
+                XConsole.WriteLine(server, "Handle request (slowww...)");
+                await Task.Delay(10_000);
+
+                XConsole.WriteLine(server, "Respond with success.");
+                var response = ClientPingServerCodec.EncodeResponse();
+                response.CorrelationId = msg.CorrelationId;
+                await conn.SendAsync(response);
+            });
+            AddDisposable(server);
+            await server.StartAsync();
+
+            var corSequence = new Int64Sequence();
+            var conSequence = new Int32Sequence();
+
+            XConsole.WriteLine(this, "Start client 1");
+            var client1 = new Client(address, corSequence, conSequence, new NullLoggerFactory());
+            await client1.ConnectAsync();
+
+            XConsole.WriteLine(this, "Send message 1 to client 1");
+            var message = ClientPingServerCodec.EncodeRequest();
+
+            Assert.ThrowsAsync<TimeoutException>(async () =>
+            {
+                await client1.SendAsync(message, 3); // default is 120s
+            });
 
             // TODO dispose the client, the server
             await server.StopAsync();

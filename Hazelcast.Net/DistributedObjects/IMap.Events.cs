@@ -93,8 +93,6 @@ namespace Hazelcast.DistributedObjects
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <returns>?</returns>
-        /// TODO: what is returned? how could this fail?
-        Task<bool> UnsubscribeAsync(Guid subscriptionId);
+        Task UnsubscribeAsync(Guid subscriptionId);
     }
 }

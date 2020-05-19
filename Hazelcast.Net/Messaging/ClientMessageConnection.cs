@@ -203,17 +203,16 @@ namespace Hazelcast.Messaging
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <param name="timeoutSeconds">The timeout in seconds.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the message has been sent.</returns>
-        public async ValueTask<bool> SendAsync(ClientMessage message, int timeoutSeconds = 0)
+        public async ValueTask<bool> SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
         {
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
 
-            // FIXME implement timeout
-
             // send message, serialize sending via semaphore
-            if (_writer != null) await _writer.WaitAsync();
+            // throws OperationCanceledException if canceled (and semaphore is not acquired)
+            if (_writer != null) await _writer.WaitAsync(cancellationToken);
 
             try
             {
@@ -222,11 +221,15 @@ namespace Hazelcast.Messaging
                 var frame = message.FirstFrame;
                 do
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                        throw new OperationCanceledException();
+
                     XConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
-                    if (!await SendFrameAsync(frame))
+                    if (!await SendFrameAsync(frame, cancellationToken))
                         return false;
 
-                    // FIXME what happens if we've sent some frames already?
+                    // note that we may have sent some frames already, and that could
+                    // confuse the server greatly (to never see the end of a message?)
 
                     frame = frame.Next;
                 } while (frame != null);
@@ -239,22 +242,20 @@ namespace Hazelcast.Messaging
             return true;
         }
 
-        internal async ValueTask<bool> SendFrameAsync(Frame frame)
+        private async ValueTask<bool> SendFrameAsync(Frame frame, CancellationToken cancellationToken)
         {
             const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
 
             var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
             frame.WriteLengthAndFlags(header);
 
-            if (!await _connection.SendAsync(header, sizeofHeader))
+            if (!await _connection.SendAsync(header, sizeofHeader, cancellationToken))
                 return false;
 
             ArrayPool<byte>.Shared.Return(header);
 
-            if (frame.Length > sizeofHeader && !await _connection.SendAsync(frame.Bytes))
-                return false;
-
-            return true;
+            return frame.Length <= sizeofHeader ||
+                   await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken);
         }
     }
 }

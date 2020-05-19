@@ -144,6 +144,113 @@ namespace Hazelcast.Tests.DotNet
                 Console.WriteLine(e);
         }
 
+        [Test]
+        [Timeout(20_000)]
+        public async Task Timeout1Test()
+        {
+            var remainingMilliseconds = 10_000;
+
+            var task = Task.Delay(2_000).ContinueWith(_ => 2);
+
+            var i = await task.WithTimeout(remainingMilliseconds);
+
+            await Task.Delay(2_000);
+
+            Assert.AreEqual(2, i);
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public async Task Timeout2Test()
+        {
+            var remainingMilliseconds = 1_000;
+            var taskexec = false;
+
+            var task = Task.Delay(2_000).ContinueWith(t =>
+            {
+                if (!t.IsCompleted || t.IsCanceled) return 0;
+                taskexec = true;
+                return 2;
+            });
+
+            Assert.ThrowsAsync<TimeoutException>(async () => await task.WithTimeout(remainingMilliseconds));
+
+            await Task.Delay(2_000);
+            Assert.IsTrue(taskexec);
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public async Task Timeout3Test()
+        {
+            var remainingMilliseconds = 1_000;
+            var taskexec = false;
+
+            var taskCancel = new CancellationTokenSource();
+            var task = Task.Delay(2_000, taskCancel.Token).ContinueWith(t =>
+            {
+                if (!t.IsCompleted || t.IsCanceled) return 0;
+                taskexec = true;
+                return 2;
+            });
+
+            Assert.ThrowsAsync<TimeoutException>(async () => await task.WithTimeout(remainingMilliseconds, taskCancel));
+
+            await Task.Delay(2_000);
+            Assert.IsFalse(taskexec);
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public async Task Timeout4Test()
+        {
+            var remainingMilliseconds = 1_000;
+            var taskexec = false;
+
+            var task = Task.Delay(100).ContinueWith(t =>
+            {
+                throw new Exception("bang");
+                return 2;
+            });
+
+            Assert.ThrowsAsync<Exception>(async () => await task.WithTimeout(remainingMilliseconds));
+
+            await Task.Delay(2_000);
+            Assert.IsFalse(taskexec);
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public async Task Timeout5Test()
+        {
+            var remainingMilliseconds = 1_000;
+            var taskexec = false;
+            var semaphore = new SemaphoreSlim(0);
+
+            async Task RunTask(CancellationToken token)
+            {
+                await Task.Delay(100);
+                try
+                {
+                    await semaphore.WaitAsync(token);
+                    Console.WriteLine("1");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("2: " + e);
+                    throw;
+                }
+            }
+
+            var taskCancel = new CancellationTokenSource();
+            var task = RunTask(taskCancel.Token);
+
+            Assert.ThrowsAsync<Exception>(async () => await task.WithTimeout(remainingMilliseconds, taskCancel));
+
+            await Task.Delay(2_000);
+            Assert.IsFalse(taskexec);
+        }
+
         private void Log(string msg)
         {
             Console.WriteLine($"[{Thread.CurrentThread.ManagedThreadId:00}] " + msg);
@@ -152,6 +259,57 @@ namespace Hazelcast.Tests.DotNet
         private async Task DoSomething()
         {
             await Task.CompletedTask;
+        }
+    }
+
+    public static class Extensions2
+    {
+        public static async Task WithTimeout(this Task task, int timeoutMilliseconds, CancellationTokenSource taskCancel = null)
+        {
+            using (var timeoutCancel = new CancellationTokenSource())
+            {
+                var timeoutTask = Task.Delay(timeoutMilliseconds, timeoutCancel.Token);
+
+                await Task.WhenAny(task, timeoutTask);
+
+                if (task.IsCompleted)
+                {
+                    // timeoutTask is never awaited,
+                    // results & exceptions will be ignored
+                    timeoutCancel.Cancel();
+                }
+
+                // cancel the task
+                taskCancel?.Cancel();
+
+                throw new TimeoutException();
+            }
+        }
+
+        public static async Task<T> WithTimeout<T>(this Task<T> task, int timeoutMilliseconds, CancellationTokenSource taskCancel = null)
+        {
+            using (var timeoutCancel = new CancellationTokenSource())
+            {
+                var timeoutTask = Task.Delay(timeoutMilliseconds, timeoutCancel.Token);
+
+                await Task.WhenAny(task, timeoutTask);
+
+                if (task.IsCompleted)
+                {
+                    // timeoutTask is never awaited,
+                    // results & exceptions will be ignored
+                    timeoutCancel.Cancel();
+
+                    // https://stackoverflow.com/questions/24623120/await-on-a-completed-task-same-as-task-result
+                    // return task.Result;
+                    return await task;
+                }
+
+                // cancel the task
+                taskCancel?.Cancel();
+
+                throw new TimeoutException();
+            }
         }
     }
 }

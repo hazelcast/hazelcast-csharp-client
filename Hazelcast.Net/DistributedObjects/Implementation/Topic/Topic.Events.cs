@@ -34,10 +34,6 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
             var handlers = new TopicEventHandlers<T>();
             on(handlers);
 
-            var flags = TopicEventType.Nothing;
-            foreach (var handler in handlers)
-                flags |= handler.EventType;
-
             var subscribeRequest = TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting);
 
             var subscription = new ClusterSubscription(
@@ -113,11 +109,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         }
 
         /// <inheritdoc />
-        public async Task<bool> UnsubscribeAsync(Guid subscriptionId)
-        {
-            // FIXME why would it return a bool?
-            await Cluster.RemoveSubscriptionAsync(subscriptionId);
-            return true;
-        }
+        public async Task UnsubscribeAsync(Guid subscriptionId)
+            => await Cluster.RemoveSubscriptionAsync(subscriptionId);
     }
 }

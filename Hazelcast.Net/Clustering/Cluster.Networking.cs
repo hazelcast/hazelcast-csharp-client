@@ -231,6 +231,8 @@ namespace Hazelcast.Clustering
                 OnClientLifecycleEvent(ClientLifecycleState.Connected);
             }
 
+            // FIXME all this could throw and then?
+
             // trigger connection event
             OnConnectionAdded(client);
 
