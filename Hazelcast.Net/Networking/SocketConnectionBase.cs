@@ -21,19 +21,9 @@ namespace Hazelcast.Networking
     /// </remarks>
     public abstract class SocketConnectionBase : IDisposable
     {
-        private static readonly byte[] ZeroBytes4 = new byte[4];
-
-        /// <summary>
-        /// Handles bytes
-        /// </summary>
-        /// <param name="connection">The originating connection.</param>
-        /// <param name="bytes">The bytes to handle.</param>
-        /// <returns>Whether to continue handling the available bytes. Otherwise, wait for more bytes.</returns>
-        public delegate bool MessageBytesHandler(SocketConnectionBase connection, ref ReadOnlySequence<byte> bytes);
-
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
 
-        private MessageBytesHandler _onReceiveMessageBytes;
+        private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask<bool>> _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
         private Action<SocketConnectionBase> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
@@ -69,7 +59,7 @@ namespace Hazelcast.Networking
         /// function has returned.</para>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public MessageBytesHandler OnReceiveMessageBytes
+        public Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask<bool>> OnReceiveMessageBytes
         {
             get => _onReceiveMessageBytes;
             set
@@ -154,12 +144,12 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets the remote endpoint of the connection.
         /// </summary>
-        public EndPoint RemotEndPoint => _socket?.RemoteEndPoint;
+        public IPEndPoint RemoteEndPoint => _socket?.RemoteEndPoint as IPEndPoint;
 
         /// <summary>
         /// Gets the local endpoint of the connection.
         /// </summary>
-        public EndPoint LocalEndPoint => _socket?.LocalEndPoint;
+        public IPEndPoint LocalEndPoint => _socket?.LocalEndPoint as IPEndPoint;
 
         /// <summary>
         /// Opens the pipe.
@@ -261,15 +251,8 @@ namespace Hazelcast.Networking
             if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
                 return;
 
-            // notify other end with an empty message
-            // FIXME sending an empty message is non-standard, what is the proper way?
-            // also this should be a true message and happen higher in the stack
-            XConsole.WriteLine(this, "Send empty message");
-            try
-            {
-                await _stream.WriteAsync(ZeroBytes4, 0, 4, CancellationToken.None);
-            }
-            catch { /* ignore */ }
+            // there does not seem to be any signaling of the other end
+            // we just shutdown the socket
 
             // requests that the pipe stops processing
             XConsole.WriteLine(this, "Cancel pipe");
@@ -339,7 +322,7 @@ namespace Hazelcast.Networking
 
             // tell the PipeReader that there's no more data coming
             XConsole.WriteLine(this, "Pipe writer completing");
-            writer.Complete();
+            await writer.CompleteAsync();
         }
 
         /// <summary>
@@ -360,15 +343,14 @@ namespace Hazelcast.Networking
                 if (state.Exception != null)
                 {
                     // TODO what shall we do with the exception?
-                    Console.WriteLine("ERROR");
-                    Console.WriteLine(state.Exception.SourceException);
+                    XConsole.WriteLine(this, "ERROR " + state.Exception.SourceException);
                 }
 
             }
 
             // mark the PipeReader as complete
             XConsole.WriteLine(this, "Pipe reader completing");
-            reader.Complete();
+            await reader.CompleteAsync();
         }
 
         /// <summary>
@@ -455,7 +437,7 @@ namespace Hazelcast.Networking
             try
             {
                 // handle the bytes (and slice the buffer accordingly)
-                return _onReceiveMessageBytes(this, ref state.Buffer);
+                return await _onReceiveMessageBytes(this, state.Buffer);
             }
             catch (Exception e)
             {

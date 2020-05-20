@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.DistributedObjects.Implementation;
@@ -28,6 +29,8 @@ namespace Hazelcast
     {
         private readonly HazelcastConfiguration _configuration;
         private readonly DistributedObjectFactory _distributedObjectFactory;
+
+        private int _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
@@ -63,10 +66,13 @@ namespace Hazelcast
         }
 
         /// <inheritdoc />
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            // TODO: properly close the client when disposing.
-            return new ValueTask();
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            await _distributedObjectFactory.DisposeAsync();
+            await Cluster.DisposeAsync();
         }
     }
 }

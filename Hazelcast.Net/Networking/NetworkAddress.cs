@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Networking
 {
@@ -11,6 +14,8 @@ namespace Hazelcast.Networking
     /// </summary>
     public class NetworkAddress
     {
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1);
+
         // NOTES
         //
         // an IP v4 address is 'x.x.x.x' where each octet 'x' is a byte (8 bits unsigned)
@@ -131,6 +136,16 @@ namespace Hazelcast.Networking
             HostName = p < 0 ? s : s.Substring(0, p);
         }
         */
+
+        /// <summary>
+        /// Locks the address.
+        /// </summary>
+        /// <returns>A disposable object that needs to be disposed to release the lock.</returns>
+        public async ValueTask<IDisposable> LockAsync()
+        {
+            await _lock.WaitAsync();
+            return new SemaphoreDisposableReleaser(_lock);
+        }
 
         /// <summary>
         /// Gets the host name.

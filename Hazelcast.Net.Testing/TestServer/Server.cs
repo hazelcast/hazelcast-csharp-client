@@ -16,11 +16,11 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.TestServer
 {
@@ -31,6 +31,7 @@ namespace Hazelcast.Testing.TestServer
     {
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
         private readonly Func<ClientMessageConnection, ClientMessage, ValueTask> _handler;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly IPEndPoint _endpoint;
         private ServerSocketListener _listener;
 
@@ -39,10 +40,12 @@ namespace Hazelcast.Testing.TestServer
         /// </summary>
         /// <param name="address">The socket network address.</param>
         /// <param name="handler">A handler for incoming messages.</param>
-        public Server(NetworkAddress address, Func<ClientMessageConnection, ClientMessage, ValueTask> handler)
+        /// <param name="loggerFactory">A logger factory.</param>
+        public Server(NetworkAddress address, Func<ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory loggerFactory)
         {
             _endpoint = address.IPEndPoint;
             _handler = handler;
+            _loggerFactory = loggerFactory;
             XConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
         }
 
@@ -101,7 +104,7 @@ namespace Hazelcast.Testing.TestServer
             // the connection we receive is not wired yet
             // must wire it properly before accepting
 
-            var messageConnection = new ClientMessageConnection(serverConnection) { OnReceiveMessage = _handler };
+            var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = _handler };
             XConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
             serverConnection.OnShutdown = SocketShutdown;
             serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);

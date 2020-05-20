@@ -16,7 +16,7 @@ using Partitioner = Hazelcast.Partitioning.Partitioner;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster
+    public partial class Cluster : IAsyncDisposable
     {
         // generates unique cluster identifiers
         private static readonly ISequence<int> ClusterIdSequence = new Int32Sequence();
@@ -52,6 +52,7 @@ namespace Hazelcast.Clustering
         private readonly ISet<string> _labels;
         private readonly AddressProvider _addressProvider;
         private readonly ISerializationService _serializationService;
+        private readonly ClientOptions _clientOptions;
 
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
@@ -67,23 +68,26 @@ namespace Hazelcast.Clustering
 
         private MemberTable _memberTable;
         private Guid _clusterServerSideId; // the server-side identifier of the cluster
-        private ClusterState _state;
+        private int _connected;
+        private int _disposed;
 
         private volatile int _firstMembersViewed;
-        private volatile int _firstpartitionsViewed;
+        //private volatile int _firstPartitionsViewed;
         private SemaphoreSlim _firstMembersView = new SemaphoreSlim(0);
-        private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0);
+        //private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0);
 
-        private enum ClusterState // FIXME move to partial, etc + usage?
-        {
-            Unknown = 0,
-            NotConnected,
-            Connecting,
-            Connected
-        }
-
-        // TODO: refactor this ctor entirely
-        // avoid passing serialization service, etc
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Cluster"/> class.
+        /// </summary>
+        /// <param name="clusterName">The cluster name.</param>
+        /// <param name="clientName">The client name.</param>
+        /// <param name="labels">The client labels.</param>
+        /// <param name="clusterConfiguration">The cluster configuration.</param>
+        /// <param name="networkingConfiguration">The networking configuration.</param>
+        /// <param name="loadBalancingConfiguration">The load-balancing configuration.</param>
+        /// <param name="securityConfiguration">The security configuration.</param>
+        /// <param name="serializationService">The serialization service.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
         public Cluster(
             string clusterName,
             string clientName,
@@ -114,6 +118,8 @@ namespace Hazelcast.Clustering
             _loadBalancer = loadBalancingConfiguration.LoadBalancer.Create();
             _addressProvider = new AddressProvider(networkingConfiguration, loggerFactory);
 
+            _clientOptions = new ClientOptions(networkingConfiguration.RedoOperation);
+
             // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same
             // it is used by ProxyManager to AddDistributedObjectListener - passing that value
 
@@ -132,6 +138,11 @@ namespace Hazelcast.Clustering
 
             XConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
         }
+
+        /// <summary>
+        /// Gets the cluster instrumentation.
+        /// </summary>
+        public ClusterInstrumentation Instrumentation { get; } = new ClusterInstrumentation();
 
         /// <summary>
         /// Gets the unique identifier of the cluster, as assigned by the client.
@@ -185,5 +196,18 @@ namespace Hazelcast.Clustering
         /// Gets the lite members.
         /// </summary>
         public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLite);
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            // FIXME: implement
+
+            // can we "just" dispose each client?
+            //foreach (var (_, client ) in _clients)
+            //    await client.DisposeAsync();
+        }
     }
 }

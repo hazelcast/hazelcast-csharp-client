@@ -114,7 +114,7 @@ namespace Hazelcast.Tests
                 response.CorrelationId = msg.CorrelationId;
                 response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                 await conn.SendAsync(response);
-            });
+            }, LoggerFactory);
             AddDisposable(server);
             await server.StartAsync();
 
@@ -122,7 +122,7 @@ namespace Hazelcast.Tests
             var conSequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(address, corSequence, conSequence, new NullLoggerFactory());
+            var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -163,7 +163,7 @@ namespace Hazelcast.Tests
                 }
                 response.CorrelationId = msg.CorrelationId;
                 await conn.SendAsync(response);
-            });
+            }, LoggerFactory);
             AddDisposable(server);
             await server.StartAsync();
 
@@ -171,7 +171,7 @@ namespace Hazelcast.Tests
             var conSequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(address, corSequence, conSequence, new NullLoggerFactory());
+            var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -205,7 +205,7 @@ namespace Hazelcast.Tests
                 var response = ClientPingServerCodec.EncodeResponse();
                 response.CorrelationId = msg.CorrelationId;
                 await conn.SendAsync(response);
-            });
+            }, LoggerFactory);
             AddDisposable(server);
             await server.StartAsync();
 
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests
             var conSequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(address, corSequence, conSequence, new NullLoggerFactory());
+            var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -242,14 +242,14 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(address, ReceiveMessage);
+            var server = new Server(address, ReceiveMessage, LoggerFactory);
             await server.StartAsync();
 
             var corSequence = new Int64Sequence();
             var conSequence = new Int32Sequence();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(address, corSequence, conSequence, new NullLoggerFactory());
+            var client1 = new Clustering.Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -259,7 +259,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
-            var client2 = new Clustering.Client(address, corSequence, conSequence, new NullLoggerFactory());
+            var client2 = new Clustering.Client(address, corSequence, conSequence, new ClientOptions(),  new NullLoggerFactory());
             await client2.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
@@ -295,11 +295,11 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start server");
-            var server = new Server(address, ReceiveMessage);
+            var server = new Server(address, ReceiveMessage, LoggerFactory);
             await server.StartAsync();
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(address, new Int64Sequence(), new NullLoggerFactory());
+            var client1 = new Clustering.Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
             await client1.ConnectAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
@@ -332,7 +332,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start client ");
-            var client1 = new Client(address, new Int64Sequence(), new NullLoggerFactory());
+            var client1 = new Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
             await client1.ConnectAsync();
 
             // RC assigns a GUID but the default cluster name is 'dev'
@@ -430,7 +430,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
 
             // connect to real server
             var address = NetworkAddress.Parse("127.0.0.1:5701");
-            var client1 = new Clustering.Client(address, new Int64Sequence(), new NullLoggerFactory());
+            var client1 = new Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
             await client1.ConnectAsync();
             /*
             // send poison

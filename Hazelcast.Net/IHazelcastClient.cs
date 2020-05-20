@@ -14,6 +14,9 @@ namespace Hazelcast
         /// Opens the client.
         /// </summary>
         /// <returns>A task that will complete when the client is open and ready.</returns>
+        /// <remarks>
+        /// <para>There is no equivalent 'close' method: a client is closed when it is disposed.</para>
+        /// </remarks>
         Task OpenAsync();
 
         /// <summary>

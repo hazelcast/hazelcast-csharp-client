@@ -67,6 +67,20 @@ ValueTask up when possible, else use Task by default, until actual performance
 benchmarking shows that ValueTask brings some benefits.
 
 
+#### NOTES ABOUT COMPARING TO NULL
+
+C# specs section 7.10.6 states that "The x == null construct is permitted even though T could represent
+a value type, and the result is simply defined to be false when T is a value type." so the line below is
+safe even when key is of type TKey which can be a value type... BUT see Eric Lippert answer
+on https://stackoverflow.com/questions/8823239 for caveats.
+
+if (key == null) throw new ArgumentNullException(nameof(key));
+
+
+
+
+
+
         // NOTES - FIXME: move this out!
         //
         // original hazelcast client internals - on start

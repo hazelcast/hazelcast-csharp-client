@@ -78,7 +78,7 @@ namespace Hazelcast.Clustering
                         }
                     }
 
-                    if (failed) 
+                    if (failed)
                         _logger.LogWarning("Failed to subscribe to cluster events, giving up.");
                     return;
                 }
@@ -106,16 +106,16 @@ namespace Hazelcast.Clustering
         /// <param name="client">The client.</param>
         /// <param name="correlationId">The correlation identifier.</param>
         /// <returns>A task that will complete when the subscription has been processed, and represent whether it was successful.</returns>
-        private async Task<bool> SubscribeToClusterEvents(Client client, long correlationId) 
+        private async Task<bool> SubscribeToClusterEvents(Client client, long correlationId)
         {
             // aka subscribe to member/partition view events
             XConsole.WriteLine(this, "subscribe");
 
             // handles the event
             void HandleEvent(ClientMessage message, object state)
-                => ClientAddClusterViewListenerCodec.HandleEvent(message, 
+                => ClientAddClusterViewListenerCodec.HandleEvent(message,
                     HandleMemberViewEvent,
-                    (version, partitions) => HandlePartitionViewEvent(client.Id, version, partitions), 
+                    (version, partitions) => HandlePartitionViewEvent(client.Id, version, partitions),
                     _loggerFactory);
 
             try
@@ -159,10 +159,10 @@ namespace Hazelcast.Clustering
             Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
 
             // signal once
-            if (Interlocked.CompareExchange(ref _firstpartitionsViewed, 1, 0) == 0)
-                _firstPartitionsView.Release();
+            //if (Interlocked.CompareExchange(ref _firstPartitionsViewed, 1, 0) == 0)
+            //    _firstPartitionsView.Release();
 
-            OnPartitionsUpdated(EventArgs.Empty);
+            OnPartitionsUpdated();
         }
 
         /// <summary>
@@ -172,11 +172,6 @@ namespace Hazelcast.Clustering
         /// <param name="members">The members.</param>
         private void HandleMemberViewEvent(int version, ICollection<MemberInfo> members)
         {
-            // FIXME: threading
-
-            // notify the load balancer of the new list of members
-            _loadBalancer.NotifyMembers(members.Select(x => x.Id));
-
             // get a new table
             var table = new MemberTable(version, members);
 
@@ -201,6 +196,9 @@ namespace Hazelcast.Clustering
 
             // replace the table
             _memberTable = table;
+
+            // notify the load balancer of the new list of members
+            _loadBalancer.NotifyMembers(members.Select(x => x.Id));
 
             // signal once
             if (Interlocked.CompareExchange(ref _firstMembersViewed, 1, 0) == 0)

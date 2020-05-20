@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -28,20 +29,23 @@ namespace Hazelcast.DistributedObjects.Implementation
     /// <summary>
     /// Represents a factory that creates <see cref="IDistributedObject"/> instances.
     /// </summary>
-    internal class DistributedObjectFactory
+    internal class DistributedObjectFactory : IAsyncDisposable
     {
-        private readonly ConcurrentDictionary<DistributedObjectInfo, ValueTask<IDistributedObject>> _objects
-            = new ConcurrentDictionary<DistributedObjectInfo, ValueTask<IDistributedObject>>();
+        private readonly ConcurrentDictionary<DistributedObjectInfo, ValueTask<DistributedObjectBase>> _objects
+            = new ConcurrentDictionary<DistributedObjectInfo, ValueTask<DistributedObjectBase>>();
 
         private readonly Cluster _cluster;
         private readonly ISerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
+
+        private int _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectFactory"/> class.
         /// </summary>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
         public DistributedObjectFactory(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
@@ -49,13 +53,22 @@ namespace Hazelcast.DistributedObjects.Implementation
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
+        /// <summary>
+        /// Gets or creates a distributed object.
+        /// </summary>
+        /// <typeparam name="T">The type of the distributed object.</typeparam>
+        /// <param name="serviceName">The unique name of the service.</param>
+        /// <param name="name">The unique name of the object.</param>
+        /// <param name="remote">Whether to create the object remotely too.</param>
+        /// <param name="factory">The object factory.</param>
+        /// <returns></returns>
         public async ValueTask<T> GetOrCreateAsync<T>(string serviceName, string name, bool remote,
                                                       Func<string, Cluster, ISerializationService, ILoggerFactory, T> factory)
             where T: DistributedObjectBase
         {
             var k = new DistributedObjectInfo(serviceName, name);
 
-            async ValueTask<IDistributedObject> CreateAsync()
+            async ValueTask<DistributedObjectBase> CreateAsync()
             {
                 var x = factory(name, _cluster, _serializationService, _loggerFactory);
 
@@ -75,7 +88,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             // try to get the object - thanks to the concurrent dictionary there will be only 1 task
             // and if several concurrent requests are made, they will all await that same task
-            IDistributedObject o;
+            DistributedObjectBase o;
             try
             {
                 o = await _objects.GetOrAdd(k, _ => CreateAsync());
@@ -109,6 +122,22 @@ namespace Hazelcast.DistributedObjects.Implementation
                 var requestMessage = ClientCreateProxyCodec.EncodeRequest(o.Name, o.ServiceName);
                 await _cluster.SendAsync(requestMessage);
             }
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            // FIXME: implement!
+            // also... we want to lock (read/write) while retrieving?
+
+            //foreach (var t in _objects.Values)
+            //{
+            //    var o = await t;
+            //    await o.DisposeAsync();
+            //}
         }
     }
 }

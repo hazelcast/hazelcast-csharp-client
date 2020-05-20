@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Messaging
 {
@@ -35,6 +36,7 @@ namespace Hazelcast.Messaging
         private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
         private readonly SocketConnectionBase _connection;
         private readonly SemaphoreSlim _writer;
+        private readonly ILogger _logger;
 
         private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
@@ -46,12 +48,16 @@ namespace Hazelcast.Messaging
         /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class.
         /// </summary>
         /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
-        public ClientMessageConnection(SocketConnectionBase connection)
+        public ClientMessageConnection(SocketConnectionBase connection, ILoggerFactory loggerFactory)
         {
-            _connection = connection;
-            _connection.OnReceiveMessageBytes = ReceiveMessageBytes;
+            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _connection.OnReceiveMessageBytes = ReceiveMessageBytesAsync;
 
-            // TODO consider threading an option (if controlled by owner?)
+            _logger = loggerFactory?.CreateLogger<ClientMessageConnection>() ??
+                      throw new ArgumentNullException(nameof(loggerFactory));
+
+            // TODO: threading control here could be an option
+            // (in case threading control is performed elsewhere)
             _writer = new SemaphoreSlim(1);
         }
 
@@ -69,7 +75,7 @@ namespace Hazelcast.Messaging
             }
         }
 
-        private bool ReceiveMessageBytes(SocketConnectionBase connection, ref ReadOnlySequence<byte> bytes)
+        private async ValueTask<bool> ReceiveMessageBytesAsync(SocketConnectionBase connection, ReadOnlySequence<byte> bytes)
         {
             XConsole.WriteLine(this, $"Received {bytes.Length} bytes");
 
@@ -104,7 +110,7 @@ namespace Hazelcast.Messaging
                 }
             }
 
-            // TODO consider buffering here
+            // TODO: consider buffering here
             // at the moment we are buffering in the pipe, but we have already
             // created the byte array, so ... might be nicer to copy now
             if (bytes.Length < _bytesLength)
@@ -116,50 +122,46 @@ namespace Hazelcast.Messaging
 
             // we now have a fully assembled message
             // don't test _currentFrame.IsFinal, adding the frame to a message has messed it
-            if (_finalFrame)
-            {
-                XConsole.WriteLine(this, "Frame is final");
-                var message = _currentMessage;
-                _currentMessage = null;
-                XConsole.WriteLine(this, "Handle fragment");
-                HandleFragment(message);
-            }
+            if (!_finalFrame) return true;
+
+            XConsole.WriteLine(this, "Frame is final");
+            var message = _currentMessage;
+            _currentMessage = null;
+            XConsole.WriteLine(this, "Handle fragment");
+            await HandleFragmentAsync(message);
 
             return true;
         }
 
-        private void HandleFragment(ClientMessage fragment)
+        private async ValueTask HandleFragmentAsync(ClientMessage fragment)
         {
             if (fragment.Flags.Has(ClientMessageFlags.Unfragmented))
             {
                 XConsole.WriteLine(this, "Handle message");
-                // FIXME consider async?
-                // this method cannot be async because of the ref bytes, and then
-                // should onReceiveMessage be async or not?
-                Task.Run(async () =>
+
+                try
                 {
-                    // FIXME this is really bad, because it's swallowing exceptions!
-                    try
-                    {
-                        await _onReceiveMessage(this, fragment);
-                    }
-                    catch (Exception e)
-                    {
-                        XConsole.WriteLine(this, "ERROR\n" + e);
-                    }
-                });
+                    await _onReceiveMessage(this, fragment);
+                }
+                catch (Exception e)
+                {
+                    // TODO: instrumentation
+                    _logger.LogError(e, "Failed to handle an incoming message.");
+                    XConsole.WriteLine(this, "ERROR\n" + e);
+                }
+
                 return;
             }
 
             // handle a fragmented message
-            // TODO what shall we do with weird cases?!
+            // TODO: can leak unfinished messages?
 
             var fragmentId = fragment.FirstFrame.ReadFragmentId();
 
             if (fragment.Flags.Has(ClientMessageFlags.BeginFragment))
             {
                 // new message
-                if (_messages.TryGetValue(fragmentId, out var message))
+                if (_messages.TryGetValue(fragmentId, out _))
                 {
                     // receiving a duplicate fragment begin, ignoring
                     return;
@@ -183,7 +185,17 @@ namespace Hazelcast.Messaging
 
                 // handle the message
                 XConsole.WriteLine(this, "Handle message");
-                Task.Run(async () => await _onReceiveMessage(this, message));
+
+                try
+                {
+                    await _onReceiveMessage(this, message);
+                }
+                catch (Exception e)
+                {
+                    // TODO: instrumentation
+                    _logger.LogError(e, "Failed to handle an incoming message.");
+                    XConsole.WriteLine(this, "ERROR\n" + e);
+                }
             }
             else
             {

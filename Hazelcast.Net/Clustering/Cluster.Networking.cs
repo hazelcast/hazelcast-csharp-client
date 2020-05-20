@@ -94,6 +94,7 @@ namespace Hazelcast.Clustering
             {
                 EnsureActive();
 
+                // gets unique addresses (by the IPEndPoint)
                 var addresses = GetCandidateAddresses();
                 foreach (var address in addresses)
                 {
@@ -123,38 +124,40 @@ namespace Hazelcast.Clustering
         /// </remarks>
         private async ValueTask<Attempt<Client>> TryConnectAsync(NetworkAddress address)
         {
-            // FIXME: why would we have a client already if we try to connect?!
-            //  and then we wouldn't need to subscribe to cluster events etc
-            if (_addressClients.TryGetValue(address, out var client)) // can the client be inactive?
-                return client;
+            if (_disposed == 1) return Attempt.Failed;
 
-            SemaphoreSlim s = null;
-
-            try
+            // ReSharper disable once InconsistentlySynchronizedField
+            if (_addressClients.TryGetValue(address, out var client))
             {
-                // ensure we only connect to an endpoint once at a time
-                // TODO: why?
-                // TODO: leaking semaphores
-                s = await LockEndPointAsync(address.IPEndPoint);
+                if (!client.Active) return Attempt.Failed;
+                return client;
+            }
 
-                if (_addressClients.TryGetValue(address, out client)) // can the client be inactive?
+            // ensure we only connect to an endpoint once at a time
+            // addresses are unique by their IPEndPoint as a NetworkAddress hash
+            // is in fact its IPEndPoint hash - so we can lock the address
+            // itself to achieve what we want (no two addresses can point to the
+            // same endpoint).
+
+            using (await address.LockAsync())
+            {
+                try
+                {
+                    // ReSharper disable once InconsistentlySynchronizedField
+                    if (_addressClients.TryGetValue(address, out client))
+                    {
+                        if (!client.Active) return Attempt.Failed;
+                        return client;
+                    }
+
+                    client = await ConnectWithLockAsync(address);
+
                     return client;
-
-                // TODO: change this
-                // ConnectAsync does register the client in _memberClients & _addressClients
-                // but it should be performed here
-                client = await ConnectWithLockAsync(address);
-
-                // TODO: tracking client's death? other?
-                return client;
-            }
-            catch (Exception e)
-            {
-                return Attempt.Fail<Client>(e);
-            }
-            finally
-            {
-                s?.Release();
+                }
+                catch (Exception e)
+                {
+                    return Attempt.Fail<Client>(e);
+                }
             }
         }
 
@@ -169,7 +172,7 @@ namespace Hazelcast.Clustering
             address = _addressProvider.Map(address);
 
             // create the client
-            var client = new Client(address, _correlationIdSequence, _loggerFactory)
+            var client = new Client(address, _correlationIdSequence, _clientOptions, _loggerFactory)
             {
                 OnReceiveEventMessage = OnEventMessage,
                 OnShutdown = HandleClientShutdown
@@ -185,87 +188,104 @@ namespace Hazelcast.Clustering
             // notify partitioner
             Partitioner.NotifyInitialCount(info.PartitionCount);
 
-            // gather infos
+            // notify client
             client.NotifyAuthenticated(info); // client.MemberId = info.MemberId;
-            var serverVersion = info.ServerVersion;
-            var remoteAddress = info.MemberAddress;
-            var clusterId = info.ClusterId;
-            var firstClient = _clients.Count == 0; // FIXME race-cond here?
-            var newCluster = firstClient && _clusterServerSideId != default && _clusterServerSideId != clusterId;
 
-            if (newCluster)
-            {
-                // warn: switching
-                // onClusterRestart
-                //  dispose disposable stuff (see hz.client internals)
-                //  clear member list
-                _memberTable = new MemberTable(0, Array.Empty<MemberInfo>());
-            }
-
-            // register the client
-            // and capture the subscriptions
+            // register the client, and capture the subscriptions
             List<ClusterSubscription> subscriptions;
+            bool firstClient;
             lock (_clientsLock)
             {
+                firstClient = _clients.Count == 0;
+
                 _clients[info.MemberId] = client;
                 _addressClients[address] = client;
+                _connected = 1;
+                
                 subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
             }
 
-            //
+            var newCluster = firstClient && _clusterServerSideId != default && _clusterServerSideId != info.ClusterId;
+
             if (firstClient)
-                _clusterServerSideId = clusterId;
+                _clusterServerSideId = info.ClusterId;
 
             if (newCluster)
             {
-                _state = ClusterState.Connecting;
-                // initialise (background)
-                //   send state to cluster = distributedObjectFactory.CreateAllAsync
-                //   and only *then* trigger connected and stuff
-                //   but we do this async in the background, and why?
-                // execute handler - allow DistributedObjectFactory to re-create objects
+                // we did connect to a cluster once, and then we lost all clients,
+                // and now we have a new client, which is connected to a different
+                // cluster identifier
+
+                _logger.LogWarning("Switching from current cluster {CurrentClusterId} to new cluster {NewClusterId}.", _clusterServerSideId, info.ClusterId);
+
+                // clear members list
+                _memberTable = new MemberTable(0, Array.Empty<MemberInfo>());
+
+                // get distributed object factory to re-create objects, etc
                 await _onConnectionToNewCluster();
-                _state = ClusterState.Connected;
+
                 OnClientLifecycleEvent(ClientLifecycleState.Connected);
             }
-            else
+            else if (firstClient)
             {
-                _state = ClusterState.Connected;
                 OnClientLifecycleEvent(ClientLifecycleState.Connected);
             }
 
-            // FIXME all this could throw and then?
+            // FIXME: we've fired 'connected' events before running the rest?
 
-            // trigger connection event
-            OnConnectionAdded(client);
+            _logger.LogInformation("Authenticated with server member {MemberId} running version {HazelcastServerVersion}" +
+                " at {RemoteAddress} via {LocalAddress}.",
+                info.MemberId, info.ServerVersion, info.MemberAddress, client.LocalEndPoint);
 
-            // ensure there is always one 'cluster client' dealing with cluster events
-            // once this is done, the client will receive the 'members view' and 'partitions
-            // view' events, and this will initialize the partitioner & load balancer
-            // beware: it is not possible to talk to the cluster before that has happen
-            // TODO: do it in the background, see ListenerService?
-            await ProposeClusterEventsClient(client);
+            try
+            {
+                // trigger connection event
+                OnConnectionAdded(client);
 
-            // subscribe the new client to all events the cluster has subscriptions for
-            // TODO: do it in the background, see ListenerService?
-            await InstallSubscriptionsOnNewClient(client, subscriptions);
+                // ensure there is always one 'cluster client' dealing with cluster events
+                // once this is done, the client will receive the 'members view' and 'partitions
+                // view' events, and this will initialize the partitioner & load balancer
+                // beware: it is not possible to talk to the cluster before that has happen
+                // TODO: do it in the background, see ListenerService?
+                await ProposeClusterEventsClient(client);
+
+                // subscribe the new client to all events the cluster has subscriptions for
+                // TODO: do it in the background, see ListenerService?
+                await InstallSubscriptionsOnNewClient(client, subscriptions);
+            }
+            catch
+            {
+                bool disconnected;
+                lock (_clientsLock)
+                {
+                    disconnected = RemoveClientWithLock(client);
+                }
+                await client.ShutdownAsync();
+                
+                // FIXME: this is bad
+                if (disconnected)
+                    OnClientLifecycleEvent(ClientLifecycleState.Disconnected);
+
+                throw;
+            }
 
             return client;
         }
 
+        private bool RemoveClientWithLock(Client client)
+        {
+            _addressClients.TryRemove(client.Address, out _);
+            _clients.TryRemove(client.MemberId, out _);
+
+            if (_clients.Count > 0 || _connected == 0) 
+                return false;
+
+            _connected = 0;
+            return true;
+        }
+
         // TODO: implement (and for client etc)
         private void EnsureActive() { } // supposed to validate that the client is still active?
-
-        // TODO: leaking semaphores, locking must be refactored
-        private readonly ConcurrentDictionary<IPEndPoint, SemaphoreSlim> _semaphores
-            = new ConcurrentDictionary<IPEndPoint, SemaphoreSlim>();
-
-        private async ValueTask<SemaphoreSlim> LockEndPointAsync(IPEndPoint endPoint)
-        {
-            var s = _semaphores.GetOrAdd(endPoint, _ => new SemaphoreSlim(1));
-            await s.WaitAsync();
-            return s;
-        }
 
         private void HandleClientShutdown(Client client)
         {
@@ -273,12 +293,15 @@ namespace Hazelcast.Clustering
 
             // forget about the client
             List<ClusterSubscription> subscriptions;
+            bool disconnected;
             lock (_clientsLock)
             {
-                _addressClients.TryRemove(client.Address, out _);
-                _clients.TryRemove(client.MemberId, out _);
+                disconnected = RemoveClientWithLock(client);
                 subscriptions = _subscriptions.Values.ToList();
             }
+
+            if (disconnected)
+                OnClientLifecycleEvent(ClientLifecycleState.Disconnected);
 
             // clears its subscriptions - does not unsubscribes from the
             // server since the client is not connected anymore
@@ -294,7 +317,10 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets all candidate network addresses for connecting to the cluster.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>All candidate network addresses.</returns>
+        /// <remarks>
+        /// <para>Returns unique addresses (unique by their IPEndPoint).</para>
+        /// </remarks>
         private IEnumerable<NetworkAddress> GetCandidateAddresses()
         {
             var addresses = new HashSet<NetworkAddress>();

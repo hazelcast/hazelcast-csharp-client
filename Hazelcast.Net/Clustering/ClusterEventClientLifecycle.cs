@@ -67,8 +67,8 @@ namespace Hazelcast.Clustering
 
     public static partial class Extensions
     {
-        // TODO: original code has 1 unique 'StateChanged' event, consider having 1 event per new state?
-        // eg ClientStarting, ClientStarted, etc...?
+        // TODO: consider having 1 event per state
+        // original code has 1 unique 'StateChanged' event, could we have eg ClientStarting, ClientStarted, etc...?
 
         public static ClusterEventHandlers ClientStateChanged(this ClusterEventHandlers handlers, Action<Cluster, ClientLifecycleEventArgs> handler)
         {

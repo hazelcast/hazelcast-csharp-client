@@ -29,8 +29,6 @@ namespace Hazelcast.DistributedObjects.Implementation
     {
         private static readonly IPartitioningStrategy PartitioningStrategy = new StringPartitioningStrategy();
 
-        // TODO consider injecting a "light" cluster not the whole class?
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectBase"/> class.
         /// </summary>
@@ -63,6 +61,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <inheritdoc />
         public void Destroy()
         {
+            // FIXME: implement
             throw new NotImplementedException();
         }
 
@@ -82,15 +81,6 @@ namespace Hazelcast.DistributedObjects.Implementation
         // TODO: document
         protected virtual IData ToData(object o)
             => SerializationService.ToData(o);
-
-        // NOTES
-        //
-        // C# specs section 7.10.6 states that "The x == null construct is permitted even though T could represent
-        // a value type, and the result is simply defined to be false when T is a value type." so the line below is
-        // safe even when key is of type TKey which can be a value type... BUT see Eric Lippert answer
-        // on https://stackoverflow.com/questions/8823239 for caveats.
-        //
-        // if (key == null) throw new ArgumentNullException(nameof(key));
 
         protected IData ToSafeData(object o1)
         {

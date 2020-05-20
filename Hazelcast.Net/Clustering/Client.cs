@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a client.
     /// </summary>
-    public class Client
+    public class Client : IAsyncDisposable
     {
         private static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
@@ -28,8 +29,9 @@ namespace Hazelcast.Clustering
         private readonly object _activeLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
+        private readonly ClientOptions _options;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
-        private readonly bool _retryOnTargetDisconnected; // FIXME set value = Configuration.NetworkConfig.RedoOperation
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<ClientMessage> _onReceiveEventMessage;
@@ -44,8 +46,8 @@ namespace Hazelcast.Clustering
         /// <param name="address">The network address.</param>
         /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
-            : this(address, correlationIdSequence, new Int32Sequence(), loggerFactory)
+        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ClientOptions options, ILoggerFactory loggerFactory)
+            : this(address, correlationIdSequence, new Int32Sequence(), options, loggerFactory)
         { }
 
         /// <summary>
@@ -60,12 +62,14 @@ namespace Hazelcast.Clustering
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence, ILoggerFactory loggerFactory)
+        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence, ClientOptions options, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
-            _logger = loggerFactory?.CreateLogger<Client>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger<Client>();
 
             XConsole.Configure(this, config => config.SetIndent(4).SetPrefix("CLIENT"));
         }
@@ -89,6 +93,11 @@ namespace Hazelcast.Clustering
         /// Gets the network address the client is connected to.
         /// </summary>
         public NetworkAddress Address { get; }
+
+        /// <summary>
+        /// Gets the local endpoint of the socket connection.
+        /// </summary>
+        public IPEndPoint LocalEndPoint => _socketConnection.LocalEndPoint;
 
         /// <summary>
         /// Gets or sets an action that will be executed when the client receives a message.
@@ -163,7 +172,7 @@ namespace Hazelcast.Clustering
             // the SocketConnection must be open *after* everything has been wired
 
             _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, Address.IPEndPoint) { OnShutdown = SocketShutdown };
-            _messageConnection = new ClientMessageConnection(_socketConnection) { OnReceiveMessage = ReceiveMessage };
+            _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
             XConsole.Configure(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 
             await _socketConnection.ConnectAsync();
@@ -417,7 +426,7 @@ namespace Hazelcast.Clustering
 
                 case TargetDisconnectedException _:
                     return !invocation.BoundToClient &&
-                           (invocation.RequestMessage.IsRetryable || _retryOnTargetDisconnected);
+                           (invocation.RequestMessage.IsRetryable || _options.RetryOnTargetDisconnected);
 
                 default:
                     return false;
@@ -492,8 +501,6 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the client has shut down.</returns>
         public async Task ShutdownAsync()
         {
-            // TODO: consider making Client IDisposable
-
             XConsole.WriteLine(this, "Shutdown");
 
             lock (_activeLock)
@@ -516,6 +523,13 @@ namespace Hazelcast.Clustering
 
             // invoke
             _onShutdown?.Invoke(this);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            // FIXME: implement + understand link to shudown?
+            await ShutdownAsync();
         }
     }
 }
