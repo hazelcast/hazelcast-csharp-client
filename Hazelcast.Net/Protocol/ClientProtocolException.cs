@@ -14,9 +14,10 @@
 
 using System;
 using System.Runtime.Serialization;
-using Hazelcast.Protocol;
+using Hazelcast.Exceptions;
+using Hazelcast.Protocol.Data;
 
-namespace Hazelcast.Exceptions
+namespace Hazelcast.Protocol
 {
     /// <summary>
     /// Represents a client protocol error.

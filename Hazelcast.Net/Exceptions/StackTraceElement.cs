@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if NETSTANDARD2_1
+using System;
+#endif
 
 namespace Hazelcast.Exceptions
 {

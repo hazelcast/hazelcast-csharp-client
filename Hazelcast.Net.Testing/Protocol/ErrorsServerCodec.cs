@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Hazelcast.Messaging;
+using Hazelcast.Protocol;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Protocol.Data;

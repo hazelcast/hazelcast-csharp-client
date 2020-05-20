@@ -1,4 +1,4 @@
-﻿namespace Hazelcast.Protocol
+﻿namespace Hazelcast.Protocol.Data
 {
     /// <summary>
     /// Defines the server error code for the client protocol.

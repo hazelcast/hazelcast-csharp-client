@@ -31,6 +31,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using static Hazelcast.Messaging.Portability;
@@ -44,7 +45,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int IterationTypeIdFieldOffset = PageFieldOffset + IntSizeInBytes;
         private const int InitialFrameSize = IterationTypeIdFieldOffset + ByteSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Data.PagingPredicateHolder pagingPredicateHolder)
+        public static void Encode(ClientMessage clientMessage, PagingPredicateHolder pagingPredicateHolder)
         {
             clientMessage.Add(Frame.CreateBeginStruct());
 
@@ -62,7 +63,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Protocol.Data.PagingPredicateHolder Decode(IEnumerator<Frame> iterator)
+        public static PagingPredicateHolder Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
@@ -79,7 +80,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             iterator.SkipToStructEnd();
 
-            return new Hazelcast.Protocol.Data.PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pageSize, page, iterationTypeId, partitionKeyData);
+            return new PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pageSize, page, iterationTypeId, partitionKeyData);
         }
     }
 }

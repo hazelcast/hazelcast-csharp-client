@@ -32,6 +32,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using static Hazelcast.Messaging.Portability;
@@ -41,7 +42,7 @@ namespace Hazelcast.Protocol.CustomCodecs
     internal static class AnchorDataListHolderServerCodec
     {
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Data.AnchorDataListHolder anchorDataListHolder)
+        public static void Encode(ClientMessage clientMessage, AnchorDataListHolder anchorDataListHolder)
         {
             clientMessage.Add(Frame.CreateBeginStruct());
 
@@ -51,7 +52,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Protocol.Data.AnchorDataListHolder Decode(IEnumerator<Frame> iterator)
+        public static AnchorDataListHolder Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
@@ -61,7 +62,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             iterator.SkipToStructEnd();
 
-            return new Hazelcast.Protocol.Data.AnchorDataListHolder(anchorPageList, anchorDataList);
+            return new AnchorDataListHolder(anchorPageList, anchorDataList);
         }
     }
 }
