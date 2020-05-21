@@ -9,5 +9,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>XCONSOLE,CODE_ANALYSIS</DefineConstants>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <!--<Nullable>enable</Nullable>-->
+  </PropertyGroup>
 
 </Project>

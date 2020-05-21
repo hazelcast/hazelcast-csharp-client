@@ -30,6 +30,17 @@ recent and more efficient code available for instance in netstandard 2.1, becaus
 we replace the code we need to make sure that it is OK wrt the other clients.
 
 
+#### NOTES ABOUT C# VERSION
+
+References
+https://medium.com/@joni2nja/consider-using-c-8-with-the-net-framework-9dceb20647c5
+https://stackoverflow.com/questions/56651472/does-c-sharp-8-support-the-net-framework
+https://stu.dev/csharp8-doing-unsupported-things/
+
+Decision to use C# 8.0 on all projects, avoiding features not supported by netstandard 2.0.
+"nullable" is currently not enabled because of the amount of warnings, consider it.
+
+
         // NOTES
         //
         // read

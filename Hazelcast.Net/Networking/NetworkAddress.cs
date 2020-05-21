@@ -14,7 +14,7 @@ namespace Hazelcast.Networking
     /// </summary>
     public class NetworkAddress
     {
-        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1);
+        private volatile SemaphoreSlim _lock;
 
         // NOTES
         //
@@ -35,10 +35,6 @@ namespace Hazelcast.Networking
         // https://superuser.com/questions/99746/why-is-there-a-percent-sign-in-the-ipv6-address
         // https://docs.microsoft.com/en-us/previous-versions/aa917150(v=msdn.10)
         // which explain the 'node-local' vs 'link-local' vs 'global' scopes
-
-        // TODO revisit original code
-        // - hostname vs scopeID, can we do www.hazelcast.com%33, etc.
-        // - get 'possible addresses' etc.
 
         /// <summary>
         /// Gets the default Hazelcast server port.
@@ -121,45 +117,20 @@ namespace Hazelcast.Networking
             HostName = source.HostName;
         }
 
-        // TODO consider removing this code
-        /*
         /// <summary>
-        /// Sets the hostname from an address.
+        /// Gets the lock semaphore for this address.
         /// </summary>
-        /// <param name="ipAddress">The address.</param>
-        private void SetHostName(IPAddress ipAddress)
+        public SemaphoreSlim Lock
         {
-            // need to figure out a hostname...
-            // IPv6 might have a scope id, remove it
-            var s = ipAddress.ToString();
-            var p = s.IndexOf('%');
-            HostName = p < 0 ? s : s.Substring(0, p);
+            get
+            {
+                // lazily create locks - no overhead as long as not locking
+                // may create multiple semaphores but only 1 will be used
+                if (_lock != null) return _lock;
+                Interlocked.CompareExchange(ref _lock, new SemaphoreSlim(1), null);
+                return _lock;
+            }
         }
-        */
-
-        /// <summary>
-        /// Locks the address.
-        /// </summary>
-        /// <returns>A disposable object that needs to be disposed to release the lock.</returns>
-#if OPTIMIZE_ASYNC
-        public ValueTask<IDisposable> LockAsync()
-            => new SemaphoreDisposableReleaser(_lock).WaitAsync();
-#else
-        public async ValueTask<IDisposable> LockAsync()
-            => await new LockAcquisition(_lock).WaitAsync();
-#endif
-
-        /// <summary>
-        /// Tries to the address.
-        /// </summary>
-        /// <returns>A disposable object that needs to be disposed to release the lock.</returns>
-#if OPTIMIZE_ASYNC
-        public ValueTask<LockAquisition> TryLockAsync()
-            => new LockAquisition(_lock).TryWaitAsync();
-#else
-        public async ValueTask<LockAcquisition> TryLockAsync()
-            => await new LockAcquisition(_lock).TryWaitAsync();
-#endif
 
         /// <summary>
         /// Gets the host name.

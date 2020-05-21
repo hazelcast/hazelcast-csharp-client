@@ -210,7 +210,6 @@ namespace Hazelcast.Tests.DotNet
             var task = Task.Delay(100).ContinueWith(t =>
             {
                 throw new Exception("bang");
-                return 2;
             });
 
             Assert.ThrowsAsync<Exception>(async () => await task.WithTimeout(remainingMilliseconds));

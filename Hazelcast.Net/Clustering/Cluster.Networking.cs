@@ -77,7 +77,7 @@ namespace Hazelcast.Clustering
 
             // once subscribers have run, they have created subscriptions
             // and we don't need them anymore - only the subscriptions
-            _clusterEventSubscribers = null;
+            _clusterEventSubscribers = null; // FIXME NO WE CAN RECOONECT!
         }
 
         /// <summary>
@@ -147,30 +147,28 @@ namespace Hazelcast.Clustering
             // some other code is already trying to connect to it and there is no
             // point waiting to try too - faster to just fail immediately
 
-            using (var acquired = await address.TryLockAsync())
+            using var acquired = await LockAcquisition.TryWaitAsync(address.Lock);
+            if (!acquired) return Attempt.Failed;
+
+            try
             {
-                if (!acquired) return Attempt.Failed;
-
-                try
+                // ReSharper disable once InconsistentlySynchronizedField
+                if (_addressClients.TryGetValue(address, out client))
                 {
-                    // ReSharper disable once InconsistentlySynchronizedField
-                    if (_addressClients.TryGetValue(address, out client))
-                    {
-                        // if we already have a client for that address, return the client
-                        // if it is active, or fail if it is not - cannot open yet another
-                        // client to that same address
-                        if (client.Active) return client;
-                        return Attempt.Failed;
-                    }
+                    // if we already have a client for that address, return the client
+                    // if it is active, or fail if it is not - cannot open yet another
+                    // client to that same address
+                    if (client.Active) return client;
+                    return Attempt.Failed;
+                }
 
-                    // else actually connect - this may throw
-                    client = await ConnectWithLockAsync(address);
-                    return client;
-                }
-                catch (Exception e)
-                {
-                    return Attempt.Fail<Client>(e);
-                }
+                // else actually connect - this may throw
+                client = await ConnectWithLockAsync(address);
+                return client;
+            }
+            catch (Exception e)
+            {
+                return Attempt.Fail<Client>(e);
             }
         }
 

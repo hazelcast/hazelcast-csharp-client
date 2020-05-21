@@ -61,7 +61,7 @@ namespace Hazelcast.Core
                     {
                         disposable.Dispose();
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // why don't we just throw
                         // instead of logging & swallowing?

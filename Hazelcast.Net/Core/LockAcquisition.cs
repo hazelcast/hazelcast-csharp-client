@@ -16,10 +16,36 @@ namespace Hazelcast.Core
         /// Initializes a new instance of the <see cref="LockAcquisition"/> class.
         /// </summary>
         /// <param name="semaphore">A semaphore.</param>
-        public LockAcquisition(SemaphoreSlim semaphore)
+        private LockAcquisition(SemaphoreSlim semaphore)
         {
             _semaphore = semaphore;
         }
+
+        /// <summary>
+        /// Acquires a lock.
+        /// </summary>
+        /// <param name="semaphore">The semaphore.</param>
+        /// <returns>A <see cref="LockAcquisition"/> instance that needs to be disposed to release the lock.</returns>
+#if OPTIMIZE_ASYNC
+        public static ValueTask<LockAcquisition> WaitAsync(SemaphoreSlim semaphore)
+            => new LockAcquisition(semaphore).WaitAsync();
+#else
+        public static async ValueTask<LockAcquisition> WaitAsync(SemaphoreSlim semaphore)
+            => await new LockAcquisition(semaphore).WaitAsync();
+#endif
+
+        /// <summary>
+        /// Tries to acquire a lock immediately.
+        /// </summary>
+        /// <param name="semaphore">The semaphore.</param>
+        /// <returns>A <see cref="LockAcquisition"/> instance that needs to be disposed to release the lock.</returns>
+#if OPTIMIZE_ASYNC
+        public static ValueTask<LockAcquisition> TryWaitAsync(SemaphoreSlim semaphore)
+            => new LockAcquisition(semaphore).TryWaitAsync();
+#else
+        public static async ValueTask<LockAcquisition> TryWaitAsync(SemaphoreSlim semaphore)
+            => await new LockAcquisition(semaphore).TryWaitAsync();
+#endif
 
         /// <summary>
         /// Whether the lock was acquired.
@@ -29,8 +55,8 @@ namespace Hazelcast.Core
         /// <summary>
         /// Asynchronously waits to enter the lock.
         /// </summary>
-        /// <returns>An <see cref="IDisposable"/> instance that must be disposed to exit the lock.</returns>
-        public async ValueTask<IDisposable> WaitAsync()
+        /// <returns>A <see cref="LockAcquisition"/> instance that must be disposed to exit the lock.</returns>
+        private async ValueTask<LockAcquisition> WaitAsync()
         {
             await _semaphore.WaitAsync();
             Acquired = true;
@@ -46,7 +72,7 @@ namespace Hazelcast.Core
         /// or it does not enter. If the lock is not entered, nothing will happen when the
         /// acquisition is disposed.</para>
         /// </remarks>
-        public async ValueTask<LockAcquisition> TryWaitAsync()
+        private async ValueTask<LockAcquisition> TryWaitAsync()
         {
             Acquired = await _semaphore.WaitAsync(0);
             return this;

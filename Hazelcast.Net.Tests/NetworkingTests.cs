@@ -314,7 +314,7 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            XAssert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message));
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message));
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
