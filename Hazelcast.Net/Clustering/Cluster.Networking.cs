@@ -129,8 +129,11 @@ namespace Hazelcast.Clustering
             // ReSharper disable once InconsistentlySynchronizedField
             if (_addressClients.TryGetValue(address, out var client))
             {
-                if (!client.Active) return Attempt.Failed;
-                return client;
+                // if we already have a client for that address, return the client
+                // if it is active, or fail if it is not - cannot open yet another
+                // client to that same address
+                if (client.Active) return client;
+                return Attempt.Failed;
             }
 
             // ensure we only connect to an endpoint once at a time
@@ -138,20 +141,30 @@ namespace Hazelcast.Clustering
             // is in fact its IPEndPoint hash - so we can lock the address
             // itself to achieve what we want (no two addresses can point to the
             // same endpoint).
+            //
+            // we do not *wait* for the lock, either we can have it or not - this
+            // is the only place where an address is locked, so if it's locked
+            // some other code is already trying to connect to it and there is no
+            // point waiting to try too - faster to just fail immediately
 
-            using (await address.LockAsync())
+            using (var acquired = await address.TryLockAsync())
             {
+                if (!acquired) return Attempt.Failed;
+
                 try
                 {
                     // ReSharper disable once InconsistentlySynchronizedField
                     if (_addressClients.TryGetValue(address, out client))
                     {
-                        if (!client.Active) return Attempt.Failed;
-                        return client;
+                        // if we already have a client for that address, return the client
+                        // if it is active, or fail if it is not - cannot open yet another
+                        // client to that same address
+                        if (client.Active) return client;
+                        return Attempt.Failed;
                     }
 
+                    // else actually connect - this may throw
                     client = await ConnectWithLockAsync(address);
-
                     return client;
                 }
                 catch (Exception e)
@@ -201,7 +214,7 @@ namespace Hazelcast.Clustering
                 _clients[info.MemberId] = client;
                 _addressClients[address] = client;
                 _connected = 1;
-                
+
                 subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
             }
 
@@ -261,7 +274,7 @@ namespace Hazelcast.Clustering
                     disconnected = RemoveClientWithLock(client);
                 }
                 await client.ShutdownAsync();
-                
+
                 // FIXME: this is bad
                 if (disconnected)
                     OnClientLifecycleEvent(ClientLifecycleState.Disconnected);
@@ -277,7 +290,7 @@ namespace Hazelcast.Clustering
             _addressClients.TryRemove(client.Address, out _);
             _clients.TryRemove(client.MemberId, out _);
 
-            if (_clients.Count > 0 || _connected == 0) 
+            if (_clients.Count > 0 || _connected == 0)
                 return false;
 
             _connected = 0;

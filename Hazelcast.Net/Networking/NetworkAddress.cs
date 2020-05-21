@@ -141,11 +141,25 @@ namespace Hazelcast.Networking
         /// Locks the address.
         /// </summary>
         /// <returns>A disposable object that needs to be disposed to release the lock.</returns>
+#if OPTIMIZE_ASYNC
+        public ValueTask<IDisposable> LockAsync()
+            => new SemaphoreDisposableReleaser(_lock).WaitAsync();
+#else
         public async ValueTask<IDisposable> LockAsync()
-        {
-            await _lock.WaitAsync();
-            return new SemaphoreDisposableReleaser(_lock);
-        }
+            => await new LockAcquisition(_lock).WaitAsync();
+#endif
+
+        /// <summary>
+        /// Tries to the address.
+        /// </summary>
+        /// <returns>A disposable object that needs to be disposed to release the lock.</returns>
+#if OPTIMIZE_ASYNC
+        public ValueTask<LockAquisition> TryLockAsync()
+            => new LockAquisition(_lock).TryWaitAsync();
+#else
+        public async ValueTask<LockAcquisition> TryLockAsync()
+            => await new LockAcquisition(_lock).TryWaitAsync();
+#endif
 
         /// <summary>
         /// Gets the host name.
