@@ -13,62 +13,67 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    // partial: networking
-    public partial class Cluster
+    public partial class Cluster // Networking
     {
-        /// <summary>
-        /// Gets a random client.
-        /// </summary>
-        /// <returns>A random client.</returns>
-        private Client GetRandomClient()
-        {
-            // In "smart mode" the clients connect to each member of the cluster. Since each
-            // data partition uses the well known and consistent hashing algorithm, each client
-            // can send an operation to the relevant cluster member, which increases the
-            // overall throughput and efficiency. Smart mode is the default mode.
-            //
-            // In "uni-socket mode" the clients is required to connect to a single member, which
-            // then behaves as a gateway for the other members. Firewalls, security, or some
-            // custom networking issues can be the reason for these cases.
-
-            var maxTries = _loadBalancer.Count;
-
-            if (IsSmartRouting)
-            {
-                for (var i = 0; i < maxTries; i++)
-                {
-                    var memberId = _loadBalancer.Select();
-                    if (_clients.TryGetValue(memberId, out var lbclient))
-                        return lbclient;
-                }
-
-                var client = _clients.Values.FirstOrDefault();
-                if (client == null)
-                    throw new HazelcastException("Could not get a client.");
-
-                return client;
-            }
-
-            // there should be only one
-            var singleClient = _clients.Values.FirstOrDefault();
-            if (singleClient == null)
-                throw new HazelcastException("Could not get a client.");
-            return singleClient;
-        }
-
-        /// <summary>
-        /// Connects to the server-side cluster.
-        /// </summary>
-        /// <returns>A task that will complete when connected.</returns>
-        public async ValueTask ConnectAsync()
-            => await ConnectAsync(TimeSpan.Zero);
-
         /// <summary>
         /// Connects to the server-side cluster.
         /// </summary>
         /// <param name="timeout">A timeout.</param>
         /// <returns>A task that will complete when connected.</returns>
-        public async ValueTask ConnectAsync(TimeSpan timeout)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task ConnectAsync(TimeSpan timeout = default)
+        {
+            var timeoutMilliseconds = timeout.TimeoutMilliseconds(Constants.Cluster.DefaultConnectTimeoutMilliseconds);
+
+            Task task;
+            if (timeoutMilliseconds < 0) // infinite
+            {
+                task = ConnectAsyncInternal(CancellationToken.None);
+            }
+            else
+            {
+                var cancellation = _clusterCancellation.WithTimeout(timeoutMilliseconds);
+                task = ConnectAsyncInternal(cancellation.Token).OrTimeout(cancellation);
+            }
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.ConfigureAwait(false);
+#endif
+        }
+
+
+        /// <summary>
+        /// Connects to the server-side cluster.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when connected.</returns>
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task ConnectAsync(CancellationToken cancellationToken)
+        {
+            var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            var task = ConnectAsyncInternal(cancellation.Token).ThenDispose(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.ConfigureAwait(false);
+#endif
+        }
+
+        /// <summary>
+        /// Connects to the server-side cluster.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when connected.</returns>
+        private async Task ConnectAsyncInternal(CancellationToken cancellationToken)
         {
             _readonlyProperties = true;
 
@@ -79,26 +84,18 @@ namespace Hazelcast.Clustering
                 _clusterState = ClusterState.Connecting;
             }
 
-            // FIXME: what should be the actual default timeout?!
-            var cancellation = CreateTimeoutCancellationTokenSource(30);
-            await ConnectAsync(cancellation.Token).OrTimeout(cancellation).ConfigureAwait(false);
-        }
-
-        private async Task ConnectAsync(CancellationToken cancellationToken)
-        {
             try
             {
                 // connects the first client, throws if it fails
-                await ConnectClusterAsync(cancellationToken);
+                await ConnectFirstClientAsync(cancellationToken).ConfigureAwait(false);
 
                 // wait for the member table
                 await _firstMembersView.WaitAsync(cancellationToken);
-                // FIXME - what happens if cancelled?
                 _firstMembersView = null;
 
                 // execute subscribers
                 foreach (var subscriber in _clusterEventSubscribers)
-                    await subscriber.SubscribeAsync(this);
+                    await subscriber.SubscribeAsync(this, cancellationToken).ConfigureAwait(false);
 
                 // once subscribers have run, they have created subscriptions
                 // and we don't need them anymore - only their subscriptions
@@ -116,7 +113,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private void StartConnectClusterWithLock()
+        private void StartConnectClusterWithLock() // FIXME: wtf?
         {
             //_connectClusterTask ??= ConnectClusterAsync();
         }
@@ -125,7 +122,7 @@ namespace Hazelcast.Clustering
         /// Connects a first client to the server-side cluster.
         /// </summary>
         /// <returns>A task that will complete when connected.</returns>
-        private async Task ConnectClusterAsync(CancellationToken cancellationToken)
+        private async Task ConnectFirstClientAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
             var exceptions = new List<Exception>();
@@ -141,18 +138,16 @@ namespace Hazelcast.Clustering
                         break;
 
                     tried.Add(address);
-                    var attempt = await TryConnectAsync(address, cancellationToken);
-
-                    if (attempt) return; // FIXME: clear the task
+                    var attempt = await TryConnectAsync(address, cancellationToken).ConfigureAwait(false);
+                    if (attempt) return;
 
                     if (attempt.HasException) exceptions.Add(attempt.Exception);
                 }
 
-            } while (await retryStrategy.WaitAsync(cancellationToken));
+            } while (await retryStrategy.WaitAsync(cancellationToken).ConfigureAwait(false));
 
-            if (_connectTaskCancel) return;
+            if (_connectTaskCancel) return; // FIXME duh?
 
-            // FIXME:
             var aggregate = new AggregateException(exceptions);
             throw new InvalidOperationException($"Unable to connect to the cluster \"{Name}\". " +
                 $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
@@ -168,7 +163,7 @@ namespace Hazelcast.Clustering
         /// <remarks>
         /// <para>This method does not throw but returns a failed attempt.</para>
         /// </remarks>
-        private async ValueTask<Attempt<Client>> TryConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
+        private async Task<Attempt<Client>> TryConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // ReSharper disable once InconsistentlySynchronizedField
             if (_addressClients.TryGetValue(address, out var client))
@@ -191,7 +186,7 @@ namespace Hazelcast.Clustering
             // some other code is already trying to connect to it and there is no
             // point waiting to try too - faster to just fail immediately
 
-            using var acquired = await LockAcquisition.TryLockAsync(address.Lock);
+            using var acquired = await LockAcquisition.TryLockAsync(address.Lock).ConfigureAwait(false);
             if (!acquired) return Attempt.Failed;
 
             try
@@ -207,7 +202,7 @@ namespace Hazelcast.Clustering
                 }
 
                 // else actually connect - this may throw
-                client = await ConnectWithLockAsync(address, cancellationToken);
+                client = await ConnectWithLockAsync(address, cancellationToken).ConfigureAwait(false);
                 return client;
             }
             catch (Exception e)
@@ -222,7 +217,7 @@ namespace Hazelcast.Clustering
         /// <param name="address">The address.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
-        private async ValueTask<Client> ConnectWithLockAsync(NetworkAddress address, CancellationToken cancellationToken)
+        private async Task<Client> ConnectWithLockAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // map private address to public address
             address = _addressProvider.Map(address);
@@ -235,11 +230,13 @@ namespace Hazelcast.Clustering
             };
 
             // connect to the server (may throw)
-            await client.ConnectAsync(cancellationToken);
+            await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
             // authenticate (may throw)
-            var info = await _authenticator.AuthenticateAsync(client, Name, ClientId, ClientName, _labels, _serializationService, cancellationToken);
+            var info = await _authenticator
+                .AuthenticateAsync(client, Name, ClientId, ClientName, _labels, _serializationService, cancellationToken)
+                .ConfigureAwait(false);
             if (info == null) throw new HazelcastException("Failed to authenticate");
             client.NotifyAuthenticated(info);
 
@@ -309,7 +306,7 @@ namespace Hazelcast.Clustering
             return client;
         }
 
-        // TODO: implement (and for client etc)
+        // TODO: wtf
         private void EnsureActive() { } // supposed to validate that the client is still active?
 
         private void HandleClientShutdown(Client client)

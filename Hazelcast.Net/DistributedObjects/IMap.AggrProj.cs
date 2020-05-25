@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregators;
 using Hazelcast.Predicates;
@@ -28,13 +30,80 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="aggregator">The aggregator.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The result of the aggregation.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="aggregator"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Aggregates values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="aggregator">The aggregator.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The result of the aggregation.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="aggregator"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Aggregates values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="aggregator">The aggregator.</param>
         /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <returns>The result of the aggregation.</returns>
         /// <remarks>
         /// <para>The <paramref name="aggregator"/> and <paramref name="predicate"/> must be
         /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
         /// </remarks>
-        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate = null);
+        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Aggregates values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="aggregator">The aggregator.</param>
+        /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The result of the aggregation.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="aggregator"/> and <paramref name="predicate"/> must be
+        /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Projects values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="projection">The projection.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The projected values.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="projection"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Projects values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="projection">The projection.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The projected values.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="projection"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, CancellationToken cancellationToken);
 
         /// <summary>
         /// Projects values.
@@ -42,11 +111,26 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="projection">The projection.</param>
         /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <returns>The projected values.</returns>
         /// <remarks>
         /// <para>The <paramref name="projection"/> and <paramref name="predicate"/> must be
         /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate = null);
+        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Projects values.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="projection">The projection.</param>
+        /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The projected values.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="projection"/> and <paramref name="predicate"/> must be
+        /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, CancellationToken cancellationToken);
     }
 }

@@ -61,9 +61,11 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <param name="name">The unique name of the object.</param>
         /// <param name="remote">Whether to create the object remotely too.</param>
         /// <param name="factory">The object factory.</param>
-        /// <returns></returns>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The distributed object.</returns>
         public async ValueTask<T> GetOrCreateAsync<T>(string serviceName, string name, bool remote,
-                                                      Func<string, Cluster, ISerializationService, ILoggerFactory, T> factory)
+                                                      Func<string, Cluster, ISerializationService, ILoggerFactory, T> factory,
+                                                      CancellationToken cancellationToken)
             where T: DistributedObjectBase
         {
             var k = new DistributedObjectInfo(serviceName, name);
@@ -77,7 +79,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
                     XConsole.WriteLine(this, "Send initialize request");
-                    _ = await _cluster.SendAsync(requestMessage);
+                    _ = await _cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
                     XConsole.WriteLine(this, "Rcvd initialize response");
                 }
 
@@ -91,7 +93,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             DistributedObjectBase o;
             try
             {
-                o = await _objects.GetOrAdd(k, _ => CreateAsync());
+                o = await _objects.GetOrAdd(k, _ => CreateAsync()).ConfigureAwait(false);
             }
             catch
             {
@@ -114,13 +116,13 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <remarks>
         /// <para>This is used when connecting to a new cluster.</para>
         /// </remarks>
-        public async ValueTask CreateAllAsync()
+        public async ValueTask CreateAllAsync(CancellationToken cancellationToken)
         {
             foreach (var (o, _) in _objects)
             {
                 // TODO: what-if some succeed and some fail?
                 var requestMessage = ClientCreateProxyCodec.EncodeRequest(o.Name, o.ServiceName);
-                await _cluster.SendAsync(requestMessage);
+                await _cluster.SendAsync(requestMessage, cancellationToken);
             }
         }
 

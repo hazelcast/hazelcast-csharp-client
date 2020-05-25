@@ -424,6 +424,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         private bool ShouldRetry(Invocation invocation, Exception exception)
         {
+            // FIXME retry on same client or different?
             switch (exception)
             {
                 case IOException _:

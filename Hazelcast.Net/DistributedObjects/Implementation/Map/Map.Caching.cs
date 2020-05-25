@@ -12,37 +12,68 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {
-    // partial: caching
-    internal partial class Map<TKey, TValue>
+    // ReSharper disable once UnusedTypeParameter
+    internal partial class Map<TKey, TValue> // Caching
     {
         /// <inheritdoc />
-        public async Task<bool> EvictAsync(TKey key)
+        public async Task<bool> EvictAsync(TKey key, TimeSpan timeout = default)
         {
             var keyData = ToSafeData(key);
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
 
             var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellation.Token).OrTimeout(cancellation).ConfigureAwait(false);
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
 
         /// <inheritdoc />
-        public async Task EvictAllAsync()
+        public async Task<bool> EvictAsync(TKey key, CancellationToken cancellationToken)
         {
-            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage);
+            var keyData = ToSafeData(key);
+
+            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).ConfigureAwait(false);
+            var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
         /// <inheritdoc />
-        public async Task FlushAsync()
+        public async Task EvictAllAsync(TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
+            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task EvictAllAsync(CancellationToken cancellationToken)
+        {
+            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
+            await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task FlushAsync(TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var requestMessage = MapFlushCodec.EncodeRequest(Name);
+            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task FlushAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapFlushCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage);
+            await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
         }
     }
 }

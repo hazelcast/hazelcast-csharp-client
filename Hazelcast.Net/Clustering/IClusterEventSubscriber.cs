@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Clustering
@@ -25,7 +26,8 @@ namespace Hazelcast.Clustering
         /// Subscribes to events.
         /// </summary>
         /// <param name="cluster">The cluster.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when events have been subscribed to.</returns>
-        Task SubscribeAsync(Cluster cluster);
+        Task SubscribeAsync(Cluster cluster, CancellationToken cancellationToken);
     }
 }

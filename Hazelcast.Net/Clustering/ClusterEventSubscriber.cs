@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
@@ -64,7 +65,7 @@ namespace Hazelcast.Clustering
         }
 
         /// <inheritdoc />
-        public async Task SubscribeAsync(Cluster cluster)
+        public async Task SubscribeAsync(Cluster cluster, CancellationToken cancellationToken)
         {
             if (_subscribeAsync != null)
             {
@@ -76,7 +77,7 @@ namespace Hazelcast.Clustering
                     ? Services.CreateInstance<IClusterEventSubscriber>(_typename)
                     : Services.CreateInstance<IClusterEventSubscriber>(_type));
 
-                await subscriber.SubscribeAsync(cluster);
+                await subscriber.SubscribeAsync(cluster, cancellationToken);
             }
         }
     }

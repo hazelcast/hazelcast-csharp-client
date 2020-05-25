@@ -1,4 +1,8 @@
-﻿using Hazelcast.Clustering;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -34,11 +38,38 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         { }
 
         /// <inheritdoc />
-        public void Publish(T message)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task PublishAsync(T message, TimeSpan timeout)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = PublishAsync(message, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.ConfigureAwait(false);
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task PublishAsync(T message, CancellationToken cancellationToken)
         {
             var messageData = ToSafeData(message);
             var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
-            _ = Cluster.SendAsync(requestMessage);
+            var task = Cluster.SendAsync(requestMessage, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.ConfigureAwait(false);
+#endif
         }
     }
 }

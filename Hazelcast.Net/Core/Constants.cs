@@ -54,5 +54,16 @@ namespace Hazelcast.Core
             /// </summary>
             public const int WaitForClientMilliseconds = 1_000;
         }
+
+        /// <summary>
+        /// Defines constants for distributed objects.
+        /// </summary>
+        public static class DistributedObjects
+        {
+            /// <summary>
+            /// Default timeout for operations.
+            /// </summary>
+            public const int DefaultOperationTimeoutMilliseconds = 60_000;
+        }
     }
 }

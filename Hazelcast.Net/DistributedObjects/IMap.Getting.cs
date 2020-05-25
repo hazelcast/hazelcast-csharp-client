@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data.Map;
 using Hazelcast.Predicates;
@@ -26,8 +28,19 @@ namespace Hazelcast.DistributedObjects
         /// Gets the value for a key, or null if the map does not contain an entry with this key.
         /// </summary>
         /// <param name="key">The key.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
-        Task<TValue> GetAsync(TKey key);
+        Task<TValue> GetAsync(TKey key, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets the value for a key, or null if the map does not contain an entry with this key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
+        Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken);
+
+        // FIXME HERE CONTINUE WITH MAP
 
         /// <summary>
         /// Gets all entries for keys.

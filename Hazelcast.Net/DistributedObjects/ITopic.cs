@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -52,6 +53,12 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>
-        void Publish(T message);
+        /// <param name="timeout">A timeout.</param>
+        Task PublishAsync(T message, TimeSpan timeout);
+
+        /// <summary>Publishes the message to all subscribers of this topic</summary>
+        /// <param name="message"></param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        Task PublishAsync(T message, CancellationToken cancellationToken);
     }
 }

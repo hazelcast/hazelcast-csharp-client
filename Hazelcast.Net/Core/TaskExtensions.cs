@@ -9,6 +9,8 @@ namespace Hazelcast.Core
     /// </summary>
     public static class TaskExtensions
     {
+        // TODO: consider removing this code (prob not safe anyways)
+        /*
         public static async Task WithTimeout(this Task task, int timeoutMilliseconds, CancellationTokenSource taskCancel = null)
         {
             using var timeoutCancel = new CancellationTokenSource();
@@ -37,7 +39,9 @@ namespace Hazelcast.Core
             {
                 await task;
             }
-            catch (OperationCanceledException) { /* expected */ } // FIXME but we want to know where?
+            catch (OperationCanceledException) {
+                // expected // FIXME but we want to know where?
+            }
             catch (Exception e)
             {
                 throw new TimeoutException("Operation timed out, see inner exception.", e);
@@ -93,7 +97,14 @@ namespace Hazelcast.Core
 
             throw new TimeoutException();
         }
+        */
 
+        /// <summary>
+        /// Configures a task to handle timeouts.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <param name="cts">A cancellation token source controlling the timeout.</param>
+        /// <returns>A task.</returns>
         public static Task OrTimeout(this Task task, TimeoutCancellationTokenSource cts)
         {
             return task.ContinueWith(x =>
@@ -117,6 +128,12 @@ namespace Hazelcast.Core
             }, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
         }
 
+        /// <summary>
+        /// Configures a task to handle timeouts.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <param name="cts">A cancellation token source controlling the timeout.</param>
+        /// <returns>A task.</returns>
         public static Task<T> OrTimeout<T>(this Task<T> task, TimeoutCancellationTokenSource cts)
         {
             return task.ContinueWith(x =>
@@ -140,8 +157,64 @@ namespace Hazelcast.Core
             }, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
         }
 
-        // TODO: consider removing this code
-        /*
+        /// <summary>
+        /// Configures a task to handle timeouts.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <param name="cts">A cancellation token source controlling the timeout.</param>
+        /// <returns>A task.</returns>
+        public static Task OrTimeout(this Task task, CancellationTokenSource cts)
+        {
+            return task.ContinueWith(x =>
+            {
+                var notTimedOut = !x.IsCanceled;
+                cts.Dispose();
+
+                if (notTimedOut) return x;
+
+                try
+                {
+                    // this is the way to get the original exception with correct stack trace
+                    task.GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    throw new TimeoutException("Operation timed out (see inner exception).", e);
+                }
+
+                throw new TimeoutException("Operation timed out");
+            }, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
+        }
+
+        /// <summary>
+        /// Configures a task to handle timeouts.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <param name="cts">A cancellation token source controlling the timeout.</param>
+        /// <returns>A task.</returns>
+        public static Task<T> OrTimeout<T>(this Task<T> task, CancellationTokenSource cts)
+        {
+            return task.ContinueWith(x =>
+            {
+                var notTimedOut = !x.IsCanceled;
+                cts.Dispose();
+
+                if (notTimedOut) return x;
+
+                try
+                {
+                    // this is the way to get the original exception with correct stack trace
+                    task.GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    throw new TimeoutException("Operation timed out (see inner exception).", e);
+                }
+
+                throw new TimeoutException("Operation timed out");
+            }, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
+        }
+
         public static Task ThenDispose(this Task task, IDisposable disposable)
         {
             return task.ContinueWith(x =>
@@ -179,6 +252,5 @@ namespace Hazelcast.Core
                 return x;
             }, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
         }
-        */
     }
 }

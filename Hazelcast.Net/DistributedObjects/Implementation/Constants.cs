@@ -14,7 +14,7 @@
 
 namespace Hazelcast.DistributedObjects.Implementation
 {
-    internal static class Constants // FIXME CLEAR THIS
+    internal static class Conztants // FIXME CLEAR THIS
     {
         /// <summary>
         /// Defines service name constants.
