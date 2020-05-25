@@ -179,7 +179,15 @@ namespace Hazelcast.Networking
             XConsole.WriteLine(this, "Accept connection");
 
             // signal the main thread to continue
-            _accepted.Set();
+            try
+            {
+                _accepted.Set();
+            }
+            catch
+            {
+                // can happen if the listener has been disposed
+                // ignore
+            }
 
             // get the socket that handles the client request
             var listener = (Socket) result.AsyncState;
