@@ -40,11 +40,11 @@ namespace Hazelcast.Core
         /// <param name="semaphore">The semaphore.</param>
         /// <returns>A <see cref="LockAcquisition"/> instance that needs to be disposed to release the lock.</returns>
 #if OPTIMIZE_ASYNC
-        public static ValueTask<LockAcquisition> TryWaitAsync(SemaphoreSlim semaphore)
-            => new LockAcquisition(semaphore).TryWaitAsync();
+        public static ValueTask<LockAcquisition> TryLockAsync(SemaphoreSlim semaphore)
+            => new LockAcquisition(semaphore).TryLockAsync();
 #else
-        public static async ValueTask<LockAcquisition> TryWaitAsync(SemaphoreSlim semaphore)
-            => await new LockAcquisition(semaphore).TryWaitAsync();
+        public static async ValueTask<LockAcquisition> TryLockAsync(SemaphoreSlim semaphore)
+            => await new LockAcquisition(semaphore).TryLockAsync();
 #endif
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Asynchronous tries to enter the lock.
+        /// Asynchronous tries to immediately enter the lock.
         /// </summary>
         /// <returns>A <see cref="LockAcquisition"/> instance that must be disposed to exit the lock.</returns>
         /// <remarks>
@@ -72,7 +72,7 @@ namespace Hazelcast.Core
         /// or it does not enter. If the lock is not entered, nothing will happen when the
         /// acquisition is disposed.</para>
         /// </remarks>
-        private async ValueTask<LockAcquisition> TryWaitAsync()
+        private async ValueTask<LockAcquisition> TryLockAsync()
         {
             Acquired = await _semaphore.WaitAsync(0);
             return this;

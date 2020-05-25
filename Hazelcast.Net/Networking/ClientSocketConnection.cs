@@ -15,8 +15,10 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Logging;
+using Hazelcast.Core;
 
 namespace Hazelcast.Networking
 {
@@ -47,12 +49,13 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Connect to the server.
         /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the connection has been established.</returns>
         /// <remarks>
         /// <para>The connection can only be established after its <see cref="SocketConnectionBase.OnReceiveMessageBytes"/> handler
         /// has been set. If the handler has not been set, an exception is thrown.</para>
         /// </remarks>
-        public async ValueTask ConnectAsync()
+        public async ValueTask ConnectAsync(CancellationToken cancellationToken)
         {
             XConsole.WriteLine(this, "Open");
 
@@ -64,7 +67,7 @@ namespace Hazelcast.Networking
 
             // connect to server
             XConsole.WriteLine(this, "Connect to server");
-            await socket.ConnectAsync(_endpoint);
+            await socket.ConnectAsync(_endpoint, cancellationToken);
             XConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream

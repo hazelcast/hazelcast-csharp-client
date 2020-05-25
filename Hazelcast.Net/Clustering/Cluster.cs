@@ -24,7 +24,6 @@ namespace Hazelcast.Clustering
         // member id -> client
         // the master clients list
         private readonly ConcurrentDictionary<Guid, Client> _clients = new ConcurrentDictionary<Guid, Client>();
-        private readonly object _clientsLock = new object();
 
         // address -> client
         // used for fast querying of _memberClients by network address
@@ -53,22 +52,31 @@ namespace Hazelcast.Clustering
         private readonly AddressProvider _addressProvider;
         private readonly ISerializationService _serializationService;
         private readonly ClientOptions _clientOptions;
+        private readonly ReconnectMode _reconnectMode;
 
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
 
         private IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
+        private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
+
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Func<ValueTask> _onConnectionToNewCluster;
 
-        private readonly object _clusterEventsLock = new object();
+        private readonly object _clusterStateLock = new object(); // general cluster state lock
+        private volatile ClusterState _clusterState = ClusterState.NotConnected; // cluster state
+        private Task _connectClusterTask; // the task that connects the cluster
+        private bool _connectTaskCancel; // cancellation of that task
+
+        private readonly object _clusterEventsLock = new object(); // lock for events
         private Client _clusterEventsClient; // the client which handles 'cluster events'
         private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
+        private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
+        private bool _clusterEventsCancel; // cancellation of that task
 
         private MemberTable _memberTable;
         private Guid _clusterServerSideId; // the server-side identifier of the cluster
-        private int _connected;
         private int _disposed;
 
         private volatile int _firstMembersViewed;
@@ -117,6 +125,7 @@ namespace Hazelcast.Clustering
             _authenticator = securityConfiguration.Authenticator.Create();
             _loadBalancer = loadBalancingConfiguration.LoadBalancer.Create();
             _addressProvider = new AddressProvider(networkingConfiguration, loggerFactory);
+            _reconnectMode = networkingConfiguration.ReconnectMode;
 
             _clientOptions = new ClientOptions(networkingConfiguration.RedoOperation);
 
@@ -185,7 +194,7 @@ namespace Hazelcast.Clustering
         /// then behaves as a gateway for the other members. Firewalls, security, or some
         /// custom networking issues can be the reason for these cases.</para>
         /// </remarks>
-        public bool IsSmartRouting { get; } = true;
+        public bool IsSmartRouting { get; }
 
         /// <summary>
         /// Gets the partitioner.
@@ -204,6 +213,12 @@ namespace Hazelcast.Clustering
                 return;
 
             // FIXME: implement
+
+            // stop that task
+            _clusterEventsCancel = true;
+            var ensureClusterEventsClient = _clusterEventsTask;
+            if (ensureClusterEventsClient != null)
+                await ensureClusterEventsClient;
 
             // can we "just" dispose each client?
             //foreach (var (_, client ) in _clients)

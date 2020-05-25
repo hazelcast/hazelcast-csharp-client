@@ -103,7 +103,7 @@ namespace Hazelcast.Core
             /// <summary>
             /// Gets the environment variable name of the default invocation retry delay.
             /// </summary>
-            public const string DefaultRetryDelayMillisecondsName =
+            public const string MinRetryDelayMillisecondsName =
                 "hazelcast.client.invocation.retry.pause.millis";
 
             /// <summary>
@@ -115,7 +115,7 @@ namespace Hazelcast.Core
             /// <summary>
             /// Gets the default invocation retry delay.
             /// </summary>
-            public static int? DefaultRetryDelayMilliseconds => GetInt32(DefaultRetryDelayMillisecondsName);
+            public static int? MinRetryDelayMilliseconds => GetInt32(MinRetryDelayMillisecondsName);
 
             /// <summary>
             /// Gets the default invocation timeout.

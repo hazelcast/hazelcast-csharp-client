@@ -23,7 +23,7 @@ namespace Hazelcast.Networking
     {
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
 
-        private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask<bool>> _onReceiveMessageBytes;
+        private Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, ValueTask<bool>> _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
         private Action<SocketConnectionBase> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
@@ -59,7 +59,7 @@ namespace Hazelcast.Networking
         /// function has returned.</para>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask<bool>> OnReceiveMessageBytes
+        public Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, ValueTask<bool>> OnReceiveMessageBytes
         {
             get => _onReceiveMessageBytes;
             set
@@ -437,7 +437,7 @@ namespace Hazelcast.Networking
             try
             {
                 // handle the bytes (and slice the buffer accordingly)
-                return await _onReceiveMessageBytes(this, state.Buffer);
+                return await _onReceiveMessageBytes(this, state);
             }
             catch (Exception e)
             {
@@ -452,7 +452,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Represents the state of the reading loop.
         /// </summary>
-        private sealed class ReadPipeState
+        private sealed class ReadPipeState : IBufferReference<ReadOnlySequence<byte>>
         {
             /// <summary>
             /// Gets or sets the pipe reader.
@@ -462,9 +462,7 @@ namespace Hazelcast.Networking
             /// <summary>
             /// Gets or sets the current buffer.
             /// </summary>
-            [SuppressMessage("NDepend", "ND1805:FieldsShouldBeDeclaredAsPrivate", Justification =
-                "Has to be a field so we can pass it as a 'ref' to avoid copying the struct.")]
-            public ReadOnlySequence<byte> Buffer;
+            public ReadOnlySequence<byte> Buffer { get; set; }
 
             /// <summary>
             /// Determines whether reading has failed.

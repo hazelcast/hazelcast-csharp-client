@@ -76,7 +76,8 @@ namespace Hazelcast.Partitioning
         /// <param name="partitionsMap">The partitions map.</param>
         public void NotifyPartitionView(Guid originClientId, int version, Dictionary<int, Guid> partitionsMap)
         {
-            XConsole.WriteLine(this, $"PARTITIONS\n\tv{version}\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
+            XConsole.WriteLine(this, $"Received partition table v{version}");
+            XConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
 
             lock (_partitionsLock) // one at a time please
             {

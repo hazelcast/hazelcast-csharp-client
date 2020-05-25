@@ -16,7 +16,10 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -123,12 +126,13 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start client 1");
             var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync();
+            await client1.ConnectAsync(CancellationToken.None);
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = ClientPingServerCodec.EncodeRequest();
 
-            Assert.ThrowsAsync<TimeoutException>(async () => await client1.SendAsync(message, 3));
+            var token = new CancellationTokenSource(3_000).Token;
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await client1.SendAsync(message, token));
 
             // TODO dispose the client, the server
             await server.StopAsync();
@@ -172,12 +176,13 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start client 1");
             var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync();
+            await client1.ConnectAsync(CancellationToken.None);
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = ClientPingServerCodec.EncodeRequest();
 
-            await client1.SendAsync(message, 3); // default is 120s
+            var token = new CancellationTokenSource(3_000).Token;
+            await client1.SendAsync(message, token); // default is 120s
 
             NUnit.Framework.Assert.AreEqual(4, count);
 
@@ -186,7 +191,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(20_000)]
         public async Task TimeoutsIfServerIsTooSlow()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
@@ -214,14 +219,15 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start client 1");
             var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync();
+            await client1.ConnectAsync(CancellationToken.None);
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = ClientPingServerCodec.EncodeRequest();
 
-            Assert.ThrowsAsync<TimeoutException>(async () =>
+            Assert.ThrowsAsync<TaskCanceledException>(async () =>
             {
-                await client1.SendAsync(message, 3); // default is 120s
+                var token = new CancellationTokenSource(3_000).Token;
+                await client1.SendAsync(message, token); // default is 120s
             });
 
             // TODO dispose the client, the server
@@ -250,27 +256,27 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start client 1");
             var client1 = new Clustering.Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync();
+            await client1.ConnectAsync(CancellationToken.None);
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
-            var response = await client1.SendAsync(message);
+            var response = await client1.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
             var client2 = new Clustering.Client(address, corSequence, conSequence, new ClientOptions(),  new NullLoggerFactory());
-            await client2.ConnectAsync();
+            await client2.ConnectAsync(CancellationToken.None);
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
             message = CreateMessage("a");
-            response = await client2.SendAsync(message);
+            response = await client2.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("foo");
-            response = await client1.SendAsync(message);
+            response = await client1.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
@@ -300,11 +306,11 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start client 1");
             var client1 = new Clustering.Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
-            await client1.ConnectAsync();
+            await client1.ConnectAsync(CancellationToken.None);
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
-            var response = await client1.SendAsync(message);
+            var response = await client1.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
@@ -314,7 +320,7 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message));
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message, CancellationToken.None));
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
@@ -333,7 +339,7 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start client ");
             var client1 = new Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
-            await client1.ConnectAsync();
+            await client1.ConnectAsync(CancellationToken.None);
 
             // RC assigns a GUID but the default cluster name is 'dev'
             var clusterName = "dev";
@@ -347,7 +353,7 @@ namespace Hazelcast.Tests
             var labels = new HashSet<string>();
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             XConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client1.SendAsync(requestMessage);
+            var responseMessage = await client1.SendAsync(requestMessage, CancellationToken.None);
             XConsole.WriteLine(this, "Rcvd auth response " +
                                      XConsole.Lines(this, 1, responseMessage.Dump()));
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
@@ -431,7 +437,7 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             // connect to real server
             var address = NetworkAddress.Parse("127.0.0.1:5701");
             var client1 = new Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
-            await client1.ConnectAsync();
+            await client1.ConnectAsync(CancellationToken.None);
             /*
             // send poison
             var message = new Message(new Frame(new byte[12]));
@@ -470,5 +476,97 @@ java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.Hazel
             NUnit.Framework.Assert.AreEqual(origin, value);
         }
 
+        [Test]
+        [Timeout(20_000)]
+        public async Task SocketTimeout1()
+        {
+            var server = new Server(NetworkAddress.Parse("127.0.0.1:11000"), (connection, message) => new ValueTask(), LoggerFactory);
+            await server.StartAsync();
+
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            // server is listening, can connect within 1s timeout
+            await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000);
+
+            socket.Close();
+            await server.StopAsync();
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public void SocketTimeout2()
+        {
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            // server is not listening, connecting results in timeout after 1s
+            Assert.ThrowsAsync<TimeoutException>(async () =>
+            {
+                await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000);
+            });
+
+            // socket has been properly closed and disposed
+            Assert.Throws<ObjectDisposedException>(() =>
+            {
+                socket.Send(Array.Empty<byte>());
+            });
+
+            // can dispose multiple times
+            socket.Close();
+            socket.Dispose();
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public async Task SocketTimeout3()
+        {
+            var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            serverSocket.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000));
+            serverSocket.Listen(1);
+            serverSocket.BeginAccept(result =>
+            {
+                var listener = (Socket) result.AsyncState;
+                Thread.Sleep(1000);
+                listener.EndAccept(result);
+            }, serverSocket);
+
+            var socket1 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            await socket1.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000);
+
+            var socket2 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            await socket2.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000);
+
+            Assert.ThrowsAsync<TimeoutException>(async () =>
+            {
+                var socket3 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                await socket3.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000);
+            });
+        }
+
+        [Test]
+        [Timeout(60_000)]
+        public async Task SocketTimeout4()
+        {
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            try
+            {
+                await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 60_000);
+                Assert.Fail("Expected an exception.");
+            }
+            catch (TimeoutException)
+            {
+                Assert.Fail("Did not expect TimeoutException.");
+            }
+            catch (Exception e)
+            {
+                // ok
+            }
+
+            // socket is not ready (but not disposed)
+            Assert.Throws<SocketException>(() =>
+            {
+                socket.Send(Array.Empty<byte>());
+            });
+        }
     }
 }

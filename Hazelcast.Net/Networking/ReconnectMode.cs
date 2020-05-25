@@ -25,7 +25,7 @@ namespace Hazelcast.Networking
         DoNotReconnect,
 
         /// <summary>
-        /// Reconnect while block invocations.
+        /// Reconnect while blocking invocations.
         /// </summary>
         ReconnectSync,
 

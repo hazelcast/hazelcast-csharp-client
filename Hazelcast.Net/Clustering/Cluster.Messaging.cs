@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Serialization;
 
@@ -8,17 +9,41 @@ namespace Hazelcast.Clustering
     // partial: messaging
     public partial class Cluster
     {
+        private TimeoutCancellationTokenSource CreateTimeoutCancellationTokenSource(int timeoutSeconds)
+        {
+            var timeout = timeoutSeconds * 1000; // FIXME: why are we not getting a timespan? + other methods
+            if (timeout == 0) timeout = Constants.Invocation.DefaultTimeoutSeconds;
+            return _clusterCancellation.WithTimeout(timeout);
+        }
+
         /// <summary>
         /// Sends a message to a random target.
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+#if OPTIMIZE_ASYNC
+        public ValueTask<ClientMessage> SendAsync(ClientMessage message, int timeoutSeconds = 0)
+#else
         public async ValueTask<ClientMessage> SendAsync(ClientMessage message, int timeoutSeconds = 0)
+#endif
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            return await GetRandomClient().SendAsync(message, _correlationIdSequence.Next, timeoutSeconds);
+            var cancellation = CreateTimeoutCancellationTokenSource(timeoutSeconds);
+
+#if OPTIMIZE_ASYNC
+            return
+#else
+            return await
+#endif
+                    GetRandomClient()
+                        .SendAsync(message, _correlationIdSequence.Next, cancellation.Token)
+                        .OrTimeout(cancellation)
+#if !OPTIMIZE_ASYNC
+                        .ConfigureAwait(false)
+#endif
+                ;
         }
 
         /// <summary>
@@ -32,7 +57,11 @@ namespace Hazelcast.Clustering
         /// <para>If <paramref name="memberId"/> is the default value, sends the message to a random member. If it
         /// is an unknown member, sends the message to a random number too.</para>
         /// </remarks>
+#if OPTIMIZE_ASYNC
+        public ValueTask<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, int timeoutSeconds = 0)
+#else
         public async ValueTask<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, int timeoutSeconds = 0)
+#endif
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -43,7 +72,20 @@ namespace Hazelcast.Clustering
 
             if (client == null) throw new InvalidOperationException("Could not get a client.");
 
-            return await client.SendAsync(message, _correlationIdSequence.Next, timeoutSeconds);
+            var cancellation = CreateTimeoutCancellationTokenSource(timeoutSeconds);
+
+#if OPTIMIZE_ASYNC
+            return
+#else
+            return await
+#endif
+                    client
+                        .SendAsync(message, _correlationIdSequence.Next, cancellation.Token)
+                        .OrTimeout(cancellation)
+#if !OPTIMIZE_ASYNC
+                        .ConfigureAwait(false)
+#endif
+                ;
         }
 
         /// <summary>
@@ -53,12 +95,29 @@ namespace Hazelcast.Clustering
         /// <param name="client">The target.</param>
         /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+#if OPTIMIZE_ASYNC
+        public ValueTask<ClientMessage> SendToClientAsync(ClientMessage message, Client client, int timeoutSeconds = 0)
+#else
         public async ValueTask<ClientMessage> SendToClientAsync(ClientMessage message, Client client, int timeoutSeconds = 0)
+#endif
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
 
-            return await client.SendAsync(message, _correlationIdSequence.Next, true, timeoutSeconds);
+            var cancellation = CreateTimeoutCancellationTokenSource(timeoutSeconds);
+
+#if OPTIMIZE_ASYNC
+            return
+#else
+            return await
+#endif
+                    client
+                        .SendAsync(message, _correlationIdSequence.Next, true, cancellation.Token)
+                        .OrTimeout(cancellation)
+#if !OPTIMIZE_ASYNC
+                        .ConfigureAwait(false)
+#endif
+                ;
         }
 
         /// <summary>
@@ -68,7 +127,11 @@ namespace Hazelcast.Clustering
         /// <param name="key">The key.</param>
         /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+#if OPTIMIZE_ASYNC
+        public ValueTask<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, int timeoutSeconds = 0)
+#else
         public async ValueTask<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, int timeoutSeconds = 0)
+#endif
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -76,7 +139,16 @@ namespace Hazelcast.Clustering
             var partitionId = Partitioner.GetPartitionId(key);
             if (partitionId < 0) throw new ArgumentException("Could not get a partition for this key.", nameof(key));
 
-            return await SendToPartitionOwnerAsync(message, partitionId, timeoutSeconds);
+#if OPTIMIZE_ASYNC
+            return
+#else
+            return await
+#endif
+                    SendToPartitionOwnerAsync(message, partitionId, timeoutSeconds)
+#if !OPTIMIZE_ASYNC
+                        .ConfigureAwait(false)
+#endif
+                ;
         }
 
         /// <summary>
@@ -86,7 +158,11 @@ namespace Hazelcast.Clustering
         /// <param name="partitionId">The identifier of the partition.</param>
         /// <param name="timeoutSeconds">The optional maximum number of seconds to get a response.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+#if OPTIMIZE_ASYNC
+        public ValueTask<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, int timeoutSeconds = 0)
+#else
         public async ValueTask<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, int timeoutSeconds = 0)
+#endif
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
@@ -94,9 +170,19 @@ namespace Hazelcast.Clustering
             message.PartitionId = partitionId;
 
             var memberId = Partitioner.GetPartitionOwner(partitionId);
-            return await (memberId == default
-                ? SendAsync(message, timeoutSeconds)
-                : SendToMemberAsync(message, memberId, timeoutSeconds));
+
+#if OPTIMIZE_ASYNC
+            return
+#else
+            return await
+#endif
+                    (memberId == default
+                        ? SendAsync(message, timeoutSeconds)
+                        : SendToMemberAsync(message, memberId, timeoutSeconds))
+#if !OPTIMIZE_ASYNC
+                    .ConfigureAwait(false)
+#endif
+                ;
         }
     }
 }

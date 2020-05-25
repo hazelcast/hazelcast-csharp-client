@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
@@ -80,7 +81,7 @@ namespace Hazelcast.Clustering
         }
 
         /// <inheritdoc />
-        public async ValueTask<bool> WaitAsync()
+        public async ValueTask<bool> WaitAsync(CancellationToken cancellationToken)
         {
             _attempts++;
 
@@ -99,10 +100,16 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await Task.Delay(delay);
+                await Task.Delay(delay, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {_timeout} ms, was cancelled.");
+                return false;
             }
             catch (Exception)
             {
+                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {_timeout} ms, error.");
                 return false;
             }
 

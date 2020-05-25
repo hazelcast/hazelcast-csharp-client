@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Core
@@ -24,11 +25,12 @@ namespace Hazelcast.Core
         /// <summary>
         /// Waits before retrying.
         /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>Whether it is ok to retry.</returns>
         /// <remarks>
         /// <para>Returns false when the timeout has been reached.</para>
         /// </remarks>
-        ValueTask<bool> WaitAsync();
+        ValueTask<bool> WaitAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Restarts the strategy.

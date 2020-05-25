@@ -75,13 +75,14 @@ namespace Hazelcast.Messaging
             }
         }
 
-        private async ValueTask<bool> ReceiveMessageBytesAsync(SocketConnectionBase connection, ReadOnlySequence<byte> bytes)
+        private async ValueTask<bool> ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference<ReadOnlySequence<byte>> bufferReference)
         {
-            XConsole.WriteLine(this, $"Received {bytes.Length} bytes");
+            XConsole.WriteLine(this, $"Received {bufferReference.Buffer.Length} bytes");
+            var bytes = bufferReference.Buffer;
 
             if (_bytesLength < 0)
             {
-                if (bytes.Length < FrameFields.SizeOf.LengthAndFlags)
+                if (bufferReference.Buffer.Length < FrameFields.SizeOf.LengthAndFlags)
                     return false;
 
                 var frameLength = Frame.ReadLength(ref bytes);
@@ -110,13 +111,17 @@ namespace Hazelcast.Messaging
                 }
             }
 
+            bufferReference.Buffer = bytes;
+
             // TODO: consider buffering here
             // at the moment we are buffering in the pipe, but we have already
             // created the byte array, so ... might be nicer to copy now
-            if (bytes.Length < _bytesLength)
+            if (bufferReference.Buffer.Length < _bytesLength)
                 return false;
 
             bytes.Fill(_currentFrame.Bytes);
+            bufferReference.Buffer = bytes;
+
             _bytesLength = -1;
             XConsole.WriteLine(this, $"Frame is complete");
 

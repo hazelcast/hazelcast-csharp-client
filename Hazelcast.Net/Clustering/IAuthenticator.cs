@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Serialization;
 
@@ -34,7 +36,8 @@ namespace Hazelcast.Clustering
         /// <param name="clusterClientName">The cluster client name, as assigned by the client.</param>
         /// <param name="labels">The client labels.</param>
         /// <param name="serializationService">The serialization service.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is authenticated.</returns>
-        ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService);
+        ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken);
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Testing
@@ -26,5 +28,26 @@ namespace Hazelcast.Tests.Testing
             // test method properties are immediately available
             Assert.AreEqual("method", TestContext.CurrentContext.Test.Properties["METHOD"]?.FirstOrDefault());
         }
+
+        [Test]
+        [Explicit("throws")]
+        public async Task Timeout()
+        {
+            // NUnit *does* show the timeout exception here
+
+            await Task.Delay(100).ContinueWith(x =>
+            {
+                try
+                {
+                    Throw();
+                }
+                catch (Exception e)
+                {
+                    throw new TimeoutException("timeout", e);
+                }
+            });
+        }
+
+        private void Throw() => throw new Exception("bang");
     }
 }

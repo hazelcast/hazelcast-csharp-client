@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
@@ -21,7 +22,7 @@ namespace Hazelcast.Clustering
         {
             // capture active clients, and adds the subscription - atomically.
             List<Client> clients;
-            lock (_clientsLock)
+            lock (_clusterStateLock)
             {
                 clients = _clients.Values.Where(x => x.Active).ToList();
 
@@ -44,7 +45,7 @@ namespace Hazelcast.Clustering
                 if (!client.Active) continue;
 
                 // this never throws
-                var attempt = await InstallSubscriptionOnClientAsync(subscription, client);
+                var attempt = await InstallSubscriptionOnClientAsync(subscription, client, CancellationToken.None); // FIXME TOKEN
 
                 switch (attempt.Result)
                 {
@@ -106,7 +107,7 @@ namespace Hazelcast.Clustering
             // so whatever happens, nothing remains of the original subscription
             // (but the client may be "dirty" ie the server may still think it needs
             // to send events, which will be ignored)
-            lock (_clientsLock) _subscriptions.TryRemove(subscription.Id, out _);
+            lock (_clusterStateLock) _subscriptions.TryRemove(subscription.Id, out _);
             return allRemoved;
         }
 
@@ -128,7 +129,7 @@ namespace Hazelcast.Clustering
                 if (!subscription.Active) continue;
 
                 // this never throws
-                var attempt = await InstallSubscriptionOnClientAsync(subscription, client);
+                var attempt = await InstallSubscriptionOnClientAsync(subscription, client, CancellationToken.None); // FIXME TOKEN
 
                 switch (attempt.Result)
                 {
@@ -146,12 +147,12 @@ namespace Hazelcast.Clustering
                     case InstallResult.ConfusedServer:
                         // same as subscription not active, but we failed to remove the subscription
                         // on the server side - the client is dirty - just kill it entirely
-                        RemoveClient(subscriptions, client);
+                        ClearClientSubscriptions(subscriptions, client);
                         throw new HazelcastException("Failed to install the new client.");
 
                     case InstallResult.Failed:
                         // failed to talk to the client - nothing works - kill it entirely
-                        RemoveClient(subscriptions, client);
+                        ClearClientSubscriptions(subscriptions, client);
                         throw new HazelcastException("Failed to install the new client.");
 
                     default:
@@ -160,7 +161,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private void RemoveClient(IEnumerable<ClusterSubscription> subscriptions, Client client)
+        private void ClearClientSubscriptions(IEnumerable<ClusterSubscription> subscriptions, Client client)
         {
             foreach (var subscription in subscriptions)
             {
@@ -176,8 +177,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="subscription">The subscription.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client has subscribed to the server event.</returns>
-        private async ValueTask<InstallAttempt> InstallSubscriptionOnClientAsync(ClusterSubscription subscription, Client client)
+        private async ValueTask<InstallAttempt> InstallSubscriptionOnClientAsync(ClusterSubscription subscription, Client client, CancellationToken cancellationToken)
         {
             // if we already know the client is not active anymore, ignore it
             // otherwise, install on this client - may throw if the client goes away in the meantime
@@ -196,7 +198,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // hopefully the client is still active, else this will throw
-                response = await client.SendAsync(subscribeRequest, correlationId);
+                response = await client.SendAsync(subscribeRequest, correlationId, cancellationToken);
             }
             catch (Exception e)
             {
@@ -215,13 +217,14 @@ namespace Hazelcast.Clustering
             // cluster subscription is not active anymore, and so we need to undo the
             // server-side subscription
 
+            // FIXME if the client has died... could we already have removed the subscriptions?!?!
             _correlatedSubscriptions.TryRemove(correlationId, out _);
 
             var unsubscribeRequest = subscription.CreateUnsubscribeRequest(id);
 
             try
             {
-                var unsubscribeResponse = await client.SendAsync(unsubscribeRequest);
+                var unsubscribeResponse = await client.SendAsync(unsubscribeRequest, cancellationToken);
                 var unsubscribed = subscription.DecodeUnsubscribeResponse(unsubscribeResponse);
                 return unsubscribed
                     ? new InstallAttempt(InstallResult.SubscriptionNotActive)
@@ -251,7 +254,7 @@ namespace Hazelcast.Clustering
             // ignore unknown subscriptions
             // don't remove it now - will remove it only if all goes well
             ClusterSubscription subscription;
-            lock (_clientsLock)
+            lock (_clusterStateLock)
             {
                 if (!_subscriptions.TryGetValue(subscriptionId, out subscription))
                     return;
@@ -286,7 +289,7 @@ namespace Hazelcast.Clustering
             // so whatever happens, nothing remains of the original subscription
             // (but the client may be "dirty" ie the server may still think it needs
             // to send events, which will be ignored)
-            lock (_clientsLock) _subscriptions.TryRemove(subscription.Id, out _);
+            lock (_clusterStateLock) _subscriptions.TryRemove(subscription.Id, out _);
 
             // if at least an exception was thrown, rethrow
             if (exceptions != null)
@@ -317,7 +320,8 @@ namespace Hazelcast.Clustering
             _correlatedSubscriptions.TryRemove(clientSubscription.CorrelationId, out _);
 
             // trigger the server-side un-subscribe
-            var responseMessage = await clientSubscription.Client.SendAsync(clientSubscription.ClusterSubscription.CreateUnsubscribeRequest(clientSubscription.ServerSubscriptionId));
+            var unsubscribeRequest = clientSubscription.ClusterSubscription.CreateUnsubscribeRequest(clientSubscription.ServerSubscriptionId);
+            var responseMessage = await clientSubscription.Client.SendAsync(unsubscribeRequest, CancellationToken.None); // FIXME TOKEN
             return clientSubscription.ClusterSubscription.DecodeUnsubscribeResponse(responseMessage);
         }
     }

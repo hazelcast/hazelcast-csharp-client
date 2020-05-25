@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
@@ -24,22 +25,16 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class Invocation
     {
-        private const int MaxFastInvocationCount = 5;
-        private const int DefaultInvocationRetryDelayMilliseconds = 1_000;
-        private const int DefaultDefaultTimeoutSeconds = 120;
-        private static readonly int InvocationRetryDelayMilliseconds;
-        private static readonly int DefaultTimeoutSeconds;
+        private static readonly int MinRetryDelayMilliseconds;
+
+        private readonly CancellationToken _cancellationToken;
 
         /// <summary>
         /// Initializes the <see cref="Invocation"/> class.
         /// </summary>
         static Invocation()
         {
-            InvocationRetryDelayMilliseconds = HazelcastEnvironment.Invocation.DefaultRetryDelayMilliseconds ??
-                                               DefaultInvocationRetryDelayMilliseconds;
-
-            DefaultTimeoutSeconds = HazelcastEnvironment.Invocation.DefaultTimeoutSeconds ??
-                                    DefaultDefaultTimeoutSeconds;
+            MinRetryDelayMilliseconds = Constants.Invocation.MinRetryDelayMilliseconds;
         }
 
         /// <summary>
@@ -47,19 +42,17 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
         /// <param name="boundToClient">Whether the invocation is bound to a client.</param>
-        /// <param name="timeoutSeconds">The timeout in seconds.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>When an invocation is bound to a client, it cannot be retried if the client dies.</para>
-        /// <para>If <paramref name="timeoutSeconds"/> is zero then the timeout is the default timeout.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, bool boundToClient, int timeoutSeconds)
+        public Invocation(ClientMessage requestMessage, bool boundToClient, CancellationToken cancellationToken)
         {
             RequestMessage = requestMessage;
             BoundToClient = boundToClient;
             CorrelationId = requestMessage.CorrelationId;
             CompletionSource = new TaskCompletionSource<ClientMessage>();
-            StartTime = Clock.Milliseconds;
-            TimeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : DefaultTimeoutSeconds;
+            cancellationToken.Register(() => CompletionSource.TrySetCanceled());
             AttemptsCount = 1;
         }
 
@@ -96,18 +89,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the start time.
         /// </summary>
-        public long StartTime { get; }
-
-        /// <summary>
-        /// Gets the timeout in milliseconds.
-        /// </summary>
-        public int TimeoutSeconds { get; }
-
-        /// <summary>
-        /// Gets the remaining time in milliseconds.
-        /// </summary>
-        public int RemainingMilliseconds =>
-            Math.Max(0, 1000 * TimeoutSeconds - (int) (Clock.Milliseconds - StartTime));
+        public long StartTime => Clock.Milliseconds;
 
         /// <summary>
         /// Transition the task to <see cref="TaskStatus.RanToCompletion"/>.
@@ -132,15 +114,11 @@ namespace Hazelcast.Clustering
         {
             AttemptsCount += 1;
 
-            // cannot retry if running out of time
-            if (RemainingMilliseconds == 0)
-                return false;
-
             CompletionSource = new TaskCompletionSource<ClientMessage>();
             RequestMessage.CorrelationId = CorrelationId = correlationIdProvider();
 
             // fast retry (no delay)
-            if (AttemptsCount <= MaxFastInvocationCount)
+            if (AttemptsCount <= Constants.Invocation.MaxFastInvocationCount)
                 return true;
 
             // otherwise, slow retry (delay)
@@ -148,8 +126,10 @@ namespace Hazelcast.Clustering
             // implement some rudimentary increasing delay based on the number of attempts
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this?
-            var delayMilliseconds = Math.Min(1 << (AttemptsCount - MaxFastInvocationCount), InvocationRetryDelayMilliseconds);
-            await System.Threading.Tasks.Task.Delay(delayMilliseconds);
+            var delayMilliseconds = Math.Min(1 << (AttemptsCount - Constants.Invocation.MaxFastInvocationCount), MinRetryDelayMilliseconds);
+            await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken);
+            if (_cancellationToken.IsCancellationRequested) return false;
+            // FIXME: or, would await throw?!
             return true;
         }
     }

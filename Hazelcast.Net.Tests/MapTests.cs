@@ -402,10 +402,10 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceWithValueAsync("a", 1);
             await map.AddOrReplaceWithValueAsync("b", 2);
 
-            await map.UnsubscribeAsync(id);
-
             while (eventsCount < 2)
                 await Task.Delay(500);
+
+            await map.UnsubscribeAsync(id);
 
             await map.AddOrReplaceWithValueAsync("c", 3);
             await Task.Delay(500);

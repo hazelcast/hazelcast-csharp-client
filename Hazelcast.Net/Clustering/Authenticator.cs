@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
@@ -42,11 +44,11 @@ namespace Hazelcast.Clustering
         }
 
         /// <inheritdoc />
-        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService)
+        public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken)
         {
             var credentialsFactory = _configuration.CredentialsFactory.Create();
 
-            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService);
+            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken);
             if (info != null) return info;
 
             if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
@@ -54,7 +56,7 @@ namespace Hazelcast.Clustering
                 resettableCredentialsFactory.Reset();
 
                 // try again
-                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService);
+                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken);
                 if (info != null) return info;
             }
 
@@ -74,7 +76,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, ISerializationService serializationService)
+        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, ISerializationService serializationService, CancellationToken cancellationToken)
         {
             const string clientType = "CSP"; // CSharp
 
@@ -100,8 +102,10 @@ namespace Hazelcast.Clustering
                     break;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             XConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client.SendAsync(requestMessage);
+            var responseMessage = await client.SendAsync(requestMessage, cancellationToken);
             XConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 

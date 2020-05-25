@@ -16,88 +16,81 @@ namespace Hazelcast.Clustering
     public partial class Cluster
     {
         /// <summary>
-        /// Clears the client currently handling cluster events, if it has not changed.
+        /// Clears a client currently handling cluster events.
         /// </summary>
-        /// <param name="client">The expected client.</param>
-        /// <returns>true if the current client matched the expected client, and was cleared; otherwise false.</returns>
-        private bool ClearClusterEventsClient(Client client)
+        /// <param name="client">A client.</param>
+        /// <returns>true if the current client matched the specified client, and was cleared; otherwise false.</returns>
+        private bool ClearClusterEventsClientWithLock(Client client)
         {
-            lock (_clusterEventsLock)
-            {
-                if (_clusterEventsClient != client)
-                    return false;
+            // if the specified client is *not* the cluster events client, ignore
+            if (_clusterEventsClient != client)
+                return false;
 
-                _clusterEventsClient = null;
-                _correlatedSubscriptions.TryRemove(_clusterEventsCorrelationId, out _);
-                _clusterEventsCorrelationId = 0;
-                return true;
-            }
+            // otherwise, clear the cluster event client
+            _clusterEventsClient = null;
+            _correlatedSubscriptions.TryRemove(_clusterEventsCorrelationId, out _);
+            _clusterEventsCorrelationId = 0;
+            return true;
         }
 
         /// <summary>
-        /// Proposes a new client to handle cluster events.
+        /// Starts the task that ensures that a client handlers cluster events, if it is not already running.
+        /// </summary>
+        /// <param name="client">An optional candidate client.</param>
+        private void StartSetClusterEventsClientWithLock(Client client = null)
+        {
+            // there can only be one instance of that task running at a time
+            // and it runs in the background, and at any time any client could
+            // shutdown, which might clear the current cluster event client
+            //
+            // the task self-removes itself when it ends
+
+            _clusterEventsTask ??= SetClusterEventsClientAsync(client);
+        }
+
+        /// <summary>
+        /// Sets a client to handle cluster events.
         /// </summary>
         /// <param name="client">An optional candidate client.</param>
         /// <returns>A task that will complete when a new client has been assigned to handle cluster events.</returns>
-        private async Task ProposeClusterEventsClient(Client client = null)
+        private async Task SetClusterEventsClientAsync(Client client = null)
         {
-            if (client == null) client = GetRandomClient();
-            if (client == null) return; // running out of clients, end
-
-            // try to become the new client by replacing the current value, which is expected to be 'null'
-            // if it is not 'null', it means that 'someone else' has taken over the assignment and we can end
-            lock (_clusterEventsLock)
+            // this will only exit once a client is assigned, or the task is
+            // cancelled, when the cluster goes down (and never up again)
+            while (!_clusterEventsCancel)
             {
-                if (_clusterEventsClient != null)
-                    return; // not replacing
+                client ??= GetRandomClient();
 
-                _clusterEventsCorrelationId = _correlationIdSequence.Next;
-            }
-
-            // arbitrarily decide to end after some amount of trying
-            // TODO: consider using a timeout, instead?
-            int GetMaxAttempts() => _clients.Count * 3;
-
-            var failedAttempts = 0;
-            while (!await SubscribeToClusterEvents(client, _clusterEventsCorrelationId))
-            {
-                // the client we tried failed to subscribe to events, try another client,
-                // but ensure we don't enter some sort of infinite loop by counting attempts
-                var nextClient = GetRandomClient();
-                if (nextClient == null || ++failedAttempts > GetMaxAttempts())
+                if (client == null)
                 {
-                    // running out of clients, or tried too many times - end
-                    var failed = false;
-                    lock (_clusterEventsLock)
-                    {
-                        if (_clusterEventsClient == client)
-                        {
-                            _clusterEventsClient = null;
-                            _clusterEventsCorrelationId = 0;
-                            failed = true;
-                        }
-                    }
-
-                    if (failed)
-                        _logger.LogWarning("Failed to subscribe to cluster events, giving up.");
-                    return;
+                    // no clients => wait for clients
+                    await Task.Delay(Constants.Cluster.WaitForClientMilliseconds);
+                    continue;
                 }
 
-                // try to become the new client by replacing the current value, which is expected to be 'client'
-                // if it is not 'client', it means that 'someone else' has taken over the assignment and we can end
+                // try to subscribe, relying on the default invocation timeout,
+                // so this is not going to last forever - we know it will end
+                var correlationId = _correlationIdSequence.Next;
+                if (!await SubscribeToClusterEventsAsync(client, correlationId)) // does not throw
+                {
+                    // failed => try another client
+                    client = null;
+                    continue;
+                }
+
+                // success!
                 lock (_clusterEventsLock)
                 {
-                    if (_clusterEventsClient != client)
-                        return;
+                    _clusterEventsClient = client;
+                    _clusterEventsCorrelationId = correlationId;
 
-                    _clusterEventsClient = nextClient;
-                    _clusterEventsCorrelationId = _correlationIdSequence.Next;
+                    // avoid race conditions, this task is going to end, and if the
+                    // client dies we want to be sure we restart the task
+                    _clusterEventsTask = null;
                 }
 
-                client = nextClient;
+                break;
             }
-
-            // success
         }
 
         /// <summary>
@@ -106,7 +99,7 @@ namespace Hazelcast.Clustering
         /// <param name="client">The client.</param>
         /// <param name="correlationId">The correlation identifier.</param>
         /// <returns>A task that will complete when the subscription has been processed, and represent whether it was successful.</returns>
-        private async Task<bool> SubscribeToClusterEvents(Client client, long correlationId)
+        private async Task<bool> SubscribeToClusterEventsAsync(Client client, long correlationId)
         {
             // aka subscribe to member/partition view events
             XConsole.WriteLine(this, "subscribe");
@@ -122,7 +115,7 @@ namespace Hazelcast.Clustering
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEvent);
-                _ = await client.SendAsync(subscribeRequest, correlationId);
+                _ = await client.SendAsync(subscribeRequest, correlationId, CancellationToken.None); // FIXME TOKEN
                 XConsole.WriteLine(this, "subscribed");
                 return true;
             }
@@ -220,6 +213,9 @@ namespace Hazelcast.Clustering
                     case 2: // new but not old = added
                         XConsole.WriteLine(this, $"Added member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Added, new ClusterMemberLifecycleEventArgs(member)));
+                        break;
+
+                    case 3: // old and new = no change
                         break;
 
                     default:
