@@ -156,108 +156,11 @@ namespace Hazelcast.Tests.DotNet
                 Console.WriteLine(e);
         }
 
-        // TODO: consider removing this code
-        /*
         [Test]
-        [Timeout(20_000)]
-        public async Task TaskWithTimeoutCompletes()
+        public void DefaultTimeSpanIsZero()
         {
-            const int timeout = 10_000;
-            const int delay = 2_000;
-
-            var task = Task.Delay(delay, CancellationToken.None)
-                .ContinueWith(_ => 2, CancellationToken.None);
-            var i = await task.WithTimeout(timeout);
-            Assert.AreEqual(2, i);
+            Assert.AreEqual(TimeSpan.Zero, default(TimeSpan));
         }
-
-        [Test]
-        [Timeout(20_000)]
-        public async Task TaskWithTimeoutTimesOut()
-        {
-            const int timeout = 1_000;
-            const int delay = 2_000;
-            var isCompleted = new SemaphoreSlim(0);
-
-            var task = Task.Delay(delay)
-                .ContinueWith(t =>
-                {
-                    if (t.IsCompletedSuccessfully())
-                        isCompleted.Release();
-                }, CancellationToken.None);
-
-            Assert.ThrowsAsync<TimeoutException>(async () => await task.WithTimeout(timeout));
-            await isCompleted.WaitAsync(CancellationToken.None);
-        }
-
-        [Test]
-        [Timeout(20_000)]
-        public async Task TaskWithTimeoutTimesOutAndCancels()
-        {
-            const int timeout = 1_000;
-            const int delay = 2_000;
-            var isCancelled = new SemaphoreSlim(0);
-
-            var taskCancel = new CancellationTokenSource();
-            var task = Task.Delay(delay, taskCancel.Token)
-                .ContinueWith(t =>
-                {
-                    if (t.IsCanceled)
-                        isCancelled.Release();
-                }, CancellationToken.None);
-
-            Assert.ThrowsAsync<TimeoutException>(async () => await task.WithTimeout(timeout, taskCancel));
-            await isCancelled.WaitAsync(CancellationToken.None);
-        }
-
-        [Test]
-        [Timeout(20_000)]
-        public async Task TaskWithTimeoutThrows()
-        {
-            const int timeout = 1_000;
-
-            var task = Task.Delay(100).ContinueWith(t => throw new Exception("bang"));
-
-            Assert.ThrowsAsync<Exception>(async () => await task.WithTimeout(timeout));
-
-            await Task.Delay(100);
-        }
-
-        [Test]
-        [Timeout(20_000)]
-        public async Task TaskWithTimeoutThrowsWhenCancelled()
-        {
-            const int timeout = 1_000;
-            var semaphore = new SemaphoreSlim(0);
-            var hasThrown = new SemaphoreSlim(0);
-            Exception exception = null;
-
-            async Task RunTask(CancellationToken token)
-            {
-                await Task.Delay(100, CancellationToken.None);
-                try
-                {
-                    // this throws when token is cancelled
-                    await semaphore.WaitAsync(token);
-                }
-                catch (Exception e)
-                {
-                    exception = e;
-                    hasThrown.Release();
-                    throw;
-                }
-            }
-
-            var taskCancel = new CancellationTokenSource();
-            var task = RunTask(taskCancel.Token);
-
-            Assert.ThrowsAsync<TimeoutException>(async () => await task.WithTimeout(timeout, taskCancel));
-
-            await hasThrown.WaitAsync(CancellationToken.None);
-            await Task.Delay(100, CancellationToken.None);
-            Assert.IsInstanceOf<OperationCanceledException>(exception);
-        }
-        */
 
         [Test]
         [Timeout(20_000)]

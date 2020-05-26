@@ -243,7 +243,7 @@ namespace Hazelcast.Tests
             // and does not return anything
             // NOTE: no way to know whether it added or replaced?
 
-            await map.AddOrReplaceAsync("key", 42, TimeSpan.FromSeconds(1));
+            await map.AddOrReplaceTtlAsync("key", 42, TimeSpan.FromSeconds(1));
             var value = await map.GetAsync("key");
             Assert.AreEqual(42, value);
 
