@@ -43,6 +43,30 @@ namespace Hazelcast.Core
             => task.ConfigureAwait(false);
 
         /// <summary>
+        /// ConfigureAwait(false) = disable synchronization context and continue on any context.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>An <see cref="ConfiguredTaskAwaitable"/> object used to await the task.</returns>
+        /// <remarks>
+        /// <para>Configures an awaiter used to await the task, to continue on any context.</para>
+        /// </remarks>
+        // ReSharper disable once InconsistentNaming
+        public static ConfiguredValueTaskAwaitable CAF(this ValueTask task)
+            => task.ConfigureAwait(false);
+
+        /// <summary>
+        /// ConfigureAwait(false) = disable synchronization context and continue on any context.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>An <see cref="ConfiguredTaskAwaitable"/> object used to await the task.</returns>
+        /// <remarks>
+        /// <para>Configures an awaiter used to await the task, to continue on any context.</para>
+        /// </remarks>
+        // ReSharper disable once InconsistentNaming
+        public static ConfiguredValueTaskAwaitable<T> CAF<T>(this ValueTask<T> task)
+            => task.ConfigureAwait(false);
+
+        /// <summary>
         /// Configures a task to handle timeouts.
         /// </summary>
         /// <param name="task">The task.</param>

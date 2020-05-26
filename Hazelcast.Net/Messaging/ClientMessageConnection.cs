@@ -133,7 +133,7 @@ namespace Hazelcast.Messaging
             var message = _currentMessage;
             _currentMessage = null;
             XConsole.WriteLine(this, "Handle fragment");
-            await HandleFragmentAsync(message);
+            await HandleFragmentAsync(message).CAF();
 
             return true;
         }
@@ -146,7 +146,7 @@ namespace Hazelcast.Messaging
 
                 try
                 {
-                    await _onReceiveMessage(this, fragment);
+                    await _onReceiveMessage(this, fragment).CAF();
                 }
                 catch (Exception e)
                 {
@@ -193,7 +193,7 @@ namespace Hazelcast.Messaging
 
                 try
                 {
-                    await _onReceiveMessage(this, message);
+                    await _onReceiveMessage(this, message).CAF();
                 }
                 catch (Exception e)
                 {
@@ -229,7 +229,7 @@ namespace Hazelcast.Messaging
 
             // send message, serialize sending via semaphore
             // throws OperationCanceledException if canceled (and semaphore is not acquired)
-            if (_writer != null) await _writer.WaitAsync(cancellationToken);
+            if (_writer != null) await _writer.WaitAsync(cancellationToken).CAF();
 
             try
             {
@@ -242,7 +242,7 @@ namespace Hazelcast.Messaging
                         throw new OperationCanceledException();
 
                     XConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
-                    if (!await SendFrameAsync(frame, cancellationToken))
+                    if (!await SendFrameAsync(frame, cancellationToken).CAF())
                         return false;
 
                     // note that we may have sent some frames already, and that could
@@ -272,7 +272,7 @@ namespace Hazelcast.Messaging
             ArrayPool<byte>.Shared.Return(header);
 
             return frame.Length <= sizeofHeader ||
-                   await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken);
+                   await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF();
         }
     }
 }

@@ -26,26 +26,40 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="semaphore">The semaphore.</param>
         /// <returns>A <see cref="LockAcquisition"/> instance that needs to be disposed to release the lock.</returns>
-#if OPTIMIZE_ASYNC
-        public static ValueTask<LockAcquisition> WaitAsync(SemaphoreSlim semaphore)
-            => new LockAcquisition(semaphore).WaitAsync();
-#else
-        public static async ValueTask<LockAcquisition> WaitAsync(SemaphoreSlim semaphore)
-            => await new LockAcquisition(semaphore).WaitAsync();
+        public static
+#if !OPTIMIZE_ASYNC
+            async
 #endif
+            ValueTask<LockAcquisition> WaitAsync(SemaphoreSlim semaphore)
+        {
+            var task = new LockAcquisition(semaphore).WaitAsync();
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
 
         /// <summary>
         /// Tries to acquire a lock immediately.
         /// </summary>
         /// <param name="semaphore">The semaphore.</param>
         /// <returns>A <see cref="LockAcquisition"/> instance that needs to be disposed to release the lock.</returns>
-#if OPTIMIZE_ASYNC
-        public static ValueTask<LockAcquisition> TryLockAsync(SemaphoreSlim semaphore)
-            => new LockAcquisition(semaphore).TryLockAsync();
-#else
-        public static async ValueTask<LockAcquisition> TryLockAsync(SemaphoreSlim semaphore)
-            => await new LockAcquisition(semaphore).TryLockAsync();
+        public static
+#if !OPTIMIZE_ASYNC
+            async
 #endif
+            ValueTask<LockAcquisition> TryLockAsync(SemaphoreSlim semaphore)
+        {
+            var task = new LockAcquisition(semaphore).TryLockAsync();
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
 
         /// <summary>
         /// Whether the lock was acquired.

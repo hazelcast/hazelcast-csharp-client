@@ -332,13 +332,20 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-#if OPTIMIZE_ASYNC
-        public Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
-            => SendAsync(message, _correlationIdSequence.Next, false, cancellationToken);
-#else
-        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
-            => await SendAsync(message, _correlationIdSequence.Next, false, cancellationToken);
+        public
+#if !OPTIMIZE_ASYNC
+            async
 #endif
+        Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+        {
+            var task = SendAsync(message, _correlationIdSequence.Next, false, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
 
         /// <summary>
         /// Sends a message.
@@ -347,13 +354,20 @@ namespace Hazelcast.Clustering
         /// <param name="thisClient">Whether the message is for this client only.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-#if OPTIMIZE_ASYNC
-        public Task<ClientMessage> SendAsync(ClientMessage message, bool thisClient, CancellationToken cancellationToken)
-            => SendAsync(message, _correlationIdSequence.Next, thisClient, cancellationToken);
-#else
-        public async Task<ClientMessage> SendAsync(ClientMessage message, bool thisClient, CancellationToken cancellationToken)
-            => await SendAsync(message, _correlationIdSequence.Next, thisClient, cancellationToken);
+        public
+#if !OPTIMIZE_ASYNC
+            async
 #endif
+        Task<ClientMessage> SendAsync(ClientMessage message, bool thisClient, CancellationToken cancellationToken)
+        {
+            var task = SendAsync(message, _correlationIdSequence.Next, thisClient, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
 
         /// <summary>
         /// Sends a message.
@@ -362,13 +376,21 @@ namespace Hazelcast.Clustering
         /// <param name="correlationId">The correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-#if OPTIMIZE_ASYNC
-        public Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, CancellationToken cancellationToken)
-            => SendAsync(message, correlationId, false, cancellationToken);
-#else
-        public async Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, CancellationToken cancellationToken)
-            => await SendAsync(message, correlationId, false, cancellationToken);
+        public
+#if !OPTIMIZE_ASYNC
+            async
 #endif
+        Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, CancellationToken cancellationToken)
+        {
+            var task = SendAsync(message, correlationId, false, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
         /// <summary>
         /// Sends a message.
         /// </summary>
@@ -397,7 +419,7 @@ namespace Hazelcast.Clustering
             {
                 try
                 {
-                    return await SendAsync(invocation, cancellationToken);
+                    return await SendAsync(invocation, cancellationToken).CAF();
                 }
                 catch (Exception exception)
                 {
@@ -407,7 +429,7 @@ namespace Hazelcast.Clustering
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     if (ShouldRetry(invocation, exception) &&
-                        await invocation.CanRetry(() => _correlationIdSequence.Next)) // may wait
+                        await invocation.CanRetry(() => _correlationIdSequence.Next).CAF()) // may wait
                     {
                         XConsole.WriteLine(this, "Retrying...");
                         continue;
@@ -424,7 +446,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         private bool ShouldRetry(Invocation invocation, Exception exception)
         {
-            // FIXME retry on same client or different?
+            // FIXME retry on same client or different? ah fuck, it can be different!
             switch (exception)
             {
                 case IOException _:
@@ -458,7 +480,7 @@ namespace Hazelcast.Clustering
                                      XConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
 
             // actually send the message
-            var success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken);
+            var success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
 
             lock (_activeLock)
             {
@@ -485,7 +507,7 @@ namespace Hazelcast.Clustering
             {
                 // in case it times out, there's not point cancelling invocation.Task as
                 // it is not a real task but just a task continuation source's task
-                return await invocation.Task;
+                return await invocation.Task.CAF();
             }
             catch
             {
