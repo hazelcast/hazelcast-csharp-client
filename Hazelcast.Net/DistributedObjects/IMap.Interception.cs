@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -25,13 +27,30 @@ namespace Hazelcast.DistributedObjects
         /// Adds an interceptor.
         /// </summary>
         /// <param name="interceptor">The interceptor.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <returns>The interceptor unique identifier.</returns>
-        Task<string> AddInterceptorAsync(IMapInterceptor interceptor);
+        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Adds an interceptor.
+        /// </summary>
+        /// <param name="interceptor">The interceptor.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The interceptor unique identifier.</returns>
+        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken);
 
         /// <summary>
         /// Removes an interceptor.
         /// </summary>
         /// <param name="id">The identifier of the interceptor.</param>
-        Task RemoveInterceptorAsync(string id);
+        /// <param name="timeout">A timeout.</param>
+        Task RemoveInterceptorAsync(string id, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Removes an interceptor.
+        /// </summary>
+        /// <param name="id">The identifier of the interceptor.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken);
     }
 }

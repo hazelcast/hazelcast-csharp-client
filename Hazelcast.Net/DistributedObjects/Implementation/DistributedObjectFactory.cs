@@ -63,9 +63,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <param name="factory">The object factory.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The distributed object.</returns>
-        public async ValueTask<T> GetOrCreateAsync<T>(string serviceName, string name, bool remote,
-                                                      Func<string, Cluster, ISerializationService, ILoggerFactory, T> factory,
-                                                      CancellationToken cancellationToken)
+        public async Task<T> GetOrCreateAsync<T>(string serviceName, string name, bool remote,
+                                                 Func<string, Cluster, ISerializationService, ILoggerFactory, T> factory,
+                                                 CancellationToken cancellationToken)
             where T: DistributedObjectBase
         {
             var k = new DistributedObjectInfo(serviceName, name);

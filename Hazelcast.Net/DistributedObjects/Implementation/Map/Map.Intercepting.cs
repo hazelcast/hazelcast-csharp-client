@@ -13,33 +13,79 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {
-    // partial: intercepting
-    internal partial class Map<TKey, TValue>
+    // ReSharper disable twice UnusedTypeParameter
+    internal partial class Map<TKey, TValue> // Intercepting
     {
         /// <inheritdoc />
-        public async Task<string> AddInterceptorAsync(IMapInterceptor interceptor)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = AddInterceptorAsync(interceptor, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public async Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken)
         {
             var interceptorData = ToSafeData(interceptor);
 
             var requestMessage = MapAddInterceptorCodec.EncodeRequest(Name, interceptorData);
-            var responseMessage = await Cluster.SendAsync(requestMessage);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken);
             var response = MapAddInterceptorCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
 
         /// <inheritdoc />
-        public async Task RemoveInterceptorAsync(string id)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task RemoveInterceptorAsync(string id, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = RemoveInterceptorAsync(id, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(id));
 
             var requestMessage = MapRemoveInterceptorCodec.EncodeRequest(Name, id);
-            await Cluster.SendAsync(requestMessage);
+            var task = Cluster.SendAsync(requestMessage, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
     }
 }

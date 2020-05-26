@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
@@ -20,56 +21,142 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {
-    // partial: removing
-    internal partial class Map<TKey, TValue>
+    internal partial class Map<TKey, TValue> // Removing
     {
         /// <inheritdoc />
-        public async Task<bool> TryRemoveAsync(TKey key, TimeSpan timeout)
-            => await TryRemoveAsync(ToSafeData(key), timeout);
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+            Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = TryRemoveAsync(key, serverTimeout, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+            Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        {
+            var task = TryRemoveAsync(ToSafeData(key), serverTimeout, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
 
         /// <summary>
         /// Tries to remove an entry from the map within a timeout.
         /// </summary>
         /// <param name="keyData">A key.</param>
-        /// <param name="timeout">A timeout.</param>
+        /// <param name="serverTimeout">A timeout.</param>
+        /// <param name="cancellationToken">A canecllation token.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
         /// <para>This method returns false when no lock on the key could be
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
-        protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeout)
+        protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var timeoutMs = timeout.CodecMilliseconds(0);
+            var timeoutMs = serverTimeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ThreadId, timeoutMs);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
             var response = MapTryRemoveCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
 
         /// <inheritdoc />
-        public async Task<TValue> RemoveAsync(TKey key)
-            => await RemoveAsync(ToSafeData(key));
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<TValue> RemoveAsync(TKey key, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = RemoveAsync(key, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken)
+        {
+            var task = RemoveAsync(ToSafeData(key), cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
 
         /// <summary>
         /// Removes an entry from this map, and returns the corresponding value if any.
         /// </summary>
         /// <param name="keyData">The key.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value, if any, or default(TValue).</returns>
-        protected virtual async Task<TValue> RemoveAsync(IData keyData)
+        protected virtual async Task<TValue> RemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
 
         /// <inheritdoc />
-        public async Task<bool> RemoveAsync(TKey key, TValue value)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = RemoveAsync(key, value, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            return await RemoveAsync(keyData, valueData);
+            var task = RemoveAsync(keyData, valueData, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
         }
 
         /// <summary>
@@ -77,42 +164,110 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// </summary>
         /// <param name="keyData">The key.</param>
         /// <param name="valueData">The value.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value, if any, or default(TValue).</returns>
         /// <remarks>
         /// <para>This method removes an entry if the key and the value both match the
         /// specified key and value.</para>
         /// </remarks>
-        protected virtual async Task<bool> RemoveAsync(IData keyData, IData valueData)
+        protected virtual async Task<bool> RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
             var response = MapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
 
         /// <inheritdoc />
-        public async Task DeleteAsync(TKey key)
-            => await DeleteAsync(ToSafeData(key));
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task DeleteAsync(TKey key, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = DeleteAsync(key, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+         Task DeleteAsync(TKey key, CancellationToken cancellationToken)
+        {
+            var task = DeleteAsync(ToSafeData(key), cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
 
         /// <summary>
         /// Removes an entry from this map.
         /// </summary>
-        /// <param name="key">The key.</param>
+        /// <param name="keyData">The key.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the value. Prefer
         /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
         /// </remarks>
-        protected virtual async Task DeleteAsync(IData keyData)
+        protected virtual
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+            Task DeleteAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ThreadId);
-            await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
 
         /// <inheritdoc />
-        public virtual async Task ClearAsync()
+        public virtual
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task ClearAsync(TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = ClearAsync(cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public virtual
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task ClearAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapClearCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage);
+            var task = Cluster.SendAsync(requestMessage, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
     }
 }

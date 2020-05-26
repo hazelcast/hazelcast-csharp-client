@@ -18,38 +18,6 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Connects to the server-side cluster.
         /// </summary>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when connected.</returns>
-        public
-#if !OPTIMIZE_ASYNC
-            async
-#endif
-        Task ConnectAsync(TimeSpan timeout = default)
-        {
-            var timeoutMilliseconds = timeout.TimeoutMilliseconds(Constants.Cluster.DefaultConnectTimeoutMilliseconds);
-
-            Task task;
-            if (timeoutMilliseconds < 0) // infinite
-            {
-                task = ConnectAsyncInternal(CancellationToken.None);
-            }
-            else
-            {
-                var cancellation = _clusterCancellation.WithTimeout(timeoutMilliseconds);
-                task = ConnectAsyncInternal(cancellation.Token).OrTimeout(cancellation);
-            }
-
-#if OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.ConfigureAwait(false);
-#endif
-        }
-
-
-        /// <summary>
-        /// Connects to the server-side cluster.
-        /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when connected.</returns>
         public

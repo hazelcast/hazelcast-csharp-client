@@ -62,7 +62,7 @@ namespace Hazelcast.Clustering
         private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
-        private Func<ValueTask> _onConnectionToNewCluster;
+        private Func<CancellationToken, ValueTask> _onConnectionToNewCluster;
 
         private readonly object _clusterStateLock = new object(); // general cluster state lock
         private volatile ClusterState _clusterState = ClusterState.NotConnected; // cluster state
@@ -171,7 +171,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when connecting to a new cluster.
         /// </summary>
-        public Func<ValueTask> OnConnectingToNewCluster
+        public Func<CancellationToken, ValueTask> OnConnectingToNewCluster
         {
             get => _onConnectionToNewCluster;
             set

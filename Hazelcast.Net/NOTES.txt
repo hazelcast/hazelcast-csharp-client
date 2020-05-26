@@ -29,6 +29,26 @@ In most cases, we keep the original hashing code instead of replacing it with mo
 recent and more efficient code available for instance in netstandard 2.1, because before
 we replace the code we need to make sure that it is OK wrt the other clients.
 
+#### NOTES ABOUT CONFIGURE AWAIT
+
+Although not relevant on .NET Core anymore, ConfigureAwait(false) is still important
+in libraries that can be used with the .NET Framework. such as Hazelcast.NET. While we
+could think about weaving it automatically (e.g. with Fody) this is considered too
+cumbersome for now. Instead, we use our own .CAF() extension methods, that could be
+easily nullified with [Conditional] code.
+
+References
+https://particular.net/blog/async-await-tips-and-tricks
+https://github.com/Fody/Fody/
+
+### NOTES ABOUT TIMEOUT AND CANCELLATION
+
+Every internal asynchronous method can be cancelled via a CancellationToken. Every
+public-facing asynchronous method can be cancelled via a CancellationToken, and also
+exposes an overload accepting a TimeSpan which indicates a timeout.
+
+Methods which are naturally cancelled throw OperationCancelledException whereas
+methods that reach their timeout throw TimeoutException.
 
 #### NOTES ABOUT C# VERSION
 

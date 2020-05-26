@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
@@ -20,41 +22,82 @@ using Hazelcast.DistributedObjects.Implementation.Topic;
 
 namespace Hazelcast
 {
-    // partial: distributed objects
-    internal partial class HazelcastClient
+    internal partial class HazelcastClient // Distributed Objects
     {
         // TODO: implement HazelcastClient access to other Distributed Objects
 
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
 
         /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = GetMapAsync<TKey, TValue>(name, cancellation.Token).OrTimeout(cancellation);
 
 #if OPTIMIZE_ASYNC
-        public Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
-            => GetMapAsyncTask<TKey, TValue>(name);
+            return task;
 #else
-        public async Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
-            => await GetMapAsyncTask<TKey, TValue>(name);
+            return await task.CAF();
 #endif
-
-        private ValueTask<Map<TKey, TValue>> GetMapAsyncTask<TKey, TValue>(string name)
-            => _distributedObjectFactory.GetOrCreateAsync(Map.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory)
-                    => new Map<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory));
+        }
 
         /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        {
+            var task = _distributedObjectFactory.GetOrCreateAsync(Map.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory)
+                    => new Map<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory),
+                cancellationToken);
 
 #if OPTIMIZE_ASYNC
-        public Task<ITopic<T>> GetTopicAsync<T>(string name)
-            => GetTopicAsyncTask<T>(name);
+            return task;
 #else
-        public async Task<ITopic<T>> GetTopicAsync<T>(string name)
-            => await GetTopicAsyncTask<T>(name);
+            return await task.CAF();
 #endif
+        }
 
-        private ValueTask<Topic<T>> GetTopicAsyncTask<T>(string name)
-            => _distributedObjectFactory.GetOrCreateAsync(Topic.ServiceName, name, true,
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<ITopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = GetTopicAsync<T>(name, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<ITopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken)
+        {
+            var task = _distributedObjectFactory.GetOrCreateAsync(Topic.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
-                    => new Topic<T>(n, cluster, serializationService, loggerFactory));
+                    => new Topic<T>(n, cluster, serializationService, loggerFactory),
+                cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
     }
 }

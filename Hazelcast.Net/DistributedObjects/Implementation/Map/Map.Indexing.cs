@@ -13,30 +13,52 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Configuration;
+using Hazelcast.Core;
 using Hazelcast.Data.Map;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {
-    // partial: indexing
-    internal partial class Map<TKey, TValue>
+    // ReSharper disable twice UnusedTypeParameter
+    internal partial class Map<TKey, TValue> // Indexing
     {
         /// <inheritdoc />
-        public async Task AddIndexAsync(IndexType type, params string[] attributes)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task AddIndexAsync(IndexConfig indexConfig, TimeSpan timeout = default)
         {
-            if (attributes == null) throw new ArgumentNullException(nameof(attributes));
-            await AddIndexAsync(new IndexConfig { Type = type, Attributes = attributes });
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = AddIndexAsync(indexConfig, cancellation.Token).OrTimeout(cancellation);
+
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
 
         /// <inheritdoc />
-        public async Task AddIndexAsync(IndexConfig indexConfig)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken)
         {
             if (indexConfig == null) throw new ArgumentNullException(nameof(indexConfig));
 
             var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexConfig.ValidateAndNormalize(Name));
-            await Cluster.SendAsync(requestMessage);
+            var task = Cluster.SendAsync(requestMessage, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
     }
 }

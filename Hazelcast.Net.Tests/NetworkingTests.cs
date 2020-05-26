@@ -397,7 +397,7 @@ namespace Hazelcast.Tests
                 configuration.Security,
                 serializationService,
                 new NullLoggerFactory());
-            await cluster.ConnectAsync();
+            await cluster.ConnectAsync(CancellationToken.None);
 
             // now we can send messages...
             //await cluster.SendAsync(new ClientMessage());

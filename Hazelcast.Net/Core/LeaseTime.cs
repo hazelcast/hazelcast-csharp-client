@@ -14,17 +14,17 @@
 
 using System;
 using System.Threading;
-using System.Threading.Tasks;
-using Hazelcast.Data.Map;
 
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Core
 {
-    // ReSharper disable twice UnusedTypeParameter
-    public partial interface IMap<TKey, TValue> // Indexing
+    /// <summary>
+    /// Utilities for managing time-to-live.
+    /// </summary>
+    public static class LeaseTime
     {
-        // TODO what is this?
-
-        Task AddIndexAsync(IndexConfig indexConfig, TimeSpan timeout = default);
-        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken);
+        /// <summary>
+        /// A constants used to specify an infinite lease time.
+        /// </summary>
+        public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
     }
 }

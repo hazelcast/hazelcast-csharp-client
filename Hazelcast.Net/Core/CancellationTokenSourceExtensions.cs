@@ -17,9 +17,7 @@ namespace Hazelcast.Core
         /// <para>The combined cancellation should be disposed after usage.</para>
         /// </remarks>
         public static TimeoutCancellationTokenSource WithTimeout(this CancellationTokenSource source, int timeoutMilliseconds)
-        {
-            return new TimeoutCancellationTokenSource(source, timeoutMilliseconds);
-        }
+            => new TimeoutCancellationTokenSource(source, timeoutMilliseconds);
 
         /// <summary>
         /// Creates a cancellation source by combining a source and a cancellation token.

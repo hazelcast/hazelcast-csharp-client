@@ -53,11 +53,9 @@ namespace Hazelcast.Core
         public static CancellationTokenSource AsCancellationTokenSource(this TimeSpan timeSpan, int defaultTimeout)
         {
             var timeout = (int) timeSpan.TotalMilliseconds;
-            if (timeout < 0) return NeverCanceledSource;
+            if (timeout < 0) return TaskExtensions.NeverCanceledSource;
             if (timeout == 0) timeout = defaultTimeout;
             return new CancellationTokenSource(timeout);
         }
-
-        private static readonly CancellationTokenSource NeverCanceledSource = new CancellationTokenSource();
     }
 }

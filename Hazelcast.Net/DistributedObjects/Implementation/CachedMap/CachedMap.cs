@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -47,14 +48,28 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         #region Setting
 
         /// <inheritdoc />
-        protected override async Task<TValue> AddOrReplaceWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected override
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<TValue> AddOrReplaceWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            return await base.AddOrReplaceWithValueAsync(keyData, valueData, timeToLive);
+            var task = base.AddOrReplaceWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
         }
 
         /// <inheritdoc />
-        protected override async Task AddOrReplaceAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries)
+        protected override
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task AddOrReplaceAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
         {
             // see comments on the base Map class
             // this should be no different except for this entry invalidation method,
@@ -75,35 +90,62 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list);
                     requestMessage.PartitionId = partitionId;
-                    var task = Cluster.SendToMemberAsync(requestMessage, ownerId).AsTask()
-                        .ContinueWith(_ => InvalidateEntries(list));
-                    tasks.Add(task);
+                    var ownerTask = Cluster.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
+                        .ContinueWith(_ => InvalidateEntries(list), CancellationToken.None);
+                    tasks.Add(ownerTask);
                 }
             }
 
-            await Task.WhenAll(tasks);
+            var task = Task.WhenAll(tasks);
+
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
 
         /// <inheritdoc />
-        protected override async Task<bool> TryAddOrReplaceAsync(IData keyData, IData valueData, TimeSpan timeout)
+        protected override async Task<bool> TryAddOrReplaceAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var added = await base.TryAddOrReplaceAsync(keyData, valueData, timeout);
+            var added = await base.TryAddOrReplaceAsync(keyData, valueData, serverTimeout, cancellationToken);
             if (added) _cache.Invalidate(keyData);
             return added;
         }
 
         /// <inheritdoc />
-        protected override async Task<TValue> AddIfMissingAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected override
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+            Task<TValue> AddIfMissingAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            return await base.AddIfMissingAsync(keyData, valueData, timeToLive);
+            var task = base.AddIfMissingAsync(keyData, valueData, timeToLive, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
         }
 
         /// <inheritdoc />
-        protected override async Task AddOrReplaceTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected override
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task AddOrReplaceTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            await base.AddOrReplaceTransientAsync(keyData, valueData, timeToLive);
+            var task = base.AddOrReplaceTransientAsync(keyData, valueData, timeToLive, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
 
         #endregion
@@ -111,11 +153,11 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         #region Getting
 
         /// <inheritdoc />
-        protected override async Task<object> GetAsync(IData keyData)
+        protected override async Task<object> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
             try
             {
-                var attempt = await _cache.TryGetOrAddAsync(keyData, data => base.GetAsync(keyData));
+                var attempt = await _cache.TryGetOrAddAsync(keyData, data => base.GetAsync(keyData, cancellationToken)).CAF();
                 return attempt.ValueOr(default);
             }
             catch
@@ -126,7 +168,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         }
 
         /// <inheritdoc />
-        protected override async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownerKeys)
+        protected override async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownerKeys, CancellationToken cancellationToken)
         {
             var cachedEntries = new Dictionary<IData, object>();
 
@@ -149,7 +191,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
                 }
             }
 
-            var entries = await base.GetAsync(ownerKeys);
+            var entries = await base.GetAsync(ownerKeys, cancellationToken).CAF();
 
             // _cache may contain either the value data (IData) or the
             // de-serialized object (TValue), depending on configuration
@@ -158,7 +200,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
             // none of them have a value yet, and ...
             // FIXME what is it we want to put in the cache?
             foreach (var (key, entry) in entries.Entries)
-                await _cache.TryAdd(key, entry.ValueObject);
+                await _cache.TryAdd(key, entry.ValueObject).CAF();
 
             // add cached entries to the retrieved entries
             foreach (var (key, valueObject) in cachedEntries)
@@ -168,9 +210,9 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         }
 
         /// <inheritdoc />
-        protected override async Task<bool> ContainsKeyAsync(IData keyData)
+        protected override async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
-            return _cache.ContainsKey(keyData) || await base.ContainsKeyAsync(keyData);
+            return _cache.ContainsKey(keyData) || await base.ContainsKeyAsync(keyData, cancellationToken).CAF();
         }
 
         #endregion
@@ -178,19 +220,19 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         #region Removing
 
         /// <inheritdoc />
-        protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeout)
+        protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var removed = await base.TryRemoveAsync(keyData, timeout);
+            var removed = await base.TryRemoveAsync(keyData, serverTimeout, cancellationToken).CAF();
             if (removed) _cache.Invalidate(keyData);
             return removed;
         }
 
         /// <inheritdoc />
-        protected override async Task<TValue> RemoveAsync(IData keyData)
+        protected override async Task<TValue> RemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             try
             {
-                return await base.RemoveAsync(keyData);
+                return await base.RemoveAsync(keyData, cancellationToken).CAF();
             }
             finally
             {
@@ -199,11 +241,11 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         }
 
         /// <inheritdoc />
-        protected override async Task<bool> RemoveAsync(IData keyData, IData valueData)
+        protected override async Task<bool> RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
         {
             try
             {
-                return await base.RemoveAsync(keyData, valueData);
+                return await base.RemoveAsync(keyData, valueData, cancellationToken).CAF();
             }
             finally
             {
@@ -212,11 +254,11 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         }
 
         /// <inheritdoc />
-        protected override async Task DeleteAsync(IData keyData)
+        protected override async Task DeleteAsync(IData keyData, CancellationToken cancellationToken)
         {
             try
             {
-                await base.RemoveAsync(keyData);
+                await base.RemoveAsync(keyData, cancellationToken).CAF();
             }
             finally
             {
@@ -225,9 +267,11 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         }
 
         /// <inheritdoc />
-        public override async Task ClearAsync()
+        public override async Task ClearAsync(CancellationToken cancellationToken)
         {
-            await base.ClearAsync().ContinueWith(_ => _cache.InvalidateAll()).ConfigureAwait(false);
+            await base.ClearAsync(cancellationToken)
+                .ContinueWith(_ => _cache.InvalidateAll(), CancellationToken.None)
+                .CAF();
         }
 
         #endregion
@@ -235,23 +279,43 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         #region Processing
 
         // <inheritdoc />
-        protected override async Task<object> ExecuteAsync(IData processorData, IData keyData)
+        protected override
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<object> ExecuteAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
-            return await base.ExecuteAsync(processorData, keyData).ContinueWith(t =>
+            var task = base.ExecuteAsync(processorData, keyData, cancellationToken).ContinueWith(t =>
             {
                 _cache.Invalidate(keyData);
                 return t;
-            });
+            }, CancellationToken.None);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
         }
 
         // <inheritdoc />
-        protected override async Task<object> ApplyAsync(IData processorData, IData keyData)
+        protected override
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<object> ApplyAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
-            return await base.ApplyAsync(processorData, keyData).ContinueWith(t =>
+            var task = base.ApplyAsync(processorData, keyData, cancellationToken).ContinueWith(t =>
             {
                 _cache.Invalidate(keyData);
                 return t;
-            });
+            }, CancellationToken.None);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
         }
 
         #endregion

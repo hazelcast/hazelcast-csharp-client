@@ -20,71 +20,251 @@ using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {
-    // partial: locking
-    internal partial class Map<TKey, TValue>
+    // ReSharper disable twice UnusedTypeParameter
+    internal partial class Map<TKey, TValue> // Locking
     {
         /// <inheritdoc />
-        public async Task LockAsync(TKey key)
-            => await LockAsync(key, Timeout.InfiniteTimeSpan);
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task LockAsync(TKey key, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = LockAsync(key, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
 
         /// <inheritdoc />
-        public async Task LockAsync(TKey key, TimeSpan leaseTime)
-            => await TryLockAsync(key, leaseTime, Timeout.InfiniteTimeSpan);
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task LockAsync(TKey key, CancellationToken cancellationToken)
+        {
+            var task = LockForAsync(key, TimeToLive.InfiniteTimeSpan, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
 
         /// <inheritdoc />
-        public async Task<bool> TryLockAsync(TKey key)
-            => await TryLockAsync(key, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task LockForAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = LockForAsync(key, leaseTime, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
 
         /// <inheritdoc />
-        public async Task<bool> TryLockAsync(TKey key, TimeSpan timeout)
-            => await TryLockAsync(key, Timeout.InfiniteTimeSpan, timeout);
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken)
+        {
+            var task = WaitLockForAsync(key, leaseTime, Timeout.InfiniteTimeSpan, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
 
         /// <inheritdoc />
-        public async Task<bool> TryLockAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<bool> TryLockAsync(TKey key, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = TryLockAsync(key, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken)
+        {
+            var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, Timeout.InfiniteTimeSpan, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<bool> WaitLockAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = WaitLockAsync(key, serverTimeout, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<bool> WaitLockAsync(TKey key, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        {
+            var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, serverTimeout, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> WaitLockForAsync(TKey key, TimeSpan leaseTime, TimeSpan serverTimeout, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = WaitLockForAsync(key, leaseTime, serverTimeout, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> WaitLockForAsync(TKey key, TimeSpan leaseTime, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
             var refId = _lockReferenceIdSequence.Next;
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
-            var timeoutMs = timeout.CodecMilliseconds(0);
+            var timeoutMs = serverTimeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ThreadId, leaseTimeMs, timeoutMs, refId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
 
         /// <inheritdoc />
-        public async Task<bool> IsLockedAsync(TKey key)
+        public async Task<bool> IsLockedAsync(TKey key, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = IsLockedAsync(key, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
             var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapIsLockedCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
 
         /// <inheritdoc />
-        public async Task UnlockAsync(TKey key)
+        public async Task UnlockAsync(TKey key, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = UnlockAsync(key, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public async Task UnlockAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
             var refId = _lockReferenceIdSequence.Next;
 
             var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ThreadId, refId);
-            await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
 
         /// <inheritdoc />
-        public async Task ForceUnlockAsync(TKey key)
+        public async Task ForceUnlockAsync(TKey key, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = ForceUnlockAsync(key, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
             var refId = _lockReferenceIdSequence.Next;
 
             var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
-            await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData);
+            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
     }
 }

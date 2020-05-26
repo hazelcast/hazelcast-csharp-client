@@ -35,6 +35,15 @@ namespace Hazelcast.Data.Map
         public static readonly IndexType DefaultType = IndexType.Sorted;
 
         /// <summary>
+        /// Creates a new instance of the <see cref="IndexConfig"/> class.
+        /// </summary>
+        /// <param name="indexType">The index type.</param>
+        /// <param name="attributes">The attributes.</param>
+        /// <returns>A new instance of the <see cref="IndexConfig"/> class.</returns>
+        public static IndexConfig Create(IndexType indexType, params string[] attributes)
+            => new IndexConfig { Type = indexType, Attributes = attributes };
+
+        /// <summary>
         /// Name of the index.
         /// </summary>
         public string Name { get; set; }

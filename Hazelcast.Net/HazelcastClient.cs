@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects.Implementation;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -46,7 +47,7 @@ namespace Hazelcast
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
             _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
-            Cluster.OnConnectingToNewCluster = () => _distributedObjectFactory.CreateAllAsync();
+            Cluster.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
         }
 
         /// <summary>
@@ -60,9 +61,36 @@ namespace Hazelcast
         public ISerializationService SerializationService { get; }
 
         /// <inheritdoc />
-        public async Task OpenAsync()
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task OpenAsync(TimeSpan timeout = default)
         {
-            await Cluster.ConnectAsync();
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = OpenAsync(cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task OpenAsync(CancellationToken cancellationToken)
+        {
+            var task = Cluster.ConnectAsync(cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
 
         /// <inheritdoc />

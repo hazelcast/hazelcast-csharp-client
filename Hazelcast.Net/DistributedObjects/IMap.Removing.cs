@@ -13,17 +13,18 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
-    // partial: removing
-    public partial interface IMap<TKey, TValue>
+    public partial interface IMap<TKey, TValue> // Removing
     {
         /// <summary>
         /// Tries to remove an entry from the map within a timeout.
         /// </summary>
         /// <param name="key">A key.</param>
+        /// <param name="serverTimeout">A server timeout.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
@@ -31,44 +32,104 @@ namespace Hazelcast.DistributedObjects
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeout);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Tries to remove an entry from the map within a timeout.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="serverTimeout">A server timeout.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>true if the entry was removed; otherwise false.</returns>
+        /// <remarks>
+        /// <para>This method returns false when no lock on the key could be
+        /// acquired within the timeout.</para>
+        /// TODO or when there was no value with that key?
+        /// </remarks>
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, CancellationToken cancellationToken);
 
         /// <summary>
         /// Removes an entry from this map, and returns the corresponding value if any.
         /// </summary>
         /// <param name="key">The key.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <returns>The value, if any, or default(TValue).</returns>
         /// <remarks>
         /// <para>This method serializes the return value. For performance reasons, prefer
         /// <see cref="DeleteAsync"/> when the returned value is not used.</para>
         /// </remarks>
-        Task<TValue> RemoveAsync(TKey key);
+        Task<TValue> RemoveAsync(TKey key, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Removes an entry from this map, and returns the corresponding value if any.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The value, if any, or default(TValue).</returns>
+        /// <remarks>
+        /// <para>This method serializes the return value. For performance reasons, prefer
+        /// <see cref="DeleteAsync"/> when the returned value is not used.</para>
+        /// </remarks>
+        Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken);
 
         /// <summary>
         /// Removes an entry from this map.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <returns>The value, if any, or default(TValue).</returns>
         /// <remarks>
         /// <para>This method removes an entry if the key and the value both match the
         /// specified key and value.</para>
         /// </remarks>
-        Task<bool> RemoveAsync(TKey key, TValue value);
+        Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default);
 
         /// <summary>
         /// Removes an entry from this map.
         /// </summary>
         /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The value, if any, or default(TValue).</returns>
+        /// <remarks>
+        /// <para>This method removes an entry if the key and the value both match the
+        /// specified key and value.</para>
+        /// </remarks>
+        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Removes an entry from this map.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the value. Prefer
         /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
         /// </remarks>
-        Task DeleteAsync(TKey key); // FIXME rename
+        Task DeleteAsync(TKey key, TimeSpan timeout = default); // FIXME rename
+
+        /// <summary>
+        /// Removes an entry from this map.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <remarks>
+        /// <para>For performance reasons, this method does not return the value. Prefer
+        /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
+        /// </remarks>
+        Task DeleteAsync(TKey key, CancellationToken cancellationToken); // FIXME rename
 
         /// <summary>
         /// Empties this map.
         /// </summary>
-        Task ClearAsync();
+        /// <param name="timeout">A timeout.</param>
+        Task ClearAsync(TimeSpan timeout = default);
+
+        /// <summary>
+        /// Empties this map.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        Task ClearAsync(CancellationToken cancellationToken);
     }
 }

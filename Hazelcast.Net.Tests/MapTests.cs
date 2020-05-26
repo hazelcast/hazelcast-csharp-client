@@ -271,11 +271,11 @@ namespace Hazelcast.Tests
             // (so it's "add or replace" really)
             // NOTE: no way to know whether it added or replaced?
 
-            await map.AddOrReplaceTransientAsync("key", 42, Timeout.InfiniteTimeSpan);
+            await map.AddOrReplaceTransientAsync("key", 42, TimeToLive.InfiniteTimeSpan);
 
-            await map.AddOrReplaceTransientAsync("key", 43, Timeout.InfiniteTimeSpan);
+            await map.AddOrReplaceTransientAsync("key", 43, TimeToLive.InfiniteTimeSpan);
 
-            await map.AddOrReplaceTransientAsync("key1", 43, Timeout.InfiniteTimeSpan);
+            await map.AddOrReplaceTransientAsync("key1", 43, TimeToLive.InfiniteTimeSpan);
 
             var value = await map.GetAsync("key");
             Assert.AreEqual(43, value);

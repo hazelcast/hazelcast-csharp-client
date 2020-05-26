@@ -40,6 +40,8 @@ namespace Hazelcast.Core
 
         public bool IsCancellationRequested => _composed.IsCancellationRequested;
 
+        public bool HasTimeout => _source != _composed;
+
         public bool HasTimedOut => _composed.IsCancellationRequested && !_source.IsCancellationRequested;
 
         public void Dispose()
