@@ -50,7 +50,7 @@ namespace Hazelcast.Core
             if (t == tcs.Task)
             {
                 cancellation.Cancel(); // cancel the delay
-                await t; // throw or return
+                await t.CAF(); // throw or return
                 return;
             }
 
@@ -92,7 +92,7 @@ namespace Hazelcast.Core
             if (t == tcs.Task)
             {
                 cancellation.Cancel(); // cancel the delay
-                await t; // throw or return
+                await t.CAF(); // throw or return
                 return;
             }
 

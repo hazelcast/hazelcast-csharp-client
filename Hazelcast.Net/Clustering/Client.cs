@@ -199,7 +199,7 @@ namespace Hazelcast.Clustering
                 throw;
             }
 
-            if (!await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken))
+            if (!await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CAF())
                 throw new InvalidOperationException("Failed to send protocol bytes.");
         }
 
@@ -225,7 +225,7 @@ namespace Hazelcast.Clustering
             {
                 XConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
                                          XConsole.Lines(this, 1, message.Dump()));
-                await ReceiveEvent(message); // should not throw
+                await ReceiveEvent(message).CAF(); // should not throw
                 return;
             }
 

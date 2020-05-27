@@ -324,7 +324,7 @@ namespace Hazelcast.Networking
         {
             // loop reading data from the pipe
             var state = new ReadPipeState { Reader = reader };
-            while (await ReadPipeLoop0(state)) { }
+            while (await ReadPipeLoop0(state).CAF()) { }
 
             // exception?
             if (state.Failed)
@@ -351,7 +351,7 @@ namespace Hazelcast.Networking
         private async ValueTask<bool> ReadPipeLoop0(ReadPipeState state)
         {
             // await data from the pipe
-            XConsole.WriteLine(this, "Pipe reader awaits data from the pipe").CAF();
+            XConsole.WriteLine(this, "Pipe reader awaits data from the pipe");
             var result = await state.Reader.ReadAsync().CAF();
             state.Buffer = result.Buffer;
 
@@ -365,7 +365,7 @@ namespace Hazelcast.Networking
             XConsole.WriteLine(this, $"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
 
             // process data
-            while (await ReadPipeLoop1(state)) { }
+            while (await ReadPipeLoop1(state).CAF()) { }
 
             // tell the PipeReader how much of the buffer we have consumed
             state.Reader.AdvanceTo(state.Buffer.Start, state.Buffer.End);

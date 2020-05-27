@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Networking;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
@@ -49,7 +50,7 @@ namespace Hazelcast.Testing
         /// <returns>Whether the cluster was properly shut down.</returns>
         public static async Task ShutdownClusterDownAsync(this IRemoteControllerClient rc, Remote.Cluster cluster)
         {
-            while (!(await rc.ShutdownClusterAsync(cluster)))
+            while (!await rc.ShutdownClusterAsync(cluster).CAF())
                 await Task.Delay(1_000).CAF();
         }
 
@@ -84,7 +85,8 @@ namespace Hazelcast.Testing
                 .PartitionsUpdated((sender, args) =>
                 {
                     partitions.Release();
-                }), CancellationToken.None);
+                }), CancellationToken.None)
+                .CAF();
 
             var member = await rc.StartMemberAsync(cluster).CAF();
             await added.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
@@ -136,7 +138,8 @@ namespace Hazelcast.Testing
                 .MemberRemoved((sender, args) =>
                 {
                     removed.Release();
-                }), CancellationToken.None);
+                }), CancellationToken.None)
+                .CAF();
 
             await rc.StopMemberAsync(cluster, member).CAF();
             await removed.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
