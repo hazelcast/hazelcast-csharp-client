@@ -93,9 +93,8 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeResponse(long response)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
+            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
             EncodeLong(initialFrame, ResponseResponseFieldOffset, response);
             clientMessage.Add(initialFrame);
             return clientMessage;

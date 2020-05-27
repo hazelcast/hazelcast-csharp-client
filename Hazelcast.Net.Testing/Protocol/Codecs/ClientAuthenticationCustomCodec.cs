@@ -184,9 +184,8 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeResponse(byte status, Hazelcast.Networking.NetworkAddress address, Guid memberUuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId, bool failoverSupported)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
+            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
             EncodeByte(initialFrame, ResponseStatusFieldOffset, status);
             EncodeGuid(initialFrame, ResponseMemberUuidFieldOffset, memberUuid);
             EncodeByte(initialFrame, ResponseSerializationVersionFieldOffset, serializationVersion);

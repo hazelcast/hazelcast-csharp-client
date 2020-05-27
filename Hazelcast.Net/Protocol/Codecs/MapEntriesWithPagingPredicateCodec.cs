@@ -31,7 +31,6 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
-using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using static Hazelcast.Messaging.Portability;
@@ -51,7 +50,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
         private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
 
-        public static ClientMessage EncodeRequest(string name, PagingPredicateHolder predicate)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Data.PagingPredicateHolder predicate)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
@@ -76,7 +75,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// The updated anchor list.
             ///</summary>
-            public AnchorDataListHolder AnchorDataList { get; set; }
+            public Hazelcast.Protocol.Data.AnchorDataListHolder AnchorDataList { get; set; }
         }
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)

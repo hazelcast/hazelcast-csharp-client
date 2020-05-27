@@ -114,9 +114,8 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeResponse(Hazelcast.Data.Map.MapEntry<IData, IData> response, long maxIdle)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
+            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
             EncodeLong(initialFrame, ResponseMaxIdleFieldOffset, maxIdle);
             clientMessage.Add(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, response, SimpleEntryViewCodec.Encode);

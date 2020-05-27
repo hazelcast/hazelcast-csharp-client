@@ -57,7 +57,7 @@ namespace Hazelcast.Protocol.Codecs
         public sealed class RequestParameters
         {
         }
-
+    
         public static ClientMessage EncodeRequest()
         {
             var clientMessage = CreateForEncode();
@@ -78,7 +78,7 @@ namespace Hazelcast.Protocol.Codecs
             iterator.Take();
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
         }
@@ -86,13 +86,12 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeResponse()
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
+            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -105,7 +104,7 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeMembersViewEvent(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
+            var initialFrame = new Frame(new byte[MembersViewEventInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, MembersViewEventMessageType);
             EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame, MembersViewEventVersionFieldOffset, version);
@@ -117,7 +116,7 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodePartitionsViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
+            var initialFrame = new Frame(new byte[PartitionsViewEventInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, PartitionsViewEventMessageType);
             EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeInt(initialFrame, PartitionsViewEventVersionFieldOffset, version);
@@ -126,7 +125,7 @@ namespace Hazelcast.Protocol.Codecs
             EntryListUUIDListIntegerCodec.Encode(clientMessage, partitions);
             return clientMessage;
         }
-
+    
         public static void HandleEvent(ClientMessage clientMessage, HandleMembersViewEvent handleMembersViewEvent, HandlePartitionsViewEvent handlePartitionsViewEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;

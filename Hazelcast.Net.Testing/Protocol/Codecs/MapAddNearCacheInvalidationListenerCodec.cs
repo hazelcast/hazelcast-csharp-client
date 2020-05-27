@@ -115,9 +115,8 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeResponse(Guid response)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
+            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
             EncodeGuid(initialFrame, ResponseResponseFieldOffset, response);
             clientMessage.Add(initialFrame);
             return clientMessage;
@@ -135,7 +134,7 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
+            var initialFrame = new Frame(new byte[IMapInvalidationEventInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, IMapInvalidationEventMessageType);
             EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame, IMapInvalidationEventSourceUuidFieldOffset, sourceUuid);
@@ -149,7 +148,7 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeIMapBatchInvalidationEvent(ICollection<IData> keys, ICollection<Guid> sourceUuids, ICollection<Guid> partitionUuids, ICollection<long> sequences)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
+            var initialFrame = new Frame(new byte[IMapBatchInvalidationEventInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, IMapBatchInvalidationEventMessageType);
             EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             clientMessage.Add(initialFrame);

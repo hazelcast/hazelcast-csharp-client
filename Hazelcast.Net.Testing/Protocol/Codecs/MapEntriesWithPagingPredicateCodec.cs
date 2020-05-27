@@ -32,7 +32,6 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
-using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using static Hazelcast.Messaging.Portability;
@@ -63,10 +62,10 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// specified query criteria.
             ///</summary>
-            public PagingPredicateHolder Predicate { get; set; }
+            public Hazelcast.Protocol.Data.PagingPredicateHolder Predicate { get; set; }
         }
     
-        public static ClientMessage EncodeRequest(string name, PagingPredicateHolder predicate)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Data.PagingPredicateHolder predicate)
         {
             var clientMessage = CreateForEncode();
             clientMessage.IsRetryable = true;
@@ -102,15 +101,14 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// The updated anchor list.
             ///</summary>
-            public AnchorDataListHolder AnchorDataList { get; set; }
+            public Hazelcast.Protocol.Data.AnchorDataListHolder AnchorDataList { get; set; }
         }
 
-        public static ClientMessage EncodeResponse(ICollection<KeyValuePair<IData, IData>> response, AnchorDataListHolder anchorDataList)
+        public static ClientMessage EncodeResponse(ICollection<KeyValuePair<IData, IData>> response, Hazelcast.Protocol.Data.AnchorDataListHolder anchorDataList)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
+            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
             clientMessage.Add(initialFrame);
             EntryListCodec.Encode(clientMessage, response, DataCodec.Encode, DataCodec.Encode);
             AnchorDataListHolderCodec.Encode(clientMessage, anchorDataList);

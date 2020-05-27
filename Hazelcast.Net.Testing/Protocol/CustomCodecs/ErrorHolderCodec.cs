@@ -32,7 +32,6 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
-using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using static Hazelcast.Messaging.Portability;
@@ -44,7 +43,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int ErrorCodeFieldOffset = 0;
         private const int InitialFrameSize = ErrorCodeFieldOffset + IntSizeInBytes;
 
-        public static void Encode(ClientMessage clientMessage, ErrorHolder errorHolder)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Data.ErrorHolder errorHolder)
         {
             clientMessage.Add(Frame.CreateBeginStruct());
 
@@ -59,7 +58,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Add(Frame.CreateEndStruct());
         }
 
-        public static ErrorHolder Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Protocol.Data.ErrorHolder Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
@@ -73,7 +72,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             iterator.SkipToStructEnd();
 
-            return new ErrorHolder(errorCode, className, message, stackTraceElements);
+            return new Hazelcast.Protocol.Data.ErrorHolder(errorCode, className, message, stackTraceElements);
         }
     }
 }

@@ -98,9 +98,8 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeResponse(Guid response)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
+            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
             EncodeGuid(initialFrame, ResponseResponseFieldOffset, response);
             clientMessage.Add(initialFrame);
             return clientMessage;
@@ -118,7 +117,7 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeDistributedObjectEvent(string name, string serviceName, string eventType, Guid source)
         {
             var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
+            var initialFrame = new Frame(new byte[DistributedObjectEventInitialFrameSize], UnfragmentedMessage);
             EncodeInt(initialFrame, TypeFieldOffset, DistributedObjectEventMessageType);
             EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
             EncodeGuid(initialFrame, DistributedObjectEventSourceFieldOffset, source);
