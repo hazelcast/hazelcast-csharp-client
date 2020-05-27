@@ -57,7 +57,7 @@ namespace Hazelcast.Clustering
         {
             _readonlyProperties = true;
 
-            lock (_clusterLock)
+            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 if (_clusterState != ClusterState.NotConnected)
                     throw new InvalidOperationException("Cluster has already been connected.");
@@ -189,7 +189,7 @@ namespace Hazelcast.Clustering
             // some other code is already trying to connect to it and there is no
             // point waiting to try too - faster to just fail immediately
 
-            using var acquired = await LockAcquisition.TryLockAsync(address.Lock).CAF();
+            using var acquired = await address.Lock.TryAcquireAsync().CAF();
             if (!acquired) return Attempt.Failed;
 
             try
@@ -251,7 +251,7 @@ namespace Hazelcast.Clustering
             Partitioner.NotifyInitialCount(info.PartitionCount);
 
             // register & prepare the client
-            lock (_clusterLock)
+            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 var firstClient = _clients.Count == 0;
 
@@ -287,8 +287,7 @@ namespace Hazelcast.Clustering
                     _memberTable = new MemberTable(0, Array.Empty<MemberInfo>());
 
                     // get distributed object factory to re-create objects, etc
-                    // FIXME: mitigation = replace cluster lock with a semaphore, 3x slower but?!
-                    //await _onConnectionToNewCluster().CAF();
+                    await _onConnectionToNewCluster(_clusterCancellation.Token).CAF();
                 }
 
                 // if we don't have a cluster client yet, start a
@@ -316,7 +315,7 @@ namespace Hazelcast.Clustering
 
             var die = false;
 
-            lock (_clusterLock)
+            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 _addressClients.TryRemove(client.Address, out _);
                 _clients.TryRemove(client.MemberId, out _);

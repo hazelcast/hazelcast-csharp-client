@@ -62,7 +62,7 @@ namespace Hazelcast.Tests.DotNet
             { }
 
             var thing2 = new Thing<int>(2);
-            var i = thing2.GetT();
+            _ = thing2.GetT();
         }
 
         private static string GetString()

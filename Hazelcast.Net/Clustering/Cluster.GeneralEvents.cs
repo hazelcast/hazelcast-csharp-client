@@ -36,7 +36,7 @@ namespace Hazelcast.Clustering
         {
             // capture active clients, and adds the subscription - atomically.
             List<Client> clients;
-            lock (_clusterLock)
+            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 clients = _clients.Values.Where(x => x.Active).ToList();
 
@@ -121,7 +121,10 @@ namespace Hazelcast.Clustering
             // so whatever happens, nothing remains of the original subscription
             // (but the client may be "dirty" ie the server may still think it needs
             // to send events, which will be ignored)
-            lock (_clusterLock) _subscriptions.TryRemove(subscription.Id, out _);
+            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
+            {
+                _subscriptions.TryRemove(subscription.Id, out _);
+            }
             return allRemoved;
         }
 
@@ -272,7 +275,7 @@ namespace Hazelcast.Clustering
             // ignore unknown subscriptions
             // don't remove it now - will remove it only if all goes well
             ClusterSubscription subscription;
-            lock (_clusterLock)
+            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 if (!_subscriptions.TryGetValue(subscriptionId, out subscription))
                     return;
@@ -307,7 +310,10 @@ namespace Hazelcast.Clustering
             // so whatever happens, nothing remains of the original subscription
             // (but the client may be "dirty" ie the server may still think it needs
             // to send events, which will be ignored)
-            lock (_clusterLock) _subscriptions.TryRemove(subscription.Id, out _);
+            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
+            {
+                _subscriptions.TryRemove(subscription.Id, out _);
+            }
 
             // if at least an exception was thrown, rethrow
             if (exceptions != null)

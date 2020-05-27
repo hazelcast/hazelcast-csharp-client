@@ -1,4 +1,7 @@
-﻿// https://github.com/dotnet/corefx/blob/1597b894a2e9cac668ce6e484506eca778a85197/src/Common/src/CoreLib/System/Index.cs
+﻿#pragma warning disable MA0048 // File name must match type name
+#if NETSTANDARD2_0 ||  NETCOREAPP2_0 ||  NETCOREAPP2_1 ||  NETCOREAPP2_2 || NET45 || NET451 || NET452 || NET6 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48
+
+// https://github.com/dotnet/corefx/blob/1597b894a2e9cac668ce6e484506eca778a85197/src/Common/src/CoreLib/System/Index.cs
 // https://github.com/dotnet/corefx/blob/1597b894a2e9cac668ce6e484506eca778a85197/src/Common/src/CoreLib/System/Range.cs
 
 using System.Runtime.CompilerServices;
@@ -238,9 +241,10 @@ namespace System
     }
 }
 
+// ReSharper disable once CheckNamespace
 namespace System.Runtime.CompilerServices
 {
-    internal static class RuntimeHelpers
+    internal static class RuntimeHelpers2
     {
         /// <summary>
         /// Slices the specified array using the specified range.
@@ -277,3 +281,5 @@ namespace System.Runtime.CompilerServices
         }
     }
 }
+
+#endif

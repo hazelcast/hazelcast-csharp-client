@@ -81,7 +81,7 @@ namespace Hazelcast.Clustering
 
         // general cluster lifecycle
         private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
-        private readonly object _clusterLock = new object(); // general lock
+        private readonly SemaphoreSlim _clusterLock = new SemaphoreSlim(1, 1); // general lock
         private volatile ClusterState _clusterState = ClusterState.NotConnected; // cluster state
         private volatile bool _disposed; // disposed flag
         private Task _clusterConnectTask; // the task that connects the cluster
@@ -253,7 +253,7 @@ namespace Hazelcast.Clustering
         {
             var tasks = new List<Task>();
 
-            lock (_clusterLock)
+            using (await _clusterLock.AcquireAsync().CAF())
             {
                 if (_disposed) return;
                 _disposed = true;

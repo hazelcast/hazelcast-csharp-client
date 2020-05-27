@@ -62,6 +62,7 @@ namespace Hazelcast.Clustering
             _clusterEventsTask ??= SetClusterEventsClientAsync(client, cancellationToken);
         }
 
+        /*
         /// <summary>
         /// Starts the task that ensures that a client handlers cluster events, if it is not already running.
         /// </summary>
@@ -76,6 +77,7 @@ namespace Hazelcast.Clustering
 
             _clusterEventsTask ??= SetClusterEventsClientAsync(null, cancellationToken);
         }
+        */
 
         /// <summary>
         /// Sets a client to handle cluster events.
@@ -109,7 +111,7 @@ namespace Hazelcast.Clustering
                 }
 
                 // success!
-                lock (_clusterLock)
+                using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
                 {
                     _clusterEventsClient = client;
                     _clusterEventsCorrelationId = correlationId;
