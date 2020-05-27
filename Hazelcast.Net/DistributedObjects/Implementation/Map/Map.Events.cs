@@ -75,7 +75,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
                 HandleEvent,
                 new SubscriptionState(mode, Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken);
+            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
 
             return subscription.Id;
         }
@@ -295,4 +295,4 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         }
     }
-}
+}

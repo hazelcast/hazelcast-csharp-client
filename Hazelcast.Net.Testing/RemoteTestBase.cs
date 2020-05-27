@@ -77,7 +77,7 @@ namespace Hazelcast.Testing
         /// </summary>
         /// <returns>A client.</returns>
         protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync()
-            => await CreateOpenClientAsync(ConfigureClient);
+            => await CreateOpenClientAsync(ConfigureClient).CAF();
 
         /// <summary>
         /// Creates a client.
@@ -93,12 +93,12 @@ namespace Hazelcast.Testing
             {
                 // TODO: set a timeout on OpenAsync
                 AddDisposable(client);
-                await client.OpenAsync();
+                await client.OpenAsync().CAF();
                 return client;
             }
             catch
             {
-                await client.DisposeAsync();
+                await client.DisposeAsync().CAF();
                 RemoveDisposable(client);
                 throw;
             }

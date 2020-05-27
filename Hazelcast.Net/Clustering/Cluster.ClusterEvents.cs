@@ -63,11 +63,11 @@ namespace Hazelcast.Clustering
                 switch (handler)
                 {
                     case ClusterObjectLifecycleEventHandler _:
-                        await _objectLifecycleEventSubscription.AddSubscription(cancellationToken);
+                        await _objectLifecycleEventSubscription.AddSubscription(cancellationToken).CAF();
                         break;
 
                     case PartitionLostEventHandler _:
-                        await _partitionLostEventSubscription.AddSubscription(cancellationToken);
+                        await _partitionLostEventSubscription.AddSubscription(cancellationToken).CAF();
                         break;
 
                     default:
@@ -97,11 +97,11 @@ namespace Hazelcast.Clustering
                 switch (handler)
                 {
                     case ClusterObjectLifecycleEventHandler _:
-                        await _objectLifecycleEventSubscription.RemoveSubscription(cancellationToken);
+                        await _objectLifecycleEventSubscription.RemoveSubscription(cancellationToken).CAF();
                         break;
 
                     case PartitionLostEventHandler _:
-                        await _partitionLostEventSubscription.RemoveSubscription(cancellationToken);
+                        await _partitionLostEventSubscription.RemoveSubscription(cancellationToken).CAF();
                         break;
 
                     default:

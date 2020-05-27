@@ -62,11 +62,11 @@ namespace Hazelcast.Testing.Remote
 
         private async Task<T> WithLock<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken)
         {
-            await _lock.WaitAsync(cancellationToken);
+            await _lock.WaitAsync(cancellationToken).CAF();
             try
             {
                 if (!cancellationToken.IsCancellationRequested)
-                    return await action(cancellationToken);
+                    return await action(cancellationToken).CAF();
                 else
                     return default;
             }

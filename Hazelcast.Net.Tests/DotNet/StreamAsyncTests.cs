@@ -22,7 +22,7 @@ namespace Hazelcast.Tests.DotNet
             //source.CancelAfter(2000);
 
             // wtf is this non-blocking?!
-            var count = await stream.ReadAsync(memory, source.Token);
+            var count = await stream.ReadAsync(memory, source.Token).CAF();
             Console.WriteLine(count);
 
             // should end ok

@@ -50,7 +50,7 @@ namespace Hazelcast.Testing
         public static async Task ShutdownClusterDownAsync(this IRemoteControllerClient rc, Remote.Cluster cluster)
         {
             while (!(await rc.ShutdownClusterAsync(cluster)))
-                await Task.Delay(1_000);
+                await Task.Delay(1_000).CAF();
         }
 
         /// <summary>
@@ -86,15 +86,15 @@ namespace Hazelcast.Testing
                     partitions.Release();
                 }), CancellationToken.None);
 
-            var member = await rc.StartMemberAsync(cluster);
-            await added.WaitAsync(TimeSpan.FromSeconds(120));
+            var member = await rc.StartMemberAsync(cluster).CAF();
+            await added.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
 
             // trigger the partition table creation
-            var map = await client.GetMapAsync<object, object>("default");
+            var map = await client.GetMapAsync<object, object>("default").CAF();
             _ = map.GetAsync(new object());
 
-            await partitions.WaitAsync(TimeSpan.FromSeconds(120));
-            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None);
+            await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
+            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
 
             var partitioner = clientInternal.Cluster.Partitioner;
             var partitionsCount = partitioner.Count;
@@ -138,9 +138,9 @@ namespace Hazelcast.Testing
                     removed.Release();
                 }), CancellationToken.None);
 
-            await rc.StopMemberAsync(cluster, member);
-            await removed.WaitAsync(TimeSpan.FromSeconds(120));
-            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None);
+            await rc.StopMemberAsync(cluster, member).CAF();
+            await removed.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
+            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Hazelcast.Testing
                 var transport = new Thrift.Transport.TFramedTransport(tSocketTransport);
                 if (!transport.IsOpen)
                 {
-                    await transport.OpenAsync();
+                    await transport.OpenAsync().CAF();
                 }
                 var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
                 return RemoteControllerClient.Create(protocol);

@@ -47,7 +47,7 @@ namespace Hazelcast.Clustering
         {
             var credentialsFactory = _configuration.CredentialsFactory.Create();
 
-            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken);
+            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
             if (info != null) return info;
 
             if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
@@ -55,7 +55,7 @@ namespace Hazelcast.Clustering
                 resettableCredentialsFactory.Reset();
 
                 // try again
-                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken);
+                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
                 if (info != null) return info;
             }
 
@@ -104,7 +104,7 @@ namespace Hazelcast.Clustering
             cancellationToken.ThrowIfCancellationRequested();
 
             XConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client.SendAsync(requestMessage, cancellationToken);
+            var responseMessage = await client.SendAsync(requestMessage, cancellationToken).CAF();
             XConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
@@ -123,4 +123,4 @@ namespace Hazelcast.Clustering
             return new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion);
         }
     }
-}
+}

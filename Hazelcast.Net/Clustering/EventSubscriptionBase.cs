@@ -46,7 +46,7 @@ namespace Hazelcast.Clustering
 
             var subscription = CreateSubscription();
 
-            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken);
+            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
 
             _subscriptionId = subscription.Id;
         }
@@ -59,8 +59,8 @@ namespace Hazelcast.Clustering
             if (Interlocked.Decrement(ref _subscriptionsCount) > 0)
                 return;
 
-            await Cluster.RemoveSubscriptionAsync(_subscriptionId, cancellationToken);
+            await Cluster.RemoveSubscriptionAsync(_subscriptionId, cancellationToken).CAF();
             _subscriptionId = default;
         }
     }
-}
+}

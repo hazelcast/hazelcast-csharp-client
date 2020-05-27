@@ -213,7 +213,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // hopefully the client is still active, else this will throw
-                response = await SendToClientAsync(subscribeRequest, client, correlationId, cancellationToken);
+                response = await SendToClientAsync(subscribeRequest, client, correlationId, cancellationToken).CAF();
             }
             catch (Exception e)
             {
@@ -241,7 +241,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                var unsubscribeResponse = await SendToClientAsync(unsubscribeRequest, client, cancellationToken);
+                var unsubscribeResponse = await SendToClientAsync(unsubscribeRequest, client, cancellationToken).CAF();
                 var unsubscribed = subscription.DecodeUnsubscribeResponse(unsubscribeResponse);
                 return unsubscribed
                     ? new InstallAttempt(InstallResult.SubscriptionNotActive)

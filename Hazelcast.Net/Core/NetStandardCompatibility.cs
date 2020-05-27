@@ -112,12 +112,12 @@ namespace Hazelcast.Core
                 // hences this... workaround
                 //
                 var reading = stream.ReadAsync(bytes, 0, memory.Length, cancellationToken);
-                var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken));
+                var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken)).CAF();
 
                 if (completed != reading)
                     throw new TaskCanceledException();
 
-                var count = await reading;
+                var count = await reading.CAF();
 
                 new ReadOnlySpan<byte>(bytes).Slice(0, count).CopyTo(memory.Span);
                 return count;

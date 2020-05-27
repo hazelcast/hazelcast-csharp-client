@@ -270,7 +270,7 @@ namespace Hazelcast.Clustering
             {
                 try
                 {
-                    await client.DisposeAsync();
+                    await client.DisposeAsync().CAF();
                 }
                 catch (Exception e)
                 {

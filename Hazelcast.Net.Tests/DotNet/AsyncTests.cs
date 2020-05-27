@@ -29,17 +29,17 @@ namespace Hazelcast.Tests.DotNet
             var task = Task.Run(async () =>
             {
                 steps.Add("task.start");
-                await Task.Delay(2000);
+                await Task.Delay(2000).CAF();
                 steps.Add("task.complete");
                 taskCompletionSource.SetResult(42); // this is NOT fire-and-forget !!
                 steps.Add("task.end");
             });
 
             steps.Add("wait");
-            await taskCompletionSource.Task;
+            await taskCompletionSource.Task.CAF();
             steps.Add("end");
 
-            await Task.Delay(100);
+            await Task.Delay(100).CAF();
 
             Console.WriteLine(steps);
 
@@ -63,17 +63,17 @@ namespace Hazelcast.Tests.DotNet
             var task = Task.Run(async () =>
             {
                 steps.Add("task.start");
-                await Task.Delay(2000);
+                await Task.Delay(2000).CAF();
                 steps.Add("task.complete");
                 taskCompletionSource.SetResult(42); // this is NOT fire-and-forget !!
                 steps.Add("task.end");
             });
 
             steps.Add("wait");
-            await taskCompletionSource.Task;
+            await taskCompletionSource.Task.CAF();
             steps.Add("end");
 
-            await Task.Delay(100);
+            await Task.Delay(100).CAF();
 
             Console.WriteLine(steps);
 
@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.DotNet
                 new TaskCompletionSource<object>(),
             };
 
-            var wait = Task.Run(async () => await Task.WhenAll(sources.Select(x => x.Task)));
+            var wait = Task.Run(async () => await Task.WhenAll(sources.Select(x => x.Task))).CAF();
 
             void Throw(int j)
                 => throw new Exception("bang_" + j);
@@ -110,7 +110,7 @@ namespace Hazelcast.Tests.DotNet
             var i = 0;
             foreach (var source in sources)
             {
-                await Task.Delay(100);
+                await Task.Delay(100).CAF();
 
                 //source.SetException(new Exception("bang_" + i));
                 try
@@ -124,7 +124,7 @@ namespace Hazelcast.Tests.DotNet
 
                 i++;
 
-                await Task.Delay(100);
+                await Task.Delay(100).CAF();
 
                 // wait becomes Faulted only when all tasks have completed
                 var expected = i == 5 ? TaskStatus.Faulted : TaskStatus.WaitingForActivation;
@@ -134,7 +134,7 @@ namespace Hazelcast.Tests.DotNet
             Assert.AreEqual(5, i);
 
             // throws the "bang" exception
-            Assert.ThrowsAsync<Exception>(async () => await wait);
+            Assert.ThrowsAsync<Exception>(async () => await wait).CAF();
 
             i = 0;
             foreach (var source in sources)
@@ -206,9 +206,9 @@ namespace Hazelcast.Tests.DotNet
             static async Task RunAsync(CancellationToken cancellationToken, int i)
             {
                 if (i == 0)
-                    await Task.Delay(delay, cancellationToken);
+                    await Task.Delay(delay, cancellationToken).CAF();
                 else
-                    await RunAsync(cancellationToken, i - 1);
+                    await RunAsync(cancellationToken, i - 1).CAF();
             }
 
             using var generalCancellation = new CancellationTokenSource();
@@ -250,7 +250,7 @@ namespace Hazelcast.Tests.DotNet
             using var generalCancellation = new CancellationTokenSource();
             var thisCancellation = generalCancellation.WithTimeout(timeout);
 
-            await Task.Delay(delay, thisCancellation.Token).OrTimeout(thisCancellation);
+            await Task.Delay(delay, thisCancellation.Token).OrTimeout(thisCancellation).CAF();
 
             Assert.IsFalse(generalCancellation.IsCancellationRequested);
             // thisCancellation has been disposed
@@ -265,7 +265,7 @@ namespace Hazelcast.Tests.DotNet
 
             static async Task RunAsync(CancellationToken cancellationToken)
             {
-                await Task.Delay(delay, cancellationToken);
+                await Task.Delay(delay, cancellationToken).CAF();
                 throw new Exception("bang");
             }
 
@@ -275,7 +275,7 @@ namespace Hazelcast.Tests.DotNet
             try
             {
                 // if the task throws before timeout, we get the real proper exception
-                await RunAsync(thisCancellation.Token).OrTimeout(thisCancellation);
+                await RunAsync(thisCancellation.Token).OrTimeout(thisCancellation).CAF();
             }
             catch (Exception e)
             {
@@ -291,14 +291,14 @@ namespace Hazelcast.Tests.DotNet
         public async Task DelayCancel()
         {
             var cancellation = new CancellationTokenSource(1_000);
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.Delay(2_000, cancellation.Token));
-            await Task.Delay(100, CancellationToken.None);
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.Delay(2_000, cancellation.Token)).CAF();
+            await Task.Delay(100, CancellationToken.None).CAF();
 
             // TaskCancelledException inherits from OperationCancelledException
             cancellation = new CancellationTokenSource(1_000);
             try
             {
-                await Task.Delay(2_000, cancellation.Token);
+                await Task.Delay(2_000, cancellation.Token).CAF();
             }
             catch (OperationCanceledException)
             { }
@@ -311,8 +311,8 @@ namespace Hazelcast.Tests.DotNet
             var semaphore = new SemaphoreSlim(0);
 
             var cancellation = new CancellationTokenSource(1_000);
-            Assert.ThrowsAsync<OperationCanceledException>(async () => await semaphore.WaitAsync(cancellation.Token));
-            await Task.Delay(100, CancellationToken.None);
+            Assert.ThrowsAsync<OperationCanceledException>(async () => await semaphore.WaitAsync(cancellation.Token)).CAF();
+            await Task.Delay(100, CancellationToken.None).CAF();
         }
 
         [Test]
@@ -327,7 +327,7 @@ namespace Hazelcast.Tests.DotNet
             var task2 = semaphore.WaitAsync(cancellation.Token);
 
             var t = await Task.WhenAny(task1, task2); // does not throw
-            await Task.Delay(100, CancellationToken.None);
+            await Task.Delay(100, CancellationToken.None).CAF();
 
             Assert.IsTrue(t.IsCompleted);
             Assert.IsTrue(t.IsCanceled);
@@ -346,8 +346,8 @@ namespace Hazelcast.Tests.DotNet
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
 
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2));
-            await Task.Delay(100, CancellationToken.None);
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2)).CAF();
+            await Task.Delay(100, CancellationToken.None).CAF();
 
             Assert.IsTrue(task1.IsCanceled);
             Assert.IsTrue(task2.IsCanceled);

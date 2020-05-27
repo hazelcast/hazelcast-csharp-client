@@ -72,7 +72,7 @@ namespace Hazelcast.Testing.TestServer
 
             _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
             XConsole.Configure(_listener, config => config.SetIndent(24).SetPrefix("LISTENER"));
-            await _listener.StartAsync();
+            await _listener.StartAsync().CAF();
 
             XConsole.WriteLine(this, "Server started");
         }
@@ -83,7 +83,7 @@ namespace Hazelcast.Testing.TestServer
 
             // shutdown all existing connections
             foreach (var connection in _connections.Values)
-                await connection.TryDisposeAsync();
+                await connection.TryDisposeAsync().CAF();
 
             XConsole.WriteLine(this, "Connections are down");
         }
@@ -102,7 +102,7 @@ namespace Hazelcast.Testing.TestServer
             XConsole.WriteLine(this, "Stop server");
 
             // stop accepting new connections
-            await listener.StopAsync();
+            await listener.StopAsync().CAF();
             listener.Dispose();
 
             XConsole.WriteLine(this, "Server stopped");
@@ -129,7 +129,7 @@ namespace Hazelcast.Testing.TestServer
         {
             eventMessage.CorrelationId = correlationId;
             eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-            await connection.SendAsync(eventMessage);
+            await connection.SendAsync(eventMessage).CAF();
         }
 
         private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
@@ -145,7 +145,7 @@ namespace Hazelcast.Testing.TestServer
                     var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
                         0, _address, _memberId, SerializationService.SerializerVersion,
                         "4.0", 1, _clusterId, false);
-                    await SendAsync(connection, responseMessage, correlationId);
+                    await SendAsync(connection, responseMessage, correlationId).CAF();
                     break;
                 }
 
@@ -154,23 +154,23 @@ namespace Hazelcast.Testing.TestServer
                 {
                     var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
                     var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                    await SendAsync(connection, responseMessage, correlationId);
+                    await SendAsync(connection, responseMessage, correlationId).CAF();
 
                     _ = Task.Run(async () =>
                     {
-                        await Task.Delay(500);
+                        await Task.Delay(500).CAF();
                         var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
                         {
                             new MemberInfo(_memberId, _address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
                         });
-                        await SendAsync(connection, eventMessage, correlationId);
+                        await SendAsync(connection, eventMessage, correlationId).CAF();
                     });
                     break;
                 }
 
                 // handle others
                 default:
-                    await _handler(connection, requestMessage);
+                    await _handler(connection, requestMessage).CAF();
                     break;
             }
         }
@@ -195,7 +195,7 @@ namespace Hazelcast.Testing.TestServer
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await StopAsync();
+            await StopAsync().CAF();
         }
     }
 }

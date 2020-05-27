@@ -106,7 +106,7 @@ namespace Hazelcast.DistributedObjects.Implementation
                 // dictionary, so take care of it ourselves
                 if (_disposed == 1)
                 {
-                    await o.DisposeAsync();
+                    await o.DisposeAsync().CAF();
                     throw new ObjectDisposedException("DistributedObjectFactory");
                 }
             }
@@ -139,7 +139,7 @@ namespace Hazelcast.DistributedObjects.Implementation
             {
                 // TODO: what-if some succeed and some fail?
                 var requestMessage = ClientCreateProxyCodec.EncodeRequest(o.Name, o.ServiceName);
-                await _cluster.SendAsync(requestMessage, cancellationToken);
+                await _cluster.SendAsync(requestMessage, cancellationToken).CAF();
             }
         }
 
@@ -161,10 +161,10 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             foreach (var t in _objects.Values)
             {
-                var o = await t;
+                var o = await t.CAF();
                 try
                 {
-                    await o.DisposeAsync();
+                    await o.DisposeAsync().CAF();
                 }
                 catch (Exception e)
                 {
@@ -173,4 +173,4 @@ namespace Hazelcast.DistributedObjects.Implementation
             }
         }
     }
-}
+}

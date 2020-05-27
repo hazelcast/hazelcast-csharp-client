@@ -15,12 +15,12 @@ namespace AsyncTest1Cli
             var task = DoAsync(source.Token);
             //task.ConfigureAwait(false).GetAwaiter().OnCompleted(OnCompleted);
 
-            await Task.Delay(1000, CancellationToken.None);
+            await Task.Delay(1000, CancellationToken.None).CAF();
 
             source.Cancel();
 
             // observes the exception
-            //await task;
+            //await task.CAF();
 
             //task = task.ContinueWith(x =>
             //{
@@ -38,7 +38,7 @@ namespace AsyncTest1Cli
 
             Console.ReadLine();
 
-            //await Task.Delay(1000, CancellationToken.None);
+            //await Task.Delay(1000, CancellationToken.None).CAF();
         }
 
         public static void OnCompleted()
@@ -48,7 +48,7 @@ namespace AsyncTest1Cli
 
         public static async Task DoAsync()
         {
-            await Task.Delay(100);
+            await Task.Delay(100).CAF();
             throw new Exception("bang");
         }
 
@@ -57,7 +57,7 @@ namespace AsyncTest1Cli
             Console.WriteLine("doAsync start");
             try
             {
-                await Task.Delay(10 * 1000, token);
+                await Task.Delay(10 * 1000, token).CAF();
             }
             catch
             {
@@ -68,4 +68,4 @@ namespace AsyncTest1Cli
             Console.WriteLine("doAsync end");
         }
     }
-}
+}

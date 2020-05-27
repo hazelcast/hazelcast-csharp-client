@@ -154,7 +154,7 @@ namespace Hazelcast.NearCaching
                 return false;
 
             // if we added the entry, make sure to create its value too
-            var value2 = (await lazyEntry.CreateValueAsync()).Value;
+            var value2 = (await lazyEntry.CreateValueAsync()).Value.CAF();
 
             if (value2 == null)
             {
@@ -190,12 +190,12 @@ namespace Hazelcast.NearCaching
 
             // if the cache is full, directly return the un-cached value
             if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize && !Entries.ContainsKey(keyData))
-                return Attempt.Fail(await valueFactory(keyData));
+                return Attempt.Fail(await valueFactory(keyData)).CAF();
 
             // prepare the cache entry
             var lazyEntry = new AsyncLazy<NearCacheEntry>(async () =>
             {
-                var valueData = await valueFactory(keyData);
+                var valueData = await valueFactory(keyData).CAF();
                 var cachedValue = ToEntryValue(valueData);
                 var entry = CreateEntry(keyData, cachedValue);
                 Statistics.IncrementEntryCount();
@@ -210,7 +210,7 @@ namespace Hazelcast.NearCaching
                 NearCacheEntry entry;
                 try
                 {
-                    entry = await lazyEntry.CreateValueAsync();
+                    entry = await lazyEntry.CreateValueAsync().CAF();
                 }
                 catch
                 {
@@ -230,7 +230,7 @@ namespace Hazelcast.NearCaching
                 return o;
 
             // otherwise, add the uncached value
-            return Attempt.Fail(await valueFactory(keyData));
+            return Attempt.Fail(await valueFactory(keyData)).CAF();
         }
 
         public bool TryGetValue(IData keyData, out object value)

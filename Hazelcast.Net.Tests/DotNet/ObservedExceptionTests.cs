@@ -50,12 +50,12 @@ namespace Hazelcast.Tests.DotNet
             _ = DoAsync(source.Token);
             //task.CAF().GetAwaiter().OnCompleted(OnCompleted);
 
-            await Task.Delay(1000, CancellationToken.None);
+            await Task.Delay(1000, CancellationToken.None).CAF();
 
             source.Cancel();
 
             // observes the exception
-            //await task;
+            //await task.CAF();
 
             //task = task.ContinueWith(x =>
             //{
@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.DotNet
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            //await Task.Delay(1000, CancellationToken.None);
+            //await Task.Delay(1000, CancellationToken.None).CAF();
         }
 
         private StringBuilder _log;
@@ -88,14 +88,14 @@ namespace Hazelcast.Tests.DotNet
             // this DOES observe the exception and we are happy
             var observing = task.ObserveException();
 
-            await Task.Delay(4000);
+            await Task.Delay(4000).CAF();
 
             // these 3 lines are required in order to observe!
             task = null;
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            await Task.Delay(4000);
+            await Task.Delay(4000).CAF();
 
             _log.AppendLine("end");
             Console.WriteLine(_log.ToString());
@@ -103,7 +103,7 @@ namespace Hazelcast.Tests.DotNet
 
         public async Task Throw()
         {
-            await Task.Delay(1000);
+            await Task.Delay(1000).CAF();
             _log.AppendLine("throw");
             throw new Exception("bang");
         }
@@ -115,7 +115,7 @@ namespace Hazelcast.Tests.DotNet
 
         public async Task DoAsync()
         {
-            await Task.Delay(100);
+            await Task.Delay(100).CAF();
             throw new Exception("bang");
         }
 
@@ -124,7 +124,7 @@ namespace Hazelcast.Tests.DotNet
             Console.WriteLine("doAsync start");
             try
             {
-                await Task.Delay(10 * 1000, token);
+                await Task.Delay(10 * 1000, token).CAF();
             }
             catch
             {
@@ -146,4 +146,4 @@ namespace Hazelcast.Tests.DotNet
             return Task.FromResult(3);
         }
     }
-}
+}

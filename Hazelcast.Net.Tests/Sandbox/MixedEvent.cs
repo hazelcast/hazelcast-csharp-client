@@ -162,7 +162,7 @@ namespace Hazelcast.Tests.Sandbox
             {
                 try
                 {
-                    await method(args);
+                    await method(args).CAF();
                 }
                 catch (Exception e)
                 {
@@ -173,4 +173,4 @@ namespace Hazelcast.Tests.Sandbox
             }
         }
     }
-}
+}

@@ -67,7 +67,7 @@ namespace Hazelcast.Networking
 
             // connect to server
             XConsole.WriteLine(this, "Connect to server");
-            await socket.ConnectAsync(_endpoint, cancellationToken);
+            await socket.ConnectAsync(_endpoint, cancellationToken).CAF();
             XConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream
@@ -80,4 +80,4 @@ namespace Hazelcast.Networking
             XConsole.WriteLine(this, "Opened");
         }
     }
-}
+}

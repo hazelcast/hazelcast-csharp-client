@@ -123,7 +123,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         /// <inheritdoc />
         protected override async Task<bool> TryAddOrReplaceAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var added = await base.TryAddOrReplaceAsync(keyData, valueData, serverTimeout, cancellationToken);
+            var added = await base.TryAddOrReplaceAsync(keyData, valueData, serverTimeout, cancellationToken).CAF();
             if (added) _cache.Invalidate(keyData);
             return added;
         }

@@ -355,7 +355,7 @@ namespace Hazelcast.Clustering
             // create the invocation
             var invocation = new Invocation(message, this, cancellationToken);
 
-            return await SendAsync(invocation, cancellationToken);
+            return await SendAsync(invocation, cancellationToken).CAF();
         }
 
         /// <summary>

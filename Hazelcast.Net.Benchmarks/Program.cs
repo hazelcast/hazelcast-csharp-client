@@ -40,7 +40,7 @@ namespace AsyncTests1.Benchmark
         [Benchmark]
         public async Task Semaphore()
         {
-            await _semaphore.WaitAsync();
+            await _semaphore.WaitAsync().CAF();
             i++;
             _semaphore.Release();
         }

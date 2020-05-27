@@ -85,14 +85,14 @@ namespace Hazelcast.Testing
                 {
                     try
                     {
-                        await assertAction();
+                        await assertAction().CAF();
                         return;
                     }
                     catch (AssertionException e)
                     {
                         if (dispatch == null)
                             dispatch = ExceptionDispatchInfo.Capture(e);
-                        await Task.Delay(250);
+                        await Task.Delay(250).CAF();
                     }
                 }
             }
@@ -101,4 +101,4 @@ namespace Hazelcast.Testing
             dispatch?.Throw();
         }
     }
-}
+}

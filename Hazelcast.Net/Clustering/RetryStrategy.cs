@@ -128,4 +128,4 @@ namespace Hazelcast.Clustering
             _begin = DateTime.UtcNow;
         }
     }
-}
+}

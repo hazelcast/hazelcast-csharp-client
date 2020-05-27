@@ -206,7 +206,7 @@ namespace Hazelcast.Networking
             Interlocked.Exchange(ref _isActive, 0);
 
             // ensure everything is down by awaiting the other task
-            await (task == _pipeReading ? _pipeWriting : _pipeReading);
+            await (task == _pipeReading ? _pipeWriting : _pipeReading).CAF();
 
             // kill socket and stream
             try
@@ -238,7 +238,7 @@ namespace Hazelcast.Networking
             // send bytes
             try
             {
-                await _stream.WriteAsync(bytes, 0, length, cancellationToken);
+                await _stream.WriteAsync(bytes, 0, length, cancellationToken).CAF();
                 LastWriteTime = DateTime.Now;
             }
             catch (Exception e)
@@ -272,7 +272,7 @@ namespace Hazelcast.Networking
                 int bytesRead;
                 try
                 {
-                    bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token);
+                    bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token).CAF();
 
                     if (bytesRead == 0)
                     {
@@ -300,7 +300,7 @@ namespace Hazelcast.Networking
                 writer.Advance(bytesRead);
 
                 // make the data available to the PipeReader
-                var result = await writer.FlushAsync();
+                var result = await writer.FlushAsync().CAF();
 
                 if (result.IsCompleted)
                 {
@@ -311,7 +311,7 @@ namespace Hazelcast.Networking
 
             // tell the PipeReader that there's no more data coming
             XConsole.WriteLine(this, "Pipe writer completing");
-            await writer.CompleteAsync();
+            await writer.CompleteAsync().CAF();
         }
 
         /// <summary>
@@ -339,7 +339,7 @@ namespace Hazelcast.Networking
 
             // mark the PipeReader as complete
             XConsole.WriteLine(this, "Pipe reader completing");
-            await reader.CompleteAsync();
+            await reader.CompleteAsync().CAF();
         }
 
         /// <summary>
@@ -351,8 +351,8 @@ namespace Hazelcast.Networking
         private async ValueTask<bool> ReadPipeLoop0(ReadPipeState state)
         {
             // await data from the pipe
-            XConsole.WriteLine(this, "Pipe reader awaits data from the pipe");
-            var result = await state.Reader.ReadAsync();
+            XConsole.WriteLine(this, "Pipe reader awaits data from the pipe").CAF();
+            var result = await state.Reader.ReadAsync().CAF();
             state.Buffer = result.Buffer;
 
             // no data means it's over
@@ -406,7 +406,7 @@ namespace Hazelcast.Networking
                 try
                 {
                     XConsole.WriteLine(this, "Pipe reader received prefix");
-                    await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength));
+                    await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength)).CAF();
                     state.Buffer = state.Buffer.Slice(_prefixLength);
                     _prefixLength = 0;
                 }
@@ -426,7 +426,7 @@ namespace Hazelcast.Networking
             try
             {
                 // handle the bytes (and slice the buffer accordingly)
-                return await _onReceiveMessageBytes(this, state);
+                return await _onReceiveMessageBytes(this, state).CAF();
             }
             catch (Exception e)
             {
@@ -450,7 +450,7 @@ namespace Hazelcast.Networking
             _streamReadCancellationTokenSource.Cancel();
 
             // wait for everything to be down
-            await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown);
+            await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown).CAF();
             XConsole.WriteLine(this, "Pipe is down");
 
             // dispose, ignore exceptions

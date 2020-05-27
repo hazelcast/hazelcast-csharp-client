@@ -153,7 +153,7 @@ namespace Hazelcast.Networking
 
             // notify
             if (_onShutdown != null)
-                await _onShutdown(this);
+                await _onShutdown(this).CAF();
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace Hazelcast.Networking
             XConsole.WriteLine(this, "Stop listener");
 
             _cancellationTokenSource.Cancel();
-            await _listeningThenShutdown;
+            await _listeningThenShutdown.CAF();
 
             XConsole.WriteLine(this, "Stopped listener");
         }
@@ -241,4 +241,4 @@ namespace Hazelcast.Networking
             _cancellationTokenSource.TryDispose();
         }
     }
-}
+}

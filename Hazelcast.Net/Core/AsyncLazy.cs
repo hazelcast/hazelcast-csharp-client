@@ -92,7 +92,7 @@ namespace Hazelcast.Core
                 if (asyncFactory == null) throw new InvalidOperationException();
                 _asyncFactory = null;
 
-                _value = await asyncFactory();
+                _value = await asyncFactory().CAF();
                 _state = null; // volatile write must occur after setting _value
 
                 return _value;
@@ -134,4 +134,4 @@ namespace Hazelcast.Core
             return _value;
         }
     }
-}
+}

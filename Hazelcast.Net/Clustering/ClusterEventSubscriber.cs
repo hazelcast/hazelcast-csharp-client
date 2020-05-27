@@ -69,7 +69,7 @@ namespace Hazelcast.Clustering
         {
             if (_subscribeAsync != null)
             {
-                await _subscribeAsync(cluster);
+                await _subscribeAsync(cluster).CAF();
             }
             else
             {
@@ -77,8 +77,8 @@ namespace Hazelcast.Clustering
                     ? Services.CreateInstance<IClusterEventSubscriber>(_typename)
                     : Services.CreateInstance<IClusterEventSubscriber>(_type));
 
-                await subscriber.SubscribeAsync(cluster, cancellationToken);
+                await subscriber.SubscribeAsync(cluster, cancellationToken).CAF();
             }
         }
     }
-}
+}

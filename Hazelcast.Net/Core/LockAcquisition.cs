@@ -86,7 +86,7 @@ namespace Hazelcast.Core
         /// <returns>A <see cref="LockAcquisition"/> instance that must be disposed to exit the lock.</returns>
         private async ValueTask<LockAcquisition> WaitAsync()
         {
-            await _semaphore.WaitAsync();
+            await _semaphore.WaitAsync().CAF();
             Acquired = true;
             return this;
         }
@@ -102,7 +102,7 @@ namespace Hazelcast.Core
         /// </remarks>
         private async ValueTask<LockAcquisition> TryLockAsync()
         {
-            Acquired = await _semaphore.WaitAsync(0);
+            Acquired = await _semaphore.WaitAsync(0).CAF();
             return this;
         }
 

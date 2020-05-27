@@ -552,4 +552,4 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
             => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.GetTarget() as PagingPredicate;
     }
-}
+}

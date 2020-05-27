@@ -376,7 +376,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         protected async Task<bool> ReplaceAsync(IData keyData, IData expectedData, IData newData, CancellationToken cancellationToken)
         {
             var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ThreadId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -432,7 +432,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var timeoutMs = serverTimeout.CodecMilliseconds(0);
 
             var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeoutMs);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -521,7 +521,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
             var requestMessage = MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -585,4 +585,4 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         }
     }
-}
+}

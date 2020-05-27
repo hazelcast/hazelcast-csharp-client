@@ -13,11 +13,11 @@ namespace Hazelcast.Tests.Sandbox
 
             var testing = new Testing();
 
-            await testing.TriggerSomething(1);
+            await testing.TriggerSomething(1).CAF();
             Assert.AreEqual(0, count);
 
             testing.OnSomething.Add(args => count += args);
-            await testing.TriggerSomething(1);
+            await testing.TriggerSomething(1).CAF();
             Assert.AreEqual(1, count);
 
             testing.OnSomething.Add(args =>
@@ -25,7 +25,7 @@ namespace Hazelcast.Tests.Sandbox
                 count += args;
                 return default;
             });
-            await testing.TriggerSomething(1);
+            await testing.TriggerSomething(1).CAF();
             Assert.AreEqual(3, count);
         }
 
@@ -36,7 +36,7 @@ namespace Hazelcast.Tests.Sandbox
             /// </summary>
             public MixedEvent<int> OnSomething { get; } = new MixedEvent<int>();
 
-            public async ValueTask TriggerSomething(int args) => await OnSomething.InvokeAsync(args);
+            public async ValueTask TriggerSomething(int args) => await OnSomething.InvokeAsync(args).CAF();
         }
     }
 }

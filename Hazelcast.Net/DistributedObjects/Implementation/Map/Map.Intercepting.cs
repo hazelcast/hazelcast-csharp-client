@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var interceptorData = ToSafeData(interceptor);
 
             var requestMessage = MapAddInterceptorCodec.EncodeRequest(Name, interceptorData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapAddInterceptorCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -88,4 +88,4 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         }
     }
-}
+}

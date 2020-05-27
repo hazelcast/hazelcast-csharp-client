@@ -43,7 +43,7 @@ namespace Hazelcast.Testing
                             syncDisposable.Dispose();
                             break;
                         case IAsyncDisposable asyncDisposable:
-                            await asyncDisposable.DisposeAsync();
+                            await asyncDisposable.DisposeAsync().CAF();
                             break;
                         default:
                             throw new NotSupportedException("Object is neither IDisposable nor IAsyncDisposable.");

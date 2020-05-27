@@ -45,7 +45,7 @@ namespace Hazelcast.Core
             //return tcs.Task;
 
             var cancellation = new CancellationTokenSource();
-            var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token));
+            var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token)).CAF();
 
             if (t == tcs.Task)
             {
@@ -87,7 +87,7 @@ namespace Hazelcast.Core
             //return tcs.Task;
 
             var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var t = await Task.WhenAny(tcs.Task, Task.Delay(-1, cancellation.Token));
+            var t = await Task.WhenAny(tcs.Task, Task.Delay(-1, cancellation.Token)).CAF();
 
             if (t == tcs.Task)
             {
