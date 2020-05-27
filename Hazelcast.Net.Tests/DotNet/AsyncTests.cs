@@ -101,9 +101,9 @@ namespace Hazelcast.Tests.DotNet
                 new TaskCompletionSource<object>(),
             };
 
-            var wait = Task.Run(async () => await Task.WhenAll(sources.Select(x => x.Task))).CAF();
+            var wait = Task.Run(async () => await Task.WhenAll(sources.Select(x => x.Task)).CAF());
 
-            void Throw(int j)
+            static void Throw(int j)
                 => throw new Exception("bang_" + j);
 
             // can set exception on many tasks without problems
@@ -134,7 +134,7 @@ namespace Hazelcast.Tests.DotNet
             Assert.AreEqual(5, i);
 
             // throws the "bang" exception
-            Assert.ThrowsAsync<Exception>(async () => await wait).CAF();
+            Assert.ThrowsAsync<Exception>(async () => await wait.CAF());
 
             i = 0;
             foreach (var source in sources)
@@ -291,7 +291,7 @@ namespace Hazelcast.Tests.DotNet
         public async Task DelayCancel()
         {
             var cancellation = new CancellationTokenSource(1_000);
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.Delay(2_000, cancellation.Token)).CAF();
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.Delay(2_000, cancellation.Token).CAF());
             await Task.Delay(100, CancellationToken.None).CAF();
 
             // TaskCancelledException inherits from OperationCancelledException
@@ -311,7 +311,7 @@ namespace Hazelcast.Tests.DotNet
             var semaphore = new SemaphoreSlim(0);
 
             var cancellation = new CancellationTokenSource(1_000);
-            Assert.ThrowsAsync<OperationCanceledException>(async () => await semaphore.WaitAsync(cancellation.Token)).CAF();
+            Assert.ThrowsAsync<OperationCanceledException>(async () => await semaphore.WaitAsync(cancellation.Token).CAF());
             await Task.Delay(100, CancellationToken.None).CAF();
         }
 
@@ -346,16 +346,11 @@ namespace Hazelcast.Tests.DotNet
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
 
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2)).CAF();
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.WhenAll(task1, task2).CAF());
             await Task.Delay(100, CancellationToken.None).CAF();
 
             Assert.IsTrue(task1.IsCanceled);
             Assert.IsTrue(task2.IsCanceled);
-        }
-
-        private void Log(string msg)
-        {
-            Console.WriteLine($"[{Thread.CurrentThread.ManagedThreadId:00}] " + msg);
         }
 
         private class Steps

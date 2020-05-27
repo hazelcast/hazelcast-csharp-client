@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 
 namespace Hazelcast.Tests.Sandbox
@@ -173,4 +174,5 @@ namespace Hazelcast.Tests.Sandbox
             }
         }
     }
-}
+}
+

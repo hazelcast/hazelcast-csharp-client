@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Hazelcast.Networking;

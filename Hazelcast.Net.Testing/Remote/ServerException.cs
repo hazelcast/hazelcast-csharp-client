@@ -2,10 +2,13 @@
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Thrift;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Protocol.Utilities;
+
+#pragma warning disable
 
 namespace Hazelcast.Testing.Remote
 {
@@ -14,7 +17,7 @@ namespace Hazelcast.Testing.Remote
   {
     private string _message;
 
-    public string Message
+    public new string Message
     {
       get
       {
@@ -140,4 +143,5 @@ namespace Hazelcast.Testing.Remote
     }
   }
 
-}
+}
+

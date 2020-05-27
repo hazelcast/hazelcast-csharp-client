@@ -176,7 +176,7 @@ namespace Hazelcast.Tests
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.SendAsync(message, token)).CAF();
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.SendAsync(message, token).CAF());
 
             // TODO dispose the client, the server
             await server.StopAsync().CAF();
@@ -377,7 +377,7 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<HazelcastClientNotConnectedException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None)).CAF();
+            Assert.ThrowsAsync<HazelcastClientNotConnectedException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None).CAF());
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100).CAF();
@@ -571,4 +571,5 @@ namespace Hazelcast.Tests
             });
         }
     }
-}
+}
+

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
@@ -123,4 +124,5 @@ namespace Hazelcast.Clustering
             return new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion);
         }
     }
-}
+}
+

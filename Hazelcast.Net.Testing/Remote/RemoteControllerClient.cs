@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Thrift.Protocol;
 
 namespace Hazelcast.Testing.Remote

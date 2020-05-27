@@ -5,12 +5,15 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Thrift;
 using Thrift.Processor;
 using Thrift.Protocol;
 using Thrift.Protocol.Entities;
 using Thrift.Protocol.Utilities;
 using Thrift.Transport;
+
+#pragma warning disable
 
 namespace Hazelcast.Testing.Remote
 {
@@ -4953,4 +4956,5 @@ namespace Hazelcast.Testing.Remote
     }
 
   }
-}
+}
+

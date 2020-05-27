@@ -127,7 +127,7 @@ namespace Hazelcast.Serialization
         public T ToObject<T>(object @object)
         {
             var o = ToObject(@object);
-            return o == null ? default(T) : (T) o;
+            return o == null ? default : (T) o;
         }
 
         public object ToObject(object @object)
@@ -347,8 +347,7 @@ namespace Hazelcast.Serialization
                     return _constantTypeIds[index];
                 }
             }
-            _idMap.TryGetValue(typeId, out var result);
-            return _idMap.TryGetValue(typeId, out result) ? result : default(ISerializerAdapter);
+            return _idMap.TryGetValue(typeId, out var result) ? result : default;
         }
 
         internal PortableSerializer GetPortableSerializer()
@@ -377,13 +376,12 @@ namespace Hazelcast.Serialization
 
         private ISerializerAdapter CreateSerializerAdapterByGeneric<T>(ISerializer serializer)
         {
-            var streamSerializer = serializer as IStreamSerializer<T>;
-            if (streamSerializer != null)
+            if (serializer is IStreamSerializer<T> streamSerializer)
             {
                 return new StreamSerializerAdapter<T>(streamSerializer);
             }
-            var arraySerializer = serializer as IByteArraySerializer<T>;
-            if (arraySerializer != null)
+
+            if (serializer is IByteArraySerializer<T> arraySerializer)
             {
                 return new ByteArraySerializerAdapter<T>(arraySerializer);
             }
@@ -409,15 +407,14 @@ namespace Hazelcast.Serialization
 
         private Exception HandleException(Exception e)
         {
-            if (e is OutOfMemoryException)
+            switch (e)
             {
-                return e;
+                case OutOfMemoryException _:
+                case HazelcastSerializationException _:
+                    return e;
+                default:
+                    return new HazelcastSerializationException(e);
             }
-            if (e is HazelcastSerializationException)
-            {
-                return e;
-            }
-            return new HazelcastSerializationException(e);
         }
 
         private int IndexForDefaultType(int typeId)
@@ -427,8 +424,7 @@ namespace Hazelcast.Serialization
 
         private ISerializerAdapter LookupCustomSerializer(Type type)
         {
-            ISerializerAdapter serializer;
-            _typeMap.TryGetValue(type, out serializer);
+            _typeMap.TryGetValue(type, out var serializer);
             if (serializer == null)
             {
                 // look for super classes
@@ -471,8 +467,8 @@ namespace Hazelcast.Serialization
             {
                 return _portableSerializerAdapter;
             }
-            ISerializerAdapter serializer;
-            if (_constantTypesMap.TryGetValue(type, out serializer) && serializer != null)
+
+            if (_constantTypesMap.TryGetValue(type, out var serializer) && serializer != null)
             {
                 return serializer;
             }
@@ -513,8 +509,7 @@ namespace Hazelcast.Serialization
                 if (fd.GetFieldType() == FieldType.Portable || fd.GetFieldType() == FieldType.PortableArray)
                 {
                     var classId = fd.GetClassId();
-                    IClassDefinition nestedCd;
-                    classDefMap.TryGetValue(classId, out nestedCd);
+                    classDefMap.TryGetValue(classId, out var nestedCd);
                     if (nestedCd != null)
                     {
                         RegisterClassDefinition(nestedCd, classDefMap, checkClassDefErrors);
@@ -619,8 +614,7 @@ namespace Hazelcast.Serialization
 
         private ISerializerAdapter RegisterFromSuperType(Type type, Type superType)
         {
-            ISerializerAdapter serializer;
-            _typeMap.TryGetValue(superType, out serializer);
+            _typeMap.TryGetValue(superType, out var serializer);
             if (serializer != null)
             {
                 SafeRegister(type, serializer);
@@ -702,4 +696,4 @@ namespace Hazelcast.Serialization
             }
         }
     }
-}
+}

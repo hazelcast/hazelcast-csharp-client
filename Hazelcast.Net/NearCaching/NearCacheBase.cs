@@ -38,7 +38,7 @@ namespace Hazelcast.NearCaching
         private readonly InMemoryFormat _inMemoryFormat;
         protected readonly bool InvalidateOnChange;
         protected readonly ILoggerFactory LoggerFactory;
-        private readonly ILogger _logger;
+        //private readonly ILogger _logger;
         private readonly long _maxIdleMilliseconds;
 
         private readonly int _maxSize;
@@ -72,7 +72,7 @@ namespace Hazelcast.NearCaching
             InvalidateOnChange = nearCacheConfiguration.InvalidateOnChange;
 
             LoggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<NearCacheBase>();
+            //_logger = loggerFactory.CreateLogger<NearCacheBase>();
         }
 
         protected Cluster Cluster { get; }
@@ -141,20 +141,20 @@ namespace Hazelcast.NearCaching
                 return false;
 
             // prepare the cache entry
-            var lazyEntry = new AsyncLazy<NearCacheEntry>(async () =>
+            var lazyEntry = new AsyncLazy<NearCacheEntry>(() =>
             {
                 // FIXME have to trust caller - uh?
                 var ncValue = value; //ToEntryValue(value);
                 var entry = CreateEntry(keyData, ncValue);
                 Statistics.IncrementEntryCount();
-                return entry;
+                return Task.FromResult(entry);
             });
 
             if (!Entries.TryAdd(keyData, lazyEntry))
                 return false;
 
             // if we added the entry, make sure to create its value too
-            var value2 = (await lazyEntry.CreateValueAsync()).Value.CAF();
+            var value2 = (await lazyEntry.CreateValueAsync().CAF()).Value;
 
             if (value2 == null)
             {
@@ -190,7 +190,7 @@ namespace Hazelcast.NearCaching
 
             // if the cache is full, directly return the un-cached value
             if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize && !Entries.ContainsKey(keyData))
-                return Attempt.Fail(await valueFactory(keyData)).CAF();
+                return Attempt.Fail(await valueFactory(keyData).CAF());
 
             // prepare the cache entry
             var lazyEntry = new AsyncLazy<NearCacheEntry>(async () =>
@@ -230,7 +230,7 @@ namespace Hazelcast.NearCaching
                 return o;
 
             // otherwise, add the uncached value
-            return Attempt.Fail(await valueFactory(keyData)).CAF();
+            return Attempt.Fail(await valueFactory(keyData).CAF());
         }
 
         public bool TryGetValue(IData keyData, out object value)
@@ -385,20 +385,13 @@ namespace Hazelcast.NearCaching
         /// <returns>The record comparer corresponding to the specified eviction policy.</returns>
         private static IComparer<AsyncLazy<NearCacheEntry>> GetComparer(EvictionPolicy policy)
         {
-            switch (policy)
+            return policy switch
             {
-                case EvictionPolicy.Lfu:
-                    return new LfuComparer();
-
-                case EvictionPolicy.Lru:
-                    return new LruComparer();
-
-                case EvictionPolicy.None:
-                    return new DefaultComparer();
-
-                default:
-                    throw new NotSupportedException();
-            }
+                EvictionPolicy.Lfu => new LfuComparer(),
+                EvictionPolicy.Lru => new LruComparer(),
+                EvictionPolicy.None => new DefaultComparer(),
+                _ => throw new NotSupportedException()
+            };
         }
 
         /// <summary>

@@ -287,7 +287,7 @@ namespace Hazelcast.Clustering
                     _memberTable = new MemberTable(0, Array.Empty<MemberInfo>());
 
                     // get distributed object factory to re-create objects, etc
-                    await _onConnectionToNewCluster().CAF();
+                    //await _onConnectionToNewCluster().CAF();
                 }
 
                 // if we don't have a cluster client yet, start a

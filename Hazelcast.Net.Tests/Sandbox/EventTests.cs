@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sandbox

@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
+#pragma warning disable
+
 namespace AsyncTests1.Benchmark
 {
     class Program
@@ -40,7 +42,7 @@ namespace AsyncTests1.Benchmark
         [Benchmark]
         public async Task Semaphore()
         {
-            await _semaphore.WaitAsync().CAF();
+            await _semaphore.WaitAsync(); //.CAF();
             i++;
             _semaphore.Release();
         }

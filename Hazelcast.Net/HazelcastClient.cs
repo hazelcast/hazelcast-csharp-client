@@ -28,7 +28,9 @@ namespace Hazelcast
     /// </summary>
     internal partial class HazelcastClient : IHazelcastClient
     {
+#pragma warning disable IDE0052 // Remove unread private members - this is temp
         private readonly HazelcastConfiguration _configuration;
+#pragma warning restore IDE0052 // Remove unread private members
         private readonly DistributedObjectFactory _distributedObjectFactory;
 
         private int _disposed;
