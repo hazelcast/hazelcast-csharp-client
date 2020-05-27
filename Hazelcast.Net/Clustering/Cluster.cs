@@ -73,7 +73,6 @@ namespace Hazelcast.Clustering
         private Task _clusterConnectTask; // the task that connects the cluster
         private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
 
-        private readonly object _clusterEventsLock = new object(); // lock for events
         private Client _clusterEventsClient; // the client which handles 'cluster events'
         private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
 
@@ -206,6 +205,22 @@ namespace Hazelcast.Clustering
         /// </summary>
         public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLite);
 
+        /// <summary>
+        /// Throws if the cluster is disconnected (wait if it is connecting).
+        /// </summary>
+        public Task ThrowIfDisconnected()
+        {
+            if (_disposed || _clusterState != ClusterState.Connected)
+                throw new HazelcastClientNotActiveException();
+
+            // TODO: if connecting, wait?
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Dies (dispose without exceptions).
+        /// </summary>
+        /// <returns>A task that completes whe, the cluster has died.</returns>
         private async ValueTask DieAsync()
         {
             try
@@ -245,7 +260,7 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception e)
                 {
-                    // FIXME: handle exception
+                    _logger.LogWarning(e, "Caught an exception while disposing a client.");
                 }
             }
 

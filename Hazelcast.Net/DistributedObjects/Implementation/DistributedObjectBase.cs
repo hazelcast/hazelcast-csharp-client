@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
@@ -28,6 +29,11 @@ namespace Hazelcast.DistributedObjects.Implementation
     internal abstract class DistributedObjectBase : IDistributedObject
     {
         private static readonly IPartitioningStrategy PartitioningStrategy = new StringPartitioningStrategy();
+
+        private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
+        private Action<DistributedObjectBase> _onDispose;
+
+        private volatile int _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectBase"/> class.
@@ -47,6 +53,20 @@ namespace Hazelcast.DistributedObjects.Implementation
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        }
+
+        /// <summary>
+        /// Gets or sets an action that will be executed when the object disposes.
+        /// </summary>
+        public Action<DistributedObjectBase> OnDispose
+        {
+            get => _onDispose;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onDispose = value;
+            }
         }
 
         /// <inheritdoc />
@@ -119,6 +139,19 @@ namespace Hazelcast.DistributedObjects.Implementation
         protected virtual TObject ToObject<TObject>(object o)
             => SerializationService.ToObject<TObject>(o);
 
-        public virtual void OnInitialized() {}
+        public virtual void OnInitialized()
+        {
+            _readonlyProperties = true;
+        }
+
+        /// <inheritdoc />
+        public virtual ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return default;
+
+            _onDispose(this);
+            return default;
+        }
     }
 }

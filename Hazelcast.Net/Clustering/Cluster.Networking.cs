@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            await task.ConfigureAwait(false);
+            await task.CAF();
 #endif
         }
 
@@ -109,7 +109,14 @@ namespace Hazelcast.Clustering
 
                     tried.Add(address);
                     var attempt = await TryConnectAsync(address, cancellationToken).CAF();
-                    if (attempt) return; // successful exit
+                    if (attempt)
+                    {
+                        // avoid race conditions, this task is going to end, and if the
+                        // cluster disconnects we want to be sure we restart the task
+                        _clusterConnectTask = null;
+
+                        return; // successful exit
+                    }
 
                     if (attempt.HasException)
                     {
@@ -170,7 +177,7 @@ namespace Hazelcast.Clustering
             // some other code is already trying to connect to it and there is no
             // point waiting to try too - faster to just fail immediately
 
-            using var acquired = await LockAcquisition.TryLockAsync(address.Lock).ConfigureAwait(false);
+            using var acquired = await LockAcquisition.TryLockAsync(address.Lock).CAF();
             if (!acquired) return Attempt.Failed;
 
             try
@@ -186,7 +193,7 @@ namespace Hazelcast.Clustering
                 }
 
                 // else actually connect - this may throw
-                client = await ConnectWithLockAsync(address, cancellationToken).ConfigureAwait(false);
+                client = await ConnectWithLockAsync(address, cancellationToken).CAF();
                 return client;
             }
             catch (Exception e)
@@ -214,7 +221,7 @@ namespace Hazelcast.Clustering
             };
 
             // connect to the server (may throw)
-            await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            await client.ConnectAsync(cancellationToken).CAF();
             cancellationToken.ThrowIfCancellationRequested();
 
             // authenticate (may throw)
@@ -267,13 +274,10 @@ namespace Hazelcast.Clustering
                     //await _onConnectionToNewCluster();
                 }
 
-                lock (_clusterEventsLock)
-                {
-                    // if we don't have a cluster client yet, start a
-                    // single, cluster-wide task ensuring there is a cluster events client
-                    if (_clusterEventsClient == null)
-                        StartSetClusterEventsClientWithLock(client, _clusterCancellation.Token);
-                }
+                // if we don't have a cluster client yet, start a
+                // single, cluster-wide task ensuring there is a cluster events client
+                if (_clusterEventsClient == null)
+                    StartSetClusterEventsClientWithLock(client, _clusterCancellation.Token);
 
                 // per-client task subscribing the client to events
                 // this is entirely fire-and-forget, it anything goes wrong it will shut the client down
@@ -314,14 +318,10 @@ namespace Hazelcast.Clustering
                 var subscriptions = _subscriptions.Values.ToList();
                 ClearClientSubscriptions(subscriptions, client);
 
-                // replace 'cluster client' if needed
-                lock (_clusterEventsLock) // TODO: could this be the same state lock?
-                {
-                    // if the client was the cluster client, and we have more client, start a
-                    // single, cluster-wide task ensuring there is a cluster events client
-                    if (ClearClusterEventsClientWithLock(client) && !lastClient)
-                        StartSetClusterEventsClientWithLock(client, _clusterCancellation.Token);
-                }
+                // if the client was the cluster client, and we have more client, start a
+                // single, cluster-wide task ensuring there is a cluster events client
+                if (ClearClusterEventsClientWithLock(client) && !lastClient)
+                    StartSetClusterEventsClientWithLock(client, _clusterCancellation.Token);
 
                 if (!lastClient)
                     return;

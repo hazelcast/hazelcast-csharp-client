@@ -37,8 +37,9 @@ namespace Hazelcast.DistributedObjects.Implementation
         private readonly Cluster _cluster;
         private readonly ISerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
 
-        private int _disposed;
+        private volatile int _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectFactory"/> class.
@@ -51,6 +52,8 @@ namespace Hazelcast.DistributedObjects.Implementation
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+            _logger = loggerFactory.CreateLogger<DistributedObjectFactory>();
         }
 
         /// <summary>
@@ -68,23 +71,26 @@ namespace Hazelcast.DistributedObjects.Implementation
                                                  CancellationToken cancellationToken)
             where T: DistributedObjectBase
         {
+            if (_disposed == 1) throw new ObjectDisposedException("DistributedObjectFactory");
+            await _cluster.ThrowIfDisconnected().CAF();
+
             var k = new DistributedObjectInfo(serviceName, name);
 
             async ValueTask<DistributedObjectBase> CreateAsync()
             {
                 var x = factory(name, _cluster, _serializationService, _loggerFactory);
+                x.OnDispose = ObjectDisposed;
 
                 // initialize the object
                 if (remote)
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
                     XConsole.WriteLine(this, "Send initialize request");
-                    _ = await _cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
-                    XConsole.WriteLine(this, "Rcvd initialize response");
+                    _ = await _cluster.SendAsync(requestMessage, cancellationToken).CAF();
+                    XConsole.WriteLine(this, "Received initialize response");
                 }
 
                 x.OnInitialized();
-
                 return x;
             }
 
@@ -93,7 +99,16 @@ namespace Hazelcast.DistributedObjects.Implementation
             DistributedObjectBase o;
             try
             {
-                o = await _objects.GetOrAdd(k, _ => CreateAsync()).ConfigureAwait(false);
+                o = await _objects.GetOrAdd(k, _ => CreateAsync()).CAF();
+
+                // race condition: maybe the factory has been disposed and is already disposing
+                // objects and will ignore this new object even though it has been added to the
+                // dictionary, so take care of it ourselves
+                if (_disposed == 1)
+                {
+                    await o.DisposeAsync();
+                    throw new ObjectDisposedException("DistributedObjectFactory");
+                }
             }
             catch
             {
@@ -118,6 +133,8 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// </remarks>
         public async ValueTask CreateAllAsync(CancellationToken cancellationToken)
         {
+            await _cluster.ThrowIfDisconnected().CAF();
+
             foreach (var (o, _) in _objects)
             {
                 // TODO: what-if some succeed and some fail?
@@ -126,20 +143,34 @@ namespace Hazelcast.DistributedObjects.Implementation
             }
         }
 
+        /// <summary>
+        /// Deals with an object being disposed.
+        /// </summary>
+        /// <param name="o">The object.</param>
+        private void ObjectDisposed(DistributedObjectBase o)
+        {
+            var k = new DistributedObjectInfo(o.ServiceName, o.Name);
+            _objects.TryRemove(k, out _);
+        }
+
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            // FIXME: implement!
-            // also... we want to lock (read/write) while retrieving?
-
-            //foreach (var t in _objects.Values)
-            //{
-            //    var o = await t;
-            //    await o.DisposeAsync();
-            //}
+            foreach (var t in _objects.Values)
+            {
+                var o = await t;
+                try
+                {
+                    await o.DisposeAsync();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning(e, "Caught an exception while disposing a distributed object.");
+                }
+            }
         }
     }
 }

@@ -119,11 +119,18 @@ namespace Hazelcast.Clustering
             => CompletionSource.SetResult(result);
 
         /// <summary>
-        /// Transition the task to <see cref="TaskStatus.Faulted"/>.
+        /// Transitions the task to <see cref="TaskStatus.Faulted"/>.
         /// </summary>
         /// <param name="exception">The exception.</param>
         public void SetException(Exception exception)
             => CompletionSource.SetException(exception);
+
+        /// <summary>
+        /// Attempts to transition the task to <see cref="TaskStatus.Faulted"/>.
+        /// </summary>
+        /// <param name="exception">The exception.</param>
+        public void TrySetException(Exception exception)
+            => CompletionSource.TrySetException(exception);
 
         /// <summary>
         /// Determines whether an invocation should be retried after an exception was thrown.

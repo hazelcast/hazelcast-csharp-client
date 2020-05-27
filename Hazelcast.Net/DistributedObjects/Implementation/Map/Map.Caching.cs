@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
 
             var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellation.Token).OrTimeout(cancellation).ConfigureAwait(false);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellation.Token).OrTimeout(cancellation).CAF();
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var keyData = ToSafeData(key);
 
             var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).ConfigureAwait(false);
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -51,14 +51,14 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         {
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).ConfigureAwait(false);
+            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).CAF();
         }
 
         /// <inheritdoc />
         public async Task EvictAllAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
         }
 
         /// <inheritdoc />
@@ -66,14 +66,14 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         {
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var requestMessage = MapFlushCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).ConfigureAwait(false);
+            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).CAF();
         }
 
         /// <inheritdoc />
         public async Task FlushAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapFlushCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
         }
     }
 }

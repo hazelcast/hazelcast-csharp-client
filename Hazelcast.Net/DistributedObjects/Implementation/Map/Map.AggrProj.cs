@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -51,7 +51,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var aggregatorData = ToSafeData(aggregator);
 
             var requestMessage = MapAggregateCodec.EncodeRequest(Name, aggregatorData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapAggregateCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TResult>(response);
         }
@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -79,7 +79,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var (aggregatorData, predicateData) = ToSafeData(aggregator, predicate);
 
             var requestMessage = MapAggregateWithPredicateCodec.EncodeRequest(Name, aggregatorData, predicateData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapAggregateWithPredicateCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TResult>(response);
         }
@@ -97,7 +97,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -107,7 +107,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var projectionData = ToSafeData(projection);
 
             var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapProjectCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TResult>(response, SerializationService);
         }
@@ -125,7 +125,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -135,7 +135,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var (projectionData, predicateData) = ToSafeData(projection, predicate);
 
             var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapProjectWithPredicateCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TResult>(response, SerializationService);
         }

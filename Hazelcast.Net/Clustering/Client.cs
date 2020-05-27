@@ -24,7 +24,6 @@ namespace Hazelcast.Clustering
         private readonly ConcurrentDictionary<long, Invocation> _invocations
             = new ConcurrentDictionary<long, Invocation>();
 
-        private readonly object _activeLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoggerFactory _loggerFactory;
@@ -36,6 +35,7 @@ namespace Hazelcast.Clustering
 
         private ClientSocketConnection _socketConnection;
         private ClientMessageConnection _messageConnection;
+        private volatile int _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
@@ -78,7 +78,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Whether the client is active.
         /// </summary>
-        public bool Active { get; private set; }
+        public bool Active => _disposed == 0;
 
         /// <summary>
         /// Gets the unique identifier of the cluster member that this client is connected to.
@@ -184,8 +184,6 @@ namespace Hazelcast.Clustering
 
             if (!await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken))
                 throw new InvalidOperationException("Failed to send protocol bytes.");
-
-            lock (_activeLock) Active = true;
         }
 
         /// <summary>
@@ -195,13 +193,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
         private void SocketShutdown(SocketConnectionBase connection)
         {
-            lock (_activeLock)
-            {
-                if (!Active) return;
-                Active = false;
-            }
-
-            CompleteShutdown();
+            Die();
         }
 
         /// <summary>
@@ -366,25 +358,26 @@ namespace Hazelcast.Clustering
             // actually send the message
             var success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
 
-            lock (_activeLock)
+            if (!Active)
             {
-                // if the message could not be sent, or if the client is not connected
-                // anymore, the invocation will never complete and must be removed
-                if (!success || !Active)
-                {
-                    var exceptionMessage = !Active
-                        ? "Client is not active."
-                        : "Failed to send a message.";
-
-                    RemoveInvocation(invocation);
-
-                    XConsole.WriteLine(this, "Failed: " + exceptionMessage);
-                    throw new InvalidOperationException(exceptionMessage);
-                }
-
-                // otherwise it's ok to wait for a response
-                XConsole.WriteLine(this, "Wait for response...");
+                // if the client is not active anymore, the invocation *may* have been failed
+                // already, but there is a race condition here (what-if the client disposed
+                // right before the invocation was added?) and so we'd better take care of the
+                // situation here
+                // if the client disposes later on, we now *know* that the invocation is in
+                // the list and will be taken care of
+                RemoveInvocation(invocation);
+                throw new TargetDisconnectedException();
             }
+
+            if (!success)
+            {
+                RemoveInvocation(invocation);
+                XConsole.WriteLine(this, "Failed to send a message.");
+                throw new InvalidOperationException("Failed to send a message.");
+            }
+
+            XConsole.WriteLine(this, "Wait for response...");
 
             // and then wait for the response
             try
@@ -401,51 +394,62 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Shuts the client down in the background.
+        /// Dies.
         /// </summary>
-        public void Shutdown()
+        public void Die()
         {
-            Task.Run(ShutdownAsync);
+            Task.Run(async () => await DieAsync().CAF());
         }
-
+        
         /// <summary>
-        /// Shuts the client down.
+        /// Dies.
         /// </summary>
-        /// <returns>A task that will complete when the client has shut down.</returns>
-        public async Task ShutdownAsync()
+        public async ValueTask DieAsync()
         {
-            XConsole.WriteLine(this, "Shutdown");
-
-            lock (_activeLock)
+            try
             {
-                if (!Active) return;
-                Active = false;
+                await DisposeAsync().CAF();
             }
-
-            // shutdown the connection
-            await _socketConnection.ShutdownAsync();
-
-            await CompleteShutdown();
-        }
-
-        private async ValueTask CompleteShutdown()
-        {
-            // shutdown all pending operations
-            foreach (var completion in _invocations.Values)
-                completion.SetException(new Exception("shutdown"));
-
-            // invoke
-            if (_onShutdown != null)
+            catch (Exception e)
             {
-                await _onShutdown(this);
+                // that's all we can do really
+                _logger.LogWarning(e, "Caught an exception while dying.");
             }
         }
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            // FIXME: implement + understand link to shudown?
-            await ShutdownAsync();
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            if (_socketConnection == null)
+                return;
+
+            try
+            {
+                await _socketConnection.ShutdownAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Caught an exception while disposing the connection.");
+            }
+
+            // shutdown all pending operations
+            foreach (var invocation in _invocations.Values)
+                invocation.TrySetException(new TargetDisconnectedException());
+
+            if (_onShutdown == null) 
+                return;
+
+            try
+            {
+                await _onShutdown(this).CAF();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Caught an exception while running onShutdown.");
+            }
         }
     }
 }

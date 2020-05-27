@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.DotNet
@@ -47,7 +48,7 @@ namespace Hazelcast.Tests.DotNet
         {
             var source = new CancellationTokenSource();
             _ = DoAsync(source.Token);
-            //task.ConfigureAwait(false).GetAwaiter().OnCompleted(OnCompleted);
+            //task.CAF().GetAwaiter().OnCompleted(OnCompleted);
 
             await Task.Delay(1000, CancellationToken.None);
 
@@ -79,7 +80,7 @@ namespace Hazelcast.Tests.DotNet
             _log.AppendLine("run");
             var task = Throw();
 
-            task.ConfigureAwait(false)
+            task.CAF()
                 .GetAwaiter()
                 .OnCompleted(OnCompleted);
 

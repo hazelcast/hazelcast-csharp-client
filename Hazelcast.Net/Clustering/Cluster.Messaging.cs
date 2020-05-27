@@ -31,7 +31,7 @@ namespace Hazelcast.Clustering
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -67,7 +67,7 @@ namespace Hazelcast.Clustering
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -93,7 +93,7 @@ namespace Hazelcast.Clustering
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -120,7 +120,7 @@ namespace Hazelcast.Clustering
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -148,7 +148,7 @@ namespace Hazelcast.Clustering
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 
@@ -178,7 +178,7 @@ namespace Hazelcast.Clustering
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.ConfigureAwait(false);
+            return await task.CAF();
 #endif
         }
 

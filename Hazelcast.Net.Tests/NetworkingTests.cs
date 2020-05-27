@@ -420,7 +420,7 @@ namespace Hazelcast.Tests
             NUnit.Framework.Assert.AreEqual(AuthenticationStatus.Authenticated, status);
 
             XConsole.WriteLine(this, "Stop client");
-            await client1.ShutdownAsync();
+            await client1.DisposeAsync();
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);

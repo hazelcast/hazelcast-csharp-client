@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            await task.ConfigureAwait(false);
+            await task.CAF();
 #endif
         }
 
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 #if OPTIMIZE_ASYNC
             return task;
 #else
-            await task.ConfigureAwait(false);
+            await task.CAF();
 #endif
         }
     }

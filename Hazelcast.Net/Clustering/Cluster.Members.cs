@@ -95,7 +95,7 @@ namespace Hazelcast.Clustering
                 }
 
                 // success!
-                lock (_clusterEventsLock)
+                lock (_clusterLock)
                 {
                     _clusterEventsClient = client;
                     _clusterEventsCorrelationId = correlationId;
@@ -224,7 +224,7 @@ namespace Hazelcast.Clustering
                         XConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
                         if (_clients.TryGetValue(member.Id, out var client))
-                            client.Shutdown(); // shuts down in the background, will self-removed once down
+                            client.Die(); // dies in the background, will self-removed once down
                         break;
 
                     case 2: // new but not old = added
