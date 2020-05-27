@@ -13,17 +13,21 @@
 // limitations under the License.
 
 using System;
+using System.IO;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
+using Hazelcast.Protocol;
 
 namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Represents an ongoing server invocation.
     /// </summary>
-    internal class Invocation
+    public class Invocation
     {
         private static readonly int MinRetryDelayMilliseconds;
 
@@ -41,18 +45,34 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="Invocation"/> class.
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
-        /// <param name="boundToClient">Whether the invocation is bound to a client.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        public Invocation(ClientMessage requestMessage, CancellationToken cancellationToken)
+        {
+            RequestMessage = requestMessage;
+            CorrelationId = requestMessage.CorrelationId;
+            CompletionSource = new TaskCompletionSource<ClientMessage>();
+            _cancellationToken = cancellationToken;
+            _cancellationToken.Register(() => CompletionSource.TrySetCanceled());
+            AttemptsCount = 1;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Invocation"/> class.
+        /// </summary>
+        /// <param name="requestMessage">The request message.</param>
+        /// <param name="client">A client, that the invocation is bound to.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>When an invocation is bound to a client, it cannot be retried if the client dies.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, bool boundToClient, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, Client client, CancellationToken cancellationToken)
         {
             RequestMessage = requestMessage;
-            BoundToClient = boundToClient;
+            Client = client;
             CorrelationId = requestMessage.CorrelationId;
             CompletionSource = new TaskCompletionSource<ClientMessage>();
-            cancellationToken.Register(() => CompletionSource.TrySetCanceled());
+            _cancellationToken = cancellationToken;
+            _cancellationToken.Register(() => CompletionSource.TrySetCanceled());
             AttemptsCount = 1;
         }
 
@@ -62,9 +82,9 @@ namespace Hazelcast.Clustering
         public ClientMessage RequestMessage { get; }
 
         /// <summary>
-        /// Whether the invocation to bound to a client.
+        /// The client, if the invocation is bound to a client, otherwise null.
         /// </summary>
-        public bool BoundToClient { get; }
+        public Client Client { get; }
 
         /// <summary>
         /// Gets the correlation identifier.
@@ -106,11 +126,41 @@ namespace Hazelcast.Clustering
             => CompletionSource.SetException(exception);
 
         /// <summary>
+        /// Determines whether an invocation should be retried after an exception was thrown.
+        /// </summary>
+        /// <param name="exception">The exception.</param>
+        /// <param name="retryOnTargetDisconnected">Whether to retry on <see cref="TargetDisconnectedException"/>.</param>
+        /// <returns>true if the invocation should be retried; otherwise false.</returns>
+        /// <remarks>
+        /// <para>If it is determined that the invocation should be retried, it does not necessarily
+        /// mean that it can be retried, and that will be determined by <see cref="CanRetryAsync"/>.</para>
+        /// </remarks>
+        public bool ShouldRetry(Exception exception, bool retryOnTargetDisconnected)
+        {
+            switch (exception)
+            {
+                case IOException _:
+                    return Client == null; // not bound to a client
+
+                case SocketException _:
+                case ClientProtocolException cpe when cpe.Retryable:
+                    return true;
+
+                case TargetDisconnectedException _:
+                    return Client == null && // not bound to a client
+                           (RequestMessage.IsRetryable || retryOnTargetDisconnected);
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Determines whether to retry the invocation with a new correlation identifier.
         /// </summary>
         /// <param name="correlationIdProvider">A correlation identifier provider.</param>
         /// <returns>true if the invocation can be retried; otherwise false.</returns>
-        public async ValueTask<bool> CanRetry(Func<long> correlationIdProvider)
+        public async ValueTask<bool> CanRetryAsync(Func<long> correlationIdProvider)
         {
             AttemptsCount += 1;
 
@@ -127,9 +177,7 @@ namespace Hazelcast.Clustering
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this?
             var delayMilliseconds = Math.Min(1 << (AttemptsCount - Constants.Invocation.MaxFastInvocationCount), MinRetryDelayMilliseconds);
-            await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken);
-            if (_cancellationToken.IsCancellationRequested) return false;
-            // FIXME: or, would await throw?!
+            await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CAF(); // throws if cancelled
             return true;
         }
     }

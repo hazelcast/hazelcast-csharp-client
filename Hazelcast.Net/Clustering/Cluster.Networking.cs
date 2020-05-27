@@ -191,7 +191,7 @@ namespace Hazelcast.Clustering
             address = _addressProvider.Map(address);
 
             // create the client
-            var client = new Client(address, _correlationIdSequence, _clientOptions, _loggerFactory)
+            var client = new Client(address, _correlationIdSequence, _loggerFactory)
             {
                 OnReceiveEventMessage = OnEventMessage,
                 OnShutdown = HandleClientShutdown
@@ -204,7 +204,7 @@ namespace Hazelcast.Clustering
             // authenticate (may throw)
             var info = await _authenticator
                 .AuthenticateAsync(client, Name, ClientId, ClientName, _labels, _serializationService, cancellationToken)
-                .ConfigureAwait(false);
+                .CAF();
             if (info == null) throw new HazelcastException("Failed to authenticate");
             client.NotifyAuthenticated(info);
 

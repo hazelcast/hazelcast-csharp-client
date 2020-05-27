@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -29,7 +27,6 @@ namespace Hazelcast.Clustering
         private readonly object _activeLock = new object();
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
-        private readonly ClientOptions _options;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
 
@@ -44,32 +41,29 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
-        /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
-        /// <param name="options">Options.</param>
+        /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ClientOptions options, ILoggerFactory loggerFactory)
-            : this(address, correlationIdSequence, new Int32Sequence(), options, loggerFactory)
+        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+            : this(address, new Int32Sequence(), correlationIdSequence, loggerFactory)
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
-        /// <param name="correlationIdSequence">A unique sequence of correlation identifiers.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
-        /// <param name="options">Options.</param>
+        /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         /// <remarks>
         /// <para>The <paramref name="connectionIdSequence"/> parameter can be used to supply a
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ISequence<int> connectionIdSequence, ClientOptions options, ILoggerFactory loggerFactory)
+        public Client(NetworkAddress address, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
-            _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<Client>();
 
@@ -178,7 +172,15 @@ namespace Hazelcast.Clustering
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
             XConsole.Configure(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 
-            await _socketConnection.ConnectAsync(cancellationToken);
+            try
+            {
+                await _socketConnection.ConnectAsync(cancellationToken).CAF();
+            }
+            catch (Exception e)
+            {
+                XConsole.WriteLine(this, "Failed to connect. " + e);
+                throw;
+            }
 
             if (!await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken))
                 throw new InvalidOperationException("Failed to send protocol bytes.");
@@ -332,137 +334,19 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public
-#if !OPTIMIZE_ASYNC
-            async
-#endif
-        Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
         {
-            var task = SendAsync(message, _correlationIdSequence.Next, false, cancellationToken);
-
-#if OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <summary>
-        /// Sends a message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        /// <param name="thisClient">Whether the message is for this client only.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public
-#if !OPTIMIZE_ASYNC
-            async
-#endif
-        Task<ClientMessage> SendAsync(ClientMessage message, bool thisClient, CancellationToken cancellationToken)
-        {
-            var task = SendAsync(message, _correlationIdSequence.Next, thisClient, cancellationToken);
-
-#if OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <summary>
-        /// Sends a message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        /// <param name="correlationId">The correlation identifier.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public
-#if !OPTIMIZE_ASYNC
-            async
-#endif
-        Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, CancellationToken cancellationToken)
-        {
-            var task = SendAsync(message, correlationId, false, cancellationToken);
-
-#if OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <summary>
-        /// Sends a message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        /// <param name="correlationId">The correlation identifier.</param>
-        /// <param name="thisClient">Whether the message is for this client only.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, long correlationId, bool thisClient, CancellationToken cancellationToken)
-        {
-            lock (_activeLock)
-            {
-                if (!Active)
-                    throw new InvalidOperationException("Not connected.");
-            }
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
-            message.CorrelationId = correlationId;
+            message.CorrelationId = _correlationIdSequence.Next;
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            var invocation = new Invocation(message, thisClient, cancellationToken);
+            var invocation = new Invocation(message, this, cancellationToken);
 
-            while (true)
-            {
-                try
-                {
-                    return await SendAsync(invocation, cancellationToken).CAF();
-                }
-                catch (Exception exception)
-                {
-                    // if the client is not connected anymore, die
-                    if (!Active)
-                        throw new HazelcastClientNotActiveException(exception);
-
-                    // if it's retryable, and can be retried (no timeout etc), retry
-                    if (ShouldRetry(invocation, exception) &&
-                        await invocation.CanRetry(() => _correlationIdSequence.Next).CAF()) // may wait
-                    {
-                        XConsole.WriteLine(this, "Retrying...");
-                        continue;
-                    }
-
-                    // else... it's bad enough
-                    throw;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Determines whether an invocation could be retried.
-        /// </summary>
-        private bool ShouldRetry(Invocation invocation, Exception exception)
-        {
-            // FIXME retry on same client or different? ah fuck, it can be different!
-            switch (exception)
-            {
-                case IOException _:
-                    return !invocation.BoundToClient;
-
-                case SocketException _:
-                case ClientProtocolException cpe when cpe.Retryable:
-                    return true;
-
-                case TargetDisconnectedException _:
-                    return !invocation.BoundToClient &&
-                           (invocation.RequestMessage.IsRetryable || _options.RetryOnTargetDisconnected);
-
-                default:
-                    return false;
-            }
+            return await SendAsync(invocation, cancellationToken);
         }
 
         /// <summary>
@@ -471,7 +355,7 @@ namespace Hazelcast.Clustering
         /// <param name="invocation">The invocation.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        private async Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken)
         {
             // adds the invocation, it will be removed when receiving the response (or timeout or...)
             AddInvocation(invocation);
@@ -503,7 +387,7 @@ namespace Hazelcast.Clustering
             }
 
             // and then wait for the response
-            try 
+            try
             {
                 // in case it times out, there's not point cancelling invocation.Task as
                 // it is not a real task but just a task continuation source's task

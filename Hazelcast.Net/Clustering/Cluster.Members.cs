@@ -115,7 +115,7 @@ namespace Hazelcast.Clustering
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEvent);
-                _ = await client.SendAsync(subscribeRequest, correlationId, CancellationToken.None); // FIXME TOKEN
+                _ = await SendToClientAsync(subscribeRequest, client, correlationId, CancellationToken.None); // FIXME TOKEN
                 XConsole.WriteLine(this, "subscribed");
                 return true;
             }

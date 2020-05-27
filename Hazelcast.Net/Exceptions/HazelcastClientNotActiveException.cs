@@ -10,7 +10,7 @@ namespace Hazelcast.Exceptions
     public class HazelcastClientNotActiveException : InvalidOperationException
     {
         // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Client is not active.";
+        private const string DefaultMessage = "Hazelcast client is not connected.";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClientNotActiveException"/> class.

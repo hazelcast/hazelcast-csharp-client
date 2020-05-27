@@ -19,7 +19,6 @@ using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
-using Hazelcast.Security;
 using Hazelcast.Serialization;
 
 namespace Hazelcast
@@ -29,12 +28,47 @@ namespace Hazelcast
     /// </summary>
     public class HazelcastClientFactory
     {
+        private readonly HazelcastConfiguration _configuration;
+        private readonly Action<HazelcastConfiguration> _configure;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
+        /// </summary>
+        public HazelcastClientFactory()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
+        /// </summary>
+        /// <param name="configuration">A configuration to use by default for all clients.</param>
+        public HazelcastClientFactory(HazelcastConfiguration configuration)
+        {
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
+        /// </summary>
+        /// <param name="configure">A configure action to apply to all clients.</param>
+        public HazelcastClientFactory(Action<HazelcastConfiguration> configure)
+        {
+            _configure = configure ?? throw new ArgumentNullException(nameof(configure));
+        }
+
+        private HazelcastConfiguration CreateConfiguration()
+        {
+            if (_configuration != null) return _configuration;
+            var configuration = HazelcastConfiguration.CreateDefault();
+            _configure?.Invoke(configuration);
+            return configuration;
+        }
+
         /// <summary>
         /// Creates an <see cref="IHazelcastClient"/> instance.
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         public IHazelcastClient CreateClient()
-            => CreateClient(HazelcastConfiguration.CreateDefault());
+            => CreateClient(CreateConfiguration());
 
         /// <summary>
         /// Creates an <see cref="IHazelcastClient"/> instance.

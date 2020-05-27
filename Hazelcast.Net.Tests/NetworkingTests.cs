@@ -98,7 +98,6 @@ namespace Hazelcast.Tests
             return ErrorsServerCodec.EncodeResponse(errorHolders);
         }
 
-
         [Test]
         [Timeout(10_000)]
         public async Task CanRetryAndTimeout()
@@ -112,27 +111,72 @@ namespace Hazelcast.Tests
             Server server = null;
             server = new Server(address, async (conn, msg) =>
             {
-                XConsole.WriteLine(server, "Respond with error.");
-                var response = CreateErrorMessage(ClientProtocolErrors.RetryableHazelcast);
-                response.CorrelationId = msg.CorrelationId;
-                response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await conn.SendAsync(response);
+                async Task ResponseAsync(ClientMessage response)
+                {
+                    response.CorrelationId = msg.CorrelationId;
+                    response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                    await conn.SendAsync(response);
+                }
+
+                async Task EventAsync(ClientMessage eventMessage)
+                {
+                    eventMessage.CorrelationId = msg.CorrelationId;
+                    eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                    await conn.SendAsync(eventMessage);
+                }
+
+                switch (msg.MessageType)
+                {
+                    // must handle auth
+                    case ClientAuthenticationServerCodec.RequestMessageType:
+                        var authRequest = ClientAuthenticationServerCodec.DecodeRequest(msg);
+                        var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
+                            0, address, Guid.NewGuid(), SerializationService.SerializerVersion,
+                            "4.0", 1, Guid.NewGuid(), false);
+                        await ResponseAsync(authResponse);
+                        break;
+
+                    // must handle events
+                    case ClientAddClusterViewListenerServerCodec.RequestMessageType:
+                        var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(msg);
+                        var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                        await ResponseAsync(addResponse);
+
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(500);
+                            var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
+                            {
+                                new MemberInfo(Guid.NewGuid(), address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
+                            });
+                            await EventAsync(eventMessage);
+                        });
+
+                        break;
+
+                    default:
+                        XConsole.WriteLine(server, "Respond with error.");
+                        var response = CreateErrorMessage(ClientProtocolErrors.RetryableHazelcast);
+                        await ResponseAsync(response);
+                        break;
+                }
             }, LoggerFactory);
             AddDisposable(server);
             await server.StartAsync();
 
-            var corSequence = new Int64Sequence();
-            var conSequence = new Int32Sequence();
+            XConsole.WriteLine(this, "Start client");
+            var client = (HazelcastClient)new HazelcastClientFactory(configuration =>
+            {
+                configuration.Networking.Addresses.Add("127.0.0.1:11001");
+            }).CreateClient();
+            AddDisposable(client);
+            await client.OpenAsync();
 
-            XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync(CancellationToken.None);
-
-            XConsole.WriteLine(this, "Send message 1 to client 1");
+            XConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await client1.SendAsync(message, token));
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.SendAsync(message, token));
 
             // TODO dispose the client, the server
             await server.StopAsync();
@@ -171,18 +215,19 @@ namespace Hazelcast.Tests
             AddDisposable(server);
             await server.StartAsync();
 
-            var corSequence = new Int64Sequence();
-            var conSequence = new Int32Sequence();
+            XConsole.WriteLine(this, "Start client");
+            var client = (HazelcastClient) new HazelcastClientFactory(configuration =>
+            {
+                configuration.Networking.Addresses.Add("127.0.0.1:11001");
+            }).CreateClient();
+            AddDisposable(client);
+            await client.OpenAsync();
 
-            XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync(CancellationToken.None);
-
-            XConsole.WriteLine(this, "Send message 1 to client 1");
+            XConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
-            await client1.SendAsync(message, token); // default is 120s
+            await client.Cluster.SendAsync(message, token); // default is 120s
 
             NUnit.Framework.Assert.AreEqual(4, count);
 
@@ -214,20 +259,21 @@ namespace Hazelcast.Tests
             AddDisposable(server);
             await server.StartAsync();
 
-            var corSequence = new Int64Sequence();
-            var conSequence = new Int32Sequence();
+            XConsole.WriteLine(this, "Start client");
+            var client = (HazelcastClient)new HazelcastClientFactory(configuration =>
+            {
+                configuration.Networking.Addresses.Add("127.0.0.1:11001");
+            }).CreateClient();
+            AddDisposable(client);
+            await client.OpenAsync();
 
-            XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync(CancellationToken.None);
-
-            XConsole.WriteLine(this, "Send message 1 to client 1");
+            XConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
             Assert.ThrowsAsync<TaskCanceledException>(async () =>
             {
                 var token = new CancellationTokenSource(3_000).Token;
-                await client1.SendAsync(message, token); // default is 120s
+                await client.Cluster.SendAsync(message, token); // default is 120s
             });
 
             // TODO dispose the client, the server
@@ -251,37 +297,41 @@ namespace Hazelcast.Tests
             var server = new Server(address, ReceiveMessage, LoggerFactory);
             await server.StartAsync();
 
-            var corSequence = new Int64Sequence();
-            var conSequence = new Int32Sequence();
+            var clientFactory = new HazelcastClientFactory(configuration =>
+            {
+                configuration.Networking.Addresses.Add("127.0.0.1:11001");
+            });
 
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(address, corSequence, conSequence, new ClientOptions(), new NullLoggerFactory());
-            await client1.ConnectAsync(CancellationToken.None);
+            var client1 = (HazelcastClient) clientFactory.CreateClient();
+            AddDisposable(client1);
+            await client1.OpenAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
-            var response = await client1.SendAsync(message, CancellationToken.None);
+            var response = await client1.Cluster.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Start client 2");
-            var client2 = new Clustering.Client(address, corSequence, conSequence, new ClientOptions(),  new NullLoggerFactory());
-            await client2.ConnectAsync(CancellationToken.None);
+            var client2 = (HazelcastClient)clientFactory.CreateClient();
+            AddDisposable(client2);
+            await client2.OpenAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 2");
             message = CreateMessage("a");
-            response = await client2.SendAsync(message, CancellationToken.None);
+            response = await client2.Cluster.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("foo");
-            response = await client1.SendAsync(message, CancellationToken.None);
+            response = await client1.Cluster.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            XConsole.WriteLine(this, "Stop client");
-            await client1.ShutdownAsync();
+            //XConsole.WriteLine(this, "Stop client");
+            //await client1.CloseAsync();
 
             XConsole.WriteLine(this, "Stop server");
             await server.StopAsync();
@@ -302,15 +352,22 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Start server");
             var server = new Server(address, ReceiveMessage, LoggerFactory);
+            AddDisposable(server);
             await server.StartAsync();
 
+            var clientFactory = new HazelcastClientFactory(configuration =>
+            {
+                configuration.Networking.Addresses.Add("127.0.0.1:11000");
+            });
+
             XConsole.WriteLine(this, "Start client 1");
-            var client1 = new Clustering.Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
-            await client1.ConnectAsync(CancellationToken.None);
+            var client1 = (HazelcastClient)clientFactory.CreateClient();
+            AddDisposable(client1);
+            await client1.OpenAsync();
 
             XConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
-            var response = await client1.SendAsync(message, CancellationToken.None);
+            var response = await client1.Cluster.SendAsync(message, CancellationToken.None);
 
             XConsole.WriteLine(this, "Got response: " + GetText(response));
 
@@ -320,7 +377,7 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.SendAsync(message, CancellationToken.None));
+            Assert.ThrowsAsync<HazelcastClientNotActiveException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None));
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
@@ -338,7 +395,7 @@ namespace Hazelcast.Tests
             XConsole.WriteLine(this, "Begin");
 
             XConsole.WriteLine(this, "Start client ");
-            var client1 = new Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
+            var client1 = new Client(address, new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync(CancellationToken.None);
 
             // RC assigns a GUID but the default cluster name is 'dev'
@@ -353,7 +410,8 @@ namespace Hazelcast.Tests
             var labels = new HashSet<string>();
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             XConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client1.SendAsync(requestMessage, CancellationToken.None);
+            var invocation = new Invocation(requestMessage, CancellationToken.None);
+            var responseMessage = await client1.SendAsync(invocation, CancellationToken.None);
             XConsole.WriteLine(this, "Rcvd auth response " +
                                      XConsole.Lines(this, 1, responseMessage.Dump()));
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
@@ -407,62 +465,6 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
-        }
-
-        [Test]
-        [Timeout(10_000)]
-        [Ignore("poison-safe!")]
-        public async Task PoisonTest()
-        {
-            // must hit an actual server...
-            // but: that does not poison the server as there is a max message size
-            // so we'd need to do it in a fragmented way, not with frames
-            // well, even with fragments... still seems to limit message size...
-            // ah, and fragmented segments are not allowed before auth - safe
-
-            /*
-
-HAZELCAST_VERSION="4.0"
-HAZELCAST_TEST_VERSION="4.0"
-HAZELCAST_LIB=build/temp/lib
-
-CLASSPATH="$HAZELCAST_LIB/hazelcast-enterprise-${HAZELCAST_VERSION}.jar;$HAZELCAST_LIB/hazelcast-enterprise-${HAZELCAST_TEST_VERSION}-tests.jar;$HAZELCAST_LIB/hazelcast-${HAZELCAST_TEST_VERSION}-tests.jar"
-LICENSE="-Dhazelcast.enterprise.license.key=UNLIMITED_LICENSE#99Nodes#VuE0OIH7TbfKwAUNmSj1JlyFkr6a53911000199920009119011112151009"
-CMD_CONFIGS="-Dhazelcast.config=src/Hazelcast.Tests/Resources/hazelcast.xml -Xms2g -Xmx2g -Dhazelcast.multicast.group=224.206.1.1 -Djava.net.preferIPv4Stack=true"
-
-java  ${LICENSE} ${CMD_CONFIGS} -cp ${CLASSPATH} com.hazelcast.core.server.HazelcastMemberStarter >build/temp/hazelcast-${HAZELCAST_VERSION}-out.log 2>build/temp/hazelcast-${HAZELCAST_VERSION}-err.log &
-
-            */
-
-            // connect to real server
-            var address = NetworkAddress.Parse("127.0.0.1:5701");
-            var client1 = new Client(address, new Int64Sequence(), new ClientOptions(),  new NullLoggerFactory());
-            await client1.ConnectAsync(CancellationToken.None);
-            /*
-            // send poison
-            var message = new Message(new Frame(new byte[12]));
-            message.CorrelationId = 0;
-            message.MessageType = 0000;
-            message.Flags |= MessageFlags.BeginFragment;
-            await client1._connection.SendFrameAsync(message.FirstFrame);
-
-            var bytes = new byte[512];
-            message = new Message(new Frame(bytes));
-            await client1._connection.SendFrameAsync(message.FirstFrame);
-
-            while (true)
-            {
-                message = new Message(new Frame(new byte[12]));
-                message.CorrelationId = 0;
-                message.MessageType = 0000;
-                await client1._connection.SendFrameAsync(message.FirstFrame);
-
-                message = new Message(new Frame(bytes));
-                await client1._connection.SendFrameAsync(message.FirstFrame);
-
-                // never send the EndFragment nor IsFinal frame?
-            }
-            */
         }
 
         [Test]

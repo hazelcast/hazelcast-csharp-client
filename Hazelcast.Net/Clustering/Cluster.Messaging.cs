@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Serialization;
 
@@ -24,9 +26,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = GetRandomClient()
-                .SendAsync(message, _correlationIdSequence.Next, cancellation.Token)
-                .ThenDispose(cancellation);
+            var task = SendAsyncInternal(message, null, cancellation.Token).ThenDispose(cancellation);
 
 #if OPTIMIZE_ASYNC
             return task;
@@ -62,9 +62,7 @@ namespace Hazelcast.Clustering
             if (client == null) throw new InvalidOperationException("Could not get a client.");
 
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = client
-                .SendAsync(message, _correlationIdSequence.Next, cancellation.Token)
-                .ThenDispose(cancellation);
+            var task = SendAsyncInternal(message, client, cancellation.Token).ThenDispose(cancellation);
 
 #if OPTIMIZE_ASYNC
             return task;
@@ -90,9 +88,34 @@ namespace Hazelcast.Clustering
             if (client == null) throw new ArgumentNullException(nameof(client));
 
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = client
-                .SendAsync(message, _correlationIdSequence.Next, true, cancellation.Token)
-                .ThenDispose(cancellation);
+            var task = SendAsyncInternal(message, client, cancellation.Token).ThenDispose(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.ConfigureAwait(false);
+#endif
+        }
+
+        /// <summary>
+        /// Sends a message to a target.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="client">The target.</param>
+        /// <param name="correlationId">A correlation identifier.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+            Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            var task = SendAsyncInternal(message, client, correlationId, cancellation.Token).ThenDispose(cancellation);
 
 #if OPTIMIZE_ASYNC
             return task;
@@ -157,6 +180,77 @@ namespace Hazelcast.Clustering
 #else
             return await task.ConfigureAwait(false);
 #endif
+        }
+
+        /// <summary>
+        /// Sends a message.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="client">An optional client.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+        private
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<ClientMessage> SendAsyncInternal(ClientMessage message, Client client, CancellationToken cancellationToken)
+        {
+            var task = SendAsyncInternal(message, client, _correlationIdSequence.Next, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <summary>
+        /// Sends a message.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="client">An optional client.</param>
+        /// <param name="correlationId">A correlation identifier.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            // assign a unique identifier to the message
+            // and send in one fragment, with proper flags
+            message.CorrelationId = correlationId;
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            // create the invocation
+            var invocation = new Invocation(message, client, cancellationToken);
+
+            while (true)
+            {
+                try
+                {
+                    client ??= GetRandomClient();
+                    if (client == null) throw new HazelcastClientNotActiveException();
+                    return await client.SendAsync(invocation, cancellationToken).CAF();
+                }
+                catch (Exception exception)
+                {
+                    // if the cluster is not connected anymore, die
+                    if (_clusterState != ClusterState.Connected)
+                        throw new HazelcastClientNotActiveException(exception); // FIXME: rename DisconnectedException
+
+                    // if it's retryable, and can be retried (no timeout etc), retry
+                    // note that CanRetryAsync may wait (depending on the retry strategy)
+                    if (invocation.ShouldRetry(exception, _retryOnTargetDisconnected) &&
+                        await invocation.CanRetryAsync(() => _correlationIdSequence.Next).CAF())
+                    {
+                        XConsole.WriteLine(this, "Retrying...");
+                        continue;
+                    }
+
+                    // else... it's bad enough
+                    throw;
+                }
+            }
         }
     }
 }

@@ -17,9 +17,13 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Protocol.Data;
+using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.TestServer
@@ -32,7 +36,10 @@ namespace Hazelcast.Testing.TestServer
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
         private readonly Func<ClientMessageConnection, ClientMessage, ValueTask> _handler;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly NetworkAddress _address;
         private readonly IPEndPoint _endpoint;
+        private readonly Guid _clusterId;
+        private readonly Guid _memberId;
         private ServerSocketListener _listener;
 
         /// <summary>
@@ -43,9 +50,14 @@ namespace Hazelcast.Testing.TestServer
         /// <param name="loggerFactory">A logger factory.</param>
         public Server(NetworkAddress address, Func<ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory loggerFactory)
         {
+            _address = address;
             _endpoint = address.IPEndPoint;
             _handler = handler;
             _loggerFactory = loggerFactory;
+
+            _clusterId = Guid.NewGuid();
+            _memberId = Guid.NewGuid();
+
             XConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
         }
 
@@ -104,12 +116,62 @@ namespace Hazelcast.Testing.TestServer
             // the connection we receive is not wired yet
             // must wire it properly before accepting
 
-            var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = _handler };
+            var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
             XConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
             serverConnection.OnShutdown = SocketShutdown;
             serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
             serverConnection.Accept();
             _connections[serverConnection.Id] = serverConnection;
+        }
+
+        protected async Task SendAsync(ClientMessageConnection connection, ClientMessage eventMessage, long correlationId)
+        {
+            eventMessage.CorrelationId = correlationId;
+            eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+            await connection.SendAsync(eventMessage);
+        }
+
+        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
+        {
+            var correlationId = requestMessage.CorrelationId;
+
+            switch (requestMessage.MessageType)
+            {
+                // handle authentication
+                case ClientAuthenticationServerCodec.RequestMessageType:
+                {
+                    var request = ClientAuthenticationServerCodec.DecodeRequest(requestMessage);
+                    var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
+                        0, _address, _memberId, SerializationService.SerializerVersion,
+                        "4.0", 1, _clusterId, false);
+                    await SendAsync(connection, responseMessage, correlationId);
+                    break;
+                }
+
+                // handle events
+                case ClientAddClusterViewListenerServerCodec.RequestMessageType:
+                {
+                    var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
+                    var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                    await SendAsync(connection, responseMessage, correlationId);
+
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(500);
+                        var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
+                        {
+                            new MemberInfo(_memberId, _address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
+                        });
+                        await SendAsync(connection, eventMessage, correlationId);
+                    });
+                    break;
+                }
+
+                // handle others
+                default:
+                    await _handler(connection, requestMessage);
+                    break;
+            }
         }
 
         private static ValueTask ReceivePrefixBytes(SocketConnectionBase connection, ReadOnlySequence<byte> bytes)
