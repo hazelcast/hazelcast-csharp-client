@@ -31,7 +31,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.Boolean)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadBoolean(fieldName);
         }
@@ -46,7 +46,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.Byte)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadByte(fieldName);
         }
@@ -61,7 +61,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.ByteArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadByteArray(fieldName);
         }
@@ -76,7 +76,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.Char)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadChar(fieldName);
         }
@@ -91,7 +91,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.CharArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadCharArray(fieldName);
         }
@@ -143,7 +143,7 @@ namespace Hazelcast.Serialization
 
                 default:
                 {
-                    throw new IncompatibleClassChangeError();
+                    throw new IncompatibleClassChangeException();
                 }
             }
         }
@@ -158,7 +158,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.DoubleArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadDoubleArray(fieldName);
         }
@@ -200,7 +200,7 @@ namespace Hazelcast.Serialization
 
                 default:
                 {
-                    throw new IncompatibleClassChangeError();
+                    throw new IncompatibleClassChangeException();
                 }
             }
         }
@@ -215,7 +215,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.FloatArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadFloatArray(fieldName);
         }
@@ -252,7 +252,7 @@ namespace Hazelcast.Serialization
 
                 default:
                 {
-                    throw new IncompatibleClassChangeError();
+                    throw new IncompatibleClassChangeException();
                 }
             }
         }
@@ -267,7 +267,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.IntArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadIntArray(fieldName);
         }
@@ -309,7 +309,7 @@ namespace Hazelcast.Serialization
 
                 default:
                 {
-                    throw new IncompatibleClassChangeError();
+                    throw new IncompatibleClassChangeException();
                 }
             }
         }
@@ -324,7 +324,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.LongArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadLongArray(fieldName);
         }
@@ -339,7 +339,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.Portable)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadPortable<TPortable>(fieldName);
         }
@@ -354,7 +354,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.PortableArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadPortableArray(fieldName);
         }
@@ -381,7 +381,7 @@ namespace Hazelcast.Serialization
 
                 default:
                 {
-                    throw new IncompatibleClassChangeError();
+                    throw new IncompatibleClassChangeException();
                 }
             }
         }
@@ -396,7 +396,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.ShortArray)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadShortArray(fieldName);
         }
@@ -411,7 +411,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != FieldType.Utf)
             {
-                throw new IncompatibleClassChangeError();
+                throw new IncompatibleClassChangeException();
             }
             return base.ReadUTF(fieldName);
         }

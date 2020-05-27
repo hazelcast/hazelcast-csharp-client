@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -19,7 +17,7 @@ namespace Hazelcast.Networking
     /// <remarks>
     /// <para>The socket connection handle message bytes, and manages the network socket.</para>
     /// </remarks>
-    public abstract class SocketConnectionBase : IDisposable
+    public abstract partial class SocketConnectionBase : IAsyncDisposable
     {
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
 
@@ -243,29 +241,6 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
-        /// Closes the connection.
-        /// </summary>
-        /// <returns>A task that will complete when the connection has closed.</returns>
-        public async ValueTask ShutdownAsync()
-        {
-            if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
-                return;
-
-            // there does not seem to be any signaling of the other end
-            // we just shutdown the socket
-
-            // requests that the pipe stops processing
-            XConsole.WriteLine(this, "Cancel pipe");
-            _streamReadCancellationTokenSource.Cancel();
-
-            // wait for everything to be down
-            await _pipeWritingThenShutdown;
-            XConsole.WriteLine(this, "Pipe writing is down");
-            await _pipeReadingThenShutdown;
-            XConsole.WriteLine(this, "Pipe reading is down");
-        }
-
-        /// <summary>
         /// Reads from network, and writes to the pipe.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to read from.</param>
@@ -449,49 +424,22 @@ namespace Hazelcast.Networking
             }
         }
 
-        /// <summary>
-        /// Represents the state of the reading loop.
-        /// </summary>
-        private sealed class ReadPipeState : IBufferReference<ReadOnlySequence<byte>>
-        {
-            /// <summary>
-            /// Gets or sets the pipe reader.
-            /// </summary>
-            public PipeReader Reader { get; set; }
-
-            /// <summary>
-            /// Gets or sets the current buffer.
-            /// </summary>
-            public ReadOnlySequence<byte> Buffer { get; set; }
-
-            /// <summary>
-            /// Determines whether reading has failed.
-            /// </summary>
-            public bool Failed { get; private set; }
-
-            /// <summary>
-            /// Gets the optional exception that caused the failure.
-            /// </summary>
-            public ExceptionDispatchInfo Exception { get; private set; }
-
-            /// <summary>
-            /// Captures an exception and registers the failure.
-            /// </summary>
-            /// <param name="e">The exception.</param>
-            public void CaptureExceptionAndFail(Exception e)
-            {
-                // this should never happen, and we cannot do much about it
-                if (Exception != null)
-                    return;
-
-                Failed = true;
-                Exception = ExceptionDispatchInfo.Capture(e);
-            }
-        }
-
         /// <inheritdoc />
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
+            if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
+                return;
+
+            // requests that the pipe stops processing - which will trigger
+            // ShutdownInternal which will close the socket etc
+            XConsole.WriteLine(this, "Cancel pipe");
+            _streamReadCancellationTokenSource.Cancel();
+
+            // wait for everything to be down
+            await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown);
+            XConsole.WriteLine(this, "Pipe is down");
+
+            // dispose, ignore exceptions
             _socket.TryDispose();
             _stream.TryDispose();
             _streamReadCancellationTokenSource.TryDispose();

@@ -426,14 +426,7 @@ namespace Hazelcast.Clustering
             if (_socketConnection == null)
                 return;
 
-            try
-            {
-                await _socketConnection.ShutdownAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Caught an exception while disposing the connection.");
-            }
+            await _socketConnection.TryDisposeAsync().CAF();
 
             // shutdown all pending operations
             foreach (var invocation in _invocations.Values)

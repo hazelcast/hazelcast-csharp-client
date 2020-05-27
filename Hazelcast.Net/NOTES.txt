@@ -41,6 +41,17 @@ References
 https://particular.net/blog/async-await-tips-and-tricks
 https://github.com/Fody/Fody/
 
+#### NOTES ABOUT FILE NAMING
+
+Class Foo goes into file Foo.cs
+Class Bar nested into class Foo goes into file Foo+Bar.cs
+Partial of class Foo for Bar purpose goes into file Foo.Bar.cs
+Class Foo<T> goes into file Foo`T.cs if needed
+Class Foo<T,U> goes into file Foo`TU.cs if needed
+
+Static classes defining extension methods are named FooBarExtensions where FooBar
+indicates what is being extended and, if necessary, for what purpose.
+
 ### NOTES ABOUT TIMEOUT AND CANCELLATION
 
 Every internal asynchronous method can be cancelled via a CancellationToken. Every

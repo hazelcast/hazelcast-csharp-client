@@ -15,9 +15,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Aggregators\" />
-    <Folder Include="Protocol\BuiltInCodecs\" />
-    <Folder Include="Protocol\CustomCodecs\" />
+    <Compile Update="Clustering\Cluster.cs" />
+    <Compile Update="Clustering\Cluster.*.cs" >
+        <DependentUpon>Cluster.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Clustering\Cluster+*.cs" >
+        <DependentUpon>Cluster.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IMap.cs" />
+    <Compile Update="DistributedObjects\IMap.*.cs" >
+        <DependentUpon>IMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Implementation\Map\Map`TKeyTValue.cs" />
+    <Compile Update="DistributedObjects\Implementation\Map\Map.*.cs" >
+        <DependentUpon>Map`TKeyTValue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Networking\SocketConnectionBase.cs" />
+    <Compile Update="Networking\SocketConnectionBase+*.cs" >
+        <DependentUpon>SocketConnectionBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Serialization\PortableContext.cs" />
+    <Compile Update="Serialization\PortableContext+*.cs" >
+        <DependentUpon>PortableContext.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Messaging\ClientMessage.cs" />
+    <Compile Update="Messaging\ClientMessage+*.cs" >
+        <DependentUpon>ClientMessage.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

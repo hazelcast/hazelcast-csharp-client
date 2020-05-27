@@ -17,6 +17,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Logging;
 using Hazelcast.Messaging;
@@ -82,7 +83,7 @@ namespace Hazelcast.Testing.TestServer
 
             // shutdown all existing connections
             foreach (var connection in _connections.Values)
-                await connection.ShutdownAsync();
+                await connection.TryDisposeAsync();
 
             XConsole.WriteLine(this, "Connections are down");
         }

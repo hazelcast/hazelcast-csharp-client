@@ -51,7 +51,6 @@ namespace Hazelcast.Networking
         public static readonly HazelcastProperty InvocationTimeoutSeconds =
             new HazelcastProperty("hazelcast.client.invocation.timeout.seconds", "120");
 
-
         public static readonly HazelcastProperty ConfigFilePath = new HazelcastProperty("hazelcast.client.config", ".");
 
         public static readonly HazelcastProperty LoggingLevel = new HazelcastProperty("hazelcast.logging.level", "all");
