@@ -17,8 +17,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Logging;
 using Hazelcast.Core;
+using Hazelcast.Logging;
 
 namespace Hazelcast.Networking
 {
@@ -80,4 +80,4 @@ namespace Hazelcast.Networking
             XConsole.WriteLine(this, "Opened");
         }
     }
-}
+}

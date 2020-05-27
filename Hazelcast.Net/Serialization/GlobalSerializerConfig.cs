@@ -64,4 +64,4 @@ namespace Hazelcast.Serialization
                 _className, _implementation, _overrideClrSerialization);
         }
     }
-}
+}

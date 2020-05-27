@@ -34,4 +34,4 @@ namespace Hazelcast.Clustering
         /// </summary>
         Removed
     }
-}
+}

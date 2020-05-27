@@ -19,7 +19,7 @@ namespace Hazelcast.Testing
 
         /// <summary>
         /// Verifies that two doubles are equal considering a delta. If the
-        /// expected value is infinity then the delta value is ignored. If 
+        /// expected value is infinity then the delta value is ignored. If
         /// they are not equal then an <see cref="AssertionException"/> is
         /// thrown.
         /// </summary>
@@ -35,7 +35,7 @@ namespace Hazelcast.Testing
 
         /// <summary>
         /// Verifies that two doubles are equal considering a delta. If the
-        /// expected value is infinity then the delta value is ignored. If 
+        /// expected value is infinity then the delta value is ignored. If
         /// they are not equal then an <see cref="AssertionException"/> is
         /// thrown.
         /// </summary>
@@ -49,7 +49,7 @@ namespace Hazelcast.Testing
 
         /// <summary>
         /// Verifies that two doubles are equal considering a delta. If the
-        /// expected value is infinity then the delta value is ignored. If 
+        /// expected value is infinity then the delta value is ignored. If
         /// they are not equal then an <see cref="AssertionException"/> is
         /// thrown.
         /// </summary>
@@ -65,7 +65,7 @@ namespace Hazelcast.Testing
 
         /// <summary>
         /// Verifies that two doubles are equal considering a delta. If the
-        /// expected value is infinity then the delta value is ignored. If 
+        /// expected value is infinity then the delta value is ignored. If
         /// they are not equal then an <see cref="AssertionException"/> is
         /// thrown.
         /// </summary>

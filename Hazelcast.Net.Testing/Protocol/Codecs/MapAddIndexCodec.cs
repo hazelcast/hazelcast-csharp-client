@@ -61,7 +61,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Hazelcast.Data.Map.IndexConfig IndexConfig { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, Hazelcast.Data.Map.IndexConfig indexConfig)
         {
             var clientMessage = CreateForEncode();
@@ -86,7 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             request.IndexConfig = IndexConfigCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
         }
@@ -99,7 +99,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -109,6 +109,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

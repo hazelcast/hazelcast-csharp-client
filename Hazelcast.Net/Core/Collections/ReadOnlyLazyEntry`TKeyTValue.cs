@@ -75,4 +75,4 @@ namespace Hazelcast.Core.Collections
         public bool HasKey { get; private set; }
 
     }
-}
+}

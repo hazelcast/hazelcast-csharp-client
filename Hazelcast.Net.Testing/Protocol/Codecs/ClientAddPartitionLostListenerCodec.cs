@@ -64,7 +64,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool LocalOnly { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(bool localOnly)
         {
             var clientMessage = CreateForEncode();
@@ -86,7 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             request.LocalOnly = DecodeBool(initialFrame, RequestLocalOnlyFieldOffset);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -105,7 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -128,7 +128,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Flags |= ClientMessageFlags.Event;
             return clientMessage;
         }
-    
+
         public static void HandleEvent(ClientMessage clientMessage, HandlePartitionLostEvent handlePartitionLostEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;
@@ -146,4 +146,4 @@ namespace Hazelcast.Protocol.Codecs
 
         public delegate void HandlePartitionLostEvent(int partitionId, int lostBackupCount, Guid source);
     }
-}
+}

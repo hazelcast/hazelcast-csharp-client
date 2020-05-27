@@ -41,4 +41,4 @@ namespace Hazelcast.NearCaching
             return cx.CompareTo(cy);
         }
     }
-}
+}

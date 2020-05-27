@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.Codecs
     /// Puts an entry into this map with a given ttl (time to live) value and maxIdle.
     /// Entry will expire and get evicted after the ttl or maxIdle, whichever comes first.
     /// If ttl and maxIdle are 0, then the entry lives forever.
-    /// 
+    ///
     /// Similar to the put operation except that set doesn't return the old value, which is more efficient.
     ///</summary>
     internal static class MapSetWithMaxIdleServerCodec
@@ -89,7 +89,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long MaxIdle { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl, long maxIdle)
         {
             var clientMessage = CreateForEncode();
@@ -121,7 +121,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Value = DataCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -140,7 +140,7 @@ namespace Hazelcast.Protocol.Codecs
             CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -151,6 +151,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

@@ -27,4 +27,4 @@ namespace Hazelcast.Core
         /// </summary>
         public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
     }
-}
+}

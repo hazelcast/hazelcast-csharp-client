@@ -46,4 +46,4 @@ namespace Hazelcast.Core
         /// </summary>
         public double Jitter { get; set; } = 0;
     }
-}
+}

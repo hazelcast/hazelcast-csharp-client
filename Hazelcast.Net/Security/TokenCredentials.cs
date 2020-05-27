@@ -43,4 +43,4 @@ namespace Hazelcast.Security
         public override string ToString()
             => $"{nameof(TokenCredentials)} ({Token.Length} bytes)";
     }
-}
+}

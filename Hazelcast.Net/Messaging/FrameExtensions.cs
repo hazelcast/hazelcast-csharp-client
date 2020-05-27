@@ -85,4 +85,4 @@ namespace Hazelcast.Messaging
         public static void WriteFragmentId(this Frame frame, long fragmentId)
             => frame.Bytes.WriteInt64(FrameFields.Offset.FragmentId, fragmentId);
     }
-}
+}

@@ -439,17 +439,17 @@ namespace Hazelcast.Serialization
                 output.WriteByte(order.X1);
                 output.WriteByte(order.X2);
                 output.WriteByte(order.X3);
-                                       
+
                 output.WriteByte(order.X4);
                 output.WriteByte(order.X5);
                 output.WriteByte(order.X6);
                 output.WriteByte(order.X7);
-                                       
+
                 output.WriteByte(order.X8);
                 output.WriteByte(order.X9);
                 output.WriteByte(order.XA);
                 output.WriteByte(order.XB);
-                                       
+
                 output.WriteByte(order.XC);
                 output.WriteByte(order.XD);
                 output.WriteByte(order.XE);
@@ -486,4 +486,4 @@ namespace Hazelcast.Serialization
             public abstract void Write(IObjectDataOutput output, T obj);
         }
     }
-}
+}

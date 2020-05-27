@@ -20,4 +20,4 @@ namespace Hazelcast.Clustering
         Added,
         Removed
     }
-}
+}

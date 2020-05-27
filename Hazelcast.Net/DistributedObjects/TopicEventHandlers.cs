@@ -22,4 +22,4 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="T">The topic object type.</typeparam>
     public sealed class TopicEventHandlers<T> : EventHandlersBase<ITopicEventHandler<T>>
     { }
-}
+}

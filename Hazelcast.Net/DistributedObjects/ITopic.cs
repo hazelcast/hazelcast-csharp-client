@@ -72,4 +72,4 @@ namespace Hazelcast.DistributedObjects
         /// <param name="cancellationToken">A cancellation token.</param>
         Task PublishAsync(T message, CancellationToken cancellationToken);
     }
-}
+}

@@ -30,7 +30,7 @@ namespace Hazelcast.Testing.Remote
         /// Initializes a new instance of the <see cref="RemoteControllerClient"/> class.
         /// </summary>
         /// <param name="protocol">The protocol.</param>
-        private RemoteControllerClient(TProtocol protocol) 
+        private RemoteControllerClient(TProtocol protocol)
             : base(protocol)
         { }
 
@@ -39,7 +39,7 @@ namespace Hazelcast.Testing.Remote
         /// </summary>
         /// <param name="inputProtocol">The input protocol.</param>
         /// <param name="outputProtocol">The output protocol.</param>
-        private RemoteControllerClient(TProtocol inputProtocol, TProtocol outputProtocol) 
+        private RemoteControllerClient(TProtocol inputProtocol, TProtocol outputProtocol)
             : base(inputProtocol, outputProtocol)
         { }
 

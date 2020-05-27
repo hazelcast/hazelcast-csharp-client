@@ -190,4 +190,4 @@ namespace Hazelcast.Clustering
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
     }
-}
+}

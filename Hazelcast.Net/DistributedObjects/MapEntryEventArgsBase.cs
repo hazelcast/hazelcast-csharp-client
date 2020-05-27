@@ -46,4 +46,4 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         public TKey Key => _key == null ? default : _key.Value;
     }
-}
+}

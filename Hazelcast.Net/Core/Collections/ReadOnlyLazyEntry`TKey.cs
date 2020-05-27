@@ -61,4 +61,4 @@ namespace Hazelcast.Core.Collections
         /// </summary>
         public bool HasValue { get; private set; }
     }
-}
+}

@@ -30,4 +30,4 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when events have been subscribed to.</returns>
         Task SubscribeAsync(Cluster cluster, CancellationToken cancellationToken);
     }
-}
+}

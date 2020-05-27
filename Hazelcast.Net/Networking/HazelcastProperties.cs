@@ -131,4 +131,4 @@ namespace Hazelcast.Networking
         internal int IntValue(HazelcastProperty hazelcastProperty) => Int32.Parse(StringValue(hazelcastProperty));
         internal long LongValue(HazelcastProperty hazelcastProperty) => Int64.Parse(StringValue(hazelcastProperty));
     }
-}
+}

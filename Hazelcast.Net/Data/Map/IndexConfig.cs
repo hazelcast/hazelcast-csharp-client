@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Protocol;
 
 namespace Hazelcast.Data.Map
 {
@@ -95,4 +94,4 @@ namespace Hazelcast.Data.Map
             return $"IndexConfig[Name={Name}, IndexType= {Type}, Attributes={string.Join(",", Attributes)}]";
         }
     }
-}
+}

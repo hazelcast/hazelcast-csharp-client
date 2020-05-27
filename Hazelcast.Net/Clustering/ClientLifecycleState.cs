@@ -23,4 +23,4 @@ namespace Hazelcast.Clustering
         Connected,
         Disconnected
     }
-}
+}

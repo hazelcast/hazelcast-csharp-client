@@ -59,7 +59,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid RegistrationId { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(Guid registrationId)
         {
             var clientMessage = CreateForEncode();
@@ -81,7 +81,7 @@ namespace Hazelcast.Protocol.Codecs
             request.RegistrationId = DecodeGuid(initialFrame, RequestRegistrationIdFieldOffset);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -100,7 +100,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -110,6 +110,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

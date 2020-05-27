@@ -155,7 +155,7 @@ namespace Hazelcast.Testing
         /// <param name="asserter">Asserter.</param>
         public static void Inconclusive(this Asserter asserter)
             => Assert.Inconclusive();
- 
+
         #endregion
 
         #region Contains

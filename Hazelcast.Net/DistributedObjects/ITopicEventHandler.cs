@@ -37,4 +37,4 @@ namespace Hazelcast.DistributedObjects
         /// <param name="payload">The topic object carried by the message.</param>
         void Handle(ITopic<T> sender, MemberInfo member, long publishTime, T payload);
     }
-}
+}

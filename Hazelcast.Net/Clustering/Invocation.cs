@@ -188,4 +188,4 @@ namespace Hazelcast.Clustering
             return true;
         }
     }
-}
+}

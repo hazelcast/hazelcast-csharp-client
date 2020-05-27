@@ -23,4 +23,4 @@ namespace Hazelcast.Partitioning.Strategies
         public object GetPartitionKey(object o)
             => o is IPartitionAware aware ? aware.GetPartitionKey() : null;
     }
-}
+}

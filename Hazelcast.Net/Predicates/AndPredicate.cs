@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Linq;
-using Hazelcast.Data;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -82,4 +81,4 @@ namespace Hazelcast.Predicates
             return string.Join(" AND ", _predicates.GetEnumerator());
         }
     }
-}
+}

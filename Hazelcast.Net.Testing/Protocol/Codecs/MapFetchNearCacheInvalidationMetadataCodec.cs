@@ -62,7 +62,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid Uuid { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(ICollection<string> names, Guid uuid)
         {
             var clientMessage = CreateForEncode();
@@ -86,7 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Names = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -111,7 +111,7 @@ namespace Hazelcast.Protocol.Codecs
             EntryListIntegerUUIDCodec.Encode(clientMessage, partitionUuidList);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -123,6 +123,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

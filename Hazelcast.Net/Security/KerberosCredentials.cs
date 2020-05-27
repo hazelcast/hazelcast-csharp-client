@@ -31,4 +31,4 @@ namespace Hazelcast.Security
         public override string ToString()
             => $"KerberosCredentials (Token, {Token.Length} bytes)";
     }
-}
+}

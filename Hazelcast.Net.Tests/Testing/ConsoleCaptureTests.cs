@@ -18,4 +18,4 @@ namespace Hazelcast.Tests.Testing
             Assert.AreEqual("test\r\n", capture.ReadToEnd());
         }
     }
-}
+}

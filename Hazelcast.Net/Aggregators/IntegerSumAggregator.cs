@@ -53,4 +53,4 @@ namespace Hazelcast.Aggregators
             return AggregatorDataSerializerHook.IntSum;
         }
     }
-}
+}

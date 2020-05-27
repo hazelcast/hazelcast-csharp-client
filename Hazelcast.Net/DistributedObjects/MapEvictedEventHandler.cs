@@ -27,4 +27,4 @@ namespace Hazelcast.DistributedObjects
         protected override MapEvictedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries)
             => new MapEvictedEventArgs(member, numberOfAffectedEntries);
     }
-}
+}

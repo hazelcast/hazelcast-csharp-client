@@ -116,4 +116,4 @@ namespace Hazelcast.DistributedObjects
         /// <returns></returns>
         Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken);
     }
-}
+}

@@ -68,4 +68,4 @@ namespace Hazelcast.Clustering
         private static ClusterObjectLifecycleEventArgs CreateEventArgs(MemberInfo member, string serviceName, string name)
             => new ClusterObjectLifecycleEventArgs(serviceName, name, member.Id);
     }
-}
+}

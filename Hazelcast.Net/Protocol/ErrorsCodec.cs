@@ -30,4 +30,4 @@ namespace Hazelcast.Protocol
             return ListMultiFrameCodec.Decode(iterator, ErrorHolderCodec.Decode);
         }
     }
-}
+}

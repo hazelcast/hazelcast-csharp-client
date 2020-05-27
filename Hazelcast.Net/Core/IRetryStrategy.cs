@@ -37,4 +37,4 @@ namespace Hazelcast.Core
         /// </summary>
         void Restart();
     }
-}
+}

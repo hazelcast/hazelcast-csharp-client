@@ -14,7 +14,6 @@
 
 using System;
 using System.Linq;
-using Hazelcast.Data;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -95,4 +94,4 @@ namespace Hazelcast.Predicates
             return _attributeName + " IN (" + string.Join(", ", _values) + ")";
         }
     }
-}
+}

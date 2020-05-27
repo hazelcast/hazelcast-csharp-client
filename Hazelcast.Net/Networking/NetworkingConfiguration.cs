@@ -14,7 +14,6 @@
 
 using System.Collections.Generic;
 using System.Xml;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 
 namespace Hazelcast.Networking
@@ -152,4 +151,4 @@ namespace Hazelcast.Networking
             return configuration;
         }
     }
-}
+}

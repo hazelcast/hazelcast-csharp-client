@@ -93,4 +93,4 @@ namespace Hazelcast.Protocol.Codecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
@@ -34,55 +33,55 @@ namespace Hazelcast.Serialization
         byte[] ToByteArray();
 
         /// <summary>
-        /// Writes an array of <see cref="Boolean"/> (bool).
+        /// Writes an array of <see cref="bool"/> (bool).
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteBooleanArray(bool[] values);
 
         /// <summary>
-        /// Writes an array of <see cref="Byte"/> (byte).
+        /// Writes an array of <see cref="byte"/> (byte).
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteByteArray(byte[] values);
 
         /// <summary>
-        /// Writes an array of <see cref="Char"/> (char).
+        /// Writes an array of <see cref="char"/> (char).
         /// </summary>
         /// <param name="values"></param>
         void WriteCharArray(char[] values);
 
         /// <summary>
-        /// Writes an array of <see cref="Double"/> double.
+        /// Writes an array of <see cref="double"/> double.
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteDoubleArray(double[] values);
 
         /// <summary>
-        /// Writes an array of <see cref="Single"/> (float).
+        /// Writes an array of <see cref="float"/> (float).
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteFloatArray(float[] values); // fixme name
 
         /// <summary>
-        /// Writes an array of <see cref="Int32"/> (int).
+        /// Writes an array of <see cref="int"/> (int).
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteIntArray(int[] values); // fixme name
 
         /// <summary>
-        /// Writes an array of <see cref="Int64"/> (long).
+        /// Writes an array of <see cref="long"/> (long).
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteLongArray(long[] values); // fixme name
 
         /// <summary>
-        /// Writes an array of <see cref="Int16"/> (short).
+        /// Writes an array of <see cref="short"/> (short).
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteShortArray(short[] values); // fixme name
 
         /// <summary>
-        /// Writes an array of <see cref="String"/> (string).
+        /// Writes an array of <see cref="string"/> (string).
         /// </summary>
         /// <param name="values">The array.</param>
         void WriteUtfArray(string[] values); // fixme name
@@ -99,4 +98,4 @@ namespace Hazelcast.Serialization
         /// <param name="value">The object.</param>
         void WriteObject(object value);
     }
-}
+}

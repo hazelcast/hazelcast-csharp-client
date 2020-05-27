@@ -68,4 +68,4 @@ namespace Hazelcast.Testing.Conditions
             test.Properties.Set(PropertyNames.SkipReason, reason);
         }
     }
-}
+}

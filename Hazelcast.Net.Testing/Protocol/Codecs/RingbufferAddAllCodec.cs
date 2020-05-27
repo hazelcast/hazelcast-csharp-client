@@ -75,7 +75,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public int OverflowPolicy { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, ICollection<IData> valueList, int overflowPolicy)
         {
             var clientMessage = CreateForEncode();
@@ -101,7 +101,7 @@ namespace Hazelcast.Protocol.Codecs
             request.ValueList = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -120,7 +120,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -130,6 +130,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

@@ -75,7 +75,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long Timeout { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, long timeout)
         {
             var clientMessage = CreateForEncode();
@@ -103,7 +103,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -122,7 +122,7 @@ namespace Hazelcast.Protocol.Codecs
             CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -133,6 +133,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

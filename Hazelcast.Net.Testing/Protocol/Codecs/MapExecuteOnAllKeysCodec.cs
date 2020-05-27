@@ -61,7 +61,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData EntryProcessor { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, IData entryProcessor)
         {
             var clientMessage = CreateForEncode();
@@ -86,7 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             request.EntryProcessor = DataCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -105,7 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             EntryListCodec.Encode(clientMessage, response, DataCodec.Encode, DataCodec.Encode);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -116,6 +116,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

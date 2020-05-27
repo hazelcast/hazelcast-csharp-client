@@ -26,4 +26,4 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ClientLifecycleState State { get; }
     }
-}
+}

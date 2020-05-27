@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Predicates;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -275,4 +274,4 @@ namespace Hazelcast.DistributedObjects
         /// <returns>a collection clone of the values contained in this map</returns>
         ICollection<TValue> Values();
     }
-}
+}

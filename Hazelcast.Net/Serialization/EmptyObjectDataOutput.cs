@@ -99,4 +99,4 @@ namespace Hazelcast.Serialization
 
         public byte[] ToByteArray() => Array.Empty<byte>();
     }
-}
+}

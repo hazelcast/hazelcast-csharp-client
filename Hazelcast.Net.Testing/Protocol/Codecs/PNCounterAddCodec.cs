@@ -91,7 +91,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid TargetReplicaUUID { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, long delta, bool getBeforeUpdate, ICollection<KeyValuePair<Guid, long>> replicaTimestamps, Guid targetReplicaUUID)
         {
             var clientMessage = CreateForEncode();
@@ -121,7 +121,7 @@ namespace Hazelcast.Protocol.Codecs
             request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -152,7 +152,7 @@ namespace Hazelcast.Protocol.Codecs
             EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -164,6 +164,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

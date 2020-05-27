@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -24,49 +22,49 @@ namespace Hazelcast.Serialization
         #region Reads
 
         /// <summary>
-        /// Reads a <see cref="Boolean"/> (bool) value.
+        /// Reads a <see cref="bool"/> (bool) value.
         /// </summary>
         /// <returns>The value.</returns>
         bool ReadBoolean();
 
         /// <summary>
-        /// Reads a <see cref="Byte"/> (byte) value.
+        /// Reads a <see cref="byte"/> (byte) value.
         /// </summary>
         /// <returns>The value.</returns>
         byte ReadByte();
 
         /// <summary>
-        /// Reads a <see cref="Char"/> (char) value.
+        /// Reads a <see cref="char"/> (char) value.
         /// </summary>
         /// <returns>The value.</returns>
         char ReadChar();
 
         /// <summary>
-        /// Reads a <see cref="Double"/> (double) value.
+        /// Reads a <see cref="double"/> (double) value.
         /// </summary>
         /// <returns>The value.</returns>
         double ReadDouble();
 
         /// <summary>
-        /// Reads a <see cref="Single"/> (float) value.
+        /// Reads a <see cref="float"/> (float) value.
         /// </summary>
         /// <returns>The value.</returns>
         float ReadFloat(); // fixme name
 
         /// <summary>
-        /// Reads an <see cref="Int32"/> (int) value.
+        /// Reads an <see cref="int"/> (int) value.
         /// </summary>
         /// <returns>The value.</returns>
         int ReadInt();
 
         /// <summary>
-        /// Reads an <see cref="Int64"/> (long) value.
+        /// Reads an <see cref="long"/> (long) value.
         /// </summary>
         /// <returns>The value.</returns>
         long ReadLong(); // fixme name
 
         /// <summary>
-        /// Reads an <see cref="Int16"/> (short) value.
+        /// Reads an <see cref="short"/> (short) value.
         /// </summary>
         /// <returns>The value.</returns>
         short ReadShort();
@@ -78,13 +76,13 @@ namespace Hazelcast.Serialization
         int ReadUnsignedByte(); // fixme name, return type?
 
         /// <summary>
-        /// Reads an <see cref="UInt16"/> (ushort) value.
+        /// Reads an <see cref="ushort"/> (ushort) value.
         /// </summary>
         /// <returns>The value.</returns>
         int ReadUnsignedShort(); // fixme name, return type?
 
         /// <summary>
-        /// Reads a <see cref="String"/> (string) value.
+        /// Reads a <see cref="string"/> (string) value.
         /// </summary>
         /// <returns>The value.</returns>
         string ReadUtf(); // fixme name
@@ -120,4 +118,4 @@ namespace Hazelcast.Serialization
 
         #endregion
     }
-}
+}

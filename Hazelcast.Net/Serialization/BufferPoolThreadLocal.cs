@@ -48,4 +48,4 @@ namespace Hazelcast.Serialization
             _threadLocal.Dispose();
         }
     }
-}
+}

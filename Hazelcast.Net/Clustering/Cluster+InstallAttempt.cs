@@ -33,4 +33,4 @@ namespace Hazelcast.Clustering
             public Exception Exception { get; }
         }
     }
-}
+}

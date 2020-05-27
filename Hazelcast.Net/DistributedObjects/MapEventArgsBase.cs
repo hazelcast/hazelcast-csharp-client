@@ -42,4 +42,4 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         public int NumberOfAffectedEntries { get; }
     }
-}
+}

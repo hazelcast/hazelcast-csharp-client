@@ -35,4 +35,4 @@ namespace Hazelcast.Serialization
         ISerializationServiceBuilder AddHook<T>();
         ISerializationServiceBuilder AddHook(Type type);
     }
-}
+}

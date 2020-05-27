@@ -133,4 +133,4 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, CancellationToken cancellationToken);
     }
-}
+}

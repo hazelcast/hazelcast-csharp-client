@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Serialization;
 
 namespace Hazelcast.Serialization
 {
@@ -62,4 +61,4 @@ namespace Hazelcast.Serialization
         /// </remarks>
         int GetId(); // fixme make it a property + rename TypeId
     }
-}
+}

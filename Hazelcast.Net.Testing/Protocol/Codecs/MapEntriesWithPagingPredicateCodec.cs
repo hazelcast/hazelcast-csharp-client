@@ -64,7 +64,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Hazelcast.Protocol.Data.PagingPredicateHolder Predicate { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Data.PagingPredicateHolder predicate)
         {
             var clientMessage = CreateForEncode();
@@ -89,7 +89,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Predicate = PagingPredicateHolderCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -114,7 +114,7 @@ namespace Hazelcast.Protocol.Codecs
             AnchorDataListHolderCodec.Encode(clientMessage, anchorDataList);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -126,6 +126,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

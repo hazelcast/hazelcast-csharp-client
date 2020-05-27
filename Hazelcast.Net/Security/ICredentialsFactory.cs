@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Configuration;
 
 namespace Hazelcast.Security
 {
@@ -43,4 +42,4 @@ namespace Hazelcast.Security
         /// <returns>The new credentials object.</returns>
         ICredentials NewCredentials();
     }
-}
+}

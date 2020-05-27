@@ -69,4 +69,4 @@ namespace Hazelcast.Aggregators
             return FactoryId;
         }
     }
-}
+}

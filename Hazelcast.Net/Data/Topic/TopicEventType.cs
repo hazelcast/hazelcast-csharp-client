@@ -32,4 +32,4 @@ namespace Hazelcast.Data.Topic
         /// </summary>
         Message = 1
     }
-}
+}

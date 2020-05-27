@@ -20,7 +20,6 @@ using System.Reflection;
 using System.Threading;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
-using Hazelcast.Logging;
 using Hazelcast.Partitioning.Strategies;
 using Microsoft.Extensions.Logging;
 
@@ -703,4 +702,4 @@ namespace Hazelcast.Serialization
             }
         }
     }
-}
+}

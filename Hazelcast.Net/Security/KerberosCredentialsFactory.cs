@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+
 #if !NETSTANDARD
 using System.IdentityModel.Selectors;
 using System.IdentityModel.Tokens;
@@ -151,4 +152,4 @@ namespace Hazelcast.Security
         public void Dispose()
         { }
     }
-}
+}

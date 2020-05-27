@@ -52,4 +52,4 @@ namespace Hazelcast.Messaging
         /// </summary>
         Null        = 0b0000_0100_0000_0000,
     }
-}
+}

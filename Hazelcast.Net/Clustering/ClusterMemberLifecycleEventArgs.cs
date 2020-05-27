@@ -27,4 +27,4 @@ namespace Hazelcast.Clustering
 
         // TODO: original event args (MembershipEvent class) also carried the complete list of members
     }
-}
+}

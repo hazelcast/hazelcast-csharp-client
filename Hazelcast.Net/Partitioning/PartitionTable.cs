@@ -71,4 +71,4 @@ namespace Hazelcast.Partitioning
         public bool IsSupersededBy(Guid originClientId, int version, Dictionary<int, Guid> partitionsMap)
             => partitionsMap.Count > 0 && (originClientId != OriginClientId || version > Version);
     }
-}
+}

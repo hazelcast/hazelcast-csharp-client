@@ -41,4 +41,4 @@ namespace Hazelcast.Clustering
         public void Handle(Cluster sender, ClientLifecycleEventArgs args)
             => _handler(sender, args);
     }
-}
+}

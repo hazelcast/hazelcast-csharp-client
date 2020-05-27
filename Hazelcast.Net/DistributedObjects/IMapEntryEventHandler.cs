@@ -38,4 +38,4 @@ namespace Hazelcast.DistributedObjects
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
         void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries);
     }
-}
+}

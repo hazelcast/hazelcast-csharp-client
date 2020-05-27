@@ -186,4 +186,4 @@ namespace Hazelcast.DistributedObjects
         /// <seealso cref="IMap{K, V}.Values(IPredicate)"/>
         ICollection<TValue> Values(IPredicate predicate);
     }
-}
+}

@@ -67,7 +67,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool ReplaceExistingValues { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, ICollection<IData> keys, bool replaceExistingValues)
         {
             var clientMessage = CreateForEncode();
@@ -93,7 +93,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
         }
@@ -106,7 +106,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -116,6 +116,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

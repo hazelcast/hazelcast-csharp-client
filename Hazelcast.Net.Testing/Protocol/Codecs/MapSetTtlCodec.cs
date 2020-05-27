@@ -46,9 +46,9 @@ namespace Hazelcast.Protocol.Codecs
     /// The entry will expire and get evicted after the TTL. If the TTL is 0,
     /// then the entry lives forever. If the TTL is negative, then the TTL
     /// from the map configuration will be used (default: forever).
-    /// 
+    ///
     /// If there is no entry with key {@code key}, this call has no effect.
-    /// 
+    ///
     /// <b>Warning:</b>
     /// <p>
     /// Time resolution for TTL is seconds. The given TTL value is rounded to the next closest second value.
@@ -80,7 +80,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long Ttl { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, IData key, long ttl)
         {
             var clientMessage = CreateForEncode();
@@ -106,7 +106,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Key = DataCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -125,7 +125,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Add(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetIterator();
@@ -135,6 +135,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
-}
+}

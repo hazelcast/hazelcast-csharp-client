@@ -58,4 +58,4 @@ namespace Hazelcast.Aggregators
             return AggregatorDataSerializerHook.IntAvg;
         }
     }
-}
+}

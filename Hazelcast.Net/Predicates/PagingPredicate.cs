@@ -15,7 +15,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Hazelcast.Data;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -177,4 +176,4 @@ namespace Hazelcast.Predicates
             return PredicateDataSerializerHook.PagingPredicate;
         }
     }
-}
+}

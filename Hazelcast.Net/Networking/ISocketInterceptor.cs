@@ -22,4 +22,4 @@ namespace Hazelcast.Networking
     {
         void Initialize(Dictionary<string, string> properties);
     }
-}
+}

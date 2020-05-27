@@ -26,4 +26,4 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         MapEventType EventType { get; }
     }
-}
+}

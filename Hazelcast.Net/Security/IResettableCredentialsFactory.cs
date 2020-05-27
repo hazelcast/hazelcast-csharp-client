@@ -24,4 +24,4 @@ namespace Hazelcast.Security
         /// </summary>
         void Reset();
     }
-}
+}

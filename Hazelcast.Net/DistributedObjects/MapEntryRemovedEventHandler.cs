@@ -27,4 +27,4 @@ namespace Hazelcast.DistributedObjects
         protected override MapEntryRemovedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
             => new MapEntryRemovedEventArgs<TKey, TValue>(member, key, value);
     }
-}
+}

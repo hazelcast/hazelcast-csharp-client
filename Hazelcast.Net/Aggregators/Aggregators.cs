@@ -340,4 +340,4 @@ namespace Hazelcast.Aggregators
             return new FloatingPointSumAggregator(attributePath);
         }
     }
-}
+}

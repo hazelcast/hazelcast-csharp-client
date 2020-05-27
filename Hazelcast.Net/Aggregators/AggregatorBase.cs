@@ -80,4 +80,4 @@ namespace Hazelcast.Aggregators
     // TODO: implement BigDecimalSumAggregator
     // TODO: implement BigIntegerAverageAggregator
     // TODO: implement DistinctValuesAggregator (returns java serializable)
-}
+}

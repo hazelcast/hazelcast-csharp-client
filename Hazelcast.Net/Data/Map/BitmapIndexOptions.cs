@@ -20,4 +20,4 @@ namespace Hazelcast.Data.Map
 
         public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
     }
-}
+}

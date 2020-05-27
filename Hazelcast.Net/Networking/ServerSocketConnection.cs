@@ -66,4 +66,4 @@ namespace Hazelcast.Networking
             XConsole.WriteLine(this, "Connected");
         }
     }
-}
+}
