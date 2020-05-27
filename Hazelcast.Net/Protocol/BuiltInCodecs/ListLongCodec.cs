@@ -43,8 +43,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static List<long> Decode(Frame frame)
         {
-            // fixme can frame.Bytes even be null?
-            var itemCount = frame.Bytes == null ? 0 : frame.Bytes.Length / LongSizeInBytes;
+            // frame.Bytes is never null
+            var itemCount = frame.Bytes.Length / LongSizeInBytes;
             var result = new List<long>(itemCount);
             for (var i = 0; i < itemCount; i++)
             {

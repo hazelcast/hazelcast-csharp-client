@@ -39,7 +39,7 @@ namespace Hazelcast.Serialization
             }
             catch (ObjectDisposedException)
             {
-                throw new HazelcastClientNotActiveException();
+                throw new HazelcastClientNotConnectedException();
             }
         }
 

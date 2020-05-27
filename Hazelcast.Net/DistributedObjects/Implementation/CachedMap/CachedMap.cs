@@ -153,12 +153,15 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         #region Getting
 
         /// <inheritdoc />
-        protected override async Task<object> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected override async Task<IData> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
+            async Task<object> BaseGetAsync(IData data, CancellationToken token)
+                => await base.GetAsync(data, token).CAF();
+
             try
             {
-                var attempt = await _cache.TryGetOrAddAsync(keyData, data => base.GetAsync(keyData, cancellationToken)).CAF();
-                return attempt.ValueOr(default);
+                var attempt = await _cache.TryGetOrAddAsync(keyData, data => BaseGetAsync(keyData, cancellationToken)).CAF();
+                return (IData) attempt.ValueOr(default);
             }
             catch
             {

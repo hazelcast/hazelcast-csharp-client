@@ -218,8 +218,10 @@ namespace Hazelcast.Clustering
             // cluster subscription is not active anymore, and so we need to undo the
             // server-side subscription
 
-            // FIXME if the client has died... could we already have removed the subscriptions?!?!
-            _correlatedSubscriptions.TryRemove(correlationId, out _);
+            // if the client is gone already it may be that the subscription has been
+            // removed already, in which case... just give up now
+            if (!_correlatedSubscriptions.TryRemove(correlationId, out _))
+                return new InstallAttempt(InstallResult.SubscriptionNotActive);
 
             var unsubscribeRequest = subscription.CreateUnsubscribeRequest(id);
 

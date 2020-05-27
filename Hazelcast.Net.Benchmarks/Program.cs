@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Buffers;
+using System.Threading;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
@@ -10,7 +12,37 @@ namespace AsyncTests1.Benchmark
         static void Main(string[] args)
         {
             Console.WriteLine("AsyncBench");
-            BenchmarkRunner.Run<Bench>();
+            BenchmarkRunner.Run<Bench2>();
+        }
+    }
+
+    [MemoryDiagnoser]
+    public class Bench2
+    {
+        private readonly object _lock = new object();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+        private int i;
+
+        // so... semaphore would be 3x slower that plain lock
+        // but plain lock cannot contain async code ;(
+
+        [Benchmark]
+        public Task Lock()
+        {
+            lock (_lock)
+            {
+                i++;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        [Benchmark]
+        public async Task Semaphore()
+        {
+            await _semaphore.WaitAsync();
+            i++;
+            _semaphore.Release();
         }
     }
 

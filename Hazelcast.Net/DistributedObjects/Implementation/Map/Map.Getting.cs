@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <param name="keyData">The key data.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value data for the specified key, or null if the map does not contain an entry with this key.</returns>
-        protected virtual async Task<object> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected virtual async Task<IData> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ThreadId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
@@ -73,9 +73,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         }
 
         /// <inheritdoc />
-        public 
+        public
 #if !OPTIMIZE_ASYNC
-            async 
+            async
 #endif
         Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys, TimeSpan timeout = default)
         {

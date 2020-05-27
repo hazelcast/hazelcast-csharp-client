@@ -39,16 +39,5 @@ namespace Hazelcast.Protocol.Data
             Message = message;
             StackTraceElements = stackTraceElements;
         }
-
-        // TODO review this code
-        // using a codec here would create a circular dependency
-        // why can't the codec directly handle a message?
-        /*
-        public static ErrorHolder Decode(ClientMessage message)
-        {
-            var iterator = message.GetIterator();
-            return ErrorHolderCodec.Decode(iterator);
-        }
-        */
     }
 }

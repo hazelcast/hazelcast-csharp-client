@@ -33,9 +33,6 @@ namespace Hazelcast.Serialization
         private ICollection<IClassDefinition> _classDefinitions;
         private IDictionary<int, IDataSerializableFactory> _dataSerializableFactories;
         private IDictionary<int, string> _dataSerializableFactoryClasses;
-        private bool _enableCompression;
-
-        private bool _enableSharedObject;
 
         private GlobalSerializerConfig _globalSerializerConfig;
         private IDictionary<int, IPortableFactory> _portableFactories;
@@ -334,28 +331,6 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Not used
-        /// </summary>
-        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
-        [Obsolete("This configuration is not used in .net client")]
-        public virtual SerializationConfiguration SetEnableCompression(bool enableCompression)
-        {
-            _enableCompression = enableCompression;
-            return this;
-        }
-
-        /// <summary>
-        /// Not used
-        /// </summary>
-        /// <returns>configured <see cref="SerializationConfiguration"/> for chaining</returns>
-        [Obsolete("This configuration is not used in .net client")]
-        public virtual SerializationConfiguration SetEnableSharedObject(bool enableSharedObject)
-        {
-            _enableSharedObject = enableSharedObject;
-            return this;
-        }
-
-        /// <summary>
         /// Sets <see cref="GlobalSerializerConfig"/>
         /// </summary>
         /// <param name="globalSerializerConfig"><see cref="GlobalSerializerConfig"/></param>
@@ -469,10 +444,10 @@ namespace Hazelcast.Serialization
                         configuration.SetEndianness(endianness);
                         break;
                     case "enable-compression":
-                        configuration.SetEnableCompression(child.GetTrueFalseContent());
+                        // ignore
                         break;
                     case "enable-shared-object":
-                        configuration.SetEnableSharedObject(child.GetTrueFalseContent());
+                        // ignore
                         break;
                     case "data-serializable-factories":
                         FillDataSerializableFactories(child, configuration);

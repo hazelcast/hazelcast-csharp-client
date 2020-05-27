@@ -37,6 +37,9 @@ namespace Hazelcast.Clustering
         private ClientMessageConnection _messageConnection;
         private volatile int _disposed;
 
+        private CancellationTokenSource _bgCancellation;
+        private Task _bgTask;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
@@ -394,6 +397,29 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Starts a background task attached to the client.
+        /// </summary>
+        /// <param name="task">The task factory.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        public void StartBackgroundTask(Func<CancellationToken, Task> task, CancellationToken cancellationToken)
+        {
+            // TODO: thread-safety + dispose
+            _bgCancellation ??= new CancellationTokenSource();
+            var s = CancellationTokenSource.CreateLinkedTokenSource(_bgCancellation.Token, cancellationToken);
+            _bgTask = task(s.Token).ContinueWith(x =>
+            {
+                if (x.IsFaulted)
+                {
+                    _logger.LogWarning("Background task failed, die.");
+                    Die();
+                }
+                _bgCancellation.Dispose();
+                _bgCancellation = null;
+                return x;
+            }, CancellationToken.None);
+        }
+
+        /// <summary>
         /// Dies.
         /// </summary>
         public void Die()
@@ -429,8 +455,20 @@ namespace Hazelcast.Clustering
             await _socketConnection.TryDisposeAsync().CAF();
 
             // shutdown all pending operations
+            // dealing with race conditions in SendAsync
             foreach (var invocation in _invocations.Values)
                 invocation.TrySetException(new TargetDisconnectedException());
+
+            var bgTask = _bgTask;
+            if (bgTask != null)
+            {
+                _bgCancellation?.Cancel();
+                try
+                {
+                    await bgTask.CAF();
+                }
+                catch { /* ignore - no value */ }
+            }
 
             if (_onShutdown == null) 
                 return;

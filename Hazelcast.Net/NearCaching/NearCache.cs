@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using Hazelcast.Clustering;
-using Hazelcast.Configuration;
 using Hazelcast.Data.Map;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -25,7 +24,7 @@ namespace Hazelcast.NearCaching
         {
             if (InvalidateOnChange)
             {
-                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, Cluster.Partitioner, LoggerFactory);
+                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, Cluster.Partitioner, SerializationService, LoggerFactory);
                 RegisterInvalidateListener();
             }
         }

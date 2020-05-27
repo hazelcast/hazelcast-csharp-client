@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -257,7 +255,12 @@ namespace Hazelcast.Clustering
                 var newCluster = firstClient && otherCluster;
                 _clusterServerSideId = info.ClusterId;
 
-                // FIXME what about cluster change thing?
+                // even the Java code does not deal with this situation - seems to assume that a 'new
+                // cluster' can only happen when connecting to the first client - what happens during
+                // splits?
+                if (otherCluster && !newCluster)
+                    _logger.LogWarning("Connected to another cluster, ignoring.");
+
                 if (newCluster)
                 {
                     // we did connect to a cluster once, and then we lost all clients,
@@ -270,8 +273,7 @@ namespace Hazelcast.Clustering
                     _memberTable = new MemberTable(0, Array.Empty<MemberInfo>());
 
                     // get distributed object factory to re-create objects, etc
-                    // FIXME:!!
-                    //await _onConnectionToNewCluster();
+                    await _onConnectionToNewCluster();
                 }
 
                 // if we don't have a cluster client yet, start a
@@ -281,10 +283,8 @@ namespace Hazelcast.Clustering
 
                 // per-client task subscribing the client to events
                 // this is entirely fire-and-forget, it anything goes wrong it will shut the client down
-                // TODO: means we cannot await on it? the client should know about it + timeout or?
                 var subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
-                // FIXME should this be a background, per-client thing?!
-                _ = InstallSubscriptionsOnNewClient(client, subscriptions, _clusterCancellation.Token);
+                client.StartBackgroundTask(token => InstallSubscriptionsOnNewClient(client, subscriptions, token), _clusterCancellation.Token);
 
                 OnConnectionAdded(client); // does not throw
 

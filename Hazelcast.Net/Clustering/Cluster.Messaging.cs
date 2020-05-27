@@ -218,7 +218,7 @@ namespace Hazelcast.Clustering
 
             // fail fast
             if (_disposed || _clusterState != ClusterState.Connected)
-                throw new HazelcastClientNotActiveException();
+                throw new HazelcastClientNotConnectedException();
 
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
@@ -233,14 +233,14 @@ namespace Hazelcast.Clustering
                 try
                 {
                     client ??= GetRandomClient();
-                    if (client == null) throw new HazelcastClientNotActiveException();
+                    if (client == null) throw new HazelcastClientNotConnectedException();
                     return await client.SendAsync(invocation, cancellationToken).CAF();
                 }
                 catch (Exception exception)
                 {
                     // if the cluster is not connected anymore, die
                     if (_disposed || _clusterState != ClusterState.Connected)
-                        throw new HazelcastClientNotActiveException(exception);
+                        throw new HazelcastClientNotConnectedException(exception);
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)

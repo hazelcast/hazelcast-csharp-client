@@ -156,7 +156,7 @@ namespace Hazelcast.Serialization
                         throw new HazelcastSerializationException("There is no suitable de-serializer for type " +
                                                                   typeId);
                     }
-                    throw new HazelcastClientNotActiveException();
+                    throw new HazelcastClientNotConnectedException();
                 }
                 var obj = serializer.Read(@in);
                 return obj;
@@ -208,7 +208,7 @@ namespace Hazelcast.Serialization
                         throw new HazelcastSerializationException("There is no suitable de-serializer for type "
                                                                   + typeId);
                     }
-                    throw new HazelcastClientNotActiveException();
+                    throw new HazelcastClientNotConnectedException();
                 }
                 var obj = serializer.Read(input);
                 try
@@ -690,7 +690,7 @@ namespace Hazelcast.Serialization
                 {
                     throw new HazelcastSerializationException("There is no suitable serializer for " + type);
                 }
-                throw new HazelcastClientNotActiveException();
+                throw new HazelcastClientNotConnectedException();
             }
             return serializer;
         }

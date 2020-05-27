@@ -3,8 +3,9 @@ using System.Runtime.Serialization;
 
 namespace Hazelcast.Exceptions
 {
-    // TODO: document
-    // FIXME: we don't throw that one = bad
+    /// <summary>
+    /// TODO: document.
+    /// </summary>
     [Serializable]
     public sealed class TargetDisconnectedException : HazelcastException
     {

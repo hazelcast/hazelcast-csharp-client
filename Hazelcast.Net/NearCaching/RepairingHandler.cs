@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Hazelcast.Core;
-using Hazelcast.Logging;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -20,10 +18,10 @@ namespace Hazelcast.NearCaching
         private readonly NearCache _nearCache;
         private readonly int _partitionCount;
 
-        private readonly ISerializationService _serializationService; // FIXME initialize!
+        private readonly ISerializationService _serializationService;
         private readonly Partitioner _partitioner;
 
-        public RepairingHandler(Guid localUuid, NearCache nearCache, Partitioner partitioner, ILoggerFactory loggerFactory)
+        public RepairingHandler(Guid localUuid, NearCache nearCache, Partitioner partitioner, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _localUuid = localUuid;
             _nearCache = nearCache;
@@ -31,6 +29,7 @@ namespace Hazelcast.NearCaching
             _partitionCount = partitioner.Count;
             _metaDataContainers = CreateMetadataContainers(_partitionCount);
             _maxToleratedMissCount = NearCacheManager.GetMaxToleratedMissCount();
+            _serializationService = serializationService;
             _logger = loggerFactory.CreateLogger<RepairingHandler>();
         }
 

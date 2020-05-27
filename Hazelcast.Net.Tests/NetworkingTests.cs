@@ -377,7 +377,7 @@ namespace Hazelcast.Tests
 
             XConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<HazelcastClientNotActiveException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None));
+            Assert.ThrowsAsync<HazelcastClientNotConnectedException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None));
 
             XConsole.WriteLine(this, "End");
             await Task.Delay(100);
@@ -559,7 +559,7 @@ namespace Hazelcast.Tests
             {
                 Assert.Fail("Did not expect TimeoutException.");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // ok
             }
