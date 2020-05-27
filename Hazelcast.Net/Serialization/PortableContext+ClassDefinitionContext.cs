@@ -18,7 +18,7 @@ using Hazelcast.Messaging;
 
 namespace Hazelcast.Serialization
 {
-    internal sealed partial class PortableContext
+    internal sealed partial class PortableContext // ClassDefinitionContext
     {
         private sealed class ClassDefinitionContext
         {

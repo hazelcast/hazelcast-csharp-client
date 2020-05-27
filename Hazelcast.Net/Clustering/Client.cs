@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<ClientMessage> _onReceiveEventMessage;
-        private Action<Client> _onShutdown;
+        private Func<Client, ValueTask> _onShutdown;
 
         private ClientSocketConnection _socketConnection;
         private ClientMessageConnection _messageConnection;
@@ -112,7 +112,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when the client shuts down.
         /// </summary>
-        public Action<Client> OnShutdown
+        public Func<Client, ValueTask> OnShutdown
         {
             get => _onShutdown;
             set
@@ -425,17 +425,20 @@ namespace Hazelcast.Clustering
             // shutdown the connection
             await _socketConnection.ShutdownAsync();
 
-            CompleteShutdown();
+            await CompleteShutdown();
         }
 
-        private void CompleteShutdown()
+        private async ValueTask CompleteShutdown()
         {
             // shutdown all pending operations
             foreach (var completion in _invocations.Values)
                 completion.SetException(new Exception("shutdown"));
 
             // invoke
-            _onShutdown?.Invoke(this);
+            if (_onShutdown != null)
+            {
+                await _onShutdown(this);
+            }
         }
 
         /// <inheritdoc />

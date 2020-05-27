@@ -7,7 +7,7 @@ namespace Hazelcast.Exceptions
     /// Represents the exception that is thrown when the Hazelcast client is invoked but is not active.
     /// </summary>
     [Serializable]
-    public class HazelcastClientNotActiveException : InvalidOperationException
+    public class HazelcastClientNotActiveException : InvalidOperationException // FIXME: rename HazelcastClientDisconnectedException
     {
         // ReSharper disable once InconsistentNaming
         private const string DefaultMessage = "Hazelcast client is not connected.";

@@ -83,6 +83,9 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask<bool> WaitAsync(CancellationToken cancellationToken)
         {
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException();
+
             _attempts++;
 
             var elapsed = (int) (DateTime.UtcNow - _begin).TotalMilliseconds;
@@ -100,7 +103,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await Task.Delay(delay, cancellationToken);
+                await Task.Delay(delay, cancellationToken).CAF();
             }
             catch (OperationCanceledException)
             {

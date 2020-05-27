@@ -13,19 +13,37 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Implementation.Topic
 {
-    // partial: events
-    internal partial class Topic<T>
+    internal partial class Topic<T> // Events
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on)
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = SubscribeAsync(on, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, CancellationToken cancellationToken)
         {
             if (on == null) throw new ArgumentNullException(nameof(on));
 
@@ -42,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
                 HandleEvent,
                 new SubscriptionState(Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription);
+            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
 
             return subscription.Id;
         }
@@ -107,13 +125,36 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         }
 
         /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = UnsubscribeAsync(subscriptionId, cancellation.Token).OrTimeout(cancellation);
 
 #if OPTIMIZE_ASYNC
-        public ValueTask UnsubscribeAsync(Guid subscriptionId)
-            => Cluster.RemoveSubscriptionAsync(subscriptionId);
+            return task;
 #else
-        public async ValueTask UnsubscribeAsync(Guid subscriptionId)
-            => await Cluster.RemoveSubscriptionAsync(subscriptionId);
+            await task.CAF();
 #endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
+        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken)
+        {
+            var task = Cluster.RemoveSubscriptionAsync(subscriptionId, cancellationToken);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
     }
 }

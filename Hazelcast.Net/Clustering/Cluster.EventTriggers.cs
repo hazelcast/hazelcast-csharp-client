@@ -7,8 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    // partial: event triggers
-    public partial class Cluster
+    public partial class Cluster // EventTriggers
     {
         /// <summary>
         /// Triggers an object lifecycle event.
@@ -53,7 +52,6 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Triggers a partitions updated event.
         /// </summary>
-        /// <param name="args">The event arguments.</param>
         private void OnPartitionsUpdated()
         {
             ForEachHandler<PartitionsUpdatedEventHandler>(handler =>
@@ -88,7 +86,6 @@ namespace Hazelcast.Clustering
             });
         }
 
-        // FIXME: invoke!
         /// <summary>
         /// Triggers a connection removed event.
         /// </summary>

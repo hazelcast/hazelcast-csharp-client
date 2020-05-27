@@ -12,8 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    // partial: members
-    public partial class Cluster
+    public partial class Cluster // Members
     {
         /// <summary>
         /// Clears a client currently handling cluster events.
@@ -36,8 +35,9 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Starts the task that ensures that a client handlers cluster events, if it is not already running.
         /// </summary>
-        /// <param name="client">An optional candidate client.</param>
-        private void StartSetClusterEventsClientWithLock(Client client = null)
+        /// <param name="client">A candidate client.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        private void StartSetClusterEventsClientWithLock(Client client, CancellationToken cancellationToken)
         {
             // there can only be one instance of that task running at a time
             // and it runs in the background, and at any time any client could
@@ -45,33 +45,49 @@ namespace Hazelcast.Clustering
             //
             // the task self-removes itself when it ends
 
-            _clusterEventsTask ??= SetClusterEventsClientAsync(client);
+            _clusterEventsTask ??= SetClusterEventsClientAsync(client, cancellationToken);
+        }
+
+        /// <summary>
+        /// Starts the task that ensures that a client handlers cluster events, if it is not already running.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        private void StartSetClusterEventsClientWithLock(CancellationToken cancellationToken)
+        {
+            // there can only be one instance of that task running at a time
+            // and it runs in the background, and at any time any client could
+            // shutdown, which might clear the current cluster event client
+            //
+            // the task self-removes itself when it ends
+
+            _clusterEventsTask ??= SetClusterEventsClientAsync(null, cancellationToken);
         }
 
         /// <summary>
         /// Sets a client to handle cluster events.
         /// </summary>
         /// <param name="client">An optional candidate client.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when a new client has been assigned to handle cluster events.</returns>
-        private async Task SetClusterEventsClientAsync(Client client = null)
+        private async Task SetClusterEventsClientAsync(Client client, CancellationToken cancellationToken)
         {
             // this will only exit once a client is assigned, or the task is
             // cancelled, when the cluster goes down (and never up again)
-            while (!_clusterEventsCancel)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 client ??= GetRandomClient();
 
                 if (client == null)
                 {
                     // no clients => wait for clients
-                    await Task.Delay(Constants.Cluster.WaitForClientMilliseconds);
+                    await Task.Delay(Constants.Cluster.WaitForClientMilliseconds, cancellationToken).CAF();
                     continue;
                 }
 
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end
                 var correlationId = _correlationIdSequence.Next;
-                if (!await SubscribeToClusterEventsAsync(client, correlationId)) // does not throw
+                if (!await SubscribeToClusterEventsAsync(client, correlationId, cancellationToken).CAF()) // does not throw
                 {
                     // failed => try another client
                     client = null;
@@ -98,8 +114,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="correlationId">The correlation identifier.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the subscription has been processed, and represent whether it was successful.</returns>
-        private async Task<bool> SubscribeToClusterEventsAsync(Client client, long correlationId)
+        private async Task<bool> SubscribeToClusterEventsAsync(Client client, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
             XConsole.WriteLine(this, "subscribe");
@@ -115,7 +132,7 @@ namespace Hazelcast.Clustering
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEvent);
-                _ = await SendToClientAsync(subscribeRequest, client, correlationId, CancellationToken.None); // FIXME TOKEN
+                _ = await SendToClientAsync(subscribeRequest, client, correlationId, cancellationToken).CAF();
                 XConsole.WriteLine(this, "subscribed");
                 return true;
             }

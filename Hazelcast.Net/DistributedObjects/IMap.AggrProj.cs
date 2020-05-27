@@ -22,8 +22,8 @@ using Hazelcast.Projections;
 
 namespace Hazelcast.DistributedObjects
 {
-    // partial: aggregating and projecting
-    public partial interface IMap<TKey, TValue>
+    // ReSharper disable twice UnusedTypeParameter
+    public partial interface IMap<TKey, TValue> // Aggregating and projecting
     {
         /// <summary>
         /// Aggregates values.

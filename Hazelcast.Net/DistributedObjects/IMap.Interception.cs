@@ -18,8 +18,8 @@ using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
-    // partial: interception
-    public partial interface IMap<TKey, TValue>
+    // ReSharper disable twice UnusedTypeParameter
+    public partial interface IMap<TKey, TValue> // Interception
     {
         // TODO what is an interceptor?
 

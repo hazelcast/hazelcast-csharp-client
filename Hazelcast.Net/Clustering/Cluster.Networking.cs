@@ -45,7 +45,7 @@ namespace Hazelcast.Clustering
         {
             _readonlyProperties = true;
 
-            lock (_clusterStateLock)
+            lock (_clusterLock)
             {
                 if (_clusterState != ClusterState.NotConnected)
                     throw new InvalidOperationException("Cluster has already been connected.");
@@ -55,15 +55,15 @@ namespace Hazelcast.Clustering
             try
             {
                 // connects the first client, throws if it fails
-                await ConnectFirstClientAsync(cancellationToken).ConfigureAwait(false);
+                await ConnectFirstClientAsync(cancellationToken).CAF();
 
                 // wait for the member table
-                await _firstMembersView.WaitAsync(cancellationToken);
+                await _firstMembersView.WaitAsync(cancellationToken).CAF();
                 _firstMembersView = null;
 
                 // execute subscribers
                 foreach (var subscriber in _clusterEventSubscribers)
-                    await subscriber.SubscribeAsync(this, cancellationToken).ConfigureAwait(false);
+                    await subscriber.SubscribeAsync(this, cancellationToken).CAF();
 
                 // once subscribers have run, they have created subscriptions
                 // and we don't need them anymore - only their subscriptions
@@ -71,19 +71,20 @@ namespace Hazelcast.Clustering
             }
             catch
             {
-                // FIXME: that is not enough, we need a "die" method
-                lock (_clusterStateLock)
-                {
-                    _clusterState = ClusterState.Disconnected;
-                }
-
+                await DieAsync().CAF();
                 throw;
             }
         }
 
-        private void StartConnectClusterWithLock() // FIXME: wtf?
+        private void StartConnectClusterWithLock(CancellationToken cancellationToken)
         {
-            //_connectClusterTask ??= ConnectClusterAsync();
+            _clusterConnectTask ??= ConnectFirstClientAsync(cancellationToken).ContinueWith(async x =>
+            {
+                if (x.IsFaulted)
+                {
+                    await DieAsync().CAF();
+                }
+            }, cancellationToken);
         }
 
         /// <summary>
@@ -93,8 +94,9 @@ namespace Hazelcast.Clustering
         private async Task ConnectFirstClientAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
-            var exceptions = new List<Exception>();
             var retryStrategy = new RetryStrategy("connect to cluster", _retryConfiguration, _loggerFactory);
+            List<Exception> exceptions = null;
+            bool canRetry;
 
             do
             {
@@ -106,15 +108,29 @@ namespace Hazelcast.Clustering
                         break;
 
                     tried.Add(address);
-                    var attempt = await TryConnectAsync(address, cancellationToken).ConfigureAwait(false);
-                    if (attempt) return;
+                    var attempt = await TryConnectAsync(address, cancellationToken).CAF();
+                    if (attempt) return; // successful exit
 
-                    if (attempt.HasException) exceptions.Add(attempt.Exception);
+                    if (attempt.HasException)
+                    {
+                        exceptions ??= new List<Exception>();
+                        exceptions.Add(attempt.Exception);
+                    }
                 }
 
-            } while (await retryStrategy.WaitAsync(cancellationToken).ConfigureAwait(false));
+                try
+                {
+                    // try to retry, maybe with a delay - handles cancellation
+                    canRetry = await retryStrategy.WaitAsync(cancellationToken).CAF();
+                }
+                catch (Exception e)
+                {
+                    exceptions ??= new List<Exception>();
+                    exceptions.Add(e);
+                    canRetry = false;
+                }
 
-            if (_connectTaskCancel) return; // FIXME duh?
+            } while (canRetry);
 
             var aggregate = new AggregateException(exceptions);
             throw new InvalidOperationException($"Unable to connect to the cluster \"{Name}\". " +
@@ -216,7 +232,7 @@ namespace Hazelcast.Clustering
             Partitioner.NotifyInitialCount(info.PartitionCount);
 
             // register & prepare the client
-            lock (_clusterStateLock)
+            lock (_clusterLock)
             {
                 var firstClient = _clients.Count == 0;
 
@@ -256,14 +272,15 @@ namespace Hazelcast.Clustering
                     // if we don't have a cluster client yet, start a
                     // single, cluster-wide task ensuring there is a cluster events client
                     if (_clusterEventsClient == null)
-                        StartSetClusterEventsClientWithLock(client);
+                        StartSetClusterEventsClientWithLock(client, _clusterCancellation.Token);
                 }
 
                 // per-client task subscribing the client to events
                 // this is entirely fire-and-forget, it anything goes wrong it will shut the client down
                 // TODO: means we cannot await on it? the client should know about it + timeout or?
                 var subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
-                _ = InstallSubscriptionsOnNewClient(client, subscriptions);
+                // FIXME should this be a background, per-client thing?!
+                _ = InstallSubscriptionsOnNewClient(client, subscriptions, _clusterCancellation.Token);
 
                 OnConnectionAdded(client); // does not throw
 
@@ -274,14 +291,13 @@ namespace Hazelcast.Clustering
             return client;
         }
 
-        // TODO: wtf
-        private void EnsureActive() { } // supposed to validate that the client is still active?
-
-        private void HandleClientShutdown(Client client)
+        private async ValueTask HandleClientShutdown(Client client)
         {
             // this runs when a client signals that it is shutting down
 
-            lock (_clusterStateLock)
+            var die = false;
+
+            lock (_clusterLock)
             {
                 _addressClients.TryRemove(client.Address, out _);
                 _clients.TryRemove(client.MemberId, out _);
@@ -304,34 +320,40 @@ namespace Hazelcast.Clustering
                     // if the client was the cluster client, and we have more client, start a
                     // single, cluster-wide task ensuring there is a cluster events client
                     if (ClearClusterEventsClientWithLock(client) && !lastClient)
-                        StartSetClusterEventsClientWithLock(client);
+                        StartSetClusterEventsClientWithLock(client, _clusterCancellation.Token);
                 }
 
-                if (lastClient)
+                if (!lastClient)
+                    return;
+
+                _logger.LogInformation("Disconnected (reconnect mode:{ReconnectMode})", _reconnectMode);
+
+                switch (_reconnectMode)
                 {
-                    _logger.LogInformation("Disconnected (reconnect mode:{ReconnectMode})", _reconnectMode);
+                    case ReconnectMode.DoNotReconnect:
+                        _clusterState = ClusterState.Disconnected;
+                        die = true;
+                        break;
 
-                    switch (_reconnectMode)
-                    {
-                        case ReconnectMode.DoNotReconnect:
-                            _clusterState = ClusterState.Disconnected;
-                            // FIXME: need to die somehow
-                            break;
+                    case ReconnectMode.ReconnectSync:
+                        _clusterState = ClusterState.Connecting;
+                        // TODO: implement ReconnectSync
+                        // in original code this does ReconnectAsync
+                        throw new NotSupportedException();
 
-                        case ReconnectMode.ReconnectSync:
-                            _clusterState = ClusterState.Connecting;
-                            // FIXME: need to trigger a reconnect + block invocations?
-                            break;
+                    case ReconnectMode.ReconnectAsync:
+                        _clusterState = ClusterState.Connecting;
+                        StartConnectClusterWithLock(_clusterCancellation.Token);
+                        break;
 
-                        case ReconnectMode.ReconnectAsync:
-                            _clusterState = ClusterState.Connecting;
-                            // FIXME: need to trigger a reconnect
-                            break;
-
-                        default:
-                            throw new NotSupportedException();
-                    }
+                    default:
+                        throw new NotSupportedException();
                 }
+            }
+
+            if (die)
+            {
+                await DieAsync().CAF();
             }
         }
 

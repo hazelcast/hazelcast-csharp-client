@@ -431,7 +431,7 @@ namespace Hazelcast.Tests
                     {
                         XConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
                         Interlocked.Increment(ref eventsCount);
-                    }));
+                    }), CancellationToken.None);
                 });
             }
 

@@ -84,7 +84,7 @@ namespace Hazelcast.Testing
                 .PartitionsUpdated((sender, args) =>
                 {
                     partitions.Release();
-                }));
+                }), CancellationToken.None);
 
             var member = await rc.StartMemberAsync(cluster);
             await added.WaitAsync(TimeSpan.FromSeconds(120));
@@ -94,7 +94,7 @@ namespace Hazelcast.Testing
             _ = map.GetAsync(new object());
 
             await partitions.WaitAsync(TimeSpan.FromSeconds(120));
-            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId);
+            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None);
 
             var partitioner = clientInternal.Cluster.Partitioner;
             var partitionsCount = partitioner.Count;
@@ -136,11 +136,11 @@ namespace Hazelcast.Testing
                 .MemberRemoved((sender, args) =>
                 {
                     removed.Release();
-                }));
+                }), CancellationToken.None);
 
             await rc.StopMemberAsync(cluster, member);
             await removed.WaitAsync(TimeSpan.FromSeconds(120));
-            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId);
+            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None);
         }
 
         /// <summary>
@@ -164,8 +164,7 @@ namespace Hazelcast.Testing
             => rc.ResumeMemberAsync(cluster.Id, member.Uuid);
     }
 
-    // partial: remoting
-    public abstract partial class RemoteTestBase
+    public abstract partial class RemoteTestBase // Remoting
     {
         /// <summary>
         /// Creates a remote controller.

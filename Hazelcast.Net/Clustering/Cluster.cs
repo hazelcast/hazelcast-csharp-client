@@ -54,30 +54,31 @@ namespace Hazelcast.Clustering
         private readonly ReconnectMode _reconnectMode;
         private readonly bool _retryOnTargetDisconnected;
 
+        // events subscriptions
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
 
+        // configured subscribers
         private IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
-        private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
-
+        // _onXxx
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Func<CancellationToken, ValueTask> _onConnectionToNewCluster;
 
-        private readonly object _clusterStateLock = new object(); // general cluster state lock
+        // general cluster lifecycle
+        private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
+        private readonly object _clusterLock = new object(); // general lock
         private volatile ClusterState _clusterState = ClusterState.NotConnected; // cluster state
-        private Task _connectClusterTask; // the task that connects the cluster
-        private bool _connectTaskCancel; // cancellation of that task
+        private volatile bool _disposed; // disposed flag
+        private Task _clusterConnectTask; // the task that connects the cluster
+        private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
 
         private readonly object _clusterEventsLock = new object(); // lock for events
         private Client _clusterEventsClient; // the client which handles 'cluster events'
         private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
-        private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
-        private bool _clusterEventsCancel; // cancellation of that task
 
         private MemberTable _memberTable;
         private Guid _clusterServerSideId; // the server-side identifier of the cluster
-        private int _disposed;
 
         private volatile int _firstMembersViewed;
         //private volatile int _firstPartitionsViewed;
@@ -205,23 +206,57 @@ namespace Hazelcast.Clustering
         /// </summary>
         public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLite);
 
+        private async ValueTask DieAsync()
+        {
+            try
+            {
+                await DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                // that's all we can do really
+                _logger.LogWarning(e, "Caught an exception while dying.");
+            }
+        }
+
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
-                return;
+            var tasks = new List<Task>();
 
-            // FIXME: implement
+            lock (_clusterLock)
+            {
+                if (_disposed) return;
+                _disposed = true;
 
-            // stop that task
-            _clusterEventsCancel = true;
-            var ensureClusterEventsClient = _clusterEventsTask;
-            if (ensureClusterEventsClient != null)
-                await ensureClusterEventsClient;
+                _clusterCancellation.Cancel();
 
-            // can we "just" dispose each client?
-            //foreach (var (_, client ) in _clients)
-            //    await client.DisposeAsync();
+                if (_clusterConnectTask != null)
+                    tasks.Add(_clusterConnectTask);
+                if (_clusterEventsTask != null)
+                    tasks.Add(_clusterEventsTask);
+            }
+
+            foreach (var (_, client) in _clients)
+            {
+                try
+                {
+                    await client.DisposeAsync();
+                }
+                catch (Exception e)
+                {
+                    // FIXME: handle exception
+                }
+            }
+
+            try
+            {
+                await Task.WhenAll(tasks).CAF();
+            }
+            catch (OperationCanceledException)
+            {
+                // expected
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Data.Map;
@@ -95,7 +96,7 @@ namespace Hazelcast.NearCaching
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent, LoggerFactory),
                     new EventState { Name = Name });
 
-                Cluster.InstallSubscriptionAsync(subscription).Wait(); // FIXME: async oops!
+                Cluster.InstallSubscriptionAsync(subscription, CancellationToken.None).Wait(); // FIXME: async oops!
                 RegistrationId = subscription.Id;
             }
             catch (Exception e)

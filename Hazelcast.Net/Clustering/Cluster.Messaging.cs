@@ -216,6 +216,10 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
+            // fail fast
+            if (_disposed || _clusterState != ClusterState.Connected)
+                throw new HazelcastClientNotActiveException();
+
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
             message.CorrelationId = correlationId;
@@ -235,8 +239,8 @@ namespace Hazelcast.Clustering
                 catch (Exception exception)
                 {
                     // if the cluster is not connected anymore, die
-                    if (_clusterState != ClusterState.Connected)
-                        throw new HazelcastClientNotActiveException(exception); // FIXME: rename DisconnectedException
+                    if (_disposed || _clusterState != ClusterState.Connected)
+                        throw new HazelcastClientNotActiveException(exception);
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)

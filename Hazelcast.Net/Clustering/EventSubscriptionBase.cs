@@ -36,7 +36,7 @@ namespace Hazelcast.Clustering
 
         protected abstract ClusterSubscription CreateSubscription();
 
-        public async Task AddSubscription()
+        public async Task AddSubscription(CancellationToken cancellationToken)
         {
             // add a subscription, increment returns the incremented value
             // so it's 1 for the first subscription - which requires an actual
@@ -46,12 +46,12 @@ namespace Hazelcast.Clustering
 
             var subscription = CreateSubscription();
 
-            await Cluster.InstallSubscriptionAsync(subscription);
+            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken);
 
             _subscriptionId = subscription.Id;
         }
 
-        public async Task RemoveSubscription()
+        public async Task RemoveSubscription(CancellationToken cancellationToken)
         {
             // remove a subscription, decrement returns the decremented value
             // so it's 0 if we don't have subscriptions anymore and can
@@ -59,7 +59,7 @@ namespace Hazelcast.Clustering
             if (Interlocked.Decrement(ref _subscriptionsCount) > 0)
                 return;
 
-            await Cluster.RemoveSubscriptionAsync(_subscriptionId);
+            await Cluster.RemoveSubscriptionAsync(_subscriptionId, cancellationToken);
             _subscriptionId = default;
         }
     }

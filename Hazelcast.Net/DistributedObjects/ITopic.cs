@@ -37,7 +37,10 @@ namespace Hazelcast.DistributedObjects
     public interface ITopic<T> : IDistributedObject
     {
         /// <summary>Subscribes to this topic.</summary>
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on);
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, TimeSpan timeout = default);
+
+        /// <summary>Subscribes to this topic.</summary>
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, CancellationToken cancellationToken);
 
         /// <summary>Stops receiving messages for the given message listener.</summary>
         /// <remarks>
@@ -45,7 +48,15 @@ namespace Hazelcast.DistributedObjects
         ///     this method does nothing.
         /// </remarks>
         /// <param name="subscriptionId">Id of listener registration.</param>
-        ValueTask UnsubscribeAsync(Guid subscriptionId);
+        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default);
+
+        /// <summary>Stops receiving messages for the given message listener.</summary>
+        /// <remarks>
+        ///     Stops receiving messages for the given message listener. If the given listener already removed,
+        ///     this method does nothing.
+        /// </remarks>
+        /// <param name="subscriptionId">Id of listener registration.</param>
+        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken);
 
         //        /// <summary>Returns the name of this ITopic instance</summary>
         //        /// <returns>name of this instance</returns>

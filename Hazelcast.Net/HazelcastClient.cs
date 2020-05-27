@@ -99,8 +99,10 @@ namespace Hazelcast
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            await _distributedObjectFactory.DisposeAsync();
-            await Cluster.DisposeAsync();
+            await Task.WhenAll(
+                _distributedObjectFactory.DisposeAsync().AsTask(),
+                Cluster.DisposeAsync().AsTask()
+            ).CAF();
         }
     }
 }
