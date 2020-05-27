@@ -287,6 +287,7 @@ namespace Hazelcast.Clustering
                     _memberTable = new MemberTable(0, Array.Empty<MemberInfo>());
 
                     // get distributed object factory to re-create objects, etc
+                    // FIXME: mitigation = replace cluster lock with a semaphore, 3x slower but?!
                     //await _onConnectionToNewCluster().CAF();
                 }
 

@@ -14,9 +14,9 @@
 
 using System;
 using System.Diagnostics;
-
 #if XCONSOLE
 using System.Collections.Generic;
+using System.Threading;
 #endif
 
 namespace Hazelcast.Logging
@@ -375,4 +375,4 @@ namespace Hazelcast.Logging
 #endif
         }
     }
-}
+}

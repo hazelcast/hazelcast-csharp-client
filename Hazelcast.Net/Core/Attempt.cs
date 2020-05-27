@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 
 namespace Hazelcast.Core
@@ -42,7 +44,7 @@ namespace Hazelcast.Core
         /// <param name="value">The value of the result.</param>
         /// <param name="exception">An optional captured exception.</param>
         /// <returns>A failed attempt.</returns>
-        public static Attempt<TResult> Fail<TResult>(TResult value, Exception exception = default)
+        public static Attempt<TResult> Fail<TResult>(TResult value, Exception? exception = default)
             => new Attempt<TResult>(false, value, exception);
 
         /// <summary>
@@ -51,7 +53,7 @@ namespace Hazelcast.Core
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="exception">An optional captured exception.</param>
         /// <returns>A failed attempt.</returns>
-        public static Attempt<TResult> Fail<TResult>(Exception exception = default)
+        public static Attempt<TResult> Fail<TResult>(Exception? exception = default)
             => new Attempt<TResult>(false, exception: exception);
     }
 }

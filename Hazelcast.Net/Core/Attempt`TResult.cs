@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 
 namespace Hazelcast.Core
@@ -32,7 +34,7 @@ namespace Hazelcast.Core
         /// <param name="success">Whether the attempt succeeded.</param>
         /// <param name="value">The optional value of the result.</param>
         /// <param name="exception">An optional captured exception.</param>
-        internal Attempt(bool success, TResult value = default, Exception exception = default)
+        internal Attempt(bool success, TResult value = default, Exception? exception = default)
         {
             Success = success;
             Value = value;
@@ -65,7 +67,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets a captured exception.
         /// </summary>
-        public Exception Exception { get; }
+        public Exception? Exception { get; }
 
         /// <summary>
         /// Gets a value indicating whether the attempt contains an exception.
@@ -87,11 +89,16 @@ namespace Hazelcast.Core
             => attempt.Value;
 
         /// <summary>
-        /// Implicitly converts a non-generic attempt into a generic one.
+        /// Implicitly converts a non-generic failed attempt into a generic one.
         /// </summary>
-        /// <param name="attempt">The attempt.</param>
-        public static implicit operator Attempt<TResult>(Attempt attempt)
-            => new Attempt<TResult>();
+        /// <param name="failedAttempt">The failed attempt.</param>
+        /// <remarks>
+        /// <para>The only non-generic attempt is the failed attempt.</para>
+        /// </remarks>
+#pragma warning disable IDE0060 // Remove unused parameter / required even though ignored
+        public static implicit operator Attempt<TResult>(Attempt failedAttempt)
+#pragma warning restore IDE0060 // Remove unused parameter
+            => new Attempt<TResult>(false);
 
         /// <summary>
         /// Implicitly converts a result value into a successful attempts.
@@ -104,6 +111,8 @@ namespace Hazelcast.Core
         //
         // there is no way to return Attempt.Fail(exception) and have it implicitly
         // converted to a new Attempt<TResult> as that would allocate first the non-
-        // generic and second the generic attempt, and we want to avoid this
+        // generic and second the generic attempt, and we want to avoid this - and
+        // all the tricks to convert a struct into another... still imply some
+        // allocations
     }
-}
+}
