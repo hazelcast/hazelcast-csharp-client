@@ -35,18 +35,21 @@ namespace Hazelcast.Serialization
                 _factoryId = factoryId;
             }
 
+            private static long CombineToLong(int x, int y)
+            {
+                return unchecked(((long)x << 32) | (y & 0xFFFFFFFFL));
+            }
+
             internal int GetClassVersion(int classId)
             {
-                int version;
-                var hasValue = _currentClassVersions.TryGetValue(classId, out version);
+                var hasValue = _currentClassVersions.TryGetValue(classId, out var version);
                 return hasValue ? version : -1;
             }
 
             internal IClassDefinition Lookup(int classId, int version)
             {
-                var versionedClassId = Portability.CombineToLong(classId, version);
-                IClassDefinition cd;
-                _versionedDefinitions.TryGetValue(versionedClassId, out cd);
+                var versionedClassId = CombineToLong(classId, version);
+                _versionedDefinitions.TryGetValue(versionedClassId, out var cd);
                 return cd;
             }
 
@@ -60,12 +63,11 @@ namespace Hazelcast.Serialization
                 {
                     throw new HazelcastSerializationException("Invalid factory-id! " + _factoryId + " -> " + cd);
                 }
-                if (cd is ClassDefinition)
+                if (cd is ClassDefinition cdImpl)
                 {
-                    var cdImpl = (ClassDefinition) cd;
                     cdImpl.SetVersionIfNotSet(_portableContext.GetVersion());
                 }
-                var versionedClassId = Portability.CombineToLong(cd.GetClassId(), cd.GetVersion());
+                var versionedClassId = CombineToLong(cd.GetClassId(), cd.GetVersion());
                 var currentCd = _versionedDefinitions.GetOrAdd(versionedClassId, cd);
                 if (Equals(currentCd, cd))
                 {
@@ -94,4 +96,4 @@ namespace Hazelcast.Serialization
             }
         }
     }
-}
+}

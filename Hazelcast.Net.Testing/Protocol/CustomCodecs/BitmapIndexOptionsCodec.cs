@@ -34,26 +34,25 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
     internal static class BitmapIndexOptionsServerCodec
     {
         private const int UniqueKeyTransformationFieldOffset = 0;
-        private const int InitialFrameSize = UniqueKeyTransformationFieldOffset + IntSizeInBytes;
+        private const int InitialFrameSize = UniqueKeyTransformationFieldOffset + BytesExtensions.SizeOfInt;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Data.Map.BitmapIndexOptions bitmapIndexOptions)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeInt(initialFrame, UniqueKeyTransformationFieldOffset, bitmapIndexOptions.UniqueKeyTransformation);
-            clientMessage.Add(initialFrame);
+            initialFrame.Bytes.WriteInt(UniqueKeyTransformationFieldOffset, bitmapIndexOptions.UniqueKeyTransformation);
+            clientMessage.Append(initialFrame);
 
             StringCodec.Encode(clientMessage, bitmapIndexOptions.UniqueKey);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Data.Map.BitmapIndexOptions Decode(IEnumerator<Frame> iterator)
@@ -62,7 +61,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var uniqueKeyTransformation = DecodeInt(initialFrame, UniqueKeyTransformationFieldOffset);
+            var uniqueKeyTransformation = initialFrame.Bytes.ReadInt(UniqueKeyTransformationFieldOffset);
 
             var uniqueKey = StringCodec.Decode(iterator);
 
@@ -73,4 +72,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

@@ -139,14 +139,14 @@ namespace Hazelcast.Serialization
         public virtual char ReadChar()
         {
             var c = ReadChar(Pos);
-            Pos += Bits.CharSizeInBytes;
+            Pos += BytesExtensions.SizeOfChar;
             return c;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual char ReadChar(int position)
         {
-            CheckAvailable(position, Bits.CharSizeInBytes);
+            CheckAvailable(position, BytesExtensions.SizeOfChar);
             return Data.ReadChar(position, _endianness);
         }
 
@@ -270,28 +270,28 @@ namespace Hazelcast.Serialization
         public virtual int ReadInt()
         {
             var i = ReadInt(Pos);
-            Pos += Bits.IntSizeInBytes;
+            Pos += BytesExtensions.SizeOfInt;
             return i;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual int ReadInt(int position)
         {
-            CheckAvailable(position, Bits.IntSizeInBytes);
-            return Data.ReadInt32(position, _endianness);
+            CheckAvailable(position, BytesExtensions.SizeOfInt);
+            return Data.ReadInt(position, _endianness);
         }
 
         public int ReadInt(Endianness endianness)
         {
             var i = ReadInt(Pos, endianness);
-            Pos += Bits.IntSizeInBytes;
+            Pos += BytesExtensions.SizeOfInt;
             return i;
         }
 
         public int ReadInt(int position, Endianness endianness)
         {
-            CheckAvailable(position, Bits.IntSizeInBytes);
-            return Data.ReadInt32(position, ResolveEndianness(endianness));
+            CheckAvailable(position, BytesExtensions.SizeOfInt);
+            return Data.ReadInt(position, ResolveEndianness(endianness));
         }
 
         /// <summary>
@@ -316,29 +316,29 @@ namespace Hazelcast.Serialization
         public virtual long ReadLong()
         {
             var l = ReadLong(Pos);
-            Pos += Bits.LongSizeInBytes;
+            Pos += BytesExtensions.SizeOfLong;
             return l;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual long ReadLong(int position)
         {
-            CheckAvailable(position, Bits.LongSizeInBytes);
-            return Data.ReadInt64(position, _endianness);
+            CheckAvailable(position, BytesExtensions.SizeOfLong);
+            return Data.ReadLong(position, _endianness);
         }
 
         public long ReadLong(Endianness endianness)
         {
             var l = ReadLong(Pos, endianness);
-            Pos += Bits.LongSizeInBytes;
+            Pos += BytesExtensions.SizeOfLong;
             return l;
         }
 
         public long ReadLong(int position, Endianness endianness)
         {
-            CheckAvailable(position, Bits.LongSizeInBytes);
-            var l = Data.ReadInt64(position, ResolveEndianness(endianness));
-            Pos += Bits.LongSizeInBytes;
+            CheckAvailable(position, BytesExtensions.SizeOfLong);
+            var l = Data.ReadLong(position, ResolveEndianness(endianness));
+            Pos += BytesExtensions.SizeOfLong;
             return l;
         }
 
@@ -364,35 +364,35 @@ namespace Hazelcast.Serialization
         public virtual short ReadShort()
         {
             var s = ReadShort(Pos);
-            Pos += Bits.ShortSizeInBytes;
+            Pos += BytesExtensions.SizeOfShort;
             return s;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual short ReadShort(int position)
         {
-            CheckAvailable(position, Bits.ShortSizeInBytes);
-            return Data.ReadInt16(position, _endianness);
+            CheckAvailable(position, BytesExtensions.SizeOfShort);
+            return Data.ReadShort(position, _endianness);
         }
 
         public short ReadShort(Endianness endianness)
         {
             var s = ReadShort(Pos, endianness);
-            Pos += Bits.ShortSizeInBytes;
+            Pos += BytesExtensions.SizeOfShort;
             return s;
         }
 
         public short ReadShort(int position, Endianness endianness)
         {
-            CheckAvailable(position, Bits.ShortSizeInBytes);
-            return Data.ReadInt16(position, ResolveEndianness(endianness));
+            CheckAvailable(position, BytesExtensions.SizeOfShort);
+            return Data.ReadShort(position, ResolveEndianness(endianness));
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public virtual byte[] ReadByteArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -406,7 +406,7 @@ namespace Hazelcast.Serialization
         public virtual bool[] ReadBooleanArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -424,7 +424,7 @@ namespace Hazelcast.Serialization
         public virtual char[] ReadCharArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -442,7 +442,7 @@ namespace Hazelcast.Serialization
         public virtual int[] ReadIntArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -460,7 +460,7 @@ namespace Hazelcast.Serialization
         public virtual long[] ReadLongArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -478,7 +478,7 @@ namespace Hazelcast.Serialization
         public virtual double[] ReadDoubleArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -496,7 +496,7 @@ namespace Hazelcast.Serialization
         public virtual float[] ReadFloatArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -514,7 +514,7 @@ namespace Hazelcast.Serialization
         public virtual short[] ReadShortArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -531,7 +531,7 @@ namespace Hazelcast.Serialization
         public virtual string[] ReadUtfArray()
         {
             var len = ReadInt();
-            if (len == Bits.NullArray) return null;
+            if (len == ArraySerializer.NullArrayLength) return null;
 
             if (len > 0)
             {
@@ -620,7 +620,7 @@ namespace Hazelcast.Serialization
         public virtual string ReadUtf()
         {
             var charCount = ReadInt();
-            if (charCount == Bits.NullArray)
+            if (charCount == ArraySerializer.NullArrayLength)
             {
                 return null;
             }
@@ -810,4 +810,4 @@ namespace Hazelcast.Serialization
             }
         }
     }
-}
+}

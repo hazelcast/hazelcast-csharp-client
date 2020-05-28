@@ -34,30 +34,29 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
     internal static class MemberInfoServerCodec
     {
         private const int UuidFieldOffset = 0;
-        private const int LiteMemberFieldOffset = UuidFieldOffset + GuidSizeInBytes;
-        private const int InitialFrameSize = LiteMemberFieldOffset + BoolSizeInBytes;
+        private const int LiteMemberFieldOffset = UuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int InitialFrameSize = LiteMemberFieldOffset + BytesExtensions.SizeOfBool;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Data.MemberInfo memberInfo)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeGuid(initialFrame, UuidFieldOffset, memberInfo.Uuid);
-            EncodeBool(initialFrame, LiteMemberFieldOffset, memberInfo.IsLiteMember);
-            clientMessage.Add(initialFrame);
+            initialFrame.Bytes.WriteGuid(UuidFieldOffset, memberInfo.Uuid);
+            initialFrame.Bytes.WriteBool(LiteMemberFieldOffset, memberInfo.IsLiteMember);
+            clientMessage.Append(initialFrame);
 
             AddressCodec.Encode(clientMessage, memberInfo.Address);
             MapCodec.Encode(clientMessage, memberInfo.Attributes, StringCodec.Encode, StringCodec.Encode);
             MemberVersionCodec.Encode(clientMessage, memberInfo.Version);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Data.MemberInfo Decode(IEnumerator<Frame> iterator)
@@ -66,8 +65,8 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var uuid = DecodeGuid(initialFrame, UuidFieldOffset);
-            var liteMember = DecodeBool(initialFrame, LiteMemberFieldOffset);
+            var uuid = initialFrame.Bytes.ReadGuid(UuidFieldOffset);
+            var liteMember = initialFrame.Bytes.ReadBool(LiteMemberFieldOffset);
 
             var address = AddressCodec.Decode(iterator);
             var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
@@ -80,4 +79,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

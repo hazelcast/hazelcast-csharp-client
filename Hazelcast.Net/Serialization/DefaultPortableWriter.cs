@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Bits = Hazelcast.Messaging.Portability;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
@@ -40,7 +40,7 @@ namespace Hazelcast.Serialization
             @out.WriteInt(cd.GetFieldCount());
             _offset = @out.Position();
             // one additional for raw data
-            var fieldIndexesLength = (cd.GetFieldCount() + 1)*Bits.IntSizeInBytes;
+            var fieldIndexesLength = (cd.GetFieldCount() + 1)* BytesExtensions.SizeOfInt;
             @out.WriteZeroBytes(fieldIndexesLength);
         }
 
@@ -198,7 +198,7 @@ namespace Hazelcast.Serialization
         public virtual void WritePortableArray(string fieldName, IPortable[] portables)
         {
             var fd = SetPosition(fieldName, FieldType.PortableArray);
-            var len = portables == null ? Bits.NullArray : portables.Length;
+            var len = portables == null ? ArraySerializer.NullArrayLength : portables.Length;
             _out.WriteInt(len);
             _out.WriteInt(fd.GetFactoryId());
             _out.WriteInt(fd.GetClassId());
@@ -211,7 +211,7 @@ namespace Hazelcast.Serialization
                     var portable = portables[i];
                     CheckPortableAttributes(fd, portable);
                     var position = _out.Position();
-                    _out.WriteInt(offset + i*Bits.IntSizeInBytes, position);
+                    _out.WriteInt(offset + i* BytesExtensions.SizeOfInt, position);
                     _serializer.WriteInternal(_out, portable);
                 }
             }
@@ -225,7 +225,7 @@ namespace Hazelcast.Serialization
                 var pos = _out.Position();
                 // last index
                 var index = _cd.GetFieldCount();
-                _out.WriteInt(_offset + index*Bits.IntSizeInBytes, pos);
+                _out.WriteInt(_offset + index* BytesExtensions.SizeOfInt, pos);
             }
             _raw = true;
             return _out;
@@ -279,7 +279,7 @@ namespace Hazelcast.Serialization
             {
                 var pos = _out.Position();
                 var index = fd.GetIndex();
-                _out.WriteInt(_offset + index*Bits.IntSizeInBytes, pos);
+                _out.WriteInt(_offset + index* BytesExtensions.SizeOfInt, pos);
                 _out.WriteShort(fieldName.Length);
                 _out.WriteBytes(fieldName);
                 _out.WriteByte((byte) fieldType);
@@ -291,4 +291,4 @@ namespace Hazelcast.Serialization
             return fd;
         }
     }
-}
+}

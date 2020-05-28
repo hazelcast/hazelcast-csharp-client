@@ -40,7 +40,7 @@ namespace Hazelcast.Tests.DotNet
 
             // this cannot return T? as it would return null only for reference types (classes)
             // but would return default(T) for structs - hence the MaybeNull attribute that only
-            // exists with ns 2.1+ 
+            // exists with netstandard 2.1+ or can be redefined for netstandard 2.0 in our own code
             [return: MaybeNull]
             public T GetT() => _t;
         }

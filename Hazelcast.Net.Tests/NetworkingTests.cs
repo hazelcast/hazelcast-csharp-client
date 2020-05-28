@@ -472,9 +472,9 @@ namespace Hazelcast.Tests
         {
             const int origin = 1234;
             var bytes = new byte[4];
-            bytes.WriteInt32(0, origin);
+            bytes.WriteInt(0, origin);
             var buffer = new ReadOnlySequence<byte>(bytes);
-            var value = BytesExtensions.ReadInt32(ref buffer);
+            var value = BytesExtensions.ReadInt(ref buffer);
             NUnit.Framework.Assert.AreEqual(origin, value);
         }
 

@@ -139,7 +139,7 @@ namespace Hazelcast.Networking
                 // lazily create locks - no overhead as long as not locking
                 // may create multiple semaphores but only 1 will be used
                 if (_lock != null) return _lock;
-                Interlocked.CompareExchange(ref _lock, new SemaphoreSlim(1), null);
+                Interlocked.CompareExchange(ref _lock, new SemaphoreSlim(1, 1), null);
                 return _lock;
             }
         }

@@ -13,8 +13,8 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
@@ -23,16 +23,16 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static void Encode(ClientMessage clientMessage, ICollection<int> collection)
         {
             var itemCount = collection.Count;
-            var frame = new Frame(new byte[itemCount * IntSizeInBytes]);
+            var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfInt]);
 
             var i = 0;
             foreach (var value in collection)
             {
-                EncodeInt(frame, i* IntSizeInBytes, value);
+                frame.Bytes.WriteInt(i* BytesExtensions.SizeOfInt, value);
                 i++;
             }
 
-            clientMessage.Add(frame);
+            clientMessage.Append(frame);
         }
 
         public static IList<int> Decode(IEnumerator<Frame> iterator)
@@ -43,13 +43,13 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static IList<int> Decode(Frame frame)
         {
             // frame.Bytes is never null
-            var itemCount = frame.Bytes.Length / IntSizeInBytes;
+            var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfInt;
             var result = new List<int>(itemCount);
             for (var i = 0; i < itemCount; i++)
             {
-                result.Add(DecodeInt(frame, i * IntSizeInBytes));
+                result.Add(frame.Bytes.ReadInt(i * BytesExtensions.SizeOfInt));
             }
             return result;
         }
     }
-}
+}

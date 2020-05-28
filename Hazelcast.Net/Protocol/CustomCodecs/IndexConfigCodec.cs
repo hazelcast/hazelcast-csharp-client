@@ -33,28 +33,27 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
     internal static class IndexConfigCodec
     {
         private const int TypeFieldOffset = 0;
-        private const int InitialFrameSize = TypeFieldOffset + IntSizeInBytes;
+        private const int InitialFrameSize = TypeFieldOffset + BytesExtensions.SizeOfInt;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Data.Map.IndexConfig indexConfig)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeInt(initialFrame, TypeFieldOffset, indexConfig.Type);
-            clientMessage.Add(initialFrame);
+            initialFrame.Bytes.WriteInt(TypeFieldOffset, indexConfig.Type);
+            clientMessage.Append(initialFrame);
 
             CodecUtil.EncodeNullable(clientMessage, indexConfig.Name, StringCodec.Encode);
             ListMultiFrameCodec.Encode(clientMessage, indexConfig.Attributes, StringCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, indexConfig.BitmapIndexOptions, BitmapIndexOptionsCodec.Encode);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Data.Map.IndexConfig Decode(IEnumerator<Frame> iterator)
@@ -63,7 +62,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var type = DecodeInt(initialFrame, TypeFieldOffset);
+            var type = initialFrame.Bytes.ReadInt(TypeFieldOffset);
 
             var name = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
             var attributes = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
@@ -76,4 +75,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

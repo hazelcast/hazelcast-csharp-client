@@ -34,7 +34,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -47,10 +46,10 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 72960; // 0x011D00
         public const int ResponseMessageType = 72961; // 0x011D01
-        private const int RequestThreadIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + LongSizeInBytes;
-        private const int ResponseMaxIdleFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseMaxIdleFieldOffset + LongSizeInBytes;
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseMaxIdleFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseMaxIdleFieldOffset + BytesExtensions.SizeOfLong;
 
         public sealed class RequestParameters
         {
@@ -70,17 +69,17 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long ThreadId { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = true;
             clientMessage.OperationName = "Map.GetEntryView";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeLong(initialFrame, RequestThreadIdFieldOffset, threadId);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLong(RequestThreadIdFieldOffset, threadId);
+            clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
             return clientMessage;
@@ -88,15 +87,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.ThreadId = DecodeLong(initialFrame, RequestThreadIdFieldOffset);
+            request.ThreadId = initialFrame.Bytes.ReadLong(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -113,25 +112,25 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeResponse(Hazelcast.Data.Map.MapEntry<IData, IData> response, long maxIdle)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
-            EncodeLong(initialFrame, ResponseMaxIdleFieldOffset, maxIdle);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLong(ResponseMaxIdleFieldOffset, maxIdle);
+            clientMessage.Append(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, response, SimpleEntryViewCodec.Encode);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.MaxIdle = DecodeLong(initialFrame, ResponseMaxIdleFieldOffset);
+            response.MaxIdle = initialFrame.Bytes.ReadLong(ResponseMaxIdleFieldOffset);
             response.Response = CodecUtil.DecodeNullable(iterator, SimpleEntryViewCodec.Decode);
             return response;
         }
 
-
+    
     }
-}
+}

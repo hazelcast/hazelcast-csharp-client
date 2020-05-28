@@ -24,7 +24,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static void Encode(ClientMessage clientMessage, string value)
         {
-            clientMessage.Add(new Frame(Utf8.GetBytes(value)));
+            clientMessage.Append(new Frame(Utf8.GetBytes(value)));
         }
 
         public static string Decode(IEnumerator<Frame> iterator)

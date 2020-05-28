@@ -34,7 +34,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -45,56 +44,56 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 768; // 0x000300
         public const int ResponseMessageType = 769; // 0x000301
-        private const int RequestInitialFrameSize = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int MembersViewEventVersionFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int MembersViewEventInitialFrameSize = MembersViewEventVersionFieldOffset + IntSizeInBytes;
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int MembersViewEventVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int MembersViewEventInitialFrameSize = MembersViewEventVersionFieldOffset + BytesExtensions.SizeOfInt;
         private const int MembersViewEventMessageType = 770; // 0x000302
-        private const int PartitionsViewEventVersionFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int PartitionsViewEventInitialFrameSize = PartitionsViewEventVersionFieldOffset + IntSizeInBytes;
+        private const int PartitionsViewEventVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int PartitionsViewEventInitialFrameSize = PartitionsViewEventVersionFieldOffset + BytesExtensions.SizeOfInt;
         private const int PartitionsViewEventMessageType = 771; // 0x000303
 
         public sealed class RequestParameters
         {
         }
-
+    
         public static ClientMessage EncodeRequest()
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;
             clientMessage.OperationName = "Client.AddClusterViewListener";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            clientMessage.Append(initialFrame);
             return clientMessage;
         }
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             //empty initial frame
             iterator.Take();
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
         }
 
         public static ClientMessage EncodeResponse()
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             //empty initial frame
             iterator.Take();
@@ -103,43 +102,43 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeMembersViewEvent(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[MembersViewEventInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, MembersViewEventMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeInt(initialFrame, MembersViewEventVersionFieldOffset, version);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[MembersViewEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, MembersViewEventMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteInt(MembersViewEventVersionFieldOffset, version);
+            clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             ListMultiFrameCodec.Encode(clientMessage, memberInfos, MemberInfoCodec.Encode);
             return clientMessage;
         }
         public static ClientMessage EncodePartitionsViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[PartitionsViewEventInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, PartitionsViewEventMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeInt(initialFrame, PartitionsViewEventVersionFieldOffset, version);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[PartitionsViewEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, PartitionsViewEventMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteInt(PartitionsViewEventVersionFieldOffset, version);
+            clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             EntryListUUIDListIntegerCodec.Encode(clientMessage, partitions);
             return clientMessage;
         }
-
+    
         public static void HandleEvent(ClientMessage clientMessage, HandleMembersViewEvent handleMembersViewEvent, HandlePartitionsViewEvent handlePartitionsViewEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             if (messageType == MembersViewEventMessageType) {
                 var initialFrame = iterator.Take();
-                var version =  DecodeInt(initialFrame, MembersViewEventVersionFieldOffset);
+                var version =  initialFrame.Bytes.ReadInt(MembersViewEventVersionFieldOffset);
                 var memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
                 handleMembersViewEvent(version, memberInfos);
                 return;
             }
             if (messageType == PartitionsViewEventMessageType) {
                 var initialFrame = iterator.Take();
-                var version =  DecodeInt(initialFrame, PartitionsViewEventVersionFieldOffset);
+                var version =  initialFrame.Bytes.ReadInt(PartitionsViewEventVersionFieldOffset);
                 var partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
                 handlePartitionsViewEvent(version, partitions);
                 return;
@@ -151,4 +150,4 @@ namespace Hazelcast.Protocol.Codecs
 
         public delegate void HandlePartitionsViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions);
     }
-}
+}

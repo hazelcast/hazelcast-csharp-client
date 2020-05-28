@@ -95,8 +95,8 @@ namespace Hazelcast.Clustering
 
         private volatile int _firstMembersViewed;
         //private volatile int _firstPartitionsViewed;
-        private SemaphoreSlim _firstMembersView = new SemaphoreSlim(0);
-        //private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0);
+        private SemaphoreSlim _firstMembersView = new SemaphoreSlim(0, 1);
+        //private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0, 1);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Cluster"/> class.

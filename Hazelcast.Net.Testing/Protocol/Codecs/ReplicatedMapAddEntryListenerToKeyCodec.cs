@@ -34,7 +34,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -46,14 +45,14 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 855040; // 0x0D0C00
         public const int ResponseMessageType = 855041; // 0x0D0C01
-        private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EntryEventEventTypeFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EntryEventUuidFieldOffset = EntryEventEventTypeFieldOffset + IntSizeInBytes;
-        private const int EntryEventNumberOfAffectedEntriesFieldOffset = EntryEventUuidFieldOffset + GuidSizeInBytes;
-        private const int EntryEventInitialFrameSize = EntryEventNumberOfAffectedEntriesFieldOffset + IntSizeInBytes;
+        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EntryEventEventTypeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EntryEventUuidFieldOffset = EntryEventEventTypeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EntryEventNumberOfAffectedEntriesFieldOffset = EntryEventUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EntryEventInitialFrameSize = EntryEventNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
         private const int EntryEventMessageType = 855042; // 0x0D0C02
 
         public sealed class RequestParameters
@@ -74,17 +73,17 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool LocalOnly { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, IData key, bool localOnly)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;
             clientMessage.OperationName = "ReplicatedMap.AddEntryListenerToKey";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBool(RequestLocalOnlyFieldOffset, localOnly);
+            clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
             return clientMessage;
@@ -92,15 +91,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.LocalOnly = DecodeBool(initialFrame, RequestLocalOnlyFieldOffset);
+            request.LocalOnly = initialFrame.Bytes.ReadBool(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -112,33 +111,33 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeResponse(Guid response)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
-            EncodeGuid(initialFrame, ResponseResponseFieldOffset, response);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuid(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
             return response;
         }
 
         public static ClientMessage EncodeEntryEvent(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[EntryEventInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, EntryEventMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeInt(initialFrame, EntryEventEventTypeFieldOffset, eventType);
-            EncodeGuid(initialFrame, EntryEventUuidFieldOffset, uuid);
-            EncodeInt(initialFrame, EntryEventNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EntryEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, EntryEventMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteInt(EntryEventEventTypeFieldOffset, eventType);
+            initialFrame.Bytes.WriteGuid(EntryEventUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteInt(EntryEventNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
+            clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, @value, DataCodec.Encode);
@@ -146,16 +145,16 @@ namespace Hazelcast.Protocol.Codecs
             CodecUtil.EncodeNullable(clientMessage, mergingValue, DataCodec.Encode);
             return clientMessage;
         }
-
+    
         public static void HandleEvent(ClientMessage clientMessage, HandleEntryEvent handleEntryEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             if (messageType == EntryEventMessageType) {
                 var initialFrame = iterator.Take();
-                var eventType =  DecodeInt(initialFrame, EntryEventEventTypeFieldOffset);
-                var uuid =  DecodeGuid(initialFrame, EntryEventUuidFieldOffset);
-                var numberOfAffectedEntries =  DecodeInt(initialFrame, EntryEventNumberOfAffectedEntriesFieldOffset);
+                var eventType =  initialFrame.Bytes.ReadInt(EntryEventEventTypeFieldOffset);
+                var uuid =  initialFrame.Bytes.ReadGuid(EntryEventUuidFieldOffset);
+                var numberOfAffectedEntries =  initialFrame.Bytes.ReadInt(EntryEventNumberOfAffectedEntriesFieldOffset);
                 var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var @value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var oldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
@@ -168,4 +167,4 @@ namespace Hazelcast.Protocol.Codecs
 
         public delegate void HandleEntryEvent(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries);
     }
-}
+}

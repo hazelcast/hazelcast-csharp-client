@@ -19,7 +19,6 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.Serialization.Formatters.Binary;
 using Hazelcast.Core;
-using Bits = Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Serialization
 {
@@ -127,7 +126,7 @@ namespace Hazelcast.Serialization
             public override List<T> Read(IObjectDataInput input)
             {
                 var size = input.ReadInt();
-                if (size <= Bits.NullArray) return null;
+                if (size <= ArraySerializer.NullArrayLength) return null;
 
                 var list = new List<T>(size);
                 for (var i = 0; i < size; i++)
@@ -139,7 +138,7 @@ namespace Hazelcast.Serialization
 
             public override void Write(IObjectDataOutput output, List<T> obj)
             {
-                var size = obj == null ? Bits.NullArray : obj.Count;
+                var size = obj == null ? ArraySerializer.NullArrayLength : obj.Count;
                 output.WriteInt(size);
                 foreach (var o in obj)
                 {
@@ -158,7 +157,7 @@ namespace Hazelcast.Serialization
             public override LinkedList<T> Read(IObjectDataInput input)
             {
                 var size = input.ReadInt();
-                if (size <= Bits.NullArray) return null;
+                if (size <= ArraySerializer.NullArrayLength) return null;
 
                 var list = new LinkedList<T>();
                 for (var i = 0; i < size; i++)
@@ -170,7 +169,7 @@ namespace Hazelcast.Serialization
 
             public override void Write(IObjectDataOutput output, LinkedList<T> obj)
             {
-                var size = obj == null ? Bits.NullArray : obj.Count;
+                var size = obj == null ? ArraySerializer.NullArrayLength : obj.Count;
                 output.WriteInt(size);
                 foreach (var o in obj)
                 {
@@ -337,4 +336,4 @@ namespace Hazelcast.Serialization
             }
         }
     }
-}
+}

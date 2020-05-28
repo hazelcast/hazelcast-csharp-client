@@ -23,7 +23,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         public static void Encode<TKey, TValue>(ClientMessage clientMessage, IDictionary<TKey, TValue> map, Action<ClientMessage, TKey> encodeKey, Action<ClientMessage, TValue> encodeValue)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             foreach (var (key, value) in map)
             {
@@ -31,12 +31,12 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 encodeValue(clientMessage, value);
             }
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static void Encode<TKey, TValue>(ClientMessage clientMessage, IReadOnlyDictionary<TKey, TValue> map, Action<ClientMessage, TKey> encodeKey, Action<ClientMessage, TValue> encodeValue)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             foreach (var (key, value) in map)
             {
@@ -44,14 +44,14 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 encodeValue(clientMessage, value);
             }
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static void EncodeNullable<TKey, TValue>(ClientMessage clientMessage, IDictionary<TKey, TValue> map, Action<ClientMessage, TKey> encodeKey, Action<ClientMessage, TValue> encodeValue)
         {
             if (map == null)
             {
-                clientMessage.Add(Frame.CreateNull());
+                clientMessage.Append(Frame.CreateNull());
             }
             else
             {
@@ -83,4 +83,4 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return iterator.SkipNull() ? null : Decode(iterator, decodeKey, decodeValue);
         }
     }
-}
+}

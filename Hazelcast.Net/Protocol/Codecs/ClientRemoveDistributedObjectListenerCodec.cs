@@ -33,7 +33,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -45,21 +44,21 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 2560; // 0x000A00
         public const int ResponseMessageType = 2561; // 0x000A01
-        private const int RequestRegistrationIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + GuidSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BoolSizeInBytes;
+        private const int RequestRegistrationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
         public static ClientMessage EncodeRequest(Guid registrationId)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = true;
             clientMessage.OperationName = "Client.RemoveDistributedObjectListener";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeGuid(initialFrame, RequestRegistrationIdFieldOffset, registrationId);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuid(RequestRegistrationIdFieldOffset, registrationId);
+            clientMessage.Append(initialFrame);
             return clientMessage;
         }
 
@@ -74,14 +73,14 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = DecodeBool(initialFrame, ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadBool(ResponseResponseFieldOffset);
             return response;
         }
 
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

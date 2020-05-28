@@ -33,7 +33,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -45,25 +44,25 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 2304; // 0x000900
         public const int ResponseMessageType = 2305; // 0x000901
-        private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventDistributedObjectSourceFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + GuidSizeInBytes;
+        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventDistributedObjectSourceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + BytesExtensions.SizeOfGuid;
         // hex: 0x000902
         private const int EventDistributedObjectMessageType = 2306;
 
         public static ClientMessage EncodeRequest(bool localOnly)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;
             clientMessage.OperationName = "Client.AddDistributedObjectListener";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBool(RequestLocalOnlyFieldOffset, localOnly);
+            clientMessage.Append(initialFrame);
             return clientMessage;
         }
 
@@ -78,20 +77,20 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
             return response;
         }
 
         public static void HandleEvent(ClientMessage clientMessage, HandleDistributedObjectEvent handleDistributedObjectEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             if (messageType == EventDistributedObjectMessageType) {
                 var initialFrame = iterator.Take();
-                var source =  DecodeGuid(initialFrame, EventDistributedObjectSourceFieldOffset);
+                var source =  initialFrame.Bytes.ReadGuid(EventDistributedObjectSourceFieldOffset);
                 var name = StringCodec.Decode(iterator);
                 var serviceName = StringCodec.Decode(iterator);
                 var eventType = StringCodec.Decode(iterator);
@@ -105,4 +104,4 @@ namespace Hazelcast.Protocol.Codecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

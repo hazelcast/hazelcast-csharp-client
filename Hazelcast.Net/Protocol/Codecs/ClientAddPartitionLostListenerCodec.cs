@@ -33,7 +33,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -44,27 +43,27 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 1536; // 0x000600
         public const int ResponseMessageType = 1537; // 0x000601
-        private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int EventPartitionLostPartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventPartitionLostLostBackupCountFieldOffset = EventPartitionLostPartitionIdFieldOffset + IntSizeInBytes;
-        private const int EventPartitionLostSourceFieldOffset = EventPartitionLostLostBackupCountFieldOffset + IntSizeInBytes;
-        private const int EventPartitionLostInitialFrameSize = EventPartitionLostSourceFieldOffset + GuidSizeInBytes;
+        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventPartitionLostPartitionIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventPartitionLostLostBackupCountFieldOffset = EventPartitionLostPartitionIdFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventPartitionLostSourceFieldOffset = EventPartitionLostLostBackupCountFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventPartitionLostInitialFrameSize = EventPartitionLostSourceFieldOffset + BytesExtensions.SizeOfGuid;
         // hex: 0x000602
         private const int EventPartitionLostMessageType = 1538;
 
         public static ClientMessage EncodeRequest(bool localOnly)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;
             clientMessage.OperationName = "Client.AddPartitionLostListener";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBool(RequestLocalOnlyFieldOffset, localOnly);
+            clientMessage.Append(initialFrame);
             return clientMessage;
         }
 
@@ -79,22 +78,22 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
             return response;
         }
 
         public static void HandleEvent(ClientMessage clientMessage, HandlePartitionLostEvent handlePartitionLostEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             if (messageType == EventPartitionLostMessageType) {
                 var initialFrame = iterator.Take();
-                var partitionId =  DecodeInt(initialFrame, EventPartitionLostPartitionIdFieldOffset);
-                var lostBackupCount =  DecodeInt(initialFrame, EventPartitionLostLostBackupCountFieldOffset);
-                var source =  DecodeGuid(initialFrame, EventPartitionLostSourceFieldOffset);
+                var partitionId =  initialFrame.Bytes.ReadInt(EventPartitionLostPartitionIdFieldOffset);
+                var lostBackupCount =  initialFrame.Bytes.ReadInt(EventPartitionLostLostBackupCountFieldOffset);
+                var source =  initialFrame.Bytes.ReadGuid(EventPartitionLostSourceFieldOffset);
                 handlePartitionLostEvent(partitionId, lostBackupCount, source);
                 return;
             }
@@ -105,4 +104,4 @@ namespace Hazelcast.Protocol.Codecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

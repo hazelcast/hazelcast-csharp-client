@@ -33,7 +33,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -44,28 +43,28 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 512; // 0x000200
         public const int ResponseMessageType = 513; // 0x000201
-        private const int RequestUuidFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + GuidSizeInBytes;
-        private const int RequestInitialFrameSize = RequestSerializationVersionFieldOffset + ByteSizeInBytes;
-        private const int ResponseStatusFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseMemberUuidFieldOffset = ResponseStatusFieldOffset + ByteSizeInBytes;
-        private const int ResponseSerializationVersionFieldOffset = ResponseMemberUuidFieldOffset + GuidSizeInBytes;
-        private const int ResponsePartitionCountFieldOffset = ResponseSerializationVersionFieldOffset + ByteSizeInBytes;
-        private const int ResponseClusterIdFieldOffset = ResponsePartitionCountFieldOffset + IntSizeInBytes;
-        private const int ResponseFailoverSupportedFieldOffset = ResponseClusterIdFieldOffset + GuidSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseFailoverSupportedFieldOffset + BoolSizeInBytes;
+        private const int RequestUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int RequestInitialFrameSize = RequestSerializationVersionFieldOffset + BytesExtensions.SizeOfByte;
+        private const int ResponseStatusFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseMemberUuidFieldOffset = ResponseStatusFieldOffset + BytesExtensions.SizeOfByte;
+        private const int ResponseSerializationVersionFieldOffset = ResponseMemberUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponsePartitionCountFieldOffset = ResponseSerializationVersionFieldOffset + BytesExtensions.SizeOfByte;
+        private const int ResponseClusterIdFieldOffset = ResponsePartitionCountFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseFailoverSupportedFieldOffset = ResponseClusterIdFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseInitialFrameSize = ResponseFailoverSupportedFieldOffset + BytesExtensions.SizeOfBool;
 
         public static ClientMessage EncodeRequest(string clusterName, byte[] credentials, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection<string> labels)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = true;
             clientMessage.OperationName = "Client.AuthenticationCustom";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeGuid(initialFrame, RequestUuidFieldOffset, uuid);
-            EncodeByte(initialFrame, RequestSerializationVersionFieldOffset, serializationVersion);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuid(RequestUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteByte(RequestSerializationVersionFieldOffset, serializationVersion);
+            clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, clusterName);
             ByteArrayCodec.Encode(clientMessage, credentials);
             StringCodec.Encode(clientMessage, clientType);
@@ -122,15 +121,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Status = DecodeByte(initialFrame, ResponseStatusFieldOffset);
-            response.MemberUuid = DecodeGuid(initialFrame, ResponseMemberUuidFieldOffset);
-            response.SerializationVersion = DecodeByte(initialFrame, ResponseSerializationVersionFieldOffset);
-            response.PartitionCount = DecodeInt(initialFrame, ResponsePartitionCountFieldOffset);
-            response.ClusterId = DecodeGuid(initialFrame, ResponseClusterIdFieldOffset);
-            response.FailoverSupported = DecodeBool(initialFrame, ResponseFailoverSupportedFieldOffset);
+            response.Status = initialFrame.Bytes.ReadByte(ResponseStatusFieldOffset);
+            response.MemberUuid = initialFrame.Bytes.ReadGuid(ResponseMemberUuidFieldOffset);
+            response.SerializationVersion = initialFrame.Bytes.ReadByte(ResponseSerializationVersionFieldOffset);
+            response.PartitionCount = initialFrame.Bytes.ReadInt(ResponsePartitionCountFieldOffset);
+            response.ClusterId = initialFrame.Bytes.ReadGuid(ResponseClusterIdFieldOffset);
+            response.FailoverSupported = initialFrame.Bytes.ReadBool(ResponseFailoverSupportedFieldOffset);
             response.Address = CodecUtil.DecodeNullable(iterator, AddressCodec.Decode);
             response.ServerHazelcastVersion = StringCodec.Decode(iterator);
             return response;
@@ -139,4 +138,4 @@ namespace Hazelcast.Protocol.Codecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

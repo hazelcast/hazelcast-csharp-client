@@ -22,12 +22,12 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         public static void Encode(ClientMessage clientMessage, IData data)
         {
-            clientMessage.Add(new Frame(data.ToByteArray()));
+            clientMessage.Append(new Frame(data.ToByteArray()));
         }
 
         public static void EncodeNullable(ClientMessage clientMessage, IData data)
         {
-            clientMessage.Add(data == null
+            clientMessage.Append(data == null
                 ? Frame.CreateNull()
                 : new Frame(data.ToByteArray()));
         }

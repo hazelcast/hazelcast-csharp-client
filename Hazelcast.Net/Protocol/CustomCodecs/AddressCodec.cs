@@ -33,26 +33,25 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
     internal static class AddressCodec
     {
         private const int PortFieldOffset = 0;
-        private const int InitialFrameSize = PortFieldOffset + IntSizeInBytes;
+        private const int InitialFrameSize = PortFieldOffset + BytesExtensions.SizeOfInt;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Networking.NetworkAddress address)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeInt(initialFrame, PortFieldOffset, address.Port);
-            clientMessage.Add(initialFrame);
+            initialFrame.Bytes.WriteInt(PortFieldOffset, address.Port);
+            clientMessage.Append(initialFrame);
 
             StringCodec.Encode(clientMessage, address.Host);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Networking.NetworkAddress Decode(IEnumerator<Frame> iterator)
@@ -61,7 +60,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var port = DecodeInt(initialFrame, PortFieldOffset);
+            var port = initialFrame.Bytes.ReadInt(PortFieldOffset);
 
             var host = StringCodec.Decode(iterator);
 
@@ -72,4 +71,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

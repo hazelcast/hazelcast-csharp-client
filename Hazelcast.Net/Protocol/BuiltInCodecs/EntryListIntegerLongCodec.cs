@@ -14,14 +14,14 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class EntryListIntegerLongCodec
     {
-        private const int EntrySizeInBytes = IntSizeInBytes + LongSizeInBytes;
+        private const int EntrySizeInBytes = BytesExtensions.SizeOfInt + BytesExtensions.SizeOfLong;
 
         public static void Encode(ClientMessage clientMessage, IEnumerable<KeyValuePair<int,long>> collection)
         {
@@ -31,12 +31,12 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var i = 0;
             foreach (var kvp in collection)
             {
-                EncodeInt(frame, i * EntrySizeInBytes, kvp.Key);
-                EncodeLong(frame, i * EntrySizeInBytes + IntSizeInBytes, kvp.Value);
+                frame.Bytes.WriteInt(i * EntrySizeInBytes, kvp.Key);
+                frame.Bytes.WriteLong(i * EntrySizeInBytes + BytesExtensions.SizeOfInt, kvp.Value);
                 i++;
             }
 
-            clientMessage.Add(frame);
+            clientMessage.Append(frame);
         }
 
         public static IList<KeyValuePair<int, long>> Decode(IEnumerator<Frame> iterator)
@@ -46,11 +46,11 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<KeyValuePair<int, long>>();
             for (var i = 0; i < itemCount; i++)
             {
-                var key = DecodeInt(frame, i * EntrySizeInBytes);
-                var value = DecodeLong(frame, i * EntrySizeInBytes + IntSizeInBytes);
+                var key = frame.Bytes.ReadInt(i * EntrySizeInBytes);
+                var value = frame.Bytes.ReadLong(i * EntrySizeInBytes + BytesExtensions.SizeOfInt);
                 result.Add(new KeyValuePair<int, long>(key, value));
             }
             return result;
         }
     }
-}
+}

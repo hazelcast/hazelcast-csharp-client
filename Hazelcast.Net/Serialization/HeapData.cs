@@ -74,7 +74,7 @@ namespace Hazelcast.Serialization
                 int hash;
                 return _bytes != null &&
                        _bytes.Length >= HeapDataOverHead &&
-                       (hash = _bytes.ReadInt32(PartitionHashOffset, Endianness.BigEndian)) != 0
+                       (hash = _bytes.ReadInt(PartitionHashOffset, Endianness.BigEndian)) != 0
                     ? hash
                     : GetHashCode();
             }
@@ -83,19 +83,19 @@ namespace Hazelcast.Serialization
         public bool HasPartitionHash
             => _bytes != null &&
                _bytes.Length >= HeapDataOverHead &&
-               _bytes.ReadInt32(PartitionHashOffset, Endianness.BigEndian) != 0;
+               _bytes.ReadInt(PartitionHashOffset, Endianness.BigEndian) != 0;
 
         /// <inheritdoc />
         public byte[] ToByteArray() => _bytes ?? Array.Empty<byte>(); // FIXME should this be null?
 
         /// <inheritdoc />
         public int TypeId
-            => TotalSize == 0 ? SerializationConstants.ConstantTypeNull : _bytes.ReadInt32(TypeOffset, Endianness.BigEndian);
+            => TotalSize == 0 ? SerializationConstants.ConstantTypeNull : _bytes.ReadInt(TypeOffset, Endianness.BigEndian);
 
         /// <inheritdoc />
         public int HeapCost
             // where does this come from?
-            => BytesExtensions.SizeOfInt32 + (_bytes != null ? ArrayHeaderSizeInBytes + _bytes.Length : 0);
+            => BytesExtensions.SizeOfInt + (_bytes != null ? ArrayHeaderSizeInBytes + _bytes.Length : 0);
 
         /// <inheritdoc />
         public bool IsPortable

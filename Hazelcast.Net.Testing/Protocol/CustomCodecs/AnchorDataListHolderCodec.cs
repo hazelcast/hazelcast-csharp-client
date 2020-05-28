@@ -34,7 +34,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
@@ -43,12 +42,12 @@ namespace Hazelcast.Protocol.CustomCodecs
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Data.AnchorDataListHolder anchorDataListHolder)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             ListIntegerCodec.Encode(clientMessage, anchorDataListHolder.AnchorPageList);
             EntryListCodec.Encode(clientMessage, anchorDataListHolder.AnchorDataList, DataCodec.Encode, DataCodec.EncodeNullable);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Protocol.Data.AnchorDataListHolder Decode(IEnumerator<Frame> iterator)
@@ -66,4 +65,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

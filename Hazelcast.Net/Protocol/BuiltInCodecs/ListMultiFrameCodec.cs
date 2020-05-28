@@ -22,25 +22,25 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         public static void Encode<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             foreach (var item in collection)
             {
                 encodeFunction(clientMessage, item);
             }
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static void EncodeContainsNullable<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             foreach (var item in collection)
             {
                 if (item == null)
                 {
-                    clientMessage.Add(Frame.CreateNull());
+                    clientMessage.Append(Frame.CreateNull());
                 }
                 else
                 {
@@ -48,14 +48,14 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 }
             }
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static void EncodeNullable<T>(ClientMessage clientMessage, IEnumerable<T> collection, Action<ClientMessage, T> encodeFunction)
         {
             if (collection == null)
             {
-                clientMessage.Add(Frame.CreateNull());
+                clientMessage.Append(Frame.CreateNull());
             }
             else
             {
@@ -98,4 +98,4 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return iterator.SkipNull() ? null : Decode(iterator, decodeFunction);
         }
     }
-}
+}

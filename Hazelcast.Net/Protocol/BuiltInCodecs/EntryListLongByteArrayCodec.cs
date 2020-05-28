@@ -22,7 +22,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static void Encode(ClientMessage clientMessage, IEnumerable<KeyValuePair<long, byte[]>> collection)
         {
             var valueList = new List<long>();
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             foreach (var kvp in collection)
             {
@@ -30,7 +30,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 ByteArrayCodec.Encode(clientMessage, kvp.Value);
             }
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
             ListLongCodec.Encode(clientMessage, valueList);
         }
 
@@ -48,4 +48,4 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return result;
         }
     }
-}
+}

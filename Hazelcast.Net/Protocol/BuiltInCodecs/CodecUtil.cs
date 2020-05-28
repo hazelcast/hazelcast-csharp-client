@@ -26,7 +26,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             if (value == null)
             {
-                clientMessage.Add(Frame.CreateNull());
+                clientMessage.Append(Frame.CreateNull());
             }
             else
             {

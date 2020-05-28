@@ -34,28 +34,27 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
     internal static class MemberVersionServerCodec
     {
         private const int MajorFieldOffset = 0;
-        private const int MinorFieldOffset = MajorFieldOffset + ByteSizeInBytes;
-        private const int PatchFieldOffset = MinorFieldOffset + ByteSizeInBytes;
-        private const int InitialFrameSize = PatchFieldOffset + ByteSizeInBytes;
+        private const int MinorFieldOffset = MajorFieldOffset + BytesExtensions.SizeOfByte;
+        private const int PatchFieldOffset = MinorFieldOffset + BytesExtensions.SizeOfByte;
+        private const int InitialFrameSize = PatchFieldOffset + BytesExtensions.SizeOfByte;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Data.MemberVersion memberVersion)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeByte(initialFrame, MajorFieldOffset, memberVersion.Major);
-            EncodeByte(initialFrame, MinorFieldOffset, memberVersion.Minor);
-            EncodeByte(initialFrame, PatchFieldOffset, memberVersion.Patch);
-            clientMessage.Add(initialFrame);
+            initialFrame.Bytes.WriteByte(MajorFieldOffset, memberVersion.Major);
+            initialFrame.Bytes.WriteByte(MinorFieldOffset, memberVersion.Minor);
+            initialFrame.Bytes.WriteByte(PatchFieldOffset, memberVersion.Patch);
+            clientMessage.Append(initialFrame);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Data.MemberVersion Decode(IEnumerator<Frame> iterator)
@@ -64,9 +63,9 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var major = DecodeByte(initialFrame, MajorFieldOffset);
-            var minor = DecodeByte(initialFrame, MinorFieldOffset);
-            var patch = DecodeByte(initialFrame, PatchFieldOffset);
+            var major = initialFrame.Bytes.ReadByte(MajorFieldOffset);
+            var minor = initialFrame.Bytes.ReadByte(MinorFieldOffset);
+            var patch = initialFrame.Bytes.ReadByte(PatchFieldOffset);
 
             iterator.SkipToStructEnd();
 
@@ -75,4 +74,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

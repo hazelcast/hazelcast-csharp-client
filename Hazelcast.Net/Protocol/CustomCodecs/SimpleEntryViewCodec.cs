@@ -33,45 +33,44 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
     internal static class SimpleEntryViewCodec
     {
         private const int CostFieldOffset = 0;
-        private const int CreationTimeFieldOffset = CostFieldOffset + LongSizeInBytes;
-        private const int ExpirationTimeFieldOffset = CreationTimeFieldOffset + LongSizeInBytes;
-        private const int HitsFieldOffset = ExpirationTimeFieldOffset + LongSizeInBytes;
-        private const int LastAccessTimeFieldOffset = HitsFieldOffset + LongSizeInBytes;
-        private const int LastStoredTimeFieldOffset = LastAccessTimeFieldOffset + LongSizeInBytes;
-        private const int LastUpdateTimeFieldOffset = LastStoredTimeFieldOffset + LongSizeInBytes;
-        private const int VersionFieldOffset = LastUpdateTimeFieldOffset + LongSizeInBytes;
-        private const int TtlFieldOffset = VersionFieldOffset + LongSizeInBytes;
-        private const int MaxIdleFieldOffset = TtlFieldOffset + LongSizeInBytes;
-        private const int InitialFrameSize = MaxIdleFieldOffset + LongSizeInBytes;
+        private const int CreationTimeFieldOffset = CostFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ExpirationTimeFieldOffset = CreationTimeFieldOffset + BytesExtensions.SizeOfLong;
+        private const int HitsFieldOffset = ExpirationTimeFieldOffset + BytesExtensions.SizeOfLong;
+        private const int LastAccessTimeFieldOffset = HitsFieldOffset + BytesExtensions.SizeOfLong;
+        private const int LastStoredTimeFieldOffset = LastAccessTimeFieldOffset + BytesExtensions.SizeOfLong;
+        private const int LastUpdateTimeFieldOffset = LastStoredTimeFieldOffset + BytesExtensions.SizeOfLong;
+        private const int VersionFieldOffset = LastUpdateTimeFieldOffset + BytesExtensions.SizeOfLong;
+        private const int TtlFieldOffset = VersionFieldOffset + BytesExtensions.SizeOfLong;
+        private const int MaxIdleFieldOffset = TtlFieldOffset + BytesExtensions.SizeOfLong;
+        private const int InitialFrameSize = MaxIdleFieldOffset + BytesExtensions.SizeOfLong;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Data.Map.MapEntry<IData, IData> simpleEntryView)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeLong(initialFrame, CostFieldOffset, simpleEntryView.Cost);
-            EncodeLong(initialFrame, CreationTimeFieldOffset, simpleEntryView.CreationTime);
-            EncodeLong(initialFrame, ExpirationTimeFieldOffset, simpleEntryView.ExpirationTime);
-            EncodeLong(initialFrame, HitsFieldOffset, simpleEntryView.Hits);
-            EncodeLong(initialFrame, LastAccessTimeFieldOffset, simpleEntryView.LastAccessTime);
-            EncodeLong(initialFrame, LastStoredTimeFieldOffset, simpleEntryView.LastStoredTime);
-            EncodeLong(initialFrame, LastUpdateTimeFieldOffset, simpleEntryView.LastUpdateTime);
-            EncodeLong(initialFrame, VersionFieldOffset, simpleEntryView.Version);
-            EncodeLong(initialFrame, TtlFieldOffset, simpleEntryView.Ttl);
-            EncodeLong(initialFrame, MaxIdleFieldOffset, simpleEntryView.MaxIdle);
-            clientMessage.Add(initialFrame);
+            initialFrame.Bytes.WriteLong(CostFieldOffset, simpleEntryView.Cost);
+            initialFrame.Bytes.WriteLong(CreationTimeFieldOffset, simpleEntryView.CreationTime);
+            initialFrame.Bytes.WriteLong(ExpirationTimeFieldOffset, simpleEntryView.ExpirationTime);
+            initialFrame.Bytes.WriteLong(HitsFieldOffset, simpleEntryView.Hits);
+            initialFrame.Bytes.WriteLong(LastAccessTimeFieldOffset, simpleEntryView.LastAccessTime);
+            initialFrame.Bytes.WriteLong(LastStoredTimeFieldOffset, simpleEntryView.LastStoredTime);
+            initialFrame.Bytes.WriteLong(LastUpdateTimeFieldOffset, simpleEntryView.LastUpdateTime);
+            initialFrame.Bytes.WriteLong(VersionFieldOffset, simpleEntryView.Version);
+            initialFrame.Bytes.WriteLong(TtlFieldOffset, simpleEntryView.Ttl);
+            initialFrame.Bytes.WriteLong(MaxIdleFieldOffset, simpleEntryView.MaxIdle);
+            clientMessage.Append(initialFrame);
 
             DataCodec.Encode(clientMessage, simpleEntryView.Key);
             DataCodec.Encode(clientMessage, simpleEntryView.Value);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Data.Map.MapEntry<IData, IData> Decode(IEnumerator<Frame> iterator)
@@ -80,16 +79,16 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var cost = DecodeLong(initialFrame, CostFieldOffset);
-            var creationTime = DecodeLong(initialFrame, CreationTimeFieldOffset);
-            var expirationTime = DecodeLong(initialFrame, ExpirationTimeFieldOffset);
-            var hits = DecodeLong(initialFrame, HitsFieldOffset);
-            var lastAccessTime = DecodeLong(initialFrame, LastAccessTimeFieldOffset);
-            var lastStoredTime = DecodeLong(initialFrame, LastStoredTimeFieldOffset);
-            var lastUpdateTime = DecodeLong(initialFrame, LastUpdateTimeFieldOffset);
-            var version = DecodeLong(initialFrame, VersionFieldOffset);
-            var ttl = DecodeLong(initialFrame, TtlFieldOffset);
-            var maxIdle = DecodeLong(initialFrame, MaxIdleFieldOffset);
+            var cost = initialFrame.Bytes.ReadLong(CostFieldOffset);
+            var creationTime = initialFrame.Bytes.ReadLong(CreationTimeFieldOffset);
+            var expirationTime = initialFrame.Bytes.ReadLong(ExpirationTimeFieldOffset);
+            var hits = initialFrame.Bytes.ReadLong(HitsFieldOffset);
+            var lastAccessTime = initialFrame.Bytes.ReadLong(LastAccessTimeFieldOffset);
+            var lastStoredTime = initialFrame.Bytes.ReadLong(LastStoredTimeFieldOffset);
+            var lastUpdateTime = initialFrame.Bytes.ReadLong(LastUpdateTimeFieldOffset);
+            var version = initialFrame.Bytes.ReadLong(VersionFieldOffset);
+            var ttl = initialFrame.Bytes.ReadLong(TtlFieldOffset);
+            var maxIdle = initialFrame.Bytes.ReadLong(MaxIdleFieldOffset);
 
             var key = DataCodec.Decode(iterator);
             var @value = DataCodec.Decode(iterator);
@@ -101,4 +100,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

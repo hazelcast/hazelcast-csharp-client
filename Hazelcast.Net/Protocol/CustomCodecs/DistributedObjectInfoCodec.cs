@@ -33,7 +33,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
@@ -42,12 +41,12 @@ namespace Hazelcast.Protocol.CustomCodecs
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Data.DistributedObjectInfo distributedObjectInfo)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             StringCodec.Encode(clientMessage, distributedObjectInfo.ServiceName);
             StringCodec.Encode(clientMessage, distributedObjectInfo.Name);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Data.DistributedObjectInfo Decode(IEnumerator<Frame> iterator)
@@ -65,4 +64,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

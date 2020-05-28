@@ -55,7 +55,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static int ReadInt(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < 4)
                 throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
@@ -65,13 +65,13 @@ namespace Hazelcast.Core
             if (slice.IsSingleSegment)
             {
                 var span = slice.FirstSpan();
-                value = span.ReadInt32(endianness);
+                value = span.ReadInt(endianness);
             }
             else
             {
                 Span<byte> stackSpan = stackalloc byte[4];
                 slice.Fill(stackSpan);
-                value = ((ReadOnlySpan<byte>) stackSpan).ReadInt32(endianness);
+                value = ((ReadOnlySpan<byte>) stackSpan).ReadInt(endianness);
             }
 
             bytes = bytes.Slice(slice.End);
@@ -84,7 +84,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUInt16(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static ushort ReadUshort(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(ushort);
 
@@ -96,13 +96,13 @@ namespace Hazelcast.Core
             if (slice.IsSingleSegment)
             {
                 var span = slice.FirstSpan();
-                value = span.ReadUInt16(endianness);
+                value = span.ReadUshort(endianness);
             }
             else
             {
                 Span<byte> stackSpan = stackalloc byte[length];
                 slice.Fill(stackSpan);
-                value = ((ReadOnlySpan<byte>) stackSpan).ReadUInt16(endianness);
+                value = ((ReadOnlySpan<byte>) stackSpan).ReadUshort(endianness);
             }
 
             bytes = bytes.Slice(slice.End);
@@ -115,7 +115,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The span of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static int ReadInt(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(int);
 
@@ -134,7 +134,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The span of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUInt16(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static ushort ReadUshort(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(ushort);
 
@@ -156,7 +156,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The span of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static short ReadInt16(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static short ReadShort(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(ushort);
 
@@ -179,7 +179,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be read.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static short ReadInt16(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
+        public static short ReadShort(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(short))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -200,7 +200,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be read.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt32(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
+        public static int ReadInt(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -224,7 +224,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be read.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static long ReadInt64(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
+        public static long ReadLong(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -280,7 +280,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteUInt16(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteUshort(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -309,7 +309,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteInt16(this byte[] bytes, int position, short value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteShort(this byte[] bytes, int position, short value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -332,13 +332,23 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Writes an <see cref="Int32"/> (int) enum value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="endianness">The endianness.</param>
+        public static void WriteInt(this byte[] bytes, int position, Enum value, Endianness endianness = Endianness.Unspecified)
+            => bytes.WriteInt(position, (int) (object) value, endianness);
+
+        /// <summary>
         /// Writes an <see cref="Int32"/> (int) value to an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to write to.</param>
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteInt32(this byte[] bytes, int position, int value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteInt(this byte[] bytes, int position, int value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -371,7 +381,7 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteInt64(this byte[] bytes, int position, long value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteLong(this byte[] bytes, int position, long value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -590,12 +600,12 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the size of a <see cref="Int32"/> (int) in arrays or sequences of bytes.
         /// </summary>
-        public const int SizeOfInt32 = 4;
+        public const int SizeOfInt = 4;
 
         /// <summary>
         /// Gets the size of an <see cref="Int64"/> (long) in arrays or sequences of bytes.
         /// </summary>
-        public const int SizeOfInt64 = 8;
+        public const int SizeOfLong = 8;
 
         /// <summary>
         /// Gets the size of an <see cref="Char"/> (char) in arrays or sequences of bytes.
@@ -605,7 +615,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the size of an <see cref="Int16"/> (short) in arrays or sequences of bytes.
         /// </summary>
-        public const int SizeOfInt16 = 2;
+        public const int SizeOfShort = 2;
 
         /// <summary>
         /// Reads a <see cref="Guid"/> value from an array of bytes.
@@ -779,4 +789,4 @@ namespace Hazelcast.Core
             }
         }
     }
-}
+}

@@ -25,26 +25,26 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static void Encode(ClientMessage clientMessage, ICollection<KeyValuePair<Guid, IList<int>>> collection)
         {
             var keyList = new List<Guid>(collection.Count);
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
             foreach (var kvp in collection)
             {
                 keyList.Add(kvp.Key);
                 ListIntegerCodec.Encode(clientMessage, kvp.Value);
             }
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
             ListUUIDCodec.Encode(clientMessage, keyList);
         }
 
         public static void Encode(ClientMessage clientMessage, ICollection<KeyValuePair<Guid, ICollection<int>>> collection)
         {
             var keyList = new List<Guid>(collection.Count);
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
             foreach (var kvp in collection)
             {
                 keyList.Add(kvp.Key);
                 ListIntegerCodec.Encode(clientMessage, kvp.Value);
             }
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
             ListUUIDCodec.Encode(clientMessage, keyList);
         }
 
@@ -61,4 +61,4 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return result;
         }
     }
-}
+}

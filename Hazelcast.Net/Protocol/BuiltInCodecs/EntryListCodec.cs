@@ -24,7 +24,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                                          Action<ClientMessage, TKey> encodeKeyFunc,
                                          Action<ClientMessage, TValue> encodeValueFunc)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             foreach (var kvp in collection)
             {
@@ -32,7 +32,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 encodeValueFunc(clientMessage, kvp.Value);
             }
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         // public static void EncodeNullable<TKey, TValue>(ClientMessage clientMessage, IEnumerable<KeyValuePair<TKey, TValue>> collection,
@@ -74,4 +74,4 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return iterator.SkipNull() ? null : Decode(iterator, decodeKeyFunc, decodeValueFunc);
         }
     }
-}
+}

@@ -34,7 +34,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -50,13 +49,13 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 72448; // 0x011B00
         public const int ResponseMessageType = 72449; // 0x011B01
-        private const int RequestLocalOnlyFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BoolSizeInBytes;
-        private const int ResponseResponseFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + GuidSizeInBytes;
-        private const int MapPartitionLostEventPartitionIdFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int MapPartitionLostEventUuidFieldOffset = MapPartitionLostEventPartitionIdFieldOffset + IntSizeInBytes;
-        private const int MapPartitionLostEventInitialFrameSize = MapPartitionLostEventUuidFieldOffset + GuidSizeInBytes;
+        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int MapPartitionLostEventPartitionIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int MapPartitionLostEventUuidFieldOffset = MapPartitionLostEventPartitionIdFieldOffset + BytesExtensions.SizeOfInt;
+        private const int MapPartitionLostEventInitialFrameSize = MapPartitionLostEventUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int MapPartitionLostEventMessageType = 72450; // 0x011B02
 
         public sealed class RequestParameters
@@ -72,31 +71,31 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool LocalOnly { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, bool localOnly)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;
             clientMessage.OperationName = "Map.AddPartitionLostListener";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeBool(initialFrame, RequestLocalOnlyFieldOffset, localOnly);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBool(RequestLocalOnlyFieldOffset, localOnly);
+            clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
         }
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.LocalOnly = DecodeBool(initialFrame, RequestLocalOnlyFieldOffset);
+            request.LocalOnly = initialFrame.Bytes.ReadBool(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -108,44 +107,44 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeResponse(Guid response)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
-            EncodeGuid(initialFrame, ResponseResponseFieldOffset, response);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuid(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = DecodeGuid(initialFrame, ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
             return response;
         }
 
         public static ClientMessage EncodeMapPartitionLostEvent(int partitionId, Guid uuid)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[MapPartitionLostEventInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, MapPartitionLostEventMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeInt(initialFrame, MapPartitionLostEventPartitionIdFieldOffset, partitionId);
-            EncodeGuid(initialFrame, MapPartitionLostEventUuidFieldOffset, uuid);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[MapPartitionLostEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, MapPartitionLostEventMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteInt(MapPartitionLostEventPartitionIdFieldOffset, partitionId);
+            initialFrame.Bytes.WriteGuid(MapPartitionLostEventUuidFieldOffset, uuid);
+            clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             return clientMessage;
         }
-
+    
         public static void HandleEvent(ClientMessage clientMessage, HandleMapPartitionLostEvent handleMapPartitionLostEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             if (messageType == MapPartitionLostEventMessageType) {
                 var initialFrame = iterator.Take();
-                var partitionId =  DecodeInt(initialFrame, MapPartitionLostEventPartitionIdFieldOffset);
-                var uuid =  DecodeGuid(initialFrame, MapPartitionLostEventUuidFieldOffset);
+                var partitionId =  initialFrame.Bytes.ReadInt(MapPartitionLostEventPartitionIdFieldOffset);
+                var uuid =  initialFrame.Bytes.ReadGuid(MapPartitionLostEventUuidFieldOffset);
                 handleMapPartitionLostEvent(partitionId, uuid);
                 return;
             }
@@ -154,4 +153,4 @@ namespace Hazelcast.Protocol.Codecs
 
         public delegate void HandleMapPartitionLostEvent(int partitionId, Guid uuid);
     }
-}
+}

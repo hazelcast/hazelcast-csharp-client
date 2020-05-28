@@ -34,7 +34,6 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.Codecs
 {
@@ -52,11 +51,11 @@ namespace Hazelcast.Protocol.Codecs
     {
         public const int RequestMessageType = 1900800; // 0x1D0100
         public const int ResponseMessageType = 1900801; // 0x1D0101
-        private const int RequestTargetReplicaUUIDFieldOffset = PartitionIdFieldOffset + IntSizeInBytes;
-        private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + GuidSizeInBytes;
-        private const int ResponseValueFieldOffset = ResponseBackupAcksFieldOffset + ByteSizeInBytes;
-        private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + LongSizeInBytes;
-        private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + IntSizeInBytes;
+        private const int RequestTargetReplicaUUIDFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseValueFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + BytesExtensions.SizeOfInt;
 
         public sealed class RequestParameters
         {
@@ -76,17 +75,17 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid TargetReplicaUUID { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<Guid, long>> replicaTimestamps, Guid targetReplicaUUID)
         {
-            var clientMessage = CreateForEncode();
+            var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = true;
             clientMessage.OperationName = "PNCounter.Get";
-            var initialFrame = new Frame(new byte[RequestInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, RequestMessageType);
-            EncodeInt(initialFrame, PartitionIdFieldOffset, -1);
-            EncodeGuid(initialFrame, RequestTargetReplicaUUIDFieldOffset, targetReplicaUUID);
-            clientMessage.Add(initialFrame);
+            var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuid(RequestTargetReplicaUUIDFieldOffset, targetReplicaUUID);
+            clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
             return clientMessage;
@@ -94,15 +93,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.TargetReplicaUUID = DecodeGuid(initialFrame, RequestTargetReplicaUUIDFieldOffset);
+            request.TargetReplicaUUID = initialFrame.Bytes.ReadGuid(RequestTargetReplicaUUIDFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -124,27 +123,27 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeResponse(long @value, ICollection<KeyValuePair<Guid, long>> replicaTimestamps, int replicaCount)
         {
-            var clientMessage = CreateForEncode();
-            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], UnfragmentedMessage);
-            EncodeInt(initialFrame, TypeFieldOffset, ResponseMessageType);
-            EncodeLong(initialFrame, ResponseValueFieldOffset, @value);
-            EncodeInt(initialFrame, ResponseReplicaCountFieldOffset, replicaCount);
-            clientMessage.Add(initialFrame);
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLong(ResponseValueFieldOffset, @value);
+            initialFrame.Bytes.WriteInt(ResponseReplicaCountFieldOffset, replicaCount);
+            clientMessage.Append(initialFrame);
             EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetIterator();
+            var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Value = DecodeLong(initialFrame, ResponseValueFieldOffset);
-            response.ReplicaCount = DecodeInt(initialFrame, ResponseReplicaCountFieldOffset);
+            response.Value = initialFrame.Bytes.ReadLong(ResponseValueFieldOffset);
+            response.ReplicaCount = initialFrame.Bytes.ReadInt(ResponseReplicaCountFieldOffset);
             response.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
             return response;
         }
 
-
+    
     }
-}
+}

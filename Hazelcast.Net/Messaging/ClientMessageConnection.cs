@@ -58,7 +58,7 @@ namespace Hazelcast.Messaging
 
             // TODO: threading control here could be an option
             // (in case threading control is performed elsewhere)
-            _writer = new SemaphoreSlim(1);
+            _writer = new SemaphoreSlim(1, 1);
         }
 
         /// <summary>

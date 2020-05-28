@@ -21,7 +21,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         public static void Encode(ClientMessage clientMessage, byte[] bytes)
         {
-            clientMessage.Add(new Frame(bytes));
+            clientMessage.Append(new Frame(bytes));
         }
 
         public static byte[] Decode(Frame frame)

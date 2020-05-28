@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Bits = Hazelcast.Messaging.Portability;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
@@ -321,7 +321,7 @@ namespace Hazelcast.Serialization
                 {
                     return (TPortable) Serializer.Read(_in, factoryId, classId);
                 }
-                return default(TPortable);
+                return default;
             }
             finally
             {
@@ -350,7 +350,7 @@ namespace Hazelcast.Serialization
                 var factoryId = _in.ReadInt();
                 var classId = _in.ReadInt();
 
-                if (len == Bits.NullArray) return null;
+                if (len == ArraySerializer.NullArrayLength) return null;
 
                 CheckFactoryAndClass(fd, factoryId, classId);
                 var portables = new IPortable[len];
@@ -359,7 +359,7 @@ namespace Hazelcast.Serialization
                     var offset = _in.Position();
                     for (var i = 0; i < len; i++)
                     {
-                        var start = _in.ReadInt(offset + i*Bits.IntSizeInBytes);
+                        var start = _in.ReadInt(offset + i* BytesExtensions.SizeOfInt);
                         _in.Position(start);
                         portables[i] = Serializer.Read(_in, factoryId, classId);
                     }
@@ -377,7 +377,7 @@ namespace Hazelcast.Serialization
         {
             if (!_raw)
             {
-                var pos = _in.ReadInt(_offset + Cd.GetFieldCount()*Bits.IntSizeInBytes);
+                var pos = _in.ReadInt(_offset + Cd.GetFieldCount()* BytesExtensions.SizeOfInt);
                 _in.Position(pos);
             }
             _raw = true;
@@ -467,10 +467,10 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"/>
         private int ReadPosition(IFieldDefinition fd)
         {
-            var pos = _in.ReadInt(_offset + fd.GetIndex()*Bits.IntSizeInBytes);
+            var pos = _in.ReadInt(_offset + fd.GetIndex()* BytesExtensions.SizeOfInt);
             var len = _in.ReadShort(pos);
             // name + len + type
-            return pos + Bits.ShortSizeInBytes + len + 1;
+            return pos + BytesExtensions.SizeOfShort + len + 1;
         }
 
         private HazelcastSerializationException ThrowUnknownFieldException(string fieldName)
@@ -480,4 +480,4 @@ namespace Hazelcast.Serialization
                                                     Cd.GetClassId() + ", version: " + Cd.GetVersion() + "}");
         }
     }
-}
+}

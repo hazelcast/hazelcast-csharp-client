@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
 using Hazelcast.Core;
 
 namespace Hazelcast.Messaging
@@ -27,7 +29,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The message type.</returns>
         public static int ReadMessageType(this Frame frame)
-            => frame.Bytes.ReadInt32(FrameFields.Offset.MessageType);
+            => frame.Bytes.ReadInt(FrameFields.Offset.MessageType);
 
         /// <summary>
         /// Writes the message type.
@@ -35,7 +37,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="type">The message type.</param>
         public static void WriteMessageType(this Frame frame, int type)
-            => frame.Bytes.WriteInt32(FrameFields.Offset.MessageType, type);
+            => frame.Bytes.WriteInt(FrameFields.Offset.MessageType, type);
 
         /// <summary>
         /// Reads the correlation id.
@@ -43,7 +45,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The correlation id.</returns>
         public static long ReadCorrelationId(this Frame frame)
-            => frame.Bytes.ReadInt64(FrameFields.Offset.CorrelationId);
+            => frame.Bytes.ReadLong(FrameFields.Offset.CorrelationId);
 
         /// <summary>
         /// Writes the correlation id.
@@ -51,7 +53,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="correlationId">The correlation id.</param>
         public static void WriteCorrelationId(this Frame frame, long correlationId)
-            => frame.Bytes.WriteInt64(FrameFields.Offset.CorrelationId, correlationId);
+            => frame.Bytes.WriteLong(FrameFields.Offset.CorrelationId, correlationId);
 
         /// <summary>
         /// Reads the partition id.
@@ -59,7 +61,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The partition id.</returns>
         public static int ReadPartitionId(this Frame frame)
-            => frame.Bytes.ReadInt32(FrameFields.Offset.PartitionId);
+            => frame.Bytes.ReadInt(FrameFields.Offset.PartitionId);
 
         /// <summary>
         /// Writes the partition id.
@@ -67,7 +69,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="partionId">The partition id.</param>
         public static void WritePartitionId(this Frame frame, int partionId)
-            => frame.Bytes.WriteInt32(FrameFields.Offset.PartitionId, partionId);
+            => frame.Bytes.WriteInt(FrameFields.Offset.PartitionId, partionId);
 
         /// <summary>
         /// Reads the fragment id.
@@ -75,7 +77,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The fragment id.</returns>
         public static long ReadFragmentId(this Frame frame)
-            => frame.Bytes.ReadInt64(FrameFields.Offset.FragmentId);
+            => frame.Bytes.ReadLong(FrameFields.Offset.FragmentId);
 
         /// <summary>
         /// Writes the fragment id.
@@ -83,6 +85,65 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="fragmentId">The fragment id.</param>
         public static void WriteFragmentId(this Frame frame, long fragmentId)
-            => frame.Bytes.WriteInt64(FrameFields.Offset.FragmentId, fragmentId);
+            => frame.Bytes.WriteLong(FrameFields.Offset.FragmentId, fragmentId);
+
+        /// <summary>
+        /// Takes the current frame and moves to the next frame.
+        /// </summary>
+        /// <returns>The current frame, or null if the end of the list has been reached.</returns>
+        public static Frame Take(this IEnumerator<Frame> frames)
+        {
+            // if current is null maybe we haven't started yet - start
+            // (if it's null because we've reached the end, nothing happens)
+            if (frames.Current == null) frames.MoveNext();
+
+            // capture and return the current frame, move to next
+            var frame = frames.Current;
+            frames.MoveNext();
+            return frame;
+        }
+
+        /// <summary>
+        /// Skips the current frame it is a "null frame".
+        /// </summary>
+        /// <returns></returns>
+        public static bool SkipNull(this IEnumerator<Frame> frames)
+        {
+            var isNull = frames.Current != null && frames.Current.IsNull;
+            if (isNull) frames.Take();
+            return isNull;
+        }
+
+        /// <summary>
+        /// Determines whether the current frame is an "end of structure" frame.
+        /// </summary>
+        public static bool AtStructEnd(this IEnumerator<Frame> frames)
+            => frames.Current != null && frames.Current.IsEndStruct;
+
+        /// <summary>
+        /// Advances the iterator by skipping all frames until the end of a structure.
+        /// </summary>
+        public static void SkipToStructEnd(this IEnumerator<Frame> frames)
+        {
+            // We are starting from 1 because of the BeginFrame we read
+            // in the beginning of the Decode method
+            var numberOfExpectedEndFrames = 1;
+
+            while (numberOfExpectedEndFrames != 0)
+            {
+                var frame = frames.Take();
+                if (frame == null)
+                    throw new InvalidOperationException("Reached end of message.");
+
+                if (frame.IsEndStruct)
+                {
+                    numberOfExpectedEndFrames--;
+                }
+                else if (frame.IsBeginStruct)
+                {
+                    numberOfExpectedEndFrames++;
+                }
+            }
+        }
     }
-}
+}

@@ -34,33 +34,32 @@ using Hazelcast.Logging;
 using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
     internal static class PagingPredicateHolderServerCodec
     {
         private const int PageSizeFieldOffset = 0;
-        private const int PageFieldOffset = PageSizeFieldOffset + IntSizeInBytes;
-        private const int IterationTypeIdFieldOffset = PageFieldOffset + IntSizeInBytes;
-        private const int InitialFrameSize = IterationTypeIdFieldOffset + ByteSizeInBytes;
+        private const int PageFieldOffset = PageSizeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int IterationTypeIdFieldOffset = PageFieldOffset + BytesExtensions.SizeOfInt;
+        private const int InitialFrameSize = IterationTypeIdFieldOffset + BytesExtensions.SizeOfByte;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Data.PagingPredicateHolder pagingPredicateHolder)
         {
-            clientMessage.Add(Frame.CreateBeginStruct());
+            clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            EncodeInt(initialFrame, PageSizeFieldOffset, pagingPredicateHolder.PageSize);
-            EncodeInt(initialFrame, PageFieldOffset, pagingPredicateHolder.Page);
-            EncodeByte(initialFrame, IterationTypeIdFieldOffset, pagingPredicateHolder.IterationTypeId);
-            clientMessage.Add(initialFrame);
+            initialFrame.Bytes.WriteInt(PageSizeFieldOffset, pagingPredicateHolder.PageSize);
+            initialFrame.Bytes.WriteInt(PageFieldOffset, pagingPredicateHolder.Page);
+            initialFrame.Bytes.WriteByte(IterationTypeIdFieldOffset, pagingPredicateHolder.IterationTypeId);
+            clientMessage.Append(initialFrame);
 
             AnchorDataListHolderCodec.Encode(clientMessage, pagingPredicateHolder.AnchorDataListHolder);
             CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.PredicateData, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.ComparatorData, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.PartitionKeyData, DataCodec.Encode);
 
-            clientMessage.Add(Frame.CreateEndStruct());
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
         public static Hazelcast.Protocol.Data.PagingPredicateHolder Decode(IEnumerator<Frame> iterator)
@@ -69,9 +68,9 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var pageSize = DecodeInt(initialFrame, PageSizeFieldOffset);
-            var page = DecodeInt(initialFrame, PageFieldOffset);
-            var iterationTypeId = DecodeByte(initialFrame, IterationTypeIdFieldOffset);
+            var pageSize = initialFrame.Bytes.ReadInt(PageSizeFieldOffset);
+            var page = initialFrame.Bytes.ReadInt(PageFieldOffset);
+            var iterationTypeId = initialFrame.Bytes.ReadByte(IterationTypeIdFieldOffset);
 
             var anchorDataListHolder = AnchorDataListHolderCodec.Decode(iterator);
             var predicateData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
@@ -85,4 +84,4 @@ namespace Hazelcast.Protocol.CustomCodecs
     }
 }
 
-#pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members

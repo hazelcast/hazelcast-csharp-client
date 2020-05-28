@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Concurrent;
 using Hazelcast.Core;
-using Bits = Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Serialization
 {
@@ -139,7 +138,7 @@ namespace Hazelcast.Serialization
             var offset = @in.Position();
             for (var i = 0; i < fieldCount; i++)
             {
-                var pos = @in.ReadInt(offset + i*Bits.IntSizeInBytes);
+                var pos = @in.ReadInt(offset + i* BytesExtensions.SizeOfInt);
                 @in.Position(pos);
                 var len = @in.ReadShort();
                 var chars = new char[len];
@@ -203,4 +202,4 @@ namespace Hazelcast.Serialization
                 theFactoryId => new ClassDefinitionContext(this, theFactoryId));
         }
     }
-}
+}
