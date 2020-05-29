@@ -31,16 +31,6 @@ namespace Hazelcast.Transactions
             /// <see cref="TransactionOptions.SetDurability(int)"/>
             /// </remarks>
             TwoPhase = 1,
-            [Obsolete("Use OnePhase instead")] Local = 2,
-
-            /// <summary>The one phase transaction executes a transaction using a single step at the end; committing the changes.</summary>
-            /// <remarks>
-            /// The one phase transaction executes a transaction using a single step at the end; committing the changes. There
-            /// is no prepare of the transactions, so conflicts are not detected. If there is a conflict, then when the transaction
-            /// commits the changes, some of the changes are written and others are not; leaving the system in a potentially permanent
-            /// inconsistent state.
-            /// </remarks>
-            OnePhase = 2
         }
 
         private int _durability;

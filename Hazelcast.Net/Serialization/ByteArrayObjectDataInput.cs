@@ -778,13 +778,6 @@ namespace Hazelcast.Serialization
             CharBuffer = null;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        [Obsolete]
-        public string ReadLine()
-        {
-            throw new NotSupportedException();
-        }
-
         public override string ToString()
         {
             var sb = new StringBuilder();
