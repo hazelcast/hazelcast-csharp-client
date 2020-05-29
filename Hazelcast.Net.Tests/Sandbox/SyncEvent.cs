@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 
 namespace Hazelcast.Tests.Sandbox
@@ -115,7 +116,7 @@ namespace Hazelcast.Tests.Sandbox
                 {
                     // we cannot let one handler kill everything,
                     // so are we going to swallow the exception?
-                    XConsole.WriteLine(this, e);
+                    HzConsole.WriteLine(this, e);
                 }
             }
         }

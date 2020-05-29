@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-#if XCONSOLE
+#if HZ_CONSOLE
 using Hazelcast.Logging;
 #endif
 
@@ -15,16 +15,18 @@ namespace Hazelcast.Core
     {
         private static readonly ISequence<long> IdSequence = new Int64Sequence();
 
-#if !XCONSOLE
+#if !HZ_CONSOLE
         private static readonly AsyncLocal<AsyncContext> Current = new AsyncLocal<AsyncContext>();
 #else
         private static readonly AsyncLocal<AsyncContext> Current = new AsyncLocal<AsyncContext>(ValueChangedHandler);
 
-        public static AsyncContext HzConsoleObject { get; } = new AsyncContext();
+        private static AsyncContext HzConsoleObject { get; } = new AsyncContext();
 
         private static void ValueChangedHandler(AsyncLocalValueChangedArgs<AsyncContext> obj)
         {
-            XConsole.WriteLine(HzConsoleObject, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {obj.PreviousValue?.Id} -> {obj.CurrentValue?.Id} ({obj.ThreadContextChanged.ToString().ToLower()})");
+            static string ToString(AsyncContext context) => context?.Id.ToString() ?? "x";
+
+            HzConsole.WriteLine(HzConsoleObject, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -> {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? "(execution context change)" : "")}");
         }
 #endif
 

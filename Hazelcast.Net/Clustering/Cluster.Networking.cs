@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when connected.</returns>
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task ConnectAsync(CancellationToken cancellationToken)
@@ -41,7 +41,7 @@ namespace Hazelcast.Clustering
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
             var task = ConnectAsyncInternal(cancellation.Token).ThenDispose(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();

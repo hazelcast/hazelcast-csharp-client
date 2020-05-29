@@ -144,7 +144,7 @@ namespace Hazelcast.Clustering
         /// <param name="message">The event message.</param>
         private void OnEventMessage(ClientMessage message)
         {
-            XConsole.WriteLine(this, "Handle event message");
+            HzConsole.WriteLine(this, "Handle event message");
 
             // FIXME: consider async handlers + running on background threads + limiting concurrency
 
@@ -152,7 +152,7 @@ namespace Hazelcast.Clustering
             {
                 Instrumentation.CountMissedEvent(message);
                 _logger.LogWarning($"No event handler for [{message.CorrelationId}]");
-                XConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
+                HzConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
                 return;
             }
 

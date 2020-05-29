@@ -109,7 +109,7 @@ namespace Hazelcast.Tests.Sandbox
                 {
                     // we cannot let one handler kill everything,
                     // so are we going to swallow the exception?
-                    XConsole.WriteLine(this, e);
+                    HzConsole.WriteLine(this, e);
                 }
             }
         }

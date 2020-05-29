@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 
 namespace Hazelcast.Partitioning
@@ -76,8 +77,8 @@ namespace Hazelcast.Partitioning
         /// <param name="partitionsMap">The partitions map.</param>
         public void NotifyPartitionView(Guid originClientId, int version, Dictionary<int, Guid> partitionsMap)
         {
-            XConsole.WriteLine(this, $"Received partition table v{version}");
-            XConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
+            HzConsole.WriteLine(this, $"Received partition table v{version}");
+            HzConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
 
             lock (_partitionsLock) // one at a time please
             {

@@ -30,7 +30,7 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
@@ -38,7 +38,7 @@ namespace Hazelcast
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = GetMapAsync<TKey, TValue>(name, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -47,7 +47,7 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
@@ -57,7 +57,7 @@ namespace Hazelcast
                     => new Map<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory),
                 cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -66,7 +66,7 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ITopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default)
@@ -74,7 +74,7 @@ namespace Hazelcast
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = GetTopicAsync<T>(name, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -83,7 +83,7 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ITopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ namespace Hazelcast
                     => new Topic<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();

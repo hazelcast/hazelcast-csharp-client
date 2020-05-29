@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
@@ -42,7 +42,7 @@ namespace Hazelcast.Clustering
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
             var task = SendAsyncInternal(message, null, cancellation.Token).ThenDispose(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -61,7 +61,7 @@ namespace Hazelcast.Clustering
         /// is an unknown member, sends the message to a random number too.</para>
         /// </remarks>
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken)
@@ -78,7 +78,7 @@ namespace Hazelcast.Clustering
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
             var task = SendAsyncInternal(message, client, cancellation.Token).ThenDispose(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -93,7 +93,7 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, CancellationToken cancellationToken)
@@ -104,7 +104,7 @@ namespace Hazelcast.Clustering
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
             var task = SendAsyncInternal(message, client, cancellation.Token).ThenDispose(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -120,7 +120,7 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
@@ -131,7 +131,7 @@ namespace Hazelcast.Clustering
             var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
             var task = SendAsyncInternal(message, client, correlationId, cancellation.Token).ThenDispose(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -146,7 +146,7 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken)
@@ -159,7 +159,7 @@ namespace Hazelcast.Clustering
 
             var task = SendToPartitionOwnerAsync(message, partitionId, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -174,7 +174,7 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken)
@@ -189,7 +189,7 @@ namespace Hazelcast.Clustering
                 ? SendAsync(message, cancellationToken)
                 : SendToMemberAsync(message, memberId, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -204,14 +204,14 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         private
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<ClientMessage> SendAsyncInternal(ClientMessage message, Client client, CancellationToken cancellationToken)
         {
             var task = SendAsyncInternal(message, client, _correlationIdSequence.Next, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -261,7 +261,7 @@ namespace Hazelcast.Clustering
                     if (invocation.ShouldRetry(exception, _retryOnTargetDisconnected) &&
                         await invocation.CanRetryAsync(() => _correlationIdSequence.Next).CAF())
                     {
-                        XConsole.WriteLine(this, "Retrying...");
+                        HzConsole.WriteLine(this, "Retrying...");
                         continue;
                     }
 

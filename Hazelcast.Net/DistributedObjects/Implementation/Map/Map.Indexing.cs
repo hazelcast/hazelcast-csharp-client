@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
     {
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task AddIndexAsync(IndexConfig indexConfig, TimeSpan timeout = default)
@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var task = AddIndexAsync(indexConfig, cancellation.Token).OrTimeout(cancellation);
 
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken)
@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexConfig.ValidateAndNormalize(Name));
             var task = Cluster.SendAsync(requestMessage, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();

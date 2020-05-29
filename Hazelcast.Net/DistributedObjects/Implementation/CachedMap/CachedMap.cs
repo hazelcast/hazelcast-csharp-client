@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
         /// <inheritdoc />
         protected override
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<TValue> AddOrReplaceWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
@@ -71,7 +71,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
             _cache.Invalidate(keyData);
             var task = base.AddOrReplaceWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
         /// <inheritdoc />
         protected override
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task AddOrReplaceAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
@@ -113,7 +113,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
             var task = Task.WhenAll(tasks);
 
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -130,7 +130,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
         /// <inheritdoc />
         protected override
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task<TValue> AddIfMissingAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
@@ -138,7 +138,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
             _cache.Invalidate(keyData);
             var task = base.AddIfMissingAsync(keyData, valueData, timeToLive, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -147,7 +147,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
         /// <inheritdoc />
         protected override
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task AddOrReplaceTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
@@ -155,7 +155,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
             _cache.Invalidate(keyData);
             var task = base.AddOrReplaceTransientAsync(keyData, valueData, timeToLive, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -297,7 +297,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
         // <inheritdoc />
         protected override
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<object> ExecuteAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
@@ -308,7 +308,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
                 return t;
             }, CancellationToken.None);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -317,7 +317,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
 
         // <inheritdoc />
         protected override
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<object> ApplyAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
@@ -328,7 +328,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
                 return t;
             }, CancellationToken.None);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();

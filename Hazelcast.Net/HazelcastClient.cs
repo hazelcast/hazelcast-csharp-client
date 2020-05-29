@@ -67,7 +67,7 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task OpenAsync(TimeSpan timeout = default)
@@ -75,7 +75,7 @@ namespace Hazelcast
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = OpenAsync(cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -84,14 +84,14 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task OpenAsync(CancellationToken cancellationToken)
         {
             var task = Cluster.ConnectAsync(cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();

@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
     {
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default)
@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, key, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ExecuteAsync(keyData, processorData, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -81,7 +81,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, TimeSpan timeout = default)
@@ -89,7 +89,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, keys, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -122,7 +122,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, TimeSpan timeout = default)
@@ -130,7 +130,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -156,7 +156,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, TimeSpan timeout = default)
@@ -164,7 +164,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, predicate, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -190,7 +190,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<object> ApplyAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default)
@@ -198,7 +198,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = ApplyAsync(processor, key, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -207,7 +207,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
@@ -215,7 +215,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ApplyAsync(processorData, keyData, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();

@@ -59,7 +59,7 @@ namespace Hazelcast.Testing.TestServer
             _clusterId = Guid.NewGuid();
             _memberId = Guid.NewGuid();
 
-            XConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
+            HzConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
         }
 
         /// <summary>
@@ -68,24 +68,24 @@ namespace Hazelcast.Testing.TestServer
         /// <returns>A task that will complete when the server has started.</returns>
         public async Task StartAsync()
         {
-            XConsole.WriteLine(this, $"Start server at {_endpoint}");
+            HzConsole.WriteLine(this, $"Start server at {_endpoint}");
 
             _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
-            XConsole.Configure(_listener, config => config.SetIndent(24).SetPrefix("LISTENER"));
+            HzConsole.Configure(_listener, config => config.SetIndent(24).SetPrefix("LISTENER"));
             await _listener.StartAsync().CAF();
 
-            XConsole.WriteLine(this, "Server started");
+            HzConsole.WriteLine(this, "Server started");
         }
 
         private async ValueTask ListenerShutdown(ServerSocketListener arg)
         {
-            XConsole.WriteLine(this, "Listener is down");
+            HzConsole.WriteLine(this, "Listener is down");
 
             // shutdown all existing connections
             foreach (var connection in _connections.Values)
                 await connection.TryDisposeAsync().CAF();
 
-            XConsole.WriteLine(this, "Connections are down");
+            HzConsole.WriteLine(this, "Connections are down");
         }
 
         /// <summary>
@@ -99,13 +99,13 @@ namespace Hazelcast.Testing.TestServer
 
             if (listener == null) return;
 
-            XConsole.WriteLine(this, "Stop server");
+            HzConsole.WriteLine(this, "Stop server");
 
             // stop accepting new connections
             await listener.StopAsync().CAF();
             listener.Dispose();
 
-            XConsole.WriteLine(this, "Server stopped");
+            HzConsole.WriteLine(this, "Server stopped");
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace Hazelcast.Testing.TestServer
             // must wire it properly before accepting
 
             var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-            XConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
+            HzConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
             serverConnection.OnShutdown = SocketShutdown;
             serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
             serverConnection.Accept();
@@ -188,7 +188,7 @@ namespace Hazelcast.Testing.TestServer
         /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
         private void SocketShutdown(SocketConnectionBase connection)
         {
-            XConsole.WriteLine(this, "Removing connection " + connection.Id);
+            HzConsole.WriteLine(this, "Removing connection " + connection.Id);
             _connections.Remove(connection.Id);
         }
 

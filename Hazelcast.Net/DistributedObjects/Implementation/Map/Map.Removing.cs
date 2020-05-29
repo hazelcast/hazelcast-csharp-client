@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
     {
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default)
@@ -33,7 +33,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = TryRemoveAsync(key, serverTimeout, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -42,14 +42,14 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
             var task = TryRemoveAsync(ToSafeData(key), serverTimeout, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<TValue> RemoveAsync(TKey key, TimeSpan timeout = default)
@@ -88,7 +88,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = RemoveAsync(key, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -97,14 +97,14 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = RemoveAsync(ToSafeData(key), cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -127,7 +127,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default)
@@ -135,7 +135,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = RemoveAsync(key, value, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -144,7 +144,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
@@ -152,7 +152,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var (keyData, valueData) = ToSafeData(key, value);
             var task = RemoveAsync(keyData, valueData, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -180,7 +180,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task DeleteAsync(TKey key, TimeSpan timeout = default)
@@ -188,7 +188,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = DeleteAsync(key, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -197,14 +197,14 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
          Task DeleteAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = DeleteAsync(ToSafeData(key), cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -221,7 +221,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
         /// </remarks>
         protected virtual
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task DeleteAsync(IData keyData, CancellationToken cancellationToken)
@@ -229,7 +229,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ThreadId);
             var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -238,7 +238,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public virtual
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task ClearAsync(TimeSpan timeout = default)
@@ -246,7 +246,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = ClearAsync(cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -255,7 +255,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         /// <inheritdoc />
         public virtual
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
         Task ClearAsync(CancellationToken cancellationToken)
@@ -263,7 +263,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             var requestMessage = MapClearCodec.EncodeRequest(Name);
             var task = Cluster.SendAsync(requestMessage, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();

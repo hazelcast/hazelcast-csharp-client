@@ -135,7 +135,7 @@ namespace Hazelcast.Clustering
         private async Task<bool> SubscribeToClusterEventsAsync(Client client, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
-            XConsole.WriteLine(this, "subscribe");
+            HzConsole.WriteLine(this, "subscribe");
 
             // handles the event
             void HandleEvent(ClientMessage message, object state)
@@ -149,7 +149,7 @@ namespace Hazelcast.Clustering
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEvent);
                 _ = await SendToClientAsync(subscribeRequest, client, correlationId, cancellationToken).CAF();
-                XConsole.WriteLine(this, "subscribed");
+                HzConsole.WriteLine(this, "subscribed");
                 return true;
             }
             catch (Exception e)
@@ -237,14 +237,14 @@ namespace Hazelcast.Clustering
                 switch (status)
                 {
                     case 1: // old but not new = removed
-                        XConsole.WriteLine(this, $"Removed member {member.Id}");
+                        HzConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
                         if (_clients.TryGetValue(member.Id, out var client))
                             client.Die(); // dies in the background, will self-removed once down
                         break;
 
                     case 2: // new but not old = added
-                        XConsole.WriteLine(this, $"Added member {member.Id}");
+                        HzConsole.WriteLine(this, $"Added member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Added, new ClusterMemberLifecycleEventArgs(member)));
                         break;
 

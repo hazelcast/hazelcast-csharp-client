@@ -84,7 +84,7 @@ namespace Hazelcast.Clustering
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<Client>();
 
-            XConsole.Configure(this, config => config.SetIndent(4).SetPrefix("CLIENT"));
+            HzConsole.Configure(this, config => config.SetIndent(4).SetPrefix("CLIENT"));
         }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace Hazelcast.Clustering
 
             _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, Address.IPEndPoint) { OnShutdown = SocketShutdown };
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-            XConsole.Configure(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
+            HzConsole.Configure(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 
             try
             {
@@ -195,7 +195,7 @@ namespace Hazelcast.Clustering
             }
             catch (Exception e)
             {
-                XConsole.WriteLine(this, "Failed to connect. " + e);
+                HzConsole.WriteLine(this, "Failed to connect. " + e);
                 throw;
             }
 
@@ -223,16 +223,16 @@ namespace Hazelcast.Clustering
         {
             if (message.IsEvent)
             {
-                XConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
-                                         XConsole.Lines(this, 1, message.Dump()));
+                HzConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
+                                         HzConsole.Lines(this, 1, message.Dump()));
                 await ReceiveEvent(message).CAF(); // should not throw
                 return;
             }
 
             if (message.IsBackupEvent)
             {
-                XConsole.WriteLine(this, $"Receive backup event [{message.CorrelationId}]" +
-                                         XConsole.Lines(this, 1, message.Dump()));
+                HzConsole.WriteLine(this, $"Receive backup event [{message.CorrelationId}]" +
+                                         HzConsole.Lines(this, 1, message.Dump()));
 
                 // backup events are not supported
                 //throw new NotSupportedException("Backup events are not supported here.");
@@ -241,8 +241,8 @@ namespace Hazelcast.Clustering
             }
 
             // message has to be a response
-            XConsole.WriteLine(this, $"Receive response [{message.CorrelationId}]" +
-                                     XConsole.Lines(this, 1, message.Dump()));
+            HzConsole.WriteLine(this, $"Receive response [{message.CorrelationId}]" +
+                                     HzConsole.Lines(this, 1, message.Dump()));
 
             // find the corresponding invocation
             // and remove invocation
@@ -250,7 +250,7 @@ namespace Hazelcast.Clustering
             {
                 // orphan messages are ignored (but logged)
                 _logger.LogWarning($"Received message for unknown invocation [{message.CorrelationId}].");
-                XConsole.WriteLine(this, $"Unknown invocation [{message.CorrelationId}]");
+                HzConsole.WriteLine(this, $"Unknown invocation [{message.CorrelationId}]");
                 return;
             }
 
@@ -272,7 +272,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                XConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
+                HzConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
                 _onReceiveEventMessage(message);
             }
             catch (Exception e)
@@ -284,7 +284,7 @@ namespace Hazelcast.Clustering
                 // at least, make some noise
                 // TODO: instrumentation
                 _logger.LogWarning(e, $"Failed to raise event [{message.CorrelationId}].");
-                XConsole.WriteLine(this, $"Failed to raise event [{message.CorrelationId}]." + e);
+                HzConsole.WriteLine(this, $"Failed to raise event [{message.CorrelationId}]." + e);
             }
 
             return new ValueTask();
@@ -306,13 +306,13 @@ namespace Hazelcast.Clustering
 
             try
             {
-                XConsole.WriteLine(this, $"Fail invocation [{message.CorrelationId}].");
+                HzConsole.WriteLine(this, $"Fail invocation [{message.CorrelationId}].");
                 invocation.SetException(exception);
             }
             catch (Exception e)
             {
                 _logger.LogWarning(e, $"Failed to fail invocation [{message.CorrelationId}].");
-                XConsole.WriteLine(this, $"Failed to fail invocation [{message.CorrelationId}].");
+                HzConsole.WriteLine(this, $"Failed to fail invocation [{message.CorrelationId}].");
             }
 
         }
@@ -321,13 +321,13 @@ namespace Hazelcast.Clustering
         {
             try
             {
-                XConsole.WriteLine(this, $"Complete invocation [{message.CorrelationId}].");
+                HzConsole.WriteLine(this, $"Complete invocation [{message.CorrelationId}].");
                 invocation.SetResult(message);
             }
             catch (Exception e)
             {
                 _logger.LogWarning(e, $"Failed to complete invocation [{message.CorrelationId}].");
-                XConsole.WriteLine(this, $"Failed to complete invocation [{message.CorrelationId}].");
+                HzConsole.WriteLine(this, $"Failed to complete invocation [{message.CorrelationId}].");
 
                 try
                 {
@@ -369,8 +369,8 @@ namespace Hazelcast.Clustering
             // adds the invocation, it will be removed when receiving the response (or timeout or...)
             AddInvocation(invocation);
 
-            XConsole.WriteLine(this, $"Send message [{invocation.CorrelationId}]" +
-                                     XConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
+            HzConsole.WriteLine(this, $"Send message [{invocation.CorrelationId}]" +
+                                     HzConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
 
             // actually send the message
             var success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
@@ -390,11 +390,11 @@ namespace Hazelcast.Clustering
             if (!success)
             {
                 RemoveInvocation(invocation);
-                XConsole.WriteLine(this, "Failed to send a message.");
+                HzConsole.WriteLine(this, "Failed to send a message.");
                 throw new InvalidOperationException("Failed to send a message.");
             }
 
-            XConsole.WriteLine(this, "Wait for response...");
+            HzConsole.WriteLine(this, "Wait for response...");
 
             // and then wait for the response
             try

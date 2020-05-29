@@ -43,7 +43,7 @@ namespace Hazelcast.Networking
             : base(id, prefixLength)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            XConsole.Configure(this, config => config.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]"));
+            HzConsole.Configure(this, config => config.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]"));
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Hazelcast.Networking
         /// </remarks>
         public async ValueTask ConnectAsync(CancellationToken cancellationToken)
         {
-            XConsole.WriteLine(this, "Open");
+            HzConsole.WriteLine(this, "Open");
 
             if (OnReceiveMessageBytes == null)
                 throw new InvalidOperationException("No message bytes handler has been configured.");
@@ -66,9 +66,9 @@ namespace Hazelcast.Networking
             var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             // connect to server
-            XConsole.WriteLine(this, "Connect to server");
+            HzConsole.WriteLine(this, "Connect to server");
             await socket.ConnectAsync(_endpoint, cancellationToken).CAF();
-            XConsole.WriteLine(this, "Connected to server");
+            HzConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream
             // TODO implement SSL or provide a Func<Stream, Stream>
@@ -77,7 +77,7 @@ namespace Hazelcast.Networking
             // wire the pipe
             OpenPipe(socket, stream);
 
-            XConsole.WriteLine(this, "Opened");
+            HzConsole.WriteLine(this, "Opened");
         }
     }
 }

@@ -29,15 +29,16 @@ namespace Hazelcast.Examples.Map
             Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
             Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
 
-            XConsole.Configure(AsyncContext.HzConsoleObject, configuration =>
-            {
-                configuration.SetMaxLevel(1);
-            });
+            // uncomment and enable HzConsole to see the context changes
+            //HzConsole.Configure<AsyncContext>(config => { config.SetMaxLevel(0); });
 
             // create an Hazelcast client and connect to a server running on localhost
             var hz = new HazelcastClientFactory().CreateClient(configuration =>
             {
-                configuration.Networking.Addresses.Add("sgay-l4");
+                // configure server address
+                //configuration.Networking.Addresses.Add("sgay-l4");
+
+                // configure logging
                 configuration.Logging.LoggerFactory.Creator = () =>
                     LoggerFactory.Create(builder => builder.AddConsole());
             });

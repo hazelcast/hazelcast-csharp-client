@@ -83,12 +83,12 @@ namespace Hazelcast.Networking
         /// <returns>A task that will complete when the listener has started listening.</returns>
         public Task StartAsync()
         {
-            XConsole.WriteLine(this, "Start listener");
+            HzConsole.WriteLine(this, "Start listener");
 
             if (_onAcceptConnection == null)
                 throw new InvalidOperationException("No connection handler has been configured.");
 
-            XConsole.WriteLine(this, "Create listener socket");
+            HzConsole.WriteLine(this, "Create listener socket");
             _socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             try
@@ -98,8 +98,8 @@ namespace Hazelcast.Networking
             }
             catch (Exception e)
             {
-                XConsole.WriteLine(this, "Failed to bind socket");
-                XConsole.WriteLine(this, e);
+                HzConsole.WriteLine(this, "Failed to bind socket");
+                HzConsole.WriteLine(this, e);
                 throw;
             }
 
@@ -107,7 +107,7 @@ namespace Hazelcast.Networking
 
             _listeningThenShutdown = Task.Run(() =>
             {
-                XConsole.WriteLine(this, "Start listening");
+                HzConsole.WriteLine(this, "Start listening");
                 Interlocked.Exchange(ref _isActive, 1);
                 var waitHandles = new[] { _accepted, _cancellationTokenSource.Token.WaitHandle };
                 while (true)
@@ -116,7 +116,7 @@ namespace Hazelcast.Networking
                     _accepted.Reset();
 
                     // start an asynchronous socket to listen for connections
-                    XConsole.WriteLine(this, "Listening");
+                    HzConsole.WriteLine(this, "Listening");
                     _socket.BeginAccept(AcceptCallback, _socket);
 
                     // TODO consider doing things differently (low)
@@ -130,11 +130,11 @@ namespace Hazelcast.Networking
                     var n = WaitHandle.WaitAny(waitHandles);
                     if (n == 1) break;
                 }
-                XConsole.WriteLine(this, "Stop listening");
+                HzConsole.WriteLine(this, "Stop listening");
 
             }, CancellationToken.None).ContinueWith(ShutdownInternal);
 
-            XConsole.WriteLine(this, "Started listener");
+            HzConsole.WriteLine(this, "Started listener");
 
             return Task.CompletedTask;
         }
@@ -144,12 +144,12 @@ namespace Hazelcast.Networking
             if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
                 return;
 
-            XConsole.WriteLine(this, "Shutdown socket");
+            HzConsole.WriteLine(this, "Shutdown socket");
             //_socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
             _socket.Dispose();
 
-            XConsole.WriteLine(this, "Listener is down");
+            HzConsole.WriteLine(this, "Listener is down");
 
             // notify
             if (_onShutdown != null)
@@ -162,12 +162,12 @@ namespace Hazelcast.Networking
         /// <returns>A task that will complete when the listener has stopped listening.</returns>
         public async ValueTask StopAsync()
         {
-            XConsole.WriteLine(this, "Stop listener");
+            HzConsole.WriteLine(this, "Stop listener");
 
             _cancellationTokenSource.Cancel();
             await _listeningThenShutdown.CAF();
 
-            XConsole.WriteLine(this, "Stopped listener");
+            HzConsole.WriteLine(this, "Stopped listener");
         }
 
         /// <summary>
@@ -176,7 +176,7 @@ namespace Hazelcast.Networking
         /// <param name="result">The status of the asynchronous listening.</param>
         private void AcceptCallback(IAsyncResult result)
         {
-            XConsole.WriteLine(this, "Accept connection");
+            HzConsole.WriteLine(this, "Accept connection");
 
             // signal the main thread to continue
             try
@@ -203,18 +203,18 @@ namespace Hazelcast.Networking
             {
                 if (_isActive == 0)
                 {
-                    XConsole.WriteLine(this, "Ignore exception (listener is down)");
+                    HzConsole.WriteLine(this, "Ignore exception (listener is down)");
                 }
                 else if (_cancellationTokenSource.IsCancellationRequested)
                 {
-                    XConsole.WriteLine(this, "Abort connection (listened is shutting down)");
+                    HzConsole.WriteLine(this, "Abort connection (listened is shutting down)");
                 }
                 else
                 {
                     _cancellationTokenSource.Cancel();
-                    XConsole.WriteLine(this, "Abort connection");
+                    HzConsole.WriteLine(this, "Abort connection");
                 }
-                XConsole.WriteLine(this, e);
+                HzConsole.WriteLine(this, e);
                 return;
             }
 
@@ -226,9 +226,9 @@ namespace Hazelcast.Networking
             }
             catch (Exception e)
             {
-                XConsole.WriteLine(this, "Failed to accept a connection");
-                XConsole.WriteLine(this, e);
-                XConsole.WriteLine(this, _cancellationTokenSource.IsCancellationRequested
+                HzConsole.WriteLine(this, "Failed to accept a connection");
+                HzConsole.WriteLine(this, e);
+                HzConsole.WriteLine(this, _cancellationTokenSource.IsCancellationRequested
                     ? "Abort connection (server is stopping)"
                     : "Abort connection");
             }

@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task PublishAsync(T message, TimeSpan timeout)
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
             var task = PublishAsync(message, cancellation.Token).OrTimeout(cancellation);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 
         /// <inheritdoc />
         public
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task PublishAsync(T message, CancellationToken cancellationToken)
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
             var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
             var task = Cluster.SendAsync(requestMessage, cancellationToken);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             await task.CAF();

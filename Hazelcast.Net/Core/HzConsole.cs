@@ -14,26 +14,37 @@
 
 using System;
 using System.Diagnostics;
-#if XCONSOLE
+#if HZ_CONSOLE
 using System.Collections.Generic;
 using System.Threading;
 #endif
 
-namespace Hazelcast.Logging
+namespace Hazelcast.Core
 {
     /// <summary>
     /// Provides a console for troubleshooting.
     /// </summary>
     /// <remarks>
-    /// <para>To enable the console, define XCONSOLE. Otherwise, none of the console
+    /// <para>To enable the console, define HZ_CONSOLE. Otherwise, none of the console
     /// method invocations will be compiled (thanks to <see cref="ConditionalAttribute"/>)
     /// and therefore the impact on actual (production) code will be null.</para>
     /// </remarks>
-    public static class XConsole
+    public static class HzConsole
     {
-#if XCONSOLE
+#if HZ_CONSOLE
         private static readonly Dictionary<object, Config> SourceConfigs = new Dictionary<object, Config>();
         private static readonly Dictionary<Type, Config> TypeConfigs = new Dictionary<Type, Config>();
+
+        static HzConsole()
+        {
+            // setup default configuration
+            Configure<object>(config =>
+            {
+                config.SetMaxLevel(-1);
+                config.SetIndent(0);
+                config.SetPrefix("");
+            });
+        }
 
         private static Config GetConfig(object source)
         {
@@ -55,7 +66,7 @@ namespace Hazelcast.Logging
         /// </summary>
         public sealed class Config
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             private bool _hasIndent;
             private bool _hasPrefix;
             private bool _hasMaxLevel;
@@ -68,7 +79,7 @@ namespace Hazelcast.Logging
             /// <returns>This configuration object.</returns>
             public Config SetIndent(int indent)
             {
-#if XCONSOLE
+#if HZ_CONSOLE
                 Indent = indent;
                 _hasIndent = true;
 #endif
@@ -81,7 +92,7 @@ namespace Hazelcast.Logging
             /// <returns>This configuration object.</returns>
             public Config ClearIndent()
             {
-#if XCONSOLE
+#if HZ_CONSOLE
                 Indent = default;
                 _hasIndent = false;
 #endif
@@ -95,7 +106,7 @@ namespace Hazelcast.Logging
             /// <returns>This configuration object.</returns>
             public Config SetPrefix(string prefix)
             {
-#if XCONSOLE
+#if HZ_CONSOLE
                 Prefix = prefix;
                 _hasPrefix = true;
 #endif
@@ -108,7 +119,7 @@ namespace Hazelcast.Logging
             /// <returns>This configuration object.</returns>
             public Config ClearPrefix()
             {
-#if XCONSOLE
+#if HZ_CONSOLE
                 Prefix = default;
                 _hasPrefix = false;
 #endif
@@ -122,7 +133,7 @@ namespace Hazelcast.Logging
             /// <returns>This configuration object.</returns>
             public Config SetMaxLevel(int maxLevel)
             {
-#if XCONSOLE
+#if HZ_CONSOLE
                 MaxLevel = maxLevel;
                 _hasMaxLevel = true;
 #endif
@@ -135,14 +146,14 @@ namespace Hazelcast.Logging
             /// <returns>This configuration object.</returns>
             public Config ClearMaxLevel()
             {
-#if XCONSOLE
+#if HZ_CONSOLE
                 MaxLevel = default;
                 _hasMaxLevel = false;
 #endif
                 return this;
             }
 
-#if XCONSOLE
+#if HZ_CONSOLE
             /// <summary>
             /// Gets the indentation level.
             /// </summary>
@@ -163,13 +174,13 @@ namespace Hazelcast.Logging
             /// Determines whether this configuration has an indentation level, a prefix and a maximal log level.
             /// </summary>
             internal bool IsComplete
-#if XCONSOLE
+#if HZ_CONSOLE
                 => _hasIndent && _hasPrefix && _hasMaxLevel;
 #else
                 => true;
 #endif
 
-#if XCONSOLE
+#if HZ_CONSOLE
             /// <summary>
             /// Merges another configuration into this configuration.
             /// </summary>
@@ -188,7 +199,7 @@ namespace Hazelcast.Logging
             /// Gets the formatted prefix (with thread identifier etc).
             /// </summary>
             public string FormattedPrefix
-#if XCONSOLE
+#if HZ_CONSOLE
                 => $"{new string(' ', Indent)}[{Thread.CurrentThread.ManagedThreadId:00}] {Prefix}: ";
 #else
                 => "";
@@ -200,7 +211,7 @@ namespace Hazelcast.Logging
             /// <param name="level">The level.</param>
             /// <returns>true if the level should be ignored; otherwise false.</returns>
             public bool Ignore(int level)
-#if XCONSOLE
+#if HZ_CONSOLE
                 => level > MaxLevel;
 #else
                 => true;
@@ -208,7 +219,7 @@ namespace Hazelcast.Logging
 
             /// <inheritdoc />
             public override string ToString()
-#if XCONSOLE
+#if HZ_CONSOLE
                 => $"{{Config: {(_hasIndent?Indent.ToString():"?")}, {(_hasPrefix?("\""+Prefix+"\""):"?")}, {(_hasMaxLevel?MaxLevel.ToString():"?")}}}";
 #else
                 => "";
@@ -217,17 +228,17 @@ namespace Hazelcast.Logging
 
         // NOTES
         //
-        // The class above *must* exist regardless of the XCONSOLE define, as
+        // The class above *must* exist regardless of the HZ_CONSOLE define, as
         // it is exposed by the methods below, so that the code can compile,
         // and even though these methods may not be compiled (see below).
         // However, to reduce its weight, we can simplify the class body when
-        // XCONSOLE is not defined.
+        // HZ_CONSOLE is not defined.
         //
-        // Methods below *must* exist regardless of the XCONSOLE define, so that
+        // Methods below *must* exist regardless of the HZ_CONSOLE define, so that
         // the code can compile, but due to the [Conditional] attributes, their
         // invocations will *not* be compiled = zero cost.
         // Nevertheless, to reduce their weight, we can simplify their bodies
-        // when XCONSOLE is not defined.
+        // when HZ_CONSOLE is not defined.
         // The 'Lines' method cannot be marked [Conditional] because it returns
         // a non-void value. However, it should always be invoked from within
         // a call to WriteLine, which will *not* be compiled anyways.
@@ -237,10 +248,10 @@ namespace Hazelcast.Logging
         /// </summary>
         /// <param name="source">The source object.</param>
         /// <param name="configure">A action to configure the console.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void Configure(object source, Action<Config> configure)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             if (!SourceConfigs.TryGetValue(source, out var info))
                 info = SourceConfigs[source] = new Config();
             configure(info);
@@ -252,10 +263,10 @@ namespace Hazelcast.Logging
         /// </summary>
         /// <typeparam name="TObject">The type of objects.</typeparam>
         /// <param name="configure">A action to configure the console.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void Configure<TObject>(Action<Config> configure)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             var type = typeof(TObject);
             if (!TypeConfigs.TryGetValue(type, out var info))
                 info = TypeConfigs[type] = new Config();
@@ -268,10 +279,10 @@ namespace Hazelcast.Logging
         /// </summary>
         /// <param name="source">The source object.</param>
         /// <param name="text">The text to write.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void WriteLine(object source, string text)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             WriteLine(source, 0, text);
 #endif
         }
@@ -282,10 +293,10 @@ namespace Hazelcast.Logging
         /// <param name="source">The source object.</param>
         /// <param name="level">The level.</param>
         /// <param name="text">The text to write.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void WriteLine(object source, int level, string text)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
             Console.WriteLine(config.FormattedPrefix + text);
@@ -298,10 +309,10 @@ namespace Hazelcast.Logging
         /// <param name="source">The source object.</param>
         /// <param name="format">The line format.</param>
         /// <param name="args">The line arguments.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void WriteLine(object source, string format, params object[] args)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             WriteLine(source, 0, format, args);
 #endif
         }
@@ -313,10 +324,10 @@ namespace Hazelcast.Logging
         /// <param name="level">The level.</param>
         /// <param name="format">The line format.</param>
         /// <param name="args">The line arguments.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void WriteLine(object source, int level, string format, params object[] args)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
             Console.WriteLine(config.FormattedPrefix + format, args);
@@ -328,10 +339,10 @@ namespace Hazelcast.Logging
         /// </summary>
         /// <param name="source">The source object.</param>
         /// <param name="o">The object to write.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void WriteLine(object source, object o)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             WriteLine(source, 0, o);
 #endif
         }
@@ -342,10 +353,10 @@ namespace Hazelcast.Logging
         /// <param name="source">The source object.</param>
         /// <param name="level">The level.</param>
         /// <param name="o">The object to write.</param>
-        [Conditional("XCONSOLE")]
+        [Conditional("HZ_CONSOLE")]
         public static void WriteLine(object source, int level, object o)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
             Console.WriteLine(config.FormattedPrefix + o);
@@ -361,7 +372,7 @@ namespace Hazelcast.Logging
         /// <returns>The indented lines, if the level is not ignored; otherwise an empty string.</returns>
         public static string Lines(object source, int level, string text)
         {
-#if XCONSOLE
+#if HZ_CONSOLE
             var info = GetConfig(source);
             if (info.Ignore(level)) return "";
             var prefix = new string(' ', info.FormattedPrefix.Length);

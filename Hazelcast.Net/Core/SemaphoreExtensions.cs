@@ -25,7 +25,7 @@ namespace Hazelcast.Core
         /// <param name="semaphore">The semaphore.</param>
         /// <returns>A <see cref="SemaphoreAcquisition"/> instance that needs to be disposed to release the semaphore.</returns>
         public static
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             ValueTask<SemaphoreAcquisition> AcquireAsync(this SemaphoreSlim semaphore)
@@ -35,7 +35,7 @@ namespace Hazelcast.Core
                 .ContinueWith(x => SemaphoreAcquisition.Create(x, semaphore),
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -49,7 +49,7 @@ namespace Hazelcast.Core
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A <see cref="SemaphoreAcquisition"/> instance that needs to be disposed to release the semaphore.</returns>
         public static
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task<SemaphoreAcquisition> AcquireAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken)
@@ -59,7 +59,7 @@ namespace Hazelcast.Core
                 .ContinueWith(x => SemaphoreAcquisition.Create(x, semaphore),
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();
@@ -72,7 +72,7 @@ namespace Hazelcast.Core
         /// <param name="semaphore">The semaphore.</param>
         /// <returns>A <see cref="SemaphoreAcquisition"/> instance that needs to be disposed to release the semaphore.</returns>
         public static
-#if !OPTIMIZE_ASYNC
+#if !HZ_OPTIMIZE_ASYNC
             async
 #endif
             Task<SemaphoreAcquisition> TryAcquireAsync(this SemaphoreSlim semaphore)
@@ -82,7 +82,7 @@ namespace Hazelcast.Core
                 .ContinueWith(x => SemaphoreAcquisition.Create(x, semaphore),
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
 
-#if OPTIMIZE_ASYNC
+#if HZ_OPTIMIZE_ASYNC
             return task;
 #else
             return await task.CAF();

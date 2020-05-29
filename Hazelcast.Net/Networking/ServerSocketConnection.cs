@@ -14,6 +14,7 @@
 
 using System;
 using System.Net.Sockets;
+using Hazelcast.Core;
 using Hazelcast.Logging;
 
 namespace Hazelcast.Networking
@@ -39,7 +40,7 @@ namespace Hazelcast.Networking
             : base(id)
         {
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            XConsole.Configure(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]"));
+            HzConsole.Configure(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]"));
         }
 
         /// <summary>
@@ -51,7 +52,7 @@ namespace Hazelcast.Networking
         /// </remarks>
         public void Accept()
         {
-            XConsole.WriteLine(this, "Connect");
+            HzConsole.WriteLine(this, "Connect");
 
             if (OnReceiveMessageBytes == null)
                 throw new InvalidOperationException("No message bytes handler has been configured.");
@@ -63,7 +64,7 @@ namespace Hazelcast.Networking
             // wire the pipe
             OpenPipe(_socket, stream);
 
-            XConsole.WriteLine(this, "Connected");
+            HzConsole.WriteLine(this, "Connected");
         }
     }
 }
