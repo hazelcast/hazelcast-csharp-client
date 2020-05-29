@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Predicates;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
@@ -158,6 +159,40 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #if !OPTIMIZE_ASYNC
             async
 #endif
+            Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var task = ExecuteAsync(processor, predicate, cancellation.Token).OrTimeout(cancellation);
+
+#if OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+
+        }
+
+        /// <inheritdoc />
+        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken)
+        {
+            var (processorData, predicateData) = ToSafeData(processor, predicate);
+
+            var requestMessage = MapExecuteWithPredicateCodec.EncodeRequest(Name, processorData, predicateData);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var response = MapExecuteWithPredicateCodec.DecodeResponse(responseMessage).Response;
+
+            var result = new Dictionary<TKey, object>();
+            foreach (var (keyData, valueData) in response)
+                result[ToObject<TKey>(keyData)] = ToObject<object>(valueData);
+            return result;
+
+        }
+
+        /// <inheritdoc />
+        public
+#if !OPTIMIZE_ASYNC
+            async
+#endif
         Task<object> ApplyAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default)
         {
             var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
@@ -187,7 +222,18 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         }
 
-        // FIXME: do we want this?
+        // TODO: understand what this does, and document
+        //
+        // documentation says that... "execute processes ..., blocking until the processing is
+        // complete and the result is returned" and "submit processes ... and provides a way to
+        // register a callback to receive notifications about the result of the entry processing".
+        //
+        // in the original code, "execute" returns a value whereas "submit" returns a task that
+        // can be awaited - but since we are fully async now, all our code now returns tasks.
+        //
+        // however, "execute" uses MapExecuteOnKeyCodec (77312 // 0x012E00) whereas "submit" uses
+        // MapSubmitToKeyCodec (77568 // 0x012F00) which is a different codec
+
         protected virtual async Task<object> ApplyAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapSubmitToKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
@@ -196,4 +242,5 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             return ToObject<object>(response);
         }
     }
-}
+}
+

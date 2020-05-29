@@ -50,6 +50,9 @@ namespace Hazelcast
 
             _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             Cluster.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
+
+            // every async operations using this client will need a proper async context
+            AsyncContext.Ensure();
         }
 
         /// <summary>

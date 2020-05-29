@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Predicates;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -99,6 +100,32 @@ namespace Hazelcast.DistributedObjects
         Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Process entries.
+        /// </summary>
+        /// <param name="processor">An entry processor.</param>
+        /// <param name="predicate">A predicate to select entries.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The result of the processing of selected entries.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Process entries.
+        /// </summary>
+        /// <param name="processor">An entry processor.</param>
+        /// <param name="predicate">A predicate to select entries.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The result of the processing of selected entries.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken);
+
+        /// <summary>
         /// TODO: kill that one, it seems to be ExecuteOnKeyAsync? what is this? updating the value?
         /// </summary>
         /// <param name="key"></param>
@@ -116,4 +143,4 @@ namespace Hazelcast.DistributedObjects
         /// <returns></returns>
         Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken);
     }
-}
+}

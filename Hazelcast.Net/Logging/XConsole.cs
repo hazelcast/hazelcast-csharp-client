@@ -29,7 +29,7 @@ namespace Hazelcast.Logging
     /// method invocations will be compiled (thanks to <see cref="ConditionalAttribute"/>)
     /// and therefore the impact on actual (production) code will be null.</para>
     /// </remarks>
-    internal static class XConsole
+    public static class XConsole
     {
 #if XCONSOLE
         private static readonly Dictionary<object, Config> SourceConfigs = new Dictionary<object, Config>();
@@ -272,8 +272,7 @@ namespace Hazelcast.Logging
         public static void WriteLine(object source, string text)
         {
 #if XCONSOLE
-            var config = GetConfig(source);
-            Console.WriteLine(config.FormattedPrefix + text);
+            WriteLine(source, 0, text);
 #endif
         }
 
@@ -303,8 +302,7 @@ namespace Hazelcast.Logging
         public static void WriteLine(object source, string format, params object[] args)
         {
 #if XCONSOLE
-            var config = GetConfig(source);
-            Console.WriteLine(config.FormattedPrefix + format, args);
+            WriteLine(source, 0, format, args);
 #endif
         }
 
@@ -334,8 +332,7 @@ namespace Hazelcast.Logging
         public static void WriteLine(object source, object o)
         {
 #if XCONSOLE
-            var config = GetConfig(source);
-            Console.WriteLine(config.FormattedPrefix + o);
+            WriteLine(source, 0, o);
 #endif
         }
 

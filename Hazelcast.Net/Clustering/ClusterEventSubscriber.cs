@@ -22,7 +22,7 @@ namespace Hazelcast.Clustering
 {
     internal class ClusterEventSubscriber : IClusterEventSubscriber
     {
-        private readonly Func<Cluster, Task> _subscribeAsync;
+        private readonly Func<Cluster, CancellationToken, Task> _subscribeAsync;
         private readonly Type _type;
         private readonly string _typename;
         private readonly IClusterEventSubscriber _subscriber;
@@ -31,7 +31,7 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="ClusterEventSubscriber"/> class.
         /// </summary>
         /// <param name="subscribeAsync">A subscribe method.</param>
-        public ClusterEventSubscriber(Func<Cluster, Task> subscribeAsync)
+        public ClusterEventSubscriber(Func<Cluster, CancellationToken, Task> subscribeAsync)
         {
             _subscribeAsync = subscribeAsync ?? throw new ArgumentNullException(nameof(subscribeAsync));
         }
@@ -69,7 +69,7 @@ namespace Hazelcast.Clustering
         {
             if (_subscribeAsync != null)
             {
-                await _subscribeAsync(cluster).CAF();
+                await _subscribeAsync(cluster, cancellationToken).CAF();
             }
             else
             {
@@ -81,4 +81,5 @@ namespace Hazelcast.Clustering
             }
         }
     }
-}
+}
+

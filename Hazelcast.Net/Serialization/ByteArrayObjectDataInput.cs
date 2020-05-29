@@ -16,7 +16,6 @@ using System;
 using System.IO;
 using System.Text;
 using Hazelcast.Core;
-using Bits = Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Serialization
 {

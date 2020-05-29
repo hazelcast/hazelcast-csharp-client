@@ -65,11 +65,11 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>
         /// <param name="timeout">A timeout.</param>
-        Task PublishAsync(T message, TimeSpan timeout);
+        Task PublishAsync(T message, TimeSpan timeout = default);
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>
         /// <param name="cancellationToken">A cancellation token.</param>
         Task PublishAsync(T message, CancellationToken cancellationToken);
     }
-}
+}

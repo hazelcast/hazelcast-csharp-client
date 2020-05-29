@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization;
@@ -89,7 +90,8 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <summary>
         /// Gets the current thread identifier.
         /// </summary>
-        protected long ThreadId => Thread.CurrentThread.ManagedThreadId;
+        // FIXME this is wrong for ASYNC!
+        protected long ThreadId => AsyncContext.CurrentContext.Id;
 
         /// <summary>
         /// Gets the serialization service.
@@ -192,4 +194,4 @@ namespace Hazelcast.DistributedObjects.Implementation
             return default;
         }
     }
-}
+}

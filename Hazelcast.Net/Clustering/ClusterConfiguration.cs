@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Xml;
 using Hazelcast.Core;
 
@@ -27,9 +26,10 @@ namespace Hazelcast.Clustering
         /// </summary>
         public List<IClusterEventSubscriber> EventSubscribers { get; } = new List<IClusterEventSubscriber>();
 
-        public ClusterConfiguration AddEventSubscriber(Func<Cluster, Task> subscribeAsync)
+        public ClusterConfiguration AddEventSubscriber(Action<ClusterEventHandlers> on)
         {
-            EventSubscribers.Add(new ClusterEventSubscriber(subscribeAsync));
+            EventSubscribers.Add(new ClusterEventSubscriber((cluster, cancellationToken)
+                => cluster.SubscribeAsync(on, cancellationToken)));
             return this;
         }
 
@@ -74,4 +74,4 @@ namespace Hazelcast.Clustering
             return configuration;
         }
     }
-}
+}

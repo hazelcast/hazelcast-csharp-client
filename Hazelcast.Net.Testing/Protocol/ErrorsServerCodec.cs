@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
-using Hazelcast.Protocol;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Protocol.Data;
-using static Hazelcast.Messaging.Portability;
 
 namespace Hazelcast.Testing.Protocol
 {

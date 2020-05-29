@@ -425,14 +425,11 @@ namespace Hazelcast.Tests
             {
                 config.Networking.Addresses.Add("sgay-l4");
 
-                config.Cluster.AddEventSubscriber(async cluster =>
+                config.Cluster.AddEventSubscriber(on => on.ObjectCreated((sender, args) =>
                 {
-                    await cluster.SubscribeAsync(on => on.ObjectCreated((sender, args) =>
-                    {
-                        XConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
-                        Interlocked.Increment(ref eventsCount);
-                    }), CancellationToken.None);
-                });
+                    XConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
+                    Interlocked.Increment(ref eventsCount);
+                }));
             }
 
             var client = await CreateOpenClientAsync(ConfigureClient).CAF();
@@ -443,4 +440,5 @@ namespace Hazelcast.Tests
                 await Task.Delay(500).CAF();
         }
     }
-}
+}
+
