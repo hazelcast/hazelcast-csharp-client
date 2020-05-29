@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
@@ -19,7 +20,116 @@ namespace Hazelcast.DistributedObjects
     /// <summary>
     /// Represents map event handlers.
     /// </summary>
-    // ReSharper disable twice UnusedTypeParameter
     public sealed class MapEventHandlers<TKey, TValue> : EventHandlersBase<IMapEventHandlerBase>
-    { }
+    {
+        /// <summary>
+        /// Adds an handler which runs when the map is cleared.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> Cleared(Action<IMap<TKey, TValue>, MapClearedEventArgs> handler)
+        {
+            Add(new MapClearedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when the map is evicted.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> Evicted(Action<IMap<TKey, TValue>, MapEvictedEventArgs> handler)
+        {
+            Add(new MapEvictedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is updated.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryUpdated(Action<IMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryUpdatedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is removed.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryRemoved(Action<IMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryRemovedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is added.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryAdded(Action<IMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryAddedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is evicted.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryEvicted(Action<IMap<TKey, TValue>, MapEntryEvictedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryEvictedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is expired.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryExpired(Action<IMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryExpiredEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is invalidated.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryInvalidated(Action<IMap<TKey, TValue>, MapEntryInvalidatedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryInvalidatedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is loaded.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryLoaded(Action<IMap<TKey, TValue>, MapEntryLoadedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryLoadedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is merged.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MapEventHandlers<TKey, TValue> EntryMerged(Action<IMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryMergedEventHandler<TKey, TValue>(handler));
+            return this;
+        }
+    }
 }

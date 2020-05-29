@@ -29,7 +29,7 @@ namespace Hazelcast.Core
         /// Adds a handler.
         /// </summary>
         /// <param name="handler">The handler.</param>
-        public void Add(TEventHandler handler)
+        protected void Add(TEventHandler handler)
             => _handlers.Add(handler);
 
         /// <inheritdoc />

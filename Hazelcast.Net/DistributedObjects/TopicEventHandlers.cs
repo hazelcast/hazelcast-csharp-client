@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
@@ -21,5 +22,16 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
     public sealed class TopicEventHandlers<T> : EventHandlersBase<ITopicEventHandler<T>>
-    { }
+    {
+        /// <summary>
+        /// Adds an handler which runs when a message is submitted.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public TopicEventHandlers<T> Message(Action<ITopic<T>, TopicMessageEventArgs<T>> handler)
+        {
+            Add(new TopicMessageEventHandler<T>(handler));
+            return this;
+        }
+    }
 }
