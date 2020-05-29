@@ -50,4 +50,4 @@ namespace Hazelcast.Clustering
             Handle(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member));
         }
     }
-}
+}

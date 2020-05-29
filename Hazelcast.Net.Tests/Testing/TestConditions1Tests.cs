@@ -28,4 +28,4 @@ namespace Hazelcast.Tests.Testing
             Assert.AreEqual(NuGetVersion.Parse("0.1"), ServerVersion);
         }
     }
-}
+}

@@ -34,4 +34,4 @@ namespace Hazelcast.Clustering
         public void Handle(Cluster cluster, ConnectionLifecycleEventArgs args)
             => _handler(cluster, args);
     }
-}
+}

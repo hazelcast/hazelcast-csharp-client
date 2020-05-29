@@ -33,4 +33,4 @@ namespace Hazelcast.DistributedObjects
         /// <returns>size</returns>
         int Size();
     }
-}
+}

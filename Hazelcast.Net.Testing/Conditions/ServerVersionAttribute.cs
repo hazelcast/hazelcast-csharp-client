@@ -54,4 +54,4 @@ namespace Hazelcast.Testing.Conditions
             test.Properties[PropertyName] = new[] { Version };
         }
     }
-}
+}

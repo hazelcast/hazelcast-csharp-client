@@ -100,4 +100,4 @@ namespace Hazelcast.Protocol.Data
                 pagingPredicate.Page, (byte)pagingPredicate.IterationType, partitionKeyData);
         }
     }
-}
+}

@@ -69,4 +69,4 @@ namespace Hazelcast.Core
         /// </remarks>
         public static Random Random => ThreadRandom.Value;
     }
-}
+}

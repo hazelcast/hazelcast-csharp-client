@@ -149,4 +149,4 @@ namespace Hazelcast.Serialization
             }
         }
     }
-}
+}

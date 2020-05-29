@@ -80,4 +80,4 @@ namespace Hazelcast.Predicates
             return builder.ToString();
         }
     }
-}
+}

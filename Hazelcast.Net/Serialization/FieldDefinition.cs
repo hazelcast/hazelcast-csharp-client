@@ -122,4 +122,4 @@ namespace Hazelcast.Serialization
             return _type == FieldType.Portable || _type == FieldType.PortableArray;
         }
     }
-}
+}

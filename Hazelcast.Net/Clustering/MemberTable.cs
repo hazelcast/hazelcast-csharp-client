@@ -72,4 +72,4 @@ namespace Hazelcast.Clustering
             return text.ToString();
         }
     }
-}
+}

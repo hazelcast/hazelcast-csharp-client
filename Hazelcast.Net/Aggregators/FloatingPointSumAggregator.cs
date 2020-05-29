@@ -56,4 +56,4 @@ namespace Hazelcast.Aggregators
             return AggregatorDataSerializerHook.FloatingPointSum;
         }
     }
-}
+}

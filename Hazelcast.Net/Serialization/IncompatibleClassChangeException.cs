@@ -20,4 +20,4 @@ namespace Hazelcast.Serialization
     internal class IncompatibleClassChangeException : SystemException
     {
     }
-}
+}

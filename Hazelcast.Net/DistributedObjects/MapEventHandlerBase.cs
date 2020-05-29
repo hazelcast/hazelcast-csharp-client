@@ -41,4 +41,4 @@ namespace Hazelcast.DistributedObjects
 
         protected abstract TArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries);
     }
-}
+}

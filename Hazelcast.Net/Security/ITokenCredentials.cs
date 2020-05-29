@@ -24,4 +24,4 @@ namespace Hazelcast.Security
         /// </summary>
         byte[] Token { get; }
     }
-}
+}

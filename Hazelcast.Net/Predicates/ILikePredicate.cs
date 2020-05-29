@@ -33,4 +33,4 @@ namespace Hazelcast.Predicates
             return AttributeName + " ILIKE '" + Expression + "'";
         }
     }
-}
+}

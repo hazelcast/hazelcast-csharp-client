@@ -94,4 +94,4 @@ namespace Hazelcast.Data.Map
             return $"IndexConfig[Name={Name}, IndexType= {Type}, Attributes={string.Join(",", Attributes)}]";
         }
     }
-}
+}

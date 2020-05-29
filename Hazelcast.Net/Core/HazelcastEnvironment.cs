@@ -123,4 +123,4 @@ namespace Hazelcast.Core
             public static int? DefaultTimeoutSeconds => GetInt32(DefaultTimeoutSecondsName);
         }
     }
-}
+}

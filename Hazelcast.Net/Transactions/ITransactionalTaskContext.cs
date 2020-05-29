@@ -55,4 +55,4 @@ namespace Hazelcast.Transactions
 
         T GetTransactionalObject<T>(string serviceName, string name) where T : ITransactionalObject;
     }
-}
+}

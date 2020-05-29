@@ -49,4 +49,4 @@ namespace Hazelcast.Clustering
         /// </summary>
         public Guid SourceMemberId { get; }
     }
-}
+}

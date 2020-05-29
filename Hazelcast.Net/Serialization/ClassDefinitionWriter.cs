@@ -208,4 +208,4 @@ namespace Hazelcast.Serialization
             return _context.RegisterClassDefinition(nestedBuilder.Build());
         }
     }
-}
+}

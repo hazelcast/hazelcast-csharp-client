@@ -58,4 +58,4 @@ namespace Hazelcast.Clustering
         private static ClusterMemberLifecycleEventArgs CreateEventArgs(MemberInfo member)
             => new ClusterMemberLifecycleEventArgs(member);
     }
-}
+}

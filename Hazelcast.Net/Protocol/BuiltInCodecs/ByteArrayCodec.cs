@@ -34,4 +34,4 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return Decode(iterator.Take());
         }
     }
-}
+}

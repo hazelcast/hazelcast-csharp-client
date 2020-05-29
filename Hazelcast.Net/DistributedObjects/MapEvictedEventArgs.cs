@@ -22,4 +22,4 @@ namespace Hazelcast.DistributedObjects
             : base(member, numberOfAffectedEntries)
         { }
     }
-}
+}

@@ -27,4 +27,4 @@ namespace Hazelcast.DistributedObjects
         protected override MapEntryLoadedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
             => new MapEntryLoadedEventArgs<TKey, TValue>(member, key, value, oldValue);
     }
-}
+}

@@ -32,4 +32,4 @@ namespace Hazelcast.Serialization
         /// <returns>typeId of serializer</returns>
         int GetTypeId();
     }
-}
+}

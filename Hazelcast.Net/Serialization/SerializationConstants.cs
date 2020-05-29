@@ -96,4 +96,4 @@ namespace Hazelcast.Serialization
 
         // RESERVED FOR JET: -300 to -400
     }
-}
+}

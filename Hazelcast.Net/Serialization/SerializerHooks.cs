@@ -62,4 +62,4 @@ namespace Hazelcast.Serialization
         /// </summary>
         public IEnumerable<IDataSerializerHook> Hooks => _types.Select(x => Services.CreateInstance<IDataSerializerHook>(x));
     }
-}
+}

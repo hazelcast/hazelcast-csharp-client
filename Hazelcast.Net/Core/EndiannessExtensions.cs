@@ -33,4 +33,4 @@ namespace Hazelcast.Core
         /// <returns>true if this endianness is 'little-endian'; otherwise false.</returns>
         public static bool IsLittleEndian(this Endianness endianness) => endianness == Endianness.LittleEndian;
     }
-}
+}

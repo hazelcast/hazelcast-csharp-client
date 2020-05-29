@@ -187,4 +187,4 @@ namespace Hazelcast.DistributedObjects
         /// <returns>the head of this queue</returns>
         T Take();
     }
-}
+}

@@ -18,4 +18,4 @@ namespace Hazelcast.Serialization
     {
         IPortableContext GetPortableContext();
     }
-}
+}

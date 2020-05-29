@@ -34,4 +34,4 @@ namespace Hazelcast.Predicates
             return AttributeName + " != " + Value;
         }
     }
-}
+}

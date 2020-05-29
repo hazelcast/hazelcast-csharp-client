@@ -26,4 +26,4 @@ namespace Hazelcast.Core
         /// <inheritdoc />
         public long Next => Interlocked.Increment(ref _value);
     }
-}
+}

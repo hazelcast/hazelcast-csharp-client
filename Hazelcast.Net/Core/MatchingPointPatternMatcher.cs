@@ -66,4 +66,4 @@ namespace Hazelcast.Core
             return firstPart.Length + secondPart.Length;
         }
     }
-}
+}

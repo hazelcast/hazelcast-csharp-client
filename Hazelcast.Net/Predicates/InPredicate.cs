@@ -94,4 +94,4 @@ namespace Hazelcast.Predicates
             return _attributeName + " IN (" + string.Join(", ", _values) + ")";
         }
     }
-}
+}

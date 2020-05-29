@@ -185,4 +185,4 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
         void WriteUTFArray(string fieldName, string[] strings);
     }
-}
+}

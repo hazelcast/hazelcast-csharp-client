@@ -39,4 +39,4 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return iterator.SkipNull() ? null : decode(iterator);
         }
     }
-}
+}

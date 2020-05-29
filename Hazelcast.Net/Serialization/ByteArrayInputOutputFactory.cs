@@ -42,4 +42,4 @@ namespace Hazelcast.Serialization
 
         public Endianness Endianness => _endianness;
     }
-}
+}

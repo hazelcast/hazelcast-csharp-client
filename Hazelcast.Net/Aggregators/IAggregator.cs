@@ -25,4 +25,4 @@ namespace Hazelcast.Aggregators
     /// </remarks>
     public interface IAggregator<TResult> : IIdentifiedDataSerializable
     { }
-}
+}

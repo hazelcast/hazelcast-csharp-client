@@ -28,4 +28,4 @@ namespace Hazelcast.Logging
         /// </summary>
         public ServiceFactory<ILoggerFactory> LoggerFactory { get; } = new ServiceFactory<ILoggerFactory>(() => new NullLoggerFactory());
     }
-}
+}

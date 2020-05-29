@@ -139,4 +139,4 @@ namespace Hazelcast.Testing.Remote
         /// <returns>The result of the script.</returns>
         Task<Response> ExecuteOnControllerAsync(string clusterId, string script, Lang lang, CancellationToken cancellationToken = default);
     }
-}
+}

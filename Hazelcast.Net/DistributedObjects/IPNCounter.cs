@@ -145,4 +145,3 @@ namespace Hazelcast.DistributedObjects
         void Reset();
     }
 }
-

@@ -37,4 +37,4 @@ namespace Hazelcast.Tests.Testing
             Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
         }
     }
-}
+}

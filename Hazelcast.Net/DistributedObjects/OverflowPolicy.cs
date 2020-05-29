@@ -53,4 +53,4 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         Fail = 1
     }
-}
+}

@@ -29,4 +29,4 @@ namespace Hazelcast.Messaging
             // Enum.HasFlag is slower
             => ((ushort) value & (ushort) flags) == (ushort) flags;
     }
-}
+}

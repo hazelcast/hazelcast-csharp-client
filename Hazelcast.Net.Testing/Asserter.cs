@@ -19,4 +19,4 @@ namespace Hazelcast.Testing
     /// </summary>
     public class Asserter
     { }
-}
+}

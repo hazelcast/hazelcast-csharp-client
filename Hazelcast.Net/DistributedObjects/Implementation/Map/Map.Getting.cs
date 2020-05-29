@@ -553,4 +553,3 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.GetTarget() as PagingPredicate;
     }
 }
-

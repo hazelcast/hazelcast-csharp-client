@@ -35,4 +35,4 @@ namespace Hazelcast.Serialization
         IClassDefinition RegisterClassDefinition(IClassDefinition cd);
         void SetClassVersion(int factoryId, int classId, int version);
     }
-}
+}

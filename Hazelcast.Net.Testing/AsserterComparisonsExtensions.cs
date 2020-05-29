@@ -1055,4 +1055,3 @@ namespace Hazelcast.Testing
         #endregion
     }
 }
-

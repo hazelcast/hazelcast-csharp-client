@@ -28,4 +28,4 @@ namespace Hazelcast.DistributedObjects
     public interface IHSet<T> : /*ISet<E>,*/ IHCollection<T>
     {
     }
-}
+}

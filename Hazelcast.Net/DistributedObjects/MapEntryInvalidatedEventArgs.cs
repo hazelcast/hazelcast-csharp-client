@@ -23,4 +23,4 @@ namespace Hazelcast.DistributedObjects
             : base(member, key)
         { }
     }
-}
+}

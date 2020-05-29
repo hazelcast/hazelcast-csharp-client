@@ -87,4 +87,4 @@ namespace Hazelcast.Predicates
             return new OrPredicate(firstPredicate, secondPredicate);
         }
     }
-}
+}

@@ -39,4 +39,4 @@ namespace Hazelcast.Clustering.LoadBalancing
         public override Guid Select()
             => _memberId;
     }
-}
+}

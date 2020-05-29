@@ -42,4 +42,4 @@ namespace Hazelcast.Security
         /// <returns>The new credentials object.</returns>
         ICredentials NewCredentials();
     }
-}
+}

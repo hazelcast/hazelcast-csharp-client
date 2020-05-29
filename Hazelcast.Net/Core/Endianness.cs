@@ -39,4 +39,4 @@ namespace Hazelcast.Core
         /// </summary>
         LittleEndian = 3
     }
-}
+}

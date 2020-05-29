@@ -33,4 +33,4 @@ namespace Hazelcast.Serialization
         /// <returns>if the serializer is overwritable</returns>
         bool IsOverwritable();
     }
-}
+}

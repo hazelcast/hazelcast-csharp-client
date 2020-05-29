@@ -65,4 +65,4 @@ namespace Hazelcast.Serialization
         /// <returns>true if this class definition contains a field named by given name</returns>
         bool HasField(string fieldName);
     }
-}
+}

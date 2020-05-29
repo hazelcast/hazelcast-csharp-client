@@ -59,4 +59,4 @@ namespace Hazelcast.Messaging.FrameFields
         /// </summary>
         public const int ResponseBackupAcks = sizeof(byte);
     }
-}
+}

@@ -34,4 +34,4 @@ namespace Hazelcast.Testing.Conditions
                 : DefaultVersion;
         }
     }
-}
+}

@@ -90,4 +90,4 @@ namespace Hazelcast.Predicates
             return _attributeName + " BETWEEN " + _from + " AND " + _to;
         }
     }
-}
+}

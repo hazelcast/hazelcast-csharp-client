@@ -59,4 +59,4 @@ namespace Hazelcast.Clustering
             Failed
         }
     }
-}
+}

@@ -35,4 +35,4 @@ namespace Hazelcast.Serialization
         /// <returns>field version</returns>
         int GetVersion();
     }
-}
+}

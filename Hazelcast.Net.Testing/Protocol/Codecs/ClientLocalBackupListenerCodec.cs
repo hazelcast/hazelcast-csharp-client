@@ -54,7 +54,7 @@ namespace Hazelcast.Protocol.Codecs
         public sealed class RequestParameters
         {
         }
-    
+
         public static ClientMessage EncodeRequest()
         {
             var clientMessage = new ClientMessage();
@@ -75,7 +75,7 @@ namespace Hazelcast.Protocol.Codecs
             iterator.Take();
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -94,7 +94,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
@@ -115,7 +115,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Flags |= ClientMessageFlags.Event;
             return clientMessage;
         }
-    
+
         public static void HandleEvent(ClientMessage clientMessage, HandleBackupEvent handleBackupEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;

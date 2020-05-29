@@ -19,4 +19,4 @@ namespace Hazelcast.Clustering
     /// </summary>
     public interface IClusterEventHandler
     { }
-}
+}

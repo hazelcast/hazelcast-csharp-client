@@ -34,4 +34,4 @@ namespace Hazelcast.Predicates
         /// </summary>
         Entry = 2
     }
-}
+}

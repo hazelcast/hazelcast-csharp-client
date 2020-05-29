@@ -28,4 +28,4 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         void Write(IObjectDataOutput output, object obj);
     }
-}
+}

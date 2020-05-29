@@ -127,4 +127,4 @@ namespace Hazelcast.Predicates
             return new TruePredicate();
         }
     }
-}
+}

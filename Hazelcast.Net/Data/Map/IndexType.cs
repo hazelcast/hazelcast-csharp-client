@@ -29,4 +29,4 @@ namespace Hazelcast.Data.Map
         /// </summary>
         Hashed = 1
     }
-}
+}

@@ -153,4 +153,4 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
         string[] ReadUTFArray(string fieldName);
     }
-}
+}

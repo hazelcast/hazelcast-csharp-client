@@ -239,4 +239,4 @@ namespace Hazelcast.DistributedObjects
         /// <returns>the sequence of the tail.</returns>
         long TailSequence();
     }
-}
+}

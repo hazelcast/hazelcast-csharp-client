@@ -27,4 +27,4 @@ namespace Hazelcast.Serialization
         /// <returns>class version</returns>
         int GetClassVersion();
     }
-}
+}

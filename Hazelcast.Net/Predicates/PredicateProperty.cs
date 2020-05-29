@@ -28,4 +28,4 @@ namespace Hazelcast.Predicates
             get { return property; }
         }
     }
-}
+}

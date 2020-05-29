@@ -27,4 +27,4 @@ namespace Hazelcast.DistributedObjects
         protected override MapClearedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries)
             => new MapClearedEventArgs(member, numberOfAffectedEntries);
     }
-}
+}

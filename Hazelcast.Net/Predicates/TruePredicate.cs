@@ -61,4 +61,4 @@ namespace Hazelcast.Predicates
             return "TruePredicate{}";
         }
     }
-}
+}

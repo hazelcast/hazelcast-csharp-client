@@ -32,4 +32,4 @@ namespace Hazelcast.Clustering
         public void Handle(Cluster cluster, PartitionLostEventArgs args)
             => _handler(cluster, args);
     }
-}
+}

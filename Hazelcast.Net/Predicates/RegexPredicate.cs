@@ -83,4 +83,4 @@ namespace Hazelcast.Predicates
             return _attributeName + " REGEX '" + _regex + "'";
         }
     }
-}
+}

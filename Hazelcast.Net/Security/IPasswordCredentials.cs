@@ -24,4 +24,4 @@ namespace Hazelcast.Security
         /// </summary>
         string Password { get; }
     }
-}
+}

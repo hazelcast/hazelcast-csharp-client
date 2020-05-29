@@ -93,4 +93,4 @@ namespace Hazelcast.Serialization
         void WriteChars(string s);
 
     }
-}
+}

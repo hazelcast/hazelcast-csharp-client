@@ -49,4 +49,4 @@ namespace Hazelcast.Serialization
             return string.Equals(Name, other.Name);
         }
     }
-}
+}

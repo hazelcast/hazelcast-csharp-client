@@ -23,4 +23,4 @@ namespace Hazelcast.Serialization
         ICollection<IClassDefinition> GetBuiltinDefinitions();
         int GetFactoryId();
     }
-}
+}

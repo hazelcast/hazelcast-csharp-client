@@ -402,4 +402,4 @@ namespace Hazelcast.Serialization
             return new ByteArrayInputOutputFactory(_endianness);
         }
     }
-}
+}

@@ -23,4 +23,4 @@ namespace Hazelcast.Partitioning.Strategies
         public object GetPartitionKey(object o)
             => null;
     }
-}
+}

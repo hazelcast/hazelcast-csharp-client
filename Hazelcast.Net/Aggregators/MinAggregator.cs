@@ -57,4 +57,4 @@ namespace Hazelcast.Aggregators
             return AggregatorDataSerializerHook.Min;
         }
     }
-}
+}

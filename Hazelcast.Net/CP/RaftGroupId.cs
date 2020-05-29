@@ -63,4 +63,4 @@ namespace Hazelcast.CP
 
         public override string ToString() => $"{nameof(Id)}: {Id}, {nameof(Seed)}: {Seed}, {nameof(Name)}: {Name}";
     }
-}
+}

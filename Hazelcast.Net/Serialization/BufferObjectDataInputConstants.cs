@@ -18,4 +18,4 @@ namespace Hazelcast.Serialization
     {
         public const int UtfBufferSize = 1024;
     }
-}
+}

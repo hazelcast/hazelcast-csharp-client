@@ -25,4 +25,4 @@ namespace Hazelcast.Partitioning.Strategies
         /// <returns>The partition key of the object, or null to fallback to the default strategy.</returns>
         object GetPartitionKey();
     }
-}
+}

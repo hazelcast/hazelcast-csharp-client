@@ -114,4 +114,4 @@ namespace Hazelcast.Data.Map
         /// <returns>version</returns>
         long Version { get; }
     }
-}
+}

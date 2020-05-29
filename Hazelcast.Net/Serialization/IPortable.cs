@@ -58,4 +58,4 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
         void WritePortable(IPortableWriter writer);
     }
-}
+}

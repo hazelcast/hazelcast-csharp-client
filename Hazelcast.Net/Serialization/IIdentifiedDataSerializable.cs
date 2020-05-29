@@ -61,4 +61,4 @@ namespace Hazelcast.Serialization
         /// </remarks>
         int GetId(); // fixme make it a property + rename TypeId
     }
-}
+}

@@ -39,4 +39,4 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         public TValue OldValue => _oldValue == null ? default : _oldValue.Value;
     }
-}
+}

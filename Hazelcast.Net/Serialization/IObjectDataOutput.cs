@@ -98,4 +98,4 @@ namespace Hazelcast.Serialization
         /// <param name="value">The object.</param>
         void WriteObject(object value);
     }
-}
+}

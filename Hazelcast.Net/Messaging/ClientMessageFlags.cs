@@ -59,4 +59,4 @@ namespace Hazelcast.Messaging
         /// </summary>
         BackupEvent   = 0b0000_0000_1000_0000
     }
-}
+}

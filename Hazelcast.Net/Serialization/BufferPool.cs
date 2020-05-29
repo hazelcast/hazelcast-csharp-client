@@ -49,4 +49,4 @@ namespace Hazelcast.Serialization
 
         public void ReturnInputBuffer(IBufferObjectDataInput input) => _inputPool.Return(input);
     }
-}
+}

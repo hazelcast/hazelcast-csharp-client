@@ -32,4 +32,4 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException">in case of failure to write</exception>
         void Write(IObjectDataOutput output, T obj);
     }
-}
+}

@@ -54,4 +54,4 @@ namespace Hazelcast.Networking
         /// <returns>The IP addresses for the specified host.</returns>
         public static IPAddress[] GetHostAddresses(string hostNameOrAddress) => System.Net.Dns.GetHostAddresses(hostNameOrAddress);
     }
-}
+}

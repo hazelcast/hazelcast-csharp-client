@@ -166,4 +166,4 @@ namespace Hazelcast.Messaging
         public override string ToString()
             => $"{{Frame: {Length} bytes, {Flags.ToBetterString()} (0x{Flags:x})}}";
     }
-}
+}

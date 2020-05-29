@@ -486,4 +486,4 @@ namespace Hazelcast.Serialization
             public abstract void Write(IObjectDataOutput output, T obj);
         }
     }
-}
+}

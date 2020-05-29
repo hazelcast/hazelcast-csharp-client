@@ -27,4 +27,4 @@ namespace Hazelcast.DistributedObjects
         Task AddIndexAsync(IndexConfig indexConfig, TimeSpan timeout = default);
         Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken);
     }
-}
+}

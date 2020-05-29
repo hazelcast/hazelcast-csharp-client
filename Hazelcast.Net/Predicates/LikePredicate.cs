@@ -83,4 +83,4 @@ namespace Hazelcast.Predicates
             return AttributeName + " LIKE '" + Expression + "'";
         }
     }
-}
+}

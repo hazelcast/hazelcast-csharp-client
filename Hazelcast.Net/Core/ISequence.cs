@@ -25,4 +25,4 @@ namespace Hazelcast.Core
         /// </summary>
         T Next { get; }
     }
-}
+}

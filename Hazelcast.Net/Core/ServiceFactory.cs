@@ -52,4 +52,4 @@ namespace Hazelcast.Core
                                     _defaultFactory?.Invoke() ??
                                     throw new InvalidOperationException($"Cannot create an instance of {typeof(TService)}.");
     }
-}
+}

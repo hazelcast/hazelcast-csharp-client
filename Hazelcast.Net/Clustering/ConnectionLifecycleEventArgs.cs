@@ -33,4 +33,4 @@ namespace Hazelcast.Clustering
         /// </summary>
         public Client Client { get; }
     }
-}
+}

@@ -26,4 +26,4 @@ namespace Hazelcast.Transactions
         RollingBack,
         RolledBack
     }
-}
+}

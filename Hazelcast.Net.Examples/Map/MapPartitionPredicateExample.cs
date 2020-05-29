@@ -48,7 +48,7 @@ namespace Hazelcast.Examples.Map
 
             //all keys on the same partition of the partitionKey will be returned
             var allPartitionKeys = map.KeySet(new PartitionPredicate(partitionKey, Predicates.Predicates.True()));
-            
+
             //keys less than 100 and on the same partition of the partitionKey will be returned
             var result = map.KeySet(new PartitionPredicate(partitionKey, Predicates.Predicates.IsLessThan("this",100)));
 

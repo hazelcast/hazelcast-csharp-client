@@ -27,4 +27,4 @@ namespace Hazelcast.Serialization
         /// <returns>portable instance or null if class id is not known by this factory</returns>
         IPortable Create(int classId);
     }
-}
+}

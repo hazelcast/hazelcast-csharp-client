@@ -46,4 +46,4 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         public TValue MergeValue => _mergeValue == null ? default : _mergeValue.Value;
     }
-}
+}

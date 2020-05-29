@@ -22,4 +22,4 @@ namespace Hazelcast.DistributedObjects
     // ReSharper disable twice UnusedTypeParameter
     public sealed class MapEventHandlers<TKey, TValue> : EventHandlersBase<IMapEventHandlerBase>
     { }
-}
+}

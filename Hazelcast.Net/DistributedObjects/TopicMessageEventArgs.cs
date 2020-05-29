@@ -66,4 +66,4 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         public T Payload { get; }
     }
-}
+}

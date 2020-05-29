@@ -49,7 +49,7 @@ namespace Hazelcast.Examples.Map
             Console.WriteLine("Map size: " + await map.CountAsync());
 
             var result = await map.ExecuteAsync(
-                new UpdateEntryProcessor("value-UPDATED"), 
+                new UpdateEntryProcessor("value-UPDATED"),
                 Predicates.Predicates.Sql("this==value5"));
 
             Console.WriteLine("Updated value result: " + result[5]);

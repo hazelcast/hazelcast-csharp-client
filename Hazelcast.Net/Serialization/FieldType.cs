@@ -37,4 +37,4 @@ namespace Hazelcast.Serialization
         DoubleArray = 18,
         UtfArray = 19
     }
-}
+}

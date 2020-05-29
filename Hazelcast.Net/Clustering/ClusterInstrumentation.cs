@@ -33,4 +33,4 @@ namespace Hazelcast.Clustering
         public void CountExceptionInEventHandler(Exception exception)
             => Interlocked.Increment(ref _exceptionsInEventHandlersCount);
     }
-}
+}

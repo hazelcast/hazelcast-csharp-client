@@ -37,4 +37,4 @@ namespace Hazelcast.Data.Map
          */
         Raw = 2
     }
-}
+}

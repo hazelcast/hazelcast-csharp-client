@@ -54,4 +54,4 @@ namespace Hazelcast.Serialization
             return string.Format("Type: {0}, Value: {1}", Type, Value);
         }
     }
-}
+}

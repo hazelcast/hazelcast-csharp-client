@@ -52,4 +52,4 @@ namespace Hazelcast.DistributedObjects
         private static TopicMessageEventArgs<T> CreateEventArgs(MemberInfo member, long publishTime, T payload)
             => new TopicMessageEventArgs<T>(member, publishTime, payload);
     }
-}
+}

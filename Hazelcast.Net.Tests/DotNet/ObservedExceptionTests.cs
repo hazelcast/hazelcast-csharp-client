@@ -146,4 +146,4 @@ namespace Hazelcast.Tests.DotNet
             return Task.FromResult(3);
         }
     }
-}
+}

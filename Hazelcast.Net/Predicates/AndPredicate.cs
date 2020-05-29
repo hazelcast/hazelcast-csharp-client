@@ -81,4 +81,4 @@ namespace Hazelcast.Predicates
             return string.Join(" AND ", _predicates.GetEnumerator());
         }
     }
-}
+}

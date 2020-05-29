@@ -36,4 +36,4 @@ namespace Hazelcast.Clustering.LoadBalancing
             return members[index % members.Count];
         }
     }
-}
+}

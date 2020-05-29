@@ -80,4 +80,4 @@ namespace Hazelcast.Predicates
             return string.Join(" OR ", _predicates.GetEnumerator());
         }
     }
-}
+}

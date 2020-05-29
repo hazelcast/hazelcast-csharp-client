@@ -176,4 +176,4 @@ namespace Hazelcast.Predicates
             return PredicateDataSerializerHook.PagingPredicate;
         }
     }
-}
+}

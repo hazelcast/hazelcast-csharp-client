@@ -19,4 +19,4 @@ namespace Hazelcast.DistributedObjects
     public interface ITransactionalObject : IDistributedObject
     {
     }
-}
+}

@@ -34,4 +34,4 @@ namespace Hazelcast.NearCaching
         /// </summary>
         Lfu
     }
-}
+}

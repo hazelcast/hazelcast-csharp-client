@@ -33,4 +33,4 @@ namespace Hazelcast.Clustering.LoadBalancing
             return members[RandomProvider.Random.Next(members.Count)];
         }
     }
-}
+}

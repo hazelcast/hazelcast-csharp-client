@@ -60,7 +60,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Projection { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, IData projection)
         {
             var clientMessage = new ClientMessage();
@@ -85,7 +85,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Projection = DataCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -104,7 +104,7 @@ namespace Hazelcast.Protocol.Codecs
             ListMultiFrameCodec.EncodeContainsNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
@@ -115,6 +115,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
 }

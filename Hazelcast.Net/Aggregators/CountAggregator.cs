@@ -55,4 +55,4 @@ namespace Hazelcast.Aggregators
             return AggregatorDataSerializerHook.Count;
         }
     }
-}
+}

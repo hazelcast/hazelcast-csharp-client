@@ -105,4 +105,4 @@ namespace Hazelcast.Predicates
             return sb.ToString();
         }
     }
-}
+}

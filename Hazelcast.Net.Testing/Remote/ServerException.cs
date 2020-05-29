@@ -144,4 +144,3 @@ namespace Hazelcast.Testing.Remote
   }
 
 }
-

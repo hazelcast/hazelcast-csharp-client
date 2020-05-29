@@ -25,4 +25,4 @@ namespace Hazelcast.Serialization
 
         void Write(byte[] b, int off, int len);
     }
-}
+}

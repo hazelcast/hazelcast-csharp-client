@@ -46,4 +46,4 @@ namespace Hazelcast.Transactions
         /// <exception cref="System.InvalidOperationException">if no there is no active transaction.</exception>
         void RollbackTransaction();
     }
-}
+}

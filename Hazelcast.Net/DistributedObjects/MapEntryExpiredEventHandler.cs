@@ -27,4 +27,4 @@ namespace Hazelcast.DistributedObjects
         protected override MapEntryExpiredEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
             => new MapEntryExpiredEventArgs<TKey, TValue>(member, key, oldValue);
     }
-}
+}

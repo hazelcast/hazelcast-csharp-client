@@ -43,4 +43,4 @@ namespace Hazelcast.Core
         /// <exception cref="InvalidConfigurationException"/>
         string Matches(IEnumerable<string> configPatterns, string itemName);
     }
-}
+}

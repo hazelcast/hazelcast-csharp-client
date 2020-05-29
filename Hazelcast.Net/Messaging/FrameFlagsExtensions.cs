@@ -63,4 +63,4 @@ namespace Hazelcast.Messaging
         public static string ToBetterString(this ClientMessageFlags value)
             => ((FrameFlags) value).ToString();
     }
-}
+}

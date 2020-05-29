@@ -35,4 +35,4 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
         byte[] Write(T obj);
     }
-}
+}

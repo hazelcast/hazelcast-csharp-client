@@ -34,4 +34,4 @@ namespace Hazelcast.Security
             return $"{nameof(UsernamePasswordCredentials)} (username='{Name ?? "<null>"}')";
         }
     }
-}
+}

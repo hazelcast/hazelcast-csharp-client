@@ -26,4 +26,4 @@ namespace Hazelcast.Serialization
 
         Endianness Endianness { get; }
     }
-}
+}

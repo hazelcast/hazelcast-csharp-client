@@ -106,4 +106,4 @@ namespace Hazelcast.NearCaching
             } while (!UpdateStaleSequence(staleSequence, sequence));
         }
     }
-}
+}

@@ -74,4 +74,4 @@ namespace Hazelcast.Predicates
             return "NOT(" + _predicate + ")";
         }
     }
-}
+}

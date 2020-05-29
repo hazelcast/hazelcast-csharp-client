@@ -41,4 +41,4 @@ namespace Hazelcast.DistributedObjects
 
         protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries);
     }
-}
+}

@@ -21,4 +21,4 @@ namespace Hazelcast.Clustering
     /// </summary>
     public sealed class ClusterEventHandlers : EventHandlersBase<IClusterEventHandler>
     { }
-}
+}
