@@ -67,6 +67,7 @@ namespace Hazelcast.Clustering
         private readonly ISerializationService _serializationService;
         private readonly ReconnectMode _reconnectMode;
         private readonly bool _retryOnTargetDisconnected;
+        private readonly Heartbeat _heartbeat;
 
         // events subscriptions
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
@@ -141,6 +142,7 @@ namespace Hazelcast.Clustering
             _addressProvider = new AddressProvider(networkingConfiguration, loggerFactory);
             _reconnectMode = networkingConfiguration.ReconnectMode;
             _retryOnTargetDisconnected = networkingConfiguration.RedoOperation;
+            _heartbeat = new Heartbeat(this, loggerFactory);
 
             // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same
             // it is used by ProxyManager to AddDistributedObjectListener - passing that value
@@ -285,6 +287,15 @@ namespace Hazelcast.Clustering
             catch (OperationCanceledException)
             {
                 // expected
+            }
+
+            try
+            {
+                await _heartbeat.DisposeAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Caught an exception while disposing the heartbeat.");
             }
         }
     }

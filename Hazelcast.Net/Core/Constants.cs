@@ -22,6 +22,33 @@ namespace Hazelcast.Core
     public static class Constants
     {
         /// <summary>
+        /// Defines constants for heartbeat.
+        /// </summary>
+        public static class Heartbeat
+        {
+            private static readonly Lazy<int> IntervalMillisecondsLazy
+                 = new Lazy<int>(() => HazelcastEnvironment.Heartbeat.IntervalMilliseconds ?? 5_000);
+
+            private static readonly Lazy<int> TimeoutMillisecondsLazy
+                = new Lazy<int>(() => HazelcastEnvironment.Heartbeat.TimeoutMilliseconds ?? 60_000);
+
+            /// <summary>
+            /// Gets the interval.
+            /// </summary>
+            public static int IntervalMilliseconds => IntervalMillisecondsLazy.Value;
+
+            /// <summary>
+            /// Gets the timeout.
+            /// </summary>
+            public static int TimeoutMilliseconds => TimeoutMillisecondsLazy.Value;
+
+            /// <summary>
+            /// Gets the ping timeout.
+            /// </summary>
+            public static int PingTimeoutMilliseconds => 10_000;
+        }
+
+        /// <summary>
         /// Defines constants for invocations.
         /// </summary>
         public static class Invocation

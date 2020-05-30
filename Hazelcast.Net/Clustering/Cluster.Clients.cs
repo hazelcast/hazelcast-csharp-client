@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Exceptions;
 
@@ -58,5 +59,12 @@ namespace Hazelcast.Clustering
                 throw new HazelcastException("Could not get a client.");
             return singleClient;
         }
+
+        /// <summary>
+        /// Gets a snapshot of the current clients.
+        /// </summary>
+        /// <returns>A snapshot of the current clients.</returns>
+        internal IList<Client> SnapshotClients()
+            => _clients.Values.ToList();
     }
 }

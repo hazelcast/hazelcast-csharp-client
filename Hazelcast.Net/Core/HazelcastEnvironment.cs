@@ -122,5 +122,33 @@ namespace Hazelcast.Core
             /// </summary>
             public static int? DefaultTimeoutSeconds => GetInt32(DefaultTimeoutSecondsName);
         }
+
+        /// <summary>
+        /// Provides information about the current Hazelcast heartbeat environment.
+        /// </summary>
+        public static class Heartbeat
+        {
+            /// <summary>
+            /// Gets the environment variable name of the heartbeat interval.
+            /// </summary>
+            public const string IntervalMillisecondsName =
+                "hazelcast.client.heartbeat.interval";
+
+            /// <summary>
+            /// Gets the environment variable name of the heartbeat timeout.
+            /// </summary>
+            public const string TimeoutMillisecondsName =
+                "hazelcast.client.heartbeat.timeout";
+
+            /// <summary>
+            /// Gets the heartbeat interval.
+            /// </summary>
+            public static int? IntervalMilliseconds => GetInt32(IntervalMillisecondsName);
+
+            /// <summary>
+            /// Gets the heartbeat timeout.
+            /// </summary>
+            public static int? TimeoutMilliseconds => GetInt32(TimeoutMillisecondsName);
+        }
     }
 }

@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Exceptions;
-using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol;
@@ -111,6 +110,16 @@ namespace Hazelcast.Clustering
         /// Gets the local endpoint of the socket connection.
         /// </summary>
         public IPEndPoint LocalEndPoint => _socketConnection.LocalEndPoint;
+
+        /// <summary>
+        /// Gets the date and time when bytes where last read by the client.
+        /// </summary>
+        public DateTime LastReadTime => _socketConnection?.LastReadTime ?? DateTime.MinValue;
+
+        /// <summary>
+        /// Gets the date and time when bytes where last written by the client.
+        /// </summary>
+        public DateTime LastWriteTime => _socketConnection?.LastWriteTime ?? DateTime.MinValue;
 
         /// <summary>
         /// Gets or sets an action that will be executed when the client receives a message.

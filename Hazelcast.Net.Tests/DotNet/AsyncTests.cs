@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -509,6 +510,82 @@ namespace Hazelcast.Tests.DotNet
             Console.WriteLine($"3{n}: [{t3}] {id3}");
         }
 
+        [Test]
+        public async Task AwaitableSuccess()
+        {
+            static async Task<int> ReturnIntAsync(int value)
+            {
+                await Task.Yield();
+                return value;
+            }
+
+            static Task<(string, TResult)> Execute<TResult>(string thingId, Func<Task<TResult>> function)
+            {
+                return function().ContinueWith(x => (thingId, x.Result));
+            }
+
+            var (thingId, value) = await Execute("a", () => ReturnIntAsync(42));
+
+            Assert.AreEqual("a", thingId);
+            Assert.AreEqual(42, value);
+        }
+
+        [Test]
+        public async Task AwaitableFault()
+        {
+            static async Task<int> ReturnIntAsync(int value)
+            {
+                await Task.Yield();
+                throw new Exception("bang");
+            }
+
+            static Task<(string, TResult)> Execute<TResult>(string thingId, Func<Task<TResult>> function)
+            {
+                return function().ContinueWith(x => (thingId, x.Result), TaskContinuationOptions.ExecuteSynchronously);
+            }
+
+            try
+            {
+                var (thingId, value) = await Execute("a", () => ReturnIntAsync(42));
+                Assert.Fail();
+            }
+            catch (AggregateException ae)
+            {
+                Assert.AreEqual(1, ae.InnerExceptions.Count);
+                var e = ae.InnerExceptions[0];
+                Assert.AreEqual(typeof(Exception), e.GetType());
+                Assert.AreEqual("bang", e.Message);
+            }
+        }
+
+        [Test]
+        public async Task AwaitableCancel()
+        {
+            static async Task<int> ReturnIntAsync(int value, CancellationToken cancellationToken)
+            {
+                await Task.Delay(2_000, cancellationToken);
+                return 42;
+            }
+
+            static Task<(string, TResult)> Execute<TResult>(string thingId, Func<CancellationToken, Task<TResult>> function, CancellationToken cancellationToken)
+            {
+                return function(cancellationToken).ContinueWith(x => (thingId, x.Result), TaskContinuationOptions.ExecuteSynchronously);
+            }
+
+            var cancellation = new CancellationTokenSource(1_000);
+
+            try
+            {
+                var (thingId, value) = await Execute("a", token => ReturnIntAsync(42, token), cancellation.Token);
+            }
+            catch (AggregateException ae)
+            {
+                Assert.AreEqual(1, ae.InnerExceptions.Count);
+                var e = ae.InnerExceptions[0];
+                Assert.AreEqual(typeof (TaskCanceledException), e.GetType());
+            }
+        }
+
         private class Steps
         {
             private readonly ConcurrentQueue<Step> _steps = new ConcurrentQueue<Step>();
@@ -558,6 +635,34 @@ namespace Hazelcast.Tests.DotNet
 
             public override string ToString()
                 => $"[{ManagedThreadId:00}] {Message}";
+        }
+
+        public struct ThingTask<TResult> : ICriticalNotifyCompletion
+        {
+            private readonly string _thingId;
+            private readonly Task<(string, TResult)> _task;
+
+            public ThingTask(string thingId, Task<TResult> task)
+            {
+                // but, exceptions?
+                _task = task.ContinueWith(x => (thingId, x.Result), TaskContinuationOptions.ExecuteSynchronously);
+                _thingId = thingId;
+            }
+
+            // awaitable
+            public TaskAwaiter<(string, TResult)> GetAwaiter() => _task.GetAwaiter();
+
+            // INotifyCompletion
+            public void OnCompleted(Action continuation)
+                => _task.GetAwaiter().OnCompleted(continuation);
+
+            // ICriticalNotifyCompletion
+            public void UnsafeOnCompleted(Action continuation)
+                => _task.GetAwaiter().UnsafeOnCompleted(continuation);
+
+            //public bool IsCompleted => _task.GetAwaiter().IsCompleted;
+
+            //public TResult GetResult() => Task.GetAwaiter().GetResult();
         }
     }
 }

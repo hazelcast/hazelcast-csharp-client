@@ -399,6 +399,12 @@ namespace Hazelcast.Clustering
             }
 
             // shuffle
+            // FIXME shuffling is actually an OPTION
+            // but... these environment thing vs. configuration are really insane
+            // should be configuration.blah.blah
+            // read from environment or config file or... in some sort of order!
+            // see what .net core is doing
+            // _shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? false;
             return addresses.Shuffle();
         }
     }
