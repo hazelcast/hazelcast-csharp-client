@@ -13,11 +13,14 @@
 // limitations under the License.
 
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Hazelcast.Net.Tests")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
+
+[assembly: CLSCompliant(true)]
 
 // NDepend scope can be: deep module namespace type method field
 

@@ -5,6 +5,10 @@
     <RootNamespace>Hazelcast.Testing</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ApacheThrift" Version="0.13.0.1" />
     <PackageReference Include="NuGet.Versioning" Version="5.6.0" />

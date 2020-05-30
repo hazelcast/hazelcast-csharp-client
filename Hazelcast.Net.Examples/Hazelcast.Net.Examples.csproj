@@ -7,6 +7,10 @@
     <AssemblyName>Hazelcast.Examples</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Collections\CollectionListenerExample.cs" />
     <Compile Remove="Collections\ListExample.cs" />
