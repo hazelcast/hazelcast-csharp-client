@@ -67,7 +67,7 @@ namespace Hazelcast.Client.Spi
             var connAttemptLimit = networkConfig.GetConnectionAttemptLimit();
             _connectionAttemptPeriod = networkConfig.GetConnectionAttemptPeriod();
             _connectionAttemptLimit = connAttemptLimit == 0 ? int.MaxValue : connAttemptLimit;
-            _shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? false;
+            _shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? true;
 
             var listenerConfigs = client.GetClientConfig().GetListenerConfigs();
             foreach (var listenerConfig in listenerConfigs)

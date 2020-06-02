@@ -1005,6 +1005,9 @@ If the port part is omitted, then 5701, 5702 and 5703 will be tried in a random 
 
 You can specify multiple addresses with or without the port information as seen above. The provided list is shuffled and tried in a random order. Its default value is `localhost`.
 
+By default the address list will be shuffled to pick the address to connect. You can disable this behaviour by setting the environment variable `hazelcast.client.shuffle.member.list` to `false`. 
+In this case the address list will be tried in the given order. 
+
 ## 5.2. Setting Smart Routing
 
 Smart routing defines whether the client mode is smart or unisocket. See the [.NET Client Operation Modes section](#72-net-client-operation-modes)
