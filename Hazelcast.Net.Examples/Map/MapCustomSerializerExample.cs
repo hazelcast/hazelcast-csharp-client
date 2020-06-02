@@ -25,15 +25,17 @@ namespace Hazelcast.Examples.Map
     {
         public static async Task Run()
         {
-            static void Configure(HazelcastConfiguration configuration)
+            static void Configure(HazelcastOptions configuration)
             {
-                configuration.Serialization.AddSerializerConfig(new SerializerConfig()
-                    .SetImplementation(new CustomSerializer())
-                    .SetTypeClass(typeof(Person)));
+                configuration.Serialization.Serializers.Add(new SerializerOptions
+                {
+                        SerializedType = typeof(Person),
+                        Creator = () => new CustomSerializer()
+                });
             }
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
             await hz.OpenAsync();
 
             var mapCustomers = await hz.GetMapAsync<string, Person>("persons");

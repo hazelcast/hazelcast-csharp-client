@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Xml;
-using Hazelcast.Core;
-
 namespace Hazelcast.Networking
 {
     /// <summary>
@@ -48,38 +45,18 @@ namespace Hazelcast.Networking
         public bool TcpNoDelay { get; set; }
 
         /// <summary>
-        /// Parses configuration from an Xml document.
+        /// Clones the options.
         /// </summary>
-        /// <param name="node">The Xml node.</param>
-        /// <returns>The configuration.</returns>
-        public static SocketOptions Parse(XmlNode node)
+        public SocketOptions Clone()
         {
-            var options = new SocketOptions();
-
-            foreach (XmlNode child in node.ChildNodes)
+            return new SocketOptions
             {
-                var nodeName = child.GetCleanName();
-                switch (nodeName)
-                {
-                    case "tcp-no-delay":
-                        options.TcpNoDelay = child.GetBoolContent();
-                        break;
-                    case "keep-alive":
-                        options.KeepAlive = child.GetBoolContent();
-                        break;
-                    case "reuse-address":
-                        options.ReuseAddress = child.GetBoolContent();
-                        break;
-                    case "linger-seconds":
-                        options.LingerSeconds = child.GetInt32Content();
-                        break;
-                    case "buffer-size":
-                        options.BufferSize = child.GetInt32Content();
-                        break;
-                }
-            }
-
-            return options;
+                BufferSize = BufferSize,
+                KeepAlive = KeepAlive,
+                LingerSeconds = LingerSeconds,
+                ReuseAddress = ReuseAddress,
+                TcpNoDelay = TcpNoDelay
+            };
         }
     }
 }

@@ -165,10 +165,11 @@ namespace Hazelcast.Tests
             await server.StartAsync().CAF();
 
             HzConsole.WriteLine(this, "Start client");
-            var client = (HazelcastClient)new HazelcastClientFactory(configuration =>
+            var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                configuration.Networking.Addresses.Add("127.0.0.1:11001");
-            }).CreateClient();
+                options.Networking.Addresses.Add("127.0.0.1:11001");
+            });
+            var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
             await client.OpenAsync().CAF();
 
@@ -216,10 +217,11 @@ namespace Hazelcast.Tests
             await server.StartAsync().CAF();
 
             HzConsole.WriteLine(this, "Start client");
-            var client = (HazelcastClient) new HazelcastClientFactory(configuration =>
+            var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                configuration.Networking.Addresses.Add("127.0.0.1:11001");
-            }).CreateClient();
+                options.Networking.Addresses.Add("127.0.0.1:11001");
+            });
+            var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
             await client.OpenAsync().CAF();
 
@@ -260,10 +262,11 @@ namespace Hazelcast.Tests
             await server.StartAsync().CAF();
 
             HzConsole.WriteLine(this, "Start client");
-            var client = (HazelcastClient)new HazelcastClientFactory(configuration =>
+            var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                configuration.Networking.Addresses.Add("127.0.0.1:11001");
-            }).CreateClient();
+                options.Networking.Addresses.Add("127.0.0.1:11001");
+            });
+            var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
             await client.OpenAsync().CAF();
 
@@ -297,10 +300,11 @@ namespace Hazelcast.Tests
             var server = new Server(address, ReceiveMessage, LoggerFactory);
             await server.StartAsync().CAF();
 
-            var clientFactory = new HazelcastClientFactory(configuration =>
+            var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
             {
-                configuration.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add("127.0.0.1:11001");
             });
+            var clientFactory = new HazelcastClientFactory(options);
 
             HzConsole.WriteLine(this, "Start client 1");
             var client1 = (HazelcastClient) clientFactory.CreateClient();
@@ -314,7 +318,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Got response: " + GetText(response));
 
             HzConsole.WriteLine(this, "Start client 2");
-            var client2 = (HazelcastClient)clientFactory.CreateClient();
+            var client2 = (HazelcastClient) clientFactory.CreateClient();
             AddDisposable(client2);
             await client2.OpenAsync().CAF();
 
@@ -355,10 +359,11 @@ namespace Hazelcast.Tests
             AddDisposable(server);
             await server.StartAsync().CAF();
 
-            var clientFactory = new HazelcastClientFactory(configuration =>
+            var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
             {
-                configuration.Networking.Addresses.Add("127.0.0.1:11000");
+                options.Networking.Addresses.Add("127.0.0.1:11000");
             });
+            var clientFactory = new HazelcastClientFactory(options);
 
             HzConsole.WriteLine(this, "Start client 1");
             var client1 = (HazelcastClient)clientFactory.CreateClient();
@@ -441,7 +446,7 @@ namespace Hazelcast.Tests
                 .SetVersion(1)
                 .Build();
 
-            var configuration = new HazelcastConfiguration();
+            var configuration = new HazelcastOptions();
 
             configuration.Networking.Addresses.Add("sgay-l4");
             configuration.Security.Authenticator.Creator = ()

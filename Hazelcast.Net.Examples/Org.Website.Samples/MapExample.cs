@@ -22,7 +22,7 @@ namespace Hazelcast.Examples.Org.Website.Samples
         public static async Task Run()
         {
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient();
+            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient();
             await hz.OpenAsync();
 
             // get distributed map from cluster

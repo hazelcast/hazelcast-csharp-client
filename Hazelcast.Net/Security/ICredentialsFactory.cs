@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 
 namespace Hazelcast.Security
 {
@@ -22,17 +21,6 @@ namespace Hazelcast.Security
     /// </summary>
     public interface ICredentialsFactory : IDisposable
     {
-        /// <summary>
-        /// Initializes the factory.
-        /// </summary>
-        /// <remarks>
-        /// This method is only invoked when the factory instance is created by Hazelcast from a class
-        /// type provided in configuration. It is *not* invoked when an <see cref="ICredentialsFactory"/>
-        /// instance is provided.
-        /// </remarks>
-        /// <param name="properties">Factory properties defined in configuration.</param>
-        void Initialize(IDictionary<string, string> properties);
-
         /// <summary>
         /// Creates and returns a new <see cref="ICredentials"/> object.
         /// </summary>

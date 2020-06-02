@@ -27,8 +27,8 @@ namespace Hazelcast.NearCaching
     {
         private RepairingHandler _repairingHandler;
 
-        public NearCache(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheConfiguration nearCacheConfiguration)
-            : base(name, cluster, serializationService, loggerFactory, nearCacheConfiguration)
+        public NearCache(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheNamedOptions nearCacheNamedOptions)
+            : base(name, cluster, serializationService, loggerFactory, nearCacheNamedOptions)
         { }
 
         // FIXME: why is this public?

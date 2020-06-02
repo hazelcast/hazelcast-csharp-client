@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Core;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Configuration;
 
-namespace Hazelcast.Logging
+namespace Hazelcast.Configuration
 {
     /// <summary>
-    /// Represents the logging configuration.
+    /// Represents Hazelcast environment variables arguments as an <see cref="IConfigurationSource"/>.
     /// </summary>
-    public class LoggingConfiguration
+    internal class HazelcastEnvironmentVariablesConfigurationSource : IConfigurationSource
     {
-        /// <summary>
-        /// Gets the service factory for <see cref="ILoggerFactory"/>.
-        /// </summary>
-        public ServiceFactory<ILoggerFactory> LoggerFactory { get; } = new ServiceFactory<ILoggerFactory>(() => new NullLoggerFactory());
+        /// <inheritdoc />
+        public IConfigurationProvider Build(IConfigurationBuilder builder)
+        {
+            return new HazelcastEnvironmentVariablesConfigurationProvider();
+        }
     }
 }

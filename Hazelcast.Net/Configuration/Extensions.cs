@@ -26,39 +26,39 @@ namespace Hazelcast.Configuration
         /// <summary>
         /// Configures security.
         /// </summary>
-        /// <param name="configuration">The client configuration.</param>
-        /// <param name="configure">The delegate for configuring the <see cref="SecurityConfiguration"/>.</param>
+        /// <param name="options">The client configuration.</param>
+        /// <param name="configure">The delegate for configuring the <see cref="SecurityOptions"/>.</param>
         /// <returns>The client configuration.</returns>
-        public static HazelcastConfiguration ConfigureSecurity(this HazelcastConfiguration configuration, Action<SecurityConfiguration> configure)
+        public static HazelcastOptions ConfigureSecurity(this HazelcastOptions options, Action<SecurityOptions> configure)
         {
-            configure(configuration.Security);
-            return configuration;
+            configure(options.Security);
+            return options;
         }
 
         /// <summary>
         /// Configures Kerberos as the authentication mechanism.
         /// </summary>
-        /// <param name="configuration">The configuration.</param>
+        /// <param name="options">The configuration.</param>
         /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
         /// <returns>The configuration.</returns>
-        public static SecurityConfiguration ConfigureKerberosCredentials(this SecurityConfiguration configuration, string spn)
+        public static SecurityOptions ConfigureKerberosCredentials(this SecurityOptions options, string spn)
         {
-            configuration.CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);
-            return configuration;
+            options.CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);
+            return options;
         }
 
         /// <summary>
         /// Configures a user name and password as the authentication mechanism.
         /// </summary>
-        /// <param name="configuration">The security configuration.</param>
+        /// <param name="options">The security configuration.</param>
         /// <param name="username">Username.</param>
         /// <param name="password">Password.</param>
         /// <returns>The security configuration.</returns>
-        private static SecurityConfiguration ConfigurePasswordCredentials(this SecurityConfiguration configuration, string username, string password)
+        private static SecurityOptions ConfigurePasswordCredentials(this SecurityOptions options, string username, string password)
         {
             var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
-            configuration.CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
-            return configuration;
+            options.CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
+            return options;
         }
 
         /// <summary>
@@ -67,10 +67,10 @@ namespace Hazelcast.Configuration
         /// <param name="config">The security configuration.</param>
         /// <param name="credentials">Credentials.</param>
         /// <returns>The security configuration.</returns>
-        private static SecurityConfiguration ConfigureCredentials(this SecurityConfiguration configuration, ICredentials credentials)
+        private static SecurityOptions ConfigureCredentials(this SecurityOptions options, ICredentials credentials)
         {
-            configuration.CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
-            return configuration;
+            options.CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
+            return options;
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Hazelcast.Configuration
         /// <param name="config">The security configuration.</param>
         /// <param name="token">A token.</param>
         /// <returns>The security configuration.</returns>
-        private static SecurityConfiguration ConfigureTokenCredentials(this SecurityConfiguration config, byte[] token)
+        private static SecurityOptions ConfigureTokenCredentials(this SecurityOptions config, byte[] token)
         {
             return config.ConfigureCredentials(new TokenCredentials(token));
         }

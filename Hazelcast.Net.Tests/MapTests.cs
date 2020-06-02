@@ -44,9 +44,9 @@ namespace Hazelcast.Tests
             });
         }
 
-        private async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastConfiguration> configure)
+        private async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastOptions> configure)
         {
-            var client = new HazelcastClientFactory().CreateClient(configure);
+            var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(configure);
             try
             {
                 AddDisposable(client);
@@ -421,7 +421,7 @@ namespace Hazelcast.Tests
 
             var eventsCount = 0;
 
-            void ConfigureClient(HazelcastConfiguration config)
+            void ConfigureClient(HazelcastOptions config)
             {
                 config.Networking.Addresses.Add("sgay-l4");
 

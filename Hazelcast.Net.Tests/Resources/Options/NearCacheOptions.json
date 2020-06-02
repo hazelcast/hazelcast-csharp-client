@@ -1,0 +1,33 @@
+{
+  "hazelcast": {
+
+    "nearCache": {
+
+      // the 'default' NearCache configuration
+      "default": {
+
+        "name": "defaultName",
+        "evictionPolicy": "lru",
+        "inMemoryFormat": "binary",
+        "maxIdleSeconds": 666,
+        "maxSize": 667,
+        "TimeToLiveSeconds": 668,
+        "invalidateOnChange": true
+      },
+
+      // another NearCache configuration, named 'other'
+      "other": {
+
+        "name": "otherName",
+        "evictionPolicy": "lfu",
+        "inMemoryFormat": "object",
+        "maxIdleSeconds": 166,
+        "maxSize": 167,
+        "TimeToLiveSeconds": 168,
+        "invalidateOnChange": false
+      }
+
+    }
+
+  }
+}

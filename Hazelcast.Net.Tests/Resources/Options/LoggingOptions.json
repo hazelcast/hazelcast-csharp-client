@@ -1,0 +1,11 @@
+{
+  "hazelcast": {
+
+    "logging": {
+
+      // there are no logging options at the moment
+
+    }
+
+  }
+}

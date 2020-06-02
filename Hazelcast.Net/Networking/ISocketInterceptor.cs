@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-
 namespace Hazelcast.Networking
 {
     // TODO: what is this?
     // it can be configured but is never used?!
     public interface ISocketInterceptor
-    {
-        void Initialize(Dictionary<string, string> properties);
-    }
+    { }
 }

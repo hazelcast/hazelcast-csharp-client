@@ -19,7 +19,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents a <see cref="RetryStrategy"/> configuration.
     /// </summary>
-    public class RetryConfiguration
+    public class RetryOptions
     {
         /// <summary>
         /// Gets or sets the back-off time in milliseconds.
@@ -45,5 +45,20 @@ namespace Hazelcast.Core
         /// Gets or sets the jitter.
         /// </summary>
         public double Jitter { get; set; } = 0;
+
+        /// <summary>
+        /// Clones the options.
+        /// </summary>
+        public RetryOptions Clone()
+        {
+            return new RetryOptions
+            {
+                InitialBackoffMilliseconds = InitialBackoffMilliseconds,
+                MaxBackoffMilliseconds = MaxBackoffMilliseconds,
+                Multiplier = Multiplier,
+                ClusterConnectionTimeoutMilliseconds = ClusterConnectionTimeoutMilliseconds,
+                Jitter = Jitter
+            };
+        }
     }
 }

@@ -19,22 +19,18 @@ using Hazelcast.Examples.Models;
 namespace Hazelcast.Examples.Map
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapEntryProcessorExample
+    public class MapEntryProcessorExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(params string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
-
-            static void Configure(HazelcastConfiguration configuration)
-            {
-                configuration.Serialization.AddDataSerializableFactory(
-                    EntryProcessorDataSerializableFactory.FactoryId,
-                    new EntryProcessorDataSerializableFactory());
-            }
+            var options = BuildExampleOptions(args);
+            
+            options.Serialization.AddDataSerializableFactory(
+                EntryProcessorDataSerializableFactory.FactoryId,
+                new EntryProcessorDataSerializableFactory());
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
 
             var map = await hz.GetMapAsync<int, string>("entry-processor-example");

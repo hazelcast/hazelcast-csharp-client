@@ -18,35 +18,27 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.Ssl
 {
     // ReSharper disable once UnusedMember.Global
-    public class ClientSslExample
+    public class ClientSslExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(params string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            var options = BuildExampleOptions(args);
 
-            static void Configure(HazelcastConfiguration configuration)
-            {
-                // replace with actual server host/ip and port
-                configuration.Networking.Addresses.Add("127.0.0.1:5701");
+            // server certificate will be validated by OS,
+            // signed certificates will just work,
+            // self-signed certificates should be registered and allowed
+            options.Networking.Ssl.IsEnabled = true;
 
-                // server certificate will be validated by OS,
-                // signed certificates will just work,
-                // self-signed certificates should be registered and allowed
-                configuration.Networking.Ssl.IsEnabled = true;
+            // disable certificate validation
+            //options.Networking.Ssl.ValidateCertificateChain = false;
 
-                // disable certificate validation
-                //configuration.Networking.Ssl.ValidateCertificateChain = false;
-
-                // validate the server certificate name
-                //configuration.Networking.Ssl.ValidateCertificateName = true;
-                //configuration.Networking.Ssl.CertificateName = "CERTIFICATE CN OR SAN VALUE HERE";
-            }
+            // validate the server certificate name
+            //options.Networking.Ssl.ValidateCertificateName = true;
+            //options.Networking.Ssl.CertificateName = "CERTIFICATE CN OR SAN VALUE HERE";
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
-
 
             // use a map
             var map = await hz.GetMapAsync<string, string>("ssl-example");

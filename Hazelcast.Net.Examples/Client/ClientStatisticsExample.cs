@@ -30,9 +30,9 @@ namespace Hazelcast.Examples.Client
             Environment.SetEnvironmentVariable("hazelcast.client.statistics.enabled", "true");
             Environment.SetEnvironmentVariable("hazelcast.client.statistics.period.seconds", "3");
 
-            static void Configure(HazelcastConfiguration configuration)
+            static void Configure(HazelcastOptions configuration)
             {
-                configuration.NearCache.Configurations["myMap"] = new NearCacheConfiguration
+                configuration.NearCache["myMap"] = new NearCacheNamedOptions
                 {
                     MaxSize = 1000,
                     InvalidateOnChange = true,
@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.Client
             }
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
             await hz.OpenAsync();
 
             // get a map

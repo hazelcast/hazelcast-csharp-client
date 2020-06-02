@@ -1,0 +1,23 @@
+{
+  "hazelcast": {
+
+    "cluster": {
+
+      // the name of the cluster
+      "name": "testClusterName",
+
+      // whether to shuffle the member list when trying to connect
+      "shuffleMemberList": false,
+
+      // event subscribers
+      "eventSubscribers": [
+
+        // add an event subscriber
+        "Hazelcast.Tests.ConfigurationTests+TestSubscriber, Hazelcast.Net.Tests"
+
+      ]
+
+    }
+
+  }
+}

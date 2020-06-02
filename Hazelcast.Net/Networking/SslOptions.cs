@@ -12,20 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Text;
-using System.Xml;
-using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
 namespace Hazelcast.Networking
 {
     /// <summary>
-    /// Represents the SSL configuration.
+    /// Represents the SSL options.
     /// </summary>
-    public class SslConfiguration
+    public class SslOptions
     {
         private SslProtocols _sslProtocol = SslProtocols.Tls12;
 
@@ -101,58 +97,21 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
-        /// Parses configuration from an Xml document.
+        /// Clones the options.
         /// </summary>
-        /// <param name="node">The Xml node.</param>
-        /// <returns>The configuration.</returns>
-        public static SslConfiguration Parse(XmlNode node)
+        public SslOptions Clone()
         {
-            var configuration = new SslConfiguration();
-
-            var atts = node.Attributes;
-            var enabledNode = atts.GetNamedItem("enabled");
-            var enabled = enabledNode != null && enabledNode.GetTrueFalseContent();
-            configuration.IsEnabled = enabled;
-            foreach (XmlNode n in node.ChildNodes)
+            return new SslOptions
             {
-                var nodeName = n.GetCleanName();
-                if ("properties".Equals(nodeName))
-                {
-                    var properties = new Dictionary<string, string>();
-                    n.FillProperties(properties);
-
-                    if (properties.TryGetValue(HazelcastProperties.CertificateName, out var certificateName))
-                    {
-                        configuration.CertificateName = certificateName;
-                    }
-                    if (properties.TryGetValue(HazelcastProperties.ValidateCertificateChain, out var validateCertificateChain))
-                    {
-                        configuration.ValidateCertificateChain = Convert.ToBoolean(validateCertificateChain);
-                    }
-                    if (properties.TryGetValue(HazelcastProperties.ValidateCertificateName, out var validateCertificateName))
-                    {
-                        configuration.ValidateCertificateName = Convert.ToBoolean(validateCertificateName);
-                    }
-                    if (properties.TryGetValue(HazelcastProperties.CheckCertificateRevocation, out var checkCertificateRevocation))
-                    {
-                        configuration.CheckCertificateRevocation = Convert.ToBoolean(checkCertificateRevocation);
-                    }
-                    if (properties.TryGetValue(HazelcastProperties.CertificateFilePath, out var certificateFilePath))
-                    {
-                        configuration.CertificatePath = certificateFilePath;
-                    }
-                    if (properties.TryGetValue(HazelcastProperties.CertificatePassword, out var certificatePassword))
-                    {
-                        configuration.CertificatePassword = certificatePassword;
-                    }
-                    if (properties.TryGetValue(HazelcastProperties.SslProtocol, out var sslProtocol))
-                    {
-                        configuration.SslProtocol = (SslProtocols) Enum.Parse(typeof(SslProtocols), sslProtocol, true);
-                    }
-                }
-            }
-
-            return configuration;
+                IsEnabled = IsEnabled,
+                ValidateCertificateChain = ValidateCertificateChain,
+                ValidateCertificateName = ValidateCertificateName,
+                CheckCertificateRevocation = CheckCertificateRevocation,
+                CertificateName = CertificateName,
+                CertificatePath = CertificatePath,
+                CertificatePassword = CertificatePassword,
+                _sslProtocol = _sslProtocol
+            };
         }
     }
 }

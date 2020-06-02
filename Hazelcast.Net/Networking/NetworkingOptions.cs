@@ -19,9 +19,9 @@ using Hazelcast.Core;
 namespace Hazelcast.Networking
 {
     /// <summary>
-    /// Represents the networking configuration.
+    /// Represents the networking options.
     /// </summary>
-    public class NetworkingConfiguration
+    public class NetworkingOptions
     {
         /// <summary>
         /// Gets or sets the list initial addresses.
@@ -72,83 +72,54 @@ namespace Hazelcast.Networking
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.ReconnectSync;
 
         /// <summary>
-        /// Gets or sets the SSL configuration.
+        /// Gets or sets the SSL options.
         /// </summary>
-        public SslConfiguration Ssl { get; set;  } = new SslConfiguration();
+        public SslOptions Ssl { get; private set;  } = new SslOptions();
 
         /// <summary>
-        /// Gets or sets the cloud configuration.
+        /// Gets or sets the cloud options.
         /// </summary>
-        public CloudConfiguration Cloud { get; set;  } = new CloudConfiguration();
+        public CloudOptions Cloud { get; private set;  } = new CloudOptions();
 
         /// <summary>
         /// Gets or sets the socket options.
         /// </summary>
-        public SocketOptions SocketOptions { get; set;  } = new SocketOptions();
+        public SocketOptions Socket { get; private set;  } = new SocketOptions();
 
         /// <summary>
         /// FIXME what is this + why strings?
         /// </summary>
-        public ISet<string> OutboundPorts { get; } = new HashSet<string>();
+        public ISet<string> OutboundPorts { get; private set; } = new HashSet<string>();
 
         /// <summary>
-        /// Gets or sets the socket interceptor configuration.
+        /// Gets or sets the socket interceptor options.
         /// </summary>
-        public SocketInterceptorConfiguration SocketInterceptor { get; set;  } = new SocketInterceptorConfiguration();
+        public SocketInterceptorOptions SocketInterceptor { get; private set;  } = new SocketInterceptorOptions();
 
         /// <summary>
-        /// Gets the connection retry configuration.
+        /// Gets the connection retry options.
         /// </summary>
-        public RetryConfiguration ConnectionRetry { get; } = new RetryConfiguration();
+        public RetryOptions ConnectionRetry { get; private set; } = new RetryOptions();
 
         /// <summary>
-        /// Parses configuration from an Xml document.
+        /// Clones the options.
         /// </summary>
-        /// <param name="node">The Xml node.</param>
-        /// <returns>The configuration.</returns>
-        public static NetworkingConfiguration Parse(XmlNode node)
+        public NetworkingOptions Clone()
         {
-            var configuration = new NetworkingConfiguration();
-
-            foreach (XmlNode child in node.ChildNodes)
+            return new NetworkingOptions
             {
-                var nodeName = child.GetCleanName();
-                switch (nodeName)
-                {
-                    case "cluster-members":
-                        foreach (XmlNode child2 in child.ChildNodes)
-                        {
-                            if ("address".Equals(child2.GetCleanName()))
-                            {
-                                configuration.Addresses.Add(child2.GetTextContent());
-                            }
-                        }
-                        break;
-                    case "smart-routing":
-                        configuration.SmartRouting = child.GetBoolContent();
-                        break;
-                    case "redo-operation":
-                        configuration.RedoOperation = child.GetBoolContent();
-                        break;
-                    case "connection-timeout":
-                        configuration.ConnectionTimeoutMilliseconds = child.GetInt32Content();
-                        break;
-                    case "socket-options":
-                        configuration.SocketOptions = SocketOptions.Parse(child);
-                        break;
-                    case "ssl":
-                        configuration.Ssl = SslConfiguration.Parse(child);
-                        break;
-                    case "hazelcast-cloud":
-                        configuration.Cloud = CloudConfiguration.Parse(child);
-                        break;
-                    case "socket-interceptor":
-                        configuration.SocketInterceptor = SocketInterceptorConfiguration.Parse(child);
-                        break;
-                }
-            }
-
-            return configuration;
+                Addresses = new List<string>(Addresses),
+                SmartRouting = SmartRouting,
+                RedoOperation = RedoOperation,
+                ConnectionTimeoutMilliseconds = ConnectionTimeoutMilliseconds,
+                ReconnectMode = ReconnectMode,
+                Ssl = Ssl.Clone(),
+                Cloud = Cloud.Clone(),
+                Socket = Socket.Clone(),
+                OutboundPorts = new HashSet<string>(OutboundPorts),
+                SocketInterceptor = SocketInterceptor.Clone(),
+                ConnectionRetry = ConnectionRetry.Clone()
+            };
         }
     }
 }

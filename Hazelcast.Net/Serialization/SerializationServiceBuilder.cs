@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
 using Microsoft.Extensions.Logging;
 
@@ -51,7 +52,7 @@ namespace Hazelcast.Serialization
 
         private readonly SerializerHooks _hooks;
 
-        private SerializationConfiguration _configuration;
+        private SerializationOptions _options;
 
         // PM.DI
         //private IHazelcastInstance _hazelcastInstance;
@@ -104,16 +105,17 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationServiceBuilder SetConfig(SerializationConfiguration configuration)
+        public ISerializationServiceBuilder SetConfig(SerializationOptions options)
         {
-            _configuration = configuration;
+            _options = options;
             if (_portableVersion < 0)
             {
-                _portableVersion = configuration.GetPortableVersion();
+                _portableVersion = options.PortableVersion;
             }
-            _checkClassDefErrors = configuration.IsCheckClassDefErrors();
-            _useNativeByteOrder = configuration.IsUseNativeByteOrder();
-            _endianness = configuration.Endianness;
+
+            _checkClassDefErrors = options.CheckClassDefinitionErrors;
+            _useNativeByteOrder = options.Endianness == Endianness.Native;
+            _endianness = options.Endianness;
             return this;
         }
 
@@ -179,15 +181,13 @@ namespace Hazelcast.Serialization
         public ISerializationService Build() // FIXME can we kill this "builder"?
         {
             if (_portableVersion < 0)
-            {
                 _portableVersion = 0;
-            }
 
-            if (_configuration != null)
+            if (_options != null)
             {
-                AddConfigDataSerializableFactories(_dataSerializableFactories, _configuration);
-                AddConfigPortableFactories(_portableFactories, _configuration);
-                _classDefinitions = _classDefinitions.Union(_configuration.GetClassDefinitions()).ToList();
+                AddConfigDataSerializableFactories(_dataSerializableFactories, _options);
+                AddConfigPortableFactories(_portableFactories, _options);
+                _classDefinitions = _classDefinitions.Union(_options.ClassDefinitions).ToList();
             }
 
             //TODO: Add support for multiple versions
@@ -203,192 +203,45 @@ namespace Hazelcast.Serialization
                 _initialOutputBufferSize,
                 _loggerFactory);
 
-            if (_configuration != null)
+            if (_options != null)
             {
-                if (_configuration.GetGlobalSerializerConfig() != null)
-                {
-                    var globalSerializerConfig = _configuration.GetGlobalSerializerConfig();
-                    var serializer = globalSerializerConfig.GetImplementation();
-                    if (serializer == null)
-                    {
-                        try
-                        {
-                            var className = globalSerializerConfig.GetClassName();
-                            var type = Type.GetType(className);
-                            if (type != null)
-                            {
-                                serializer = Activator.CreateInstance(type) as ISerializer;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            throw new HazelcastSerializationException(e);
-                        }
-                    }
-                    // PM.DI
-                    //var aware = serializer as IHazelcastInstanceAware;
-                    //if (aware != null)
-                    //{
-                    //    aware.SetHazelcastInstance(_hazelcastInstance);
-                    //}
-                    ss.RegisterGlobal(serializer, globalSerializerConfig.GetOverrideClrSerialization());
-                }
-                var typeSerializers = _configuration.GetSerializerConfigs();
-                foreach (var serializerConfig in typeSerializers)
-                {
-                    var serializer = serializerConfig.GetImplementation();
-                    if (serializer == null)
-                    {
-                        try
-                        {
-                            var className = serializerConfig.GetClassName();
-                            var type = Type.GetType(className);
-                            if (type != null)
-                            {
-                                serializer = Activator.CreateInstance(type) as ISerializer;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            throw new HazelcastSerializationException(e);
-                        }
-                    }
-                    // PM.DI
-                    //if (serializer is IHazelcastInstanceAware)
-                    //{
-                    //    ((IHazelcastInstanceAware) serializer).SetHazelcastInstance(_hazelcastInstance);
-                    //}
-                    var typeClass = serializerConfig.GetTypeClass();
-                    if (typeClass == null)
-                    {
-                        try
-                        {
-                            var className = serializerConfig.GetTypeClassName();
-                            typeClass = Type.GetType(className);
-                        }
-                        catch (TypeLoadException e)
-                        {
-                            throw new HazelcastSerializationException(e);
-                        }
-                    }
-                    ss.Register(typeClass, serializer);
-                }
+                var globalSerializer = _options.DefaultSerializer;
+                if (globalSerializer != null)
+                    ss.RegisterGlobal(globalSerializer.Create(), globalSerializer.OverrideClr);
+
+                foreach (var serializer in _options.Serializers)
+                    ss.Register(serializer.SerializedType, serializer.Create());
             }
             return ss;
         }
 
 
-        private void AddConfigDataSerializableFactories(
-            IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationConfiguration configuration)
+        private static void AddConfigDataSerializableFactories(IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationOptions options)
         {
-            foreach (var entry in configuration.GetDataSerializableFactories())
+            foreach (var factoryOptions in options.DataSerializableFactories)
             {
-                var factoryId = entry.Key;
-                var factory = entry.Value;
-                if (factoryId <= 0)
-                {
-                    throw new ArgumentException("IDataSerializableFactory factoryId must be positive! -> " + factory);
-                }
-                if (dataSerializableFactories.ContainsKey(factoryId))
-                {
-                    throw new ArgumentException("IDataSerializableFactory with factoryId '" + factoryId +
-                                                "' is already registered!");
-                }
-                dataSerializableFactories.Add(factoryId, factory);
+                if (factoryOptions.Id <= 0)
+                    throw new ArgumentException($"IDataSerializableFactory factoryId must be positive.");
+
+                if (dataSerializableFactories.ContainsKey(factoryOptions.Id))
+                    throw new ArgumentException($"IDataSerializableFactory with factoryId {factoryOptions.Id} is already registered.");
+
+                dataSerializableFactories.Add(factoryOptions.Id, factoryOptions.Create());
             }
-            foreach (var entry in configuration.GetDataSerializableFactoryClasses())
-            {
-                var factoryId = entry.Key;
-                var factoryClassName = entry.Value;
-                if (factoryId <= 0)
-                {
-                    throw new ArgumentException("IDataSerializableFactory factoryId must be positive! -> " +
-                                                factoryClassName);
-                }
-                if (dataSerializableFactories.ContainsKey(factoryId))
-                {
-                    throw new ArgumentException("IDataSerializableFactory with factoryId '" + factoryId +
-                                                "' is already registered!");
-                }
-                IDataSerializableFactory factory = null;
-                try
-                {
-                    var type = Type.GetType(factoryClassName);
-                    if (type != null)
-                    {
-                        factory = Activator.CreateInstance(type) as IDataSerializableFactory;
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw new HazelcastSerializationException(e);
-                }
-                dataSerializableFactories.Add(factoryId, factory);
-            }
-            // PM.DI
-            //foreach (var f in dataSerializableFactories.Values)
-            //{
-            //    var aware = f as IHazelcastInstanceAware;
-            //    if (aware != null)
-            //    {
-            //        aware.SetHazelcastInstance(_hazelcastInstance);
-            //    }
-            //}
         }
 
-        private void AddConfigPortableFactories(IDictionary<int, IPortableFactory> portableFactories,
-            SerializationConfiguration configuration)
+        private static void AddConfigPortableFactories(IDictionary<int, IPortableFactory> portableFactories, SerializationOptions options)
         {
-            foreach (var entry in configuration.GetPortableFactories())
+            foreach (var factoryOptions in options.PortableFactories)
             {
-                var factoryId = entry.Key;
-                var factory = entry.Value;
-                if (factoryId <= 0)
-                {
-                    throw new ArgumentException("IPortableFactory factoryId must be positive! -> " + factory);
-                }
-                if (portableFactories.ContainsKey(factoryId))
-                {
-                    throw new ArgumentException("IPortableFactory with factoryId '" + factoryId +
-                                                "' is already registered!");
-                }
-                portableFactories.Add(factoryId, factory);
-            }
-            foreach (var entry in configuration.GetPortableFactoryClasses())
-            {
-                var factoryId = entry.Key;
-                var factoryClassName = entry.Value;
-                if (factoryId <= 0)
-                {
-                    throw new ArgumentException("IPortableFactory factoryId must be positive! -> " + factoryClassName);
-                }
-                if (portableFactories.ContainsKey(factoryId))
-                {
-                    throw new ArgumentException("IPortableFactory with factoryId '" + factoryId +
-                                                "' is already registered!");
-                }
+                if (factoryOptions.Id <= 0)
+                    throw new ArgumentException($"IPortableFactory factoryId must be positive.");
 
-                var type = Type.GetType(factoryClassName);
-                if (type == null)
-                {
-                    throw new HazelcastSerializationException("Unable to find type " + factoryClassName);
-                }
-                if (!typeof (IPortableFactory).IsAssignableFrom(type))
-                {
-                    throw new HazelcastSerializationException("Type " + type + " does not implement IPortableFactory");
-                }
-                var factory = Activator.CreateInstance(type) as IPortableFactory;
-                portableFactories.Add(factoryId, factory);
-            }
+                if (portableFactories.ContainsKey(factoryOptions.Id))
+                    throw new ArgumentException($"IPortableFactory with factoryId {factoryOptions.Id} is already registered.");
 
-            // PM.DI
-            //foreach (var f in portableFactories.Values)
-            //{
-            //    if (f is IHazelcastInstanceAware)
-            //    {
-            //        ((IHazelcastInstanceAware) f).SetHazelcastInstance(_hazelcastInstance);
-            //    }
-            //}
+                portableFactories.Add(factoryOptions.Id, factoryOptions.Create());
+            }
         }
 
         private IInputOutputFactory CreateInputOutputFactory()

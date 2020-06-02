@@ -25,6 +25,13 @@ namespace Hazelcast.Clustering.LoadBalancing
     /// </remarks>
     public class RandomLoadBalancer : LoadBalancerBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RandomLoadBalancer"/> class.
+        /// </summary>
+        /// <param name="options">Options.</param>
+        public RandomLoadBalancer(LoadBalancingOptions options)
+        { }
+
         /// <inheritdoc />
         public override Guid Select()
         {

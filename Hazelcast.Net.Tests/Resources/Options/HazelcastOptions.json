@@ -1,0 +1,21 @@
+{
+  "hazelcast": {
+
+    "clusterName": "testClusterName",
+
+    "clientName": "testClientName",
+
+    "properties": {
+      "aKey": "aValue",
+      "anotherKey": "anotherValue"
+    },
+
+    "labels": [
+      "label1",
+      "label2"
+    ],
+
+    "asyncStart": true
+
+  }
+}

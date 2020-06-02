@@ -22,10 +22,7 @@ namespace Hazelcast.Examples.Cloud
     {
         public static async Task Run()
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
-
-            static void Configure(HazelcastConfiguration configuration)
+            static void Configure(HazelcastOptions configuration)
             {
                 var cloud = configuration.Networking.Cloud;
                 cloud.IsEnabled = true;
@@ -38,7 +35,7 @@ namespace Hazelcast.Examples.Cloud
             }
 
             // create an Hazelcast client and connect to a Cloud server
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
             await hz.OpenAsync();
 
             // use a map

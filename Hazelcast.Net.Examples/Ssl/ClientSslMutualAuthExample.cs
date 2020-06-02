@@ -18,32 +18,24 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.Ssl
 {
     // ReSharper disable once UnusedMember.Global
-    public class ClientSslMutualAuthExample
+    public class ClientSslMutualAuthExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            var options = BuildExampleOptions(args);
 
-            static void Configure(HazelcastConfiguration configuration)
-            {
-                // replace with actual server host/ip and port
-                configuration.Networking.Addresses.Add("127.0.0.1:5701");
+            // server certificate will be validated by OS,
+            // signed certificates will just work,
+            // self-signed certificates should be registered and allowed
+            options.Networking.Ssl.IsEnabled = true;
 
-                // server certificate will be validated by OS,
-                // signed certificates will just work,
-                // self-signed certificates should be registered and allowed
-                configuration.Networking.Ssl.IsEnabled = true;
-
-                // providing a client pfx certificate will enable mutual authentication
-                // if the server is also configured for mutual authentication.
-                configuration.Networking.Ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH";
-            }
+            // providing a client pfx certificate will enable mutual authentication
+            // if the server is also configured for mutual authentication.
+            options.Networking.Ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH";
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
-
 
             // use a map
             var map = await hz.GetMapAsync<string, string>("ssl-example");

@@ -30,15 +30,15 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Initializes a new instance of the <see cref="AddressProvider"/> class.
         /// </summary>
-        /// <param name="networkingConfiguration">The networking configuration.</param>
+        /// <param name="networkingOptions">The networking configuration.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public AddressProvider(NetworkingConfiguration networkingConfiguration, ILoggerFactory loggerFactory)
+        public AddressProvider(NetworkingOptions networkingOptions, ILoggerFactory loggerFactory)
         {
-            if(networkingConfiguration == null) throw new ArgumentNullException(nameof(networkingConfiguration));
+            if(networkingOptions == null) throw new ArgumentNullException(nameof(networkingOptions));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
 
-            var cloudConfiguration = networkingConfiguration.Cloud;
-            var addresses = networkingConfiguration.Addresses;
+            var cloudConfiguration = networkingOptions.Cloud;
+            var addresses = networkingOptions.Addresses;
 
             if (cloudConfiguration != null && cloudConfiguration.IsEnabled)
             {
@@ -49,7 +49,7 @@ namespace Hazelcast.Networking
                 // initialize cloud discovery
                 var token = cloudConfiguration.DiscoveryToken;
                 var urlBase = cloudConfiguration.UrlBase;
-                var connectionTimeoutMilliseconds = networkingConfiguration.ConnectionTimeoutMilliseconds;
+                var connectionTimeoutMilliseconds = networkingOptions.ConnectionTimeoutMilliseconds;
                 connectionTimeoutMilliseconds = connectionTimeoutMilliseconds == 0 ? int.MaxValue : connectionTimeoutMilliseconds;
                 var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, loggerFactory);
 

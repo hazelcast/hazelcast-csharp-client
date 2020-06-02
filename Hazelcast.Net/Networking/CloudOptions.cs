@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Xml;
-using Hazelcast.Core;
-
 namespace Hazelcast.Networking
 {
     /// <summary>
-    /// Represents the Hazelcast Cloud configuration.
+    /// Represents the Hazelcast Cloud options.
     /// </summary>
-    public class CloudConfiguration
+    public class CloudOptions
     {
         /// <summary>
         /// Whether Hazelcast Cloud is enabled.
@@ -38,27 +35,16 @@ namespace Hazelcast.Networking
         public string UrlBase { get; set; } = "https://coordinator.hazelcast.cloud";
 
         /// <summary>
-        /// Parses configuration from an Xml document.
+        /// Clones the options.
         /// </summary>
-        /// <param name="node">The Xml node.</param>
-        /// <returns>The configuration.</returns>
-        public static CloudConfiguration Parse(XmlNode node)
+        public CloudOptions Clone()
         {
-            var configuration = new CloudConfiguration();
-
-            var enabledNode = node.Attributes.GetNamedItem("enabled");
-            var enabled = enabledNode != null && enabledNode.GetTrueFalseContent();
-            configuration.IsEnabled = enabled;
-            foreach (XmlNode child in node.ChildNodes)
+            return new CloudOptions
             {
-                var nodeName = child.GetCleanName();
-                if ("discovery-token".Equals(nodeName))
-                {
-                    configuration.DiscoveryToken = child.GetTextContent();
-                }
-            }
-
-            return configuration;
+                IsEnabled = IsEnabled,
+                DiscoveryToken = DiscoveryToken,
+                UrlBase = UrlBase
+            };
         }
     }
 }

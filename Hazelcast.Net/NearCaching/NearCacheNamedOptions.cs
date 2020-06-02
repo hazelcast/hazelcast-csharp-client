@@ -18,21 +18,21 @@ using Hazelcast.Core;
 namespace Hazelcast.NearCaching
 {
     /// <summary>
-    /// Contains the configuration for a Near Cache.
+    /// Contains the options for a Near Cache.
     /// </summary>
-    public class NearCacheConfiguration
+    public class NearCacheNamedOptions
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NearCacheConfiguration"/> class.
+        /// Initializes a new instance of the <see cref="NearCacheNamedOptions"/> class.
         /// </summary>
-        public NearCacheConfiguration()
+        public NearCacheNamedOptions()
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NearCacheConfiguration"/> class.
+        /// Initializes a new instance of the <see cref="NearCacheNamedOptions"/> class.
         /// </summary>
         /// <param name="name">The name of the configuration.</param>
-        public NearCacheConfiguration(string name)
+        public NearCacheNamedOptions(string name)
         {
             Name = name;
         }
@@ -80,7 +80,7 @@ namespace Hazelcast.NearCaching
         public bool InvalidateOnChange { get; set; } = true;
 
         /// <summary>
-        /// TODO: document
+        /// FIXME: usage?
         /// </summary>
         public bool SerializeKeys { get; set; }
 
@@ -89,6 +89,24 @@ namespace Hazelcast.NearCaching
         {
             var text = new StringBuilder("NearCacheConfig{");
             return text.ToString();
+        }
+
+        /// <summary>
+        /// Clones the options.
+        /// </summary>
+        public NearCacheNamedOptions Clone()
+        {
+            return new NearCacheNamedOptions
+            {
+                Name = Name,
+                EvictionPolicy = EvictionPolicy,
+                InMemoryFormat = InMemoryFormat,
+                MaxIdleSeconds = MaxIdleSeconds,
+                MaxSize = MaxSize,
+                TimeToLiveSeconds = TimeToLiveSeconds,
+                InvalidateOnChange = InvalidateOnChange,
+                SerializeKeys = SerializeKeys
+            };
         }
     }
 }

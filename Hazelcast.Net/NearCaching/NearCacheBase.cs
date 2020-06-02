@@ -49,7 +49,7 @@ namespace Hazelcast.NearCaching
         private long _lastCleanup;
         protected Guid RegistrationId;
 
-        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheConfiguration nearCacheConfiguration)
+        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheNamedOptions nearCacheNamedOptions)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
             Name = name;
@@ -63,13 +63,13 @@ namespace Hazelcast.NearCaching
             _canEvict = 1;
             _lastCleanup = Clock.Milliseconds;
 
-            _maxSize = nearCacheConfiguration.MaxSize;
-            _maxIdleMilliseconds = nearCacheConfiguration.MaxIdleSeconds * 1000;
-            _inMemoryFormat = nearCacheConfiguration.InMemoryFormat;
-            _timeToLiveMillis = nearCacheConfiguration.TimeToLiveSeconds * 1000;
-            _evictionPolicy = nearCacheConfiguration.EvictionPolicy;
+            _maxSize = nearCacheNamedOptions.MaxSize;
+            _maxIdleMilliseconds = nearCacheNamedOptions.MaxIdleSeconds * 1000;
+            _inMemoryFormat = nearCacheNamedOptions.InMemoryFormat;
+            _timeToLiveMillis = nearCacheNamedOptions.TimeToLiveSeconds * 1000;
+            _evictionPolicy = nearCacheNamedOptions.EvictionPolicy;
             _comparer = GetComparer(_evictionPolicy);
-            InvalidateOnChange = nearCacheConfiguration.InvalidateOnChange;
+            InvalidateOnChange = nearCacheNamedOptions.InvalidateOnChange;
 
             LoggerFactory = loggerFactory;
             //_logger = loggerFactory.CreateLogger<NearCacheBase>();

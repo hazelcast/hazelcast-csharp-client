@@ -16,32 +16,25 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples.Map
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapLockExample
+    public class MapLockExample : ExampleBase
     {
-        public static async Task Run()
-        {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+        // server address can be configured via the command line, e.g.
+        // hazelcast.networking.addresses.0=127.0.0.1
 
+        public static async Task Run(params string[] args)
+        {
             // uncomment and enable HzConsole to see the context changes
             //HzConsole.Configure<AsyncContext>(config => { config.SetMaxLevel(0); });
 
-            // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(configuration =>
-            {
-                // configure server address
-                //configuration.Networking.Addresses.Add("sgay-l4");
+            var options = BuildExampleOptions(args);
+            using var ensureLoggerFactoryIsDisposed = options.Logging.LoggerFactory.Create();
 
-                // configure logging
-                configuration.Logging.LoggerFactory.Creator = () =>
-                    LoggerFactory.Create(builder => builder.AddConsole());
-            });
+            // create an Hazelcast client and connect to a server running on localhost
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
 
             var map = await hz.GetMapAsync<string, string>("map-lock-example");

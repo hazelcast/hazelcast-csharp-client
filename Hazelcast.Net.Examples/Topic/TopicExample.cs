@@ -20,15 +20,14 @@ using Hazelcast.DistributedObjects;
 namespace Hazelcast.Examples.Topic
 {
     // ReSharper disable once UnusedMember.Global
-    public class TopicExample
+    public class TopicExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(params string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient();
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
 
             // get distributed topic from cluster

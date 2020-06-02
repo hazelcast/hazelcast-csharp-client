@@ -44,15 +44,15 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="RetryStrategy"/> class.
         /// </summary>
         /// <param name="action">The description of the action.</param>
-        /// <param name="configuration">Configuration.</param>
+        /// <param name="options">Configuration.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public RetryStrategy(string action, RetryConfiguration configuration, ILoggerFactory loggerFactory)
+        public RetryStrategy(string action, RetryOptions options, ILoggerFactory loggerFactory)
             : this(action,
-                configuration.InitialBackoffMilliseconds,
-                configuration.MaxBackoffMilliseconds,
-                configuration.Multiplier,
-                configuration.ClusterConnectionTimeoutMilliseconds,
-                configuration.Jitter,
+                options.InitialBackoffMilliseconds,
+                options.MaxBackoffMilliseconds,
+                options.Multiplier,
+                options.ClusterConnectionTimeoutMilliseconds,
+                options.Jitter,
                 loggerFactory)
         { }
 

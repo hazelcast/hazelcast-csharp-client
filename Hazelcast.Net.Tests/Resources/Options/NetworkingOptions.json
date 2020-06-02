@@ -1,0 +1,62 @@
+{
+  "hazelcast": {
+
+    "networking": {
+
+      "addresses": [
+        "localhost",
+        "otherhost"
+      ],
+
+      "smartRouting": false,
+
+      "redoOperation": false,
+
+      "connectionTimeoutMilliseconds": 666,
+
+      "reconnectMode": "doNotReconnect",
+
+      "ssl": {
+        "isEnabled": true,
+        "validateCertificateChain": false,
+        "validateCertificateName": true,
+        "checkCertificateRevocation": true,
+        "certificateName": "testCertificateName",
+        "certificatePath": "testCertificatePath",
+        "certificatePassword": "testCertificatePassword",
+        "sslProtocol": "tls11" 
+      },
+
+      "cloud": {
+        "isEnabled": true,
+        "discoveryToken": "testToken",
+        "urlBase": "testUrl"
+      },
+
+      "socket": {
+        "bufferSize": 666,
+        "keepAlive": false,
+        "lingerSeconds": 667,
+        "reuseAddress": false,
+        "tcpNoDelay": true
+      },
+
+      "outboundPorts": [],
+
+      "socketInterceptor": {
+        "isEnabled": true,
+        "interceptorType": "Hazelcast.Tests.ConfigurationTests+TestSocketInterceptor, Hazelcast.Net.Tests"
+      },
+
+      "connectionRetry": {
+        "initialBackoffMilliseconds": 666,
+        "maxBackoffMilliseconds": 667,
+        "multiplier": 668,
+        "clusterConnectionTimeoutMilliseconds": 669,
+        "jitter": 42
+      }
+
+    } 
+
+  }
+}

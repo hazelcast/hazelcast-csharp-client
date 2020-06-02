@@ -27,6 +27,13 @@ namespace Hazelcast.Clustering.LoadBalancing
     {
         private int _index;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RoundRobinLoadBalancer"/> class.
+        /// </summary>
+        /// <param name="options">Options.</param>
+        public RoundRobinLoadBalancer(LoadBalancingOptions options)
+        { }
+
         /// <inheritdoc />
         public override Guid Select()
         {

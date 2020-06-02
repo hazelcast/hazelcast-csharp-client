@@ -18,13 +18,8 @@ namespace Hazelcast.Testing
 
         protected RemoteTestBase()
         {
-            // #if DEBUG
-            // Environment.SetEnvironmentVariable("hazelcast.logging.type", "trace");
-
-            // #else
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
-            // #endif
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "finest");
+            // FIXME we probably need to setup the options at some point?
+            // with log level (debug) logging to console, etc
 
             Logger.LogInformation("LOGGER ACTIVE");
 
@@ -59,12 +54,12 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Configures the client.
         /// </summary>
-        /// <param name="configuration">The client configuration.</param>
-        protected virtual void ConfigureClient(HazelcastConfiguration configuration)
+        /// <param name="options">The client configuration.</param>
+        protected virtual void ConfigureClient(HazelcastOptions options)
         {
-            configuration.AsyncStart = false;
+            options.AsyncStart = false;
 
-            var n = configuration.Networking;
+            var n = options.Networking;
             n.Addresses.Add("localhost:5701");
             n.ReconnectMode = ReconnectMode.ReconnectSync;
 
@@ -84,11 +79,11 @@ namespace Hazelcast.Testing
         /// Creates a client.
         /// </summary>
         /// <returns>A client.</returns>
-        protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastConfiguration> configureClient)
+        protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastOptions> configure)
         {
             Logger.LogInformation("Creating new client");
 
-            var client = new HazelcastClientFactory().CreateClient(configureClient);
+            var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(configure);
 
             try
             {

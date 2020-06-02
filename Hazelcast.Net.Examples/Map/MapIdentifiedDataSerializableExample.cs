@@ -19,22 +19,18 @@ using Hazelcast.Examples.Models;
 namespace Hazelcast.Examples.Map
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapIdentifiedDataSerializableExample
+    public class MapIdentifiedDataSerializableExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(params string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            var options = BuildExampleOptions(args);
 
-            static void Configure(HazelcastConfiguration configuration)
-            {
-                configuration.Serialization.AddDataSerializableFactory(
-                    ExampleDataSerializableFactory.FactoryId,
-                    new ExampleDataSerializableFactory());
-            }
+            options.Serialization.AddDataSerializableFactory(
+                ExampleDataSerializableFactory.FactoryId,
+                new ExampleDataSerializableFactory());
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
 
             var map = await hz.GetMapAsync<int, Employee>("identified-data-serializable-example");

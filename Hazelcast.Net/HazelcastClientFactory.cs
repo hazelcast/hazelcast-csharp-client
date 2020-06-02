@@ -28,39 +28,15 @@ namespace Hazelcast
     /// </summary>
     public class HazelcastClientFactory
     {
-        private readonly HazelcastConfiguration _configuration;
-        private readonly Action<HazelcastConfiguration> _configure;
+        private readonly HazelcastOptions _options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
         /// </summary>
-        public HazelcastClientFactory()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
-        /// </summary>
-        /// <param name="configuration">A configuration to use by default for all clients.</param>
-        public HazelcastClientFactory(HazelcastConfiguration configuration)
+        /// <param name="options">Options to use by default for all clients.</param>
+        public HazelcastClientFactory(HazelcastOptions options)
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
-        /// </summary>
-        /// <param name="configure">A configure action to apply to all clients.</param>
-        public HazelcastClientFactory(Action<HazelcastConfiguration> configure)
-        {
-            _configure = configure ?? throw new ArgumentNullException(nameof(configure));
-        }
-
-        private HazelcastConfiguration CreateConfiguration()
-        {
-            if (_configuration != null) return _configuration;
-            var configuration = HazelcastConfiguration.CreateDefault();
-            _configure?.Invoke(configuration);
-            return configuration;
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         /// <summary>
@@ -68,38 +44,44 @@ namespace Hazelcast
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         public IHazelcastClient CreateClient()
-            => CreateClient(CreateConfiguration());
+            => CreateClient(_options);
 
         /// <summary>
         /// Creates an <see cref="IHazelcastClient"/> instance.
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        public IHazelcastClient CreateClient(string configurationFilepath)
-            => CreateClient(HazelcastConfiguration.Parse(configurationFilepath));
+        public IHazelcastClient CreateClient(Action<HazelcastOptions> configure)
+            => CreateClient(GetClientOptions(configure));
 
         /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance.
+        /// Builds the configuration.
         /// </summary>
-        /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        public IHazelcastClient CreateClient(Action<HazelcastConfiguration> configure)
-            => CreateClient(BuildConfiguration(configure));
-
-        /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance.
-        /// </summary>
-        /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        public IHazelcastClient CreateClient(HazelcastConfiguration configuration)
+        /// <param name="configure">A configuration builder.</param>
+        /// <returns>The configuration.</returns>
+        private HazelcastOptions GetClientOptions(Action<HazelcastOptions> configure)
         {
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            var options = _options.Clone(); // ensure we don't modify the original options
+            configure(options);
+            return options;
+        }
 
-            var loggerFactory = configuration.Logging.LoggerFactory.Create();
+        /// <summary>
+        /// Creates an <see cref="IHazelcastClient"/> instance.
+        /// </summary>
+        /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
+        public IHazelcastClient CreateClient(HazelcastOptions options)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var loggerFactory = options.Logging.LoggerFactory.Create();
 
             // TODO: refactor serialization service entirely
             // there should not be a 'builder'
             // it's all configuration or service
             var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);
             serializationServiceBuilder
-                .SetConfig(configuration.Serialization)
+                .SetConfig(options.Serialization)
                 .SetPartitioningStrategy(new NullPartitioningStrategy()) // should be configure-able
                 .SetVersion(SerializationService.SerializerVersion) // uh? else default is wrong?
                 .AddHook<PredicateDataSerializerHook>() // shouldn't they be configurable?
@@ -109,29 +91,16 @@ namespace Hazelcast
                 ;
             var serializationService = serializationServiceBuilder.Build();
 
-            var cluster = new Cluster(configuration.ClientName, null,
-                configuration.Labels,
-                configuration.Cluster,
-                configuration.Networking,
-                configuration.LoadBalancing,
-                configuration.Security,
+            var cluster = new Cluster(options.ClientName, null,
+                options.Labels,
+                options.Cluster,
+                options.Networking,
+                options.LoadBalancing,
+                options.Security,
                 serializationService,
                 loggerFactory);
 
-            return new HazelcastClient(configuration, cluster, serializationService, loggerFactory);
-        }
-
-        /// <summary>
-        /// Builds the configuration.
-        /// </summary>
-        /// <param name="configure">A configuration builder.</param>
-        /// <returns>The configuration.</returns>
-        internal static HazelcastConfiguration BuildConfiguration(Action<HazelcastConfiguration> configure)
-        {
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            var configuration = new HazelcastConfiguration();
-            configure(configuration);
-            return configuration;
+            return new HazelcastClient(options, cluster, serializationService, loggerFactory);
         }
     }
 }

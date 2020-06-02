@@ -20,15 +20,14 @@ using Hazelcast.Core;
 namespace Hazelcast.Examples.Map
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapJsonExample
+    public class MapJsonExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(params string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient();
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
 
             var map = await hz.GetMapAsync<string, HazelcastJsonValue>("json-example");

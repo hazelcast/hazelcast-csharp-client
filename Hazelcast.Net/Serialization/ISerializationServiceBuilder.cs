@@ -26,7 +26,7 @@ namespace Hazelcast.Serialization
         ISerializationService Build();
         ISerializationServiceBuilder SetEndianness(Endianness endianness);
         ISerializationServiceBuilder SetCheckClassDefErrors(bool checkClassDefErrors);
-        ISerializationServiceBuilder SetConfig(SerializationConfiguration configuration);
+        ISerializationServiceBuilder SetConfig(SerializationOptions options);
         ISerializationServiceBuilder SetInitialOutputBufferSize(int initialOutputBufferSize);
         ISerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitioningStrategy);
         ISerializationServiceBuilder SetPortableVersion(int version);

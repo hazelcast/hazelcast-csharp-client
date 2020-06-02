@@ -56,12 +56,13 @@ namespace Hazelcast.Clustering
         // for cluster client-level events (not wired to the server)
         private readonly ConcurrentDictionary<Guid, ClusterEventHandlers> _clusterHandlers = new ConcurrentDictionary<Guid, ClusterEventHandlers>();
 
+        private readonly ClusterOptions _clusterOptions;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoadBalancer _loadBalancer;
         private readonly IAuthenticator _authenticator;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
-        private readonly RetryConfiguration _retryConfiguration;
+        private readonly RetryOptions _retryOptions;
         private readonly ISet<string> _labels;
         private readonly AddressProvider _addressProvider;
         private readonly ISerializationService _serializationService;
@@ -105,10 +106,10 @@ namespace Hazelcast.Clustering
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="clientName">The client name.</param>
         /// <param name="labels">The client labels.</param>
-        /// <param name="clusterConfiguration">The cluster configuration.</param>
-        /// <param name="networkingConfiguration">The networking configuration.</param>
-        /// <param name="loadBalancingConfiguration">The load-balancing configuration.</param>
-        /// <param name="securityConfiguration">The security configuration.</param>
+        /// <param name="clusterOptions">The cluster configuration.</param>
+        /// <param name="networkingOptions">The networking configuration.</param>
+        /// <param name="loadBalancingOptions">The load-balancing configuration.</param>
+        /// <param name="securityOptions">The security configuration.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public Cluster(
@@ -116,32 +117,32 @@ namespace Hazelcast.Clustering
             string clientName,
             ISet<string> labels,
 
-            ClusterConfiguration clusterConfiguration,
-            NetworkingConfiguration networkingConfiguration,
-            LoadBalancingConfiguration loadBalancingConfiguration,
-            SecurityConfiguration securityConfiguration,
+            ClusterOptions clusterOptions,
+            NetworkingOptions networkingOptions,
+            LoadBalancingOptions loadBalancingOptions,
+            SecurityOptions securityOptions,
 
             ISerializationService serializationService,
             ILoggerFactory loggerFactory)
         {
-            if (clusterConfiguration == null) throw new ArgumentNullException(nameof(clusterConfiguration));
-            if (networkingConfiguration == null) throw new ArgumentNullException(nameof(networkingConfiguration));
-            if (loadBalancingConfiguration == null) throw new ArgumentNullException(nameof(loadBalancingConfiguration));
-            if (securityConfiguration == null) throw new ArgumentNullException(nameof(securityConfiguration));
+            if (networkingOptions == null) throw new ArgumentNullException(nameof(networkingOptions));
+            if (loadBalancingOptions == null) throw new ArgumentNullException(nameof(loadBalancingOptions));
+            if (securityOptions == null) throw new ArgumentNullException(nameof(securityOptions));
 
+            _clusterOptions = clusterOptions ?? throw new ArgumentNullException(nameof(clusterOptions));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = _loggerFactory.CreateLogger<Cluster>();
             _labels = labels ?? throw new ArgumentNullException(nameof(labels));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
-            _clusterEventSubscribers = clusterConfiguration.EventSubscribers;
-            IsSmartRouting = networkingConfiguration.SmartRouting;
-            _retryConfiguration = networkingConfiguration.ConnectionRetry;
-            _authenticator = securityConfiguration.Authenticator.Create();
-            _loadBalancer = loadBalancingConfiguration.LoadBalancer.Create();
-            _addressProvider = new AddressProvider(networkingConfiguration, loggerFactory);
-            _reconnectMode = networkingConfiguration.ReconnectMode;
-            _retryOnTargetDisconnected = networkingConfiguration.RedoOperation;
+            _clusterEventSubscribers = clusterOptions.EventSubscribers;
+            IsSmartRouting = networkingOptions.SmartRouting;
+            _retryOptions = networkingOptions.ConnectionRetry;
+            _authenticator = securityOptions.Authenticator.Create();
+            _loadBalancer = loadBalancingOptions.LoadBalancer.Create();
+            _addressProvider = new AddressProvider(networkingOptions, loggerFactory);
+            _reconnectMode = networkingOptions.ReconnectMode;
+            _retryOnTargetDisconnected = networkingOptions.RedoOperation;
             _heartbeat = new Heartbeat(this, loggerFactory);
 
             // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same

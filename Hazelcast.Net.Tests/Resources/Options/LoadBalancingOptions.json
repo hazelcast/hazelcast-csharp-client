@@ -1,0 +1,20 @@
+{
+  "hazelcast": {
+
+    "loadBalancing": {
+
+      // the type of the load balancer
+      "loadBalancerType": "Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net",
+
+      // arguments for the load balancer
+      "loadBalancerArgs": {
+
+        "arg1": "value1",
+        "arg2": "value2"
+
+      }
+
+    }
+
+  }
+}

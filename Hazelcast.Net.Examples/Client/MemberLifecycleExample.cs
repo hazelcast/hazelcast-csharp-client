@@ -15,32 +15,28 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class MemberLifecycleExample
+    public class MemberLifecycleExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(params string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
-
             var memberAdded = new SemaphoreSlim(0);
 
-            void Configure(HazelcastConfiguration configuration)
+            var options = BuildExampleOptions(args, configureOptions: (configuration, options) =>
             {
-                configuration.Cluster.AddEventSubscriber(on => on
+                options.Cluster.AddEventSubscriber(on => on
                     .MemberAdded((c, args) =>
                     {
                         Console.WriteLine($"Added member: {args.Member.Id}");
                         memberAdded.Release();
                     }));
-            }
+            });
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient(Configure);
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
 
             // wait for the event

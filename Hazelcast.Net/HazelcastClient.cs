@@ -29,7 +29,7 @@ namespace Hazelcast
     internal partial class HazelcastClient : IHazelcastClient
     {
 #pragma warning disable IDE0052 // Remove unread private members - this is temp
-        private readonly HazelcastConfiguration _configuration;
+        private readonly HazelcastOptions _options;
 #pragma warning restore IDE0052 // Remove unread private members
         private readonly DistributedObjectFactory _distributedObjectFactory;
 
@@ -38,13 +38,13 @@ namespace Hazelcast
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClient"/> class.
         /// </summary>
-        /// <param name="configuration">The client configuration.</param>
+        /// <param name="options">The client configuration.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HazelcastClient(HazelcastConfiguration configuration, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HazelcastClient(HazelcastOptions options, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 

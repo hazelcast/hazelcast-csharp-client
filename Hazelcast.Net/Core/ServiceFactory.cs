@@ -51,5 +51,17 @@ namespace Hazelcast.Core
         public TService Create() => Creator?.Invoke() ??
                                     _defaultFactory?.Invoke() ??
                                     throw new InvalidOperationException($"Cannot create an instance of {typeof(TService)}.");
+
+        /// <summary>
+        /// Clones the factory.
+        /// </summary>
+        /// <returns></returns>
+        public ServiceFactory<TService> Clone()
+        {
+            return new ServiceFactory<TService>(_defaultFactory)
+            {
+                Creator = Creator
+            };
+        }
     }
 }

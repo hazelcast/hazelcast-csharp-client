@@ -19,15 +19,14 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.Map
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapAsyncExample
+    public class MapAsyncExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(params string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory().CreateClient();
+            var hz = new HazelcastClientFactory(options).CreateClient();
             await hz.OpenAsync();
 
             // get distributed map from cluster

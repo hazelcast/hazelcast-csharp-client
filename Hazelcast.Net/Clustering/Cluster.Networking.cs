@@ -106,7 +106,7 @@ namespace Hazelcast.Clustering
         private async Task ConnectFirstClientAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
-            var retryStrategy = new RetryStrategy("connect to cluster", _retryConfiguration, _loggerFactory);
+            var retryStrategy = new RetryStrategy("connect to cluster", _retryOptions, _loggerFactory);
             List<Exception> exceptions = null;
             bool canRetry;
 
@@ -398,14 +398,9 @@ namespace Hazelcast.Clustering
                 }
             }
 
-            // shuffle
-            // FIXME shuffling is actually an OPTION
-            // but... these environment thing vs. configuration are really insane
-            // should be configuration.blah.blah
-            // read from environment or config file or... in some sort of order!
-            // see what .net core is doing
-            // _shuffleMemberList = EnvironmentUtil.ReadBool("hazelcast.client.shuffle.member.list") ?? false;
-            return addresses.Shuffle();
+            return _clusterOptions.ShuffleMemberList
+                ? addresses.Shuffle()
+                : addresses;
         }
     }
 }
