@@ -29,6 +29,24 @@ namespace Hazelcast
     public sealed partial class HazelcastOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
+        /// </summary>
+        public HazelcastOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">A service provider.</param>
+        internal HazelcastOptions(IServiceProvider serviceProvider)
+        { }
+
+        /// <summary>
+        /// Gets or sets the service provider.
+        /// </summary>
+        internal IServiceProvider ServiceProvider { get; set; }
+
+        /// <summary>
         /// Gets the client name.
         /// </summary>
         public string ClientName { get; set; }
