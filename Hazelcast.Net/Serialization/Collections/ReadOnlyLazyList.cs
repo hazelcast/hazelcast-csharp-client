@@ -14,9 +14,8 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using Hazelcast.Serialization;
 
-namespace Hazelcast.Core.Collections
+namespace Hazelcast.Serialization.Collections
 {
     /// <summary>
     /// Represents a lazy list of values.

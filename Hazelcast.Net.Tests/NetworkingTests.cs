@@ -167,7 +167,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Network.Addresses.Add("127.0.0.1:11001");
             });
             var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
@@ -219,7 +219,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Network.Addresses.Add("127.0.0.1:11001");
             });
             var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
@@ -264,7 +264,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Network.Addresses.Add("127.0.0.1:11001");
             });
             var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
@@ -302,7 +302,7 @@ namespace Hazelcast.Tests
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Network.Addresses.Add("127.0.0.1:11001");
             });
             var clientFactory = new HazelcastClientFactory(options);
 
@@ -361,7 +361,7 @@ namespace Hazelcast.Tests
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
             {
-                options.Networking.Addresses.Add("127.0.0.1:11000");
+                options.Network.Addresses.Add("127.0.0.1:11000");
             });
             var clientFactory = new HazelcastClientFactory(options);
 
@@ -446,18 +446,14 @@ namespace Hazelcast.Tests
                 .SetVersion(1)
                 .Build();
 
-            var configuration = new HazelcastOptions();
+            var options = new HazelcastOptions();
 
-            configuration.Networking.Addresses.Add("sgay-l4");
-            configuration.Security.Authenticator.Creator = ()
-                => new Authenticator(configuration.Security);
+            options.Network.Addresses.Add("sgay-l4");
+            options.Authentication.Authenticator.Creator = ()
+                => new Authenticator(options.Security);
 
             var cluster = new Cluster("dev", "hz.client",
-                new HashSet<string>(),
-                configuration.Cluster,
-                configuration.Networking,
-                configuration.LoadBalancing,
-                configuration.Security,
+                options,
                 serializationService,
                 new NullLoggerFactory());
             await cluster.ConnectAsync(CancellationToken.None).CAF();

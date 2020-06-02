@@ -24,6 +24,7 @@ using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Logging;
 using Hazelcast.Networking;
+using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using Partitioner = Hazelcast.Partitioning.Partitioner;
@@ -56,18 +57,16 @@ namespace Hazelcast.Clustering
         // for cluster client-level events (not wired to the server)
         private readonly ConcurrentDictionary<Guid, ClusterEventHandlers> _clusterHandlers = new ConcurrentDictionary<Guid, ClusterEventHandlers>();
 
-        private readonly ClusterOptions _clusterOptions;
+        private readonly IClusterOptions _clusterOptions;
+        private readonly NetworkingOptions _networkingOptions;
+
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoadBalancer _loadBalancer;
         private readonly IAuthenticator _authenticator;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
-        private readonly RetryOptions _retryOptions;
-        private readonly ISet<string> _labels;
         private readonly AddressProvider _addressProvider;
         private readonly ISerializationService _serializationService;
-        private readonly ReconnectMode _reconnectMode;
-        private readonly bool _retryOnTargetDisconnected;
         private readonly Heartbeat _heartbeat;
 
         // events subscriptions
@@ -105,8 +104,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="clientName">The client name.</param>
-        /// <param name="labels">The client labels.</param>
-        /// <param name="clusterOptions">The cluster configuration.</param>
+        /// <param name="options">The cluster configuration.</param>
         /// <param name="networkingOptions">The networking configuration.</param>
         /// <param name="loadBalancingOptions">The load-balancing configuration.</param>
         /// <param name="securityOptions">The security configuration.</param>
@@ -115,34 +113,22 @@ namespace Hazelcast.Clustering
         public Cluster(
             string clusterName,
             string clientName,
-            ISet<string> labels,
-
-            ClusterOptions clusterOptions,
-            NetworkingOptions networkingOptions,
-            LoadBalancingOptions loadBalancingOptions,
-            SecurityOptions securityOptions,
-
+            IClusterOptions options,
             ISerializationService serializationService,
             ILoggerFactory loggerFactory)
         {
-            if (networkingOptions == null) throw new ArgumentNullException(nameof(networkingOptions));
-            if (loadBalancingOptions == null) throw new ArgumentNullException(nameof(loadBalancingOptions));
-            if (securityOptions == null) throw new ArgumentNullException(nameof(securityOptions));
 
-            _clusterOptions = clusterOptions ?? throw new ArgumentNullException(nameof(clusterOptions));
+            _clusterOptions = options ?? throw new ArgumentNullException(nameof(options));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = _loggerFactory.CreateLogger<Cluster>();
-            _labels = labels ?? throw new ArgumentNullException(nameof(labels));
+
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
-            _clusterEventSubscribers = clusterOptions.EventSubscribers;
-            IsSmartRouting = networkingOptions.SmartRouting;
-            _retryOptions = networkingOptions.ConnectionRetry;
-            _authenticator = securityOptions.Authenticator.Create();
-            _loadBalancer = loadBalancingOptions.LoadBalancer.Create();
-            _addressProvider = new AddressProvider(networkingOptions, loggerFactory);
-            _reconnectMode = networkingOptions.ReconnectMode;
-            _retryOnTargetDisconnected = networkingOptions.RedoOperation;
+            _clusterEventSubscribers = options.Subscribers;
+
+            _authenticator = options.Authentication.Authenticator.Create() ?? new Authenticator(options.Security);
+            _loadBalancer = options.LoadBalancer.LoadBalancer.Create() ?? new RoundRobinLoadBalancer(options.LoadBalancer);
+            _addressProvider = new AddressProvider(options.Network, loggerFactory);
             _heartbeat = new Heartbeat(this, loggerFactory);
 
             // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same
@@ -210,7 +196,7 @@ namespace Hazelcast.Clustering
         /// then behaves as a gateway for the other members. Firewalls, security, or some
         /// custom networking issues can be the reason for these cases.</para>
         /// </remarks>
-        public bool IsSmartRouting { get; }
+        public bool IsSmartRouting => _networkingOptions.SmartRouting;
 
         /// <summary>
         /// Gets the partitioner.

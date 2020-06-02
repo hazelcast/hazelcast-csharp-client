@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Core.Collections
+namespace Hazelcast.Serialization.Collections
 {
     /// <summary>
     /// Represents an entry in a lazy collection.

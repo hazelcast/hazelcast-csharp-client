@@ -15,11 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Clustering;
-using Hazelcast.Clustering.LoadBalancing;
-using Hazelcast.Logging;
-using Hazelcast.NearCaching;
-using Hazelcast.Networking;
-using Hazelcast.Serialization;
+using Hazelcast.Core;
 
 namespace Hazelcast
 {
@@ -32,14 +28,11 @@ namespace Hazelcast
         /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
         /// </summary>
         public HazelcastOptions()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
-        /// </summary>
-        /// <param name="serviceProvider">A service provider.</param>
-        internal HazelcastOptions(IServiceProvider serviceProvider)
-        { }
+        {
+            Subscribers = new List<IClusterEventSubscriber>();
+            SubscribersBinder = new CollectionBinder<string>(x
+                => Subscribers.Add(new ClusterEventSubscriber(x)));
+        }
 
         /// <summary>
         /// Gets or sets the service provider.
@@ -47,78 +40,26 @@ namespace Hazelcast
         internal IServiceProvider ServiceProvider { get; set; }
 
         /// <summary>
-        /// Gets the client name.
-        /// </summary>
-        public string ClientName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the client properties.
-        /// </summary>
-        [Obsolete] // what's the use now?
-        public IDictionary<string, string> Properties { get; private set; } = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Gets or sets the client labels.
-        /// </summary>
-        public ISet<string> Labels { get; private set; } = new HashSet<string>();
-
-        /// <summary>
-        /// Whether to start the client asynchronously.
-        /// </summary>
-        // TODO: should AsyncStart still exist (and what would it mean)?
-        public bool AsyncStart { get; set; }
-
-        /// <summary>
-        /// Gets or sets the cluster options.
-        /// </summary>
-        public ClusterOptions Cluster { get; private set; } = new ClusterOptions();
-
-        /// <summary>
-        /// Gets the logging options.
-        /// </summary>
-        public LoggingOptions Logging { get; private set; } = new LoggingOptions();
-
-        /// <summary>
-        /// Gets or sets the networking options.
-        /// </summary>
-        public NetworkingOptions Networking { get; private set; } = new NetworkingOptions();
-
-        /// <summary>
-        /// Gets or sets the security options.
-        /// </summary>
-        public SecurityOptions Security { get; private set; } = new SecurityOptions();
-
-        /// <summary>
-        /// Gets or sets the load balancing options.
-        /// </summary>
-        public LoadBalancingOptions LoadBalancing { get; private set; } = new LoadBalancingOptions();
-
-        /// <summary>
-        /// Gets the serialization options.
-        /// </summary>
-        public SerializationOptions Serialization { get; private set; } = new SerializationOptions();
-
-        /// <summary>
-        /// Gets or sets the NearCache options.
-        /// </summary>
-        public NearCacheOptions NearCache { get; private set; } = new NearCacheOptions();
-
-        /// <summary>
         /// Clones the options.
         /// </summary>
-        public HazelcastOptions Clone()
+        internal HazelcastOptions Clone()
         {
             return new HazelcastOptions
             {
                 ClientName = ClientName,
+
+                ClusterName = ClusterName,
+                Subscribers = new List<IClusterEventSubscriber>(Subscribers),
+
                 Properties = new Dictionary<string, string>(Properties),
                 Labels = new HashSet<string>(Labels),
                 AsyncStart = AsyncStart,
-                Cluster = Cluster.Clone(),
+
                 Logging = Logging.Clone(),
-                Networking = Networking.Clone(),
+                Network = Network.Clone(),
                 Security = Security.Clone(),
-                LoadBalancing = LoadBalancing.Clone(),
+                Authentication = Authentication.Clone(),
+                LoadBalancer = LoadBalancer.Clone(),
                 Serialization = Serialization.Clone(),
                 NearCache = NearCache.Clone()
             };

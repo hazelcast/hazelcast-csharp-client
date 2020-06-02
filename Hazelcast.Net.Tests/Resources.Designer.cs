@@ -64,13 +64,47 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    // all ClusterOptions
+        ///    &quot;authentication&quot;: {
+        ///
+        ///      &quot;authenticatorType&quot;: &quot;Hazelcast.Clustering.Authenticator, Hazelcast.Net&quot;,
+        ///
+        ///      &quot;authenticatorArgs&quot;: {
+        ///        &quot;arg3&quot;: &quot;value3&quot;,
+        ///        &quot;arg4&quot;: &quot;value4&quot;
+        ///      }
+        ///
+        ///    }
+        ///
+        ///  }
+        ///}.
+        /// </summary>
+        internal static string AuthenticationOptions {
+            get {
+                return ResourceManager.GetString("AuthenticationOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;hazelcast&quot;: {
         ///
         ///    &quot;cluster&quot;: {
+        ///
+        ///      // the name of the cluster
+        ///      &quot;name&quot;: &quot;testClusterName&quot;,
+        ///
+        ///      // whether to shuffle the member list when trying to connect
+        ///      &quot;shuffleMemberList&quot;: false,
+        ///
+        ///      // event subscribers
         ///      &quot;eventSubscribers&quot;: [
+        ///
+        ///        // add an event subscriber
         ///        &quot;Hazelcast.Tests.ConfigurationTests+TestSubscriber, Hazelcast.Net.Tests&quot;
+        ///
         ///      ]
-        ///    } 
+        ///
+        ///    }
         ///
         ///  }
         ///}.
@@ -111,8 +145,6 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    // all HazelcastOptions top-level properties
-        ///
         ///    &quot;clusterName&quot;: &quot;testClusterName&quot;,
         ///
         ///    &quot;clientName&quot;: &quot;testClientName&quot;,
@@ -142,12 +174,12 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    // all LoadBalancingOptions
-        ///
         ///    &quot;loadBalancing&quot;: {
         ///
+        ///      // the type of the load balancer
         ///      &quot;loadBalancerType&quot;: &quot;Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net&quot;,
         ///
+        ///      // arguments for the load balancer
         ///      &quot;loadBalancerArgs&quot;: {
         ///
         ///        &quot;arg1&quot;: &quot;value1&quot;,
@@ -170,7 +202,11 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    &quot;logging&quot;: { }
+        ///    &quot;logging&quot;: {
+        ///
+        ///      // there are no logging options at the moment
+        ///
+        ///    }
         ///
         ///  }
         ///}.
@@ -185,10 +221,9 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    // all NearCacheOptions
-        ///
         ///    &quot;nearCache&quot;: {
         ///
+        ///      // the &apos;default&apos; NearCache configuration
         ///      &quot;default&quot;: {
         ///
         ///        &quot;name&quot;: &quot;defaultName&quot;,
@@ -200,13 +235,12 @@ namespace Hazelcast.Tests {
         ///        &quot;invalidateOnChange&quot;: true
         ///      },
         ///
+        ///      // another NearCache configuration, named &apos;other&apos;
         ///      &quot;other&quot;: {
         ///
         ///        &quot;name&quot;: &quot;otherName&quot;,
         ///        &quot;evictionPolicy&quot;: &quot;lfu&quot;,
-        ///        &quot;inMemoryFormat&quot;: &quot;object&quot;,
-        ///        &quot;maxIdleSeconds&quot;: 166,
-        ///        &quot;maxSize&quot;: [rest of string was truncated]&quot;;.
+        ///        &quot;inMe [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NearCacheOptions {
             get {
@@ -217,8 +251,6 @@ namespace Hazelcast.Tests {
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
-        ///
-        ///    // all NetworkingOptions
         ///
         ///    &quot;networking&quot;: {
         ///
@@ -235,22 +267,13 @@ namespace Hazelcast.Tests {
         ///
         ///      &quot;reconnectMode&quot;: &quot;doNotReconnect&quot;,
         ///
-        ///      &quot;ssl&quot;: {},
-        ///
-        ///      &quot;cloud&quot;: {},
-        ///
-        ///      &quot;socket&quot;: {},
-        ///
-        ///      &quot;outboundPorts&quot;: [],
-        ///
-        ///      &quot;socketInterceptor&quot;: {},
-        ///
-        ///      &quot;connectionRetry&quot;: {}
-        ///
-        ///    } 
-        ///
-        ///  }
-        ///}.
+        ///      &quot;ssl&quot;: {
+        ///        &quot;isEnabled&quot;: true,
+        ///        &quot;validateCertificateChain&quot;: false,
+        ///        &quot;validateCertificateName&quot;: true,
+        ///        &quot;checkCertificateRevocation&quot;: true,
+        ///        &quot;certificateName&quot;: &quot;testCertificateName&quot;,
+        ///        [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NetworkingOptions {
             get {
@@ -262,8 +285,6 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    // all SecurityOptions
-        ///
         ///    &quot;security&quot;: {
         ///
         ///      &quot;credentialsFactoryType&quot;: &quot;Hazelcast.Security.DefaultCredentialsFactory, Hazelcast.Net&quot;,
@@ -271,16 +292,9 @@ namespace Hazelcast.Tests {
         ///      &quot;credentialsFactoryArgs&quot;: {
         ///        &quot;arg1&quot;: &quot;value1&quot;,
         ///        &quot;arg2&quot;: &quot;value2&quot;
-        ///      },
+        ///      }
         ///
-        ///      &quot;authenticatorType&quot;: &quot;Hazelcast.Clustering.Authenticator, Hazelcast.Net&quot;,
-        ///
-        ///      &quot;authenticatorArgs&quot;: {
-        ///        &quot;arg3&quot;: &quot;value3&quot;,
-        ///        &quot;arg4&quot;: &quot;value4&quot; 
-        ///      } 
-        ///      
-        ///    } 
+        ///    }
         ///
         ///  }
         ///}.

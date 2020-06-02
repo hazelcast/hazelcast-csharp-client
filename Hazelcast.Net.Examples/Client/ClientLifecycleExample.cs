@@ -31,9 +31,9 @@ namespace Hazelcast.Examples.Client
 
             var connected = new SemaphoreSlim(0);
 
-            void Configure(HazelcastOptions configuration)
+            void Configure(HazelcastOptions options)
             {
-                configuration.Cluster.AddEventSubscriber(on => on
+                options.AddSubscriber(on => on
                     .ClientStateChanged((c, args) =>
                     {
                         Console.WriteLine($"State: {args.State}");

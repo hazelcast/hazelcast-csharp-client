@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Xml;
 using Hazelcast.Core;
 
 namespace Hazelcast.Networking
@@ -32,6 +31,11 @@ namespace Hazelcast.Networking
         /// to the client.</para>
         /// </remarks>
         public IList<string> Addresses { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Whether to shuffle addresses when attempting to connect to the cluster.
+        /// </summary>
+        public bool ShuffleAddresses { get; set; } = true;
 
         /// <summary>
         /// Whether smart routing is enabled.
@@ -109,14 +113,16 @@ namespace Hazelcast.Networking
             return new NetworkingOptions
             {
                 Addresses = new List<string>(Addresses),
+                ShuffleAddresses = ShuffleAddresses,
                 SmartRouting = SmartRouting,
                 RedoOperation = RedoOperation,
                 ConnectionTimeoutMilliseconds = ConnectionTimeoutMilliseconds,
                 ReconnectMode = ReconnectMode,
+                OutboundPorts = new HashSet<string>(OutboundPorts),
+
                 Ssl = Ssl.Clone(),
                 Cloud = Cloud.Clone(),
                 Socket = Socket.Clone(),
-                OutboundPorts = new HashSet<string>(OutboundPorts),
                 SocketInterceptor = SocketInterceptor.Clone(),
                 ConnectionRetry = ConnectionRetry.Clone()
             };

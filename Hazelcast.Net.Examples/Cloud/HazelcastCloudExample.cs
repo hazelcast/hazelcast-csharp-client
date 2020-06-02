@@ -24,7 +24,7 @@ namespace Hazelcast.Examples.Cloud
         {
             static void Configure(HazelcastOptions configuration)
             {
-                var cloud = configuration.Networking.Cloud;
+                var cloud = configuration.Network.Cloud;
                 cloud.IsEnabled = true;
                 cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
             }

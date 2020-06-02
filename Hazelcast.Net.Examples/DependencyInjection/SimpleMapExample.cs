@@ -32,7 +32,7 @@ namespace Hazelcast.Examples.DependencyInjection
             // configure (can do it multiple times..)
             services.Configure<HazelcastOptions>(options =>
             {
-                options.Networking.ConnectionTimeoutMilliseconds = 2_000;
+                options.Network.ConnectionTimeoutMilliseconds = 2_000;
             });
 
             services.AddTransient<A>();

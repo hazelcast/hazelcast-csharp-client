@@ -27,7 +27,7 @@ namespace Hazelcast.Examples.Client
 
             var options = BuildExampleOptions(args, configureOptions: (configuration, options) =>
             {
-                options.Cluster.AddEventSubscriber(on => on
+                options.AddSubscriber(on => on
                     .MemberAdded((c, args) =>
                     {
                         Console.WriteLine($"Added member: {args.Member.Id}");

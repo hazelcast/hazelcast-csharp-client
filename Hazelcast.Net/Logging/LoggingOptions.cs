@@ -34,7 +34,7 @@ namespace Hazelcast.Logging
         /// Gets the service factory for <see cref="ILoggerFactory"/>.
         /// </summary>
         [BinderIgnore]
-        public ServiceFactory<ILoggerFactory> LoggerFactory { get; private set; } = new ServiceFactory<ILoggerFactory>(() => new NullLoggerFactory());
+        public ServiceFactory<ILoggerFactory> LoggerFactory { get; private set; } = new ServiceFactory<ILoggerFactory>();
 
         /// <summary>
         /// Clones the options.

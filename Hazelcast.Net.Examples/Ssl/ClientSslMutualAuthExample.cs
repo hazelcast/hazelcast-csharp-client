@@ -27,11 +27,11 @@ namespace Hazelcast.Examples.Ssl
             // server certificate will be validated by OS,
             // signed certificates will just work,
             // self-signed certificates should be registered and allowed
-            options.Networking.Ssl.IsEnabled = true;
+            options.Network.Ssl.IsEnabled = true;
 
             // providing a client pfx certificate will enable mutual authentication
             // if the server is also configured for mutual authentication.
-            options.Networking.Ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH";
+            options.Network.Ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH";
 
             // create an Hazelcast client and connect to a server running on localhost
             var hz = new HazelcastClientFactory(options).CreateClient();

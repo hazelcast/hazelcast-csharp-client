@@ -18,11 +18,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Core.Collections;
 using Hazelcast.DistributedObjects.Implementation.Map;
 using Hazelcast.NearCaching;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.Collections;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Implementation.CachedMap

@@ -106,7 +106,7 @@ namespace Hazelcast.Clustering
         private async Task ConnectFirstClientAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
-            var retryStrategy = new RetryStrategy("connect to cluster", _retryOptions, _loggerFactory);
+            var retryStrategy = new RetryStrategy("connect to cluster", _networkingOptions.ConnectionRetry, _loggerFactory);
             List<Exception> exceptions = null;
             bool canRetry;
 
@@ -238,7 +238,7 @@ namespace Hazelcast.Clustering
 
             // authenticate (may throw)
             var info = await _authenticator
-                .AuthenticateAsync(client, Name, ClientId, ClientName, _labels, _serializationService, cancellationToken)
+                .AuthenticateAsync(client, Name, ClientId, ClientName, _clusterOptions.Labels, _serializationService, cancellationToken)
                 .CAF();
             if (info == null) throw new HazelcastException("Failed to authenticate");
             client.NotifyAuthenticated(info);
@@ -340,9 +340,9 @@ namespace Hazelcast.Clustering
                 if (!lastClient)
                     return;
 
-                _logger.LogInformation("Disconnected (reconnect mode:{ReconnectMode})", _reconnectMode);
+                _logger.LogInformation("Disconnected (reconnect mode:{ReconnectMode})", _networkingOptions.ReconnectMode);
 
-                switch (_reconnectMode)
+                switch (_networkingOptions.ReconnectMode)
                 {
                     case ReconnectMode.DoNotReconnect:
                         _clusterState = ClusterState.Disconnected;
@@ -382,25 +382,30 @@ namespace Hazelcast.Clustering
         {
             var addresses = new HashSet<NetworkAddress>();
 
-            // take all configured addresses
-            foreach (var address in _addressProvider.GetAddresses())
-            {
-                addresses.Add(address);
-            }
+            // do it in two batches,
+            // each batch may be shuffled, but know members always come first
 
-            // add (de-duplicated thanks to HashSet) all known members
+            // first, add all known members
             var members = _memberTable?.Members;
             if (members != null)
             {
-                foreach (var address in _memberTable.Members.Values.Select(x => x.Address))
-                {
+                var memberAddresses = _memberTable.Members.Values.Select(x => x.Address);
+                if (_networkingOptions.ShuffleAddresses)
+                    memberAddresses = memberAddresses.Shuffle();
+
+                foreach (var address in memberAddresses)
                     addresses.Add(address);
-                }
             }
 
-            return _clusterOptions.ShuffleMemberList
-                ? addresses.Shuffle()
-                : addresses;
+            // second, add all known addresses (de-duplicated thanks to HashSet)
+            var configuredAddresses = _addressProvider.GetAddresses();
+            if (_networkingOptions.ShuffleAddresses)
+                configuredAddresses = configuredAddresses.Shuffle();
+
+            foreach (var address in configuredAddresses)
+                addresses.Add(address);
+
+            return addresses;
         }
     }
 }

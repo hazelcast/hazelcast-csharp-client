@@ -16,9 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
-using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Security;
@@ -46,7 +46,7 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken)
         {
-            var credentialsFactory = _options.CredentialsFactory.Create();
+            var credentialsFactory = _options.CredentialsFactory.Create() ?? new DefaultCredentialsFactory(_options);
 
             var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
             if (info != null) return info;

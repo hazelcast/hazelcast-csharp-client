@@ -24,11 +24,11 @@ namespace Hazelcast.Examples.Cloud
         {
             static void Configure(HazelcastOptions configuration)
             {
-                var cloud = configuration.Networking.Cloud;
+                var cloud = configuration.Network.Cloud;
                 cloud.IsEnabled = true;
                 cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
 
-                var ssl = configuration.Networking.Ssl;
+                var ssl = configuration.Network.Ssl;
                 ssl.IsEnabled = true;
                 //ssl.ValidateCertificateChain = false;
                 ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH"; // downloaded from CLoud console

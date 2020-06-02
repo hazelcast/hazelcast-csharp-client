@@ -23,22 +23,6 @@ namespace Hazelcast.Core
     public class ServiceFactory<TService>
         where TService : class
     {
-        private readonly Func<TService> _defaultFactory;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceFactory{TService}"/> class.
-        /// </summary>
-        public ServiceFactory()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceFactory{TService}"/> class.
-        /// </summary>
-        public ServiceFactory(Func<TService> defaultFactory)
-        {
-            _defaultFactory = defaultFactory;
-        }
-
         /// <summary>
         /// Gets or sets the service creator.
         /// </summary>
@@ -48,9 +32,7 @@ namespace Hazelcast.Core
         /// Creates an instance of the service.
         /// </summary>
         /// <returns>An instance of the service.</returns>
-        public TService Create() => Creator?.Invoke() ??
-                                    _defaultFactory?.Invoke() ??
-                                    throw new InvalidOperationException($"Cannot create an instance of {typeof(TService)}.");
+        public TService Create() => Creator?.Invoke();
 
         /// <summary>
         /// Clones the factory.
@@ -58,7 +40,7 @@ namespace Hazelcast.Core
         /// <returns></returns>
         public ServiceFactory<TService> Clone()
         {
-            return new ServiceFactory<TService>(_defaultFactory)
+            return new ServiceFactory<TService>
             {
                 Creator = Creator
             };

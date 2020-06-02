@@ -35,7 +35,7 @@ namespace Hazelcast.Tests
             var options = new HazelcastOptions();
             configuration.HzBind(HazelcastOptions.Hazelcast, options);
 
-            Assert.AreEqual("dev", options.Cluster.Name);
+            Assert.AreEqual("dev", options.ClusterName);
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace Hazelcast.Tests
             var options = new HazelcastOptions();
             configuration.HzBind(HazelcastOptions.Hazelcast, options);
 
-            Assert.AreEqual("dev", options.Cluster.Name);
+            Assert.AreEqual("dev", options.ClusterName);
         }
 
         private static HazelcastOptions ReadResource(string json)
@@ -74,7 +74,7 @@ namespace Hazelcast.Tests
         {
             var options = ReadResource(Resources.HazelcastOptions);
 
-            Assert.AreEqual("testClusterName", options.Cluster.Name);
+            Assert.AreEqual("testClusterName", options.ClusterName);
             Assert.AreEqual("testClientName", options.ClientName);
             Assert.AreEqual(2, options.Properties.Count);
             Assert.IsTrue(options.Properties.ContainsKey("aKey"));
@@ -90,13 +90,10 @@ namespace Hazelcast.Tests
         [Test]
         public async Task ClusterOptionsFile()
         {
-            var options = ReadResource(Resources.ClusterOptions).Cluster;
+            var options = ReadResource(Resources.ClusterOptions) as IClusterOptions;
 
-            Assert.AreEqual("testClusterName", options.Name);
-            Assert.IsFalse(options.ShuffleMemberList);
-
-            Assert.AreEqual(1, options.EventSubscribers.Count);
-            var subscriber = options.EventSubscribers[0];
+            Assert.AreEqual(1, options.Subscribers.Count);
+            var subscriber = options.Subscribers[0];
             Assert.IsInstanceOf<ClusterEventSubscriber>(subscriber);
 
             TestSubscriber.Ctored = false;
@@ -126,7 +123,7 @@ namespace Hazelcast.Tests
         [Test]
         public void NetworkingOptionsFile()
         {
-            var options = ReadResource(Resources.NetworkingOptions).Networking;
+            var options = ReadResource(Resources.NetworkingOptions).Network;
 
             Assert.AreEqual(2, options.Addresses.Count);
             Assert.IsTrue(options.Addresses.Contains("localhost"));
@@ -135,6 +132,8 @@ namespace Hazelcast.Tests
             Assert.IsFalse(options.RedoOperation);
             Assert.AreEqual(666, options.ConnectionTimeoutMilliseconds);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
+            Assert.IsFalse(options.ShuffleAddresses);
+
 
             var sslOptions = options.Ssl;
             Assert.IsTrue(sslOptions.IsEnabled);
@@ -177,31 +176,37 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        public void SecurityOptionsFile()
+        public void AuthenticationOptionsFile()
         {
-            var options = ReadResource(Resources.SecurityOptions).Security;
-
-            Assert.AreEqual("Hazelcast.Security.DefaultCredentialsFactory, Hazelcast.Net", options.CredentialsFactoryType);
-            Assert.AreEqual(2, options.CredentialsFactoryArgs.Count);
-            Assert.IsTrue(options.CredentialsFactoryArgs.TryGetValue("arg1", out var arg1) && arg1 == "value1");
-            Assert.IsTrue(options.CredentialsFactoryArgs.TryGetValue("arg2", out var arg2) && arg2 == "value2");
-
-            var credentialsFactory = options.CredentialsFactory.Create();
-            Assert.IsInstanceOf<DefaultCredentialsFactory>(credentialsFactory);
+            var options = ReadResource(Resources.AuthenticationOptions).Authentication;
 
             Assert.AreEqual("Hazelcast.Clustering.Authenticator, Hazelcast.Net", options.AuthenticatorType);
             Assert.AreEqual(2, options.AuthenticatorArgs.Count);
-            Assert.IsTrue(options.AuthenticatorArgs.TryGetValue("arg3", out var arg3) && arg3 == "value3");
-            Assert.IsTrue(options.AuthenticatorArgs.TryGetValue("arg4", out var arg4) && arg4 == "value4");
+            Assert.IsTrue(options.AuthenticatorArgs.TryGetValue("arg3", out var arg3) && arg3 is string s3 && s3 == "value3");
+            Assert.IsTrue(options.AuthenticatorArgs.TryGetValue("arg4", out var arg4) && arg4 is string s4 && s4 == "value4");
 
             var authenticator = options.Authenticator.Create();
             Assert.IsInstanceOf<Authenticator>(authenticator);
         }
 
         [Test]
+        public void SecurityOptionsFile()
+        {
+            var options = ReadResource(Resources.SecurityOptions).Security;
+
+            Assert.AreEqual("Hazelcast.Security.DefaultCredentialsFactory, Hazelcast.Net", options.CredentialsFactoryType);
+            Assert.AreEqual(2, options.CredentialsFactoryArgs.Count);
+            Assert.IsTrue(options.CredentialsFactoryArgs.TryGetValue("arg1", out var arg1) && arg1 is string s1 && s1 == "value1");
+            Assert.IsTrue(options.CredentialsFactoryArgs.TryGetValue("arg2", out var arg2) && arg2 is string s2 && s2 == "value2");
+
+            var credentialsFactory = options.CredentialsFactory.Create();
+            Assert.IsInstanceOf<DefaultCredentialsFactory>(credentialsFactory);
+        }
+
+        [Test]
         public void LoadBalancingOptionsFile()
         {
-            var options = ReadResource(Resources.LoadBalancingOptions).LoadBalancing;
+            var options = ReadResource(Resources.LoadBalancingOptions).LoadBalancer;
 
             Assert.AreEqual("Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net", options.LoadBalancerType);
             Assert.AreEqual(2, options.LoadBalancerArgs.Count);

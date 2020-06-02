@@ -28,7 +28,7 @@ namespace Hazelcast.Clustering.LoadBalancing
 
         public LoadBalancingOptions()
         {
-            LoadBalancer = new ServiceFactory<ILoadBalancer>(() => new RoundRobinLoadBalancer(this));
+            LoadBalancer = new ServiceFactory<ILoadBalancer>();
             LoadBalancerArgs = new Dictionary<string, object>();
         }
 

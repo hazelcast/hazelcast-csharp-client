@@ -1,0 +1,16 @@
+{
+  "hazelcast": {
+
+    "authentication": {
+
+      "authenticatorType": "Hazelcast.Clustering.Authenticator, Hazelcast.Net",
+
+      "authenticatorArgs": {
+        "arg3": "value3",
+        "arg4": "value4"
+      }
+
+    }
+
+  }
+}

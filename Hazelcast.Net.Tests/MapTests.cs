@@ -40,7 +40,7 @@ namespace Hazelcast.Tests
         {
             return CreateOpenClientAsync(configuration =>
             {
-                configuration.Networking.Addresses.Add("sgay-l4");
+                configuration.Network.Addresses.Add("sgay-l4");
             });
         }
 
@@ -423,9 +423,9 @@ namespace Hazelcast.Tests
 
             void ConfigureClient(HazelcastOptions config)
             {
-                config.Networking.Addresses.Add("sgay-l4");
+                config.Network.Addresses.Add("sgay-l4");
 
-                config.Cluster.AddEventSubscriber(on => on.ObjectCreated((sender, args) =>
+                config.AddSubscriber(on => on.ObjectCreated((sender, args) =>
                 {
                     HzConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
                     Interlocked.Increment(ref eventsCount);

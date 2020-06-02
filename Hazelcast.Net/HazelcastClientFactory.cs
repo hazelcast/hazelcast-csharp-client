@@ -20,6 +20,7 @@ using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast
 {
@@ -74,7 +75,7 @@ namespace Hazelcast
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var loggerFactory = options.Logging.LoggerFactory.Create();
+            var loggerFactory = options.Logging.LoggerFactory.Create() ?? new NullLoggerFactory();
 
             // TODO: refactor serialization service entirely
             // there should not be a 'builder'
@@ -92,11 +93,7 @@ namespace Hazelcast
             var serializationService = serializationServiceBuilder.Build();
 
             var cluster = new Cluster(options.ClientName, null,
-                options.Labels,
-                options.Cluster,
-                options.Networking,
-                options.LoadBalancing,
-                options.Security,
+                options,
                 serializationService,
                 loggerFactory);
 

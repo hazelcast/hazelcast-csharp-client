@@ -15,9 +15,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Hazelcast.Serialization;
+using Hazelcast.Core;
 
-namespace Hazelcast.Core.Collections
+namespace Hazelcast.Serialization.Collections
 {
     /// <summary>
     /// Represent a lazy dictionary of keys and values.

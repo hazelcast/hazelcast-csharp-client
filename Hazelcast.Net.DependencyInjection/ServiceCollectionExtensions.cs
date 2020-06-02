@@ -45,7 +45,7 @@ namespace Hazelcast.DependencyInjection
             services.Configure<HazelcastOptions>(options =>
             {
                 options.Logging.LoggerFactory.Creator = () => options.ServiceProvider.GetRequiredService<ILoggerFactory>();
-                options.Security.Authenticator.Creator = () => options.ServiceProvider.GetRequiredService<IAuthenticator>();
+                options.Authentication.Authenticator.Creator = () => options.ServiceProvider.GetRequiredService<IAuthenticator>();
 
                 // TODO: think!
                 // when running without DI, everything comes from options

@@ -31,6 +31,8 @@ namespace Hazelcast.Examples.Map
             //HzConsole.Configure<AsyncContext>(config => { config.SetMaxLevel(0); });
 
             var options = BuildExampleOptions(args);
+
+            // FIXME: this is bad, because the factory does not ensure it's a singleton
             using var ensureLoggerFactoryIsDisposed = options.Logging.LoggerFactory.Create();
 
             // create an Hazelcast client and connect to a server running on localhost

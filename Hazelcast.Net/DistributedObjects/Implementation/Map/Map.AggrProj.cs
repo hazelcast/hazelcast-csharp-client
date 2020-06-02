@@ -18,10 +18,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregators;
 using Hazelcast.Core;
-using Hazelcast.Core.Collections;
 using Hazelcast.Predicates;
 using Hazelcast.Projections;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.DistributedObjects.Implementation.Map
 {

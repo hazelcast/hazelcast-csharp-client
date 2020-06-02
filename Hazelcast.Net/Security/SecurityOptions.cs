@@ -14,11 +14,11 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
-using Hazelcast.Security;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Security
 {
     /// <summary>
     /// Represents the security options.
@@ -26,17 +26,17 @@ namespace Hazelcast.Clustering
     public class SecurityOptions
     {
         private string _credentialsFactoryType;
-        private string _authenticatorType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityOptions"/> class.
         /// </summary>
         public SecurityOptions()
         {
-            CredentialsFactory = new ServiceFactory<ICredentialsFactory>(() => new DefaultCredentialsFactory(this));
+            // FIXME these could move up to the HazelcastOptions in some sort of DI-like thing
+            // but what about... do we have more?
+
+            CredentialsFactory = new ServiceFactory<ICredentialsFactory>();
             CredentialsFactoryArgs = new Dictionary<string, object>();
-            Authenticator = new ServiceFactory<IAuthenticator>(() => new Authenticator(this));
-            AuthenticatorArgs = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -78,42 +78,49 @@ namespace Hazelcast.Clustering
         public Dictionary<string, object> CredentialsFactoryArgs { get; private set; }
 
         /// <summary>
-        /// Gets or sets the authenticator factory.
+        /// Configures Kerberos as the authentication mechanism.
         /// </summary>
-        public ServiceFactory<IAuthenticator> Authenticator { get; private set; }
-
-        /// <summary>
-        /// Gets or sets the type of the authenticator.
-        /// </summary>
-        /// <remarks>
-        /// <para>Returns the correct value only if it has been set via the same property. If the
-        /// authenticator has been configured via code and the <see cref="Authenticator"/>
-        /// property, the value returned by this property is unspecified.</para>
-        /// </remarks>
-        public string AuthenticatorType
+        /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
+        /// <returns>The security options.</returns>
+        public SecurityOptions ConfigureKerberosCredentials(string spn)
         {
-            get => _authenticatorType;
-
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(value));
-
-                _authenticatorType = value;
-
-                Authenticator.Creator = () => Services.CreateInstance<IAuthenticator>(value, this);
-            }
+            CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);
+            return this;
         }
 
         /// <summary>
-        /// Gets the arguments for the authenticator.
+        /// Configures a user name and password as the authentication mechanism.
         /// </summary>
-        /// <remarks>
-        /// <para>Arguments are used when creating an authenticator from its type as set
-        /// via the <see cref="AuthenticatorType"/> property. They are ignored if the
-        /// authenticator has been configured via code and the <see cref="Authenticator"/>
-        /// property.</para>
-        /// </remarks>
-        public Dictionary<string, object> AuthenticatorArgs { get; private set; }
+        /// <param name="username">Username.</param>
+        /// <param name="password">Password.</param>
+        /// <returns>The security options.</returns>
+        private SecurityOptions ConfigurePasswordCredentials(string username, string password)
+        {
+            var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
+            CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
+            return this;
+        }
+
+        /// <summary>
+        /// Configures static credentials as the authentication mechanism.
+        /// </summary>
+        /// <param name="credentials">Credentials.</param>
+        /// <returns>The security options.</returns>
+        private SecurityOptions ConfigureCredentials(ICredentials credentials)
+        {
+            CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a static token as the authentication mechanism.
+        /// </summary>
+        /// <param name="token">A token.</param>
+        /// <returns>The security configuration.</returns>
+        private SecurityOptions ConfigureTokenCredentials(byte[] token)
+        {
+            return ConfigureCredentials(new TokenCredentials(token));
+        }
 
         /// <summary>
         /// Clone the options.
@@ -122,10 +129,7 @@ namespace Hazelcast.Clustering
         {
             return new SecurityOptions
             {
-                _authenticatorType = _authenticatorType,
                 _credentialsFactoryType = _credentialsFactoryType,
-                Authenticator = Authenticator.Clone(),
-                AuthenticatorArgs = new Dictionary<string, object>(AuthenticatorArgs),
                 CredentialsFactory = CredentialsFactory.Clone(),
                 CredentialsFactoryArgs = new Dictionary<string, object>(CredentialsFactoryArgs)
             };
