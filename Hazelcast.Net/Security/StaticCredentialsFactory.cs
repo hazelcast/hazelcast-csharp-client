@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-
 namespace Hazelcast.Security
 {
     /// <summary>
@@ -31,10 +29,6 @@ namespace Hazelcast.Security
         {
             _credentials = credentials;
         }
-
-        /// <inheritdoc />
-        public void Initialize(IDictionary<string, string> properties)
-        { }
 
         /// <inheritdoc />
         public ICredentials NewCredentials()

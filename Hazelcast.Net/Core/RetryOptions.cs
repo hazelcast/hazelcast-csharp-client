@@ -22,6 +22,24 @@ namespace Hazelcast.Core
     public class RetryOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="RetryOptions"/> class.
+        /// </summary>
+        public RetryOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RetryOptions"/> class.
+        /// </summary>
+        private RetryOptions(RetryOptions other)
+        {
+            InitialBackoffMilliseconds = other.InitialBackoffMilliseconds;
+            MaxBackoffMilliseconds = other.MaxBackoffMilliseconds;
+            Multiplier = other.Multiplier;
+            ClusterConnectionTimeoutMilliseconds = other.ClusterConnectionTimeoutMilliseconds;
+            Jitter = other.Jitter;
+        }
+
+        /// <summary>
         /// Gets or sets the back-off time in milliseconds.
         /// </summary>
         public int InitialBackoffMilliseconds { get; set; } = 1000;
@@ -44,21 +62,11 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets or sets the jitter.
         /// </summary>
-        public double Jitter { get; set; } = 0;
+        public double Jitter { get; set; }
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public RetryOptions Clone()
-        {
-            return new RetryOptions
-            {
-                InitialBackoffMilliseconds = InitialBackoffMilliseconds,
-                MaxBackoffMilliseconds = MaxBackoffMilliseconds,
-                Multiplier = Multiplier,
-                ClusterConnectionTimeoutMilliseconds = ClusterConnectionTimeoutMilliseconds,
-                Jitter = Jitter
-            };
-        }
+        internal RetryOptions Clone() => new RetryOptions(this);
     }
 }

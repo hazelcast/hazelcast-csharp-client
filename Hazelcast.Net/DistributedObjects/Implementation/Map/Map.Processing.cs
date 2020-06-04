@@ -34,7 +34,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, key, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -86,7 +86,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, keys, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -127,7 +127,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -161,7 +161,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
             Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ExecuteAsync(processor, predicate, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -195,7 +195,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<object> ApplyAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ApplyAsync(processor, key, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC

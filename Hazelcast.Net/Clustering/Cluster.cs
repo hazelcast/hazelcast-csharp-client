@@ -57,8 +57,7 @@ namespace Hazelcast.Clustering
         // for cluster client-level events (not wired to the server)
         private readonly ConcurrentDictionary<Guid, ClusterEventHandlers> _clusterHandlers = new ConcurrentDictionary<Guid, ClusterEventHandlers>();
 
-        private readonly IClusterOptions _clusterOptions;
-        private readonly NetworkingOptions _networkingOptions;
+        private readonly IClusterOptions _options;
 
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoadBalancer _loadBalancer;
@@ -118,29 +117,26 @@ namespace Hazelcast.Clustering
             ILoggerFactory loggerFactory)
         {
 
-            _clusterOptions = options ?? throw new ArgumentNullException(nameof(options));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            _logger = _loggerFactory.CreateLogger<Cluster>();
-
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
+            _logger = _loggerFactory.CreateLogger<Cluster>();
             _clusterEventSubscribers = options.Subscribers;
-
-            _authenticator = options.Authentication.Authenticator.Create() ?? new Authenticator(options.Security);
-            _loadBalancer = options.LoadBalancer.LoadBalancer.Create() ?? new RoundRobinLoadBalancer(options.LoadBalancer);
-            _addressProvider = new AddressProvider(options.Network, loggerFactory);
-            _heartbeat = new Heartbeat(this, loggerFactory);
-
-            // _localOnly is defined in ListenerService and initialized with IsSmartRouting so it's the same
-            // it is used by ProxyManager to AddDistributedObjectListener - passing that value
-
             _correlationIdSequence = new Int64Sequence();
+
+            DefaultOperationTimeoutMilliseconds = options.Messaging.DefaultOperationTimeoutMilliseconds;
             Partitioner = new Partitioner();
 
-            Name = string.IsNullOrWhiteSpace(clusterName) ? "dev" : clusterName;
+            _authenticator = options.Authentication.Authenticator.Service ?? new Authenticator(options.Authentication);
+            _loadBalancer = options.LoadBalancing.LoadBalancer.Service ?? new RoundRobinLoadBalancer();
 
+            _addressProvider = new AddressProvider(options.Networking, loggerFactory);
+            _heartbeat = new Heartbeat(this, options.Heartbeat, loggerFactory);
+
+            Name = string.IsNullOrWhiteSpace(clusterName) ? "dev" : clusterName;
             ClientName = string.IsNullOrWhiteSpace(clientName)
-                ? "hz.client_" + ClusterIdSequence.Next
+                ? options.DefaultClientNamePrefix + ClusterIdSequence.Next
                 : clientName;
 
             // setup events
@@ -171,6 +167,11 @@ namespace Hazelcast.Clustering
         public string Name { get; }
 
         /// <summary>
+        /// Gets the default operation timeout in milliseconds.
+        /// </summary>
+        public int DefaultOperationTimeoutMilliseconds { get; }
+
+        /// <summary>
         /// Gets or sets an action that will be executed when connecting to a new cluster.
         /// </summary>
         public Func<CancellationToken, ValueTask> OnConnectingToNewCluster
@@ -196,7 +197,7 @@ namespace Hazelcast.Clustering
         /// then behaves as a gateway for the other members. Firewalls, security, or some
         /// custom networking issues can be the reason for these cases.</para>
         /// </remarks>
-        public bool IsSmartRouting => _networkingOptions.SmartRouting;
+        public bool IsSmartRouting => _options.Networking.SmartRouting;
 
         /// <summary>
         /// Gets the partitioner.

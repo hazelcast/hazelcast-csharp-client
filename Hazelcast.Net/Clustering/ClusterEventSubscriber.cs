@@ -74,8 +74,8 @@ namespace Hazelcast.Clustering
             else
             {
                 var subscriber = _subscriber ?? (_type == null
-                    ? Services.CreateInstance<IClusterEventSubscriber>(_typename)
-                    : Services.CreateInstance<IClusterEventSubscriber>(_type));
+                    ? ServiceFactory.CreateInstance<IClusterEventSubscriber>(_typename, null)
+                    : ServiceFactory.CreateInstance<IClusterEventSubscriber>(_type, null));
 
                 await subscriber.SubscribeAsync(cluster, cancellationToken).CAF();
             }

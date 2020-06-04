@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 #endif
         Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = SubscribeAsync(on, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -131,7 +131,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 #endif
         Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = UnsubscribeAsync(subscriptionId, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC

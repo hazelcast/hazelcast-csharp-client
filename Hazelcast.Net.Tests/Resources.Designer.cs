@@ -64,61 +64,6 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    &quot;authentication&quot;: {
-        ///
-        ///      &quot;authenticatorType&quot;: &quot;Hazelcast.Clustering.Authenticator, Hazelcast.Net&quot;,
-        ///
-        ///      &quot;authenticatorArgs&quot;: {
-        ///        &quot;arg3&quot;: &quot;value3&quot;,
-        ///        &quot;arg4&quot;: &quot;value4&quot;
-        ///      }
-        ///
-        ///    }
-        ///
-        ///  }
-        ///}.
-        /// </summary>
-        internal static string AuthenticationOptions {
-            get {
-                return ResourceManager.GetString("AuthenticationOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
-        ///    &quot;cluster&quot;: {
-        ///
-        ///      // the name of the cluster
-        ///      &quot;name&quot;: &quot;testClusterName&quot;,
-        ///
-        ///      // whether to shuffle the member list when trying to connect
-        ///      &quot;shuffleMemberList&quot;: false,
-        ///
-        ///      // event subscribers
-        ///      &quot;eventSubscribers&quot;: [
-        ///
-        ///        // add an event subscriber
-        ///        &quot;Hazelcast.Tests.ConfigurationTests+TestSubscriber, Hazelcast.Net.Tests&quot;
-        ///
-        ///      ]
-        ///
-        ///    }
-        ///
-        ///  }
-        ///}.
-        /// </summary>
-        internal static string ClusterOptions {
-            get {
-                return ResourceManager.GetString("ClusterOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
         ///  }
         ///}.
         /// </summary>
@@ -145,191 +90,38 @@ namespace Hazelcast.Tests {
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
-        ///    &quot;clusterName&quot;: &quot;testClusterName&quot;,
-        ///
-        ///    &quot;clientName&quot;: &quot;testClientName&quot;,
-        ///
-        ///    &quot;properties&quot;: {
-        ///      &quot;aKey&quot;: &quot;aValue&quot;,
-        ///      &quot;anotherKey&quot;: &quot;anotherValue&quot;
-        ///    },
+        ///    &quot;clientName&quot;: &quot;client&quot;,
+        ///    &quot;clusterName&quot;: &quot;cluster&quot;,
+        ///    &quot;asyncStart&quot;: true,
         ///
         ///    &quot;labels&quot;: [
-        ///      &quot;label1&quot;,
-        ///      &quot;label2&quot;
+        ///      &quot;label_1&quot;,
+        ///      &quot;label_2&quot;
         ///    ],
         ///
-        ///    &quot;asyncStart&quot;: true
+        ///    &quot;subscribers&quot;: [
+        ///      { &quot;typeName&quot;: &quot;Hazelcast.Tests.ConfigurationTests+TestSubscriber, Hazelcast.Net.Tests&quot; }
+        ///    ],
         ///
-        ///  }
-        ///}.
+        ///    &quot;logging&quot;: {},
+        ///
+        ///    // core options
+        ///    &quot;core&quot;: {
+        ///
+        ///      // clock options
+        ///      &quot;clock&quot;: {
+        ///
+        ///        // clock offset
+        ///        &quot;offset&quot;: 1000
+        ///      }
+        ///    },
+        ///
+        ///    // messaging options
+        ///    &quot;messaging [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string HazelcastOptions {
             get {
                 return ResourceManager.GetString("HazelcastOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
-        ///    &quot;loadBalancing&quot;: {
-        ///
-        ///      // the type of the load balancer
-        ///      &quot;loadBalancerType&quot;: &quot;Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net&quot;,
-        ///
-        ///      // arguments for the load balancer
-        ///      &quot;loadBalancerArgs&quot;: {
-        ///
-        ///        &quot;arg1&quot;: &quot;value1&quot;,
-        ///        &quot;arg2&quot;: &quot;value2&quot;
-        ///
-        ///      }
-        ///
-        ///    }
-        ///
-        ///  }
-        ///}.
-        /// </summary>
-        internal static string LoadBalancingOptions {
-            get {
-                return ResourceManager.GetString("LoadBalancingOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
-        ///    &quot;logging&quot;: {
-        ///
-        ///      // there are no logging options at the moment
-        ///
-        ///    }
-        ///
-        ///  }
-        ///}.
-        /// </summary>
-        internal static string LoggingOptions {
-            get {
-                return ResourceManager.GetString("LoggingOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
-        ///    &quot;nearCache&quot;: {
-        ///
-        ///      // the &apos;default&apos; NearCache configuration
-        ///      &quot;default&quot;: {
-        ///
-        ///        &quot;name&quot;: &quot;defaultName&quot;,
-        ///        &quot;evictionPolicy&quot;: &quot;lru&quot;,
-        ///        &quot;inMemoryFormat&quot;: &quot;binary&quot;,
-        ///        &quot;maxIdleSeconds&quot;: 666,
-        ///        &quot;maxSize&quot;: 667,
-        ///        &quot;TimeToLiveSeconds&quot;: 668,
-        ///        &quot;invalidateOnChange&quot;: true
-        ///      },
-        ///
-        ///      // another NearCache configuration, named &apos;other&apos;
-        ///      &quot;other&quot;: {
-        ///
-        ///        &quot;name&quot;: &quot;otherName&quot;,
-        ///        &quot;evictionPolicy&quot;: &quot;lfu&quot;,
-        ///        &quot;inMe [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string NearCacheOptions {
-            get {
-                return ResourceManager.GetString("NearCacheOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
-        ///    &quot;networking&quot;: {
-        ///
-        ///      &quot;addresses&quot;: [
-        ///        &quot;localhost&quot;,
-        ///        &quot;otherhost&quot;
-        ///      ],
-        ///
-        ///      &quot;smartRouting&quot;: false,
-        ///
-        ///      &quot;redoOperation&quot;: false,
-        ///
-        ///      &quot;connectionTimeoutMilliseconds&quot;: 666,
-        ///
-        ///      &quot;reconnectMode&quot;: &quot;doNotReconnect&quot;,
-        ///
-        ///      &quot;ssl&quot;: {
-        ///        &quot;isEnabled&quot;: true,
-        ///        &quot;validateCertificateChain&quot;: false,
-        ///        &quot;validateCertificateName&quot;: true,
-        ///        &quot;checkCertificateRevocation&quot;: true,
-        ///        &quot;certificateName&quot;: &quot;testCertificateName&quot;,
-        ///        [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string NetworkingOptions {
-            get {
-                return ResourceManager.GetString("NetworkingOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
-        ///    &quot;security&quot;: {
-        ///
-        ///      &quot;credentialsFactoryType&quot;: &quot;Hazelcast.Security.DefaultCredentialsFactory, Hazelcast.Net&quot;,
-        ///
-        ///      &quot;credentialsFactoryArgs&quot;: {
-        ///        &quot;arg1&quot;: &quot;value1&quot;,
-        ///        &quot;arg2&quot;: &quot;value2&quot;
-        ///      }
-        ///
-        ///    }
-        ///
-        ///  }
-        ///}.
-        /// </summary>
-        internal static string SecurityOptions {
-            get {
-                return ResourceManager.GetString("SecurityOptions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;hazelcast&quot;: {
-        ///
-        ///    &quot;serialization&quot;: {
-        ///
-        ///      &quot;endianness&quot;: &quot;LittleEndian&quot;,
-        ///      &quot;portableVersion&quot;: 42,
-        ///      &quot;checkClassDefinitionErrors&quot;: false,
-        ///
-        ///      &quot;portableFactories&quot;: [
-        ///        {
-        ///          &quot;id&quot;: 666,
-        ///          &quot;factoryType&quot;: &quot;Hazelcast.Tests.ConfigurationTests+TestPortableFactory, Hazelcast.Net.Tests&quot;
-        ///        }
-        ///      ],
-        ///
-        ///      &quot;dataSerializableFactories&quot;: [
-        ///        {
-        ///          &quot;id&quot;: 667,
-        ///          &quot;factoryType&quot;: &quot;Hazelcast.Tests.ConfigurationTests+TestDataSerializableFactory, [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string SerializationOptions {
-            get {
-                return ResourceManager.GetString("SerializationOptions", resourceCulture);
             }
         }
     }

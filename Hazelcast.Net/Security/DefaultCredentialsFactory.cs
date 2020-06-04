@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using Hazelcast.Clustering;
-
 namespace Hazelcast.Security
 {
     /// <summary>
@@ -26,13 +23,6 @@ namespace Hazelcast.Security
     {
         // by default, go with username+password
         private static readonly ICredentials DefaultCredentials = new UsernamePasswordCredentials();
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultCredentialsFactory"/> class.
-        /// </summary>
-        /// <param name="options">Options.</param>
-        public DefaultCredentialsFactory(SecurityOptions options)
-        { }
 
         /// <inheritdoc />
         public ICredentials NewCredentials()

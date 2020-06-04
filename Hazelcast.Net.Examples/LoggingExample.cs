@@ -13,8 +13,7 @@ namespace Hazelcast.Examples
                 { "Logging:LogLevel:Hazelcast.Examples.LoggingExample.B", "Information" }
             });
 
-            // FIXME: not  a singleton wtf? none of them are?!
-            var loggerFactory = options.Logging.LoggerFactory.Create();
+            var loggerFactory = options.Logging.LoggerFactory.Service;
 
             var loggerA = loggerFactory.CreateLogger<A>();
 

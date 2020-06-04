@@ -25,11 +25,14 @@ namespace Hazelcast.NearCaching
 {
     internal class NearCache : NearCacheBase
     {
+        private readonly int _maxToleratedMissCount;
         private RepairingHandler _repairingHandler;
 
-        public NearCache(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheNamedOptions nearCacheNamedOptions)
+        public NearCache(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheNamedOptions nearCacheNamedOptions, int maxToleratedMissCount)
             : base(name, cluster, serializationService, loggerFactory, nearCacheNamedOptions)
-        { }
+        {
+            _maxToleratedMissCount = maxToleratedMissCount;
+        }
 
         // FIXME: why is this public?
         public RepairingHandler RepairingHandler => _repairingHandler;
@@ -38,7 +41,7 @@ namespace Hazelcast.NearCaching
         {
             if (InvalidateOnChange)
             {
-                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, Cluster.Partitioner, SerializationService, LoggerFactory);
+                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, _maxToleratedMissCount, Cluster.Partitioner, SerializationService, LoggerFactory);
                 RegisterInvalidateListener();
             }
         }

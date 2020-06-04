@@ -30,8 +30,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Initializes a new instance of the <see cref="RoundRobinLoadBalancer"/> class.
         /// </summary>
-        /// <param name="options">Options.</param>
-        public RoundRobinLoadBalancer(LoadBalancingOptions options)
+        public RoundRobinLoadBalancer()
         { }
 
         /// <inheritdoc />

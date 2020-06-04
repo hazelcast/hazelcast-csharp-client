@@ -32,12 +32,12 @@ namespace Hazelcast.Clustering
     public class Authenticator : IAuthenticator
     {
         private static string _clientVersion;
-        private readonly SecurityOptions _options;
+        private readonly AuthenticationOptions _options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Authenticator"/> class.
         /// </summary>
-        public Authenticator(SecurityOptions options)
+        public Authenticator(AuthenticationOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             HzConsole.Configure(this, config => config.SetIndent(4).SetPrefix("AUTH"));
@@ -46,7 +46,7 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken)
         {
-            var credentialsFactory = _options.CredentialsFactory.Create() ?? new DefaultCredentialsFactory(_options);
+            var credentialsFactory = _options.CredentialsFactory.Service ?? new DefaultCredentialsFactory();
 
             var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
             if (info != null) return info;

@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
+using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.Exceptions;
 
 namespace Hazelcast.Clustering.LoadBalancing
 {
@@ -24,63 +22,42 @@ namespace Hazelcast.Clustering.LoadBalancing
     /// </summary>
     public class LoadBalancingOptions
     {
-        private string _loadBalancerType;
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoadBalancingOptions"/> class.
+        /// </summary>
         public LoadBalancingOptions()
         {
-            LoadBalancer = new ServiceFactory<ILoadBalancer>();
-            LoadBalancerArgs = new Dictionary<string, object>();
+            LoadBalancer = new SingletonServiceFactory<ILoadBalancer>();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoadBalancingOptions"/> class.
+        /// </summary>
+        private LoadBalancingOptions(LoadBalancingOptions other)
+        {
+            LoadBalancer = other.LoadBalancer.Clone();
         }
 
         /// <summary>
         /// Gets the service factory for <see cref="ILoadBalancer"/>.
         /// </summary>
-        public ServiceFactory<ILoadBalancer> LoadBalancer { get; private set; }
+        [BinderIgnore]
+        public SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
 
-        /// <summary>
-        /// Gets or sets the type of the load balancer.
-        /// </summary>
-        /// <remarks>
-        /// <para>Returns the correct value only if it has been set via the same property. If the
-        /// load balancer has been configured via code and the <see cref="LoadBalancer"/>
-        /// property, the value returned by this property is unspecified.</para>
-        /// </remarks>
-        public string LoadBalancerType
+        [BinderName("loadBalancer")]
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions LoadBalancerBinder
+#pragma warning restore IDE0051 // Remove unused private members
         {
-            get => _loadBalancerType;
-
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(value));
-
-                _loadBalancerType = value;
-
-                LoadBalancer.Creator = () => Services.CreateInstance<ILoadBalancer>(value, this);
-            }
+            get => default;
+            set => LoadBalancer.Creator = () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args);
         }
-
-        /// <summary>
-        /// Gets the arguments for the load balancer.
-        /// </summary>
-        /// <remarks>
-        /// <para>Arguments are used when creating a load balancer from its type as set
-        /// via the <see cref="LoadBalancerType"/> property. They are ignored if the
-        /// credentials factory has been configured via code and the <see cref="LoadBalancer"/>
-        /// property.</para>
-        /// </remarks>
-        public Dictionary<string, object> LoadBalancerArgs { get; private set; }
 
         /// <summary>
         /// Clone the options.
         /// </summary>
-        public LoadBalancingOptions Clone()
-        {
-            return new LoadBalancingOptions
-            {
-                LoadBalancer = LoadBalancer.Clone(),
-                _loadBalancerType = _loadBalancerType,
-                LoadBalancerArgs = new Dictionary<string, object>(LoadBalancerArgs)
-            };
-        }
+        internal LoadBalancingOptions Clone() => new LoadBalancingOptions(this);
     }
 }

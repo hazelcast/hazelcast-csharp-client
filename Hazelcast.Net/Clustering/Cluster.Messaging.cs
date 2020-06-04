@@ -240,7 +240,7 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            var invocation = new Invocation(message, client, cancellationToken);
+            var invocation = new Invocation(message, _options.Messaging, client, cancellationToken);
 
             while (true)
             {
@@ -258,7 +258,7 @@ namespace Hazelcast.Clustering
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
-                    if (invocation.ShouldRetry(exception, _networkingOptions.RedoOperation) &&
+                    if (invocation.ShouldRetry(exception, _options.Networking.RetryOnTargetDisconnected) &&
                         await invocation.CanRetryAsync(() => _correlationIdSequence.Next).CAF())
                     {
                         HzConsole.WriteLine(this, "Retrying...");

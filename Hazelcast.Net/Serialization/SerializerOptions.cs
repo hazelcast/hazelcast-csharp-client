@@ -19,42 +19,48 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Serialization
 {
-    public class SerializerOptions : ServiceFactory<ISerializer>
+    public class SerializerOptions : SingletonServiceFactory<ISerializer>
     {
-        private Type _serializedType;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SerializationOptions"/> class.
+        /// </summary>
+        public SerializerOptions()
+        { }
 
-        [BinderIgnore]
-        public Type SerializedType
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SerializationOptions"/> class.
+        /// </summary>
+        private SerializerOptions(SerializerOptions other, bool shallow)
+            : base(other, shallow)
         {
-            get => _serializedType ??
-                   Type.GetType(SerializedTypeName) ??
-                   throw new ConfigurationException($"Unknown serialized type \"{SerializedTypeName}\".");
-            set => _serializedType = value;
+            SerializedType = other.SerializedType;
+            OverrideClr = other.OverrideClr;
         }
 
-        [BinderName("serializedType")]
-        public string SerializedTypeName { get; set; }
+        /// <summary>
+        /// Gets or sets the type being serialized.
+        /// </summary>
+        [BinderIgnore]
+        public Type SerializedType { get; set; }
 
-        public string SerializerType
+        /// <summary>
+        /// Gets or sets the name of the type being serialized.
+        /// </summary>
+        [BinderIgnore(false)]
+        private string SerializedTypeName
         {
             get => default;
-            set => Creator = () => Services.CreateInstance<ISerializer>(value);
+            set => SerializedType = Type.GetType(value) ?? throw new ConfigurationException($"Unknown serialized type \"{value}\".");
         }
 
+        /// <summary>
+        /// Whether to FIXME - what?
+        /// </summary>
         public bool OverrideClr { get; set; }
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public new SerializerOptions Clone()
-        {
-            return new SerializerOptions
-            {
-                _serializedType = _serializedType,
-                SerializedTypeName = SerializedTypeName,
-                OverrideClr = OverrideClr,
-                Creator = Creator
-            };
-        }
+        internal new SerializerOptions Clone(bool shallow = true) => new SerializerOptions(this, shallow);
     }
 }

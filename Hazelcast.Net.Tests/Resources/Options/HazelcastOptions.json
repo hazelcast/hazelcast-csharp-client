@@ -1,21 +1,279 @@
 {
   "hazelcast": {
 
-    "clusterName": "testClusterName",
+    // name of the client
+    "clientName": "client",
 
-    "clientName": "testClientName",
+    // name of the cluster
+    "clusterName": "cluster",
 
-    "properties": {
-      "aKey": "aValue",
-      "anotherKey": "anotherValue"
-    },
+    // whether to start async (FIXME USAGE?)
+    "asyncStart": true,
 
+    // client labels
     "labels": [
-      "label1",
-      "label2"
+      "label_1",
+      "label_2"
     ],
 
-    "asyncStart": true
+    // client events subscribers
+    "subscribers": [
 
+      // a subscriber
+      {
+        // name of the type of the subscriber
+        "typeName": "Hazelcast.Tests.ConfigurationTests+TestSubscriber, Hazelcast.Net.Tests"
+      }
+    ],
+
+    // logging options
+    "logging": {},
+
+    // core options
+    "core": {
+
+      // clock options
+      "clock": {
+
+        // clock offset
+        "offset": 1000
+      }
+    },
+
+    // messaging options
+    "messaging": {
+
+      // number of times an invocation that failed can be retried immediately
+      "maxFastInvocationCount": 1000,
+
+      // minimum delay to wait between invocations, once we wait
+      "minRetryDelayMilliseconds": 1001,
+
+      // ?
+      "defaultTimeoutMilliseconds": 1002,
+
+      // default timeout for complete operations
+      "defaultOperationTimeoutMilliseconds": 1003
+    },
+
+    // heartbeat options
+    "heartbeat": {
+
+      // heartbeat period
+      "periodMilliseconds": 1000,
+
+      // heartbeat timeout - how long before we consider a client has died
+      "timeoutMilliseconds": 1001,
+
+      // ping timeout - how long to wait when pinging a client
+      "pingTimeoutMilliseconds": 1002
+    },
+
+    // networking options
+    "networking": {
+
+      // cluster addresses
+      "addresses": [
+        "localhost",
+        "otherhost"
+      ],
+
+      // whether to shuffle addresses when connecting to the cluster
+      "shuffleAddresses": false,
+
+      // whether to use smart routing
+      "smartRouting": false,
+
+      // whether to retry an invocation if the target is disconnected
+      "retryOnTargetDisconnected": false,
+
+      // ?
+      "connectionTimeoutMilliseconds": 1000,
+
+      // how to reconnect in case the client is disconnected from the cluster
+      "reconnectMode": "doNotReconnect",
+
+      // how long to pause before looking for clients again, when trying to
+      // set the client that handles cluster view events, and no client is
+      // available
+      "waitForClientMilliseconds": 1001,
+
+      "ssl": {
+        "enabled": true,
+        "validateCertificateChain": false,
+        "validateCertificateName": true,
+        "checkCertificateRevocation": true,
+        "certificateName": "cert",
+        "certificatePath": "path",
+        "certificatePassword": "password",
+        "protocol": "tls11"
+      },
+
+      "cloud": {
+        "enabled": true,
+        "discoveryToken": "token",
+        "urlBase": "url"
+      },
+
+      "socket": {
+        "bufferSize": 1000, // UNIT?
+        "keepAlive": false,
+        "lingerSeconds": 1001,
+        "reuseAddress": false,
+        "tcpNoDelay": true
+      },
+
+      "outboundPorts": "??", // not supported for now
+
+      // socket interception
+      "socketInterception": {
+
+        // whether interception is enabled
+        "enabled": true,
+
+        // interceptor
+        "interceptor": {
+
+          // the name of the type of the interceptor
+          "typeName": "Hazelcast.Tests.ConfigurationTests+TestSocketInterceptor, Hazelcast.Net.Tests"
+        }
+
+      },
+
+      "connectionRetry": {
+        "initialBackoffMilliseconds": 1000,
+        "maxBackoffMilliseconds": 1001,
+        "multiplier": 1002,
+        "clusterConnectionTimeoutMilliseconds": 1003,
+        "jitter": 1004
+      }
+    },
+
+    // authentication
+    "authentication": {
+
+      // authenticator
+      "authenticator": {
+
+        // name of the type of the authenticator
+        "typeName": "Hazelcast.Clustering.Authenticator, Hazelcast.Net"
+      },
+
+      // credentials factory
+      "credentialsFactory": {
+
+        // name of the type of the credentials factory
+        "typeName": "Hazelcast.Tests.ConfigurationTests+TestCredentialsFactory, Hazelcast.Net.Tests",
+
+        // arguments for the credentials factory constructor
+        "args": {
+          "arg1": "arg",
+          "arg2": 1000
+        }
+      }
+    },
+
+    // load balancing
+    "loadBalancing": {
+
+      // load balancer
+      "loadBalancer": {
+
+        // name of the type of the load balancer
+        "typeName": "Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net"
+      }
+    },
+
+    // serialization
+    "serialization": {
+
+      // endianness
+      "endianness": "LittleEndian",
+      
+      // portable version
+      "portableVersion": 1000,
+      
+      // whether to validate class definitions
+      "validateClassDefinitions": false,
+
+      // portable factories
+      "portableFactories": [
+        
+        // portable factory
+        {
+          "id": 1001,
+          "typeName": "Hazelcast.Tests.ConfigurationTests+TestPortableFactory, Hazelcast.Net.Tests"
+        }
+      ],
+
+      // data serializable factories
+      "dataSerializableFactories": [
+        
+        // data serializable factory
+        {
+          "id": 1002,
+          "typeName": "Hazelcast.Tests.ConfigurationTests+TestDataSerializableFactory, Hazelcast.Net.Tests"
+        }
+      ],
+      
+      // default serializer
+      "defaultSerializer": {
+        "typeName": "Hazelcast.Tests.ConfigurationTests+TestDefaultSerializer, Hazelcast.Net.Tests",
+        "overrideClr": true
+      },
+
+      // serializers
+      "serializers": [
+        
+        // serializer
+        {
+          "serializedTypeName": "Hazelcast.HazelcastClient, Hazelcast.Net",
+          "typeName": "Hazelcast.Tests.ConfigurationTests+TestSerializer, Hazelcast.Net.Tests"
+        }
+      ]
+
+    },
+
+    // near cache
+    "nearCache": {
+
+      // reconciliation interval
+      "reconciliationIntervalSeconds": 1000,
+      
+      // minimum reconciliation interval
+      "minReconciliationIntervalSeconds": 1001,
+      
+      // maximum tolerated miss count
+      "maxToleratedMissCount": 1002,
+
+      // configurations
+      "configurations": {
+
+        // default
+        "default": {
+          
+          "evictionPolicy": "lru",
+          "inMemoryFormat": "binary",
+          "maxIdleSeconds": 1000,
+          "maxSize": 1001,
+          "timeToLiveSeconds": 1002,
+          "invalidateOnChange": true,
+          "serializeKeys": true // WTF?
+        },
+
+        // another
+        "other": {
+
+          "evictionPolicy": "lfu",
+          "inMemoryFormat": "object",
+          "maxIdleSeconds": 2000,
+          "maxSize": 2001,
+          "timeToLiveSeconds": 2002,
+          "invalidateOnChange": false,
+          "serializeKeys": false // WTF?
+        }
+
+      }
+    }
   }
 }

@@ -106,7 +106,7 @@ namespace Hazelcast.Clustering
         private async Task ConnectFirstClientAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
-            var retryStrategy = new RetryStrategy("connect to cluster", _networkingOptions.ConnectionRetry, _loggerFactory);
+            var retryStrategy = new RetryStrategy("connect to cluster", _options.Networking.ConnectionRetry, _loggerFactory);
             List<Exception> exceptions = null;
             bool canRetry;
 
@@ -226,7 +226,7 @@ namespace Hazelcast.Clustering
             address = _addressProvider.Map(address);
 
             // create the client
-            var client = new Client(address, _correlationIdSequence, _loggerFactory)
+            var client = new Client(address, _options.Messaging, _correlationIdSequence, _loggerFactory)
             {
                 OnReceiveEventMessage = OnEventMessage,
                 OnShutdown = HandleClientShutdown
@@ -238,7 +238,7 @@ namespace Hazelcast.Clustering
 
             // authenticate (may throw)
             var info = await _authenticator
-                .AuthenticateAsync(client, Name, ClientId, ClientName, _clusterOptions.Labels, _serializationService, cancellationToken)
+                .AuthenticateAsync(client, Name, ClientId, ClientName, _options.Labels, _serializationService, cancellationToken)
                 .CAF();
             if (info == null) throw new HazelcastException("Failed to authenticate");
             client.NotifyAuthenticated(info);
@@ -340,9 +340,9 @@ namespace Hazelcast.Clustering
                 if (!lastClient)
                     return;
 
-                _logger.LogInformation("Disconnected (reconnect mode:{ReconnectMode})", _networkingOptions.ReconnectMode);
+                _logger.LogInformation("Disconnected (reconnect mode:{ReconnectMode})", _options.Networking.ReconnectMode);
 
-                switch (_networkingOptions.ReconnectMode)
+                switch (_options.Networking.ReconnectMode)
                 {
                     case ReconnectMode.DoNotReconnect:
                         _clusterState = ClusterState.Disconnected;
@@ -390,7 +390,7 @@ namespace Hazelcast.Clustering
             if (members != null)
             {
                 var memberAddresses = _memberTable.Members.Values.Select(x => x.Address);
-                if (_networkingOptions.ShuffleAddresses)
+                if (_options.Networking.ShuffleAddresses)
                     memberAddresses = memberAddresses.Shuffle();
 
                 foreach (var address in memberAddresses)
@@ -399,7 +399,7 @@ namespace Hazelcast.Clustering
 
             // second, add all known addresses (de-duplicated thanks to HashSet)
             var configuredAddresses = _addressProvider.GetAddresses();
-            if (_networkingOptions.ShuffleAddresses)
+            if (_options.Networking.ShuffleAddresses)
                 configuredAddresses = configuredAddresses.Shuffle();
 
             foreach (var address in configuredAddresses)

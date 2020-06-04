@@ -14,20 +14,25 @@
 
 using System.Collections.Generic;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Security;
 
 namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Defines cluster options.
     /// </summary>
-    public interface IClusterOptions : IHaveSecurityOptions, IHaveNetworkingOptions
+    public interface IClusterOptions
     {
         /// <summary>
         /// Gets or sets the cluster name.
         /// </summary>
         string ClusterName { get; set; }
+
+        /// <summary>
+        /// Gets the default client name prefix.
+        /// </summary>
+        string DefaultClientNamePrefix { get; }
 
         /// <summary>
         /// Gets the client labels.
@@ -47,6 +52,21 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the load balancing options.
         /// </summary>
-        LoadBalancingOptions LoadBalancer { get; }
+        LoadBalancingOptions LoadBalancing { get; }
+
+        /// <summary>
+        /// Gets the heartbeat options.
+        /// </summary>
+        HeartbeatOptions Heartbeat { get; }
+
+        /// <summary>
+        /// Gets the messaging options.
+        /// </summary>
+        MessagingOptions Messaging { get; }
+
+        /// <summary>
+        /// Gets the networking options.
+        /// </summary>
+        NetworkingOptions Networking { get; }
     }
 }

@@ -38,6 +38,12 @@ namespace Hazelcast
         public HazelcastClientFactory(HazelcastOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+
+            // this ensures that the clock is correctly configured before anything else
+            // happens - remember the clock is static - so we are doing it here - and
+            // the clock will actually initialize once
+            // TODO: make the clock non-static (low)
+            Clock.Initialize(options.Core.Clock);
         }
 
         /// <summary>
@@ -75,9 +81,9 @@ namespace Hazelcast
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var loggerFactory = options.Logging.LoggerFactory.Create() ?? new NullLoggerFactory();
+            var loggerFactory = options.Logging.LoggerFactory.Service ?? new NullLoggerFactory();
 
-            // TODO: refactor serialization service entirely
+            // TODO: refactor serialization service entirely (medium)
             // there should not be a 'builder'
             // it's all configuration or service
             var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);

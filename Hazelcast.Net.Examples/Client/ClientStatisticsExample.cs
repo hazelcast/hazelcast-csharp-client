@@ -32,7 +32,7 @@ namespace Hazelcast.Examples.Client
 
             static void Configure(HazelcastOptions configuration)
             {
-                configuration.NearCache["myMap"] = new NearCacheNamedOptions
+                configuration.NearCache.Configurations["myMap"] = new NearCacheNamedOptions
                 {
                     MaxSize = 1000,
                     InvalidateOnChange = true,

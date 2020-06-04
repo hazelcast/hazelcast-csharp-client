@@ -167,7 +167,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                options.Network.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add("127.0.0.1:11001");
             });
             var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
@@ -219,7 +219,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                options.Network.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add("127.0.0.1:11001");
             });
             var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
@@ -264,7 +264,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
-                options.Network.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add("127.0.0.1:11001");
             });
             var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             AddDisposable(client);
@@ -302,7 +302,7 @@ namespace Hazelcast.Tests
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
             {
-                options.Network.Addresses.Add("127.0.0.1:11001");
+                options.Networking.Addresses.Add("127.0.0.1:11001");
             });
             var clientFactory = new HazelcastClientFactory(options);
 
@@ -361,7 +361,7 @@ namespace Hazelcast.Tests
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
             {
-                options.Network.Addresses.Add("127.0.0.1:11000");
+                options.Networking.Addresses.Add("127.0.0.1:11000");
             });
             var clientFactory = new HazelcastClientFactory(options);
 
@@ -400,7 +400,7 @@ namespace Hazelcast.Tests
             HzConsole.WriteLine(this, "Begin");
 
             HzConsole.WriteLine(this, "Start client ");
-            var client1 = new Client(address, new Int64Sequence(), new NullLoggerFactory());
+            var client1 = new Client(address, new MessagingOptions(), new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync(CancellationToken.None).CAF();
 
             // RC assigns a GUID but the default cluster name is 'dev'
@@ -415,7 +415,7 @@ namespace Hazelcast.Tests
             var labels = new HashSet<string>();
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             HzConsole.WriteLine(this, "Send auth request");
-            var invocation = new Invocation(requestMessage, CancellationToken.None);
+            var invocation = new Invocation(requestMessage, new MessagingOptions(), CancellationToken.None);
             var responseMessage = await client1.SendAsync(invocation, CancellationToken.None).CAF();
             HzConsole.WriteLine(this, "Rcvd auth response " +
                                      HzConsole.Lines(this, 1, responseMessage.Dump()));
@@ -448,9 +448,9 @@ namespace Hazelcast.Tests
 
             var options = new HazelcastOptions();
 
-            options.Network.Addresses.Add("sgay-l4");
+            options.Networking.Addresses.Add("sgay-l4");
             options.Authentication.Authenticator.Creator = ()
-                => new Authenticator(options.Security);
+                => new Authenticator(options.Authentication);
 
             var cluster = new Cluster("dev", "hz.client",
                 options,

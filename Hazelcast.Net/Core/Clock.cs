@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Threading;
 
 namespace Hazelcast.Core
 {
@@ -26,14 +27,18 @@ namespace Hazelcast.Core
         // unix epoch is 00:00:00 UTC on January 1st, 1970
         private static readonly DateTime Jan1St1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        private static readonly long Offset;
+        private static int _initialized;
+        private static long _offset;
 
         /// <summary>
-        /// Initializes the <see cref="Clock"/> class.
+        /// Initializes the clock.
         /// </summary>
-        static Clock()
+        /// <param name="options">Clock options.</param>
+        internal static void Initialize(ClockOptions options)
         {
-            Offset = HazelcastEnvironment.Clock.Offset ?? 0;
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1)
+                return;
+            _offset = options.Offset;
         }
 
         /// <summary>
@@ -52,10 +57,10 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the UTC <see cref="DateTime"/> corresponding to an epoch time.
         /// </summary>
-        /// <param name="milliseconds">The epoch time in milliseconds.</param>
+        /// <param name="epochMilliseconds">The epoch time in milliseconds.</param>
         /// <returns>The corresponding UTC <see cref="DateTime"/>.</returns>
-        public static DateTime ToDateTime(long milliseconds)
-            => Jan1St1970.AddMilliseconds(milliseconds - Offset);
+        public static DateTime ToDateTime(long epochMilliseconds)
+            => Jan1St1970.AddMilliseconds(epochMilliseconds - _offset);
 
         /// <summary>
         /// Gets the epoch time in milliseconds corresponding to an UTC <see cref="DateTime"/>.
@@ -63,6 +68,6 @@ namespace Hazelcast.Core
         /// <param name="dateTime">The <see cref="DateTime"/>.</param>
         /// <returns>The epoch time in milliseconds corresponding to the <see cref="DateTime"/>.</returns>
         public static long ToEpoch(DateTime dateTime)
-            => (long) (dateTime - Jan1St1970).TotalMilliseconds + Offset;
+            => (long) (dateTime - Jan1St1970).TotalMilliseconds + _offset;
     }
 }

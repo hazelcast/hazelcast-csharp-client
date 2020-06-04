@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using Hazelcast.Exceptions;
 using Microsoft.Extensions.Configuration;
 
 namespace Hazelcast.Configuration.Binding
@@ -230,7 +231,15 @@ namespace Hazelcast.Configuration.Binding
 
             if (propertyValue != null && hasSetter)
             {
-                property.SetValue(instance, propertyValue);
+                try
+                {
+                    property.SetValue(instance, propertyValue);
+                }
+                catch (Exception e)
+                {
+                    // hz
+                    throw new ConfigurationException($"Failed to set property '{name}' value '{propertyValue}'.", e);
+                }
             }
         }
 
@@ -465,6 +474,7 @@ namespace Hazelcast.Configuration.Binding
                 }
                 catch
                 {
+                    throw; // hz
                 }
             }
         }
@@ -498,13 +508,14 @@ namespace Hazelcast.Configuration.Binding
                 }
                 catch
                 {
+                    throw; // hz
                 }
             }
 
             return newArray;
         }
 
-        private static bool TryConvertValue(Type type, string value, string path, out object result, out Exception error)
+        internal static bool TryConvertValue(Type type, string value, string path, out object result, out Exception error)
         {
             error = null;
             result = null;
@@ -524,6 +535,7 @@ namespace Hazelcast.Configuration.Binding
             }
 
             var converter = TypeDescriptor.GetConverter(type);
+            
             if (converter.CanConvertFrom(typeof(string)))
             {
                 try

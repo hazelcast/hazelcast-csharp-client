@@ -118,12 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="AuthenticationOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\AuthenticationOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="ClusterOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\ClusterOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
   <data name="Empty" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\Empty.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
@@ -132,23 +126,5 @@
   </data>
   <data name="HazelcastOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\HazelcastOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="LoadBalancingOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\LoadBalancingOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="LoggingOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\LoggingOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="NearCacheOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\NearCacheOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="NetworkingOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\NetworkingOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="SecurityOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\SecurityOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="SerializationOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Options\SerializationOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
 </root>

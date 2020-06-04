@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -33,10 +34,10 @@ namespace Hazelcast.NearCaching
 
     internal class NearCacheManager
     {
-        private const int ReconciliationIntervalSecondsDefault = 60;
-        private const int MinReconciliationIntervalSecondsDefault = 30;
-        private const int MaxToleratedMissCountDefault = 10;
-        private const int AsyncResultWaitTimeoutMillis = 1 * 60 * 1000;
+        //private const int ReconciliationIntervalSecondsDefault = 60;
+        //private const int MinReconciliationIntervalSecondsDefault = 30;
+        //private const int MaxToleratedMissCountDefault = 10;
+        //private const int AsyncResultWaitTimeoutMillis = 1 * 60 * 1000;
 
         private readonly ILogger _logger;
 
@@ -85,7 +86,7 @@ namespace Hazelcast.NearCaching
                 ? null
                 : _caches.GetOrAdd(mapName, newMapName =>
                 {
-                    var nearCache = new NearCache(newMapName, _cluster, _serializationService, _loggerFactory, nearCacheConfig);
+                    var nearCache = new NearCache(newMapName, _cluster, _serializationService, _loggerFactory, nearCacheConfig, GetMaxToleratedMissCount());
                     InitNearCache(nearCache);
                     return nearCache;
                 });
@@ -100,11 +101,11 @@ namespace Hazelcast.NearCaching
             DestroyAllNearCache();
         }
 
-        internal static int GetMaxToleratedMissCount()
+        private int GetMaxToleratedMissCount()
         {
-            var value = HazelcastEnvironment.NearCache.MaxToleratedMissCount ?? MaxToleratedMissCountDefault;
+            var value = _options.MaxToleratedMissCount;
             if (value < 0)
-                throw new Exception($"Environment variable {HazelcastEnvironment.NearCache.MaxToleratedMissCountName} cannot be < 0."); // FIXME onfiguration exception
+                throw new ConfigurationException($"Option 'MaxToleratedMissCount' cannot be < 0.");
             return value;
         }
 
@@ -179,19 +180,19 @@ namespace Hazelcast.NearCaching
             }
         }
 
-        private static int GetReconciliationIntervalSeconds()
+        private int GetReconciliationIntervalSeconds()
         {
-            var reconciliationIntervalSeconds = HazelcastEnvironment.NearCache.ReconciliationIntervalSeconds ?? ReconciliationIntervalSecondsDefault;
+            var reconciliationIntervalSeconds =_options.ReconciliationIntervalSeconds;
             if (reconciliationIntervalSeconds < 0)
-                throw new Exception($"Environment variable {HazelcastEnvironment.NearCache.ReconciliationIntervalSecondsName} cannot be < 0."); // FIXME onfiguration exception
+                throw new ConfigurationException("Option 'ReconciliationIntervalSeconds' cannot be < 0.");
 
-            var minReconciliationIntervalSeconds = HazelcastEnvironment.NearCache.MinReconciliationIntervalSeconds ?? MinReconciliationIntervalSecondsDefault;
+            var minReconciliationIntervalSeconds = _options.MinReconciliationIntervalSeconds;
             if (minReconciliationIntervalSeconds < 0)
-                throw new Exception($"Environment variable {HazelcastEnvironment.NearCache.MinReconciliationIntervalSecondsName} cannot be < 0."); // FIXME onfiguration exception
+                throw new ConfigurationException("Option 'MinReconciliationIntervalSeconds' cannot be < 0.");
 
             if (reconciliationIntervalSeconds > 0 && reconciliationIntervalSeconds < minReconciliationIntervalSeconds)
-                throw new Exception($"When it is > 0, environment variable {HazelcastEnvironment.NearCache.ReconciliationIntervalSecondsName} " +
-                                    $"must be >= environment variable {HazelcastEnvironment.NearCache.MinReconciliationIntervalSecondsName}."); // FIXME onfiguration exception
+                throw new ConfigurationException("When it is > 0, option 'ReconciliationIntervalSeconds' " +
+                                    "must be >= option 'MinReconciliationIntervalSeconds'.");
 
             return reconciliationIntervalSeconds;
         }

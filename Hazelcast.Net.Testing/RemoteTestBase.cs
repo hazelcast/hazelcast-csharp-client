@@ -59,7 +59,7 @@ namespace Hazelcast.Testing
         {
             options.AsyncStart = false;
 
-            var n = options.Network;
+            var n = options.Networking;
             n.Addresses.Add("localhost:5701");
             n.ReconnectMode = ReconnectMode.ReconnectSync;
 

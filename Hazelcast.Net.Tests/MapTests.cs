@@ -40,7 +40,7 @@ namespace Hazelcast.Tests
         {
             return CreateOpenClientAsync(configuration =>
             {
-                configuration.Network.Addresses.Add("sgay-l4");
+                configuration.Networking.Addresses.Add("sgay-l4");
             });
         }
 
@@ -423,7 +423,7 @@ namespace Hazelcast.Tests
 
             void ConfigureClient(HazelcastOptions config)
             {
-                config.Network.Addresses.Add("sgay-l4");
+                config.Networking.Addresses.Add("sgay-l4");
 
                 config.AddSubscriber(on => on.ObjectCreated((sender, args) =>
                 {

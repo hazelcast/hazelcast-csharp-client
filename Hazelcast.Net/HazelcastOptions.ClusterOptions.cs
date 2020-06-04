@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
 
 namespace Hazelcast
 {
@@ -32,23 +33,20 @@ namespace Hazelcast
         public string ClusterName { get; set; } = DefaultClusterName;
 
         /// <summary>
-        /// Gets or sets the client labels.
+        /// Gets the client labels.
         /// </summary>
-        public ISet<string> Labels { get; private set; } = new HashSet<string>();
+        public ISet<string> Labels { get; } = new HashSet<string>();
 
         /// <summary>
         /// Gets the subscribers.
         /// </summary>
         [BinderIgnore]
-        public IList<IClusterEventSubscriber> Subscribers { get; private set; }
+        public IList<IClusterEventSubscriber> Subscribers { get; }
 
         // used for configuration binding
         [BinderName("subscribers")]
         [BinderIgnore(false)]
-#pragma warning disable IDE0051 // Remove unused private members
-        // ReSharper disable once UnusedMember.Local UnassignedGetOnlyAutoProperty
-        private ICollection<string> SubscribersBinder { get; }
-#pragma warning restore IDE0051 // Remove unused private members
+        private CollectionBinder<InjectionOptions> SubscribersBinder { get; set; }
 
         /// <summary>
         /// Adds a subscriber.

@@ -37,6 +37,7 @@ namespace Hazelcast.Clustering
         private readonly ConcurrentDictionary<long, Invocation> _invocations
             = new ConcurrentDictionary<long, Invocation>();
 
+        private readonly MessagingOptions _messagingOptions;
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoggerFactory _loggerFactory;
@@ -59,8 +60,8 @@ namespace Hazelcast.Clustering
         /// <param name="address">The network address.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Client(NetworkAddress address, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
-            : this(address, new Int32Sequence(), correlationIdSequence, loggerFactory)
+        public Client(NetworkAddress address, MessagingOptions messagingOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+            : this(address, messagingOptions, new Int32Sequence(), correlationIdSequence, loggerFactory)
         { }
 
         /// <summary>
@@ -75,9 +76,10 @@ namespace Hazelcast.Clustering
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public Client(NetworkAddress address, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public Client(NetworkAddress address, MessagingOptions messagingOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
+            _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
@@ -362,7 +364,7 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            var invocation = new Invocation(message, this, cancellationToken);
+            var invocation = new Invocation(message, _messagingOptions, this, cancellationToken);
 
             return await SendAsync(invocation, cancellationToken).CAF();
         }

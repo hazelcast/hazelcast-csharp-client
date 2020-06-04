@@ -29,26 +29,19 @@ namespace Hazelcast.Clustering
     /// </summary>
     public class Invocation
     {
-        private static readonly int MinRetryDelayMilliseconds;
-
+        private readonly MessagingOptions _messagingOptions;
         private readonly CancellationToken _cancellationToken;
-
-        /// <summary>
-        /// Initializes the <see cref="Invocation"/> class.
-        /// </summary>
-        static Invocation()
-        {
-            MinRetryDelayMilliseconds = Constants.Invocation.MinRetryDelayMilliseconds;
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Invocation"/> class.
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
+        /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        public Invocation(ClientMessage requestMessage, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, CancellationToken cancellationToken)
         {
             RequestMessage = requestMessage;
+            _messagingOptions = messagingOptions;
             CorrelationId = requestMessage.CorrelationId;
             CompletionSource = new TaskCompletionSource<ClientMessage>();
             _cancellationToken = cancellationToken;
@@ -60,20 +53,17 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="Invocation"/> class.
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
+        /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="client">A client, that the invocation is bound to.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>When an invocation is bound to a client, it cannot be retried if the client dies.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, Client client, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, Client client, CancellationToken cancellationToken)
+            : this(requestMessage, messagingOptions, cancellationToken)
         {
-            RequestMessage = requestMessage;
+            // FIXME: are we binding *all* invocations to the same client?!
             Client = client;
-            CorrelationId = requestMessage.CorrelationId;
-            CompletionSource = new TaskCompletionSource<ClientMessage>();
-            _cancellationToken = cancellationToken;
-            _cancellationToken.Register(() => CompletionSource.TrySetCanceled());
-            AttemptsCount = 1;
         }
 
         /// <summary>
@@ -175,7 +165,7 @@ namespace Hazelcast.Clustering
             RequestMessage.CorrelationId = CorrelationId = correlationIdProvider();
 
             // fast retry (no delay)
-            if (AttemptsCount <= Constants.Invocation.MaxFastInvocationCount)
+            if (AttemptsCount <= _messagingOptions.MaxFastInvocationCount)
                 return true;
 
             // otherwise, slow retry (delay)
@@ -183,7 +173,7 @@ namespace Hazelcast.Clustering
             // implement some rudimentary increasing delay based on the number of attempts
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this?
-            var delayMilliseconds = Math.Min(1 << (AttemptsCount - Constants.Invocation.MaxFastInvocationCount), MinRetryDelayMilliseconds);
+            var delayMilliseconds = Math.Min(1 << (AttemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
             await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CAF(); // throws if cancelled
             return true;
         }

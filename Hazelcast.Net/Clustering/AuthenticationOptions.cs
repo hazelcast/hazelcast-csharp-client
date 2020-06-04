@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.Exceptions;
+using Hazelcast.Security;
 
 namespace Hazelcast.Clustering
 {
@@ -10,66 +10,113 @@ namespace Hazelcast.Clustering
     /// </summary>
     public class AuthenticationOptions
     {
-        private string _authenticatorType;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationOptions"/> class.
         /// </summary>
         public AuthenticationOptions()
         {
-            Authenticator = new ServiceFactory<IAuthenticator>();
-            AuthenticatorArgs = new Dictionary<string, object>();
+            Authenticator = new SingletonServiceFactory<IAuthenticator>();
+            CredentialsFactory = new SingletonServiceFactory<ICredentialsFactory>();
         }
 
         /// <summary>
-        /// Gets or sets the authenticator factory.
+        /// Initializes a new instance of the <see cref="AuthenticationOptions"/> class.
         /// </summary>
-        public ServiceFactory<IAuthenticator> Authenticator { get; private set; }
+        private AuthenticationOptions(AuthenticationOptions other)
+        {
+            Authenticator = other.Authenticator.Clone();
+            CredentialsFactory = other.CredentialsFactory.Clone();
+        }
 
         /// <summary>
-        /// Gets or sets the type of the authenticator.
+        /// Gets the authenticator service factory.
         /// </summary>
-        /// <remarks>
-        /// <para>Returns the correct value only if it has been set via the same property. If the
-        /// authenticator has been configured via code and the <see cref="Authenticator"/>
-        /// property, the value returned by this property is unspecified.</para>
-        /// </remarks>
-        public string AuthenticatorType
-        {
-            get => _authenticatorType;
+        [BinderIgnore]
+        public SingletonServiceFactory<IAuthenticator> Authenticator { get; }
 
+        [BinderName("authenticator")]
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions AuthenticatorBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get => default;
             set
             {
-                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(value));
-
-                _authenticatorType = value;
-
-                Authenticator.Creator = () => Services.CreateInstance<IAuthenticator>(value, this);
+                // we need to pass the options to the authenticator
+                // and maybe also anything else? how can this work?!
+                var args = value.Args ?? new Dictionary<string, string>();
+                //args["options"] = this; FIXME FIXME
+                Authenticator.Creator = () => ServiceFactory.CreateInstance<IAuthenticator>(value.TypeName, null, this);
             }
         }
 
         /// <summary>
-        /// Gets the arguments for the authenticator.
+        /// Gets the credentials factory service factory.
         /// </summary>
-        /// <remarks>
-        /// <para>Arguments are used when creating an authenticator from its type as set
-        /// via the <see cref="AuthenticatorType"/> property. They are ignored if the
-        /// authenticator has been configured via code and the <see cref="Authenticator"/>
-        /// property.</para>
-        /// </remarks>
-        public Dictionary<string, object> AuthenticatorArgs { get; private set; }
+        [BinderIgnore]
+        public SingletonServiceFactory<ICredentialsFactory> CredentialsFactory { get; }
+
+        [BinderName("credentialsFactory")]
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions CredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get => default;
+            set => CredentialsFactory.Creator = () => ServiceFactory.CreateInstance<ICredentialsFactory>(value.TypeName, value.Args);
+        }
+
+        /// <summary>
+        /// Configures Kerberos as the authentication mechanism.
+        /// </summary>
+        /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
+        /// <returns>The security options.</returns>
+        public AuthenticationOptions ConfigureKerberosCredentials(string spn)
+        {
+            CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a user name and password as the authentication mechanism.
+        /// </summary>
+        /// <param name="username">Username.</param>
+        /// <param name="password">Password.</param>
+        /// <returns>The security options.</returns>
+        private AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
+        {
+            var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
+            CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
+            return this;
+        }
+
+        /// <summary>
+        /// Configures static credentials as the authentication mechanism.
+        /// </summary>
+        /// <param name="credentials">Credentials.</param>
+        /// <returns>The security options.</returns>
+        private AuthenticationOptions ConfigureCredentials(ICredentials credentials)
+        {
+            CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
+            return this;
+        }
+
+        /// <summary>
+        /// Configures a static token as the authentication mechanism.
+        /// </summary>
+        /// <param name="token">A token.</param>
+        /// <returns>The security configuration.</returns>
+        private AuthenticationOptions ConfigureTokenCredentials(byte[] token)
+        {
+            return ConfigureCredentials(new TokenCredentials(token));
+        }
 
         /// <summary>
         /// Clone the options.
         /// </summary>
-        public AuthenticationOptions Clone()
-        {
-            return new AuthenticationOptions()
-            {
-                _authenticatorType = _authenticatorType,
-                Authenticator = Authenticator.Clone(),
-                AuthenticatorArgs = new Dictionary<string, object>(AuthenticatorArgs),
-            };
-        }
+        internal AuthenticationOptions Clone() => new AuthenticationOptions(this);
     }
 }

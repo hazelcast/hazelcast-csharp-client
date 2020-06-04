@@ -104,6 +104,11 @@ namespace Hazelcast.DistributedObjects.Implementation
         protected Cluster Cluster { get; }
 
         /// <summary>
+        /// Gets the default operation timeout in milliseconds.
+        /// </summary>
+        protected int DefaultOperationTimeoutMilliseconds => Cluster.DefaultOperationTimeoutMilliseconds;
+
+        /// <summary>
         /// Gets the logger factory.
         /// </summary>
         protected ILoggerFactory LoggerFactory { get; }

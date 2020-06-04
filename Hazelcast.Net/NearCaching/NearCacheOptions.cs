@@ -22,7 +22,7 @@ namespace Hazelcast.NearCaching
     /// <summary>
     /// Represents the Near Cache options.
     /// </summary>
-    public class NearCacheOptions : Dictionary<string, NearCacheNamedOptions>
+    public class NearCacheOptions
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="NearCacheOptions"/> class.
@@ -33,9 +33,35 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Initializes a new instance of the <see cref="NearCacheOptions"/> class.
         /// </summary>
-        private NearCacheOptions(Dictionary<string, NearCacheNamedOptions> namedOptions)
-            : base(namedOptions)
-        { }
+        private NearCacheOptions(NearCacheOptions other)
+        {
+            ReconciliationIntervalSeconds = other.ReconciliationIntervalSeconds;
+            MinReconciliationIntervalSeconds = other.MinReconciliationIntervalSeconds;
+            MaxToleratedMissCount = other.ReconciliationIntervalSeconds;
+            Configurations = new Dictionary<string, NearCacheNamedOptions>(other.Configurations.ToDictionary(
+                x => x.Key,
+                x => x.Value.Clone()));
+        }
+
+        /// <summary>
+        /// Gets or sets the reconciliation interval.
+        /// </summary>
+        public int ReconciliationIntervalSeconds { get; set; } = 60;
+
+        /// <summary>
+        /// Gets or sets the minimum reconciliation interval.
+        /// </summary>
+        public int MinReconciliationIntervalSeconds { get; set; } = 30;
+
+        /// <summary>
+        /// Gets or sets the maximum tolerated miss count.
+        /// </summary>
+        public int MaxToleratedMissCount { get; set; } = 10;
+        
+        /// <summary>
+        /// Gets the configurations.
+        /// </summary>
+        public IDictionary<string, NearCacheNamedOptions> Configurations { get; } = new Dictionary<string, NearCacheNamedOptions>();
 
         /// <summary>
         /// Gets or sets the NearCache configuration pattern matcher.
@@ -49,26 +75,19 @@ namespace Hazelcast.NearCaching
         /// <returns>A configuration matching the name.</returns>
         public NearCacheNamedOptions GetConfig(string name)
         {
-            if (TryGetValue(name, out var configuration))
+            if (Configurations.TryGetValue(name, out var configuration))
                 return configuration;
 
             if (PatternMatcher == null)
                 throw new InvalidOperationException("No pattern matcher has been defined.");
 
-            var key = PatternMatcher.Matches(Keys, name);
-            return key == null ? null : this[key];
+            var key = PatternMatcher.Matches(Configurations.Keys, name);
+            return key == null ? null : Configurations[key];
         }
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public NearCacheOptions Clone()
-        {
-            var namedOptions = this.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.Clone());
-
-            return new NearCacheOptions(namedOptions);
-        }
+        internal NearCacheOptions Clone() => new NearCacheOptions(this);
     }
 }

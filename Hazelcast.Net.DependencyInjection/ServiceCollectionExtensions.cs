@@ -1,5 +1,4 @@
-﻿using Hazelcast.Clustering;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -26,8 +25,10 @@ namespace Hazelcast.DependencyInjection
             services.AddSingleton<IOptionsChangeTokenSource<HazelcastOptions>>(new ConfigurationChangeTokenSource<HazelcastOptions>(string.Empty, configuration));
             services.AddSingleton<IConfigureOptions<HazelcastOptions>>(new HazelcastNamedConfigureFromConfigurationOptions(string.Empty, configuration));
 
-            // wire the HazelcastOptions
-            // should be preferred to IOptions<HazelcastOptions> because of the service provider
+            // wire the HazelcastOptions which will be injected in the HazelcastClientFactory.
+            // the main library is not DI-aware and therefore does not expose a constructor
+            // accepting IOptions<>, and in addition we want to inject the service provider in
+            // the options so that service factory creators can use it.
             services.AddSingleton(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<HazelcastOptions>>().Value;
@@ -35,33 +36,20 @@ namespace Hazelcast.DependencyInjection
                 return options;
             });
 
-            // wire configurations
-            services.AddSingleton(provider => provider.GetRequiredService<HazelcastOptions>().Security);
-
             // wire the client factory
             services.AddSingleton<HazelcastClientFactory>();
 
             // wire creators
             services.Configure<HazelcastOptions>(options =>
             {
+                // assumes that the ILoggerFactory has been registered in the container
                 options.Logging.LoggerFactory.Creator = () => options.ServiceProvider.GetRequiredService<ILoggerFactory>();
-                options.Authentication.Authenticator.Creator = () => options.ServiceProvider.GetRequiredService<IAuthenticator>();
 
-                // TODO: think!
-                // when running without DI, everything comes from options
-                // including instances of classes such as the authenticator
-                // with DI we want them to come from DI
-                // but how can the *same* code support both?
-                // we'd have to pass everything from HazelcastClient to-level options, down to each class?
+                // we could do it for others but we cannot assume that users want all other services
+                // wired through dependency injection - so... this is just an example of how we would
+                // do it for the authenticator - but we are not going to do any here
+                //options.Authentication.Authenticator.Creator = () => options.ServiceProvider.GetRequiredService<IAuthenticator>();
             });
-
-            // creators for:
-            // ILoggingFactory
-            // IAuthenticator
-            // ICredentialsFactory
-            // ILoadBalancer
-            // ISocketInterceptor
-            // + all serialization stuff
 
             return services;
         }

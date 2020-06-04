@@ -23,6 +23,33 @@ namespace Hazelcast.Networking
     public class NetworkingOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkingOptions"/> class.
+        /// </summary>
+        public NetworkingOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkingOptions"/> class.
+        /// </summary>
+        private NetworkingOptions(NetworkingOptions other)
+        {
+            Addresses = new List<string>(other.Addresses);
+            ShuffleAddresses = other.ShuffleAddresses;
+            SmartRouting = other.SmartRouting;
+            RetryOnTargetDisconnected = other.RetryOnTargetDisconnected;
+            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
+            WaitForClientMilliseconds = other.WaitForClientMilliseconds;
+            ReconnectMode = other.ReconnectMode;
+            OutboundPorts = new HashSet<string>(other.OutboundPorts);
+
+            Ssl = other.Ssl.Clone();
+            Cloud = other.Cloud.Clone();
+            Socket = other.Socket.Clone();
+            SocketInterception = other.SocketInterception.Clone();
+            ConnectionRetry = other.ConnectionRetry.Clone();
+        }
+
+        /// <summary>
         /// Gets or sets the list initial addresses.
         /// </summary>
         /// <remarks>
@@ -60,7 +87,7 @@ namespace Hazelcast.Networking
         /// undesirable effects. Also note that the redo can perform on any member.</para>
         /// </remarks>
 
-        public bool RedoOperation { get; set; } = true;
+        public bool RetryOnTargetDisconnected { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the connection timeout in milliseconds.
@@ -76,56 +103,44 @@ namespace Hazelcast.Networking
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.ReconnectSync;
 
         /// <summary>
-        /// Gets or sets the SSL options.
+        /// Gets or sets the delay to pause for when looking for a client
+        /// to handle cluster view events and no client is available.
         /// </summary>
-        public SslOptions Ssl { get; private set;  } = new SslOptions();
+        public int WaitForClientMilliseconds { get; set; } = 1_000;
 
         /// <summary>
-        /// Gets or sets the cloud options.
+        /// Gets the SSL options.
         /// </summary>
-        public CloudOptions Cloud { get; private set;  } = new CloudOptions();
+        public SslOptions Ssl { get; } = new SslOptions();
 
         /// <summary>
-        /// Gets or sets the socket options.
+        /// Gets the cloud options.
         /// </summary>
-        public SocketOptions Socket { get; private set;  } = new SocketOptions();
+        public CloudOptions Cloud { get; } = new CloudOptions();
+
+        /// <summary>
+        /// Gets the socket options.
+        /// </summary>
+        public SocketOptions Socket { get; } = new SocketOptions();
 
         /// <summary>
         /// FIXME what is this + why strings?
         /// </summary>
-        public ISet<string> OutboundPorts { get; private set; } = new HashSet<string>();
+        public ISet<string> OutboundPorts { get; } = new HashSet<string>();
 
         /// <summary>
-        /// Gets or sets the socket interceptor options.
+        /// Gets the socket interceptor options.
         /// </summary>
-        public SocketInterceptorOptions SocketInterceptor { get; private set;  } = new SocketInterceptorOptions();
+        public SocketInterceptionOptions SocketInterception { get; } = new SocketInterceptionOptions();
 
         /// <summary>
         /// Gets the connection retry options.
         /// </summary>
-        public RetryOptions ConnectionRetry { get; private set; } = new RetryOptions();
+        public RetryOptions ConnectionRetry { get; } = new RetryOptions();
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public NetworkingOptions Clone()
-        {
-            return new NetworkingOptions
-            {
-                Addresses = new List<string>(Addresses),
-                ShuffleAddresses = ShuffleAddresses,
-                SmartRouting = SmartRouting,
-                RedoOperation = RedoOperation,
-                ConnectionTimeoutMilliseconds = ConnectionTimeoutMilliseconds,
-                ReconnectMode = ReconnectMode,
-                OutboundPorts = new HashSet<string>(OutboundPorts),
-
-                Ssl = Ssl.Clone(),
-                Cloud = Cloud.Clone(),
-                Socket = Socket.Clone(),
-                SocketInterceptor = SocketInterceptor.Clone(),
-                ConnectionRetry = ConnectionRetry.Clone()
-            };
-        }
+        internal NetworkingOptions Clone() => new NetworkingOptions(this);
     }
 }

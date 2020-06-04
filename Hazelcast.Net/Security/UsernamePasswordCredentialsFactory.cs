@@ -12,41 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
+using Hazelcast.Core;
+
 namespace Hazelcast.Security
 {
     /// <summary>
-    /// Simple username password credentials factory.
+    /// Provides an implementation of <see cref="ICredentialsFactory"/> that returns a static username+password <see cref="ICredentials"/>.
     /// </summary>
-    /// <remarks>
-    /// This factory uses the properties dictionary of <see cref="CredentialsFactoryConfig"/>. <c>username</c> and <c>password</c>
-    /// properties are used for creating <see cref="UsernamePasswordCredentials"/>.
-    /// if username is omitted in the properties list then <see cref="ClientConfig.GetClusterName"/> will be used instead
-    /// if password is omitted in the properties list then <see cref="ClientConfig.GetClusterPassword"/> will be used instead
-    /// </remarks>
-//    public class UsernamePasswordCredentialsFactory : ICredentialsFactory
-//    {
-//        private string _username;
-//        private string _password;
-//
-//        public void Configure(ClientConfig groupConfig, IDictionary<string, string> properties)
-//        {
-//            if (!properties.TryGetValue("username", out _username))
-//            {
-//                _username = groupConfig.GetClusterName();
-//            }
-//            if(!properties.TryGetValue("password", out _password))
-//            {
-//                _password = groupConfig.GetClusterPassword();
-//            }
-//        }
-//
-//        public ICredentials NewCredentials()
-//        {
-//            return new UsernamePasswordCredentials(_username, _password);
-//        }
-//
-//        public void Destroy()
-//        {
-//        }
-//    }
+    public class UsernamePasswordCredentialsFactory : StaticCredentialsFactory
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UsernamePasswordCredentialsFactory"/> class.
+        /// </summary>
+        /// <param name="username">A username.</param>
+        /// <param name="password">A password.</param>
+        public UsernamePasswordCredentialsFactory(string username, string password)
+            : base(new UsernamePasswordCredentials { Name = username, Password = password })
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UsernamePasswordCredentialsFactory"/> class.
+        /// </summary>
+        /// <param name="args">Arguments.</param>
+        public UsernamePasswordCredentialsFactory(IReadOnlyDictionary<string, string> args)
+            : this(args.GetStringValue("username"), args.GetStringValue("password"))
+        { }
+    }
 }

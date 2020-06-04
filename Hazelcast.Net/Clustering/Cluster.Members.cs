@@ -96,7 +96,7 @@ namespace Hazelcast.Clustering
                 if (client == null)
                 {
                     // no clients => wait for clients
-                    await Task.Delay(Constants.Cluster.WaitForClientMilliseconds, cancellationToken).CAF();
+                    await Task.Delay(_options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();
                     continue;
                 }
 

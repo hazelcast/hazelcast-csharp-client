@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,15 +16,32 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    public class FactoryOptions<T> : ServiceFactory<T>
+    public class FactoryOptions<T> : SingletonServiceFactory<T>
         where T : class
     {
-        public int Id { get; set; }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FactoryOptions{T}"/> class.
+        /// </summary>
+        public FactoryOptions()
+        { }
 
-        public string FactoryType
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FactoryOptions{T}"/> class.
+        /// </summary>
+        private FactoryOptions(FactoryOptions<T> other, bool shallow)
+            : base(other, shallow)
         {
-            get => default;
-            set => Creator = () => Services.CreateInstance<T>(value);
+            Id = other.Id;
         }
+
+        /// <summary>
+        /// Gets or sets the identifier of the factory.
+        /// </summary>
+        public int Id { get; set; }
+        
+        /// <summary>
+        /// Clones the options.
+        /// </summary>
+        internal new FactoryOptions<T> Clone(bool shallow = true) => new FactoryOptions<T>(this, shallow);
     }
 }

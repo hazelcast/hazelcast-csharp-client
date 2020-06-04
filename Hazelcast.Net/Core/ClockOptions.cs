@@ -26,40 +26,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Hazelcast.Core;
-
-namespace Hazelcast.Serialization
+namespace Hazelcast.Core
 {
     /// <summary>
-    /// Represents a collection of <see cref="ISerializerHook{T}"/> types.
+    /// Represents the clock options.
     /// </summary>
-    public sealed class SerializerHooks
+    public class ClockOptions
     {
-        private readonly List<Type> _types = new List<Type>();
+        /// <summary>
+        /// Gets or sets the clock offset.
+        /// </summary>
+        public long Offset { get; set; }
 
         /// <summary>
-        /// Adds a type.
+        /// Clones the options.
         /// </summary>
-        /// <param name="type">The type.</param>
-        public void Add(Type type) => _types.Add(type);
-
-        /// <summary>
-        /// Adds a type.
-        /// </summary>
-        /// <typeparam name="T">The type.</typeparam>
-        public void Add<T>() => Add(typeof(T));
-
-        /// <summary>
-        /// Gets the types.
-        /// </summary>
-        public IEnumerable<Type> Types => _types;
-
-        /// <summary>
-        /// Gets the hooks.
-        /// </summary>
-        public IEnumerable<IDataSerializerHook> Hooks => _types.Select(x => ServiceFactory.CreateInstance<IDataSerializerHook>(x, null));
+        internal ClockOptions Clone()
+        {
+            return new ClockOptions
+            {
+                Offset = Offset
+            };
+        }
     }
 }

@@ -17,9 +17,9 @@ using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Logging;
+using Hazelcast.Messaging;
 using Hazelcast.NearCaching;
 using Hazelcast.Networking;
-using Hazelcast.Security;
 using Hazelcast.Serialization;
 
 namespace Hazelcast
@@ -32,12 +32,6 @@ namespace Hazelcast
         public string ClientName { get; set; }
 
         /// <summary>
-        /// Gets or sets the client properties.
-        /// </summary>
-        [Obsolete] // what's the use now?
-        public IDictionary<string, string> Properties { get; private set; } = new Dictionary<string, string>();
-
-        /// <summary>
         /// Whether to start the client asynchronously.
         /// </summary>
         // TODO: should AsyncStart still exist (and what would it mean)?
@@ -46,36 +40,41 @@ namespace Hazelcast
         /// <summary>
         /// Gets the logging options.
         /// </summary>
-        public LoggingOptions Logging { get; private set; } = new LoggingOptions();
+        public LoggingOptions Logging { get; } = new LoggingOptions();
 
         /// <summary>
-        /// Gets or sets the networking options.
+        /// Gets the heartbeat options.
         /// </summary>
-        public NetworkingOptions Network { get; private set; } = new NetworkingOptions();
+        public HeartbeatOptions Heartbeat { get; } = new HeartbeatOptions();
 
         /// <summary>
-        /// Gets or sets the security options.
+        /// Gets the networking options.
         /// </summary>
-        public SecurityOptions Security { get; private set; } = new SecurityOptions();
+        public NetworkingOptions Networking { get; } = new NetworkingOptions();
 
         /// <summary>
-        /// Gets or sets the authentication options.
+        /// Gets the authentication options.
         /// </summary>
-        public AuthenticationOptions Authentication { get; private set; } = new AuthenticationOptions();
+        public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
 
         /// <summary>
-        /// Gets or sets the load balancing options.
+        /// Gets the load balancing options.
         /// </summary>
-        public LoadBalancingOptions LoadBalancer { get; private set; } = new LoadBalancingOptions();
+        public LoadBalancingOptions LoadBalancing { get; } = new LoadBalancingOptions();
 
         /// <summary>
         /// Gets the serialization options.
         /// </summary>
-        public SerializationOptions Serialization { get; private set; } = new SerializationOptions();
+        public SerializationOptions Serialization { get; } = new SerializationOptions();
 
         /// <summary>
-        /// Gets or sets the NearCache options.
+        /// Gets  the NearCache options.
         /// </summary>
-        public NearCacheOptions NearCache { get; private set; } = new NearCacheOptions();
+        public NearCacheOptions NearCache { get; } = new NearCacheOptions();
+
+        /// <summary>
+        /// Gets the messaging options.
+        /// </summary>
+        public MessagingOptions Messaging { get; } = new MessagingOptions();
     }
 }

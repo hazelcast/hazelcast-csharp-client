@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = AggregateAsync(aggregator, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = AggregateAsync(aggregator, predicate, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -91,7 +91,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, TimeSpan timeout)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ProjectAsync<TResult>(projection, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -119,7 +119,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, TimeSpan timeout)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ProjectAsync<TResult>(projection, predicate, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC

@@ -33,6 +33,59 @@ namespace Hazelcast.Serialization
     public sealed class SerializationOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="SerializationOptions"/> class.
+        /// </summary>
+        public SerializationOptions()
+        {
+            PortableFactories = new List<FactoryOptions<IPortableFactory>>();
+            PortableFactoriesBinder = new CollectionBinder<IdentifiedInjectionOptions>(item =>
+            {
+                PortableFactories.Add(new FactoryOptions<IPortableFactory>
+                {
+                    Id = item.Id,
+                    Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(item.TypeName, item.Args)
+                });
+            });
+            
+            DataSerializableFactories = new List<FactoryOptions<IDataSerializableFactory>>();
+            DataSerializableFactoriesBinder = new CollectionBinder<IdentifiedInjectionOptions>(item =>
+            {
+                DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory>
+                {
+                    Id = item.Id,
+                    Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(item.TypeName, item.Args)
+                });
+            });
+            
+            Serializers = new List<SerializerOptions>();
+            SerializersBinder = new CollectionBinder<SerializerInjectionOptions>(item =>
+            {
+                Serializers.Add(new SerializerOptions
+                {
+                    SerializedType = Type.GetType(item.SerializedTypeName) ?? throw new ConfigurationException($"Unknown serialized type \"{item.SerializedTypeName}\"."),
+                    Creator = () => ServiceFactory.CreateInstance<ISerializer>(item.TypeName, item.Args)
+                });
+            });
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SerializationOptions"/> class.
+        /// </summary>
+        private SerializationOptions(SerializationOptions other)
+        {
+            Endianness = other.Endianness;
+            ValidateClassDefinitions = other.ValidateClassDefinitions;
+            PortableVersion = other.PortableVersion;
+
+            ClassDefinitions = new List<IClassDefinition>(other.ClassDefinitions);
+            PortableFactories = new List<FactoryOptions<IPortableFactory>>(other.PortableFactories);
+            DataSerializableFactories = new List<FactoryOptions<IDataSerializableFactory>>(other.DataSerializableFactories);
+
+            DefaultSerializer = other.DefaultSerializer?.Clone();
+            Serializers = new List<SerializerOptions>(other.Serializers);
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="Endianness"/>.
         /// </summary>
         public Endianness Endianness { get; set; } = Endianness.BigEndian;
@@ -41,7 +94,7 @@ namespace Hazelcast.Serialization
         /// Whether to check for class definition errors at start,
         /// and throw an Serialization Exception with error definition.
         /// </summary>
-        public bool CheckClassDefinitionErrors { get; set; } = true;
+        public bool ValidateClassDefinitions { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the portable version.
@@ -50,7 +103,7 @@ namespace Hazelcast.Serialization
 
         #region Class Definitions
 
-        public ICollection<IClassDefinition> ClassDefinitions { get; private set; } = new HashSet<IClassDefinition>();
+        public ICollection<IClassDefinition> ClassDefinitions { get; } = new HashSet<IClassDefinition>();
 
         #endregion
 
@@ -59,7 +112,12 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Gets the portable factories.
         /// </summary>
-        public ICollection<FactoryOptions<IPortableFactory>> PortableFactories { get; private set; } = new List<FactoryOptions<IPortableFactory>>();
+        [BinderIgnore]
+        public ICollection<FactoryOptions<IPortableFactory>> PortableFactories { get; }
+        
+        [BinderIgnore(false)]
+        [BinderName("portableFactories")]
+        private CollectionBinder<IdentifiedInjectionOptions> PortableFactoriesBinder { get; }
 
         /// <summary>
         /// Adds an <see cref="IPortableFactory"/>.
@@ -81,7 +139,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddPortableFactory(int factoryId, Type factoryType)
         {
-            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => Services.CreateInstance<IPortableFactory>(factoryType) });
+            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(factoryType, null) });
             return this;
         }
 
@@ -93,7 +151,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddPortableFactory(int factoryId, string factoryTypeName)
         {
-            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => Services.CreateInstance<IPortableFactory>(factoryTypeName) });
+            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(factoryTypeName, null) });
             return this;
         }
 
@@ -101,7 +159,12 @@ namespace Hazelcast.Serialization
 
         #region Data Serializable Factories
 
-        public ICollection<FactoryOptions<IDataSerializableFactory>> DataSerializableFactories { get; private set; } = new List<FactoryOptions<IDataSerializableFactory>>();
+        [BinderIgnore]
+        public ICollection<FactoryOptions<IDataSerializableFactory>> DataSerializableFactories { get; }
+        
+        [BinderIgnore(false)]
+        [BinderName("dataSerializableFactories")]
+        private CollectionBinder<IdentifiedInjectionOptions> DataSerializableFactoriesBinder { get; }
 
         /// <summary>
         /// Adds an <see cref="IDataSerializableFactory"/>.
@@ -123,7 +186,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddDataSerializableFactoryClass(int factoryId, string factoryTypeName)
         {
-            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => Services.CreateInstance<IDataSerializableFactory>(factoryTypeName) });
+            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(factoryTypeName, null) });
             return this;
         }
 
@@ -135,7 +198,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddDataSerializableFactoryClass(int factoryId, Type factoryType)
         {
-            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => Services.CreateInstance<IDataSerializableFactory>(factoryType) });
+            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(factoryType, null) });
             return this;
         }
 
@@ -143,30 +206,73 @@ namespace Hazelcast.Serialization
 
         #region Serializers
 
+        [BinderIgnore]
         public SerializerOptions DefaultSerializer { get; set; }
 
-        public ICollection<SerializerOptions> Serializers { get; private set; } = new List<SerializerOptions>();
+        [BinderIgnore(false)]
+        [BinderName("defaultSerializer")]
+        private DefaultSerializerInjectionOptions DefaultSerializerBinder
+        {
+            get => default;
+            set
+            {
+                DefaultSerializer = new SerializerOptions
+                {
+                    OverrideClr = value.OverrideClr,
+                    Creator = () => ServiceFactory.CreateInstance<ISerializer>(value.TypeName, value.Args)
+                };
+            }
+        }
+
+        [BinderIgnore]
+        public ICollection<SerializerOptions> Serializers { get; }
+        
+        [BinderIgnore(false)]
+        [BinderName("serializers")]
+        private CollectionBinder<SerializerInjectionOptions> SerializersBinder { get; }
 
         #endregion
+
+        internal class IdentifiedInjectionOptions : InjectionOptions
+        {
+            public int Id { get; set; }
+
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(", id: ");
+                text.Append(Id);
+            }
+        }
+        
+        internal class SerializerInjectionOptions : InjectionOptions
+        {
+            public string SerializedTypeName { get; set; }
+            
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(", serializedTypeName: '");
+                text.Append(SerializedTypeName ?? "<null>");
+                text.Append("'");
+            }
+        }
+
+        internal class DefaultSerializerInjectionOptions : InjectionOptions
+        {
+            public bool OverrideClr { get; set; }
+            
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(", overrideClr: ");
+                text.Append(OverrideClr);
+            }
+        }
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public SerializationOptions Clone()
-        {
-            return new SerializationOptions
-            {
-                Endianness = Endianness,
-                CheckClassDefinitionErrors = CheckClassDefinitionErrors,
-                PortableVersion = PortableVersion,
-
-                ClassDefinitions = new List<IClassDefinition>(ClassDefinitions),
-                PortableFactories = new List<FactoryOptions<IPortableFactory>>(PortableFactories),
-                DataSerializableFactories = new List<FactoryOptions<IDataSerializableFactory>>(DataSerializableFactories),
-
-                DefaultSerializer = DefaultSerializer.Clone(),
-                Serializers = new List<SerializerOptions>(Serializers)
-            };
-        }
+        internal SerializationOptions Clone() => new SerializationOptions(this);
     }
 }

@@ -27,7 +27,7 @@ namespace Hazelcast.Examples.Ssl
             // server certificate will be validated by OS,
             // signed certificates will just work,
             // self-signed certificates should be registered and allowed
-            options.Network.Ssl.IsEnabled = true;
+            options.Networking.Ssl.Enabled = true;
 
             // disable certificate validation
             //options.Networking.Ssl.ValidateCertificateChain = false;

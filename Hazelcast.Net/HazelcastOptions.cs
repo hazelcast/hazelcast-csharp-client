@@ -30,39 +30,54 @@ namespace Hazelcast
         public HazelcastOptions()
         {
             Subscribers = new List<IClusterEventSubscriber>();
-            SubscribersBinder = new CollectionBinder<string>(x
-                => Subscribers.Add(new ClusterEventSubscriber(x)));
+            SubscribersBinder = new CollectionBinder<InjectionOptions>(x
+                => Subscribers.Add(new ClusterEventSubscriber(x.TypeName)));
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
+        /// </summary>
+        private HazelcastOptions(HazelcastOptions other)
+        {
+            ClientName = other.ClientName;
+            ClusterName = other.ClusterName;
+            Subscribers = new List<IClusterEventSubscriber>(other.Subscribers);
+            Labels = new HashSet<string>(other.Labels);
+            AsyncStart = other.AsyncStart;
+
+            Core = Core.Clone();
+            Logging = Logging.Clone();
+            Heartbeat = Heartbeat.Clone();
+            Networking = Networking.Clone();
+            Authentication = Authentication.Clone();
+            LoadBalancing = LoadBalancing.Clone();
+            Serialization = Serialization.Clone();
+            NearCache = NearCache.Clone();
+            Messaging = Messaging.Clone();
+        }
+
+        /// <summary>
+        /// Gets the default client name prefix.
+        /// </summary>
+        public string DefaultClientNamePrefix => "hz.client_";
 
         /// <summary>
         /// Gets or sets the service provider.
         /// </summary>
-        internal IServiceProvider ServiceProvider { get; set; }
+        /// <remarks>
+        /// <para>In dependency-injection scenario the service provider may be available,
+        /// so that service factories can return injected services.</para>
+        /// </remarks>
+        public IServiceProvider ServiceProvider { get; set; }
+
+        /// <summary>
+        /// Gets the core options.
+        /// </summary>
+        public CoreOptions Core { get; } = new CoreOptions();
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal HazelcastOptions Clone()
-        {
-            return new HazelcastOptions
-            {
-                ClientName = ClientName,
-
-                ClusterName = ClusterName,
-                Subscribers = new List<IClusterEventSubscriber>(Subscribers),
-
-                Properties = new Dictionary<string, string>(Properties),
-                Labels = new HashSet<string>(Labels),
-                AsyncStart = AsyncStart,
-
-                Logging = Logging.Clone(),
-                Network = Network.Clone(),
-                Security = Security.Clone(),
-                Authentication = Authentication.Clone(),
-                LoadBalancer = LoadBalancer.Clone(),
-                Serialization = Serialization.Clone(),
-                NearCache = NearCache.Clone()
-            };
-        }
+        internal HazelcastOptions Clone() => new HazelcastOptions(this);
     }
 }

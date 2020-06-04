@@ -49,14 +49,6 @@ namespace Hazelcast.Security
         /// <summary>
         /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
         /// </summary>
-        /// <remarks>The new instance needs to be fully initialized with the <see cref="Initialize"/> method.</remarks>
-        // ReSharper disable once UnusedMember.Global - created by reflection
-        public KerberosCredentialsFactory()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
-        /// </summary>
         /// <returns>The application will authenticate to the KDC as the current Windows user.</returns>
         /// <param name="spn">The service principal name.</param>
         public KerberosCredentialsFactory(string spn)
@@ -88,20 +80,6 @@ namespace Hazelcast.Security
             if (string.IsNullOrWhiteSpace(domain))
                 throw new ArgumentException("Value cannot be null nor empty.", nameof(domain));
             _domain = domain;
-        }
-
-        /// <inheritdoc />
-        public void Initialize(IDictionary<string, string> properties)
-        {
-            if (!properties.TryGetValue("spn", out _spn) || string.IsNullOrWhiteSpace(_spn))
-                throw new InvalidOperationException("Missing Service Principal Name.");
-
-            if (!properties.TryGetValue("username", out _username) ||
-                !properties.TryGetValue("password", out _password) ||
-                !properties.TryGetValue("domain", out _domain))
-            {
-                _username = _password = _domain = null;
-            }
         }
 
         /// <inheritdoc />

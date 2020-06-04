@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task LockAsync(TKey key, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = LockAsync(key, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task LockForAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = LockForAsync(key, leaseTime, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -96,7 +96,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<bool> TryLockAsync(TKey key, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = TryLockAsync(key, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -129,7 +129,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<bool> WaitLockAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = WaitLockAsync(key, serverTimeout, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -158,7 +158,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <inheritdoc />
         public async Task<bool> WaitLockForAsync(TKey key, TimeSpan leaseTime, TimeSpan serverTimeout, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = WaitLockForAsync(key, leaseTime, serverTimeout, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -186,7 +186,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <inheritdoc />
         public async Task<bool> IsLockedAsync(TKey key, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = IsLockedAsync(key, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -210,7 +210,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <inheritdoc />
         public async Task UnlockAsync(TKey key, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = UnlockAsync(key, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -240,7 +240,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <inheritdoc />
         public async Task ForceUnlockAsync(TKey key, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = ForceUnlockAsync(key, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC

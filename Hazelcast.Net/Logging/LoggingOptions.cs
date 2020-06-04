@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast.Logging
 {
@@ -31,20 +31,28 @@ namespace Hazelcast.Logging
     public class LoggingOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="LoggingOptions"/> class.
+        /// </summary>
+        public LoggingOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoggingOptions"/> class.
+        /// </summary>
+        private LoggingOptions(LoggingOptions other)
+        {
+            LoggerFactory = other.LoggerFactory.Clone();
+        }
+
+        /// <summary>
         /// Gets the service factory for <see cref="ILoggerFactory"/>.
         /// </summary>
         [BinderIgnore]
-        public ServiceFactory<ILoggerFactory> LoggerFactory { get; private set; } = new ServiceFactory<ILoggerFactory>();
+        public SingletonServiceFactory<ILoggerFactory> LoggerFactory { get; } = new SingletonServiceFactory<ILoggerFactory>();
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public LoggingOptions Clone()
-        {
-            return new LoggingOptions
-            {
-                LoggerFactory = LoggerFactory.Clone()
-            };
-        }
+        internal LoggingOptions Clone() => new LoggingOptions(this);
     }
 }

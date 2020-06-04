@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
 namespace Hazelcast.Clustering.LoadBalancing
@@ -30,20 +32,16 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Initializes a new instance of the <see cref="RandomLoadBalancer"/> class.
         /// </summary>
-        /// <param name="options">Options.</param>
-        public StaticLoadBalancer(LoadBalancingOptions options)
+        /// <param name="args">Arguments.</param>
+        public StaticLoadBalancer(IReadOnlyDictionary<string, string> args)
         {
-            if (!options.LoadBalancerArgs.TryGetValue("memberId", out var memberIdArg) ||
-                !Guid.TryParse(memberIdArg.ToString(), out var memberId))
-                throw new ConfigurationException($"Value '{memberIdArg}' is not a valid Guid member identifier.");
-
-            _memberId = memberId;
+            _memberId = args.GetGuidValue("memberId");
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StaticLoadBalancer"/> class.
         /// </summary>
-        /// <param name="memberId"></param>
+        /// <param name="memberId">The member identifier.</param>
         public StaticLoadBalancer(Guid memberId)
         {
             _memberId = memberId;

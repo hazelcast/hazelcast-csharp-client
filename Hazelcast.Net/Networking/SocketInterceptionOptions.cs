@@ -21,21 +21,43 @@ namespace Hazelcast.Networking
     /// <summary>
     /// Contains the configuration for interceptor socket.
     /// </summary>
-    public class SocketInterceptorOptions
+    public class SocketInterceptionOptions
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SocketInterceptionOptions"/> class.
+        /// </summary>
+        public SocketInterceptionOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SocketInterceptionOptions"/> class.
+        /// </summary>
+        private SocketInterceptionOptions(SocketInterceptionOptions other)
+        {
+            Enabled = other.Enabled;
+            Interceptor = other.Interceptor.Clone();
+        }
+
         /// <summary>
         /// Whether socket interception is enabled.
         /// </summary>
-        public bool IsEnabled { get; set; }
+        public bool Enabled { get; set; }
 
+        /// <summary>
+        /// Gets the interceptor service factory.
+        /// </summary>
         [BinderIgnore]
-        public ServiceFactory<ISocketInterceptor> SocketInterceptor { get; private set; } = new ServiceFactory<ISocketInterceptor>();
+        public SingletonServiceFactory<ISocketInterceptor> Interceptor { get; } = new SingletonServiceFactory<ISocketInterceptor>();
 
+        [BinderName("interceptor")]
         [BinderIgnore(false)]
-        private string InterceptorType
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions InterceptorBinder
+#pragma warning restore IDE0051 // Remove unused private members
         {
             get => default;
-            set => SocketInterceptor.Creator = () => Services.CreateInstance<ISocketInterceptor>(value, this);
+            set => Interceptor.Creator = () => ServiceFactory.CreateInstance<ISocketInterceptor>(value.TypeName, value.Args);
         }
 
         /// <inheritdoc />
@@ -49,13 +71,6 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public SocketInterceptorOptions Clone()
-        {
-            return new SocketInterceptorOptions
-            {
-                IsEnabled = IsEnabled,
-                SocketInterceptor = SocketInterceptor.Clone()
-            };
-        }
+        internal SocketInterceptionOptions Clone() => new SocketInterceptionOptions(this);
     }
 }

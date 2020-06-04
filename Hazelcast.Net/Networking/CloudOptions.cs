@@ -20,9 +20,25 @@ namespace Hazelcast.Networking
     public class CloudOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="CloudOptions"/> class.
+        /// </summary>
+        public CloudOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CloudOptions"/> class.
+        /// </summary>
+        private CloudOptions(CloudOptions other)
+        {
+            Enabled = other.Enabled;
+            DiscoveryToken = other.DiscoveryToken;
+            UrlBase = other.UrlBase;
+        }
+
+        /// <summary>
         /// Whether Hazelcast Cloud is enabled.
         /// </summary>
-        public bool IsEnabled { get; set; }
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Gets or sets the discovery token of the cluster.
@@ -37,14 +53,6 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public CloudOptions Clone()
-        {
-            return new CloudOptions
-            {
-                IsEnabled = IsEnabled,
-                DiscoveryToken = DiscoveryToken,
-                UrlBase = UrlBase
-            };
-        }
+        internal CloudOptions Clone() => new CloudOptions(this);
     }
 }

@@ -26,9 +26,30 @@ namespace Hazelcast.Networking
         private SslProtocols _sslProtocol = SslProtocols.Tls12;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="SslOptions"/> class.
+        /// </summary>
+        public SslOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SslOptions"/> class.
+        /// </summary>
+        private SslOptions(SslOptions other)
+        {
+            Enabled = other.Enabled;
+            ValidateCertificateChain = other.ValidateCertificateChain;
+            ValidateCertificateName = other.ValidateCertificateName;
+            CheckCertificateRevocation = other.CheckCertificateRevocation;
+            CertificateName = other.CertificateName;
+            CertificatePath = other.CertificatePath;
+            CertificatePassword = other.CertificatePassword;
+            _sslProtocol = other._sslProtocol;
+        }
+
+        /// <summary>
         /// Whether to enable SSL.
         /// </summary>
-        public bool IsEnabled { get; set; }
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Whether to validate the certificate chain.
@@ -63,7 +84,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets or sets the SSL protocol.
         /// </summary>
-        public SslProtocols SslProtocol
+        public SslProtocols Protocol
         {
             get => _sslProtocol;
             set
@@ -86,7 +107,7 @@ namespace Hazelcast.Networking
         {
             var text = new StringBuilder();
             text.Append("SslConfig {");
-            text.Append(IsEnabled ? "enabled" : "disabled");
+            text.Append(Enabled ? "enabled" : "disabled");
             text.Append(", ValidateCertificateName=").Append(ValidateCertificateName ? "true" : "false");
             text.Append(", ValidateCertificateChain=").Append(ValidateCertificateChain ? "true" : "false");
             text.Append(", CheckCertificateRevocation=").Append(CheckCertificateRevocation ? "true" : "false");
@@ -99,19 +120,6 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public SslOptions Clone()
-        {
-            return new SslOptions
-            {
-                IsEnabled = IsEnabled,
-                ValidateCertificateChain = ValidateCertificateChain,
-                ValidateCertificateName = ValidateCertificateName,
-                CheckCertificateRevocation = CheckCertificateRevocation,
-                CertificateName = CertificateName,
-                CertificatePath = CertificatePath,
-                CertificatePassword = CertificatePassword,
-                _sslProtocol = _sslProtocol
-            };
-        }
+        internal SslOptions Clone() => new SslOptions(this);
     }
 }

@@ -40,7 +40,7 @@ namespace Hazelcast.Networking
             var cloudConfiguration = networkingOptions.Cloud;
             var addresses = networkingOptions.Addresses;
 
-            if (cloudConfiguration != null && cloudConfiguration.IsEnabled)
+            if (cloudConfiguration != null && cloudConfiguration.Enabled)
             {
                 // fail fast
                 if (addresses.Count > 0)

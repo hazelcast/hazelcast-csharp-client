@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Authentication;
@@ -70,27 +71,17 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        public void HazelcastOptionsFile()
+        public async Task HazelcastOptionsRoot()
         {
             var options = ReadResource(Resources.HazelcastOptions);
 
-            Assert.AreEqual("testClusterName", options.ClusterName);
-            Assert.AreEqual("testClientName", options.ClientName);
-            Assert.AreEqual(2, options.Properties.Count);
-            Assert.IsTrue(options.Properties.ContainsKey("aKey"));
-            Assert.IsTrue(options.Properties["aKey"] == "aValue");
-            Assert.IsTrue(options.Properties.ContainsKey("anotherKey"));
-            Assert.IsTrue(options.Properties["anotherKey"] == "anotherValue");
+            Assert.AreEqual("cluster", options.ClusterName);
+            Assert.AreEqual("client", options.ClientName);
             Assert.AreEqual(2, options.Labels.Count);
-            Assert.IsTrue(options.Labels.Contains("label1"));
-            Assert.IsTrue(options.Labels.Contains("label2"));
             Assert.IsTrue(options.AsyncStart);
-        }
 
-        [Test]
-        public async Task ClusterOptionsFile()
-        {
-            var options = ReadResource(Resources.ClusterOptions) as IClusterOptions;
+            Assert.IsTrue(options.Labels.Contains("label_1"));
+            Assert.IsTrue(options.Labels.Contains("label_2"));
 
             Assert.AreEqual(1, options.Subscribers.Count);
             var subscriber = options.Subscribers[0];
@@ -99,6 +90,118 @@ namespace Hazelcast.Tests
             TestSubscriber.Ctored = false;
             await subscriber.SubscribeAsync(null, CancellationToken.None);
             Assert.IsTrue(TestSubscriber.Ctored);
+        }
+
+        [Test]
+        public void LoggingOptionsSection()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).Logging;
+
+            // nothing is configured here
+        }
+
+        [Test]
+        public void CoreOptionsSection()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).Core;
+
+            Assert.AreEqual(1000, options.Clock.Offset);
+        }
+
+        [Test]
+        public void MessagingOptionsSection()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).Messaging;
+
+            Assert.AreEqual(1000, options.MaxFastInvocationCount);
+            Assert.AreEqual(1001, options.MinRetryDelayMilliseconds);
+            Assert.AreEqual(1002, options.DefaultTimeoutMilliseconds);
+            Assert.AreEqual(1003, options.DefaultOperationTimeoutMilliseconds);
+        }
+
+        [Test]
+        public void HeartbeatOptionsSection()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).Heartbeat;
+
+            Assert.AreEqual(1000, options.PeriodMilliseconds);
+            Assert.AreEqual(1001, options.TimeoutMilliseconds);
+            Assert.AreEqual(1002, options.PingTimeoutMilliseconds);
+        }
+
+        [Test]
+        public void NetworkingOptionsSection()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).Networking;
+
+            Assert.AreEqual(2, options.Addresses.Count);
+            Assert.IsTrue(options.Addresses.Contains("localhost"));
+            Assert.IsTrue(options.Addresses.Contains("otherhost"));
+            Assert.IsFalse(options.ShuffleAddresses);
+            Assert.IsFalse(options.SmartRouting);
+            Assert.IsFalse(options.RetryOnTargetDisconnected);
+            Assert.AreEqual(1000, options.ConnectionTimeoutMilliseconds);
+            Assert.AreEqual(1001, options.WaitForClientMilliseconds);
+            Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
+            Assert.IsFalse(options.ShuffleAddresses);
+
+            var sslOptions = options.Ssl;
+            Assert.IsTrue(sslOptions.Enabled);
+            Assert.IsFalse(sslOptions.ValidateCertificateChain);
+            Assert.IsTrue(sslOptions.ValidateCertificateName);
+            Assert.IsTrue(sslOptions.CheckCertificateRevocation);
+            Assert.AreEqual("cert", sslOptions.CertificateName);
+            Assert.AreEqual("path", sslOptions.CertificatePath);
+            Assert.AreEqual("password", sslOptions.CertificatePassword);
+            Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
+
+            var cloudOptions = options.Cloud;
+            Assert.IsTrue(cloudOptions.Enabled);
+            Assert.AreEqual("token", cloudOptions.DiscoveryToken);
+            Assert.AreEqual("url", cloudOptions.UrlBase);
+
+            var socketOptions = options.Socket;
+            Assert.AreEqual(1000, socketOptions.BufferSize);
+            Assert.IsFalse(socketOptions.KeepAlive);
+            Assert.AreEqual(1001, socketOptions.LingerSeconds);
+            Assert.IsFalse(socketOptions.ReuseAddress);
+            Assert.IsTrue(socketOptions.TcpNoDelay);
+
+            var interceptorOptions = options.SocketInterception;
+            Assert.IsTrue(interceptorOptions.Enabled);
+            Assert.IsInstanceOf<TestSocketInterceptor>(interceptorOptions.Interceptor.Service);
+
+            var retryOptions = options.ConnectionRetry;
+            Assert.AreEqual(1000, retryOptions.InitialBackoffMilliseconds);
+            Assert.AreEqual(1001, retryOptions.MaxBackoffMilliseconds);
+            Assert.AreEqual(1002, retryOptions.Multiplier);
+            Assert.AreEqual(1003, retryOptions.ClusterConnectionTimeoutMilliseconds);
+            Assert.AreEqual(1004, retryOptions.Jitter);
+        }
+
+        [Test]
+        public void AuthenticationOptionsFile()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).Authentication;
+
+            var authenticator = options.Authenticator.Service;
+            Assert.IsInstanceOf<Authenticator>(authenticator);
+
+            var credentialsFactory = options.CredentialsFactory.Service;
+            Assert.IsInstanceOf<TestCredentialsFactory>(credentialsFactory);
+
+            var testCredentialsFactory = (TestCredentialsFactory) credentialsFactory;
+            Assert.AreEqual("arg", testCredentialsFactory.Arg1);
+            Assert.AreEqual(1000, testCredentialsFactory.Arg2);
+        }
+
+        [Test]
+        public void LoadBalancingOptionsFile()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).LoadBalancing;
+
+            var loadBalancer = options.LoadBalancer.Service;
+            Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
         }
 
         public class TestSubscriber : IClusterEventSubscriber
@@ -112,138 +215,86 @@ namespace Hazelcast.Tests
             }
         }
 
-        [Test]
-        public void LoggingOptionsFile()
-        {
-            var options = ReadResource(Resources.LoggingOptions).Logging;
-
-            // TODO we should be able to configure logging?
-        }
-
-        [Test]
-        public void NetworkingOptionsFile()
-        {
-            var options = ReadResource(Resources.NetworkingOptions).Network;
-
-            Assert.AreEqual(2, options.Addresses.Count);
-            Assert.IsTrue(options.Addresses.Contains("localhost"));
-            Assert.IsTrue(options.Addresses.Contains("otherhost"));
-            Assert.IsFalse(options.SmartRouting);
-            Assert.IsFalse(options.RedoOperation);
-            Assert.AreEqual(666, options.ConnectionTimeoutMilliseconds);
-            Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
-            Assert.IsFalse(options.ShuffleAddresses);
-
-
-            var sslOptions = options.Ssl;
-            Assert.IsTrue(sslOptions.IsEnabled);
-            Assert.IsFalse(sslOptions.ValidateCertificateChain);
-            Assert.IsTrue(sslOptions.ValidateCertificateName);
-            Assert.IsTrue(sslOptions.CheckCertificateRevocation);
-            Assert.AreEqual("testCertificateName", sslOptions.CertificateName);
-            Assert.AreEqual("testCertificatePath", sslOptions.CertificatePath);
-            Assert.AreEqual("testCertificatePassword", sslOptions.CertificatePassword);
-            Assert.AreEqual(SslProtocols.Tls11,sslOptions.SslProtocol);
-
-            var cloudOptions = options.Cloud;
-            Assert.IsTrue(cloudOptions.IsEnabled);
-            Assert.AreEqual("testToken", cloudOptions.DiscoveryToken);
-            Assert.AreEqual("testUrl", cloudOptions.UrlBase);
-
-            var socketOptions = options.Socket;
-            Assert.AreEqual(666, socketOptions.BufferSize);
-            Assert.IsFalse(socketOptions.KeepAlive);
-            Assert.AreEqual(667, socketOptions.LingerSeconds);
-            Assert.IsFalse(socketOptions.ReuseAddress);
-            Assert.IsTrue(socketOptions.TcpNoDelay);
-
-            var interceptorOptions = options.SocketInterceptor;
-            Assert.IsTrue(interceptorOptions.IsEnabled);
-            Assert.IsInstanceOf<TestSocketInterceptor>(interceptorOptions.SocketInterceptor.Create());
-
-            var retryOptions = options.ConnectionRetry;
-            Assert.AreEqual(666, retryOptions.InitialBackoffMilliseconds);
-            Assert.AreEqual(667, retryOptions.MaxBackoffMilliseconds);
-            Assert.AreEqual(668, retryOptions.Multiplier);
-            Assert.AreEqual(669, retryOptions.ClusterConnectionTimeoutMilliseconds);
-            Assert.AreEqual(42, retryOptions.Jitter);
-        }
-
         public class TestSocketInterceptor : ISocketInterceptor
         {
-            public TestSocketInterceptor(SocketInterceptorOptions options)
+            public TestSocketInterceptor()
             { }
         }
 
-        [Test]
-        public void AuthenticationOptionsFile()
+        public class TestCredentialsFactory : ICredentialsFactory
         {
-            var options = ReadResource(Resources.AuthenticationOptions).Authentication;
+            public TestCredentialsFactory(string arg1, int arg2)
+            {
+                Arg1 = arg1;
+                Arg2 = arg2;
+            }
 
-            Assert.AreEqual("Hazelcast.Clustering.Authenticator, Hazelcast.Net", options.AuthenticatorType);
-            Assert.AreEqual(2, options.AuthenticatorArgs.Count);
-            Assert.IsTrue(options.AuthenticatorArgs.TryGetValue("arg3", out var arg3) && arg3 is string s3 && s3 == "value3");
-            Assert.IsTrue(options.AuthenticatorArgs.TryGetValue("arg4", out var arg4) && arg4 is string s4 && s4 == "value4");
+            public string Arg1 { get; }
 
-            var authenticator = options.Authenticator.Create();
-            Assert.IsInstanceOf<Authenticator>(authenticator);
-        }
+            public int Arg2 { get; }
 
-        [Test]
-        public void SecurityOptionsFile()
-        {
-            var options = ReadResource(Resources.SecurityOptions).Security;
+            public ICredentials NewCredentials()
+            {
+                throw new NotSupportedException();
+            }
 
-            Assert.AreEqual("Hazelcast.Security.DefaultCredentialsFactory, Hazelcast.Net", options.CredentialsFactoryType);
-            Assert.AreEqual(2, options.CredentialsFactoryArgs.Count);
-            Assert.IsTrue(options.CredentialsFactoryArgs.TryGetValue("arg1", out var arg1) && arg1 is string s1 && s1 == "value1");
-            Assert.IsTrue(options.CredentialsFactoryArgs.TryGetValue("arg2", out var arg2) && arg2 is string s2 && s2 == "value2");
-
-            var credentialsFactory = options.CredentialsFactory.Create();
-            Assert.IsInstanceOf<DefaultCredentialsFactory>(credentialsFactory);
-        }
-
-        [Test]
-        public void LoadBalancingOptionsFile()
-        {
-            var options = ReadResource(Resources.LoadBalancingOptions).LoadBalancer;
-
-            Assert.AreEqual("Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net", options.LoadBalancerType);
-            Assert.AreEqual(2, options.LoadBalancerArgs.Count);
-            Assert.IsTrue(options.LoadBalancerArgs.TryGetValue("arg1", out var arg1) && arg1 == "value1");
-            Assert.IsTrue(options.LoadBalancerArgs.TryGetValue("arg2", out var arg2) && arg2 == "value2");
-
-            var loadBalancer = options.LoadBalancer.Create();
-            Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
+            public void Dispose()
+            { }
         }
 
         [Test]
         public void SerializationOptionsFile()
         {
-            var options = ReadResource(Resources.SerializationOptions).Serialization;
+            var options = ReadResource(Resources.HazelcastOptions).Serialization;
 
             Assert.AreEqual(Endianness.LittleEndian, options.Endianness);
-            Assert.AreEqual(42, options.PortableVersion);
-            Assert.IsFalse(options.CheckClassDefinitionErrors);
+            Assert.AreEqual(1000, options.PortableVersion);
+            Assert.IsFalse(options.ValidateClassDefinitions);
 
             Assert.AreEqual(1, options.PortableFactories.Count);
             var portableFactoryOptions = options.PortableFactories.First();
-            Assert.AreEqual(666, portableFactoryOptions.Id);
-            Assert.IsInstanceOf<TestPortableFactory>(portableFactoryOptions.Create());
+            Assert.AreEqual(1001, portableFactoryOptions.Id);
+            Assert.IsInstanceOf<TestPortableFactory>(portableFactoryOptions.Service);
 
             Assert.AreEqual(1, options.DataSerializableFactories.Count);
             var dataSerializableFactoryOptions = options.DataSerializableFactories.First();
-            Assert.AreEqual(667, dataSerializableFactoryOptions.Id);
-            Assert.IsInstanceOf<TestDataSerializableFactory>(dataSerializableFactoryOptions.Create());
+            Assert.AreEqual(1002, dataSerializableFactoryOptions.Id);
+            Assert.IsInstanceOf<TestDataSerializableFactory>(dataSerializableFactoryOptions.Service);
 
             Assert.IsNotNull(options.DefaultSerializer);
             Assert.IsTrue(options.DefaultSerializer.OverrideClr);
-            Assert.IsInstanceOf<TestDefaultSerializer>(options.DefaultSerializer.Create());
+            Assert.IsInstanceOf<TestDefaultSerializer>(options.DefaultSerializer.Service);
 
             Assert.AreEqual(1, options.Serializers.Count);
             var serializerOptions = options.Serializers.First();
-            Assert.AreEqual("SomeClassName", serializerOptions.SerializedType);
-            Assert.IsInstanceOf<TestSerializer>(serializerOptions.Create());
+            Assert.AreEqual(typeof(HazelcastClient), serializerOptions.SerializedType);
+            Assert.IsInstanceOf<TestSerializer>(serializerOptions.Service);
+        }
+
+        [Test]
+        public void NearCacheOptionsFile()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).NearCache;
+
+            Assert.AreEqual(2, options.Configurations.Count);
+
+            Assert.IsTrue(options.Configurations.TryGetValue("default", out var defaultNearCache));
+            Assert.AreEqual(EvictionPolicy.Lru, defaultNearCache.EvictionPolicy);
+            Assert.AreEqual(InMemoryFormat.Binary, defaultNearCache.InMemoryFormat);
+            Assert.AreEqual(1000, defaultNearCache.MaxIdleSeconds);
+            Assert.AreEqual(1001, defaultNearCache.MaxSize);
+            Assert.AreEqual(1002, defaultNearCache.TimeToLiveSeconds);
+            Assert.IsTrue(defaultNearCache.InvalidateOnChange);
+
+            Assert.IsTrue(options.Configurations.TryGetValue("other", out var otherNearCache));
+            Assert.AreEqual(EvictionPolicy.Lfu, otherNearCache.EvictionPolicy);
+            Assert.AreEqual(InMemoryFormat.Object, otherNearCache.InMemoryFormat);
+            Assert.AreEqual(2000, otherNearCache.MaxIdleSeconds);
+            Assert.AreEqual(2001, otherNearCache.MaxSize);
+            Assert.AreEqual(2002, otherNearCache.TimeToLiveSeconds);
+            Assert.IsFalse(otherNearCache.InvalidateOnChange);
+
+            // TODO: whatever keys?
         }
 
         public class TestPortableFactory : IPortableFactory
@@ -286,34 +337,6 @@ namespace Hazelcast.Tests
             {
                 throw new NotSupportedException();
             }
-        }
-
-        [Test]
-        public void NearCacheOptionsFile()
-        {
-            var options = ReadResource(Resources.NearCacheOptions).NearCache;
-
-            Assert.AreEqual(2, options.Count);
-
-            Assert.IsTrue(options.TryGetValue("default", out var defaultNearCache));
-            Assert.AreEqual("defaultName", defaultNearCache.Name);
-            Assert.AreEqual(EvictionPolicy.Lru, defaultNearCache.EvictionPolicy);
-            Assert.AreEqual(InMemoryFormat.Binary, defaultNearCache.InMemoryFormat);
-            Assert.AreEqual(666, defaultNearCache.MaxIdleSeconds);
-            Assert.AreEqual(667, defaultNearCache.MaxSize);
-            Assert.AreEqual(668, defaultNearCache.TimeToLiveSeconds);
-            Assert.IsTrue(defaultNearCache.InvalidateOnChange);
-
-            Assert.IsTrue(options.TryGetValue("other", out var otherNearCache));
-            Assert.AreEqual("otherName", otherNearCache.Name);
-            Assert.AreEqual(EvictionPolicy.Lfu, otherNearCache.EvictionPolicy);
-            Assert.AreEqual(InMemoryFormat.Object, otherNearCache.InMemoryFormat);
-            Assert.AreEqual(166, otherNearCache.MaxIdleSeconds);
-            Assert.AreEqual(167, otherNearCache.MaxSize);
-            Assert.AreEqual(168, otherNearCache.TimeToLiveSeconds);
-            Assert.IsFalse(otherNearCache.InvalidateOnChange);
-
-            // TODO: whatever keys?
         }
     }
 }

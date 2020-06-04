@@ -28,8 +28,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Initializes a new instance of the <see cref="RandomLoadBalancer"/> class.
         /// </summary>
-        /// <param name="options">Options.</param>
-        public RandomLoadBalancer(LoadBalancingOptions options)
+        public RandomLoadBalancer()
         { }
 
         /// <inheritdoc />

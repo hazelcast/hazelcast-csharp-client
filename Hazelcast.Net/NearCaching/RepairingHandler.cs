@@ -35,14 +35,14 @@ namespace Hazelcast.NearCaching
         private readonly ISerializationService _serializationService;
         private readonly Partitioner _partitioner;
 
-        public RepairingHandler(Guid localUuid, NearCache nearCache, Partitioner partitioner, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public RepairingHandler(Guid localUuid, NearCache nearCache, int maxToleratedMissCount, Partitioner partitioner, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _localUuid = localUuid;
             _nearCache = nearCache;
             _partitioner = partitioner;
             _partitionCount = partitioner.Count;
             _metaDataContainers = CreateMetadataContainers(_partitionCount);
-            _maxToleratedMissCount = NearCacheManager.GetMaxToleratedMissCount();
+            _maxToleratedMissCount = maxToleratedMissCount;
             _serializationService = serializationService;
             _logger = loggerFactory.CreateLogger<RepairingHandler>();
         }

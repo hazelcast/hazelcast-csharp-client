@@ -113,7 +113,7 @@ namespace Hazelcast.Serialization
                 _portableVersion = options.PortableVersion;
             }
 
-            _checkClassDefErrors = options.CheckClassDefinitionErrors;
+            _checkClassDefErrors = options.ValidateClassDefinitions;
             _useNativeByteOrder = options.Endianness == Endianness.Native;
             _endianness = options.Endianness;
             return this;
@@ -207,10 +207,10 @@ namespace Hazelcast.Serialization
             {
                 var globalSerializer = _options.DefaultSerializer;
                 if (globalSerializer != null)
-                    ss.RegisterGlobal(globalSerializer.Create(), globalSerializer.OverrideClr);
+                    ss.RegisterGlobal(globalSerializer.Service, globalSerializer.OverrideClr);
 
                 foreach (var serializer in _options.Serializers)
-                    ss.Register(serializer.SerializedType, serializer.Create());
+                    ss.Register(serializer.SerializedType, serializer.Service);
             }
             return ss;
         }
@@ -226,7 +226,7 @@ namespace Hazelcast.Serialization
                 if (dataSerializableFactories.ContainsKey(factoryOptions.Id))
                     throw new ArgumentException($"IDataSerializableFactory with factoryId {factoryOptions.Id} is already registered.");
 
-                dataSerializableFactories.Add(factoryOptions.Id, factoryOptions.Create());
+                dataSerializableFactories.Add(factoryOptions.Id, factoryOptions.Service);
             }
         }
 
@@ -240,7 +240,7 @@ namespace Hazelcast.Serialization
                 if (portableFactories.ContainsKey(factoryOptions.Id))
                     throw new ArgumentException($"IPortableFactory with factoryId {factoryOptions.Id} is already registered.");
 
-                portableFactories.Add(factoryOptions.Id, factoryOptions.Create());
+                portableFactories.Add(factoryOptions.Id, factoryOptions.Service);
             }
         }
 

@@ -31,16 +31,16 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Initializes a new instance of the <see cref="NearCacheNamedOptions"/> class.
         /// </summary>
-        /// <param name="name">The name of the configuration.</param>
-        public NearCacheNamedOptions(string name)
+        private NearCacheNamedOptions(NearCacheNamedOptions other)
         {
-            Name = name;
+            EvictionPolicy = other.EvictionPolicy;
+            InMemoryFormat = other.InMemoryFormat;
+            MaxIdleSeconds = other.MaxIdleSeconds;
+            MaxSize = other.MaxSize;
+            TimeToLiveSeconds = other.TimeToLiveSeconds;
+            InvalidateOnChange = other.InvalidateOnChange;
+            SerializeKeys = other.SerializeKeys;
         }
-
-        /// <summary>
-        /// Gets or sets the name of this configuration.
-        /// </summary>
-        public string Name { get; set; } = "default";
 
         /// <summary>
         /// Gets or sets the eviction policy.
@@ -94,19 +94,6 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public NearCacheNamedOptions Clone()
-        {
-            return new NearCacheNamedOptions
-            {
-                Name = Name,
-                EvictionPolicy = EvictionPolicy,
-                InMemoryFormat = InMemoryFormat,
-                MaxIdleSeconds = MaxIdleSeconds,
-                MaxSize = MaxSize,
-                TimeToLiveSeconds = TimeToLiveSeconds,
-                InvalidateOnChange = InvalidateOnChange,
-                SerializeKeys = SerializeKeys
-            };
-        }
+        internal NearCacheNamedOptions Clone() => new NearCacheNamedOptions(this);
     }
 }

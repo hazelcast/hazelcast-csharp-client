@@ -23,7 +23,7 @@ namespace Hazelcast.Examples.Map
     public class MapLockExample : ExampleBase
     {
         // server address can be configured via the command line, e.g.
-        // hazelcast.networking.addresses.0=127.0.0.1
+        // hazelcast.network.addresses.0=127.0.0.1
 
         public static async Task Run(params string[] args)
         {
@@ -32,8 +32,8 @@ namespace Hazelcast.Examples.Map
 
             var options = BuildExampleOptions(args);
 
-            // FIXME: this is bad, because the factory does not ensure it's a singleton
-            using var ensureLoggerFactoryIsDisposed = options.Logging.LoggerFactory.Create();
+            // FIXME: this is temp, we should have a better way to tear down a client
+            using var ensureLoggerFactoryIsDisposed = options.Logging.LoggerFactory.Service;
 
             // create an Hazelcast client and connect to a server running on localhost
             var hz = new HazelcastClientFactory(options).CreateClient();

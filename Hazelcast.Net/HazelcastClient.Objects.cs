@@ -35,7 +35,7 @@ namespace Hazelcast
 #endif
         Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
             var task = GetMapAsync<TKey, TValue>(name, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -71,7 +71,7 @@ namespace Hazelcast
 #endif
         Task<ITopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
             var task = GetTopicAsync<T>(name, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC

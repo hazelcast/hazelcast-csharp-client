@@ -82,7 +82,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(true, default, false, default, false, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -91,7 +91,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(includeValues, default, false, default, false, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -100,7 +100,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(true, default, false, key, true, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -109,7 +109,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(includeValues, default, false, key, true, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -118,7 +118,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(true, predicate, true, default, false, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -127,7 +127,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(includeValues, predicate, true, default, false, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -136,7 +136,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(true, predicate, true, key, true, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -145,7 +145,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             return SubscribeAsync(includeValues, predicate, true, key, true, on, cancellation.Token).OrTimeout(cancellation);
         }
 
@@ -269,7 +269,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(Constants.DistributedObjects.DefaultOperationTimeoutMilliseconds);
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
             var task = UnsubscribeAsync(subscriptionId, cancellation.Token).OrTimeout(cancellation);
 
 #if HZ_OPTIMIZE_ASYNC

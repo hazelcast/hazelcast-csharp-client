@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -10,8 +11,9 @@ namespace Hazelcast.Clustering
 {
     internal class Heartbeat : IAsyncDisposable
     {
+        private readonly HeartbeatOptions _options;
+        private readonly TimeSpan _period;
         private readonly TimeSpan _timeout;
-        private readonly TimeSpan _interval;
 
         private readonly Cluster _cluster;
         private readonly ILogger _logger;
@@ -20,13 +22,14 @@ namespace Hazelcast.Clustering
         private Task _heartbeating;
         private CancellationTokenSource _cancellation;
 
-        public Heartbeat(Cluster cluster, ILoggerFactory loggerFactory)
+        public Heartbeat(Cluster cluster, HeartbeatOptions options, ILoggerFactory loggerFactory)
         {
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
             _logger = loggerFactory?.CreateLogger<Heartbeat>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-            _timeout = TimeSpan.FromMilliseconds(Constants.Heartbeat.TimeoutMilliseconds);
-            _interval = TimeSpan.FromMilliseconds(Constants.Heartbeat.IntervalMilliseconds);
+            _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
+            _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
         }
 
         public void Start(CancellationToken cancellationToken)
@@ -66,7 +69,7 @@ namespace Hazelcast.Clustering
         {
             while (true)
             {
-                await Task.Delay(_interval, cancellationToken);
+                await Task.Delay(_period, cancellationToken);
                 try
                 {
                     await RunAsync(cancellationToken);
@@ -110,14 +113,14 @@ namespace Hazelcast.Clustering
 
             // make sure we write to the client at least every interval
             // this should trigger a read when we receive the response
-            if (now - client.LastWriteTime > _interval)
+            if (now - client.LastWriteTime > _period)
             {
                 _logger.LogDebug("Ping client {ClientId}", client.Id);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
 
                 // cannot wait forever on a ping
-                var timeout = TimeSpan.Zero.AsCancellationTokenSource(Constants.Heartbeat.PingTimeoutMilliseconds);
+                var timeout = TimeSpan.Zero.AsCancellationTokenSource(_options.PingTimeoutMilliseconds);
                 var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
 
                 try

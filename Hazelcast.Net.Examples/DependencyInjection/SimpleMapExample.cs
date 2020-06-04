@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 using Hazelcast.Configuration;
-using Hazelcast.Configuration.Binding;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Hazelcast.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples.DependencyInjection
 {
+    // ReSharper disable once UnusedMember.Global
     public class SimpleMapExample : ExampleBase
     {
         public static async Task Run(params string[] args)
@@ -18,13 +16,19 @@ namespace Hazelcast.Examples.DependencyInjection
             var services = new ServiceCollection();
 
             // build the configuration
+            // alternatively, configuration may from from a 'host'
+            // but even then, it is important to AddHazelcast()
             var configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddHazelcast(args);
             IConfiguration configuration = configurationBuilder.Build();
 
             // add hazelcast to services
-            // this adds the configuration + the client factory
+            // this adds the options + the client factory
+            // this also wires logging to get
             services.AddHazelcast(configuration);
+
+            // add logging the normal way
+            services.AddLogging(builder => builder.AddConfiguration(configuration.GetSection("logging")).AddConsole());
 
             // wire a client
             services.AddSingleton(provider => provider.GetService<HazelcastClientFactory>().CreateClient());
@@ -32,17 +36,13 @@ namespace Hazelcast.Examples.DependencyInjection
             // configure (can do it multiple times..)
             services.Configure<HazelcastOptions>(options =>
             {
-                options.Network.ConnectionTimeoutMilliseconds = 2_000;
+                options.Networking.ConnectionTimeoutMilliseconds = 2_000;
             });
 
             services.AddTransient<A>();
 
-            services.AddLogging(builder => builder.AddConfiguration(configuration.GetSection("logging")).AddConsole());
-
-            services.AddSingleton<IAuthenticator, Authenticator>();
-
+            // create the service provider, get the object and run
             var serviceProvider = services.BuildServiceProvider();
-
             var a = serviceProvider.GetService<A>();
             await a.RunAsync();
         }

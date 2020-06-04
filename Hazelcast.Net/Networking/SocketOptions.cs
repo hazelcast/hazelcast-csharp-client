@@ -20,6 +20,24 @@ namespace Hazelcast.Networking
     public class SocketOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="SocketOptions"/> class.
+        /// </summary>
+        public SocketOptions()
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SocketOptions"/> class.
+        /// </summary>
+        private SocketOptions(SocketOptions other)
+        {
+            BufferSize = other.BufferSize;
+            KeepAlive = other.KeepAlive;
+            LingerSeconds = other.LingerSeconds;
+            ReuseAddress = other.ReuseAddress;
+            TcpNoDelay = other.TcpNoDelay;
+        }
+
+        /// <summary>
         /// Gets or sets the buffer size.
         /// </summary>
         public int BufferSize { get; set; } = 128; // TODO: bytes? kilobytes?
@@ -47,16 +65,6 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public SocketOptions Clone()
-        {
-            return new SocketOptions
-            {
-                BufferSize = BufferSize,
-                KeepAlive = KeepAlive,
-                LingerSeconds = LingerSeconds,
-                ReuseAddress = ReuseAddress,
-                TcpNoDelay = TcpNoDelay
-            };
-        }
+        internal SocketOptions Clone() => new SocketOptions(this);
     }
 }
