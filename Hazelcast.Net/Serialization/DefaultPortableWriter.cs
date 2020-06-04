@@ -248,13 +248,13 @@ namespace Hazelcast.Serialization
         {
             if (fd.GetFactoryId() != portable.GetFactoryId())
             {
-                throw new HazelcastSerializationException(
+                throw new SerializationException(
                     "Wrong Portable type! Generic portable types are not supported! " + " Expected factory-id: " +
                     fd.GetFactoryId() + ", Actual factory-id: " + portable.GetFactoryId());
             }
             if (fd.GetClassId() != portable.GetClassId())
             {
-                throw new HazelcastSerializationException(
+                throw new SerializationException(
                     "Wrong Portable type! Generic portable types are not supported! " + "Expected class-id: " +
                     fd.GetClassId() + ", Actual class-id: " + portable.GetClassId());
             }
@@ -265,13 +265,13 @@ namespace Hazelcast.Serialization
         {
             if (_raw)
             {
-                throw new HazelcastSerializationException(
+                throw new SerializationException(
                     "Cannot write Portable fields after getRawDataOutput() is called!");
             }
             var fd = _cd.GetField(fieldName);
             if (fd == null)
             {
-                throw new HazelcastSerializationException("Invalid field name: '" + fieldName +
+                throw new SerializationException("Invalid field name: '" + fieldName +
                                                           "' for ClassDefinition {id: " + _cd.GetClassId() +
                                                           ", version: " + _cd.GetVersion() + "}");
             }
@@ -286,7 +286,7 @@ namespace Hazelcast.Serialization
             }
             else
             {
-                throw new HazelcastSerializationException("Field '" + fieldName + "' has already been written!");
+                throw new SerializationException("Field '" + fieldName + "' has already been written!");
             }
             return fd;
         }

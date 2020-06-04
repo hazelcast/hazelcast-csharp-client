@@ -14,11 +14,12 @@
 
 using System;
 using System.Runtime.Serialization;
+using Hazelcast.Configuration;
 
 namespace Hazelcast.Exceptions
 {
     /// <summary>
-    /// TODO: document.
+    /// Represents the exception that is thrown when the target of an invocation disconnects.
     /// </summary>
     [Serializable]
     public sealed class TargetDisconnectedException : HazelcastException

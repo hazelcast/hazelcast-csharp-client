@@ -13,33 +13,65 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.Serialization;
 using Hazelcast.Exceptions;
 
 namespace Hazelcast.Transactions
 {
     /// <summary>
-    ///     A
-    ///     <see cref="HazelcastException">Hazelcast.Core.HazelcastException</see>
-    ///     that is thrown when something goes wrong while dealing with transactions and transactional
-    ///     data-structures.
+    /// Represents the exception that is thrown when something goes wrong with transactions.
     /// </summary>
     [Serializable]
     internal class TransactionException : HazelcastException
     {
+        // ReSharper disable once InconsistentNaming
+        private const string DefaultMessage = "Transaction exception.";
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransactionException"/> class.
+        /// </summary>
         public TransactionException()
-        {
-        }
+            : base(DefaultMessage)
+        { }
 
-        public TransactionException(string message) : base(message)
-        {
-        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransactionException"/> class with a specified error message.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        public TransactionException(string message)
+            : base(message)
+        { }
 
-        public TransactionException(string message, Exception cause) : base(message, cause)
-        {
-        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransactionException"/> class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// </summary>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.</param>
+        public TransactionException(Exception innerException)
+            : base(DefaultMessage, innerException)
+        { }
 
-        public TransactionException(Exception cause) : base(cause)
-        {
-        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransactionException"/> class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.</param>
+        public TransactionException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransactionException"/> class with serialized data.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
+        /// about the exception being thrown.</param>
+        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
+        /// about the source or destination.</param>
+        public TransactionException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        { }
     }
 }

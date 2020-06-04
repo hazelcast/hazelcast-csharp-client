@@ -70,7 +70,7 @@ namespace Hazelcast.Serialization
                 var identified = input.ReadBoolean();
                 if (!identified)
                 {
-                    throw new HazelcastSerializationException("Non-identified DataSerializable is not supported by .NET client. " +
+                    throw new SerializationException("Non-identified DataSerializable is not supported by .NET client. " +
                                                               "Please use IdentifiedDataSerializable instead.");
                 }
                 factoryId = input.ReadInt();
@@ -78,14 +78,14 @@ namespace Hazelcast.Serialization
                 _factories.TryGetValue(factoryId, out dsf);
                 if (dsf == null)
                 {
-                    throw new HazelcastSerializationException(
+                    throw new SerializationException(
                         "No DataSerializerFactory registered for factoryId: " + factoryId);
                 }
                 id = input.ReadInt();
                 var ds = dsf.Create(id);
                 if (ds == null)
                 {
-                    throw new HazelcastSerializationException(dsf + " is not be able to create an instance for id: " +
+                    throw new SerializationException(dsf + " is not be able to create an instance for id: " +
                                                                 id + " on factoryId: " + factoryId);
                 }
                 ds.ReadData(input);
@@ -97,11 +97,11 @@ namespace Hazelcast.Serialization
                 {
                     throw;
                 }
-                if (e is HazelcastSerializationException)
+                if (e is SerializationException)
                 {
                     throw;
                 }
-                throw new HazelcastSerializationException(
+                throw new SerializationException(
                     "Problem while reading DataSerializable, namespace: " + factoryId + ", id: " + id +
                      "', exception: " + e.Message, e);
             }

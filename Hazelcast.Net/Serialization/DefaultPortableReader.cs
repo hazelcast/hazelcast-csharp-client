@@ -46,7 +46,7 @@ namespace Hazelcast.Serialization
             }
             catch (IOException e)
             {
-                throw new HazelcastSerializationException(e);
+                throw new SerializationException(e);
             }
             if (fieldCount != cd.GetFieldCount())
             {
@@ -309,7 +309,7 @@ namespace Hazelcast.Serialization
                 }
                 if (fd.GetFieldType() != FieldType.Portable)
                 {
-                    throw new HazelcastSerializationException("Not a Portable field: " + fieldName);
+                    throw new SerializationException("Not a Portable field: " + fieldName);
                 }
                 var pos = ReadPosition(fd);
                 _in.Position(pos);
@@ -342,7 +342,7 @@ namespace Hazelcast.Serialization
                 }
                 if (fd.GetFieldType() != FieldType.PortableArray)
                 {
-                    throw new HazelcastSerializationException("Not a Portable array field: " + fieldName);
+                    throw new SerializationException("Not a Portable array field: " + fieldName);
                 }
                 var pos = ReadPosition(fd);
                 _in.Position(pos);
@@ -437,7 +437,7 @@ namespace Hazelcast.Serialization
                 }
                 if (fd.GetFieldType() != type)
                 {
-                    throw new HazelcastSerializationException("Not a '" + type + "' field: " + fieldName);
+                    throw new SerializationException("Not a '" + type + "' field: " + fieldName);
                 }
                 return reader.ReadPosition(fd);
             }
@@ -449,7 +449,7 @@ namespace Hazelcast.Serialization
         {
             if (_raw)
             {
-                throw new HazelcastSerializationException(
+                throw new SerializationException(
                     "Cannot read Portable fields after getRawDataInput() is called!");
             }
             var fd = Cd.GetField(fieldName);
@@ -459,7 +459,7 @@ namespace Hazelcast.Serialization
             }
             if (fd.GetFieldType() != type)
             {
-                throw new HazelcastSerializationException("Not a '" + type + "' field: " + fieldName);
+                throw new SerializationException("Not a '" + type + "' field: " + fieldName);
             }
             return ReadPosition(fd);
         }
@@ -473,10 +473,10 @@ namespace Hazelcast.Serialization
             return pos + BytesExtensions.SizeOfShort + len + 1;
         }
 
-        private HazelcastSerializationException ThrowUnknownFieldException(string fieldName)
+        private SerializationException ThrowUnknownFieldException(string fieldName)
         {
             return
-                new HazelcastSerializationException("Unknown field name: '" + fieldName + "' for ClassDefinition {id: " +
+                new SerializationException("Unknown field name: '" + fieldName + "' for ClassDefinition {id: " +
                                                     Cd.GetClassId() + ", version: " + Cd.GetVersion() + "}");
         }
     }

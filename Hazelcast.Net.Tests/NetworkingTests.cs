@@ -382,7 +382,7 @@ namespace Hazelcast.Tests
 
             HzConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<HazelcastClientNotConnectedException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None).CAF());
+            Assert.ThrowsAsync<ClientNotConnectedException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None).CAF());
 
             HzConsole.WriteLine(this, "End");
             await Task.Delay(100).CAF();

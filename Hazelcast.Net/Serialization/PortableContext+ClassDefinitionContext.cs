@@ -61,7 +61,7 @@ namespace Hazelcast.Serialization
                 }
                 if (cd.GetFactoryId() != _factoryId)
                 {
-                    throw new HazelcastSerializationException("Invalid factory-id! " + _factoryId + " -> " + cd);
+                    throw new SerializationException("Invalid factory-id! " + _factoryId + " -> " + cd);
                 }
                 if (cd is ClassDefinition cdImpl)
                 {
@@ -77,7 +77,7 @@ namespace Hazelcast.Serialization
                 {
                     if (!currentCd.Equals(cd))
                     {
-                        throw new HazelcastSerializationException(
+                        throw new SerializationException(
                             "Incompatible class-definitions with same class-id: " + cd + " VS " + currentCd);
                     }
                     return currentCd;

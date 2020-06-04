@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,63 +14,64 @@
 
 using System;
 using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
 
-namespace Hazelcast.Exceptions
+namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Represents the exception that is thrown when the Hazelcast client is invoked but is not connected.
+    /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects. 
     /// </summary>
     [Serializable]
-    public class HazelcastClientNotConnectedException : InvalidOperationException
+    public class SerializationException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Hazelcast client is not connected.";
+        private const string DefaultMessage = "Serialization or de-serialization error.";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientNotConnectedException"/> class.
+        /// Initializes a new instance of the <see cref="SerializationException"/> class.
         /// </summary>
-        public HazelcastClientNotConnectedException()
+        public SerializationException()
             : base(DefaultMessage)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientNotConnectedException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="SerializationException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public HazelcastClientNotConnectedException(string message)
+        public SerializationException(string message)
             : base(message)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientNotConnectedException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="SerializationException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public HazelcastClientNotConnectedException(Exception innerException)
+        public SerializationException(Exception innerException)
             : base(DefaultMessage, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientNotConnectedException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="SerializationException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public HazelcastClientNotConnectedException(string message, Exception innerException)
+        public SerializationException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientNotConnectedException"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="SerializationException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public HazelcastClientNotConnectedException(SerializationInfo info, StreamingContext context)
+        public SerializationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        { }
+        { }    
     }
 }

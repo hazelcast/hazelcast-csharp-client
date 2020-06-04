@@ -105,12 +105,12 @@ namespace Hazelcast.Serialization
             _factories.TryGetValue(factoryId, out portableFactory);
             if (portableFactory == null)
             {
-                throw new HazelcastSerializationException("Could not find PortableFactory for factory-id: " + factoryId);
+                throw new SerializationException("Could not find PortableFactory for factory-id: " + factoryId);
             }
             var portable = portableFactory.Create(classId);
             if (portable == null)
             {
-                throw new HazelcastSerializationException("Could not create Portable for class-id: " + classId);
+                throw new SerializationException("Could not create Portable for class-id: " + classId);
             }
             return portable;
         }

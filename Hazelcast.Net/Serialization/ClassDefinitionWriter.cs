@@ -143,7 +143,7 @@ namespace Hazelcast.Serialization
         {
             if (portable == null)
             {
-                throw new HazelcastSerializationException("Cannot write null portable without explicitly "
+                throw new SerializationException("Cannot write null portable without explicitly "
                                                           + "registering class definition!");
             }
             var version = PortableVersionHelper.GetVersion(portable, _context.GetVersion());
@@ -159,7 +159,7 @@ namespace Hazelcast.Serialization
                 , _context.GetVersion());
             if (nestedClassDef == null)
             {
-                throw new HazelcastSerializationException("Cannot write null portable without explicitly "
+                throw new SerializationException("Cannot write null portable without explicitly "
                                                           + "registering class definition!");
             }
             _builder.AddPortableField(fieldName, nestedClassDef);
@@ -170,7 +170,7 @@ namespace Hazelcast.Serialization
         {
             if (portables == null || portables.Length == 0)
             {
-                throw new HazelcastSerializationException("Cannot write null portable array without explicitly "
+                throw new SerializationException("Cannot write null portable array without explicitly "
                                                           + "registering class definition!");
             }
             var p = portables[0];

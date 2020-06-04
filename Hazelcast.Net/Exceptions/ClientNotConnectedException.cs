@@ -18,58 +18,58 @@ using System.Runtime.Serialization;
 namespace Hazelcast.Exceptions
 {
     /// <summary>
-    /// Represents the exception that is throw when the Hazelcast environment is incorrect.
+    /// Represents the exception that is thrown when the Hazelcast client is invoked but is not connected.
     /// </summary>
     [Serializable]
-    public sealed class EnvironmentException : HazelcastException
+    public class ClientNotConnectedException : InvalidOperationException
     {
         // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Incorrect environment.";
+        private const string DefaultMessage = "Hazelcast client is not connected.";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnvironmentException"/> class.
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class.
         /// </summary>
-        public EnvironmentException()
+        public ClientNotConnectedException()
             : base(DefaultMessage)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnvironmentException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public EnvironmentException(string message)
+        public ClientNotConnectedException(string message)
             : base(message)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnvironmentException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public EnvironmentException(Exception innerException)
+        public ClientNotConnectedException(Exception innerException)
             : base(DefaultMessage, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnvironmentException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public EnvironmentException(string message, Exception innerException)
+        public ClientNotConnectedException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EnvironmentException"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public EnvironmentException(SerializationInfo info, StreamingContext context)
+        public ClientNotConnectedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

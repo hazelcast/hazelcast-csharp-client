@@ -215,7 +215,7 @@ namespace Hazelcast.Clustering
         public Task ThrowIfDisconnected()
         {
             if (_disposed || _clusterState != ClusterState.Connected)
-                throw new HazelcastClientNotConnectedException();
+                throw new ClientNotConnectedException();
 
             // TODO: if connecting, wait?
             return Task.CompletedTask;

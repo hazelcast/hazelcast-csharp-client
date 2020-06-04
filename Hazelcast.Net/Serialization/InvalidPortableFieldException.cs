@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,63 +14,64 @@
 
 using System;
 using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
 
-namespace Hazelcast.Exceptions
+namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Represents the exception that is throw when the Hazelcast configuration is incorrect.
+    /// Represents the exception that is thrown when the portable reader reads a field of an invalid type.
     /// </summary>
     [Serializable]
-    public sealed class ConfigurationException : HazelcastException
+    internal class InvalidPortableFieldException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Invalid configuration.";
+        private const string DefaultMessage = "Invalid portable field.";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class.
+        /// Initializes a new instance of the <see cref="InvalidPortableFieldException"/> class.
         /// </summary>
-        public ConfigurationException()
+        public InvalidPortableFieldException()
             : base(DefaultMessage)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="InvalidPortableFieldException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public ConfigurationException(string message)
+        public InvalidPortableFieldException(string message)
             : base(message)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="InvalidPortableFieldException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public ConfigurationException(Exception innerException)
+        public InvalidPortableFieldException(Exception innerException)
             : base(DefaultMessage, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="InvalidPortableFieldException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public ConfigurationException(string message, Exception innerException)
+        public InvalidPortableFieldException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="InvalidPortableFieldException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public ConfigurationException(SerializationInfo info, StreamingContext context)
+        public InvalidPortableFieldException(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        { }
+        { }    
     }
 }

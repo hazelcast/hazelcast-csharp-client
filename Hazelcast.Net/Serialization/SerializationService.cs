@@ -152,10 +152,10 @@ namespace Hazelcast.Serialization
                 {
                     if (_isActive)
                     {
-                        throw new HazelcastSerializationException("There is no suitable de-serializer for type " +
+                        throw new SerializationException("There is no suitable de-serializer for type " +
                                                                   typeId);
                     }
-                    throw new HazelcastClientNotConnectedException();
+                    throw new ClientNotConnectedException();
                 }
                 var obj = serializer.Read(@in);
                 return obj;
@@ -174,7 +174,7 @@ namespace Hazelcast.Serialization
         {
             if (obj is IData)
             {
-                throw new HazelcastSerializationException(
+                throw new SerializationException(
                     "Cannot write a Data instance! Use #writeData(ObjectDataOutput out, Data data) instead.");
             }
             try
@@ -204,10 +204,10 @@ namespace Hazelcast.Serialization
                 {
                     if (_isActive)
                     {
-                        throw new HazelcastSerializationException("There is no suitable de-serializer for type "
+                        throw new SerializationException("There is no suitable de-serializer for type "
                                                                   + typeId);
                     }
-                    throw new HazelcastClientNotConnectedException();
+                    throw new ClientNotConnectedException();
                 }
                 var obj = serializer.Read(input);
                 try
@@ -216,7 +216,7 @@ namespace Hazelcast.Serialization
                 }
                 catch (NullReferenceException)
                 {
-                    throw new HazelcastSerializationException("Trying to cast null value to value type " +
+                    throw new SerializationException("Trying to cast null value to value type " +
                                                           typeof (T));
                 }
             }
@@ -410,10 +410,10 @@ namespace Hazelcast.Serialization
             switch (e)
             {
                 case OutOfMemoryException _:
-                case HazelcastSerializationException _:
+                case SerializationException _:
                     return e;
                 default:
-                    return new HazelcastSerializationException(e);
+                    return new SerializationException(e);
             }
         }
 
@@ -519,7 +519,7 @@ namespace Hazelcast.Serialization
                     {
                         if (checkClassDefErrors)
                         {
-                            throw new HazelcastSerializationException(
+                            throw new SerializationException(
                                 "Could not find registered ClassDefinition for class-id: " + classId);
                         }
                     }
@@ -536,7 +536,7 @@ namespace Hazelcast.Serialization
             {
                 if (classDefMap.ContainsKey(cd.GetClassId()))
                 {
-                    throw new HazelcastSerializationException("Duplicate registration found for class-id[" +
+                    throw new SerializationException("Duplicate registration found for class-id[" +
                                                               cd.GetClassId() + "]!");
                 }
                 classDefMap.Add(cd.GetClassId(), cd);
@@ -685,9 +685,9 @@ namespace Hazelcast.Serialization
             {
                 if (_isActive)
                 {
-                    throw new HazelcastSerializationException("There is no suitable serializer for " + type);
+                    throw new SerializationException("There is no suitable serializer for " + type);
                 }
-                throw new HazelcastClientNotConnectedException();
+                throw new ClientNotConnectedException();
             }
             return serializer;
         }

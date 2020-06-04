@@ -246,7 +246,7 @@ namespace Hazelcast.Serialization
         {
             if (_done)
             {
-                throw new HazelcastSerializationException("ClassDefinition is already built for " + _classId);
+                throw new SerializationException("ClassDefinition is already built for " + _classId);
             }
         }
     }

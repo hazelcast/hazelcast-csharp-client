@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Configuration;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 

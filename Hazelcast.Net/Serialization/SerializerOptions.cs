@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
