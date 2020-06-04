@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using Hazelcast.Messaging;
 
 namespace Hazelcast.Serialization
 {

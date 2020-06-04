@@ -14,7 +14,6 @@
 
 using System.Collections.Generic;
 using Hazelcast.Configuration;
-using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {

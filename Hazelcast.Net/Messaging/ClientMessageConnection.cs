@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 using Hazelcast.Networking;
 using Microsoft.Extensions.Logging;
 

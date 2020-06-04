@@ -25,17 +25,14 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Exceptions;
-using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
-using Hazelcast.Testing.TestServer;
-using Hazelcast.Tests.Testing;
 using Hazelcast.Testing.Protocol;
+using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 

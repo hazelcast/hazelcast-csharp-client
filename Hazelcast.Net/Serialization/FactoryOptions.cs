@@ -38,7 +38,7 @@ namespace Hazelcast.Serialization
         /// Gets or sets the identifier of the factory.
         /// </summary>
         public int Id { get; set; }
-        
+
         /// <summary>
         /// Clones the options.
         /// </summary>

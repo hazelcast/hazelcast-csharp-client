@@ -15,7 +15,6 @@
 using System;
 using System.Linq;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Microsoft.Extensions.Logging;
 

@@ -14,7 +14,6 @@
 
 using System;
 using System.Runtime.Serialization;
-using Hazelcast.Exceptions;
 
 namespace Hazelcast.Transactions
 {

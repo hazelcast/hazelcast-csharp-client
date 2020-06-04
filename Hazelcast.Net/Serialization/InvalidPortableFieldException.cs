@@ -72,6 +72,6 @@ namespace Hazelcast.Serialization
         /// about the source or destination.</param>
         public InvalidPortableFieldException(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        { }    
+        { }
     }
 }

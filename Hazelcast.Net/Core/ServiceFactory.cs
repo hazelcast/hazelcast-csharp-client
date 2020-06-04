@@ -209,7 +209,7 @@ namespace Hazelcast.Core
                 var parameters = ctor.GetParameters();
                 if (parameters.Length == 0)
                     return Activator.CreateInstance(type);
-                
+
                 args ??= new List<object>();
                 args.Clear();
 
@@ -224,7 +224,7 @@ namespace Hazelcast.Core
                         continue;
                     }
 
-                    if (stringArgs != null && 
+                    if (stringArgs != null &&
                         stringArgs.TryGetValue(parameter.Name, out var stringArg) &&
                         ConfigurationBinder.TryConvertValue(parameter.ParameterType, stringArg, "", out var value, out _))
                     {

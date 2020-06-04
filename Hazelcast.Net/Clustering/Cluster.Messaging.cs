@@ -17,7 +17,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
-using Hazelcast.Logging;
 using Hazelcast.Messaging;
 using Hazelcast.Serialization;
 

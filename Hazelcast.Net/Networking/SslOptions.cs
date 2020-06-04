@@ -15,7 +15,6 @@
 using System.Security.Authentication;
 using System.Text;
 using Hazelcast.Configuration;
-using Hazelcast.Exceptions;
 
 namespace Hazelcast.Networking
 {

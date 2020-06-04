@@ -14,14 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Xml;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.Exceptions;
 
 namespace Hazelcast.Serialization
 {
@@ -47,7 +43,7 @@ namespace Hazelcast.Serialization
                     Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(item.TypeName, item.Args)
                 });
             });
-            
+
             DataSerializableFactories = new List<FactoryOptions<IDataSerializableFactory>>();
             DataSerializableFactoriesBinder = new CollectionBinder<IdentifiedInjectionOptions>(item =>
             {
@@ -57,7 +53,7 @@ namespace Hazelcast.Serialization
                     Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(item.TypeName, item.Args)
                 });
             });
-            
+
             Serializers = new List<SerializerOptions>();
             SerializersBinder = new CollectionBinder<SerializerInjectionOptions>(item =>
             {
@@ -115,7 +111,7 @@ namespace Hazelcast.Serialization
         /// </summary>
         [BinderIgnore]
         public ICollection<FactoryOptions<IPortableFactory>> PortableFactories { get; }
-        
+
         [BinderIgnore(false)]
         [BinderName("portableFactories")]
         private CollectionBinder<IdentifiedInjectionOptions> PortableFactoriesBinder { get; }
@@ -162,7 +158,7 @@ namespace Hazelcast.Serialization
 
         [BinderIgnore]
         public ICollection<FactoryOptions<IDataSerializableFactory>> DataSerializableFactories { get; }
-        
+
         [BinderIgnore(false)]
         [BinderName("dataSerializableFactories")]
         private CollectionBinder<IdentifiedInjectionOptions> DataSerializableFactoriesBinder { get; }
@@ -227,7 +223,7 @@ namespace Hazelcast.Serialization
 
         [BinderIgnore]
         public ICollection<SerializerOptions> Serializers { get; }
-        
+
         [BinderIgnore(false)]
         [BinderName("serializers")]
         private CollectionBinder<SerializerInjectionOptions> SerializersBinder { get; }
@@ -245,11 +241,11 @@ namespace Hazelcast.Serialization
                 text.Append(Id);
             }
         }
-        
+
         internal class SerializerInjectionOptions : InjectionOptions
         {
             public string SerializedTypeName { get; set; }
-            
+
             protected override void ToString(StringBuilder text)
             {
                 base.ToString(text);
@@ -262,7 +258,7 @@ namespace Hazelcast.Serialization
         internal class DefaultSerializerInjectionOptions : InjectionOptions
         {
             public bool OverrideClr { get; set; }
-            
+
             protected override void ToString(StringBuilder text)
             {
                 base.ToString(text);

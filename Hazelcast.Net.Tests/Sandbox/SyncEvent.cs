@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
-using Hazelcast.Logging;
 
 namespace Hazelcast.Tests.Sandbox
 {

@@ -24,7 +24,7 @@ namespace Hazelcast.Examples.Map
         public static async Task Run(params string[] args)
         {
             var options = BuildExampleOptions(args);
-            
+
             options.Serialization.AddDataSerializableFactory(
                 EntryProcessorDataSerializableFactory.FactoryId,
                 new EntryProcessorDataSerializableFactory());

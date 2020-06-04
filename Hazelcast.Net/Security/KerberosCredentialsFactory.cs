@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 
 #if !NETSTANDARD
 using System.IdentityModel.Selectors;

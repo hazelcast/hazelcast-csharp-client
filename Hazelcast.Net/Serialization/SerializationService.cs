@@ -628,10 +628,10 @@ namespace Hazelcast.Serialization
             {
                 throw new ArgumentException("[" + type + "] serializer cannot be overridden!");
             }
-            
-            // uh? that should be 
+
+            // uh? that should be
             // if (_typeMap.TryAdd(type, serializer)) ...
-            
+
             var current = _typeMap.GetOrAdd(type, serializer);
             if (current != null && current.GetImpl().GetType() != serializer.GetImpl().GetType())
             {

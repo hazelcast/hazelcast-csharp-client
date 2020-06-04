@@ -19,7 +19,7 @@ using Hazelcast.Exceptions;
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects. 
+    /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects.
     /// </summary>
     [Serializable]
     public class SerializationException : HazelcastException
@@ -72,6 +72,6 @@ namespace Hazelcast.Serialization
         /// about the source or destination.</param>
         public SerializationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        { }    
+        { }
     }
 }

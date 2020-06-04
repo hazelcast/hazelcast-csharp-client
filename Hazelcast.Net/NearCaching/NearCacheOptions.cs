@@ -57,7 +57,7 @@ namespace Hazelcast.NearCaching
         /// Gets or sets the maximum tolerated miss count.
         /// </summary>
         public int MaxToleratedMissCount { get; set; } = 10;
-        
+
         /// <summary>
         /// Gets the configurations.
         /// </summary>
