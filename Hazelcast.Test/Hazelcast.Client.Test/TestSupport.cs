@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,17 +25,27 @@ namespace Hazelcast.Client.Test
 {
     internal static class TestSupport
     {
-        private const int TimeoutSeconds = 30;
+        private static readonly int TimeoutSeconds = 30;
         private static readonly Random Random = new Random();
 
-        public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = TimeoutSeconds, string taskName = "")
+        static TestSupport()
         {
+            var timeoutEnv = Environment.GetEnvironmentVariable("HAZELCAST_TEST_EVENTUALLY_TIMEOUT");
+            if (timeoutEnv == null || !int.TryParse(timeoutEnv, out TimeoutSeconds)) TimeoutSeconds = 30;
+        }
+
+        public static void AssertCompletedEventually<T>(Task<T> task, int timeoutSeconds = -1, string taskName = "")
+        {
+            if (timeoutSeconds < 0) timeoutSeconds = TimeoutSeconds;
+
             Assert.IsTrue(task.Wait(timeoutSeconds * 1000),
                 "Task " + taskName + " did not complete in " + timeoutSeconds + " seconds");
         }
 
-        public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = TimeoutSeconds, string message = null)
+        public static void AssertOpenEventually(CountdownEvent latch, int timeoutSeconds = -1, string message = null)
         {
+            if (timeoutSeconds < 0) timeoutSeconds = TimeoutSeconds;
+
             var completed = latch.Wait(timeoutSeconds * 1000);
             if (message == null)
             {
@@ -51,25 +61,29 @@ namespace Hazelcast.Client.Test
             }
         }
 
-        public static void AssertTrueEventually(Func<bool> assertFunc, int timeoutSeconds = TimeoutSeconds,
+        public static void AssertTrueEventually(Func<bool> assertFunc, int timeoutSeconds = -1,
             string assertion = null)
         {
+            if (timeoutSeconds < 0) timeoutSeconds = TimeoutSeconds;
+
             using (new TestExecutionContext.IsolatedContext())
             {
                 var startTimeMillis = Clock.CurrentTimeMillis();
                 var timeoutMillis = timeoutSeconds * 1000;
-    
+
                 while (Clock.CurrentTimeMillis() - startTimeMillis < timeoutMillis)
                 {
                     if (assertFunc()) return;
                     Thread.Sleep(250);
-                }                
+                }
             }
             Assert.Fail("Could not verify assertion " + assertion + " after " + timeoutSeconds + " seconds");
         }
 
-        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = TimeoutSeconds, string assertion = null)
+        public static void AssertTrueEventually(Action asserAction, int timeoutSeconds = -1, string assertion = null)
         {
+            if (timeoutSeconds < 0) timeoutSeconds = TimeoutSeconds;
+
             Exception last = null;
             var startTimeMillis = Clock.CurrentTimeMillis();
             var timeoutMillis = timeoutSeconds * 1000;

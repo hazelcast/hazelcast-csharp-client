@@ -112,9 +112,11 @@ namespace Hazelcast.Client.Test
         private Version GetServerVersion()
         {
             var versionEnv = Environment.GetEnvironmentVariable("HAZELCAST_SERVER_VERSION");
+            if (string.IsNullOrWhiteSpace(versionEnv)) return new Version(0, 0);
+            var pos = versionEnv.IndexOf('-');
+            if (pos > 0) versionEnv = versionEnv.Substring(0, pos);
             Version version;
-            if (!Version.TryParse(versionEnv, out version)) return null;
-            return version;
+            return Version.TryParse(versionEnv, out version) ? version : new Version(0, 0);
         }
 
         private string FilterConfiguration(string config)
