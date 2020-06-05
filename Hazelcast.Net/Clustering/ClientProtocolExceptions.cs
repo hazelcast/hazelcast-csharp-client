@@ -37,6 +37,10 @@ namespace Hazelcast.Clustering
             ClientProtocolErrors.TargetNotReplicaException,
             ClientProtocolErrors.CannotReplicateException,
             ClientProtocolErrors.HazelcastInstanceNotActive,
+
+            // this one must *not* automatically retryable, because it requires more
+            // checks on the client and message in order to decide whether to retry
+            //ClientProtocolErrors.TargetDisconnected,
         };
 
         /// <summary>

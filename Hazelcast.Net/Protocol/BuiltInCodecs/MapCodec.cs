@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Messaging;
+using Hazelcast.Core;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {

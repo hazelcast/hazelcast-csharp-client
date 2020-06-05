@@ -247,8 +247,8 @@ namespace Hazelcast.Clustering
                                    " at {RemoteAddress} via {LocalAddress}.",
                 info.MemberId, info.ServerVersion, info.MemberAddress, client.LocalEndPoint);
 
-            // notify partitioner
-            Partitioner.NotifyInitialCount(info.PartitionCount);
+            // notify partitioner (may throw)
+            Partitioner.NotifyPartitionsCount(info.PartitionCount);
 
             // register & prepare the client
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())

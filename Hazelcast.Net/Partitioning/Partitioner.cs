@@ -15,7 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Partitioning
 {
@@ -90,15 +92,25 @@ namespace Hazelcast.Partitioning
         }
 
         /// <summary>
-        /// Notifies the partitioner of the initial partitions count.
+        /// Notifies the partitioner of the partitions count.
         /// </summary>
         /// <param name="count">The partitions count.</param>
-        public void NotifyInitialCount(int count)
+        public void NotifyPartitionsCount(int count)
         {
             lock (_partitionsLock)
             {
-                if (_partitions != null) return;
-                Count = count;
+                if (_partitions != null)
+                {
+                    if (count != Count)
+                        throw new ConnectionException("Failed to open a connection because " +
+                                                      $"the partitions count announced by the member ({count}) " +
+                                                      $"is not the expected value ({Count}).");
+                }
+                else
+                {
+                    // else this is the first count
+                    Count = count;
+                }
             }
         }
     }

@@ -412,7 +412,7 @@ namespace Hazelcast.Tests
             var labels = new HashSet<string>();
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
             HzConsole.WriteLine(this, "Send auth request");
-            var invocation = new Invocation(requestMessage, new MessagingOptions(), CancellationToken.None);
+            var invocation = new Invocation(requestMessage, new MessagingOptions(), null, CancellationToken.None);
             var responseMessage = await client1.SendAsync(invocation, CancellationToken.None).CAF();
             HzConsole.WriteLine(this, "Rcvd auth response " +
                                      HzConsole.Lines(this, 1, responseMessage.Dump()));

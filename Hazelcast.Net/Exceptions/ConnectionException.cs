@@ -18,58 +18,58 @@ using System.Runtime.Serialization;
 namespace Hazelcast.Exceptions
 {
     /// <summary>
-    /// Represents the exception that is thrown when the Hazelcast client is invoked but is not connected.
+    /// Represents the exception that is thrown when connection to a member fails.
     /// </summary>
     [Serializable]
-    public class ClientNotConnectedException : HazelcastException
+    public class ConnectionException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Hazelcast client is not connected.";
+        private const string DefaultMessage = "Failed to connect to a member.";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class.
+        /// Initializes a new instance of the <see cref="ConnectionException"/> class.
         /// </summary>
-        public ClientNotConnectedException()
+        public ConnectionException()
             : base(DefaultMessage)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="ConnectionException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public ClientNotConnectedException(string message)
+        public ConnectionException(string message)
             : base(message)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="ConnectionException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public ClientNotConnectedException(Exception innerException)
+        public ConnectionException(Exception innerException)
             : base(DefaultMessage, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="ConnectionException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public ClientNotConnectedException(string message, Exception innerException)
+        public ConnectionException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="ConnectionException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public ClientNotConnectedException(SerializationInfo info, StreamingContext context)
+        public ConnectionException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

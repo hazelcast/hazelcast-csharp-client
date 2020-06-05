@@ -122,7 +122,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
+        Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
@@ -239,6 +239,7 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
+            // note that 'client' here may be null if the invocation is not bound to a client
             var invocation = new Invocation(message, _options.Messaging, client, cancellationToken);
 
             while (true)

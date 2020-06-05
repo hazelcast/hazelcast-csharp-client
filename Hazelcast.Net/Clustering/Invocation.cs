@@ -21,6 +21,7 @@ using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol;
+using Hazelcast.Protocol.Data;
 
 namespace Hazelcast.Clustering
 {
@@ -37,33 +38,21 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
         /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, CancellationToken cancellationToken)
-        {
-            RequestMessage = requestMessage;
-            _messagingOptions = messagingOptions;
-            CorrelationId = requestMessage.CorrelationId;
-            CompletionSource = new TaskCompletionSource<ClientMessage>();
-            _cancellationToken = cancellationToken;
-            _cancellationToken.Register(() => CompletionSource.TrySetCanceled());
-            AttemptsCount = 1;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Invocation"/> class.
-        /// </summary>
-        /// <param name="requestMessage">The request message.</param>
-        /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="client">A client, that the invocation is bound to.</param>
+        /// <param name="client">An optional client, that the invocation is bound to.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>When an invocation is bound to a client, it cannot be retried if the client dies.</para>
         /// </remarks>
         public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, Client client, CancellationToken cancellationToken)
-            : this(requestMessage, messagingOptions, cancellationToken)
         {
-            // FIXME: are we binding *all* invocations to the same client?!
-            Client = client;
+            RequestMessage = requestMessage ?? throw new ArgumentNullException(nameof(requestMessage));
+            _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
+            Client = client; // may be null if not bound to a client
+            CorrelationId = requestMessage.CorrelationId;
+            CompletionSource = new TaskCompletionSource<ClientMessage>();
+            _cancellationToken = cancellationToken;
+            _cancellationToken.Register(() => CompletionSource.TrySetCanceled());
+            AttemptsCount = 1;
         }
 
         /// <summary>
@@ -143,6 +132,9 @@ namespace Hazelcast.Clustering
                 case ClientProtocolException cpe when cpe.Retryable:
                     return true;
 
+                // target disconnected protocol error is not automatically retryable,
+                // because we need to perform more checks on the client and message
+                case ClientProtocolException cpe when cpe.Error == ClientProtocolErrors.TargetDisconnected:
                 case TargetDisconnectedException _:
                     return Client == null && // not bound to a client
                            (RequestMessage.IsRetryable || retryOnTargetDisconnected);

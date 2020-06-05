@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Security;
@@ -47,20 +48,21 @@ namespace Hazelcast.Clustering
         {
             var credentialsFactory = _options.CredentialsFactory.Service ?? new DefaultCredentialsFactory();
 
-            var info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
-            if (info != null) return info;
+            var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
+            if (result != null) return result;
 
+            // result is null, credentials failed but we may want to retry
             if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
             {
                 resettableCredentialsFactory.Reset();
 
                 // try again
-                info = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
-                if (info != null) return info;
+                result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
+                if (result != null) return result;
             }
 
-            // but maybe we want to capture an exception here?
-            throw new Exception("Failed to authenticate.");
+            // nah, no chance
+            throw new AuthenticationException("Invalid credentials.");
         }
 
         private static string ClientVersion
@@ -75,6 +77,10 @@ namespace Hazelcast.Clustering
             }
         }
 
+        // tries to authenticate
+        // returns a result if successful
+        // returns null if failed due to credentials (may want to retry)
+        // throws if anything else went wrong
         private async ValueTask<AuthenticationResult> TryAuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, ISerializationService serializationService, CancellationToken cancellationToken)
         {
             const string clientType = "CSP"; // CSharp
@@ -108,19 +114,22 @@ namespace Hazelcast.Clustering
             HzConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
-            switch ((AuthenticationStatus) response.Status)
+            return (AuthenticationStatus) response.Status switch
             {
-                case AuthenticationStatus.Authenticated:
-                    break;
-                case AuthenticationStatus.CredentialsFailed:
-                case AuthenticationStatus.NotAllowedInCluster:
-                case AuthenticationStatus.SerializationVersionMismatch:
-                    return null;
-                default:
-                    throw new NotSupportedException();
-            }
+                AuthenticationStatus.Authenticated
+                    => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion),
 
-            return new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion);
+                AuthenticationStatus.CredentialsFailed
+                    => null, // could want to retry
+
+                AuthenticationStatus.NotAllowedInCluster
+                    => throw new AuthenticationException("Client is not allowed in cluster."),
+
+                AuthenticationStatus.SerializationVersionMismatch
+                    => throw new AuthenticationException("Serialization mismatch."),
+
+                _ => throw new AuthenticationException($"Received unsupported status code {response.Status}.")
+            };
         }
     }
 }
