@@ -61,23 +61,6 @@ namespace Hazelcast.Clustering
             _clusterEventsTask ??= SetClusterEventsClientAsync(client, cancellationToken);
         }
 
-        /*
-        /// <summary>
-        /// Starts the task that ensures that a client handlers cluster events, if it is not already running.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private void StartSetClusterEventsClientWithLock(CancellationToken cancellationToken)
-        {
-            // there can only be one instance of that task running at a time
-            // and it runs in the background, and at any time any client could
-            // shutdown, which might clear the current cluster event client
-            //
-            // the task self-removes itself when it ends
-
-            _clusterEventsTask ??= SetClusterEventsClientAsync(null, cancellationToken);
-        }
-        */
-
         /// <summary>
         /// Sets a client to handle cluster events.
         /// </summary>

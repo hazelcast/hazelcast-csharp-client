@@ -238,3 +238,104 @@ if (key == null) throw new ArgumentNullException(nameof(key));
         // is installed on the cluster, which in turns installs the subscription on each client
         //
         // when the user unsubscribes, the subscription is removed on each client
+
+
+#### NOTES ABOUT EXCEPTIONS
+
+src/Hazelcast.Net/Core/ public ServiceFactoryException : HazelcastException
+              +
+
+src/Hazelcast.Net/Exceptions/ public HazelcastException : SystemException
+              ->                                        : Exception
+
+src/Hazelcast.Net/Exceptions/ public InvalidConfigurationException : HazelcastException
+              ->  Configuration/     ConfigurationException
+
+src/Hazelcast.Net/Client/ internal AuthenticationException : HazelcastException
+              ->  Exceptions/ public
+
+src/Hazelcast.Net/Client/Spi/ public ClientNotAllowedInClusterException : HazelcastException
+              ->  Exceptions/        AuthenticationException
+              ->  Exceptions/        ConnectionException
+
+src/Hazelcast.Net/Client/Spi/ internal CpSubsystemException : HazelcastException
+              X
+              / was base class for more exceptions which -> ClientProtocolException
+
+src/Hazelcast.Net/Client/Spi/ internal AssertException : Exception
+src/Hazelcast.Net/Client/Spi/ public CallerNotMemberException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ public RetryableHazelcastException : HazelcastException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ public HazelcastInstanceNotActiveException : InvalidOperationException
+src/Hazelcast.Net/Client/Spi/ public TargetDisconnectedException : HazelcastException
+              / becomes a non-retryable protocol exception but can be retried (see code)
+src/Hazelcast.Net/Client/Spi/ public TargetNotMemberException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ public UndefinedErrorCodeException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal CannotReplicateException : CpSubsystemException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ internal ConfigMismatchException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal CpGroupDestroyedException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal DuplicateTaskException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal HazelcastOverloadException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal IndeterminateOperationStateException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal LeaderDemotedException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal LocalMemberResetException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal LockAcquireLimitReachedException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal LockOwnershipLostException : SynchronizationLockException
+src/Hazelcast.Net/Client/Spi/ internal MaxMessageSizeExceeded : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal MemberLeftException : AggregateException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ internal MutationDisallowedException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal NativeOutOfMemoryException : Exception
+src/Hazelcast.Net/Client/Spi/ internal NodeIdOutOfRangeException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal NotLeaderException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal PartitionMigratingException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ internal QueryResultSizeExceededException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal ReachedMaxSizeException : Exception
+src/Hazelcast.Net/Client/Spi/ internal ReplicatedMapCantBeCreatedOnLiteMemberException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal ResponseAlreadySentException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal RetryableIOException : IOException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ internal ServiceNotFoundException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal SessionExpiredException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal SplitBrainProtectionException : TransactionException
+src/Hazelcast.Net/Client/Spi/ internal StaleAppendRequestException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal StaleTaskException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal StaleTaskIdException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal TargetNotReplicaException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ internal TopicOverloadException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal VersionMismatchException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal WaitKeyCancelledException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal WanQueueFullException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal WrongTargetException : RetryableHazelcastException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+
+src/Hazelcast.Net/Exceptions/ public ConsistencyLostException : HazelcastException
+src/Hazelcast.Net/Exceptions/ public NoDataMemberInClusterException : HazelcastException
+src/Hazelcast.Net/Exceptions/ public QueryException : HazelcastException
+src/Hazelcast.Net/Exceptions/ public StaleSequenceException : HazelcastException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+
+src/Hazelcast.Net/Net/ internal InvalidAddressException : ArgumentException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+
+src/Hazelcast.Net/Exceptions/ public DistributedObjectDestroyedException : HazelcastException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+              / was also thrown when retrieving the object of a 'destroyed' event
+              / should not do it else it just recreates the object
+
+src/Hazelcast.Net/Exceptions/ public HazelcastClientNotActiveException : InvalidOperationException
+              ->                     ClientNotConnectedException : HazelcastException
+
+src/Hazelcast.Net/Serialization/ public HazelcastSerializationException : HazelcastException
+              ->                        SerializationException
+
+src/Hazelcast.Net/Serialization/ internal IncompatibleClassChangeError : SystemException
+              ->                          InvalidPortableField : HazelcastException
+
+src/Hazelcast.Net/Transactions/ internal TransactionException : HazelcastException
+
+src/Hazelcast.Net/Transactions/ internal TransactionNotActiveException : HazelcastException
+              ->                                                         TransactionException
+
+src/Hazelcast.Net/Transactions/ internal TransactionTimedOutException : TransactionException
+
+src/Hazelcast.Tests/Hazelcast.Remote/ public ServerException : TException, TBase
+
+####

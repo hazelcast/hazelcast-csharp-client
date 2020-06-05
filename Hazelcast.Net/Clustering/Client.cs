@@ -27,6 +27,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
+    // NOTES
+    //
+    // older versions of the code had a background task that would check every invocation
+    // and terminate them if their attached client was not alive anymore - but really that
+    // should be taken care of by the OnShutdown handler when the socket goes down.
+    //
+    // also, every invocation has a timeout by default, so unless users set an absurdly
+    // long timeout, invocations *will* be collected eventually and we do not leak.
+
     /// <summary>
     /// Represents a client.
     /// </summary>
@@ -58,6 +67,7 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
+        /// <param name="messagingOptions">Options.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public Client(NetworkAddress address, MessagingOptions messagingOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
@@ -68,6 +78,7 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="Client"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
+        /// <param name="messagingOptions">Options.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
@@ -426,9 +437,13 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="task">The task factory.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        public void StartBackgroundTask(Func<CancellationToken, Task> task, CancellationToken cancellationToken)
+        /// <remarks>
+        /// <para>There can be only one background task running at a time. This is used to
+        /// install subscriptions on a new client. This method is *not* thread safe and
+        /// expects the caller to handler thread-safety.</para>
+        /// </remarks>
+        internal void StartBackgroundTask(Func<CancellationToken, Task> task, CancellationToken cancellationToken)
         {
-            // TODO: thread-safety + dispose
             _bgCancellation ??= new CancellationTokenSource();
             var s = CancellationTokenSource.CreateLinkedTokenSource(_bgCancellation.Token, cancellationToken);
             _bgTask = task(s.Token).ContinueWith(x =>
