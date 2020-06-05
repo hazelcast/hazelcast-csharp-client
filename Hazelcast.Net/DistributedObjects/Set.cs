@@ -15,14 +15,13 @@
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Provides constants for the topic type.
+    /// Provides constants for the set type.
     /// </summary>
-    public static class Topic
+    public static class Set
     {
         /// <summary>
         /// Gets the service name.
         /// </summary>
-        public const string ServiceName = "hz:impl:topicService";
+        public const string ServiceName = "hz:impl:setService";
     }
 }
-

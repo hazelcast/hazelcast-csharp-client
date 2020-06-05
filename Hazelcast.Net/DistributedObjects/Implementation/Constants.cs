@@ -22,10 +22,6 @@ namespace Hazelcast.DistributedObjects.Implementation
         internal class ServiceNames
         {
 
-            /// <summary>
-            /// Gets the set service name.
-            /// </summary>
-            public const string Set = "hz:impl:setService";
 
             /// <summary>
             /// Gets the multi-map service name.

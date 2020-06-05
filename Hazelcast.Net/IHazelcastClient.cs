@@ -105,5 +105,25 @@ namespace Hazelcast
         /// <returns>A task that will complete when the list has been retrieved or created,
         /// and represents the list that has been retrieved or created.</returns>
         Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets a <see cref="IHSet{T}"/> distributed object.
+        /// </summary>
+        /// <typeparam name="T">The type of the set items.</typeparam>
+        /// <param name="name">The unique name of the set .</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>A task that will complete when the set has been retrieved or created,
+        /// and represents the set that has been retrieved or created.</returns>
+        Task<IHSet<T>> GetSetAsync<T>(string name, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHSet{T}"/> distributed object.
+        /// </summary>
+        /// <typeparam name="T">The type of the set items.</typeparam>
+        /// <param name="name">The unique name of the set.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the set has been retrieved or created,
+        /// and represents the set that has been retrieved or created.</returns>
+        Task<IHSet<T>> GetSetAsync<T>(string name, CancellationToken cancellationToken);
     }
 }

@@ -12,17 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.DistributedObjects
+using Hazelcast.Clustering;
+using Hazelcast.DistributedObjects.Implementation.Collection;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects.Implementation.Set
 {
     /// <summary>
-    /// Provides constants for the topic type.
+    /// Implements <see cref="IHSet{T}"/>.
     /// </summary>
-    public static class Topic
+    /// <typeparam name="T">The type of the set items.</typeparam>
+    internal partial class HSet<T> : HCollectionBase<T>, IHSet<T>
     {
-        /// <summary>
-        /// Gets the service name.
-        /// </summary>
-        public const string ServiceName = "hz:impl:topicService";
+        public HSet(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(DistributedObjects.Set.ServiceName, name, cluster, serializationService, loggerFactory)
+        { }
     }
 }
-
