@@ -16,7 +16,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.Implementation.Topic;
 
 namespace Hazelcast
 {
@@ -68,7 +67,7 @@ namespace Hazelcast
         Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Gets a <see cref="Topic"/> distributed object.
+        /// Gets a <see cref="ITopic{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the topic messages.</typeparam>
         /// <param name="name">The unique name of the topic.</param>
@@ -78,7 +77,7 @@ namespace Hazelcast
         Task<ITopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default);
 
         /// <summary>
-        /// Gets a <see cref="Topic"/> distributed object.
+        /// Gets a <see cref="ITopic{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the topic messages.</typeparam>
         /// <param name="name">The unique name of the topic.</param>
@@ -86,5 +85,25 @@ namespace Hazelcast
         /// <returns>A task that will complete when the topic has been retrieved or created,
         /// and represents the topic that has been retrieved or created.</returns>
         Task<ITopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets a <see cref="IHList{T}"/> distributed object.
+        /// </summary>
+        /// <typeparam name="T">The type of the list items.</typeparam>
+        /// <param name="name">The unique name of the list.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>A task that will complete when the list has been retrieved or created,
+        /// and represents the list that has been retrieved or created.</returns>
+        Task<IHList<T>> GetListAsync<T>(string name, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHList{T}"/> distributed object.
+        /// </summary>
+        /// <typeparam name="T">The type of the list items.</typeparam>
+        /// <param name="name">The unique name of the list.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the list has been retrieved or created,
+        /// and represents the list that has been retrieved or created.</returns>
+        Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken);
     }
 }

@@ -13,25 +13,28 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Core;
+using Hazelcast.Data;
+using Hazelcast.Data.Collection;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represent topic event handlers.
+    /// Specifies a collection item event handler.
     /// </summary>
-    /// <typeparam name="T">The topic message type.</typeparam>
-    public sealed class TopicEventHandlers<T> : EventHandlersBase<ITopicEventHandler<T>>
+    /// <typeparam name="T">The collection items type.</typeparam>
+    public interface ICollectionItemEventHandler<T>
     {
         /// <summary>
-        /// Adds an handler which runs when a message is submitted.
+        /// Gets the handled event type.
         /// </summary>
-        /// <param name="handler">The handler.</param>
-        /// <returns>The handlers.</returns>
-        public TopicEventHandlers<T> Message(Action<ITopic<T>, TopicMessageEventArgs<T>> handler)
-        {
-            Add(new TopicMessageEventHandler<T>(handler));
-            return this;
-        }
+        CollectionItemEventType EventType { get; }
+
+        /// <summary>
+        /// Handles an event.
+        /// </summary>
+        /// <param name="sender">The <see cref="IHCollection{T}"/> that triggered the event.</param>
+        /// <param name="member">The member.</param>
+        /// <param name="item">The item.</param>
+        void Handle(IHCollection<T> sender, MemberInfo member, Lazy<T> item);
     }
 }

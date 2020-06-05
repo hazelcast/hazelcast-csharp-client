@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="logggerFactory">A logger factory.</param>
         public Map(string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
-            : base(Map.ServiceName, name, cluster, serializationService, logggerFactory)
+            : base(DistributedObjects.Map.ServiceName, name, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }

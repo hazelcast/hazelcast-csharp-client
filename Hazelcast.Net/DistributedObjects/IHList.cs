@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
     ///     Concurrent, distributed implementation of <see cref="IList{T}"/>IList
     /// </summary>
-    public interface IHList<T> : IList<T>, IHCollection<T>
+    public interface IHList<T> : IHCollection<T>
     {
         /// <summary>
         /// Inserts the specified element at the specified position in this list.
@@ -28,8 +31,9 @@ namespace Hazelcast.DistributedObjects
         /// indices).
         /// </summary>
         /// <param name="index">index at which the specified element is to be inserted</param>
-        /// <param name="element">element to be inserted</param>
-        void Add(int index, T element);
+        /// <param name="item">element to be inserted</param>
+        Task InsertAsync(int index, T item, TimeSpan timeout = default);
+        Task InsertAsync(int index, T item, CancellationToken cancellationToken);
 
         /// <summary>
         /// Inserts all of the elements in the specified collection into this
@@ -44,16 +48,18 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="index">index at which to insert the first element from the specified collection</param>
         /// <param name="c">collection containing elements to be added to this list</param>
-        /// <typeparam name="TE"></typeparam>
+        /// <typeparam name="TItem"></typeparam>
         /// <returns><tt>true</tt> if this list changed as a result of the call</returns>
-        bool AddAll<TE>(int index, ICollection<TE> c) where TE : T;
+        Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
+        Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
 
         /// <summary>
         /// Returns the element in the specified position in this list
         /// </summary>
         /// <param name="index">index of the element to return</param>
         /// <returns>the element at the specified position in the list</returns>
-        T Get(int index);
+        Task<T> GetAsync(int index, TimeSpan timeout = default);
+        Task<T> GetAsync(int index, CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns the index of the last occurrence of the specified element
@@ -65,7 +71,11 @@ namespace Hazelcast.DistributedObjects
         /// <param name="o">element to search for</param>
         /// <returns>the index of the last occurrence of the specified element in
         ///  this list, or -1 if this list does not contain the element</returns>
-        int LastIndexOf(T o);
+        Task<int> LastIndexOfAsync(T item, TimeSpan timeout = default);
+        Task<int> LastIndexOfAsync(T item, CancellationToken cancellationToken);
+
+        Task<int> IndexOfAsync(T item, TimeSpan timeout = default);
+        Task<int> IndexOfAsync(T item, CancellationToken cancellationToken);
 
         /// <summary>
         /// Removes the first occurrence of the specified element from this list,
@@ -79,16 +89,18 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="index">element to be removed from this list, if present</param>
         /// <returns><tt>true</tt> if this list contained the specified element</returns>
-        T Remove(int index);
+        Task<T> RemoveAtAsync(int index, TimeSpan timeout = default);
+        Task<T> RemoveAtAsync(int index, CancellationToken cancellationToken);
 
         /// <summary>
         /// Replaces the element at the specified position in this list with the
         /// specified element.
         /// </summary>
         /// <param name="index">index index of the element to replace</param>
-        /// <param name="element">element to be stored at the specified position</param>
+        /// <param name="item">element to be stored at the specified position</param>
         /// <returns></returns>
-        T Set(int index, T element);
+        Task<T> SetAsync(int index, T item, TimeSpan timeout = default);
+        Task<T> SetAsync(int index, T item, CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns a view of the portion of this list between the specified
@@ -99,6 +111,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="fromIndex">low endpoint (inclusive) of the subList</param>
         /// <param name="toIndex">high endpoint (exclusive) of the subList</param>
         /// <returns>a view of the specified range within this list</returns>
-        IList<T> SubList(int fromIndex, int toIndex);
+        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, TimeSpan timeout = default);
+        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, CancellationToken cancellationToken);
     }
 }

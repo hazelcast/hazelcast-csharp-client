@@ -14,72 +14,73 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>Concurrent, distributed, partitioned, listenable collection.</summary>
     /// <remarks>Concurrent, distributed, partitioned, listenable collection.</remarks>
-    public interface IHCollection<T> : ICollection<T>, IDistributedObject
+    public interface IHCollection<T> : IDistributedObject
     {
-        /// <summary>
-        /// Adds the specified item.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        /// <returns><c>true</c> if added, <c>false</c> otherwise.</returns>
-        new bool Add(T item);
+        // these mimics ICollection<T>
+
+        Task<int> CountAsync(TimeSpan timeout = default);
+        Task<int> CountAsync(CancellationToken cancellationToken);
+
+        Task<bool> AddAsync(T item, TimeSpan timeout = default);
+        Task<bool> AddAsync(T item, CancellationToken cancellationToken);
+
+        Task ClearAsync(TimeSpan timeout = default);
+        Task ClearAsync(CancellationToken cancellationToken);
+        
+        Task<bool> ContainsAsync(T item, TimeSpan timeout = default);
+        Task<bool> ContainsAsync(T item, CancellationToken cancellationToken);
+
+        Task<bool> RemoveAsync(T item, TimeSpan timeout = default);
+        Task<bool> RemoveAsync(T item, CancellationToken cancellationToken);
+
+        Task CopyToAsync(T[] array, int arrayIndex, TimeSpan timeout = default);
+        Task CopyToAsync(T[] array, int arrayIndex, CancellationToken cancellationToken);
+
+        // rest is a mix of influences
+
+        Task<IReadOnlyList<T>> GetAllAsync(TimeSpan timeout = default);
+        Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds all.
         /// </summary>
-        /// <typeparam name="TE">type of elements</typeparam>
+        /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">element collection</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        bool AddAll<TE>(ICollection<TE> c);
-
-        /// <summary>Adds an item listener for this collection.</summary>
-        /// <remarks>
-        /// Adds an item listener for this collection. Listener will get notified
-        /// for all collection Add/remove events.
-        /// </remarks>
-        /// <param name="listener">item listener</param>
-        /// <param name="includeValue">
-        /// <TE>true</TE> updated item should be passed
-        /// to the item listener, <TE>false</TE> otherwise.
-        /// </param>
-        /// <returns>returns registration id.</returns>
-        //  FIXME refactor!
-        //Guid AddItemListener(IItemListener<T> listener, bool includeValue);
+        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
+        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
 
         /// <summary>
         /// Determines whether this collection contains all of the elements in the specified collection.
         /// </summary>
-        /// <typeparam name="TE">type of elements</typeparam>
+        /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">The collection</param>
         /// <returns><c>true</c> if this collection contains all of the elements in the specified collection; otherwise, <c>false</c>.</returns>
-        bool ContainsAll<TE>(ICollection<TE> c);
+        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
+        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
 
         /// <summary>
         /// Determines whether this instance is empty.
         /// </summary>
         /// <returns><c>true</c> if this instance is empty; otherwise, <c>false</c>.</returns>
-        bool IsEmpty();
+        Task<bool> IsEmptyAsync(TimeSpan timeout = default);
+        Task<bool> IsEmptyAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Removes all of the elements in the specified collection from this collection.
         /// </summary>
-        /// <typeparam name="TE">type of elements</typeparam>
+        /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">element collection to be removed</param>
         /// <returns><c>true</c> if all removed, <c>false</c> otherwise.</returns>
-        bool RemoveAll<TE>(ICollection<TE> c);
-
-        /// <summary>Removes the specified item listener.</summary>
-        /// <remarks>
-        /// Removes the specified item listener.
-        /// Returns silently if the specified listener is not added before.
-        /// </remarks>
-        /// <param name="registrationId">Id of listener registration.</param>
-        /// <returns>true if registration is removed, false otherwise</returns>
-        bool RemoveItemListener(Guid registrationId);
+        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
+        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
 
         /// <summary>
         /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
@@ -88,34 +89,32 @@ namespace Hazelcast.DistributedObjects
         /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
         /// In other words, removes from this collection all of its elements that are not contained in the specified collection
         /// </remarks>
-        /// <typeparam name="TE">type of elements</typeparam>
+        /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">The c.</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        bool RetainAll<TE>(ICollection<TE> c);
-
-        /// <summary>
-        /// Gets the number of elements contained in the collection.
-        /// </summary>
-        /// <returns>
-        /// The number of elements contained in the collection.
-        /// </returns>
-        int Size();
+        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
+        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
 
         /// <summary>
         /// Returns an array containing all of the elements in this collection.
         /// </summary>
         /// <returns>an array containing all of the elements in this collection.</returns>
-        T[] ToArray();
+        Task<T[]> ToArrayAsync(TimeSpan timeout = default);
+        Task<T[]> ToArrayAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns an array containing all of the elements in this collection
         /// the runtime type of the returned array is that of the specified array
         /// </summary>
-        /// <typeparam name="TE">return array type</typeparam>
+        /// <typeparam name="TItem">return array type</typeparam>
         /// <param name="a">the array into which the elements of this collection are to be
         /// stored, if it is big enough; otherwise, a new array of the same
         /// runtime type is allocated for this purpose</param>
         /// <returns>an array containing all of the elements in this collection</returns>
-        TE[] ToArray<TE>(TE[] a);
+        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, TimeSpan timeout = default) where TItem : T;
+        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, CancellationToken cancellationToken) where TItem : T;
+
+        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> on, CancellationToken cancellationToken);
     }
 }

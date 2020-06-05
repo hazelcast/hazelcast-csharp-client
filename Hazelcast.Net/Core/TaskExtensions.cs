@@ -40,6 +40,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>Configures an awaiter used to await the task, to continue on any context.</para>
         /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
         public static ConfiguredTaskAwaitable CAF(this Task task)
             => task.ConfigureAwait(false);
@@ -52,6 +53,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>Configures an awaiter used to await the task, to continue on any context.</para>
         /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
         public static ConfiguredTaskAwaitable<T> CAF<T>(this Task<T> task)
             => task.ConfigureAwait(false);
@@ -64,6 +66,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>Configures an awaiter used to await the task, to continue on any context.</para>
         /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
         public static ConfiguredValueTaskAwaitable CAF(this ValueTask task)
             => task.ConfigureAwait(false);
@@ -76,6 +79,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>Configures an awaiter used to await the task, to continue on any context.</para>
         /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
         public static ConfiguredValueTaskAwaitable<T> CAF<T>(this ValueTask<T> task)
             => task.ConfigureAwait(false);

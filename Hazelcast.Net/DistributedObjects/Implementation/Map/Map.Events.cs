@@ -73,7 +73,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
                 CreateUnsubscribeRequest,
                 DecodeUnsubscribeResponse,
                 HandleEvent,
-                new SubscriptionState(mode, Name, handlers));
+                new MapSubscriptionState(mode, Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
 
@@ -152,42 +152,27 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(includeValues, predicate, true, key, true, on, cancellationToken);
 
-        private class SubscriptionState
+        private class MapSubscriptionState : SubscriptionState<MapEventHandlers<TKey, TValue>>
         {
-            public SubscriptionState(int mode, string name, MapEventHandlers<TKey, TValue> handlers)
+            public MapSubscriptionState(int mode, string name, MapEventHandlers<TKey, TValue> handlers)
+                : base(name, handlers)
             {
                 Mode = mode;
-                Name = name;
-                Handlers = handlers;
             }
 
             public int Mode { get; }
-
-            public string Name { get;}
-
-            public MapEventHandlers<TKey, TValue> Handlers { get; }
-        }
-
-        private static SubscriptionState ToSafeState(object state)
-        {
-            if (state is SubscriptionState sstate) return sstate;
-            throw new Exception();
         }
 
         private void HandleEvent(ClientMessage eventMessage, object state)
         {
-            var sstate = ToSafeState(state);
+            var sstate = ToSafeState<MapSubscriptionState>(state);
 
             void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
                 var eventType = (MapEventType)eventTypeData;
                 if (eventType == MapEventType.Nothing) return;
 
-                Lazy<T> LazyArg<T>(IData source) => source == null ? null : new Lazy<T>(() => ToObject<T>(source));
-
                 var member = Cluster.GetMember(memberId);
-
-                // TODO: could this be optimized?
                 var key = LazyArg<TKey>(keyData);
                 var value = LazyArg<TValue>(valueData);
                 var oldValue = LazyArg<TValue>(oldValueData);
@@ -234,13 +219,13 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 
         private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
         {
-            var sstate = ToSafeState(state);
+            var sstate = ToSafeState<MapSubscriptionState>(state);
             return MapRemoveEntryListenerCodec.EncodeRequest(sstate.Name, subscriptionId);
         }
 
         private static Guid HandleSubscribeResponse(ClientMessage responseMessage, object state)
         {
-            var sstate = ToSafeState(state);
+            var sstate = ToSafeState<MapSubscriptionState>(state);
 
             switch (sstate.Mode)
             {
@@ -260,39 +245,6 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         private static bool DecodeUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
         {
             return MapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = UnsubscribeAsync(subscriptionId, cancellation.Token).OrTimeout(cancellation);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken)
-        {
-            var task = Cluster.RemoveSubscriptionAsync(subscriptionId, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
         }
     }
 }

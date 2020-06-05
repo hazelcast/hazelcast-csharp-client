@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
+using Hazelcast.DistributedObjects.Implementation.List;
 using Hazelcast.DistributedObjects.Implementation.Map;
 using Hazelcast.DistributedObjects.Implementation.Topic;
 
@@ -91,6 +92,42 @@ namespace Hazelcast
             var task = _distributedObjectFactory.GetOrCreateAsync(Topic.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
                     => new Topic<T>(n, cluster, serializationService, loggerFactory),
+                cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task<IHList<T>> GetListAsync<T>(string name, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
+            var task = GetListAsync<T>(name, cancellation.Token).OrTimeout(cancellation);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken)
+        {
+            var task = _distributedObjectFactory.GetOrCreateAsync(HList.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory)
+                    => new HList<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

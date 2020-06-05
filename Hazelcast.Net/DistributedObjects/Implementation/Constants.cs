@@ -28,11 +28,6 @@ namespace Hazelcast.DistributedObjects.Implementation
             public const string Set = "hz:impl:setService";
 
             /// <summary>
-            /// Gets the list service name.
-            /// </summary>
-            public const string List = "hz:impl:listService";
-
-            /// <summary>
             /// Gets the multi-map service name.
             /// </summary>
             public const string MultiMap = "hz:impl:multiMapService";

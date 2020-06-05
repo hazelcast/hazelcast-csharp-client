@@ -12,16 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.DistributedObjects.Implementation.Map
+using Hazelcast.Clustering;
+using Hazelcast.DistributedObjects.Implementation.Collection;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects.Implementation.List
 {
     /// <summary>
-    /// Provides constants for the map type.
+    /// Implements <see cref="IHList{T}"/>.
     /// </summary>
-    public static class Map
+    /// <typeparam name="T">The type of the list items.</typeparam>
+    internal partial class HList<T> : HCollectionBase<T>, IHList<T>
     {
-        /// <summary>
-        /// Gets the service name.
-        /// </summary>
-        public const string ServiceName = "hz:impl:mapService";
+        public HList(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HList.ServiceName, name, cluster, serializationService, loggerFactory)
+        { }
     }
 }

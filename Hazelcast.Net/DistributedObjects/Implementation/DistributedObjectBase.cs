@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -139,6 +142,22 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <summary>
         /// Serializes non-null objects to <see cref="IData"/>.
         /// </summary>
+        /// <typeparam name="T">The type of the objects.</typeparam>
+        /// <param name="collection">The collection of objects.</param>
+        /// <returns>The collection of <see cref="IData"/> serialized objects.</returns>
+        /// <exception cref="ArgumentNullException">Occurs when the collection, or an object in the collection, is null.</exception>
+        protected ICollection<IData> ToSafeData<T>(ICollection<T> collection)
+        {
+            if (collection == null) throw new ArgumentNullException(nameof(collection));
+
+            var data = new List<IData>(collection.Count);
+            foreach (var item in collection) data.Add(ToData(item));
+            return data;
+        }
+
+        /// <summary>
+        /// Serializes non-null objects to <see cref="IData"/>.
+        /// </summary>
         /// <param name="o1">The first object.</param>
         /// <param name="o2">The second objects.</param>
         /// <returns>The <see cref="IData"/> serialized objects.</returns>
@@ -183,6 +202,98 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <returns>The deserialized object.</returns>
         protected virtual TObject ToObject<TObject>(IData data)
             => SerializationService.ToObject<TObject>(data);
+
+        /// <summary>
+        /// Creates a lazy argument.
+        /// </summary>
+        /// <typeparam name="TArg">The type of the argument.</typeparam>
+        /// <param name="source">The source value.</param>
+        /// <returns>The lazy argument.</returns>
+        protected Lazy<TArg> LazyArg<TArg>(IData source)
+            => source == null
+                ? null
+                : new Lazy<TArg>(() => ToObject<TArg>(source));
+
+        /// <summary>
+        /// Represents subscription state data.
+        /// </summary>
+        /// <typeparam name="TEventHandlers">The type of the event handlers.</typeparam>
+        protected class SubscriptionState<TEventHandlers>
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="SubscriptionState{TEventHandlers}"/> class.
+            /// </summary>
+            /// <param name="name">The unique name of the distributed object.</param>
+            /// <param name="handlers">The event handlers.</param>
+            public SubscriptionState(string name, TEventHandlers handlers)
+            {
+                Name = name;
+                Handlers = handlers;
+            }
+
+            /// <summary>
+            /// Gets the unique name of the distributed object.
+            /// </summary>
+            public string Name { get; }
+
+            /// <summary>
+            /// Gets the event handlers.
+            /// </summary>
+            public TEventHandlers Handlers { get; }
+        }
+
+        /// <summary>
+        /// Casts a subscription state, or throw.
+        /// </summary>
+        /// <typeparam name="T">The expected type.</typeparam>
+        /// <param name="state">The state object.</param>
+        /// <returns>The state object.</returns>
+        protected static T ToSafeState<T>(object state)
+        {
+            if (state is T sstate) return sstate;
+            throw new InvalidCastException("Invalid subscription state type.");
+        }
+
+        /// <summary>
+        /// Unsubscribe from events.
+        /// </summary>
+        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
+        /// <param name="timeout">A timeout.</param>
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
+        {
+            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
+            var task = UnsubscribeAsync(subscriptionId, cancellation.Token).OrTimeout(cancellation);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
+
+        /// <summary>
+        /// Unsubscribe from events.
+        /// </summary>
+        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken)
+        {
+            var task = Cluster.RemoveSubscriptionAsync(subscriptionId, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
+        }
 
         public virtual void OnInitialized()
         {

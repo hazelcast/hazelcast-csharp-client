@@ -12,16 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.DistributedObjects.Implementation.Topic
+using System;
+
+namespace Hazelcast.Data.Collection
 {
     /// <summary>
-    /// Provides constants for the topic type.
+    /// Specifies the collection item event types.
     /// </summary>
-    public static class Topic
+    [Flags]
+    public enum CollectionItemEventType
     {
         /// <summary>
-        /// Gets the service name.
+        /// Nothing (default value).
         /// </summary>
-        public const string ServiceName = "hz:impl:topicService";
+        Nothing = 0,
+
+        /// <summary>
+        /// The item was added.
+        /// </summary>
+        Added = 1,
+
+        /// <summary>
+        /// The item was removed.
+        /// </summary>
+        Removed = 2
     }
 }

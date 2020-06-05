@@ -40,6 +40,15 @@
     <Compile Update="DistributedObjects\Implementation\Map\Map.*.cs">
         <DependentUpon>Map`TKeyTValue.cs</DependentUpon>
     </Compile>
+    <Compile Update="DistributedObjects\Implementation\Topic\Topic.*.cs">
+      <DependentUpon>Topic`T.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Implementation\Collection\HCollectionBase.*.cs">
+      <DependentUpon>HCollectionBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Implementation\List\HList.*.cs">
+      <DependentUpon>HList`T.cs</DependentUpon>
+    </Compile>
     <Compile Update="Networking\SocketConnectionBase+*.cs">
         <DependentUpon>SocketConnectionBase.cs</DependentUpon>
     </Compile>

@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public Topic(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(Topic.ServiceName, name, cluster, serializationService, loggerFactory)
+            : base(DistributedObjects.Topic.ServiceName, name, cluster, serializationService, loggerFactory)
         { }
 
         /// <inheritdoc />
