@@ -18,17 +18,17 @@ using System.Threading;
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Utilities for managing time-to-live.
+    /// Utilities for managing time-to-wait.
     /// </summary>
-    public static class TimeToLive
+    public static class TimeToWait
     {
         /// <summary>
-        /// A constants used to specify an infinite time-to-live (never expire).
+        /// A constants used to specify an infinite time-to-wait (wait forever).
         /// </summary>
         public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
 
         /// <summary>
-        /// A constants used to specify a zero time-to-live (expire immediately).
+        /// A constants used to specify a zero time-to-wait (do not wait).
         /// </summary>
         public static readonly TimeSpan Zero = TimeSpan.Zero;
     }

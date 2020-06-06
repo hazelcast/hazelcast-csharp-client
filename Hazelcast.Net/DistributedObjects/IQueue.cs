@@ -14,14 +14,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>Concurrent, blocking, distributed, observable queue.</summary>
     public interface IQueue<T> : IHCollection<T>
     {
-        bool Contains(object o);
-
         /// <summary>
         /// Removes all available elements from this queue and adds them
         /// to the given collection.  This operation may be more
@@ -34,10 +34,11 @@ namespace Hazelcast.DistributedObjects
         /// this operation is undefined if the specified collection is
         /// modified while the operation is in progress.
         /// </summary>
-        /// <typeparam name="TE">type of elements</typeparam>
+        /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">the collection to transfer elements into</param>
         /// <returns>the number of elements transferred</returns>
-        int DrainTo<TE>(ICollection<TE> c) where TE : T;
+        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
+        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
 
         /// <summary>
         /// Removes at most the given number of available elements from
@@ -50,11 +51,12 @@ namespace Hazelcast.DistributedObjects
         /// this operation is undefined if the specified collection is
         /// modified while the operation is in progress.
         /// </summary>
-        /// <typeparam name="TE">type of elements</typeparam>
+        /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">the collection to transfer elements into</param>
         /// <param name="maxElements">the maximum number of elements to transfer</param>
         /// <returns>the number of elements transferred</returns>
-        int DrainTo<TE>(ICollection<TE> c, int maxElements) where TE : T;
+        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, TimeSpan timeout = default) where TItem : T;
+        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, CancellationToken cancellationToken) where TItem : T;
 
         /// <summary>
         /// Retrieves, but does not remove, the head of this queue.  This method
@@ -62,7 +64,8 @@ namespace Hazelcast.DistributedObjects
         /// if this queue is empty.
         /// </summary>
         /// <returns>the head of this queue</returns>
-        T Element();
+        Task<T> PeekAsync(TimeSpan timeout = default);
+        Task<T> PeekAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Inserts the specified element into this queue if it is possible to do
@@ -81,7 +84,10 @@ namespace Hazelcast.DistributedObjects
         /// <c>true</c> if the element was added to this queue, else
         /// <c>false</c>
         /// </returns>
-        bool Offer(T e);
+        // there is no timeout overload because it's replaced by timeToWait
+        //Task<bool> TryEnqueueAsync(T item, TimeSpan timeout = default);
+        Task<bool> TryEnqueueAsync(T item);
+        Task<bool> TryEnqueueAsync(T item, CancellationToken cancellationToken);
 
         /// <summary>
         /// Inserts the specified element into this queue, waiting up to the
@@ -105,9 +111,13 @@ namespace Hazelcast.DistributedObjects
         /// the specified waiting time elapses before space is available
         /// </returns>
         /// <exception cref="System.Exception">if interrupted while waiting</exception>
-        bool Offer(T e, TimeSpan timeout);
+        // there is no timeout overload because it's replaced by timeToWait
+        //Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, TimeSpan timeout = default);
+        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait);
+        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken);
 
-        T Peek();
+        Task<T> TryPeekAsync(TimeSpan timeout = default);
+        Task<T> TryPeekAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Retrieves and removes the head of this queue,
@@ -118,7 +128,10 @@ namespace Hazelcast.DistributedObjects
         /// or returns <c>null</c> if this queue is empty.
         /// </remarks>
         /// <returns>the head of this queue, or <c>null</c> if this queue is empty</returns>
-        T Poll();
+        // there is no timeout overload because it's replaced by timeToWait
+        //Task<T> TryDequeueAsync(TimeSpan timeout = default);
+        Task<T> TryDequeueAsync();
+        Task<T> TryDequeueAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting up to the
@@ -140,13 +153,17 @@ namespace Hazelcast.DistributedObjects
         /// the head of this queue, or <c>null</c> if the
         /// specified waiting time elapses before an element is available
         /// </returns>
-        T Poll(TimeSpan timeout);
+        // there is no timeout overload because it's replaced by timeToWait
+        //Task<T> TryDequeueAsync(TimeSpan timeToWait, TimeSpan timeout = default);
+        Task<T> TryDequeueAsync(TimeSpan timeToWait);
+        Task<T> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken);
 
         /// <summary>
         /// Inserts the specified element into this queue, waiting if necessary for space to become available.
         /// </summary>
-        /// <param name="e">the element to Add</param>
-        void Put(T e);
+        /// <param name="item">the element to Add</param>
+        Task EnqueueAsync(T item, TimeSpan timeout = default);
+        Task EnqueueAsync(T item, CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns the number of additional elements that this queue can ideally
@@ -161,22 +178,8 @@ namespace Hazelcast.DistributedObjects
         ///</p>
         ///</summary>
         ///<returns>the remaining capacity </returns>
-        int RemainingCapacity();
-
-        /// <summary>
-        /// Removes a single instance of the specified element from this queue, if it is present
-        /// </summary>
-        /// <param name="o">element to be removed from this queue, if present</param>
-        /// <returns><c>true</c> if this queue changed as a result of the call, <c>false</c> otherwise.</returns>
-        bool Remove(object o);
-
-        /// <summary>
-        /// Retrieves and removes the head of this queue.  This method differs
-        /// from <see cref="Poll()"/> only in that it throws an exception if this
-        /// queue is empty.
-        /// </summary>
-        /// <returns>the head of this queue</returns>
-        T Remove();
+        Task<int> RemainingCapacityAsync(TimeSpan timeout = default);
+        Task<int> RemainingCapacityAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
@@ -185,6 +188,7 @@ namespace Hazelcast.DistributedObjects
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
         /// </remarks>
         /// <returns>the head of this queue</returns>
-        T Take();
+        Task<T> DequeueAsync(bool waitForItem, TimeSpan timeout = default);
+        Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken);
     }
 }

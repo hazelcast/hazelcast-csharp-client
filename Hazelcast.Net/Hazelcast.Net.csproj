@@ -49,6 +49,12 @@
     <Compile Update="DistributedObjects\Implementation\List\HList.*.cs">
       <DependentUpon>HList`T.cs</DependentUpon>
     </Compile>
+    <Compile Update="DistributedObjects\Implementation\Set\HSet.*.cs">
+      <DependentUpon>HSet`T.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Implementation\Queue\Queue.*.cs">
+      <DependentUpon>Queue`T.cs</DependentUpon>
+    </Compile>
     <Compile Update="Networking\SocketConnectionBase+*.cs">
         <DependentUpon>SocketConnectionBase.cs</DependentUpon>
     </Compile>

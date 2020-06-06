@@ -27,7 +27,7 @@ namespace Hazelcast
     internal partial class HazelcastClient // Distributed Objects
     {
         // TODO: implement HazelcastClient access to other Distributed Objects
-
+        
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
 
         /// <inheritdoc />

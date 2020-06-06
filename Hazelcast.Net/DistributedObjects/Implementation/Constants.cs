@@ -39,11 +39,6 @@ namespace Hazelcast.DistributedObjects.Implementation
             public const string Cluster = "hz:impl:clusterService";
 
             /// <summary>
-            /// Gets the queue service name.
-            /// </summary>
-            public const string Queue = "hz:impl:queueService";
-
-            /// <summary>
             /// Gets the partition service name.
             /// </summary>
             public const string Partition = "hz:impl:partitionService";

@@ -12,24 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
-
-namespace Hazelcast.Core
+namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Utilities for managing time-to-live.
+    /// Provides constants for the queue type.
     /// </summary>
-    public static class TimeToLive
+    public static class Queue
     {
         /// <summary>
-        /// A constants used to specify an infinite time-to-live (never expire).
+        /// Gets the service name.
         /// </summary>
-        public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
-
-        /// <summary>
-        /// A constants used to specify a zero time-to-live (expire immediately).
-        /// </summary>
-        public static readonly TimeSpan Zero = TimeSpan.Zero;
+        public const string ServiceName = "hz:impl:queueService";
     }
 }
