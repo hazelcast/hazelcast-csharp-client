@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
+using TaskExtensions = Hazelcast.Core.TaskExtensions;
 
 namespace Hazelcast.Tests.DotNet
 {
@@ -676,6 +677,127 @@ namespace Hazelcast.Tests.DotNet
             //public bool IsCompleted => _task.GetAwaiter().IsCompleted;
 
             //public TResult GetResult() => Task.GetAwaiter().GetResult();
+        }
+
+        [Test]
+        public async Task StackTrace1()
+        {
+            try
+            {
+                // shows WrapS1 and WrapS2 in the stack trace
+                //await WrapS1(() => WrapS2(WrapThrow<int>));
+
+                // WrapD1 and WrapD2 missing from the stack trace
+                await WrapD1(() => WrapD2(WrapThrow<int>));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        [Test]
+        public async Task StackTrace2()
+        {
+            try
+            {
+                // can find WrapS1 and WrapThrow2 in the stack trace
+                // but of course no trace of WithTimeout = ?
+                await TaskEx.WithTimeout(token => WrapS1(() => WrapThrow2<int>(token)), TimeSpan.FromSeconds(1), 1);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        public async Task<T> WrapS1<T>(Func<Task<T>> function)
+            => await function();
+
+        public async Task<T> WrapS2<T>(Func<Task<T>> function)
+            => await function();
+
+        public Task<T> WrapD1<T>(Func<Task<T>> function)
+            => function();
+
+        public Task<T> WrapD2<T>(Func<Task<T>> function)
+            => function();
+
+        public async Task<T> WrapThrow<T>()
+            => throw new Exception("bang");
+
+        public async Task<T> WrapThrow2<T>(CancellationToken token)
+        {
+            await Task.Delay(3_000, token);
+            if (token.IsCancellationRequested) return default;
+            throw new Exception("bang");
+        }
+
+        [Test]
+        public async Task Throwing1()
+        {
+            // Throw1 throws
+            await Throw1();
+        }
+
+        [Test]
+        public async Task Throwing2()
+        {
+            // Throw2 is gone from stack traces ;(
+            await Throw2();
+        }
+
+        [Test]
+        public async Task Throwing3()
+        {
+            // Throw3 shows even if indirectly
+            await Throw3();
+        }
+
+        [Test]
+        public async Task Throwing4()
+        {
+            // Throw4 ?
+            var task = Throw4();
+            Console.WriteLine("here");
+            await task; // throws here
+        }
+
+        // test handling of exception before the first await in a method?
+        public Task Throw()
+        {
+            throw new Exception("bang");
+        }
+
+        public async Task Throw1()
+        {
+            await Throw();
+        }
+
+        public Task Throw2()
+        {
+            return Throw();
+        }
+
+        public Task Throw3()
+        {
+            try
+            {
+                return Throw();
+            }
+            catch (Exception e)
+            {
+                return Task.FromException(e);
+            }
+        }
+
+        // if the method is 'async' then can throw anytime, will work
+        // the issue is for methods which return a Task without being 'async'
+        public async Task Throw4()
+        {
+            //await Task.Delay(100);
+            throw new Exception("bang");
+            await Throw();
         }
     }
 }

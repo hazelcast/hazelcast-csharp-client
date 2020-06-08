@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +33,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This cancellation source should *not* ever be canceled, completed, anything.</para>
         /// </remarks>
-        public static readonly CancellationTokenSource NeverCanceledSource = new CancellationTokenSource();
+        internal static readonly CancellationTokenSource NeverCanceledSource = new CancellationTokenSource();
 
         /// <summary>
         /// ConfigureAwait(false) = disable synchronization context and continue on any context.
@@ -42,7 +45,7 @@ namespace Hazelcast.Core
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
-        public static ConfiguredTaskAwaitable CAF(this Task task)
+        public static ConfiguredTaskAwaitable CAF([NotNull] this Task task)
             => task.ConfigureAwait(false);
 
         /// <summary>
@@ -55,7 +58,7 @@ namespace Hazelcast.Core
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
-        public static ConfiguredTaskAwaitable<T> CAF<T>(this Task<T> task)
+        public static ConfiguredTaskAwaitable<T> CAF<T>([NotNull] this Task<T> task)
             => task.ConfigureAwait(false);
 
         /// <summary>
@@ -90,7 +93,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="cts">A cancellation token source controlling the timeout.</param>
         /// <returns>A task.</returns>
-        public static Task OrTimeout(this Task task, TimeoutCancellationTokenSource cts)
+        public static Task OrTimeout([NotNull] this Task task, [NotNull] TimeoutCancellationTokenSource cts)
         {
             if (!cts.HasTimeout) return task;
 
@@ -121,7 +124,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="cts">A cancellation token source controlling the timeout.</param>
         /// <returns>A task.</returns>
-        public static Task<T> OrTimeout<T>(this Task<T> task, TimeoutCancellationTokenSource cts)
+        public static Task<T> OrTimeout<T>([NotNull] this Task<T> task, [NotNull] TimeoutCancellationTokenSource cts)
         {
             if (!cts.HasTimeout) return task;
 
@@ -152,7 +155,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="cts">A cancellation token source controlling the timeout.</param>
         /// <returns>A task.</returns>
-        public static Task OrTimeout(this Task task, CancellationTokenSource cts)
+        public static Task OrTimeout([NotNull] this Task task, [NotNull] CancellationTokenSource cts)
         {
             if (cts == NeverCanceledSource) return task;
 
@@ -183,7 +186,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="cts">A cancellation token source controlling the timeout.</param>
         /// <returns>A task.</returns>
-        public static Task<T> OrTimeout<T>(this Task<T> task, CancellationTokenSource cts)
+        public static Task<T> OrTimeout<T>([NotNull] this Task<T> task, [NotNull] CancellationTokenSource cts)
         {
             if (cts == NeverCanceledSource) return task;
 
@@ -214,7 +217,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="disposable">The disposable resource.</param>
         /// <returns>A task.</returns>
-        public static Task ThenDispose(this Task task, IDisposable disposable)
+        public static Task ThenDispose([NotNull] this Task task, [NotNull] IDisposable disposable)
         {
             return task.ContinueWith(x =>
             {
@@ -229,7 +232,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="disposables">The disposable resources.</param>
         /// <returns>A task.</returns>
-        public static Task ThenDispose(this Task task, params IDisposable[] disposables)
+        public static Task ThenDispose([NotNull] this Task task, params IDisposable[] disposables)
         {
             return task.ContinueWith(x =>
             {
@@ -245,7 +248,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="disposable">The disposable resource.</param>
         /// <returns>A task.</returns>
-        public static Task<T> ThenDispose<T>(this Task<T> task, IDisposable disposable)
+        public static Task<T> ThenDispose<T>([NotNull] this Task<T> task, [NotNull] IDisposable disposable)
         {
             return task.ContinueWith(x =>
             {
@@ -260,7 +263,7 @@ namespace Hazelcast.Core
         /// <param name="task">The task.</param>
         /// <param name="disposables">The disposable resources.</param>
         /// <returns>A task.</returns>
-        public static Task<T> ThenDispose<T>(this Task<T> task, params IDisposable[] disposables)
+        public static Task<T> ThenDispose<T>([NotNull] this Task<T> task, params IDisposable[] disposables)
         {
             return task.ContinueWith(x =>
             {

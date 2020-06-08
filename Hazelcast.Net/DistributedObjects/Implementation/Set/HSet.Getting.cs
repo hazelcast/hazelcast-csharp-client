@@ -12,20 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.DistributedObjects.Implementation.Set
 {
     internal partial class HSet<T> // Getting
     {
-        public override Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken)
+        public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var requestMessage = SetGetAllCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var response = SetGetAllCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList<T>(response, SerializationService);
         }
 
         public override async Task<bool> ContainsAsync(T item, CancellationToken cancellationToken)

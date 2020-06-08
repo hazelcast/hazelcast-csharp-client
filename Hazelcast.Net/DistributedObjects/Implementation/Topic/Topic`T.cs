@@ -47,8 +47,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 #endif
             Task PublishAsync(T message, TimeSpan timeout)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = PublishAsync(message, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(PublishAsync, message, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

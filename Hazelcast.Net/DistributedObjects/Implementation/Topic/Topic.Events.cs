@@ -32,8 +32,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 #endif
         Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = SubscribeAsync(on, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(SubscribeAsync, on, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -50,48 +49,25 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
             var handlers = new TopicEventHandlers<T>();
             on(handlers);
 
-            var subscribeRequest = TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting);
-
             var subscription = new ClusterSubscription(
-                subscribeRequest,
-                HandleSubscribeResponse,
+                TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),
+                ReadSubscribeResponse,
                 CreateUnsubscribeRequest,
-                DecodeUnsubscribeResponse,
+                ReadUnsubscribeResponse,
                 HandleEvent,
-                new SubscriptionState(Name, handlers));
+                new SubscriptionState<TopicEventHandlers<T>>(Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
 
             return subscription.Id;
         }
 
-        private sealed class SubscriptionState
-        {
-            public SubscriptionState(string name, TopicEventHandlers<T> handlers)
-            {
-                Name = name;
-                Handlers = handlers;
-            }
-
-            public string Name { get; }
-
-            public TopicEventHandlers<T> Handlers { get; }
-        }
-
-        private static SubscriptionState ToSafeState(object state)
-        {
-            if (state is SubscriptionState sstate) return sstate;
-            throw new Exception();
-        }
-
         private void HandleEvent(ClientMessage eventMessage, object state)
         {
-            var sstate = ToSafeState(state);
+            var sstate = ToSafeState<SubscriptionState<TopicEventHandlers<T>>>(state);
 
             void HandleEvent(IData itemData, long publishTime, Guid memberId)
             {
-                //Lazy<T> LazyArg<T>(IData source) => source == null ? null : new Lazy<T>(() => ToObject<T>(source));
-
                 var member = Cluster.GetMember(memberId);
 
                 // that one is not lazy...
@@ -108,53 +84,13 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
             TopicAddMessageListenerCodec.HandleEvent(eventMessage, HandleEvent, LoggerFactory);
         }
 
-        private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
-        {
-            var sstate = ToSafeState(state);
-            return TopicRemoveMessageListenerCodec.EncodeRequest(sstate.Name, subscriptionId);
-        }
+        private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
+            => TopicRemoveMessageListenerCodec.EncodeRequest(Name, subscriptionId);
 
-        private static Guid HandleSubscribeResponse(ClientMessage responseMessage, object state)
-        {
-            return TopicAddMessageListenerCodec.DecodeResponse(responseMessage).Response;
-        }
+        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
+            => TopicAddMessageListenerCodec.DecodeResponse(responseMessage).Response;
 
-        private static bool DecodeUnsubscribeResponse(ClientMessage message, object state)
-        {
-            return TopicRemoveMessageListenerCodec.DecodeResponse(message).Response;
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = UnsubscribeAsync(subscriptionId, cancellation.Token).OrTimeout(cancellation);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken)
-        {
-            var task = Cluster.RemoveSubscriptionAsync(subscriptionId, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
+        private static bool ReadUnsubscribeResponse(ClientMessage message, object state)
+            => TopicRemoveMessageListenerCodec.DecodeResponse(message).Response;
     }
 }

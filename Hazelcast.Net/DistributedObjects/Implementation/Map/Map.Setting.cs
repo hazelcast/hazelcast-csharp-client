@@ -31,8 +31,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddOrReplaceWithValueAsync(key, value, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddOrReplaceWithValueAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -64,8 +63,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddOrReplaceAsync(key, value, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddOrReplaceAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -97,8 +95,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<TValue> AddOrReplaceWithValueTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddOrReplaceWithValueTtlAsync(key, value, timeToLive, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddOrReplaceWithValueTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -152,8 +149,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task AddOrReplaceTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddOrReplaceTtlAsync(key, value, timeToLive, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddOrReplaceTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -216,8 +212,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
             Task AddOrReplaceAsync(IDictionary<TKey, TValue> entries, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddOrReplaceAsync(entries, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddOrReplaceAsync, entries, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -310,8 +305,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<TValue> ReplaceAsync(TKey key, TValue newValue, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = ReplaceAsync(key, newValue, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(ReplaceAsync, key, newValue, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -338,8 +332,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = ReplaceAsync(key, expectedValue, newValue, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(ReplaceAsync, key, expectedValue, newValue, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -388,8 +381,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
             Task<bool> TryAddOrReplaceAsync(TKey key, TValue value, TimeSpan serverTimeout, TimeSpan timeout)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = TryAddOrReplaceAsync(key, value, serverTimeout, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(TryAddOrReplaceAsync, key, value, serverTimeout, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -444,8 +436,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<TValue> AddIfMissingAsync(TKey key, TValue value, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddIfMissingAsync(key, value, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddIfMissingAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -477,8 +468,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<TValue> AddIfMissingTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddIfMissingTtlAsync(key, value, timeToLive, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddIfMissingTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -533,8 +523,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task AddOrReplaceTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddOrReplaceTransientAsync(key, value, timeToLive, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddOrReplaceTransientAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

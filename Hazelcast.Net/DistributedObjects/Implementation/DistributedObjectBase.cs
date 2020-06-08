@@ -24,6 +24,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
+using TaskExtensions = Hazelcast.Core.TaskExtensions;
 
 namespace Hazelcast.DistributedObjects.Implementation
 {
@@ -250,8 +251,12 @@ namespace Hazelcast.DistributedObjects.Implementation
         /// <returns>The state object.</returns>
         protected static T ToSafeState<T>(object state)
         {
-            if (state is T sstate) return sstate;
-            throw new InvalidCastException("Invalid subscription state type.");
+            return state switch
+            {
+                null => default,
+                T sstate => sstate,
+                _ => throw new InvalidCastException("Invalid subscription state type.")
+            };
         }
 
         /// <summary>

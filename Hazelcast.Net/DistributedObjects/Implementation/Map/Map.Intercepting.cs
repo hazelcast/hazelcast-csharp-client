@@ -31,8 +31,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task<string> AddInterceptorAsync(IMapInterceptor interceptor, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddInterceptorAsync(interceptor, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddInterceptorAsync, interceptor, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -59,8 +58,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task RemoveInterceptorAsync(string id, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = RemoveInterceptorAsync(id, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(RemoveInterceptorAsync, id, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

@@ -40,8 +40,7 @@ namespace Hazelcast.DistributedObjects.Implementation.List
 #endif
         Task<T> GetAsync(int index, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = GetAsync(index, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(GetAsync, index, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -66,8 +65,7 @@ namespace Hazelcast.DistributedObjects.Implementation.List
 #endif
             Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = GetRangeAsync(fromIndex, toIndex, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(GetRangeAsync, fromIndex, toIndex, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -92,8 +90,7 @@ namespace Hazelcast.DistributedObjects.Implementation.List
 #endif
             Task<int> IndexOfAsync(T item, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = IndexOfAsync(item, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(IndexOfAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -118,8 +115,7 @@ namespace Hazelcast.DistributedObjects.Implementation.List
 #endif
             Task<int> LastIndexOfAsync(T item, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = LastIndexOfAsync(item, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(LastIndexOfAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

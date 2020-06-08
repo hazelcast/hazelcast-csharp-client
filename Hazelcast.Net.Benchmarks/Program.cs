@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Hazelcast.Core;
 
 #pragma warning disable
 
@@ -28,7 +29,75 @@ namespace AsyncTests1.Benchmark
         static void Main(string[] args)
         {
             Console.WriteLine("AsyncBench");
-            BenchmarkRunner.Run<Bench2>();
+            BenchmarkRunner.Run<Bench3>();
+        }
+    }
+
+    [MemoryDiagnoser]
+    public class Bench3
+    {
+        public int I;
+        public int J;
+
+        /*
+            |  Method |     Mean |     Error |    StdDev |   Median |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+            |-------- |---------:|----------:|----------:|---------:|-------:|------:|------:|----------:|
+            | BenchW1 | 2.672 us | 0.0512 us | 0.0548 us | 2.678 us | 0.2060 |     - |     - |     863 B |
+            | BenchW2 | 2.657 us | 0.0528 us | 0.0740 us | 2.624 us | 0.2060 |     - |     - |     864 B |
+            | BenchW3 | 2.466 us | 0.0424 us | 0.0709 us | 2.464 us | 0.1755 |     - |     - |     742 B |
+            | BenchN1 | 2.709 us | 0.0534 us | 0.0730 us | 2.705 us | 0.2136 |     - |     - |     900 B |
+            | BenchN2 | 2.680 us | 0.0497 us | 0.0788 us | 2.642 us | 0.2136 |     - |     - |     901 B |
+            | BenchN3 | 2.497 us | 0.0493 us | 0.0782 us | 2.493 us | 0.1831 |     - |     - |     772 B |
+        */
+
+        // lessons:
+        // Bench?3 generally faster & allocates less = best to avoid the async/await state machine whenever possible
+        // BenchW? slightly faster  so could make sense
+        //
+        // when there is a state machine the compiler seems clever enough to use it also for the capture
+        // so BenchN3 is the only one that creates a capture class, others capture the values in the
+        // state, but yet avoiding this seems slightly faster + allocating slightly less
+
+        [Benchmark]
+        public async Task BenchW1() => await Args1(1, 1);
+
+        [Benchmark]
+        public async Task BenchW2() => await Args2(1, 1);
+
+        [Benchmark]
+        public async Task BenchW3() => await Args3(1, 1);
+
+        [Benchmark]
+        public async Task BenchN1() => await NoArgs1(1, 1);
+
+        [Benchmark]
+        public async Task BenchN2() => await NoArgs2(1, 1);
+
+        [Benchmark]
+        public async Task BenchN3() => await NoArgs3(1, 1);
+
+        public async Task Args1(int i, int j)
+            => await TaskEx.WithTimeout(F, i, j, TimeSpan.Zero, 1);
+
+        public async Task Args2(int i, int j)
+            => await TaskEx.WithTimeout(F, i, j, TimeSpan.Zero, 1);
+
+        public Task Args3(int i, int j)
+            => TaskEx.WithTimeout(F, i, j, TimeSpan.Zero, 1);
+
+        public async Task NoArgs1(int i, int j)
+            => TaskEx.WithTimeout((token) => F(i, j, token), TimeSpan.Zero, 1);
+
+        public async Task NoArgs2(int i, int j)
+            => TaskEx.WithTimeout((token) => F(i, j, token), TimeSpan.Zero, 1);
+
+        public Task NoArgs3(int i, int j)
+            => TaskEx.WithTimeout((token) => F(i, j, token), TimeSpan.Zero, 1);
+
+        public async Task<int> F(int i, int j, CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            return 3;
         }
     }
 

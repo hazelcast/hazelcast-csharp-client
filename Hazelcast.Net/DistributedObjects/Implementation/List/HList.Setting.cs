@@ -30,8 +30,7 @@ namespace Hazelcast.DistributedObjects.Implementation.List
 #endif
             Task<T> SetAsync(int index, T item, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = SetAsync(index, item, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(SetAsync, index, item, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -57,8 +56,7 @@ namespace Hazelcast.DistributedObjects.Implementation.List
 #endif
             Task InsertAsync(int index, T item, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = InsertAsync(index, item, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(InsertAsync, index, item, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -102,8 +100,7 @@ namespace Hazelcast.DistributedObjects.Implementation.List
             Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, TimeSpan timeout = default)
             where TItem : T
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = InsertRangeAsync(index, items, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(InsertRangeAsync, index, items, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

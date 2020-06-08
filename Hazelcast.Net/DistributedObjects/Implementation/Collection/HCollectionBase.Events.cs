@@ -33,8 +33,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #endif
             Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> on, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = SubscribeAsync(includeValue, on, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(SubscribeAsync, includeValue, on, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -51,13 +50,11 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
             var handlers = new CollectionItemEventHandlers<T>();
             on(handlers);
 
-            var subscribeRequest = CreateSubscribeRequest(Name, includeValue, Cluster.IsSmartRouting);
-
             var subscription = new ClusterSubscription(
-                subscribeRequest,
-                HandleSubscribeResponse,
+                CreateSubscribeRequest(includeValue, Cluster.IsSmartRouting),
+                ReadSubscribeResponse,
                 CreateUnsubscribeRequest,
-                DecodeUnsubscribeResponse,
+                ReadUnsubscribeResponse,
                 HandleEvent,
                 new SubscriptionState<CollectionItemEventHandlers<T>>(Name, handlers));
 
@@ -91,7 +88,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
             ListAddListenerCodec.HandleEvent(eventMessage, HandleItemEvent, LoggerFactory);
         }
 
-        protected abstract ClientMessage CreateSubscribeRequest(string name, bool includeValue, bool isSmartRouting);
+        protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);
 
         private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
         {
@@ -101,20 +98,20 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 
         protected abstract ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, SubscriptionState<CollectionItemEventHandlers<T>> state);
 
-        private Guid HandleSubscribeResponse(ClientMessage responseMessage, object state)
+        private Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
         {
             var sstate = ToSafeState<SubscriptionState<CollectionItemEventHandlers<T>>>(state);
-            return HandleSubscribeResponse(responseMessage, sstate);
+            return ReadSubscribeResponse(responseMessage, sstate);
         }
 
-        protected abstract Guid HandleSubscribeResponse(ClientMessage responseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state);
+        protected abstract Guid ReadSubscribeResponse(ClientMessage responseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state);
 
-        private bool DecodeUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
+        private bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
         {
             var sstate = ToSafeState<SubscriptionState<CollectionItemEventHandlers<T>>>(state);
-            return DecodeUnsubscribeResponse(unsubscribeResponseMessage, sstate);
+            return ReadUnsubscribeResponse(unsubscribeResponseMessage, sstate);
         }
 
-        protected abstract bool DecodeUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state);
+        protected abstract bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state);
     }
 }

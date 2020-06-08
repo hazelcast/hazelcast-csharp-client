@@ -20,7 +20,8 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
 
-[assembly: CLSCompliant(true)]
+// FIXME: should we be CLSCompliant when MS is not anymore?
+//[assembly: CLSCompliant(true)]
 
 // NDepend scope can be: deep module namespace type method field
 

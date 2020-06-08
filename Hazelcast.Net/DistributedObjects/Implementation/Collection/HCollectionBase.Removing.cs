@@ -27,10 +27,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> RemoveAsync(T item, TimeSpan timeout = default)
+        Task<bool> RemoveAsync(T item, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = RemoveAsync(item, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(RemoveAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -47,11 +46,10 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
+        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
             where TItem : T
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = RemoveAllAsync(items, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(RemoveAllAsync, items, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -69,11 +67,10 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
+        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
             where TItem : T
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = RetainAllAsync(items, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(RetainAllAsync, items, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -91,10 +88,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task ClearAsync(TimeSpan timeout = default)
+        Task ClearAsync(TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = ClearAsync(cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(ClearAsync, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

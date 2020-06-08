@@ -31,8 +31,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
 #endif
         Task AddIndexAsync(IndexConfig indexConfig, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddIndexAsync(indexConfig, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddIndexAsync, indexConfig, timeout, DefaultOperationTimeoutMilliseconds);
 
 
 #if HZ_OPTIMIZE_ASYNC

@@ -48,30 +48,20 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             // 3: entryKey, predicate
             var mode = (hasKey ? 1 : 0) + (hasPredicate ? 2 : 0);
 
-            ClientMessage subscribeRequest;
-            switch (mode)
+            var subscribeRequest = mode switch
             {
-                case 0:
-                    subscribeRequest = MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int)flags, Cluster.IsSmartRouting);
-                    break;
-                case 1:
-                    subscribeRequest = MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(key), includeValues, (int)flags, Cluster.IsSmartRouting);
-                    break;
-                case 2:
-                    subscribeRequest = MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int)flags, Cluster.IsSmartRouting);
-                    break;
-                case 3:
-                    subscribeRequest = MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(key), ToData(predicate), includeValues, (int)flags, Cluster.IsSmartRouting);
-                    break;
-                default:
-                    throw new Exception();
-            }
+                0 => MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int) flags, Cluster.IsSmartRouting),
+                1 => MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(key), includeValues, (int) flags, Cluster.IsSmartRouting),
+                2 => MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
+                3 => MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(key), ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
+                _ => throw new Exception()
+            };
 
             var subscription = new ClusterSubscription(
                 subscribeRequest,
-                HandleSubscribeResponse,
+                ReadSubscribeResponse,
                 CreateUnsubscribeRequest,
-                DecodeUnsubscribeResponse,
+                ReadUnsubscribeResponse,
                 HandleEvent,
                 new MapSubscriptionState(mode, Name, handlers));
 
@@ -81,73 +71,49 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         }
 
         public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(true, default, false, default, false, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, true, default(IPredicate), false, default(TKey), false, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(true, default, false, default, false, on, cancellationToken);
 
         public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(includeValues, default, false, default, false, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, includeValues, default(IPredicate), false, default(TKey), false, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(includeValues, default, false, default, false, on, cancellationToken);
 
         public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(true, default, false, key, true, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, true, default(IPredicate), false, key, true, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(true, default, false, key, true, on, cancellationToken);
 
         public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(includeValues, default, false, key, true, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, includeValues, default(IPredicate), false, key, true, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(includeValues, default, false, key, true, on, cancellationToken);
 
         public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(true, predicate, true, default, false, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, true, predicate, true, default(TKey), false, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(true, predicate, true, default, false, on, cancellationToken);
 
         public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(includeValues, predicate, true, default, false, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, includeValues, predicate, true, default(TKey), false, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(includeValues, predicate, true, default, false, on, cancellationToken);
 
         public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(true, predicate, true, key, true, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, true, predicate, true, key, true, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(true, predicate, true, key, true, on, cancellationToken);
 
         public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default)
-        {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            return SubscribeAsync(includeValues, predicate, true, key, true, on, cancellation.Token).OrTimeout(cancellation);
-        }
+            => TaskEx.WithTimeout(SubscribeAsync, includeValues, predicate, true, key, true, on, timeout, DefaultOperationTimeoutMilliseconds);
 
         public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken)
             => SubscribeAsync(includeValues, predicate, true, key, true, on, cancellationToken);
@@ -223,26 +189,21 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
             return MapRemoveEntryListenerCodec.EncodeRequest(sstate.Name, subscriptionId);
         }
 
-        private static Guid HandleSubscribeResponse(ClientMessage responseMessage, object state)
+        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
         {
             var sstate = ToSafeState<MapSubscriptionState>(state);
 
-            switch (sstate.Mode)
+            return sstate.Mode switch
             {
-                case 0:
-                    return MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response;
-                case 1:
-                    return MapAddEntryListenerToKeyCodec.DecodeResponse(responseMessage).Response;
-                case 2:
-                    return MapAddEntryListenerWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                case 3:
-                    return MapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                default:
-                    throw new NotSupportedException();
-            }
+                0 => MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response,
+                1 => MapAddEntryListenerToKeyCodec.DecodeResponse(responseMessage).Response,
+                2 => MapAddEntryListenerWithPredicateCodec.DecodeResponse(responseMessage).Response,
+                3 => MapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response,
+                _ => throw new NotSupportedException()
+            };
         }
 
-        private static bool DecodeUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
+        private static bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
         {
             return MapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
         }

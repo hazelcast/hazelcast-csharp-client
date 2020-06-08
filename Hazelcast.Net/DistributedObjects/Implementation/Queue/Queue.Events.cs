@@ -16,20 +16,24 @@ using System;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 
-namespace Hazelcast.DistributedObjects.Implementation.List
+namespace Hazelcast.DistributedObjects.Implementation.Queue
 {
-    internal partial class HList<T> // Events
+    internal partial class Queue<T> // Events
     {
+        /// <inheritdoc />
         protected override ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting)
-            => ListAddListenerCodec.EncodeRequest(Name, includeValue, isSmartRouting);
+            => QueueAddListenerCodec.EncodeRequest(Name, includeValue, isSmartRouting);
 
+        /// <inheritdoc />
         protected override ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, SubscriptionState<CollectionItemEventHandlers<T>> state)
-            => ListRemoveListenerCodec.EncodeRequest(Name, subscriptionId);
+            => QueueRemoveListenerCodec.EncodeRequest(Name, subscriptionId);
 
+        /// <inheritdoc />
         protected override Guid ReadSubscribeResponse(ClientMessage responseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
-            => ListAddListenerCodec.DecodeResponse(responseMessage).Response;
+            => QueueAddListenerCodec.DecodeResponse(responseMessage).Response;
 
+        /// <inheritdoc />
         protected override bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
-            => ListRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
+            => QueueRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
     }
 }

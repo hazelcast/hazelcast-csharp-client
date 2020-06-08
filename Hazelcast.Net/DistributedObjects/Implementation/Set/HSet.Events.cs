@@ -20,16 +20,16 @@ namespace Hazelcast.DistributedObjects.Implementation.Set
 {
     internal partial class HSet<T> // Events
     {
-        protected override ClientMessage CreateSubscribeRequest(string name, bool includeValue, bool isSmartRouting)
-            => SetAddListenerCodec.EncodeRequest(name, includeValue, isSmartRouting);
+        protected override ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting)
+            => SetAddListenerCodec.EncodeRequest(Name, includeValue, isSmartRouting);
 
         protected override ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, SubscriptionState<CollectionItemEventHandlers<T>> state)
             => SetRemoveListenerCodec.EncodeRequest(Name, subscriptionId);
 
-        protected override Guid HandleSubscribeResponse(ClientMessage responseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
+        protected override Guid ReadSubscribeResponse(ClientMessage responseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
             => SetAddListenerCodec.DecodeResponse(responseMessage).Response;
 
-        protected override bool DecodeUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
+        protected override bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
             => SetRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
     }
 }

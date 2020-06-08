@@ -35,8 +35,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #endif
         Task CopyToAsync(T[] array, int arrayIndex, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = CopyToAsync(array, arrayIndex, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(CopyToAsync, array, arrayIndex, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -66,8 +65,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #endif
         Task<T[]> ToArrayAsync(TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = ToArrayAsync(cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(ToArrayAsync, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -89,8 +87,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
         Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, TimeSpan timeout = default)
             where TItem : T
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = ToArrayAsync(array, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(ToArrayAsync, array, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

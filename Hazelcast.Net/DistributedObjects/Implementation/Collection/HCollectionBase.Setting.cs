@@ -27,10 +27,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> AddAsync(T item, TimeSpan timeout = default)
+        Task<bool> AddAsync(T item, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddAsync(item, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -47,11 +46,10 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
+        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
             where TItem : T
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = AddRangeAsync(items, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(AddRangeAsync, items, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
