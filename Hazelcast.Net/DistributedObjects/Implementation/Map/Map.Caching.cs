@@ -27,10 +27,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         public async Task<bool> EvictAsync(TKey key, TimeSpan timeout = default)
         {
             var keyData = ToSafeData(key);
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
 
             var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellation.Token).OrTimeout(cancellation).CAF();
+            var responseMessage = await TaskEx.WithTimeout(Cluster.SendToKeyPartitionOwnerAsync, requestMessage, keyData, timeout, DefaultOperationTimeoutMilliseconds).CAF();
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -49,9 +48,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <inheritdoc />
         public async Task EvictAllAsync(TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).CAF();
+            await TaskEx.WithTimeout(EvictAllAsync, timeout, DefaultOperationTimeoutMilliseconds).CAF();
         }
 
         /// <inheritdoc />
@@ -64,10 +61,8 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         /// <inheritdoc />
         public async Task FlushAsync(TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var requestMessage = MapFlushCodec.EncodeRequest(Name);
-            await Cluster.SendAsync(requestMessage, cancellation.Token).OrTimeout(cancellation).CAF();
-        }
+            await TaskEx.WithTimeout(FlushAsync, timeout, DefaultOperationTimeoutMilliseconds).CAF();
+       }
 
         /// <inheritdoc />
         public async Task FlushAsync(CancellationToken cancellationToken)

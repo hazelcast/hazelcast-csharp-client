@@ -25,18 +25,18 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal static class ClientProtocolExceptions
     {
-        private static readonly HashSet<ClientProtocolErrors> RetryableErrors = new HashSet<ClientProtocolErrors>
+        private static readonly HashSet<ClientProtocolError> RetryableErrors = new HashSet<ClientProtocolError>
         {
-            ClientProtocolErrors.CallerNotMember,
-            ClientProtocolErrors.MemberLeft,
-            ClientProtocolErrors.PartitionMigrating,
-            ClientProtocolErrors.RetryableHazelcast,
-            ClientProtocolErrors.RetryableIO,
-            ClientProtocolErrors.TargetNotMember,
-            ClientProtocolErrors.WrongTarget,
-            ClientProtocolErrors.TargetNotReplicaException,
-            ClientProtocolErrors.CannotReplicateException,
-            ClientProtocolErrors.HazelcastInstanceNotActive,
+            ClientProtocolError.CallerNotMember,
+            ClientProtocolError.MemberLeft,
+            ClientProtocolError.PartitionMigrating,
+            ClientProtocolError.RetryableHazelcast,
+            ClientProtocolError.RetryableIO,
+            ClientProtocolError.TargetNotMember,
+            ClientProtocolError.WrongTarget,
+            ClientProtocolError.TargetNotReplicaException,
+            ClientProtocolError.CannotReplicateException,
+            ClientProtocolError.HazelcastInstanceNotActive,
 
             // this one must *not* automatically retryable, because it requires more
             // checks on the client and message in order to decide whether to retry
@@ -68,13 +68,13 @@ namespace Hazelcast.Clustering
                 return null;
 
             var errorHolder = errorHolders.Current;
-            if (errorHolder == null) return new ClientProtocolException(ClientProtocolErrors.Undefined);
+            if (errorHolder == null) return new ClientProtocolException(ClientProtocolError.Undefined);
 
             var innerException = CreateException(errorHolders);
 
-            var error = ClientProtocolErrors.Undefined;
-            if (Enum.IsDefined(typeof(ClientProtocolErrors), errorHolder.ErrorCode))
-                error = (ClientProtocolErrors) errorHolder.ErrorCode;
+            var error = ClientProtocolError.Undefined;
+            if (Enum.IsDefined(typeof(ClientProtocolError), errorHolder.ErrorCode))
+                error = (ClientProtocolError) errorHolder.ErrorCode;
 
             var retryable = RetryableErrors.Contains(error);
             var exception = new ClientProtocolException(error, errorHolder.Message, innerException, retryable);

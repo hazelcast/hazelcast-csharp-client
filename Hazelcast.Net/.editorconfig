@@ -16,6 +16,7 @@ indent_size = 2
 #dotnet_code_quality.CA2000.excluded_symbol_names = M:Hazelcast.DistributedObjects.Implementation.Queue.Queue`1.WithTimeout``
 #dotnet_code_quality.CA2000.severity = none
 
-dotnet_diagnostic.CA1303.severity = none
+dotnet_diagnostic.CA1303.severity = none # Do not pass literals as localized parameters
+dotnet_diagnostic.CA1031.severity = none # Do not catch general exception types
 
 #

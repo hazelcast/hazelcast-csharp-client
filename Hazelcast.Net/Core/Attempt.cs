@@ -21,12 +21,28 @@ namespace Hazelcast.Core
     /// <summary>
     /// Creates instances of the <see cref="Attempt{TResult}"/> struct.
     /// </summary>
+#pragma warning disable CA1815 // Override equals and operator equals on value types - one should not compare attempts
     public readonly struct Attempt
+#pragma warning disable CA1815
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Attempt"/> struct.
+        /// </summary>
+        /// <param name="success">Whether the attempt succeeded.</param>
+        public Attempt(bool success)
+        {
+            Success = success;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the attempt succeeded.
+        /// </summary>
+        public bool Success { get; }
+
         /// <summary>
         /// Represents a failed attempt.
         /// </summary>
-        public static Attempt Failed { get; } = new Attempt();
+        public static Attempt Failed { get; } = new Attempt(false);
 
         /// <summary>
         /// Creates a successful attempt with a result.

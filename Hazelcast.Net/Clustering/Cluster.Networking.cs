@@ -32,20 +32,10 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when connected.</returns>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task ConnectAsync(CancellationToken cancellationToken)
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = ConnectAsyncInternal(cancellation.Token).ThenDispose(cancellation);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
+            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            await ConnectAsyncInternal(cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -96,7 +86,7 @@ namespace Hazelcast.Clustering
                 {
                     await DieAsync().CAF();
                 }
-            }, cancellationToken);
+            }, cancellationToken, TaskContinuationOptions.None, TaskScheduler.Current);
         }
 
         /// <summary>
@@ -205,7 +195,9 @@ namespace Hazelcast.Clustering
                 }
 
                 // else actually connect - this may throw
+#pragma warning disable CA2000 // Dispose objects before losing scope - will be disposed, eventually
                 client = await ConnectWithLockAsync(address, cancellationToken).CAF();
+#pragma warning restore CA2000
                 return client;
             }
             catch (Exception e)

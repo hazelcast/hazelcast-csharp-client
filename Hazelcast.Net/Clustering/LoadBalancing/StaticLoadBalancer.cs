@@ -47,7 +47,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         }
 
         /// <inheritdoc />
-        public override Guid Select()
+        public override Guid GetMember()
             => _memberId;
     }
 }

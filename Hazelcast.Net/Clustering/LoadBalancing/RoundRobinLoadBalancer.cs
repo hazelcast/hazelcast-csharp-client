@@ -34,7 +34,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         { }
 
         /// <inheritdoc />
-        public override Guid Select()
+        public override Guid GetMember()
         {
             // get an immutable list of members, and pick "the next one"
             var members = Members;

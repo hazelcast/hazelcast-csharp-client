@@ -31,7 +31,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// Selects a member.
         /// </summary>
         /// <returns>The unique identifier of the selected member.</returns>
-        Guid Select();
+        Guid GetMember();
 
         /// <summary>
         /// Notifies the load balancer of a new set of members.

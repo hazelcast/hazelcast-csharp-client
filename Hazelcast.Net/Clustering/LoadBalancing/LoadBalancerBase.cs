@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         public int Count => Members.Count;
 
         /// <inheritdoc />
-        public abstract Guid Select();
+        public abstract Guid GetMember();
 
         /// <inheritdoc />
         public void NotifyMembers(IEnumerable<Guid> memberIds)

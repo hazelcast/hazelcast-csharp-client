@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Configuration;
 
@@ -54,12 +55,12 @@ namespace Hazelcast.Core
                 return -1;
             }
             var firstPart = pattern.Substring(0, index);
-            if (!itemName.StartsWith(firstPart))
+            if (!itemName.StartsWith(firstPart, StringComparison.Ordinal))
             {
                 return -1;
             }
             var secondPart = pattern.Substring(index + 1);
-            if (!itemName.EndsWith(secondPart))
+            if (!itemName.EndsWith(secondPart, StringComparison.Ordinal))
             {
                 return -1;
             }

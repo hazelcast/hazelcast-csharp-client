@@ -33,15 +33,39 @@ namespace Hazelcast.Protocol
         // displaying exceptions, which omits the Error and Retryable properties,
         // unless we also store them as data
         //
-        private ClientProtocolErrors _error;
+        private ClientProtocolError _error;
         private bool _retryable;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastException"/> class.
+        /// </summary>
+        public ClientProtocolException()
+            : base("Client Protocol Error")
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastException"/> class.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        public ClientProtocolException(string message)
+            : base(message)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastException"/> class.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception.</param>
+        public ClientProtocolException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class.
         /// </summary>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
         /// <param name="error">The client protocol error.</param>
-        public ClientProtocolException(ClientProtocolErrors error, bool retryable = false)
+        public ClientProtocolException(ClientProtocolError error, bool retryable = false)
             : base(error.ToString())
         {
             Error = error;
@@ -54,7 +78,7 @@ namespace Hazelcast.Protocol
         /// <param name="error">The client protocol error.</param>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public ClientProtocolException(ClientProtocolErrors error, string message, bool retryable = false)
+        public ClientProtocolException(ClientProtocolError error, string message, bool retryable = false)
             : base(message)
         {
             Error = error;
@@ -69,7 +93,7 @@ namespace Hazelcast.Protocol
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public ClientProtocolException(ClientProtocolErrors error, Exception innerException, bool retryable = false)
+        public ClientProtocolException(ClientProtocolError error, Exception innerException, bool retryable = false)
             : base(error.ToString(), innerException)
         {
             Error = error;
@@ -85,7 +109,7 @@ namespace Hazelcast.Protocol
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public ClientProtocolException(ClientProtocolErrors error, string message, Exception innerException, bool retryable = false)
+        public ClientProtocolException(ClientProtocolError error, string message, Exception innerException, bool retryable = false)
             : base(message, innerException)
         {
             Error = error;
@@ -99,17 +123,17 @@ namespace Hazelcast.Protocol
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public ClientProtocolException(SerializationInfo info, StreamingContext context)
+        private ClientProtocolException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            Error = (ClientProtocolErrors) info.GetInt32("error");
+            Error = (ClientProtocolError) info.GetInt32("error");
             Retryable = info.GetBoolean("retryable");
         }
 
         /// <summary>
         /// Gets the protocol error.
         /// </summary>
-        public ClientProtocolErrors Error
+        public ClientProtocolError Error
         {
             get => _error;
             set
@@ -135,6 +159,8 @@ namespace Hazelcast.Protocol
         /// <inheritdoc />
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
+            if (info == null) throw new ArgumentNullException(nameof(info));
+
             info.AddValue("error", Error);
             info.AddValue("retryable", Retryable);
             base.GetObjectData(info, context);

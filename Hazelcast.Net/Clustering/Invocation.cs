@@ -53,6 +53,7 @@ namespace Hazelcast.Clustering
             _cancellationToken = cancellationToken;
             _cancellationToken.Register(() => CompletionSource.TrySetCanceled());
             AttemptsCount = 1;
+            StartTime = Clock.Milliseconds;
         }
 
         /// <summary>
@@ -88,7 +89,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the start time.
         /// </summary>
-        public long StartTime => Clock.Milliseconds;
+        public long StartTime { get; }
 
         /// <summary>
         /// Transition the task to <see cref="TaskStatus.RanToCompletion"/>.
@@ -134,7 +135,7 @@ namespace Hazelcast.Clustering
 
                 // target disconnected protocol error is not automatically retryable,
                 // because we need to perform more checks on the client and message
-                case ClientProtocolException cpe when cpe.Error == ClientProtocolErrors.TargetDisconnected:
+                case ClientProtocolException cpe when cpe.Error == ClientProtocolError.TargetDisconnected:
                 case TargetDisconnectedException _:
                     return Client == null && // not bound to a client
                            (RequestMessage.IsRetryable || retryOnTargetDisconnected);
@@ -151,6 +152,8 @@ namespace Hazelcast.Clustering
         /// <returns>true if the invocation can be retried; otherwise false.</returns>
         public async ValueTask<bool> CanRetryAsync(Func<long> correlationIdProvider)
         {
+            if (correlationIdProvider == null) throw new ArgumentNullException(nameof(correlationIdProvider));
+
             AttemptsCount += 1;
 
             CompletionSource = new TaskCompletionSource<ClientMessage>();

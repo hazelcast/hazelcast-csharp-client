@@ -28,19 +28,21 @@ namespace Hazelcast.Security
         /// <param name="token">The credentials token.</param>
         public TokenCredentials(byte[] token)
         {
-            Token = token ?? throw new ArgumentNullException(nameof(token));
+            this.token = token ?? throw new ArgumentNullException(nameof(token));
         }
 
         /// <inheritdoc />
-        public string Name => Token == null ? "<empty>" : "<token>";
+        public string Name => GetToken() == null ? "<empty>" : "<token>";
+
+        private readonly byte[] token;
 
         /// <summary>
         /// Gets the token representing the credentials.
         /// </summary>
-        public byte[] Token { get; }
+        public byte[] GetToken() => token;
 
         /// <inheritdoc />
         public override string ToString()
-            => $"{nameof(TokenCredentials)} ({Token.Length} bytes)";
+            => $"{nameof(TokenCredentials)} ({GetToken().Length} bytes)";
     }
 }

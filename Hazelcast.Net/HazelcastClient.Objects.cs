@@ -37,8 +37,7 @@ namespace Hazelcast
 #endif
         Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
-            var task = GetMapAsync<TKey, TValue>(name, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(GetMapAsync<TKey, TValue>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -73,8 +72,7 @@ namespace Hazelcast
 #endif
         Task<ITopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
-            var task = GetTopicAsync<T>(name, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(GetTopicAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -109,8 +107,7 @@ namespace Hazelcast
 #endif
             Task<IHList<T>> GetListAsync<T>(string name, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
-            var task = GetListAsync<T>(name, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(GetListAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -145,8 +142,7 @@ namespace Hazelcast
 #endif
             Task<IHSet<T>> GetSetAsync<T>(string name, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
-            var task = GetSetAsync<T>(name, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(GetSetAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

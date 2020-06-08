@@ -61,6 +61,7 @@ namespace Hazelcast.Clustering
         private volatile int _disposed;
 
         private CancellationTokenSource _bgCancellation;
+        private CancellationTokenSource _bgTaskCancellation;
         private Task _bgTask;
 
         /// <summary>
@@ -191,6 +192,7 @@ namespace Hazelcast.Clustering
         /// <param name="result">The result of the authentication.</param>
         public void NotifyAuthenticated(AuthenticationResult result)
         {
+            if (result == null) throw new ArgumentNullException(nameof(result));
             MemberId = result.MemberId;
         }
 
@@ -388,6 +390,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public async Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken)
         {
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+
             // adds the invocation, it will be removed when receiving the response (or timeout or...)
             AddInvocation(invocation);
 
@@ -445,8 +449,8 @@ namespace Hazelcast.Clustering
         internal void StartBackgroundTask(Func<CancellationToken, Task> task, CancellationToken cancellationToken)
         {
             _bgCancellation ??= new CancellationTokenSource();
-            var s = CancellationTokenSource.CreateLinkedTokenSource(_bgCancellation.Token, cancellationToken);
-            _bgTask = task(s.Token).ContinueWith(x =>
+            _bgTaskCancellation = CancellationTokenSource.CreateLinkedTokenSource(_bgCancellation.Token, cancellationToken);
+            _bgTask = task(_bgTaskCancellation.Token).ContinueWith(x =>
             {
                 if (x.IsFaulted)
                 {
@@ -455,8 +459,10 @@ namespace Hazelcast.Clustering
                 }
                 _bgCancellation.Dispose();
                 _bgCancellation = null;
+                _bgTaskCancellation.Dispose();
+                _bgTaskCancellation = null;
                 return x;
-            }, CancellationToken.None);
+            }, TaskScheduler.Current);
         }
 
         /// <summary>
@@ -493,6 +499,14 @@ namespace Hazelcast.Clustering
                 return;
 
             await _socketConnection.TryDisposeAsync().CAF();
+            try
+            {
+                await _socketConnection.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"Caught an exception while disposing {_socketConnection.GetType()}.");
+            }
 
             // shutdown all pending operations
             // dealing with race conditions in SendAsync
@@ -509,6 +523,9 @@ namespace Hazelcast.Clustering
                 }
                 catch { /* ignore - no value */ }
             }
+
+            _bgCancellation?.Dispose();
+            _bgTaskCancellation?.Dispose();
 
             if (_onShutdown == null)
                 return;

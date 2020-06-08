@@ -29,6 +29,6 @@ namespace Hazelcast.Security
 
         /// <inheritdoc />
         public override string ToString()
-            => $"KerberosCredentials (Token, {Token.Length} bytes)";
+            => $"KerberosCredentials (Token, {GetToken().Length} bytes)";
     }
 }

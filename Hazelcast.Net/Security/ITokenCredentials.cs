@@ -22,6 +22,6 @@ namespace Hazelcast.Security
         /// <summary>
         /// Gets the token.
         /// </summary>
-        byte[] Token { get; }
+        byte[] GetToken();
     }
 }

@@ -22,18 +22,6 @@ namespace Hazelcast.Core
     internal static class CancellationTokenSourceExtensions
     {
         /// <summary>
-        /// Creates a cancellation source by combining a source and a timeout.
-        /// </summary>
-        /// <param name="source">The source.</param>
-        /// <param name="timeoutMilliseconds">The timeout, in milliseconds.</param>
-        /// <returns>The combined cancellation.</returns>
-        /// <remarks>
-        /// <para>The combined cancellation should be disposed after usage.</para>
-        /// </remarks>
-        public static TimeoutCancellationTokenSource WithTimeout(this CancellationTokenSource source, int timeoutMilliseconds)
-            => new TimeoutCancellationTokenSource(source, timeoutMilliseconds);
-
-        /// <summary>
         /// Creates a cancellation source by combining a source and a cancellation token.
         /// </summary>
         /// <param name="source">The source.</param>

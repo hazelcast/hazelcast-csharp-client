@@ -102,9 +102,6 @@ namespace Hazelcast.Clustering
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="clientName">The client name.</param>
         /// <param name="options">The cluster configuration.</param>
-        /// <param name="networkingOptions">The networking configuration.</param>
-        /// <param name="loadBalancingOptions">The load-balancing configuration.</param>
-        /// <param name="securityOptions">The security configuration.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public Cluster(
@@ -277,12 +274,19 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await _heartbeat.DisposeAsync();
+                await _heartbeat.DisposeAsync().CAF();
             }
             catch (Exception e)
             {
                 _logger.LogWarning(e, "Caught an exception while disposing the heartbeat.");
             }
+
+            _clusterCancellation.Dispose();
+            _clusterLock.Dispose();
+            var clusterEventsClient = _clusterEventsClient;
+            if (clusterEventsClient != null)
+                await clusterEventsClient.DisposeAsync().CAF();
+            _firstMembersView?.Dispose();
         }
     }
 }

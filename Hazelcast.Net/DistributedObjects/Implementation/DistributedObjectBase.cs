@@ -92,10 +92,15 @@ namespace Hazelcast.DistributedObjects.Implementation
         }
 
         /// <summary>
-        /// Gets the current thread identifier.
+        /// Gets the current "thread identifier".
         /// </summary>
-        // FIXME this is wrong for ASYNC!
-        protected long ThreadId => AsyncContext.CurrentContext.Id;
+        /// <remarks>
+        /// Hazelcast APIs call this the thread identified and maintain locks "per threads",
+        /// so we are keeping the name here internally, but in reality this is not a thread
+        /// identifier anymore - it is attached to the async context so it can flow with
+        /// async operations.
+        /// </remarks>
+        protected static long ThreadId => AsyncContext.CurrentContext.Id;
 
         /// <summary>
         /// Gets the serialization service.
@@ -270,8 +275,7 @@ namespace Hazelcast.DistributedObjects.Implementation
 #endif
         Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(DefaultOperationTimeoutMilliseconds);
-            var task = UnsubscribeAsync(subscriptionId, cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(UnsubscribeAsync, subscriptionId, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

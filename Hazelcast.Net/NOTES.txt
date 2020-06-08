@@ -338,4 +338,32 @@ src/Hazelcast.Net/Transactions/ internal TransactionTimedOutException : Transact
 
 src/Hazelcast.Tests/Hazelcast.Remote/ public ServerException : TException, TBase
 
+#### NOTES ON TASK SCHEDULER
+
+References
+https://stackoverflow.com/questions/51311321/when-should-task-continuewith-be-called-with-taskscheduler-current-as-an-argumen
+
+TaskScheduler.Default - run on threadpool scheduler
+TaskScheduler.Current - keep running on same scheduler
+
+considering that most of the runtime code uses TaskScheduler.Current when a scheduler is not supplied,
+we pass TaskScheduler.Current whenever a scheduler is required (CA2008)
+
+#### NOTES ON OPTIMIZING ASYNC
+
+References
+https://blog.stephencleary.com/2016/12/eliding-async-await.html
+
+idea is: consider removing async/await for simple overloads - anything else is potentially dangerous
+
+also there is an issue with disposing -> ThenDispose()
+and, benchmarks show that it is very slighly faster to *not* ThenDispose() but rather to async/await
+
+|             Method |     Mean |     Error |    StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------------- |---------:|----------:|----------:|-------:|------:|------:|----------:|
+|        DoSomething | 1.844 us | 0.0345 us | 0.0323 us | 0.0896 |     - |     - |     383 B |
+| DoSomethingEliding | 1.999 us | 0.0361 us | 0.0721 us | 0.1259 |     - |     - |     529 B |
+
+
+
 ####

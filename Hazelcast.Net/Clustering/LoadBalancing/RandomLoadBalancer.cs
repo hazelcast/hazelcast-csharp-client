@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         { }
 
         /// <inheritdoc />
-        public override Guid Select()
+        public override Guid GetMember()
         {
             // get an immutable list of members, and pick one at random
             var members = Members;

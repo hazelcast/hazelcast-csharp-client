@@ -41,7 +41,7 @@ namespace Hazelcast.Clustering
             {
                 for (var i = 0; i < maxTries; i++)
                 {
-                    var memberId = _loadBalancer.Select();
+                    var memberId = _loadBalancer.GetMember();
                     if (_clients.TryGetValue(memberId, out var lbclient))
                         return lbclient;
                 }

@@ -24,7 +24,7 @@ namespace Hazelcast.Protocol
     {
         public static List<ErrorHolder> Decode(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             //initial frame
             iterator.Take();
             return ListMultiFrameCodec.Decode(iterator, ErrorHolderCodec.Decode);

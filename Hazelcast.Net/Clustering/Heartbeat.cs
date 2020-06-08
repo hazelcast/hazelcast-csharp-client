@@ -34,6 +34,7 @@ namespace Hazelcast.Clustering
         private int _active;
         private Task _heartbeating;
         private CancellationTokenSource _cancellation;
+        private CancellationTokenSource _linkedCancellation;
 
         public Heartbeat(Cluster cluster, HeartbeatOptions options, ILoggerFactory loggerFactory)
         {
@@ -51,7 +52,8 @@ namespace Hazelcast.Clustering
                 throw new InvalidOperationException("Already active.");
 
             _cancellation = new CancellationTokenSource();
-            _heartbeating ??= LoopAsync(_cancellation.LinkedWith(cancellationToken).Token);
+            _linkedCancellation = _cancellation.LinkedWith(cancellationToken);
+            _heartbeating ??= LoopAsync(_linkedCancellation.Token);
         }
 
         public async ValueTask DisposeAsync()
@@ -63,9 +65,8 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await _heartbeating;
+                await _heartbeating.CAF();
                 _heartbeating = null;
-                _cancellation = null;
             }
             catch (OperationCanceledException)
             {
@@ -76,16 +77,23 @@ namespace Hazelcast.Clustering
                 // unexpected
                 _logger.LogWarning(e, "Heartbeat has thrown an exception.");
             }
+            finally
+            {
+                _cancellation.Dispose();
+                _cancellation = null;
+                _linkedCancellation.Dispose();
+                _linkedCancellation = null;
+            }
         }
 
         private async Task LoopAsync(CancellationToken cancellationToken)
         {
             while (true)
             {
-                await Task.Delay(_period, cancellationToken);
+                await Task.Delay(_period, cancellationToken).CAF();
                 try
                 {
-                    await RunAsync(cancellationToken);
+                    await RunAsync(cancellationToken).CAF();
                 }
                 catch (Exception e)
                 {
@@ -107,7 +115,7 @@ namespace Hazelcast.Clustering
                 .Select(x => RunAsync(x, now, cancellationToken))
                 .ToList();
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).CAF();
         }
 
         private async Task RunAsync(Client client, DateTime now, CancellationToken cancellationToken)
@@ -120,7 +128,7 @@ namespace Hazelcast.Clustering
             // that the client is kinda dead - kill it for real
             if (now - client.LastReadTime > _timeout)
             {
-                await KillClient(client);
+                await KillClient(client).CAF();
                 return;
             }
 
@@ -140,19 +148,24 @@ namespace Hazelcast.Clustering
                 {
                     var responseMessage = await _cluster.SendToClientAsync(requestMessage, client, cancellation.Token)
                         .OrTimeout(timeout)
-                        .ThenDispose(cancellation);
+                        .CAF();
 
                     // just to be sure everything is ok
                     _ = ClientPingCodec.DecodeResponse(responseMessage);
                 }
                 catch (TimeoutException)
                 {
-                    await KillClient(client);
+                    await KillClient(client).CAF();
                 }
                 catch (Exception e)
                 {
                     // unexpected
                     _logger.LogWarning(e, "Heartbeat has thrown an exception.");
+                }
+                finally
+                {
+                    timeout.Dispose();
+                    cancellation.Dispose();
                 }
             }
         }
@@ -164,7 +177,7 @@ namespace Hazelcast.Clustering
 
             // kill
             _logger.LogWarning("Heartbeat timeout for client {ClientId}, stopping.", client.Id);
-            await client.DieAsync(); // does not throw
+            await client.DieAsync().CAF(); // does not throw
 
             // FIXME: should pass a reason?
             //connection.Close(reason, new TargetDisconnectedException($"Heartbeat timed out to connection {connection}"));

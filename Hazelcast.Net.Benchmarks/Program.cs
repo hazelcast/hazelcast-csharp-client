@@ -29,8 +29,65 @@ namespace AsyncTests1.Benchmark
         static void Main(string[] args)
         {
             Console.WriteLine("AsyncBench");
-            BenchmarkRunner.Run<Bench3>();
+            BenchmarkRunner.Run<Bench4>();
         }
+    }
+
+    [MemoryDiagnoser]
+    public class Bench4
+    {
+        [Benchmark]
+        public async Task DoSomething()
+        {
+            await Run();
+        }
+
+        [Benchmark]
+        public async Task DoSomethingEliding()
+        {
+            await RunEliding();
+        }
+
+        public async Task Run()
+        {
+            using var disposable = new SomeDisposable();
+            await Whatever();
+        }
+
+        public Task RunEliding()
+        {
+            var disposable = new SomeDisposable();
+            //return Whatever().ThenDispose(disposable);
+            return ThenDispose(Whatever(), disposable);
+        }
+
+        public async Task Whatever()
+        {
+            await Task.Yield();
+        }
+
+        /// <summary>
+        /// Configures a task to dispose a resource after it completes.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <param name="disposable">The disposable resource.</param>
+        /// <returns>A task.</returns>
+        public static Task ThenDispose(Task task, IDisposable disposable)
+        {
+            if (task == null) throw new ArgumentNullException(nameof(task));
+            return task.ContinueWith(x =>
+            {
+                disposable.Dispose();
+                return x;
+            }, default, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current).Unwrap();
+        }
+
+    }
+
+    public class SomeDisposable : IDisposable
+    {
+        public void Dispose()
+        { }
     }
 
     [MemoryDiagnoser]

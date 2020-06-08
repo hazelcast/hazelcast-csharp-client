@@ -34,6 +34,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the subscription has been installed.</returns>
         public async Task InstallSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken)
         {
+            if (subscription == null) throw new ArgumentNullException(nameof(subscription));
+
             // capture active clients, and adds the subscription - atomically.
             List<Client> clients;
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())

@@ -186,9 +186,9 @@ namespace Hazelcast.Networking
             // wire the pipe
             var pipe = new Pipe();
             _pipeWriting = WritePipeAsync(_stream, pipe.Writer);
-            _pipeWritingThenShutdown = _pipeWriting.ContinueWith(ShutdownInternal);
+            _pipeWritingThenShutdown = _pipeWriting.ContinueWith(ShutdownInternal, TaskScheduler.Current);
             _pipeReading = ReadPipeAsync(pipe.Reader);
-            _pipeReadingThenShutdown = _pipeReading.ContinueWith(ShutdownInternal);
+            _pipeReadingThenShutdown = _pipeReading.ContinueWith(ShutdownInternal, TaskScheduler.Current);
         }
 
         /// <summary>
@@ -262,6 +262,8 @@ namespace Hazelcast.Networking
         /// is closed, or when an error occurs.</returns>
         protected async Task WritePipeAsync(Stream stream, PipeWriter writer)
         {
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
+
             const int minimumBufferSize = 512;
 
             while (true)
@@ -321,6 +323,8 @@ namespace Hazelcast.Networking
         /// is received, or when there is no more data coming (writer completed).</returns>
         protected async Task ReadPipeAsync(PipeReader reader)
         {
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
+
             // loop reading data from the pipe
             var state = new ReadPipeState { Reader = reader };
             while (await ReadPipeLoop0(state).CAF()) { }
@@ -453,9 +457,21 @@ namespace Hazelcast.Networking
             HzConsole.WriteLine(this, "Pipe is down");
 
             // dispose, ignore exceptions
-            _socket.TryDispose();
-            _stream.TryDispose();
-            _streamReadCancellationTokenSource.TryDispose();
+            try
+            {
+                _socket.TryDispose();
+            }
+            catch { /* ignore */ }
+            try
+            {
+                _stream.TryDispose();
+            }
+            catch { /* ignore */ }
+            try
+            {
+                _streamReadCancellationTokenSource.Dispose();
+            }
+            catch { /* ignore */ }
         }
     }
 }

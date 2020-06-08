@@ -46,7 +46,14 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken)
         {
-            var credentialsFactory = _options.CredentialsFactory.Service ?? new DefaultCredentialsFactory();
+            if (client == null) throw new ArgumentNullException(nameof(client));
+            if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
+
+            // gets the credentials factory and don't dispose it
+            // if there is none, create the default one and dispose it
+            var credentialsFactory = _options.CredentialsFactory.Service;
+            using var temp = credentialsFactory != null ? null : new DefaultCredentialsFactory();
+            credentialsFactory ??= temp;
 
             var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, serializationService, cancellationToken).CAF();
             if (result != null) return result;
@@ -98,7 +105,7 @@ namespace Hazelcast.Clustering
                     break;
 
                 case ITokenCredentials tokenCredentials:
-                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.Token, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
                     break;
 
                 default:

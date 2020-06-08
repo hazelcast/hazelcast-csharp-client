@@ -393,13 +393,11 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
-            {
-                var b = new byte[len];
-                ReadFully(b);
-                return b;
-            }
-            return new byte[0];
+            if (len <= 0) return Array.Empty<byte>();
+
+            var b = new byte[len];
+            ReadFully(b);
+            return b;
         }
 
         public virtual bool[] ReadBooleanArray()
@@ -407,16 +405,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<bool>();
+
+            var values = new bool[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new bool[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadBoolean();
-                }
-                return values;
+                values[i] = ReadBoolean();
             }
-            return new bool[0];
+            return values;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -425,16 +421,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<char>();
+
+            var values = new char[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new char[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadChar();
-                }
-                return values;
+                values[i] = ReadChar();
             }
-            return new char[0];
+            return values;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -443,16 +437,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<int>();
+
+            var values = new int[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new int[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadInt();
-                }
-                return values;
+                values[i] = ReadInt();
             }
-            return new int[0];
+            return values;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -461,16 +453,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<long>();
+
+            var values = new long[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new long[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadLong();
-                }
-                return values;
+                values[i] = ReadLong();
             }
-            return new long[0];
+            return values;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -479,16 +469,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<double>();
+
+            var values = new double[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new double[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadDouble();
-                }
-                return values;
+                values[i] = ReadDouble();
             }
-            return new double[0];
+            return values;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -497,16 +485,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<float>();
+
+            var values = new float[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new float[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadFloat();
-                }
-                return values;
+                values[i] = ReadFloat();
             }
-            return new float[0];
+            return values;
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -515,16 +501,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<short>();
+
+            var values = new short[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new short[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadShort();
-                }
-                return values;
+                values[i] = ReadShort();
             }
-            return new short[0];
+            return values;
         }
 
         public virtual string[] ReadUtfArray()
@@ -532,16 +516,14 @@ namespace Hazelcast.Serialization
             var len = ReadInt();
             if (len == ArraySerializer.NullArrayLength) return null;
 
-            if (len > 0)
+            if (len <= 0) return Array.Empty<string>();
+
+            var values = new string[len];
+            for (var i = 0; i < len; i++)
             {
-                var values = new string[len];
-                for (var i = 0; i < len; i++)
-                {
-                    values[i] = ReadUtf();
-                }
-                return values;
+                values[i] = ReadUtf();
             }
-            return new string[0];
+            return values;
         }
 
         public T ReadObject<T>()
@@ -671,7 +653,7 @@ namespace Hazelcast.Serialization
         {
             if ((newPos > Size) || (newPos < 0))
             {
-                throw new ArgumentException();
+                throw new ArgumentOutOfRangeException(nameof(newPos));
             }
             Pos = newPos;
             if (MarkPos > Pos)
@@ -688,7 +670,7 @@ namespace Hazelcast.Serialization
         public virtual void Init(byte[] data, int offset)
         {
             Data = data;
-            Size = data != null ? data.Length : 0;
+            Size = data?.Length ?? 0;
             Pos = offset;
         }
 
@@ -720,7 +702,7 @@ namespace Hazelcast.Serialization
         {
             if (b == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(b));
             }
             if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
             {

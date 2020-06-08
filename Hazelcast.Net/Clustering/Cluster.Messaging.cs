@@ -30,22 +30,12 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message to send.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = SendAsyncInternal(message, null, cancellation.Token).ThenDispose(cancellation);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            return await SendAsyncInternal(message, null, cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -59,11 +49,7 @@ namespace Hazelcast.Clustering
         /// <para>If <paramref name="memberId"/> is the default value, sends the message to a random member. If it
         /// is an unknown member, sends the message to a random number too.</para>
         /// </remarks>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -74,14 +60,8 @@ namespace Hazelcast.Clustering
 
             if (client == null) throw new InvalidOperationException("Could not get a client.");
 
-            var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = SendAsyncInternal(message, client, cancellation.Token).ThenDispose(cancellation);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            return await SendAsyncInternal(message, client, cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -91,23 +71,13 @@ namespace Hazelcast.Clustering
         /// <param name="client">The target.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
 
-            var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = SendAsyncInternal(message, client, cancellation.Token).ThenDispose(cancellation);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            return await SendAsyncInternal(message, client, cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -118,23 +88,13 @@ namespace Hazelcast.Clustering
         /// <param name="correlationId">A correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
 
-            var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            var task = SendAsyncInternal(message, client, correlationId, cancellation.Token).ThenDispose(cancellation);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            return await SendAsyncInternal(message, client, correlationId, cancellation.Token).CAF();
         }
 
         /// <summary>

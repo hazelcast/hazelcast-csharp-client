@@ -16,6 +16,7 @@ namespace Hazelcast.Serialization
 {
     public enum FieldType
     {
+#pragma warning disable CA1720 // Identifier contains type name - yes, happy with it
         Portable = 0,
         Byte = 1,
         Boolean = 2,
@@ -36,5 +37,6 @@ namespace Hazelcast.Serialization
         FloatArray = 17,
         DoubleArray = 18,
         UtfArray = 19
+#pragma warning restore CA1720
     }
 }

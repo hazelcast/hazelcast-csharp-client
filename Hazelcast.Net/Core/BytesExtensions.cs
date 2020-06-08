@@ -181,6 +181,8 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static short ReadShort(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(short))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -202,6 +204,8 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static int ReadInt(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -226,6 +230,8 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static long ReadLong(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -253,6 +259,8 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static byte ReadByte(this byte[] bytes, int position)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(byte))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -267,6 +275,8 @@ namespace Hazelcast.Core
         /// <param name="value">The value to write.</param>
         public static void WriteByte(this byte[] bytes, int position, byte value)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(byte))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -282,6 +292,8 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteUshort(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -311,6 +323,8 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteShort(this byte[] bytes, int position, short value, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -350,6 +364,8 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteInt(this byte[] bytes, int position, int value, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -383,6 +399,8 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteLong(this byte[] bytes, int position, long value, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -442,6 +460,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static char ReadChar(this byte[] bytes, int position, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             const byte length = sizeof(char);
 
             if (bytes.Length < position + length)
@@ -465,6 +484,8 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteChar(this byte[] bytes, int position, char value, Endianness endianness = Endianness.Unspecified)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + sizeof(char))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -496,6 +517,8 @@ namespace Hazelcast.Core
         /// </remarks>
         public static char ReadUtf8Char(this byte[] bytes, ref int position)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             const byte length = sizeof(byte);
 
             if (bytes.Length < position + length)
@@ -550,6 +573,8 @@ namespace Hazelcast.Core
         /// </remarks>
         public static void WriteUtf8Char(this byte[] bytes, ref int position, char value)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             const int length = sizeof(byte);
 
             if (value <= 0x007f)
@@ -625,6 +650,8 @@ namespace Hazelcast.Core
         /// <returns></returns>
         public static Guid ReadGuid(this byte[] bytes, int position)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + SizeOfGuid)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -667,6 +694,8 @@ namespace Hazelcast.Core
         /// <param name="value">The value to write.</param>
         public static void WriteGuid(this byte[] bytes, int position, Guid value)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
             if (bytes.Length < position + SizeOfGuid)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
@@ -712,7 +741,7 @@ namespace Hazelcast.Core
         public static void Fill<T>(ref this ReadOnlySequence<T> source, Span<T> destination)
         {
             if (source.Length < destination.Length)
-                throw new ArgumentOutOfRangeException(ExceptionMessages.NotEnoughBytes, nameof(source));
+                throw new ArgumentOutOfRangeException(nameof(source), ExceptionMessages.NotEnoughBytes);
 
             if (source.IsSingleSegment)
             {
@@ -744,7 +773,7 @@ namespace Hazelcast.Core
         public static void Fill<T>(this Span<T> destination, ref ReadOnlySequence<T> source)
         {
             if (source.Length < destination.Length)
-                throw new ArgumentOutOfRangeException(ExceptionMessages.NotEnoughBytes, nameof(source));
+                throw new ArgumentOutOfRangeException(nameof(source), ExceptionMessages.NotEnoughBytes);
 
             if (source.IsSingleSegment)
             {

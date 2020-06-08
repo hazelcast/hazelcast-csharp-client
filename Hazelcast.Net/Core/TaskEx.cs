@@ -47,9 +47,7 @@ namespace Hazelcast.Core
             {
                 task = function(cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -82,9 +80,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -119,9 +115,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, arg2, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -158,9 +152,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, arg2, arg3, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -199,9 +191,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, arg2, arg3, arg4, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -242,9 +232,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, arg2, arg3, arg4, arg5, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -287,9 +275,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, arg2, arg3, arg4, arg5, arg6, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -319,9 +305,7 @@ namespace Hazelcast.Core
             {
                 task = function(cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -353,9 +337,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -389,9 +371,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, arg2, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();
@@ -427,9 +407,7 @@ namespace Hazelcast.Core
             {
                 task = function(arg1, arg2, arg3, cancellation.Token);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 
             {
                 if (cancellation != TaskExtensions.NeverCanceledSource)
                     cancellation.Dispose();

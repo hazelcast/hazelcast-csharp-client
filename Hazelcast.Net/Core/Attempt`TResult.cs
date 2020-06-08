@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #nullable enable
+#pragma warning disable CA2225 // Operator overloads have named alternates - would not make sense
 
 using System;
 
@@ -26,7 +27,9 @@ namespace Hazelcast.Core
     /// <para>An <see cref="Attempt{TResult}"/> is either successful or failed, it
     /// carries a <typeparamref name="TResult"/> result, and an exception.</para>
     /// </remarks>
+#pragma warning disable CA1815 // Override equals and operator equals on value types - one should not compare attempts
     public readonly struct Attempt<TResult>
+#pragma warning restore CA1815
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Attempt{TResult}"/> struct.
@@ -44,7 +47,9 @@ namespace Hazelcast.Core
         /// <summary>
         /// Represents a failed attempt with no result and no exception.
         /// </summary>
+#pragma warning disable CA1000 // Do not declare static members on generic types - fine here
         public static Attempt<TResult> Failed { get; } = new Attempt<TResult>(false);
+#pragma warning restore CA1000 // Do not declare static members on generic types
 
         /// <summary>
         /// Gets a value indicating whether the attempt succeeded.
@@ -89,16 +94,15 @@ namespace Hazelcast.Core
             => attempt.Value;
 
         /// <summary>
-        /// Implicitly converts a non-generic failed attempt into a generic one.
+        /// Implicitly converts a non-generic attempt into a generic one.
         /// </summary>
-        /// <param name="failedAttempt">The failed attempt.</param>
-        /// <remarks>
-        /// <para>The only non-generic attempt is the failed attempt.</para>
-        /// </remarks>
-#pragma warning disable IDE0060 // Remove unused parameter / required even though ignored
-        public static implicit operator Attempt<TResult>(Attempt failedAttempt)
-#pragma warning restore IDE0060 // Remove unused parameter
-            => new Attempt<TResult>(false);
+        /// <param name="attempt">The attempt.</param>
+#pragma warning disable IDE0060 // Remove unused parameter - needed for implicit conversion
+#pragma warning disable CA1801 // Review unused parameters
+        public static implicit operator Attempt<TResult>(Attempt attempt)
+#pragma warning restore CA1801
+#pragma warning restore IDE0060
+            => new Attempt<TResult>(attempt.Success);
 
         /// <summary>
         /// Implicitly converts a result value into a successful attempts.

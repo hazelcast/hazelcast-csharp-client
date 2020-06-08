@@ -191,14 +191,14 @@ namespace Hazelcast.Serialization
             public override object Read(IObjectDataInput input)
             {
                 var formatter = new BinaryFormatter();
-                var stream = new MemoryStream(input.ReadByteArray());
+                using var stream = new MemoryStream(input.ReadByteArray());
                 return formatter.Deserialize(stream);
             }
 
             public override void Write(IObjectDataOutput output, object obj)
             {
                 var formatter = new BinaryFormatter();
-                var stream = new MemoryStream();
+                using var stream = new MemoryStream();
                 formatter.Serialize(stream, obj);
                 output.WriteByteArray(stream.GetBuffer());
             }
@@ -291,7 +291,7 @@ namespace Hazelcast.Serialization
                 }
             }
 
-            protected CollectionType DeserializeEntries(IObjectDataInput input, int size, CollectionType collection)
+            protected static CollectionType DeserializeEntries(IObjectDataInput input, int size, CollectionType collection)
             {
                 for (var i = 0; i < size; i++)
                 {
@@ -326,7 +326,7 @@ namespace Hazelcast.Serialization
                 }
             }
 
-            protected DType DeserializeEntries(IObjectDataInput input, int size, DType result)
+            protected static DType DeserializeEntries(IObjectDataInput input, int size, DType result)
             {
                 for (int i = 0; i < size; i++)
                 {

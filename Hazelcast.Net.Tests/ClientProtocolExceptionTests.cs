@@ -32,7 +32,7 @@ namespace Hazelcast.Tests
         {
             try
             {
-                ThrowClientProtocolException(ClientProtocolErrors.IllegalState);
+                ThrowClientProtocolException(ClientProtocolError.IllegalState);
             }
             catch (Exception exception)
             {
@@ -47,7 +47,7 @@ namespace Hazelcast.Tests
         {
             try
             {
-                ThrowClientProtocolException(ClientProtocolErrors.MemberLeft);
+                ThrowClientProtocolException(ClientProtocolError.MemberLeft);
             }
             catch (Exception exception)
             {
@@ -62,7 +62,7 @@ namespace Hazelcast.Tests
         {
             try
             {
-                ThrowClientProtocolExceptionWithInner(ClientProtocolErrors.MemberLeft);
+                ThrowClientProtocolExceptionWithInner(ClientProtocolError.MemberLeft);
             }
             catch (Exception exception)
             {
@@ -71,7 +71,7 @@ namespace Hazelcast.Tests
             }
         }
 
-        private static void ThrowClientProtocolException(ClientProtocolErrors error)
+        private static void ThrowClientProtocolException(ClientProtocolError error)
         {
             var stackTraceElements = new List<StackTraceElement>();
             for (var i = 0; i < 5; i++)
@@ -84,7 +84,7 @@ namespace Hazelcast.Tests
             throw exception;
         }
 
-        private static void ThrowClientProtocolExceptionWithInner(ClientProtocolErrors error)
+        private static void ThrowClientProtocolExceptionWithInner(ClientProtocolError error)
         {
             var stackTraceElements = new List<StackTraceElement>();
             for (var i = 0; i < 5; i++)
