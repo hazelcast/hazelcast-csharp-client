@@ -21,7 +21,7 @@ namespace Hazelcast.Exceptions
     /// Represents the exception that is thrown when the Hazelcast client is invoked but is not connected.
     /// </summary>
     [Serializable]
-    public class ClientNotConnectedException : HazelcastException
+    public sealed class ClientNotConnectedException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
         private const string DefaultMessage = "Hazelcast client is not connected.";
@@ -69,7 +69,7 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public ClientNotConnectedException(SerializationInfo info, StreamingContext context)
+        private ClientNotConnectedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

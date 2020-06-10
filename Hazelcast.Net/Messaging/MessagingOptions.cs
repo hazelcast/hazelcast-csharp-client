@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Messaging
 {
     /// <summary>
@@ -30,6 +32,8 @@ namespace Hazelcast.Messaging
         /// </summary>
         public MessagingOptions(MessagingOptions other)
         {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
             DefaultTimeoutMilliseconds = other.DefaultTimeoutMilliseconds;

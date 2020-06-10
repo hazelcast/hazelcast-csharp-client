@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Data.Map;
+using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -24,6 +24,6 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Gets the handled event type.
         /// </summary>
-        MapEventType EventType { get; }
+        MapEventTypes EventType { get; }
     }
 }

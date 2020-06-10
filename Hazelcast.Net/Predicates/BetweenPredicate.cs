@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -35,6 +36,8 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+
             _attributeName = input.ReadUtf();
             _to = input.ReadObject<object>();
             _from = input.ReadObject<object>();
@@ -42,6 +45,8 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
             output.WriteUtf(_attributeName);
             output.WriteObject(_to);
             output.WriteObject(_from);
@@ -78,7 +83,8 @@ namespace Hazelcast.Predicates
         {
             unchecked
             {
-                var hashCode = (_attributeName != null ? _attributeName.GetHashCode() : 0);
+                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                var hashCode = (_attributeName != null ? _attributeName.GetHashCode(StringComparison.Ordinal) : 0);
                 hashCode = (hashCode*397) ^ (_from != null ? _from.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (_to != null ? _to.GetHashCode() : 0);
                 return hashCode;

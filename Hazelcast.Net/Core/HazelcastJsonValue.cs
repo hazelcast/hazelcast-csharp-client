@@ -42,7 +42,7 @@ namespace Hazelcast.Core
         public override string ToString() => _json;
 
         /// <inheritdoc />
-        public override int GetHashCode() => _json.GetHashCode();
+        public override int GetHashCode() => _json.GetHashCode(StringComparison.Ordinal);
 
         /// <inheritdoc />
         public override bool Equals(object obj)

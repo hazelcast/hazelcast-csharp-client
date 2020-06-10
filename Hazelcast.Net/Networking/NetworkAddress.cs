@@ -85,7 +85,7 @@ namespace Hazelcast.Networking
             IPEndPoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
 
             var ipAddress = IPEndPoint.Address;
-            if (ipAddress == null) throw new ArgumentException("Address cannot be null.", nameof(IPEndPoint));
+            if (ipAddress == null) throw new ArgumentException("Address cannot be null.", nameof(endpoint));
 
             //SetHostName(ipAddress);
             HostName = ipAddress.ToString();

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -32,8 +33,8 @@ namespace Hazelcast.Configuration
         internal static MemoryConfigurationSource FilterSource(HazelcastMemoryConfigurationSource source)
         {
             static KeyValuePair<string, string> Filter(KeyValuePair<string, string> kvp)
-                => kvp.Key.StartsWith("hazelcast.")
-                    ? new KeyValuePair<string, string>(kvp.Key.Replace(".", ConfigurationPath.KeyDelimiter), kvp.Value)
+                => kvp.Key.StartsWith("hazelcast.", StringComparison.Ordinal)
+                    ? new KeyValuePair<string, string>(kvp.Key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal), kvp.Value)
                     : kvp;
 
             return new MemoryConfigurationSource

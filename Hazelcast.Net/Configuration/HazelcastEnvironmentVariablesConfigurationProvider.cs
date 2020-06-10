@@ -39,8 +39,7 @@ namespace Hazelcast.Configuration
                 var key = (string) envVariable.Key;
 
                 if (key.StartsWith("hazelcast.", StringComparison.OrdinalIgnoreCase))
-                    key = key.Replace(".", ConfigurationPath.KeyDelimiter);
-
+                    key = key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
                 Data[key] = (string) envVariable.Value;
             }
         }

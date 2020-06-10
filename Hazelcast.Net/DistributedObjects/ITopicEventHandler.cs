@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using Hazelcast.Data;
-using Hazelcast.Data.Topic;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -26,7 +25,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Gets the handled event type.
         /// </summary>
-        TopicEventType EventType { get; }
+        TopicEventTypes EventType { get; }
 
         /// <summary>
         /// Handles an event.

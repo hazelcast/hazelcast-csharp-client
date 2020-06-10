@@ -24,143 +24,132 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="key">A key to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="key">A key to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="key">A key to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="key">A key to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="key">A key to filter events.</param>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="key">A key to filter events.</param>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="key">A key to filter events.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
         /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="key">A key to filter events.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="key">A key to filter events.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
@@ -168,10 +157,21 @@ namespace Hazelcast.DistributedObjects
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="key">A key to filter events.</param>
         /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="key">A key to filter events.</param>
+        /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> on, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Unsubscribe from events.

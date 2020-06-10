@@ -206,7 +206,7 @@ namespace Hazelcast.Clustering
             if (!client.Active) return new InstallAttempt(InstallResult.ClientNotActive);
 
             // add immediately, we don't know when the events will start to come
-            var correlationId = _correlationIdSequence.Next;
+            var correlationId = _correlationIdSequence.GetNext();
             _correlatedSubscriptions[correlationId] = subscription;
 
             // we do not control the original subscription.SubscribeRequest message and it may

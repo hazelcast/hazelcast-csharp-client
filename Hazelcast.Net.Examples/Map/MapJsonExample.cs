@@ -35,7 +35,7 @@ namespace Hazelcast.Examples.Map
             await map.AddOrReplaceAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
             await map.AddOrReplaceAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
 
-            var result = await map.GetValuesAsync(Predicates.Predicates.IsLessThan("age", 6));
+            var result = await map.GetValuesAsync(Predicates.Predicate.IsLessThan("age", 6));
 
             Console.WriteLine("Retrieved " + result.Count + " values whose age is less than 6.");
             Console.WriteLine("Entry is: " + result.First().ToString());

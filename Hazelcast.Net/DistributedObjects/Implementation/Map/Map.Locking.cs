@@ -168,7 +168,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         {
             var keyData = ToSafeData(key);
 
-            var refId = _lockReferenceIdSequence.Next;
+            var refId = _lockReferenceIdSequence.GetNext();
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
             var timeoutMs = serverTimeout.CodecMilliseconds(0);
 
@@ -218,7 +218,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         {
             var keyData = ToSafeData(key);
 
-            var refId = _lockReferenceIdSequence.Next;
+            var refId = _lockReferenceIdSequence.GetNext();
 
             var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ThreadId, refId);
             var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
@@ -247,7 +247,7 @@ namespace Hazelcast.DistributedObjects.Implementation.Map
         {
             var keyData = ToSafeData(key);
 
-            var refId = _lockReferenceIdSequence.Next;
+            var refId = _lockReferenceIdSequence.GetNext();
 
             var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
             var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);

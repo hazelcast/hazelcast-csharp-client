@@ -262,6 +262,7 @@ namespace Hazelcast.Networking
         /// is closed, or when an error occurs.</returns>
         protected async Task WritePipeAsync(Stream stream, PipeWriter writer)
         {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
             if (writer == null) throw new ArgumentNullException(nameof(writer));
 
             const int minimumBufferSize = 512;
@@ -459,12 +460,12 @@ namespace Hazelcast.Networking
             // dispose, ignore exceptions
             try
             {
-                _socket.TryDispose();
+                _socket.Dispose();
             }
             catch { /* ignore */ }
             try
             {
-                _stream.TryDispose();
+                _stream.Dispose();
             }
             catch { /* ignore */ }
             try

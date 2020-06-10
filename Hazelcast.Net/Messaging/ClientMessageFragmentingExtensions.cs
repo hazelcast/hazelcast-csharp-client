@@ -49,7 +49,7 @@ namespace Hazelcast.Messaging
             // frames disposable then to avoid memory leaks?
 
             var f = new Frame(new byte[FrameFields.SizeOf.FragmentId]);
-            f.WriteFragmentId(FragmentIdSequence.Next);
+            f.WriteFragmentId(FragmentIdSequence.GetNext());
             return new ClientMessage(f).Append(frame.ShallowClone());
         }
 
@@ -66,6 +66,8 @@ namespace Hazelcast.Messaging
         /// </remarks>
         public static IEnumerable<ClientMessage> Fragment(this ClientMessage message, int maxSize)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             var size = 0;
             for (var frame = message.FirstFrame; frame != null; frame = frame.Next)
                 size += frame.Length;

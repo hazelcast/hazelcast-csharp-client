@@ -14,23 +14,22 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Core;
 
 namespace Hazelcast.NearCaching
 {
     /// <summary>
     /// Compares <see cref="NearCacheEntry"/> using the default comparison.
     /// </summary>
-    internal class DefaultComparer : IComparer<AsyncLazy<NearCacheEntry>>
+    internal class DefaultComparer : IComparer<NearCacheEntry>
     {
         /// <inheritdoc />
-        public int Compare(AsyncLazy<NearCacheEntry> x, AsyncLazy<NearCacheEntry> y)
+        public int Compare(NearCacheEntry x, NearCacheEntry y)
         {
             if (x == null) throw new ArgumentNullException(nameof(x));
             if (y == null) throw new ArgumentNullException(nameof(y));
 
-            var cx = x.Value.Key.GetHashCode();
-            var cy = y.Value.Key.GetHashCode();
+            var cx = x.Key.GetHashCode();
+            var cy = y.Key.GetHashCode();
 
             return cx.CompareTo(cy);
         }

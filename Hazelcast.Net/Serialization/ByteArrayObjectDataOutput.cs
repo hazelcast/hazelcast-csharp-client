@@ -296,7 +296,7 @@ namespace Hazelcast.Serialization
         public virtual void Position(int newPos)
         {
             if (newPos > Buffer.Length || (newPos < 0))
-                throw new ArgumentException();
+                throw new ArgumentOutOfRangeException(nameof(newPos));
 
             Pos = newPos;
         }
@@ -304,7 +304,7 @@ namespace Hazelcast.Serialization
         public virtual byte[] ToByteArray()
         {
             if (Buffer == null || Pos == 0)
-                return new byte[0];
+                return Array.Empty<byte>();
 
             var newBuffer = new byte[Pos];
             System.Buffer.BlockCopy(Buffer, 0, newBuffer, 0, Pos);

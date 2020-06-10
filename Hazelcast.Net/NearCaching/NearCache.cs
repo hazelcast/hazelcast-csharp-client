@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Hazelcast.Clustering;
-using Hazelcast.Data.Map;
+using Hazelcast.Data;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -105,7 +105,7 @@ namespace Hazelcast.NearCaching
                 */
 
                 var subscription = new ClusterSubscription(
-                    MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) MapEventType.Invalidated, false),
+                    MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) MapEventTypes.Invalidated, false),
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                     (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
                     (message, state) => MapRemoveEntryListenerCodec.DecodeResponse(message).Response,

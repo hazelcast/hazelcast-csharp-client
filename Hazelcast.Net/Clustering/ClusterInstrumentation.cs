@@ -27,10 +27,18 @@ namespace Hazelcast.Clustering
 
         public int ExceptionsInEventHandlersCount => _exceptionsInEventHandlersCount;
 
+#pragma warning disable CA1801 // Review unused parameters - for later usage
+#pragma warning disable IDE0060 // Remove unused parameter
         public void CountMissedEvent(ClientMessage message)
+#pragma warning restore IDE0060
+#pragma warning restore CA1801
             => Interlocked.Increment(ref _missedEventsCount);
 
+#pragma warning disable CA1801 // Review unused parameters - for later usage
+#pragma warning disable IDE0060 // Remove unused parameter
         public void CountExceptionInEventHandler(Exception exception)
+#pragma warning restore IDE0060
+#pragma warning restore CA1801
             => Interlocked.Increment(ref _exceptionsInEventHandlersCount);
     }
 }

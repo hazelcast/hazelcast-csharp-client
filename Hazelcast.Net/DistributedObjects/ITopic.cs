@@ -37,10 +37,10 @@ namespace Hazelcast.DistributedObjects
     public interface ITopic<T> : IDistributedObject
     {
         /// <summary>Subscribes to this topic.</summary>
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, TimeSpan timeout = default);
 
         /// <summary>Subscribes to this topic.</summary>
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, CancellationToken cancellationToken);
 
         /// <summary>Stops receiving messages for the given message listener.</summary>
         /// <remarks>

@@ -81,7 +81,13 @@ namespace Hazelcast.Testing.TestServer
 
             // shutdown all existing connections
             foreach (var connection in _connections.Values)
-                await connection.TryDisposeAsync().CAF();
+            {
+                try
+                {
+                    await connection.DisposeAsync().CAF();
+                }
+                catch { /* ignore */ }
+            }
 
             HzConsole.WriteLine(this, "Connections are down");
         }
@@ -101,7 +107,7 @@ namespace Hazelcast.Testing.TestServer
 
             // stop accepting new connections
             await listener.StopAsync().CAF();
-            listener.Dispose();
+            await listener.DisposeAsync().CAF();
 
             HzConsole.WriteLine(this, "Server stopped");
         }

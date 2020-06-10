@@ -14,7 +14,6 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -36,6 +35,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="mergeValue">The merged value.</param>
         /// <param name="eventType">The event type.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries);
+        void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries);
     }
 }

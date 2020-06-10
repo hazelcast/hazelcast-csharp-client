@@ -14,6 +14,7 @@
 
 using System;
 using System.Buffers;
+using System.Globalization;
 using System.Text;
 using Hazelcast.Exceptions;
 
@@ -32,6 +33,7 @@ namespace Hazelcast.Core
         /// <returns>A readable string representation of the array of bytes.</returns>
         public static string Dump(this byte[] bytes, int length = 0)
         {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (length > bytes.Length)
                 throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
 
@@ -43,7 +45,7 @@ namespace Hazelcast.Core
             {
                 for (var j = 0; j < 8 && i < length; j++, i++)
                 {
-                    text.AppendFormat("{0:x2} ", bytes[i]);
+                    text.AppendFormat(CultureInfo.InvariantCulture, "{0:x2} ", bytes[i]);
                 }
 
                 if (i < length)

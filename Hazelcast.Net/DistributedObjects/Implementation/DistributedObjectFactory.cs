@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -30,8 +30,8 @@ namespace Hazelcast.DistributedObjects.Implementation
     /// </summary>
     internal class DistributedObjectFactory : IAsyncDisposable
     {
-        private readonly ConcurrentDictionary<DistributedObjectInfo, ValueTask<DistributedObjectBase>> _objects
-            = new ConcurrentDictionary<DistributedObjectInfo, ValueTask<DistributedObjectBase>>();
+        private readonly ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase> _objects
+            = new ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase>();
 
         private readonly Cluster _cluster;
         private readonly ISerializationService _serializationService;
@@ -95,24 +95,16 @@ namespace Hazelcast.DistributedObjects.Implementation
 
             // try to get the object - thanks to the concurrent dictionary there will be only 1 task
             // and if several concurrent requests are made, they will all await that same task
-            DistributedObjectBase o;
-            try
-            {
-                o = await _objects.GetOrAdd(k, _ => CreateAsync()).CAF();
 
-                // race condition: maybe the factory has been disposed and is already disposing
-                // objects and will ignore this new object even though it has been added to the
-                // dictionary, so take care of it ourselves
-                if (_disposed == 1)
-                {
-                    await o.DisposeAsync().CAF();
-                    throw new ObjectDisposedException("DistributedObjectFactory");
-                }
-            }
-            catch
+            var o = await _objects.GetOrAddAsync(k, _ => CreateAsync()).CAF();
+
+            // race condition: maybe the factory has been disposed and is already disposing
+            // objects and will ignore this new object even though it has been added to the
+            // dictionary, so take care of it ourselves
+            if (_disposed == 1)
             {
-                _objects.TryRemove(k, out _);
-                throw;
+                await o.DisposeAsync().CAF();
+                throw new ObjectDisposedException("DistributedObjectFactory");
             }
 
             if (o is T t) return t;
@@ -134,11 +126,17 @@ namespace Hazelcast.DistributedObjects.Implementation
         {
             await _cluster.ThrowIfDisconnected().CAF();
 
-            foreach (var (o, _) in _objects)
+            await foreach (var (key, _) in _objects)
             {
-                // TODO: what-if some succeed and some fail?
-                var requestMessage = ClientCreateProxyCodec.EncodeRequest(o.Name, o.ServiceName);
-                await _cluster.SendAsync(requestMessage, cancellationToken).CAF();
+                try
+                {
+                    var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
+                    await _cluster.SendAsync(requestMessage, cancellationToken).CAF();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"Failed to create a distributed object '{key.ServiceName}/{key.Name}' on new cluster.");
+                }
             }
         }
 
@@ -149,7 +147,7 @@ namespace Hazelcast.DistributedObjects.Implementation
         private void ObjectDisposed(DistributedObjectBase o)
         {
             var k = new DistributedObjectInfo(o.ServiceName, o.Name);
-            _objects.TryRemove(k, out _);
+            _objects.TryRemove(k);
         }
 
         /// <inheritdoc />
@@ -158,12 +156,14 @@ namespace Hazelcast.DistributedObjects.Implementation
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            foreach (var t in _objects.Values)
+            // there is a potential race-cond here, if an item is added to _objects after
+            // we enumerate (capture) values, but it is taken care of in GetOrCreateAsync
+
+            await foreach (var (_, value) in _objects)
             {
-                var o = await t.CAF();
                 try
                 {
-                    await o.DisposeAsync().CAF();
+                    await value.DisposeAsync().CAF();
                 }
                 catch (Exception e)
                 {

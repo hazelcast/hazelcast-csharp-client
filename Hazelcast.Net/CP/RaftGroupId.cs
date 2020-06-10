@@ -16,7 +16,7 @@ using System;
 
 namespace Hazelcast.CP
 {
-    internal class RaftGroupId : IEquatable<RaftGroupId>
+    internal sealed class RaftGroupId : IEquatable<RaftGroupId>
     {
         public RaftGroupId(string name, long seed, long commitIndex)
         {
@@ -33,17 +33,21 @@ namespace Hazelcast.CP
 
         public bool Equals(RaftGroupId other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Id == other.Id && Seed == other.Seed && Name == other.Name;
+            if (other is null) return false;
+            return ReferenceEquals(this, other) || EqualsN(this, other);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((RaftGroupId) obj);
+            if (ReferenceEquals(this, other)) return true;
+            return other is RaftGroupId thing && EqualsN(this, thing);
+        }
+
+        public static bool Equals(RaftGroupId left, RaftGroupId right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+            return EqualsN(left, right);
         }
 
         public override int GetHashCode()
@@ -52,7 +56,7 @@ namespace Hazelcast.CP
             {
                 var hashCode = Id.GetHashCode();
                 hashCode = (hashCode * 397) ^ Seed.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode(StringComparison.Ordinal) : 0);
                 return hashCode;
             }
         }
@@ -60,6 +64,11 @@ namespace Hazelcast.CP
         public static bool operator ==(RaftGroupId left, RaftGroupId right) => Equals(left, right);
 
         public static bool operator !=(RaftGroupId left, RaftGroupId right) => !Equals(left, right);
+
+        private static bool EqualsN(RaftGroupId left, RaftGroupId right)
+            => left.Id == right.Id && 
+               left.Seed == right.Seed && 
+               left.Name == right.Name;
 
         public override string ToString() => $"{nameof(Id)}: {Id}, {nameof(Seed)}: {Seed}, {nameof(Name)}: {Name}";
     }

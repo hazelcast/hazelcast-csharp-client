@@ -19,6 +19,8 @@ namespace Hazelcast.Core
     /// </summary>
     public enum InMemoryFormat
     {
+#pragma warning disable CA1720 // Identifier contains type name - well, yes
+
         /// <summary>
         /// Binary format.
         /// </summary>
@@ -28,5 +30,7 @@ namespace Hazelcast.Core
         /// Object format.
         /// </summary>
         Object
+
+#pragma warning restore CA1720
     }
 }

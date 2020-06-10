@@ -49,7 +49,7 @@ namespace Hazelcast.Core
         /// <returns>-1 if name does not match at all, zero or positive otherwise</returns>
         private static int GetMatchingPoint(string pattern, string itemName)
         {
-            var index = pattern.IndexOf('*');
+            var index = pattern.IndexOf('*', StringComparison.Ordinal);
             if (index == -1)
             {
                 return -1;

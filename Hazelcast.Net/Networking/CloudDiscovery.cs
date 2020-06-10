@@ -36,10 +36,10 @@ namespace Hazelcast.Networking
         private readonly string _endpointUrl;
         private readonly int _connectionTimeoutMilliseconds;
 
-        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, string cloudBaseUrl, ILoggerFactory loggerFactory)
+        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, Uri cloudBaseUrl, ILoggerFactory loggerFactory)
         {
             if (string.IsNullOrWhiteSpace(discoveryToken)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(discoveryToken));
-            if (string.IsNullOrWhiteSpace(cloudBaseUrl)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(cloudBaseUrl));
+            if (cloudBaseUrl == null) throw new ArgumentNullException(nameof(cloudBaseUrl));
 
             _endpointUrl = cloudBaseUrl + CloudUrlPath + discoveryToken;
             _connectionTimeoutMilliseconds = connectionTimeoutMilliseconds;

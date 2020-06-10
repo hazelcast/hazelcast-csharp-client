@@ -390,7 +390,7 @@ namespace Hazelcast.Serialization
             _in.Position(_finalPosition);
         }
 
-        private void CheckFactoryAndClass(IFieldDefinition fd, int factoryId, int classId)
+        private static void CheckFactoryAndClass(IFieldDefinition fd, int factoryId, int classId)
         {
             if (factoryId != fd.GetFactoryId())
             {

@@ -26,6 +26,8 @@ namespace Hazelcast.Configuration
     {
         public static IConfigurationBuilder AddHazelcastFile(this IConfigurationBuilder configurationBuilder, string filePath, string fileName, string environmentName)
         {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+
             var fullpath = string.IsNullOrWhiteSpace(filePath)
                 ? fileName
                 : Path.Combine(filePath, fileName);
@@ -47,6 +49,7 @@ namespace Hazelcast.Configuration
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         public static IConfigurationBuilder AddHazelcastEnvironmentVariables(this IConfigurationBuilder configurationBuilder)
         {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
             configurationBuilder.Add(new HazelcastEnvironmentVariablesConfigurationSource());
             return configurationBuilder;
         }
@@ -58,6 +61,7 @@ namespace Hazelcast.Configuration
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         public static IConfigurationBuilder AddHazelcastCommandLine(this IConfigurationBuilder configurationBuilder, string[] args)
         {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
             configurationBuilder.Add(new HazelcastCommandLineConfigurationSource { Args = args });
             return configurationBuilder;
         }
@@ -69,6 +73,7 @@ namespace Hazelcast.Configuration
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         public static IConfigurationBuilder AddHazelcastInMemoryCollection(this IConfigurationBuilder configurationBuilder, IEnumerable<KeyValuePair<string, string>> initialData)
         {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
             configurationBuilder.Add(new HazelcastMemoryConfigurationSource { InitialData = initialData });
             return configurationBuilder;
         }
@@ -84,6 +89,8 @@ namespace Hazelcast.Configuration
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, string[] args, IEnumerable<KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null)
         {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+
             if (string.IsNullOrWhiteSpace(optionsFileName))
                 optionsFileName = "hazelcast.json";
 
@@ -122,6 +129,7 @@ namespace Hazelcast.Configuration
                 return dotnet;
 
             var aspnetcore = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            // ReSharper disable once ConvertIfStatementToReturnStatement
             if (!string.IsNullOrWhiteSpace(aspnetcore))
                 return aspnetcore;
 

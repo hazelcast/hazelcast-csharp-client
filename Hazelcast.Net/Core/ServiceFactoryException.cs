@@ -19,7 +19,7 @@ using Hazelcast.Exceptions;
 namespace Hazelcast.Core
 {
     [Serializable]
-    public class ServiceFactoryException : HazelcastException
+    public sealed class ServiceFactoryException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
         private const string DefaultMessage = "Failed to create an instance.";
@@ -67,7 +67,7 @@ namespace Hazelcast.Core
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public ServiceFactoryException(SerializationInfo info, StreamingContext context)
+        private ServiceFactoryException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

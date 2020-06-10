@@ -131,7 +131,7 @@ namespace Hazelcast.Clustering
 
             Name = string.IsNullOrWhiteSpace(clusterName) ? "dev" : clusterName;
             ClientName = string.IsNullOrWhiteSpace(clientName)
-                ? options.DefaultClientNamePrefix + ClusterIdSequence.Next
+                ? options.DefaultClientNamePrefix + ClusterIdSequence.GetNext()
                 : clientName;
 
             // setup events

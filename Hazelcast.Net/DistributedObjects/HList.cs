@@ -17,7 +17,7 @@ namespace Hazelcast.DistributedObjects
     /// <summary>
     /// Provides constants for the <see cref="IHList{T}"/> implementation.
     /// </summary>
-    public class HList
+    public static class HList
     {
         /// <summary>
         /// Gets the service name.

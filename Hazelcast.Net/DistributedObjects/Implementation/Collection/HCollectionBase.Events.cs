@@ -17,7 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Data.Collection;
+using Hazelcast.Data;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -31,9 +31,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> on, TimeSpan timeout = default)
+            Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(SubscribeAsync, includeValue, on, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(SubscribeAsync, includeValue, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -43,12 +43,12 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> on, CancellationToken cancellationToken)
+        public async Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken)
         {
-            if (on == null) throw new ArgumentNullException(nameof(on));
+            if (handle == null) throw new ArgumentNullException(nameof(handle));
 
             var handlers = new CollectionItemEventHandlers<T>();
-            on(handlers);
+            handle(handlers);
 
             var subscription = new ClusterSubscription(
                 CreateSubscribeRequest(includeValue, Cluster.IsSmartRouting),
@@ -69,8 +69,8 @@ namespace Hazelcast.DistributedObjects.Implementation.Collection
 
             void HandleItemEvent(IData itemData, Guid memberId, int eventTypeData)
             {
-                var eventType = (CollectionItemEventType)eventTypeData;
-                if (eventType == CollectionItemEventType.Nothing) return;
+                var eventType = (CollectionItemEventTypes)eventTypeData;
+                if (eventType == CollectionItemEventTypes.Nothing) return;
 
                 var member = Cluster.GetMember(memberId);
                 var item = LazyArg<T>(itemData);

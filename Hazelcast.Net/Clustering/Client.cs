@@ -209,7 +209,7 @@ namespace Hazelcast.Clustering
             // MessageConnection is just a wrapper around a true SocketConnection
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.Next, Address.IPEndPoint) { OnShutdown = SocketShutdown };
+            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint) { OnShutdown = SocketShutdown };
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
             HzConsole.Configure(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 
@@ -373,7 +373,7 @@ namespace Hazelcast.Clustering
 
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
-            message.CorrelationId = _correlationIdSequence.Next;
+            message.CorrelationId = _correlationIdSequence.GetNext();
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
@@ -498,7 +498,6 @@ namespace Hazelcast.Clustering
             if (_socketConnection == null)
                 return;
 
-            await _socketConnection.TryDisposeAsync().CAF();
             try
             {
                 await _socketConnection.DisposeAsync().CAF();
@@ -506,6 +505,15 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 _logger.LogWarning(e, $"Caught an exception while disposing {_socketConnection.GetType()}.");
+            }
+
+            try
+            {
+                await _messageConnection.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"Caught an exception while disposing {_messageConnection.GetType()}.");
             }
 
             // shutdown all pending operations

@@ -14,12 +14,11 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Collection;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="CollectionItemEventType.Message"/> event.
+    /// Represents a handler for the <see cref="CollectionItemEventTypes.Message"/> event.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
     internal class CollectionItemEventHandler<T> : ICollectionItemEventHandler<T>
@@ -31,14 +30,14 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="eventType">The event type to handle.</param>
         /// <param name="handler">An action to execute</param>
-        public CollectionItemEventHandler(CollectionItemEventType eventType, Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
+        public CollectionItemEventHandler(CollectionItemEventTypes eventType, Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
         {
             EventType = eventType;
             _handler = handler;
         }
 
         /// <inheritdoc />
-        public CollectionItemEventType EventType { get; }
+        public CollectionItemEventTypes EventType { get; }
 
         /// <inheritdoc />
         public void Handle(IHCollection<T> sender, MemberInfo member, Lazy<T> item)

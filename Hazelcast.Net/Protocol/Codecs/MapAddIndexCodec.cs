@@ -31,6 +31,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -46,7 +47,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
-        public static ClientMessage EncodeRequest(string name, Hazelcast.Data.Map.IndexConfig indexConfig)
+        public static ClientMessage EncodeRequest(string name, IndexConfig indexConfig)
         {
             var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;

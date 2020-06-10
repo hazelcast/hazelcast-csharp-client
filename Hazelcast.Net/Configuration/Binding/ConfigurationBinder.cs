@@ -43,7 +43,7 @@ namespace Hazelcast.Configuration.Binding
         /// <param name="configuration">The configuration instance to bind.</param>
         /// <returns>The new instance of T if successful, default(T) otherwise.</returns>
         public static T Get<T>(this IConfiguration configuration)
-            => configuration.Get<T>(_ => { });
+            => (configuration ?? throw new ArgumentNullException(nameof(configuration))).Get<T>(_ => { });
 
         /// <summary>
         /// Attempts to bind the configuration instance to a new instance of type T.
@@ -56,17 +56,14 @@ namespace Hazelcast.Configuration.Binding
         /// <returns>The new instance of T if successful, default(T) otherwise.</returns>
         public static T Get<T>(this IConfiguration configuration, Action<BinderOptions> configureOptions)
         {
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration));
-            }
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
             var result = configuration.Get(typeof(T), configureOptions);
             if (result == null)
             {
-                return default(T);
+                return default;
             }
-            return (T)result;
+            return (T) result;
         }
 
         /// <summary>
@@ -78,7 +75,7 @@ namespace Hazelcast.Configuration.Binding
         /// <param name="type">The type of the new instance to bind.</param>
         /// <returns>The new instance if successful, null otherwise.</returns>
         public static object Get(this IConfiguration configuration, Type type)
-            => configuration.Get(type, _ => { });
+            => (configuration ?? throw new ArgumentNullException(nameof(configuration))).Get(type, _ => { });
 
         /// <summary>
         /// Attempts to bind the configuration instance to a new instance of type T.
@@ -91,10 +88,7 @@ namespace Hazelcast.Configuration.Binding
         /// <returns>The new instance if successful, null otherwise.</returns>
         public static object Get(this IConfiguration configuration, Type type, Action<BinderOptions> configureOptions)
         {
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration));
-            }
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
             var options = new BinderOptions();
             configureOptions?.Invoke(options);
@@ -108,7 +102,7 @@ namespace Hazelcast.Configuration.Binding
         /// <param name="key">The key of the configuration section to bind.</param>
         /// <param name="instance">The object to bind.</param>
         public static void HzBind(this IConfiguration configuration, string key, object instance)
-            => configuration.GetSection(key).HzBind(instance);
+            => (configuration ?? throw new ArgumentNullException(nameof(configuration))).GetSection(key).HzBind(instance);
 
         /// <summary>
         /// Attempts to bind the given object instance to configuration values by matching property names against configuration keys recursively.
@@ -186,6 +180,7 @@ namespace Hazelcast.Configuration.Binding
         /// <returns>The converted value.</returns>
         public static object GetValue(this IConfiguration configuration, Type type, string key, object defaultValue)
         {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
             var section = configuration.GetSection(key);
             var value = section.Value;
             if (value != null)
@@ -328,9 +323,7 @@ namespace Hazelcast.Configuration.Binding
 
             var section = config as IConfigurationSection;
             var configValue = section?.Value;
-            object convertedValue;
-            Exception error;
-            if (configValue != null && TryConvertValue(type, configValue, section.Path, out convertedValue, out error))
+            if (configValue != null && TryConvertValue(type, configValue, section.Path, out var convertedValue, out var error))
             {
                 if (error != null)
                 {
@@ -563,9 +556,7 @@ namespace Hazelcast.Configuration.Binding
 
         private static object ConvertValue(Type type, string value, string path)
         {
-            object result;
-            Exception error;
-            TryConvertValue(type, value, path, out result, out error);
+            TryConvertValue(type, value, path, out var result, out var error);
             if (error != null)
             {
                 throw error;

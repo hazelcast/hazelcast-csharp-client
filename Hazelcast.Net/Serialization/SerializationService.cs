@@ -95,14 +95,14 @@ namespace Hazelcast.Serialization
 
         public IData ToData(object obj, IPartitioningStrategy strategy)
         {
-            if (obj == null)
+            switch (obj)
             {
-                return null;
+                case null:
+                    return null;
+                case IData data:
+                    return data;
             }
-            if (obj is IData)
-            {
-                return (IData) obj;
-            }
+
             var pool = _bufferPoolThreadLocal.Get();
             var @out = pool.TakeOutputBuffer();
             try
@@ -324,14 +324,11 @@ namespace Hazelcast.Serialization
         {
             var partitionHash = 0;
             var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
-            if (partitioningStrategy != null)
+            var pk = partitioningStrategy?.GetPartitionKey(obj);
+            if (pk != null && pk != obj)
             {
-                var pk = partitioningStrategy.GetPartitionKey(obj);
-                if (pk != null && pk != obj)
-                {
-                    var partitionKey = ToData(pk, TheEmptyPartitioningStrategy);
-                    partitionHash = partitionKey == null ? 0 : partitionKey.PartitionHash;
-                }
+                var partitionKey = ToData(pk, TheEmptyPartitioningStrategy);
+                partitionHash = partitionKey?.PartitionHash ?? 0;
             }
             return partitionHash;
         }
@@ -369,24 +366,21 @@ namespace Hazelcast.Serialization
         {
             var methodInfo = GetType()
                 .GetMethod("CreateSerializerAdapterByGeneric", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (methodInfo == null)
+                throw new InvalidOperationException($"Type {GetType()} does not expose a method named CreateSerializerAdapterByGeneric.");
             var makeGenericMethod = methodInfo.MakeGenericMethod(type);
             var result = makeGenericMethod.Invoke(this, new object[] {serializer});
             return (ISerializerAdapter) result;
         }
 
-        private ISerializerAdapter CreateSerializerAdapterByGeneric<T>(ISerializer serializer)
+        private static ISerializerAdapter CreateSerializerAdapterByGeneric<T>(ISerializer serializer)
         {
-            if (serializer is IStreamSerializer<T> streamSerializer)
+            return serializer switch
             {
-                return new StreamSerializerAdapter<T>(streamSerializer);
-            }
-
-            if (serializer is IByteArraySerializer<T> arraySerializer)
-            {
-                return new ByteArraySerializerAdapter<T>(arraySerializer);
-            }
-            throw new ArgumentException("Serializer must be instance of either " +
-                                        "StreamSerializer or ByteArraySerializer!");
+                IStreamSerializer<T> streamSerializer => new StreamSerializerAdapter<T>(streamSerializer),
+                IByteArraySerializer<T> arraySerializer => new ByteArraySerializerAdapter<T>(arraySerializer),
+                _ => throw new ArgumentException("Serializer must be instance of either StreamSerializer or ByteArraySerializer.")
+            };
         }
 
         private static void GetInterfaces(Type type, ICollection<Type> interfaces)
@@ -405,7 +399,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        private Exception HandleException(Exception e)
+        private static Exception HandleException(Exception e)
         {
             switch (e)
             {
@@ -417,7 +411,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        private int IndexForDefaultType(int typeId)
+        private static int IndexForDefaultType(int typeId)
         {
             return -typeId;
         }
@@ -690,6 +684,12 @@ namespace Hazelcast.Serialization
                 throw new ClientNotConnectedException();
             }
             return serializer;
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _bufferPoolThreadLocal.Dispose();
         }
 
         private sealed class EmptyPartitioningStrategy : IPartitioningStrategy

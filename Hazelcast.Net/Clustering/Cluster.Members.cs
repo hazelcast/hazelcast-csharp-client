@@ -84,7 +84,7 @@ namespace Hazelcast.Clustering
 
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end
-                var correlationId = _correlationIdSequence.Next;
+                var correlationId = _correlationIdSequence.GetNext();
                 if (!await SubscribeToClusterEventsAsync(client, correlationId, cancellationToken).CAF()) // does not throw
                 {
                     // failed => try another client

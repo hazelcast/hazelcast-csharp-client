@@ -19,17 +19,17 @@ namespace Hazelcast.DistributedObjects
     ///     <see cref="IHSet{T}">IHSet&lt;E&gt;</see>
     ///     .
     /// </summary>
-    public interface ITransactionalSet<E> : ITransactionalObject
+    public interface ITransactionalSet<in T> : ITransactionalObject
     {
         /// <summary>Add new item to transactional set</summary>
         /// <param name="e">item</param>
         /// <returns>true if item is added successfully</returns>
-        bool Add(E e);
+        bool Add(T e);
 
         /// <summary>Add item from transactional set</summary>
         /// <param name="e">item</param>
         /// <returns>true if item is remove successfully</returns>
-        bool Remove(E e);
+        bool Remove(T e);
 
         /// <summary>Returns the size of the set</summary>
         /// <returns>size</returns>

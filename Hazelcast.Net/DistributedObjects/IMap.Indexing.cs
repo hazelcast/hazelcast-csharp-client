@@ -15,7 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Data.Map;
+using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {

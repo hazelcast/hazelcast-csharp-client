@@ -21,7 +21,7 @@ namespace Hazelcast.Exceptions
     /// Represents the exception that is thrown when authentication fails.
     /// </summary>
     [Serializable]
-    public class AuthenticationException : HazelcastException
+    public sealed class AuthenticationException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
         private const string DefaultMessage = "Failed to authenticate.";
@@ -69,7 +69,7 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public AuthenticationException(SerializationInfo info, StreamingContext context)
+        private AuthenticationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

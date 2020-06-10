@@ -107,7 +107,9 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets the frame bytes.
         /// </summary>
+#pragma warning disable CA1819 // Properties should not return arrays - but here we do intend to modify the array
         public byte[] Bytes { get; }
+#pragma warning restore CA1819
 
         /// <summary>
         /// Gets the next frame.

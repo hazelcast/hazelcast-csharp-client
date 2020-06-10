@@ -50,6 +50,8 @@ namespace Hazelcast
         /// <returns>Hazelcast options.</returns>
         public static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configureOptions = null)
         {
+            if (setup == null) throw new ArgumentNullException(nameof(setup));
+
             var builder = new ConfigurationBuilder();
             setup(builder);
             var configuration = builder.Build();

@@ -62,8 +62,9 @@ namespace Hazelcast.Partitioning
         /// <returns>The partition identifier for the specified key <see cref="IHavePartitionHash"/> instance.</returns>
         public int GetPartitionId(IHavePartitionHash key)
         {
-            // we can use whatever value count is, and it is atomic
+            if (key == null) throw new ArgumentNullException(nameof(key));
 
+            // we can use whatever value count is, and it is atomic
             var hash = key.PartitionHash;
             return hash == int.MinValue // cannot Abs(int.MinValue)
                 ? 0
@@ -78,6 +79,8 @@ namespace Hazelcast.Partitioning
         /// <param name="partitionsMap">The partitions map.</param>
         public void NotifyPartitionView(Guid originClientId, int version, Dictionary<int, Guid> partitionsMap)
         {
+            if (partitionsMap == null) throw new ArgumentNullException(nameof(partitionsMap));
+
             HzConsole.WriteLine(this, $"Received partition table v{version}");
             HzConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
 

@@ -27,12 +27,11 @@
 // limitations under the License.
 
 using Hazelcast.Data;
-using Hazelcast.Data.Topic;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents event data for the <see cref="TopicEventType.Message"/> event.
+    /// Represents event data for the <see cref="TopicEventTypes.Message"/> event.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
     public sealed class TopicMessageEventArgs<T>

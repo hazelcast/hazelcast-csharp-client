@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.CommandLine;
@@ -55,12 +56,15 @@ namespace Hazelcast.Configuration
                 // note that in case of switch mapping, the ':' separator must be used,
                 // as mapping will take place after we have replaced the dots
 
-                if (arg.StartsWith("/hazelcast.") || arg.StartsWith("--hazelcast.") || arg.StartsWith("-hazelcast."))
+                if (arg.StartsWith("/hazelcast.", StringComparison.Ordinal) ||
+                    arg.StartsWith("--hazelcast.", StringComparison.Ordinal) || 
+                    arg.StartsWith("-hazelcast.", StringComparison.Ordinal))
                 {
-                    if ((pos = arg.IndexOf('=')) > 0)
+                    if ((pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)
                     {
                         // yield the key
-                        yield return arg.Substring(0, pos).Replace(".", ConfigurationPath.KeyDelimiter);
+                        yield return arg.Substring(0, pos)
+                            .Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
 
                         // yield the value
                         yield return arg.Substring(pos + 1);
@@ -68,17 +72,19 @@ namespace Hazelcast.Configuration
                     else
                     {
                         // yield the key
-                        yield return arg.Replace(".", ConfigurationPath.KeyDelimiter);
+                        yield return arg.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
 
                         // yield the value
                         if (enumerator.MoveNext())
                             yield return enumerator.Current;
                     }
                 }
-                else if (arg.StartsWith("hazelcast.") && (pos = arg.IndexOf('=')) > 0)
+                else if (arg.StartsWith("hazelcast.", StringComparison.Ordinal) &&
+                         (pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)
                 {
                     // yield the key
-                    yield return "--" + arg.Substring(0, pos).Replace(".", ConfigurationPath.KeyDelimiter);
+                    yield return "--" + arg.Substring(0, pos)
+                        .Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
 
                     // yield the value
                     yield return arg.Substring(pos + 1);

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Globalization;
+
 namespace Hazelcast.Configuration.Binding
 {
     // no idea how building Microsoft's runtime generates these,
@@ -21,18 +24,18 @@ namespace Hazelcast.Configuration.Binding
     internal partial class Resources
     {
         internal static string FormatError_CannotActivateAbstractOrInterface(params object[] args)
-            => string.Format(Error_CannotActivateAbstractOrInterface, args);
+            => string.Format(CultureInfo.InvariantCulture, Error_CannotActivateAbstractOrInterface, args);
 
         internal static string FormatError_FailedBinding(params object[] args)
-            => string.Format(Error_FailedBinding, args);
+            => string.Format(CultureInfo.InvariantCulture, Error_FailedBinding, args);
 
         internal static string FormatError_FailedToActivate(params object[] args)
-            => string.Format(Error_FailedToActivate, args);
+            => string.Format(CultureInfo.InvariantCulture, Error_FailedToActivate, args);
 
         internal static string FormatError_MissingParameterlessConstructor(params object[] args)
-            => string.Format(Error_MissingParameterlessConstructor, args);
+            => string.Format(CultureInfo.InvariantCulture, Error_MissingParameterlessConstructor, args);
 
         internal static string FormatError_UnsupportedMultidimensionalArray(params object[] args)
-            => string.Format(Error_UnsupportedMultidimensionalArray, args);
+            => string.Format(CultureInfo.InvariantCulture, Error_UnsupportedMultidimensionalArray, args);
     }
 }

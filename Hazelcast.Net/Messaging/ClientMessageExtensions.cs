@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Messaging
 {
     /// <summary>
@@ -32,6 +34,8 @@ namespace Hazelcast.Messaging
         /// </remarks>
         public static ClientMessage CloneWithNewCorrelationId(this ClientMessage message, long correlationId)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             var clone = new ClientMessage();
             var first = true;
 

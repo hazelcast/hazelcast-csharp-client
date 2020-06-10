@@ -23,7 +23,7 @@ namespace Hazelcast.Networking
     /// <para>This class is just a wrapper around <see cref="System.Net.Dns"/> with entry
     /// points that allow for altering its behavior for tests (exclusively).</para>
     /// </remarks>
-    public class Dns
+    public static class Dns
     {
         // TODO for tests, allow overriding these methods
 

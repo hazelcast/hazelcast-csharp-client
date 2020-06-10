@@ -14,14 +14,13 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapClearedEventHandler<TKey, TValue> : MapEventHandlerBase<TKey, TValue, MapClearedEventArgs>
     {
         public MapClearedEventHandler(Action<IMap<TKey, TValue>, MapClearedEventArgs> handler)
-            : base(MapEventType.AllCleared, handler)
+            : base(MapEventTypes.AllCleared, handler)
         { }
 
         protected override MapClearedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries)

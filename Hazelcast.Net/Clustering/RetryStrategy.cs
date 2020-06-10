@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
@@ -48,7 +49,7 @@ namespace Hazelcast.Clustering
         /// <param name="loggerFactory">A logger factory.</param>
         public RetryStrategy(string action, RetryOptions options, ILoggerFactory loggerFactory)
             : this(action,
-                options.InitialBackoffMilliseconds,
+                (options ?? throw new ArgumentNullException(nameof(options))).InitialBackoffMilliseconds,
                 options.MaxBackoffMilliseconds,
                 options.Multiplier,
                 options.ClusterConnectionTimeoutMilliseconds,
@@ -68,8 +69,10 @@ namespace Hazelcast.Clustering
         /// <param name="loggerFactory">A logger factory.</param>
         public RetryStrategy(string action, int initialBackOff, int maxBackOff, double multiplier, long timeout, double jitter, ILoggerFactory loggerFactory)
         {
-            if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(nameof(action));
+            if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(action));
+#pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just displaying
             _action = action.ToLowerInvariant();
+#pragma warning restore CA1308
             _initialBackOff = initialBackOff;
             _maxBackOff = maxBackOff;
             _multiplier = multiplier;

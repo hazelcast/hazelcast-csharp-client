@@ -35,6 +35,8 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            
             _attributeName = input.ReadUtf();
             var size = input.ReadInt();
             _values = new object[size];
@@ -46,6 +48,8 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
             output.WriteUtf(_attributeName);
             output.WriteInt(_values.Length);
             foreach (var value in _values)
@@ -84,7 +88,8 @@ namespace Hazelcast.Predicates
         {
             unchecked
             {
-                return ((_attributeName != null ? _attributeName.GetHashCode() : 0)*397) ^
+                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                return ((_attributeName != null ? _attributeName.GetHashCode(StringComparison.Ordinal) : 0)*397) ^
                        (_values != null ? _values.GetHashCode() : 0);
             }
         }

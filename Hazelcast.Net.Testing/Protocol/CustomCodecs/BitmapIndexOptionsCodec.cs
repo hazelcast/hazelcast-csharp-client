@@ -32,6 +32,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -42,7 +43,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int UniqueKeyTransformationFieldOffset = 0;
         private const int InitialFrameSize = UniqueKeyTransformationFieldOffset + BytesExtensions.SizeOfInt;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.Map.BitmapIndexOptions bitmapIndexOptions)
+        public static void Encode(ClientMessage clientMessage, BitmapIndexOptions bitmapIndexOptions)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -55,7 +56,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.Map.BitmapIndexOptions Decode(IEnumerator<Frame> iterator)
+        public static BitmapIndexOptions Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

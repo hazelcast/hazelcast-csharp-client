@@ -185,7 +185,7 @@ namespace Hazelcast.NearCaching
 
         public override string ToString()
         {
-            return string.Format("RepairingHandler{{name='{0}', localUuid='{1}'}}", _nearCache.Name, _localUuid);
+            return $"RepairingHandler{{name='{_nearCache.Name}', localUuid='{_localUuid}'}}";
         }
 
         internal void FixSequenceGap()

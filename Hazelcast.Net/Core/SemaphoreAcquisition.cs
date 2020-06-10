@@ -21,7 +21,9 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents a semaphore acquisition.
     /// </summary>
+#pragma warning disable CA1815 // Override equals and operator equals on value types - not meant to be compared
     public struct SemaphoreAcquisition : IDisposable
+#pragma warning restore CA1815
     {
         private readonly SemaphoreSlim _semaphore;
         private int _disposed;

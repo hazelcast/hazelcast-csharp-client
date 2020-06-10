@@ -45,6 +45,8 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <inheritdoc />
         public void NotifyMembers(IEnumerable<Guid> memberIds)
         {
+            if (memberIds == null) throw new ArgumentNullException(nameof(memberIds));
+
             lock (_memberIds)
             {
                 _memberIds.Clear();

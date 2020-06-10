@@ -14,12 +14,11 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Collection;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents event data for the <see cref="CollectionItemEventType"/> events.
+    /// Represents event data for the <see cref="CollectionItemEventTypes"/> events.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
     public sealed class CollectionItemEventArgs<T>

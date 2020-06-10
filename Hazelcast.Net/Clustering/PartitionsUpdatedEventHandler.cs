@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Data;
 
 namespace Hazelcast.Clustering
 {
@@ -25,9 +24,6 @@ namespace Hazelcast.Clustering
         {
             _handler = handler;
         }
-
-        public void Handle(Cluster cluster, MemberInfo member)
-            => _handler(cluster, EventArgs.Empty);
 
         public void Handle(Cluster cluster, EventArgs args)
             => _handler(cluster, args);

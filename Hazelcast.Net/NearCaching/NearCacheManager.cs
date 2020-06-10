@@ -32,24 +32,21 @@ namespace Hazelcast.NearCaching
     // this is 'above' the cluster, not part of it, but it uses the cluster
     // = can have a ref to the cluster?
 
-    internal class NearCacheManager
+    internal class NearCacheManager : IAsyncDisposable
     {
-        //private const int ReconciliationIntervalSecondsDefault = 60;
-        //private const int MinReconciliationIntervalSecondsDefault = 30;
-        //private const int MaxToleratedMissCountDefault = 10;
-        //private const int AsyncResultWaitTimeoutMillis = 1 * 60 * 1000;
-
         private readonly ILogger _logger;
 
-        private readonly ConcurrentDictionary<string, NearCacheBase> _caches =
-            new ConcurrentDictionary<string, NearCacheBase>();
+        private readonly ConcurrentAsyncDictionary<string, NearCacheBase> _caches =
+            new ConcurrentAsyncDictionary<string, NearCacheBase>();
 
         private readonly Cluster _cluster;
         private readonly ISerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly long _reconciliationIntervalMillis;
-        private readonly Task _repairingTask;
         private readonly NearCacheOptions _options;
+
+        private Task _repairing;
+        private CancellationTokenSource _repairingCancellation;
 
         private long _lastAntiEntropyRunMillis;
         private volatile int _running;
@@ -63,42 +60,19 @@ namespace Hazelcast.NearCaching
             _options = options;
 
             _reconciliationIntervalMillis = GetReconciliationIntervalSeconds() * 1000;
-            _repairingTask = new Task(Repair, TaskCreationOptions.LongRunning);
         }
 
-        public void DestroyNearCache(string name)
-        {
-            if (_caches.TryRemove(name, out var nearCache))
-            {
-                nearCache.Destroy();
-            }
-        }
-
-        public ICollection<NearCacheBase> GetAllNearCaches()
-        {
-            return _caches.Values;
-        }
-
-        public NearCacheBase GetOrCreateNearCache(string mapName)
+        public async ValueTask<NearCacheBase> GetOrCreateNearCacheAsync(string mapName, CancellationToken cancellationToken)
         {
             var nearCacheConfig = _options.GetConfig(mapName);
-            return nearCacheConfig == null
-                ? null
-                : _caches.GetOrAdd(mapName, newMapName =>
-                {
-                    var nearCache = new NearCache(newMapName, _cluster, _serializationService, _loggerFactory, nearCacheConfig, GetMaxToleratedMissCount());
-                    InitNearCache(nearCache);
-                    return nearCache;
-                });
-        }
+            if (nearCacheConfig == null) return null;
 
-        public void Shutdown()
-        {
-            if (Interlocked.CompareExchange(ref _running, 0, 1) == 1)
+            return await _caches.GetOrAddAsync(mapName, async name => 
             {
-                _repairingTask.Wait(TimeSpan.FromSeconds(120));
-            }
-            DestroyAllNearCache();
+                var nearCache = new NearCache(name, _cluster, _serializationService, _loggerFactory, nearCacheConfig, GetMaxToleratedMissCount());
+                await InitNearCache(nearCache, cancellationToken).CAF();
+                return nearCache;
+            }).CAF();
         }
 
         private int GetMaxToleratedMissCount()
@@ -109,58 +83,37 @@ namespace Hazelcast.NearCaching
             return value;
         }
 
-        private void DestroyAllNearCache()
+        private async ValueTask FetchMetadataAsync(CancellationToken cancellationToken)
         {
-            foreach (var entry in _caches)
-            {
-                DestroyNearCache(entry.Key);
-            }
-        }
+            var names = new List<string>();
+            
+            await foreach (var (key, value) in _caches)
+                names.Add(value.Name);
 
-
-        private void FetchMetadata()
-        {
-            var names = _caches.Values.OfType<NearCache>().Select(cache => cache.Name).ToList();
             if (names.Count == 0)
-            {
                 return;
-            }
 
-            FetchMetadataInternal(names, responseParameter =>
+            await FetchMetadataAsyncInternal(names, async responseParameter =>
             {
-                RepairGuids(responseParameter.PartitionUuidList);
-                RepairSequences(responseParameter.NamePartitionSequenceList);
-            });
+                await RepairGuids(responseParameter.PartitionUuidList).CAF();
+                await RepairSequences(responseParameter.NamePartitionSequenceList).CAF();
+            }, cancellationToken).CAF();
         }
 
-        private void FetchMetadataInternal(IList<string> names, Action<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters> process)
+        private async ValueTask FetchMetadataAsyncInternal(IList<string> names, Func<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters, ValueTask> process, CancellationToken cancellationToken)
         {
             var dataMembers = _cluster.LiteMembers;
             foreach (var member in dataMembers)
             {
-                var request = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
-                    var responseMessage = _cluster.SendToMemberAsync(request, member.Id, /*AsyncResultWaitTimeoutMillis, */ CancellationToken.None).Result; // FIXME ASYNC oops!
+                    var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
+                    var responseMessage = await _cluster.SendToMemberAsync(requestMessage, member.Id, cancellationToken).CAF();
                     var responseParameter = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
-                    process(responseParameter);
-                    /*
-                    var future = _cluster.InvocationService.InvokeOnTarget(request, member.Uuid);
-                    var task = future.ToTask();
 
-                    task.ContinueWith(t =>
-                    {
-                        if (t.IsFaulted)
-                        {
-                            // ReSharper disable once PossibleNullReferenceException
-                            throw t.Exception.Flatten().InnerExceptions.First();
-                        }
-                        var responseMessage = ThreadUtil.GetResult(t, AsyncResultWaitTimeoutMillis);
-                        var responseParameter =
-                            MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
-                        process(responseParameter);
-                    }).IgnoreExceptions();
-                    */
+                    await process(responseParameter).CAF();
                 }
                 catch (Exception e)
                 {
@@ -170,11 +123,11 @@ namespace Hazelcast.NearCaching
         }
 
         // Marks relevant data as stale if missed invalidation event count is above the max tolerated miss count.
-        private void FixSequenceGaps()
+        private async ValueTask FixSequenceGaps()
         {
-            foreach (var baseNearCach in _caches.Values)
+            await foreach (var (_, cache) in _caches)
             {
-                var nc = baseNearCach as NearCache;
+                var nc = cache as NearCache;
                 var ncRepairingHandler = nc?.RepairingHandler;
                 ncRepairingHandler?.FixSequenceGap();
             }
@@ -197,7 +150,7 @@ namespace Hazelcast.NearCaching
             return reconciliationIntervalSeconds;
         }
 
-        private void InitNearCache(NearCacheBase baseNearCache)
+        private async ValueTask InitNearCache(NearCacheBase baseNearCache, CancellationToken cancellationToken)
         {
             try
             {
@@ -208,16 +161,19 @@ namespace Hazelcast.NearCaching
                 if (repairingHandler == null) return;
 
                 var names = new List<string> { nearCache.Name };
-                FetchMetadataInternal(names, responseParameter =>
+                await FetchMetadataAsyncInternal(names, responseParameter =>
                 {
                     repairingHandler.InitGuids(responseParameter.PartitionUuidList);
                     repairingHandler.InitSequences(responseParameter.NamePartitionSequenceList);
-                });
+                    return default;
+                }, cancellationToken).CAF();
 
                 //start repairing task if not started
                 if (Interlocked.CompareExchange(ref _running, 1, 0) == 0)
                 {
-                    _repairingTask.Start();
+                    _repairingCancellation = new CancellationTokenSource();
+                    _repairing = Task.Run(() => Repair(_repairingCancellation.Token));
+
                     Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
                 }
             }
@@ -227,33 +183,38 @@ namespace Hazelcast.NearCaching
             }
         }
 
-        //Repairing task method
-        private void Repair()
+        // body of the background repairing task
+        // runs until cancelled - and then, it may simply stop, or throw
+        private async ValueTask Repair(CancellationToken cancellationToken)
         {
-            while (_running == 1)
+            while (true)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
                 try
                 {
-                    FixSequenceGaps();
-                    RunAntiEntropyIfNeeded();
+                    await FixSequenceGaps().CAF();
+                    await RunAntiEntropyIfNeededAsync(cancellationToken).CAF();
                 }
                 catch (Exception e)
                 {
-                    _logger.LogDebug(e, "Failed to repair.");
+                    _logger.LogError(e, "Caught an exception while repairing NearCache.");
                 }
-                finally
-                {
-                    // FIXME no!
-                    Thread.Sleep(1000);
-                }
+
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                // TODO: this should be a constant
+                await Task.Delay(1000, cancellationToken).CAF();
             }
         }
 
-        private void RepairGuids(IList<KeyValuePair<int, Guid>> guids)
+        private async ValueTask RepairGuids(IList<KeyValuePair<int, Guid>> guids)
         {
             foreach (var pair in guids)
             {
-                foreach (var cache in _caches.Values)
+                await foreach (var (_, cache) in _caches)
                 {
                     var nc = cache as NearCache;
                     var ncRepairingHandler = nc?.RepairingHandler;
@@ -262,14 +223,14 @@ namespace Hazelcast.NearCaching
             }
         }
 
-        private void RepairSequences(
-            IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> namePartitionSequenceList)
+        private async ValueTask RepairSequences(IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> namePartitionSequenceList)
         {
             foreach (var pair in namePartitionSequenceList)
             {
                 foreach (var subPair in pair.Value)
                 {
-                    if (_caches.TryGetValue(pair.Key, out var cache))
+                    var (hasCache, cache) = await _caches.TryGetValue(pair.Key).CAF();
+                    if (hasCache)
                     {
                         var nc = cache as NearCache;
                         var ncRepairingHandler = nc?.RepairingHandler;
@@ -280,20 +241,43 @@ namespace Hazelcast.NearCaching
         }
 
         // Periodically sends generic operations to cluster members to get latest invalidation metadata.
-        private void RunAntiEntropyIfNeeded()
+        private async ValueTask RunAntiEntropyIfNeededAsync(CancellationToken cancellationToken)
         {
             if (_reconciliationIntervalMillis == 0)
-            {
                 return;
-            }
 
             // if this thread-safe?
             var lastAntiEntropyRunMillis = Interlocked.Read(ref _lastAntiEntropyRunMillis);
             var sinceLastRun = Clock.Milliseconds - lastAntiEntropyRunMillis;
             if (sinceLastRun >= _reconciliationIntervalMillis)
             {
-                FetchMetadata();
+                await FetchMetadataAsync(cancellationToken).CAF();
                 Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
+            }
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _running, 0, 1) == 0)
+                return;
+
+            if (_repairingCancellation != null)
+            {
+                _repairingCancellation.Cancel();
+                try
+                {
+                    await _repairing.CAF();
+                }
+                catch (OperationCanceledException) { /* expected */ }
+
+                _repairingCancellation.Dispose();
+            }
+
+            await foreach (var (key, value) in _caches)
+            {
+                _caches.TryRemove(key); // ok with concurrent dictionary
+                await value.DestroyAsync().CAF();
             }
         }
     }

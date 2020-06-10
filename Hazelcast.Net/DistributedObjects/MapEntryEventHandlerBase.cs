@@ -14,7 +14,6 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -28,17 +27,17 @@ namespace Hazelcast.DistributedObjects
     {
         private readonly Action<IMap<TKey, TValue>, TArgs> _handler;
 
-        protected MapEntryEventHandlerBase(MapEventType eventType, Action<IMap<TKey, TValue>, TArgs> handler)
+        protected MapEntryEventHandlerBase(MapEventTypes eventType, Action<IMap<TKey, TValue>, TArgs> handler)
         {
             EventType = eventType;
             _handler = handler;
         }
 
-        public MapEventType EventType { get; }
+        public MapEventTypes EventType { get; }
 
-        public void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+        public void Handle(IMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries)
             => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergeValue, eventType, numberOfAffectedEntries));
 
-        protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries);
+        protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries);
     }
 }

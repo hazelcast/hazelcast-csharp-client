@@ -14,17 +14,16 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEntryExpiredEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryExpiredEventArgs<TKey, TValue>>
     {
         public MapEntryExpiredEventHandler(Action<IMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>> handler)
-            : base(MapEventType.Expired, handler)
+            : base(MapEventTypes.Expired, handler)
         { }
 
-        protected override MapEntryExpiredEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+        protected override MapEntryExpiredEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries)
             => new MapEntryExpiredEventArgs<TKey, TValue>(member, key, oldValue);
     }
 }

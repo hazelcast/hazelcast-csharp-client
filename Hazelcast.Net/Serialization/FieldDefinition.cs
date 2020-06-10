@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 
 namespace Hazelcast.Serialization
@@ -88,7 +89,7 @@ namespace Hazelcast.Serialization
             {
                 var hashCode = _classId;
                 hashCode = (hashCode*397) ^ _factoryId;
-                hashCode = (hashCode*397) ^ (_fieldName != null ? _fieldName.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (_fieldName != null ? _fieldName.GetHashCode(StringComparison.Ordinal) : 0);
                 hashCode = (hashCode*397) ^ _index;
                 hashCode = (hashCode*397) ^ (int) _type;
                 hashCode = (hashCode*397) ^ _version;
@@ -112,7 +113,7 @@ namespace Hazelcast.Serialization
         protected bool Equals(FieldDefinition other)
         {
             return _classId == other._classId && _factoryId == other._factoryId &&
-                   string.Equals(_fieldName, other._fieldName) &&
+                   string.Equals(_fieldName, other._fieldName, StringComparison.Ordinal) &&
                    _index == other._index && _type == other._type &&
                    _version == other._version;
         }

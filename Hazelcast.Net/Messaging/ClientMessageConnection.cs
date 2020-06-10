@@ -30,7 +30,7 @@ namespace Hazelcast.Messaging
     /// <para>A message connection wraps a socket connection and provides a
     /// message-level communication channel.</para>
     /// </remarks>
-    public class ClientMessageConnection // TODO: IDisposable?
+    public class ClientMessageConnection : IAsyncDisposable
     {
         private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
         private readonly SocketConnectionBase _connection;
@@ -226,6 +226,8 @@ namespace Hazelcast.Messaging
             // serialize the message into bytes,
             // and then pass those bytes to the socket connection
 
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             // send message, serialize sending via semaphore
             // throws OperationCanceledException if canceled (and semaphore is not acquired)
             if (_writer != null) await _writer.WaitAsync(cancellationToken).CAF();
@@ -272,6 +274,13 @@ namespace Hazelcast.Messaging
 
             return frame.Length <= sizeofHeader ||
                    await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF();
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
+        {
+            await _connection.DisposeAsync().CAF();
+            _writer.Dispose();
         }
     }
 }

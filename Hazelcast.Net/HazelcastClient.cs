@@ -72,8 +72,7 @@ namespace Hazelcast
 #endif
         Task OpenAsync(TimeSpan timeout = default)
         {
-            var cancellation = timeout.AsCancellationTokenSource(_options.Messaging.DefaultOperationTimeoutMilliseconds);
-            var task = OpenAsync(cancellation.Token).OrTimeout(cancellation);
+            var task = TaskEx.WithTimeout(OpenAsync, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

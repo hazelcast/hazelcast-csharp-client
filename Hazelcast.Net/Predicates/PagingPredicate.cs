@@ -15,6 +15,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using Hazelcast.Core;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -143,35 +145,36 @@ namespace Hazelcast.Predicates
             }
         }
 
-        void IIdentifiedDataSerializable.ReadData(IObjectDataInput input)
+        public void ReadData(IObjectDataInput input)
         {
             throw new NotSupportedException("Client should not need to use ReadData method.");
         }
 
-        void IIdentifiedDataSerializable.WriteData(IObjectDataOutput output)
+        public void WriteData(IObjectDataOutput output)
         {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
             output.WriteObject(Predicate);
             output.WriteObject(Comparer);
             output.WriteInt(Page);
             output.WriteInt(PageSize);
-            output.WriteUtf(IterationType?.ToString().ToUpper());
+            output.WriteUtf(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
             output.WriteInt(AnchorList.Count);
-            foreach (var anchor in AnchorList)
+            foreach (var (key, anchorEntry) in AnchorList)
             {
-                output.WriteInt(anchor.Key);
-                var anchorEntry = anchor.Value;
+                output.WriteInt(key);
                 output.WriteObject(anchorEntry.Key);
                 output.WriteObject(anchorEntry.Value);
             }
         }
 
 
-        int IIdentifiedDataSerializable.GetFactoryId()
+        public int GetFactoryId()
         {
             return FactoryIds.PredicateFactoryId;
         }
 
-        int IIdentifiedDataSerializable.GetId()
+        public int GetId()
         {
             return PredicateDataSerializerHook.PagingPredicate;
         }

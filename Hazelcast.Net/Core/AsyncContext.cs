@@ -48,7 +48,7 @@ namespace Hazelcast.Core
         /// </summary>
         private AsyncContext()
         {
-            Id = IdSequence.Next;
+            Id = IdSequence.GetNext();
         }
 
         /// <summary>

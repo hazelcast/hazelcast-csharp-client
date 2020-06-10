@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Aggregators;
+using Hazelcast.Aggregating;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
@@ -77,7 +77,9 @@ namespace Hazelcast
         /// Creates an <see cref="IHazelcastClient"/> instance.
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
+#pragma warning disable CA1822 // Mark members as static - no
         public IHazelcastClient CreateClient(HazelcastOptions options)
+#pragma warning restore CA1822
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

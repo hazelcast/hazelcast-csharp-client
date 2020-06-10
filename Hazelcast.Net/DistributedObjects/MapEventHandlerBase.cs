@@ -14,7 +14,6 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -28,13 +27,13 @@ namespace Hazelcast.DistributedObjects
     {
         private readonly Action<IMap<TKey, TValue>, TArgs> _handler;
 
-        protected MapEventHandlerBase(MapEventType eventType, Action<IMap<TKey, TValue>, TArgs> handler)
+        protected MapEventHandlerBase(MapEventTypes eventType, Action<IMap<TKey, TValue>, TArgs> handler)
         {
             EventType = eventType;
             _handler = handler;
         }
 
-        public MapEventType EventType { get; }
+        public MapEventTypes EventType { get; }
 
         public void Handle(IMap<TKey, TValue> sender, MemberInfo member, int numberOfAffectedEntries)
             => _handler(sender, CreateEventArgs(member, numberOfAffectedEntries));

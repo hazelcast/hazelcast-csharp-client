@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -31,11 +32,15 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            
             _predicate = input.ReadObject<IPredicate>();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
             output.WriteObject(_predicate);
         }
 

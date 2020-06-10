@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
     public class LikePredicate : IPredicate
     {
-        protected string AttributeName;
-        protected string Expression;
+        protected string AttributeName { get;private set; }
+        protected string Expression { get; private set; }
 
         public LikePredicate()
-        {
-        }
+        { }
 
         public LikePredicate(string attributeName, string expression)
         {
@@ -33,12 +33,16 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            
             AttributeName = input.ReadUtf();
             Expression = input.ReadUtf();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
             output.WriteUtf(AttributeName);
             output.WriteUtf(Expression);
         }
@@ -73,8 +77,9 @@ namespace Hazelcast.Predicates
         {
             unchecked
             {
-                return ((AttributeName != null ? AttributeName.GetHashCode() : 0)*397) ^
-                       (Expression != null ? Expression.GetHashCode() : 0);
+                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                return ((AttributeName != null ? AttributeName.GetHashCode(StringComparison.Ordinal) : 0)*397) ^
+                       (Expression != null ? Expression.GetHashCode(StringComparison.Ordinal) : 0);
             }
         }
 

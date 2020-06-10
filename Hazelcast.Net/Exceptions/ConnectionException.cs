@@ -21,7 +21,7 @@ namespace Hazelcast.Exceptions
     /// Represents the exception that is thrown when connection to a member fails.
     /// </summary>
     [Serializable]
-    public class ConnectionException : HazelcastException
+    public sealed class ConnectionException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
         private const string DefaultMessage = "Failed to connect to a member.";
@@ -69,7 +69,7 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public ConnectionException(SerializationInfo info, StreamingContext context)
+        private ConnectionException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

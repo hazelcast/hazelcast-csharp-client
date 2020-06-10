@@ -178,7 +178,7 @@ namespace Hazelcast.Core
             return o switch
             {
                 T t => t,
-                null => throw new ArgumentNullException(),
+                null => throw new ArgumentNullException(nameof(o)),
                 _ => throw new InvalidCastException($"Failed to cast object of type {o.GetType()} to {typeof(T)}.")
             };
         }

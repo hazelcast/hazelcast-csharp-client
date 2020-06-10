@@ -14,12 +14,11 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Topic;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a handler for the <see cref="TopicEventType.Message"/> event.
+    /// Represents a handler for the <see cref="TopicEventTypes.Message"/> event.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
     internal class TopicMessageEventHandler<T> : ITopicEventHandler<T>
@@ -36,7 +35,7 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <inheritdoc />
-        public TopicEventType EventType => TopicEventType.Message;
+        public TopicEventTypes EventType => TopicEventTypes.Message;
 
         /// <inheritdoc />
         public void Handle(ITopic<T> sender, MemberInfo member, long publishTime, T payload)

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -19,34 +21,44 @@ namespace Hazelcast.Serialization
     /// </summary>
     public class JavaClass
     {
-        public string Name { get; private set; }
-
         public JavaClass(string name)
         {
             Name = name;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((JavaClass) obj);
-        }
+        public string Name { get; }
 
-        public override int GetHashCode()
+        public override bool Equals(object other)
         {
-            return (Name != null ? Name.GetHashCode() : 0);
-        }
-
-        public override string ToString()
-        {
-            return string.Format("Name: {0}", Name);
+            if (ReferenceEquals(this, other)) return true;
+            return other is JavaClass thing && EqualsN(this, thing);
         }
 
         protected bool Equals(JavaClass other)
         {
-            return string.Equals(Name, other.Name);
+            if (other is null) return false;
+            return ReferenceEquals(this, other) || EqualsN(this, other);
         }
+
+        public static bool Equals(JavaClass left, JavaClass right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+            return EqualsN(left, right);
+        }
+
+        private static bool EqualsN(JavaClass left, JavaClass right)
+            => string.Equals(left.Name, right.Name, StringComparison.Ordinal);
+
+        public override int GetHashCode()
+        {
+            return Name != null ? Name.GetHashCode(StringComparison.Ordinal) : 0;
+        }
+
+        public override string ToString()
+        {
+            return $"Name: {Name}";
+        }
+
     }
 }

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -30,7 +32,9 @@ namespace Hazelcast.Serialization
 
         protected bool Equals(JavaEnum other)
         {
-            return string.Equals(Type, other.Type) && string.Equals(Value, other.Value);
+            if (other is null) return false;
+            return string.Equals(Type, other.Type, StringComparison.Ordinal) &&
+                   string.Equals(Value, other.Value, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
@@ -45,13 +49,14 @@ namespace Hazelcast.Serialization
         {
             unchecked
             {
-                return ((Type != null ? Type.GetHashCode() : 0)*397) ^ (Value != null ? Value.GetHashCode() : 0);
+                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                return ((Type != null ? Type.GetHashCode(StringComparison.Ordinal) : 0)*397) ^ (Value != null ? Value.GetHashCode(StringComparison.Ordinal) : 0);
             }
         }
 
         public override string ToString()
         {
-            return string.Format("Type: {0}, Value: {1}", Type, Value);
+            return $"Type: {Type}, Value: {Value}";
         }
     }
 }

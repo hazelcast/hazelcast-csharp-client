@@ -19,7 +19,7 @@ namespace Hazelcast.Security
     /// </summary>
     /// <remarks>This factory provides username + password credentials, with username being 'default'
     /// and password being '', and is used whenever no other factory has been configured.</remarks>
-    public class DefaultCredentialsFactory : ICredentialsFactory
+    public sealed class DefaultCredentialsFactory : ICredentialsFactory
     {
         // by default, go with username+password
         private static readonly ICredentials DefaultCredentials = new UsernamePasswordCredentials();

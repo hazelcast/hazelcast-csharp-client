@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +33,7 @@ namespace Hazelcast.NearCaching
         private int _canCleanUp;
         private int _canEvict;
 
+        private readonly ConcurrentAsyncDictionary<IData, NearCacheEntry> _entries;
         private readonly EvictionPolicy _evictionPolicy;
         private readonly InMemoryFormat _inMemoryFormat;
         protected readonly bool InvalidateOnChange;
@@ -43,7 +43,7 @@ namespace Hazelcast.NearCaching
 
         private readonly int _maxSize;
 
-        private readonly IComparer<AsyncLazy<NearCacheEntry>> _comparer;
+        private readonly IComparer<NearCacheEntry> _comparer;
         private readonly long _timeToLiveMillis;
 
         private long _lastCleanup;
@@ -56,7 +56,7 @@ namespace Hazelcast.NearCaching
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
-            Entries = new ConcurrentDictionary<IData, AsyncLazy<NearCacheEntry>>();
+            _entries = new ConcurrentAsyncDictionary<IData, NearCacheEntry>();
             Statistics = new NearCacheStatistics();
 
             _canCleanUp = 1;
@@ -79,37 +79,35 @@ namespace Hazelcast.NearCaching
 
         protected ISerializationService SerializationService { get; }
 
-        public ConcurrentDictionary<IData, AsyncLazy<NearCacheEntry>> Entries { get; }
-
         public string Name { get; }
 
         public NearCacheStatistics Statistics { get; }
 
         public void Clear()
         {
-            Entries.Clear();
+            _entries.Clear();
             Statistics.EntryCount = 0L;
         }
 
-        public bool ContainsKey(IData keyData)
+        public async ValueTask<bool> ContainsKey(IData keyData)
         {
-            return TryGetValue(keyData, out _);
+            var (contains, _) = await TryGetValue(keyData).CAF();
+            return contains;
         }
 
-        public virtual void Destroy()
+        public virtual async ValueTask DestroyAsync()
         {
-            if (RegistrationId != null)
-            {
-                Cluster.RemoveSubscriptionAsync(RegistrationId, CancellationToken.None).AsTask().Wait(); // FIXME ASYNC OOPS!
-            }
-            Entries.Clear();
+            if (RegistrationId != default)
+                await Cluster.RemoveSubscriptionAsync(RegistrationId, CancellationToken.None).CAF();
+
+            _entries.Clear();
         }
 
         public abstract void Init();
 
         public void Invalidate(IData key)
         {
-            if (Entries.TryRemove(key, out _))
+            if (_entries.TryRemove(key))
             {
                 Statistics.DecrementEntryCount();
             }
@@ -117,12 +115,12 @@ namespace Hazelcast.NearCaching
 
         public void InvalidateAll()
         {
-            Entries.Clear();
+            _entries.Clear();
         }
 
         public bool Remove(IData key)
         {
-            if (Entries.TryRemove(key, out _))
+            if (_entries.TryRemove(key))
             {
                 Statistics.DecrementEntryCount();
                 return true;
@@ -133,36 +131,41 @@ namespace Hazelcast.NearCaching
         public async Task<bool> TryAdd(IData keyData, object value)
         {
             // kick eviction policy if needed
-            if (_evictionPolicy != EvictionPolicy.None && Entries.Count >= _maxSize)
-                TryCacheEvict();
+            if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
+                await TryCacheEvict().CAF();
 
             // cannot add if the cache is full
-            if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize)
+            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
                 return false;
 
-            // prepare the cache entry
-            var lazyEntry = new AsyncLazy<NearCacheEntry>(() =>
+            // FIXME why is the cache entry an AsyncLazy and not a plain Lazy of some sort?!
+            // plus we keep creating the lazy which in many cases is not appropriate?!
+            // also note that GetOrAdd does NOT guarantee that the factory runs only once!!
+
+            ValueTask<NearCacheEntry> CreateCacheEntry(IData keyData)
             {
                 // FIXME have to trust caller - uh?
                 var ncValue = value; //ToEntryValue(value);
                 var entry = CreateEntry(keyData, ncValue);
                 Statistics.IncrementEntryCount();
-                return Task.FromResult(entry);
-            });
-
-            if (!Entries.TryAdd(keyData, lazyEntry))
-                return false;
-
-            // if we added the entry, make sure to create its value too
-            var value2 = (await lazyEntry.CreateValueAsync().CAF()).Value;
-
-            if (value2 == null)
-            {
-                Entries.TryRemove(keyData, out _);
-                return false;
+                return new ValueTask<NearCacheEntry>(entry);
             }
 
-            return true;
+            var (added, task) = _entries.TryAdd(keyData, CreateCacheEntry);
+            if (!added) return false;
+
+            try
+            {
+                var entry = await task.CAF();
+                if (entry != null) return true;
+            }
+            catch
+            {
+                // ignore, remove from the cache
+            }
+
+            _entries.TryRemove(keyData);
+            return false;
         }
 
         /// <summary>
@@ -178,39 +181,43 @@ namespace Hazelcast.NearCaching
         public async Task<Attempt<object>> TryGetOrAddAsync(IData keyData, Func<IData, Task<object>> valueFactory)
         {
             // if it's in the cache already, return it
-            if (TryGetValue(keyData, out var o))
-                return o;
+            var (hasEntry, o) = await TryGetValue(keyData).CAF();
+            if (hasEntry) return o;
 
             // count a miss
             Statistics.IncrementMiss();
 
             // kick eviction policy if needed
-            if (_evictionPolicy != EvictionPolicy.None && Entries.Count >= _maxSize)
-                TryCacheEvict();
+            if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
+                await TryCacheEvict().CAF();
 
             // if the cache is full, directly return the un-cached value
-            if (_evictionPolicy == EvictionPolicy.None && Entries.Count >= _maxSize && !Entries.ContainsKey(keyData))
+            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKey(keyData).CAF())
                 return Attempt.Fail(await valueFactory(keyData).CAF());
 
-            // prepare the cache entry
-            var lazyEntry = new AsyncLazy<NearCacheEntry>(async () =>
+            async ValueTask<NearCacheEntry> CreateCacheEntry(IData keyData)
             {
                 var valueData = await valueFactory(keyData).CAF();
                 var cachedValue = ToEntryValue(valueData);
                 var entry = CreateEntry(keyData, cachedValue);
                 Statistics.IncrementEntryCount();
                 return entry;
-            });
+            }
 
             // insert into cache
-            // concurrency is managed by the concurrent dictionary: there will be only one lazy record at a time,
-            // and only once will TryAdd succeed and CreateValueAsync be invoked, and others will wait
-            if (Entries.TryAdd(keyData, lazyEntry))
+            var (added, task) = _entries.TryAdd(keyData, CreateCacheEntry);
+            if (added)
             {
+                // we have inserted a new cache entry in the cache - but, if the factory
+                // fails, it's not really there and will be removed from the cache - so we
+                // need to get the value back and ensure it is ok
+
+                // having doubts as to whether this all does what we want...
+
                 NearCacheEntry entry;
                 try
                 {
-                    entry = await lazyEntry.CreateValueAsync().CAF();
+                    entry = await task.CAF();
                 }
                 catch
                 {
@@ -226,43 +233,38 @@ namespace Hazelcast.NearCaching
             }
 
             // failed to add, was added by another thread?
-            if (TryGetValue(keyData, out o))
-                return o;
+            (hasEntry, o) = await TryGetValue(keyData).CAF();
+            if (hasEntry) return o;
 
             // otherwise, add the uncached value
             return Attempt.Fail(await valueFactory(keyData).CAF());
         }
 
-        public bool TryGetValue(IData keyData, out object value)
+        public async ValueTask<Attempt<object>> TryGetValue(IData keyData)
         {
-            TryTtlCleanup();
+            await TryTtlCleanup().CAF();
 
-            value = null;
-
-            if (!Entries.TryGetValue(keyData, out var lazyEntry) || lazyEntry == null)
-                return false;
-
-            var entry = lazyEntry.Value;
+            var (hasEntry, entry) = await _entries.TryGetValue(keyData).CAF();
+            if (!hasEntry || entry.Value == null) return Attempt.Failed;
 
             if (IsStaleRead(keyData, entry) || entry.Value == null)
             {
                 Invalidate(keyData);
                 Statistics.IncrementMiss();
-                return false;
+                return Attempt.Failed;
             }
 
-            if (IsRecordExpired(entry))
+            if (IsExpired(entry))
             {
                 Invalidate(keyData);
                 Statistics.IncrementExpiration();
-                return false;
+                return Attempt.Failed;
             }
 
             entry.NotifyHit();
             Statistics.IncrementHit();
 
-            value = entry.Value;
-            return true;
+            return entry.Value;
         }
 
         protected virtual NearCacheEntry CreateEntry(IData key, object value)
@@ -294,7 +296,7 @@ namespace Hazelcast.NearCaching
                 : SerializationService.ToObject<object>(o);
         }
 
-        private void TryCacheEvict()
+        private async ValueTask TryCacheEvict()
         {
             try
             {
@@ -302,29 +304,30 @@ namespace Hazelcast.NearCaching
                 if (Interlocked.CompareExchange(ref _canEvict, 0, 1) == 0)
                     return;
 
-                DoCacheEvict();
+                await DoCacheEvict().CAF();
             }
-            catch
+            finally
             {
                 // make sure to release the lock
                 Interlocked.Exchange(ref _canEvict, 1);
-                throw;
             }
         }
 
-        private void DoCacheEvict()
+        private async ValueTask DoCacheEvict()
         {
-            var records = new SortedSet<AsyncLazy<NearCacheEntry>>(Entries.Values, _comparer);
-            var evictCount = Entries.Count * EvictionPercentage / 100;
+            var entries = new SortedSet<NearCacheEntry>(_comparer);
+            await foreach (var (_, value) in _entries)
+                entries.Add(value);
+
+            //var records = new SortedSet<AsyncLazy<NearCacheEntry>>(_entries.Values, _comparer);
+            var evictCount = _entries.Count * EvictionPercentage / 100;
 
             var count = 0;
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var lazyRecord in records)
+            foreach (var entry in entries)
             {
-                var record = lazyRecord.Value;
-
-                if (!Entries.TryRemove(record.Key, out _))
+                if (!_entries.TryRemove(entry.Key))
                     continue;
 
                 Statistics.DecrementEntryCount();
@@ -334,13 +337,13 @@ namespace Hazelcast.NearCaching
             }
 
             // FIXME wtf?
-            if (Entries.Count >= _maxSize)
+            if (_entries.Count >= _maxSize)
             {
-                TryCacheEvict();
+                await TryCacheEvict().CAF();
             }
         }
 
-        private void TryTtlCleanup()
+        private async ValueTask TryTtlCleanup()
         {
             // run when it is time to run
             if (Clock.Milliseconds < _lastCleanup + CleanupInterval)
@@ -354,27 +357,23 @@ namespace Hazelcast.NearCaching
 
                 _lastCleanup = Clock.Milliseconds;
 
-                DoTtlCleanup();
+                await DoTtlCleanup().CAF();
             }
-            catch
+            finally
             {
                 // make sure to release the lock
                 Interlocked.Exchange(ref _canCleanUp, 1);
-                throw;
             }
         }
 
-        private void DoTtlCleanup()
+        private async ValueTask DoTtlCleanup()
         {
-            foreach (var (key, lazyRecord) in Entries)
+            await foreach (var (key, entry) in _entries)
             {
-                var record = lazyRecord.Value;
+                if (!IsExpired(entry)) continue;
 
-                if (IsRecordExpired(record))
-                {
-                    Invalidate(key);
-                    Statistics.IncrementExpiration();
-                }
+                Invalidate(key);
+                Statistics.IncrementExpiration();
             }
         }
 
@@ -383,7 +382,7 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="policy">The eviction policy.</param>
         /// <returns>The record comparer corresponding to the specified eviction policy.</returns>
-        private static IComparer<AsyncLazy<NearCacheEntry>> GetComparer(EvictionPolicy policy)
+        private static IComparer<NearCacheEntry> GetComparer(EvictionPolicy policy)
         {
             return policy switch
             {
@@ -399,7 +398,7 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="entry">The record.</param>
         /// <returns>true if the record has expired; false otherwise.</returns>
-        private bool IsRecordExpired(NearCacheEntry entry)
+        private bool IsExpired(NearCacheEntry entry)
         {
             var now = Clock.Milliseconds;
             return entry.IsExpiredAt(now) || entry.IsIdleAt(_maxIdleMilliseconds, now);

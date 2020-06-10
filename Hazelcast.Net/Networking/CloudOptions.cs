@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Networking
 {
     /// <summary>
@@ -48,7 +50,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets or sets the cloud url base.
         /// </summary>
-        public string UrlBase { get; set; } = "https://coordinator.hazelcast.cloud";
+        public Uri UrlBase { get; set; } = new Uri("https://coordinator.hazelcast.cloud");
 
         /// <summary>
         /// Clones the options.

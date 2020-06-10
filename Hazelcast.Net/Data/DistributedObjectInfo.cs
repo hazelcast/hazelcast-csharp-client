@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 
 namespace Hazelcast.Data
@@ -48,8 +49,8 @@ namespace Hazelcast.Data
         {
             unchecked
             {
-                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^
-                       (ServiceName != null ? ServiceName.GetHashCode() : 0);
+                return ((Name != null ? Name.GetHashCode(StringComparison.Ordinal) : 0) * 397) ^
+                       (ServiceName != null ? ServiceName.GetHashCode(StringComparison.Ordinal) : 0);
             }
         }
 

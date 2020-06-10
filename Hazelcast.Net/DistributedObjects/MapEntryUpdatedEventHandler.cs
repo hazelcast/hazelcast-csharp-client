@@ -14,17 +14,16 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Map;
 
 namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEntryUpdatedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryUpdatedEventArgs<TKey, TValue>>
     {
         public MapEntryUpdatedEventHandler(Action<IMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
-            : base(MapEventType.Updated, handler)
+            : base(MapEventTypes.Updated, handler)
         { }
 
-        protected override MapEntryUpdatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventType eventType, int numberOfAffectedEntries)
+        protected override MapEntryUpdatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries)
             => new MapEntryUpdatedEventArgs<TKey, TValue>(member, key, oldValue, value);
     }
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,12 +29,13 @@ namespace Hazelcast.Core
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            ValueTask<SemaphoreAcquisition> AcquireAsync(this SemaphoreSlim semaphore)
+        ValueTask<SemaphoreAcquisition> AcquireAsync(this SemaphoreSlim semaphore)
         {
+            if (semaphore == null) throw new ArgumentNullException(nameof(semaphore));
             var task = semaphore
                 .WaitAsync()
                 .ContinueWith(x => SemaphoreAcquisition.Create(x, semaphore),
-                    TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
+                    default, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -52,12 +54,13 @@ namespace Hazelcast.Core
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<SemaphoreAcquisition> AcquireAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken)
+        Task<SemaphoreAcquisition> AcquireAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken)
         {
+            if (semaphore == null) throw new ArgumentNullException(nameof(semaphore));
             var task = semaphore
                 .WaitAsync(cancellationToken)
                 .ContinueWith(x => SemaphoreAcquisition.Create(x, semaphore),
-                    TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
+                    default, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -75,12 +78,13 @@ namespace Hazelcast.Core
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<SemaphoreAcquisition> TryAcquireAsync(this SemaphoreSlim semaphore)
+        Task<SemaphoreAcquisition> TryAcquireAsync(this SemaphoreSlim semaphore)
         {
+            if (semaphore == null) throw new ArgumentNullException(nameof(semaphore));
             var task = semaphore
                 .WaitAsync(0)
                 .ContinueWith(x => SemaphoreAcquisition.Create(x, semaphore),
-                    TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
+                    default, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

@@ -32,6 +32,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -102,7 +103,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public Hazelcast.Data.Map.MapEntry<IData, IData> Response { get; set; }
+            public MapEntry<IData, IData> Response { get; set; }
 
             /// <summary>
             /// Last set max idle in millis.
@@ -110,7 +111,7 @@ namespace Hazelcast.Protocol.Codecs
             public long MaxIdle { get; set; }
         }
 
-        public static ClientMessage EncodeResponse(Hazelcast.Data.Map.MapEntry<IData, IData> response, long maxIdle)
+        public static ClientMessage EncodeResponse(MapEntry<IData, IData> response, long maxIdle)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);

@@ -29,6 +29,8 @@ namespace Hazelcast.Core
         {
             // this is the code that the runtime uses, unchanged
 
+            if (socket == null) throw new ArgumentNullException(nameof(socket));
+
             var tcs = new TaskCompletionSource<bool>(socket);
             socket.BeginConnect(endPoint, iar =>
             {
@@ -51,10 +53,12 @@ namespace Hazelcast.Core
             {
                 cancellation.Cancel(); // cancel the delay
                 await t.CAF(); // throw or return
+                cancellation.Dispose();
                 return;
             }
 
             // else the delay has expired, kill the socket
+            cancellation.Dispose();
             try
             {
                 // triggers the callback, thus EndConnect
@@ -70,6 +74,8 @@ namespace Hazelcast.Core
         public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, CancellationToken cancellationToken)
         {
             // this is the code that the runtime uses, unchanged
+
+            if (socket == null) throw new ArgumentNullException(nameof(socket));
 
             var tcs = new TaskCompletionSource<bool>(socket);
             socket.BeginConnect(endPoint, iar =>
@@ -93,10 +99,12 @@ namespace Hazelcast.Core
             {
                 cancellation.Cancel(); // cancel the delay
                 await t.CAF(); // throw or return
+                cancellation.Dispose();
                 return;
             }
 
             // else the delay has been cancelled, kill the socket
+            cancellation.Dispose();
             try
             {
                 // triggers the callback, thus EndConnect

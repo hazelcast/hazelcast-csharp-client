@@ -14,7 +14,6 @@
 
 using System;
 using Hazelcast.Data;
-using Hazelcast.Data.Collection;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -27,7 +26,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Gets the handled event type.
         /// </summary>
-        CollectionItemEventType EventType { get; }
+        CollectionItemEventTypes EventType { get; }
 
         /// <summary>
         /// Handles an event.

@@ -21,22 +21,22 @@ namespace Hazelcast.NearCaching
     /// <summary>
     /// Compares <see cref="NearCacheEntry"/> using the least-recently-used comparison.
     /// </summary>
-    internal class LruComparer : IComparer<AsyncLazy<NearCacheEntry>>
+    internal class LruComparer : IComparer<NearCacheEntry>
     {
         /// <inheritdoc />
-        public int Compare(AsyncLazy<NearCacheEntry> x, AsyncLazy<NearCacheEntry> y)
+        public int Compare(NearCacheEntry x, NearCacheEntry y)
         {
             if (x == null) throw new ArgumentNullException(nameof(x));
             if (y == null) throw new ArgumentNullException(nameof(y));
 
-            var cx = x.Value.LastHitTime;
-            var cy = y.Value.LastHitTime;
+            var cx = x.LastHitTime;
+            var cy = y.LastHitTime;
 
             var c = cx.CompareTo(cy);
             if (c != 0) return c;
 
-            cx = x.Value.Key.GetHashCode();
-            cy = y.Value.Key.GetHashCode();
+            cx = x.Value.GetHashCode();
+            cy = y.Value.GetHashCode();
 
             return cx.CompareTo(cy);
         }

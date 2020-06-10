@@ -29,7 +29,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The message type.</returns>
         public static int ReadMessageType(this Frame frame)
-            => frame.Bytes.ReadInt(FrameFields.Offset.MessageType);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.MessageType);
 
         /// <summary>
         /// Writes the message type.
@@ -37,7 +37,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="type">The message type.</param>
         public static void WriteMessageType(this Frame frame, int type)
-            => frame.Bytes.WriteInt(FrameFields.Offset.MessageType, type);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.MessageType, type);
 
         /// <summary>
         /// Reads the correlation id.
@@ -45,7 +45,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The correlation id.</returns>
         public static long ReadCorrelationId(this Frame frame)
-            => frame.Bytes.ReadLong(FrameFields.Offset.CorrelationId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.CorrelationId);
 
         /// <summary>
         /// Writes the correlation id.
@@ -53,7 +53,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="correlationId">The correlation id.</param>
         public static void WriteCorrelationId(this Frame frame, long correlationId)
-            => frame.Bytes.WriteLong(FrameFields.Offset.CorrelationId, correlationId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.CorrelationId, correlationId);
 
         /// <summary>
         /// Reads the partition id.
@@ -61,7 +61,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The partition id.</returns>
         public static int ReadPartitionId(this Frame frame)
-            => frame.Bytes.ReadInt(FrameFields.Offset.PartitionId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.PartitionId);
 
         /// <summary>
         /// Writes the partition id.
@@ -69,7 +69,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="partionId">The partition id.</param>
         public static void WritePartitionId(this Frame frame, int partionId)
-            => frame.Bytes.WriteInt(FrameFields.Offset.PartitionId, partionId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.PartitionId, partionId);
 
         /// <summary>
         /// Reads the fragment id.
@@ -77,7 +77,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The fragment id.</returns>
         public static long ReadFragmentId(this Frame frame)
-            => frame.Bytes.ReadLong(FrameFields.Offset.FragmentId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.FragmentId);
 
         /// <summary>
         /// Writes the fragment id.
@@ -85,7 +85,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="fragmentId">The fragment id.</param>
         public static void WriteFragmentId(this Frame frame, long fragmentId)
-            => frame.Bytes.WriteLong(FrameFields.Offset.FragmentId, fragmentId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.FragmentId, fragmentId);
 
         /// <summary>
         /// Takes the current frame and moves to the next frame.
@@ -93,6 +93,8 @@ namespace Hazelcast.Messaging
         /// <returns>The current frame, or null if the end of the list has been reached.</returns>
         public static Frame Take(this IEnumerator<Frame> frames)
         {
+            if (frames == null) throw new ArgumentNullException(nameof(frames));
+
             // if current is null maybe we haven't started yet - start
             // (if it's null because we've reached the end, nothing happens)
             if (frames.Current == null) frames.MoveNext();
@@ -109,6 +111,8 @@ namespace Hazelcast.Messaging
         /// <returns></returns>
         public static bool SkipNull(this IEnumerator<Frame> frames)
         {
+            if (frames == null) throw new ArgumentNullException(nameof(frames));
+
             var isNull = frames.Current != null && frames.Current.IsNull;
             if (isNull) frames.Take();
             return isNull;
@@ -118,7 +122,7 @@ namespace Hazelcast.Messaging
         /// Determines whether the current frame is an "end of structure" frame.
         /// </summary>
         public static bool AtStructEnd(this IEnumerator<Frame> frames)
-            => frames.Current != null && frames.Current.IsEndStruct;
+            => (frames ?? throw new ArgumentNullException(nameof(frames))).Current != null && frames.Current.IsEndStruct;
 
         /// <summary>
         /// Advances the iterator by skipping all frames until the end of a structure.

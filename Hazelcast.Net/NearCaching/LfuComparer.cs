@@ -14,29 +14,28 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Core;
 
 namespace Hazelcast.NearCaching
 {
     /// <summary>
     /// Compares <see cref="NearCacheEntry"/> using the least-frequently-used comparison.
     /// </summary>
-    internal class LfuComparer : IComparer<AsyncLazy<NearCacheEntry>>
+    internal class LfuComparer : IComparer<NearCacheEntry>
     {
         /// <inheritdoc />
-        public int Compare(AsyncLazy<NearCacheEntry> x, AsyncLazy<NearCacheEntry> y)
+        public int Compare(NearCacheEntry x, NearCacheEntry y)
         {
             if (x == null) throw new ArgumentNullException(nameof(x));
             if (y == null) throw new ArgumentNullException(nameof(y));
 
-            var cx = x.Value.Hits;
-            var cy = y.Value.Hits;
+            var cx = x.Hits;
+            var cy = y.Hits;
 
             var c = cx.CompareTo(cy);
             if (c != 0) return c;
 
-            cx = x.Value.Key.GetHashCode();
-            cy = y.Value.Key.GetHashCode();
+            cx = x.Key.GetHashCode();
+            cy = y.Key.GetHashCode();
 
             return cx.CompareTo(cy);
         }

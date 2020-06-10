@@ -22,7 +22,7 @@ namespace Hazelcast.Serialization
     /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects.
     /// </summary>
     [Serializable]
-    public class SerializationException : HazelcastException
+    public sealed class SerializationException : HazelcastException
     {
         // ReSharper disable once InconsistentNaming
         private const string DefaultMessage = "Serialization or de-serialization error.";
@@ -70,7 +70,7 @@ namespace Hazelcast.Serialization
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public SerializationException(SerializationInfo info, StreamingContext context)
+        private SerializationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

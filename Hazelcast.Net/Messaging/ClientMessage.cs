@@ -136,6 +136,7 @@ namespace Hazelcast.Messaging
         public ClientMessage AppendFragment(Frame firstFrame, Frame lastFrame, bool trustable = false)
         {
             if (firstFrame == null) throw new ArgumentNullException(nameof(firstFrame));
+            if (lastFrame == null) throw new ArgumentNullException(nameof(lastFrame));
 
             if (LastFrame == null) throw new InvalidOperationException("Empty message.");
 

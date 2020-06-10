@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if !HZ_CONSOLE
+#pragma warning disable // too many 'unused args' etc
+#endif
+
 using System;
 using System.Diagnostics;
 #if HZ_CONSOLE

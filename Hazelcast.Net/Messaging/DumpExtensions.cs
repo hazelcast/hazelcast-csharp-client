@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 
 namespace Hazelcast.Messaging
@@ -28,8 +29,9 @@ namespace Hazelcast.Messaging
         /// <returns>A readable string representation of the message.</returns>
         public static string Dump(this ClientMessage message)
         {
-            string prefix;
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
+            string prefix;
             var text = new StringBuilder();
 
             // trying to do colors but that does not seem to work w/Nunit

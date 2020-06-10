@@ -17,7 +17,7 @@ using System;
 namespace Hazelcast.Messaging
 {
     [Flags]
-    public enum ClientMessageFlags : ushort
+    public enum ClientMessageFlags
     {
         /// <summary>
         /// Default value (all flags).

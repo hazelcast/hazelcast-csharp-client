@@ -70,7 +70,7 @@ namespace Hazelcast.Configuration
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        public ConfigurationException(SerializationInfo info, StreamingContext context)
+        private ConfigurationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

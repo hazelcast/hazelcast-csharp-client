@@ -42,6 +42,8 @@ namespace Hazelcast.Core
         /// </summary>
         protected SingletonServiceFactory(SingletonServiceFactory<TService> other, bool shallow)
         {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+
             Creator = other.Creator;
             if (shallow)
             {

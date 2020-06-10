@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Security
 {
     /// <summary>
@@ -38,6 +40,16 @@ namespace Hazelcast.Security
 
         /// <inheritdoc />
         public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes resources.
+        /// </summary>
+        /// <param name="disposing">true when disposing deterministically.</param>
+        protected virtual void Dispose(bool disposing)
         { }
     }
 }

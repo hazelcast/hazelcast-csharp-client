@@ -14,7 +14,7 @@
 
 using System;
 using Hazelcast.Core;
-using Hazelcast.Data.Collection;
+using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The handlers.</returns>
         public CollectionItemEventHandlers<T> ItemAdded(Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
         {
-            Add(new CollectionItemEventHandler<T>(CollectionItemEventType.Added, handler));
+            Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Added, handler));
             return this;
         }
 
@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The handlers.</returns>
         public CollectionItemEventHandlers<T> ItemRemoved(Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
         {
-            Add(new CollectionItemEventHandler<T>(CollectionItemEventType.Removed, handler));
+            Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Removed, handler));
             return this;
         }
     }

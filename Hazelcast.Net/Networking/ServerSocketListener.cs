@@ -24,7 +24,7 @@ namespace Hazelcast.Networking
     /// <summary>
     /// Represents a server listener.
     /// </summary>
-    public class ServerSocketListener : IDisposable
+    public sealed class ServerSocketListener : IAsyncDisposable
     {
         private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
         private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
@@ -33,6 +33,7 @@ namespace Hazelcast.Networking
 
         private Socket _socket;
         private CancellationTokenSource _cancellationTokenSource;
+        private ServerSocketConnection _serverConnection;
         private Action<ServerSocketConnection> _onAcceptConnection;
         private Func<ServerSocketListener, ValueTask> _onShutdown;
         private Task _listeningThenShutdown;
@@ -131,7 +132,7 @@ namespace Hazelcast.Networking
                 }
                 HzConsole.WriteLine(this, "Stop listening");
 
-            }, CancellationToken.None).ContinueWith(ShutdownInternal);
+            }, CancellationToken.None).ContinueWith(ShutdownInternal, default, default, TaskScheduler.Current);
 
             HzConsole.WriteLine(this, "Started listener");
 
@@ -220,8 +221,8 @@ namespace Hazelcast.Networking
             try
             {
                 // we now have a connection
-                var serverConnection = new ServerSocketConnection(_connectionIdSequence.Next, handler);
-                _onAcceptConnection(serverConnection);
+                _serverConnection = new ServerSocketConnection(_connectionIdSequence.GetNext(), handler);
+                _onAcceptConnection(_serverConnection);
             }
             catch (Exception e)
             {
@@ -234,10 +235,31 @@ namespace Hazelcast.Networking
         }
 
         /// <inheritdoc />
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            _accepted.TryDispose();
-            _cancellationTokenSource.TryDispose();
+            try
+            {
+                _accepted.Dispose();
+            }
+            catch { /* ignore */ }
+
+            try
+            {
+                await _serverConnection.DisposeAsync().CAF();
+            }
+            catch { /* ignore */ }
+
+            try
+            {
+                _socket.Dispose();
+            }
+            catch { /* ignore */ }
+
+            try
+            {
+                _cancellationTokenSource.Dispose();
+            }
+            catch { /* ignore */ }
         }
     }
 }

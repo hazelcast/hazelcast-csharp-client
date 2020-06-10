@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #nullable enable
-#pragma warning disable CA2225 // Operator overloads have named alternates - would not make sense
 
 using System;
 
@@ -27,7 +26,7 @@ namespace Hazelcast.Core
     /// <para>An <see cref="Attempt{TResult}"/> is either successful or failed, it
     /// carries a <typeparamref name="TResult"/> result, and an exception.</para>
     /// </remarks>
-#pragma warning disable CA1815 // Override equals and operator equals on value types - one should not compare attempts
+#pragma warning disable CA1815 // Override equals and operator equals on value types - not meant to be compared
     public readonly struct Attempt<TResult>
 #pragma warning restore CA1815
     {
@@ -110,6 +109,17 @@ namespace Hazelcast.Core
         /// <param name="result">The result value.</param>
         public static implicit operator Attempt<TResult>(TResult result)
             => new Attempt<TResult>(true, result);
+
+        /// <summary>
+        /// Deconstruct an attempt.
+        /// </summary>
+        /// <param name="success">Whether the attempt succeeded.</param>
+        /// <param name="value">The value of the result.</param>
+        public void Deconstruct(out bool success, out TResult value)
+        {
+            success = Success;
+            value = Value;
+        }
 
         // NOTE
         //

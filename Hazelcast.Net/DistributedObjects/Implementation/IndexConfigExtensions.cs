@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using Hazelcast.Data.Map;
+using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects.Implementation
 {
@@ -28,13 +28,15 @@ namespace Hazelcast.DistributedObjects.Implementation
         // TODO: document, explain, refactor
 
         /** Maximum number of attributes allowed in the index. */
-        private static readonly int MaxAttributes = 255;
+        private const int MaxAttributes = 255;
 
         /** Regex to stripe away "this." prefix. */
         private static readonly Regex ThisPattern = new Regex("^this\\.");
 
         public static IndexConfig ValidateAndNormalize(this IndexConfig config, string mapName)
         {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+
             // Validate attributes.
             var originalAttributeNames = config.Attributes;
             if (originalAttributeNames.Count == 0)
@@ -97,21 +99,15 @@ namespace Hazelcast.DistributedObjects.Implementation
         private static void ValidateAttribute(IndexConfig config, string attributeName)
         {
             if (attributeName == null)
-            {
                 throw new NullReferenceException($"Attribute name cannot be null: {config}");
-            }
 
             var attributeName0 = attributeName.Trim();
 
             if (attributeName0.Length == 0)
-            {
                 throw new ArgumentException($"Attribute name cannot be empty: {config}");
-            }
 
-            if (attributeName0.EndsWith("."))
-            {
+            if (attributeName0.EndsWith(".", StringComparison.Ordinal))
                 throw new ArgumentException($"Attribute name cannot end with dot: {attributeName}");
-            }
         }
 
         private static string CanonicalizeAttribute(string attribute)
@@ -121,17 +117,12 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         private static string GetIndexTypeName(IndexType indexType)
         {
-            switch (indexType)
+            return indexType switch
             {
-                case IndexType.Sorted:
-                    return "sorted";
-
-                case IndexType.Hashed:
-                    return "hash";
-
-                default:
-                    throw new ArgumentException($"Unsupported index type: {indexType}");
-            }
+                IndexType.Sorted => "sorted",
+                IndexType.Hashed => "hash",
+                _ => throw new ArgumentException($"Unsupported index type: {indexType}")
+            };
         }
     }
 }

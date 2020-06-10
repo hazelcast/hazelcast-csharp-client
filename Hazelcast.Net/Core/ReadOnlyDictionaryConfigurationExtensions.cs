@@ -30,6 +30,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static string GetStringValue(this IReadOnlyDictionary<string, string> keyValues, string key)
         {
+            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
             if (!keyValues.TryGetValue(key, out var arg))
                 throw new InvalidOperationException($"Failed to get a string value for key '{key}'.");
 
@@ -47,6 +48,7 @@ namespace Hazelcast.Core
         {
             value = default;
 
+            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
             if (!keyValues.TryGetValue(key, out var arg))
                 return false;
 
@@ -62,6 +64,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static Guid GetGuidValue(this IReadOnlyDictionary<string, string> keyValues, string key)
         {
+            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
             if (!keyValues.TryGetValue(key, out var arg) || !Guid.TryParse(arg, out var value))
                 throw new InvalidOperationException($"Failed to get a Guid value for key '{key}'.");
 
@@ -79,6 +82,7 @@ namespace Hazelcast.Core
         {
             value = default;
 
+            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
             return keyValues.TryGetValue(key, out var arg) && Guid.TryParse(arg, out value);
         }
 
@@ -90,6 +94,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static int GetIntValue(this IReadOnlyDictionary<string, string> keyValues, string key)
         {
+            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
             if (!keyValues.TryGetValue(key, out var arg) || !int.TryParse(arg, out var value))
                 throw new InvalidOperationException($"Failed to get an integer value for key '{key}'.");
 
@@ -107,6 +112,7 @@ namespace Hazelcast.Core
         {
             value = default;
 
+            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
             return keyValues.TryGetValue(key, out var arg) && int.TryParse(arg, out value);
         }
     }

@@ -14,7 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Data.Map;
+using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
@@ -59,21 +59,14 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             };
         }
 
-        public static IndexConfig CreateIndexConfig(string name, int indexType, List<string> attributes,
-            BitmapIndexOptions bitmapIndexOptions)
+        public static IndexConfig CreateIndexConfig(string name, int indexType, List<string> attributes, BitmapIndexOptions bitmapIndexOptions)
         {
-            return new IndexConfig
-            {
-                Name = name, Type = (IndexType) indexType, Attributes = attributes, BitmapIndexOptions = bitmapIndexOptions
-            };
+            return new IndexConfig(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndexOptions = bitmapIndexOptions };
         }
 
         public static BitmapIndexOptions CreateBitmapIndexOptions(string uniqueKey, int uniqueKeyTransformation)
         {
-            return new BitmapIndexOptions
-            {
-                UniqueKey = uniqueKey, UniqueKeyTransformation = (UniqueKeyTransformation) uniqueKeyTransformation
-            };
+            return new BitmapIndexOptions { UniqueKey = uniqueKey, UniqueKeyTransformation = (UniqueKeyTransformation) uniqueKeyTransformation };
         }
     }
 }

@@ -30,9 +30,9 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, TimeSpan timeout = default)
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(SubscribeAsync, on, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(SubscribeAsync, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -42,12 +42,12 @@ namespace Hazelcast.DistributedObjects.Implementation.Topic
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> on, CancellationToken cancellationToken)
+        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, CancellationToken cancellationToken)
         {
-            if (on == null) throw new ArgumentNullException(nameof(on));
+            if (handle == null) throw new ArgumentNullException(nameof(handle));
 
             var handlers = new TopicEventHandlers<T>();
-            on(handlers);
+            handle(handlers);
 
             var subscription = new ClusterSubscription(
                 TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),

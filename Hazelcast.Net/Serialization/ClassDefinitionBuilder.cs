@@ -154,6 +154,7 @@ namespace Hazelcast.Serialization
 
         public ClassDefinitionBuilder AddPortableArrayField(string fieldName, IClassDefinition def)
         {
+            if (def == null) throw new ArgumentNullException(nameof(def));
             Check();
             if (def.GetClassId() == 0)
             {
@@ -166,6 +167,7 @@ namespace Hazelcast.Serialization
 
         public ClassDefinitionBuilder AddPortableField(string fieldName, IClassDefinition def)
         {
+            if (def == null) throw new ArgumentNullException(nameof(def));
             Check();
             if (def.GetClassId() == 0)
             {

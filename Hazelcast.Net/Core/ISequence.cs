@@ -23,6 +23,6 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the next element of the sequence.
         /// </summary>
-        T Next { get; }
+        T GetNext();
     }
 }

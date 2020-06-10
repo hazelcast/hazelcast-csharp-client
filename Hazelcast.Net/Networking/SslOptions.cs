@@ -89,16 +89,15 @@ namespace Hazelcast.Networking
             get => _sslProtocol;
             set
             {
-                switch (value)
+                _sslProtocol = value switch
                 {
-                    case SslProtocols.Tls:
-                    case SslProtocols.Tls11:
-                    case SslProtocols.Tls12:
-                        _sslProtocol = value;
-                        break;
-                    default:
-                        throw new ConfigurationException("Invalid value. Value must be Tls, Tls11 or Tls12.");
-                }
+#pragma warning disable CA5397 // Do not use deprecated SslProtocols values - TODO: consider removing them?
+                    SslProtocols.Tls => value,
+                    SslProtocols.Tls11 => value,
+#pragma warning restore CA5397
+                    SslProtocols.Tls12 => value,
+                    _ => throw new ConfigurationException("Invalid value. Value must be Tls, Tls11 or Tls12.")
+                };
             }
         }
 

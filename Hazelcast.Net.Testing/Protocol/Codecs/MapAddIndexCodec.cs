@@ -32,6 +32,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -58,10 +59,10 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Index configuration.
             ///</summary>
-            public Hazelcast.Data.Map.IndexConfig IndexConfig { get; set; }
+            public IndexConfig IndexConfig { get; set; }
         }
 
-        public static ClientMessage EncodeRequest(string name, Hazelcast.Data.Map.IndexConfig indexConfig)
+        public static ClientMessage EncodeRequest(string name, IndexConfig indexConfig)
         {
             var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;

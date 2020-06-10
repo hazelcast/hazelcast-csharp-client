@@ -114,7 +114,7 @@ namespace Hazelcast.DistributedObjects
         Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, TimeSpan timeout = default) where TItem : T;
         Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, CancellationToken cancellationToken) where TItem : T;
 
-        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> on, TimeSpan timeout = default);
-        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> on, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken);
     }
 }

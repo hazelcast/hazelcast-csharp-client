@@ -168,7 +168,7 @@ namespace Hazelcast.Clustering
 #endif
         Task<ClientMessage> SendAsyncInternal(ClientMessage message, Client client, CancellationToken cancellationToken)
         {
-            var task = SendAsyncInternal(message, client, _correlationIdSequence.Next, cancellationToken);
+            var task = SendAsyncInternal(message, client, _correlationIdSequence.GetNext(), cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -219,7 +219,7 @@ namespace Hazelcast.Clustering
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
                     if (invocation.ShouldRetry(exception, _options.Networking.RetryOnTargetDisconnected) &&
-                        await invocation.CanRetryAsync(() => _correlationIdSequence.Next).CAF())
+                        await invocation.CanRetryAsync(() => _correlationIdSequence.GetNext()).CAF())
                     {
                         HzConsole.WriteLine(this, "Retrying...");
                         continue;

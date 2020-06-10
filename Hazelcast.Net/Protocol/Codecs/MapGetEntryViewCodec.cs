@@ -31,6 +31,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
+using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -71,7 +72,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public Hazelcast.Data.Map.MapEntry<IData, IData> Response { get; set; }
+            public MapEntry<IData, IData> Response { get; set; }
 
             /// <summary>
             /// Last set max idle in millis.

@@ -105,7 +105,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list);
                     requestMessage.PartitionId = partitionId;
                     var ownerTask = Cluster.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
-                        .ContinueWith(_ => InvalidateEntries(list), CancellationToken.None);
+                        .ContinueWith(_ => InvalidateEntries(list), default, default, TaskScheduler.Current);
                     tasks.Add(ownerTask);
                 }
             }
@@ -196,7 +196,8 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
                     var remove = new List<IData>();
                     foreach (var key in list)
                     {
-                        if (_cache.TryGetValue(key, out var value))
+                        var (hasValue, value) = await _cache.TryGetValue(key).CAF();
+                        if (hasValue)
                         {
                             remove.Add(key);
                             cachedEntries[key] = value;
@@ -229,7 +230,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         /// <inheritdoc />
         protected override async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
-            return _cache.ContainsKey(keyData) || await base.ContainsKeyAsync(keyData, cancellationToken).CAF();
+            return await _cache.ContainsKey(keyData).CAF() || await base.ContainsKeyAsync(keyData, cancellationToken).CAF();
         }
 
         #endregion
@@ -287,7 +288,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
         public override async Task ClearAsync(CancellationToken cancellationToken)
         {
             await base.ClearAsync(cancellationToken)
-                .ContinueWith(_ => _cache.InvalidateAll(), CancellationToken.None)
+                .ContinueWith(_ => _cache.InvalidateAll(), default, default, TaskScheduler.Current)
                 .CAF();
         }
 
@@ -306,7 +307,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
             {
                 _cache.Invalidate(keyData);
                 return t;
-            }, CancellationToken.None);
+            }, default, default, TaskScheduler.Current);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -326,7 +327,7 @@ namespace Hazelcast.DistributedObjects.Implementation.CachedMap
             {
                 _cache.Invalidate(keyData);
                 return t;
-            }, CancellationToken.None);
+            }, default, default, TaskScheduler.Current);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

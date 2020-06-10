@@ -311,9 +311,10 @@ namespace Hazelcast.Tests.DotNet
             Assert.AreEqual(id1, id2);
             //Assert.AreNotEqual(t1, t2);
 
+            /*
             long id3 = 0, id4 = 0;
             int t3 = 0, t4 = 0;
-            /*
+
             await Task.Run(() =>
             {
                 // the context, being async local, flows here
@@ -354,7 +355,7 @@ namespace Hazelcast.Tests.DotNet
             Console.WriteLine("--");
             await task;
 
-            AsyncContext.RunDetached(() =>
+            _ = AsyncContext.RunDetached(() =>
             {
                 Task.Run(async () =>
                 {
@@ -368,22 +369,19 @@ namespace Hazelcast.Tests.DotNet
             Console.WriteLine($"5: [{t5}] {id5}");
 
             Assert.AreEqual(id1, id5);
-            Assert.AreNotEqual(id1, id3);
-            Assert.AreEqual(id3, id4);
+            //Assert.AreNotEqual(id1, id3);
+            //Assert.AreEqual(id3, id4);
 
             //Assert.AreNotEqual(t3, t4);
 
             await Task.Delay(2000);
         }
 
-        private async Task AsyncContextWhenAsyncSub(string n)
+        private static async Task AsyncContextWhenAsyncSub(string n)
         {
-            long id3 = 0, id4 = 0;
-            int t3 = 0, t4 = 0;
-
-            id3 = AsyncContext.CurrentContext.Id;
-            t3 = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"3{n}: [{t3}] {id3}");
+            var id = AsyncContext.CurrentContext.Id;
+            var t = Thread.CurrentThread.ManagedThreadId;
+            Console.WriteLine($"3{n}: [{t}] {id}");
 
             async Task f()
             {
@@ -395,9 +393,9 @@ namespace Hazelcast.Tests.DotNet
             await f();
             await Task.Delay(500);
 
-            id3 = AsyncContext.CurrentContext.Id;
-            t3 = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"3{n}: [{t3}] {id3}");
+            id = AsyncContext.CurrentContext.Id;
+            t = Thread.CurrentThread.ManagedThreadId;
+            Console.WriteLine($"3{n}: [{t}] {id}");
         }
 
         [Test]
@@ -527,34 +525,6 @@ namespace Hazelcast.Tests.DotNet
                 => $"[{ManagedThreadId:00}] {Message}";
         }
 
-        public struct ThingTask<TResult> : ICriticalNotifyCompletion
-        {
-            private readonly string _thingId;
-            private readonly Task<(string, TResult)> _task;
-
-            public ThingTask(string thingId, Task<TResult> task)
-            {
-                // but, exceptions?
-                _task = task.ContinueWith(x => (thingId, x.Result), TaskContinuationOptions.ExecuteSynchronously);
-                _thingId = thingId;
-            }
-
-            // awaitable
-            public TaskAwaiter<(string, TResult)> GetAwaiter() => _task.GetAwaiter();
-
-            // INotifyCompletion
-            public void OnCompleted(Action continuation)
-                => _task.GetAwaiter().OnCompleted(continuation);
-
-            // ICriticalNotifyCompletion
-            public void UnsafeOnCompleted(Action continuation)
-                => _task.GetAwaiter().UnsafeOnCompleted(continuation);
-
-            //public bool IsCompleted => _task.GetAwaiter().IsCompleted;
-
-            //public TResult GetResult() => Task.GetAwaiter().GetResult();
-        }
-
         [Test]
         public async Task StackTrace1()
         {
@@ -590,9 +560,6 @@ namespace Hazelcast.Tests.DotNet
         public async Task<T> WrapS1<T>(Func<Task<T>> function)
             => await function();
 
-        public async Task<T> WrapS2<T>(Func<Task<T>> function)
-            => await function();
-
         public Task<T> WrapD1<T>(Func<Task<T>> function)
             => function();
 
@@ -600,7 +567,10 @@ namespace Hazelcast.Tests.DotNet
             => function();
 
         public async Task<T> WrapThrow<T>()
-            => throw new Exception("bang");
+        {
+            await Task.Yield();
+            throw new Exception("bang");
+        } 
 
         public async Task<T> WrapThrow2<T>(CancellationToken token)
         {
@@ -671,9 +641,10 @@ namespace Hazelcast.Tests.DotNet
         // the issue is for methods which return a Task without being 'async'
         public async Task Throw4()
         {
+            await Task.Yield();
             //await Task.Delay(100);
             throw new Exception("bang");
-            await Throw();
+            //await Throw();
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Hazelcast.Predicates
     /// <summary>
     /// Creates predicates.
     /// </summary>
-    public static class Predicates
+    public static class Predicate
     {
         public const string KeyConst = "__key";
         private const string ThisConst = "this";

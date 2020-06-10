@@ -57,7 +57,7 @@ namespace Hazelcast.Networking
         /// to it. This initial member will then send the list of other members
         /// to the client.</para>
         /// </remarks>
-        public IList<string> Addresses { get; set; } = new List<string>();
+        public IList<string> Addresses { get; } = new List<string>();
 
         /// <summary>
         /// Whether to shuffle addresses when attempting to connect to the cluster.

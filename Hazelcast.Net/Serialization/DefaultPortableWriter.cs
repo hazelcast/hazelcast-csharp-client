@@ -244,7 +244,7 @@ namespace Hazelcast.Serialization
             _out.WriteInt(_begin, position);
         }
 
-        private void CheckPortableAttributes(IFieldDefinition fd, IPortable portable)
+        private static void CheckPortableAttributes(IFieldDefinition fd, IPortable portable)
         {
             if (fd.GetFactoryId() != portable.GetFactoryId())
             {

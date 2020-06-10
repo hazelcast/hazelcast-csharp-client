@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 
 namespace Hazelcast.Serialization
 {
-    public interface ISerializationService
+    public interface ISerializationService : IDisposable
     {
         IBufferObjectDataInput CreateObjectDataInput(byte[] data);
         IBufferObjectDataInput CreateObjectDataInput(IData data);

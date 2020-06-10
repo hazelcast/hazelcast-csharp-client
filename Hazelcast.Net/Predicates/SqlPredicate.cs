@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 using Hazelcast.Serialization;
 
@@ -25,8 +26,7 @@ namespace Hazelcast.Predicates
         private string _sql;
 
         public SqlPredicate()
-        {
-        }
+        { }
 
         public SqlPredicate(string sql)
         {
@@ -35,11 +35,13 @@ namespace Hazelcast.Predicates
 
         public void WriteData(IObjectDataOutput output)
         {
+            if (output == null) throw new ArgumentNullException(nameof(output));
             output.WriteUtf(_sql);
         }
 
         public void ReadData(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
             _sql = input.ReadUtf();
         }
 
@@ -70,7 +72,10 @@ namespace Hazelcast.Predicates
 
         public override int GetHashCode()
         {
-            return (_sql != null ? _sql.GetHashCode() : 0);
+            
+            // ReSharper disable NonReadonlyMemberInGetHashCode
+            return _sql != null ? _sql.GetHashCode(StringComparison.Ordinal) : 0;
+            // ReSharper restore NonReadonlyMemberInGetHashCode
         }
 
         public override string ToString()
