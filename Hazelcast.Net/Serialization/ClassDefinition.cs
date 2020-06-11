@@ -42,8 +42,7 @@ namespace Hazelcast.Serialization
 
         public virtual IFieldDefinition GetField(string name)
         {
-            IFieldDefinition val;
-            return _fieldDefinitionsMap.TryGetValue(name, out val) ? val : null;
+            return _fieldDefinitionsMap.TryGetValue(name, out var val) ? val : null;
         }
 
         public virtual IFieldDefinition GetField(int fieldIndex)
@@ -109,7 +108,7 @@ namespace Hazelcast.Serialization
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
             return Equals((ClassDefinition) obj);

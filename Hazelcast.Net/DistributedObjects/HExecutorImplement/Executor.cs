@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.HExecutorImplement
             throw new NotSupportedException();
         }
 
-        public IEnumerable<Task<(Guid MemberId, TResult Result)>> ExecuteOnAllAsync<TResult>(IExecutable<TResult> executable, CancellationToken cancellationToken)
+        public IEnumerable<Task<ExecutionResult<TResult>>> ExecuteOnAllAsync<TResult>(IExecutable<TResult> executable, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }
@@ -124,7 +124,7 @@ namespace Hazelcast.DistributedObjects.HExecutorImplement
             throw new NotSupportedException();
         }
 
-        public IEnumerable<Task<(Guid MemberId, TResult Result)>> ExecuteAsync<TResult>(IExecutable<TResult> executable, IEnumerable<Guid> memberIds, CancellationToken cancellationToken)
+        public IEnumerable<Task<ExecutionResult<TResult>>> ExecuteAsync<TResult>(IExecutable<TResult> executable, IEnumerable<Guid> memberIds, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }

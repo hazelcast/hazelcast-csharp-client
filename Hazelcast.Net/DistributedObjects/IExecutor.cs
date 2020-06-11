@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects
     /// <seealso cref="IMultiExecutionCallback" />
     public interface IExecutor
     {
-        // TODO: for anything returning Task<TResult> could we want Task<(Guid MemberId, TResult Result) instead?
+        // TODO: for anything returning Task<TResult> could we want Task<ExecutionResult<TResult> instead?
 
         // the original code, when it returns a 'future', can cancel the execution
         // future.cancel(bool evenIfAlreadyRunning)
@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects
         // (should we have timeouts too?)
 
         Task ExecuteOnAllAsync(IExecutable executable, CancellationToken cancellationToken);
-        IEnumerable<Task<(Guid MemberId, TResult Result)>> ExecuteOnAllAsync<TResult>(IExecutable<TResult> executable, CancellationToken cancellationToken);
+        IEnumerable<Task<ExecutionResult<TResult>>> ExecuteOnAllAsync<TResult>(IExecutable<TResult> executable, CancellationToken cancellationToken);
 
         Task ExecuteAsync(IExecutable executable, CancellationToken cancellationToken); // on random member
         Task<TResult> ExecuteAsync<TResult>(IExecutable<TResult> executable, CancellationToken cancellationToken); // on random member
@@ -49,6 +49,6 @@ namespace Hazelcast.DistributedObjects
         Task<TResult> ExecuteAsync<TResult>(IExecutable<TResult> executable, Guid memberId, CancellationToken cancellationToken); // on member
 
         Task ExecuteAsync(IExecutable executable, IEnumerable<Guid> memberIds, CancellationToken cancellationToken); // on members
-        IEnumerable<Task<(Guid MemberId, TResult Result)>> ExecuteAsync<TResult>(IExecutable<TResult> executable, IEnumerable<Guid> memberIds, CancellationToken cancellationToken); // on members
+        IEnumerable<Task<ExecutionResult<TResult>>> ExecuteAsync<TResult>(IExecutable<TResult> executable, IEnumerable<Guid> memberIds, CancellationToken cancellationToken); // on members
     }
 }

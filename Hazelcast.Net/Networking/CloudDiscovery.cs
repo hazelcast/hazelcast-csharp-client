@@ -74,11 +74,9 @@ namespace Hazelcast.Networking
 
         private static string ReadFromResponse(WebResponse webResponse)
         {
-            using (var responseStream = webResponse.GetResponseStream())
-            using (var sr = new StreamReader(responseStream, Encoding.UTF8))
-            {
-                return sr.ReadToEnd();
-            }
+            using var responseStream = webResponse.GetResponseStream();
+            using var sr = new StreamReader(responseStream, Encoding.UTF8);
+            return sr.ReadToEnd();
         }
 
         private static Dictionary<NetworkAddress, NetworkAddress> ParseResponse(string jsonResult)
