@@ -14,6 +14,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Transactions
 {
@@ -23,14 +24,11 @@ namespace Hazelcast.Transactions
     [Serializable]
     internal class TransactionTimedOutException : TransactionException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Transaction timed out.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TransactionTimedOutException"/> class.
         /// </summary>
         public TransactionTimedOutException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.TransactionTimedOutException)
         { }
 
         /// <summary>
@@ -48,7 +46,7 @@ namespace Hazelcast.Transactions
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public TransactionTimedOutException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.TransactionTimedOutException, innerException)
         { }
 
         /// <summary>

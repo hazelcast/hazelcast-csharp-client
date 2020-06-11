@@ -24,14 +24,11 @@ namespace Hazelcast.Exceptions
     [Serializable]
     public sealed class TargetDisconnectedException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Target disconnected.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationException"/> class.
         /// </summary>
         public TargetDisconnectedException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.TargetDisconnectedException)
         { }
 
         /// <summary>
@@ -49,7 +46,7 @@ namespace Hazelcast.Exceptions
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public TargetDisconnectedException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.TargetDisconnectedException, innerException)
         { }
 
         /// <summary>

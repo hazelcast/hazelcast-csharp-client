@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Messaging
 {
@@ -130,7 +131,7 @@ namespace Hazelcast.Messaging
 
                         if (ready != null)
                             yield return ready;
-                        ready = current ?? throw new Exception("panic");
+                        ready = current ?? throw new HazelcastException("panic");
 
                         current = NewFragment(frame);
                         size = frame.Length;

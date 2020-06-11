@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> Cleared(Action<IMap<TKey, TValue>, MapClearedEventArgs> handler)
+        public MapEventHandlers<TKey, TValue> Cleared(Action<IHMap<TKey, TValue>, MapClearedEventArgs> handler)
         {
             Add(new MapClearedEventHandler<TKey, TValue>(handler));
             return this;
@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> Evicted(Action<IMap<TKey, TValue>, MapEvictedEventArgs> handler)
+        public MapEventHandlers<TKey, TValue> Evicted(Action<IHMap<TKey, TValue>, MapEvictedEventArgs> handler)
         {
             Add(new MapEvictedEventHandler<TKey, TValue>(handler));
             return this;
@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryUpdated(Action<IMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryUpdated(Action<IHMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryUpdatedEventHandler<TKey, TValue>(handler));
             return this;
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryRemoved(Action<IMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryRemoved(Action<IHMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryRemovedEventHandler<TKey, TValue>(handler));
             return this;
@@ -71,7 +71,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryAdded(Action<IMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryAdded(Action<IHMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryAddedEventHandler<TKey, TValue>(handler));
             return this;
@@ -82,7 +82,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryEvicted(Action<IMap<TKey, TValue>, MapEntryEvictedEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryEvicted(Action<IHMap<TKey, TValue>, MapEntryEvictedEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryEvictedEventHandler<TKey, TValue>(handler));
             return this;
@@ -93,7 +93,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryExpired(Action<IMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryExpired(Action<IHMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryExpiredEventHandler<TKey, TValue>(handler));
             return this;
@@ -104,7 +104,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryInvalidated(Action<IMap<TKey, TValue>, MapEntryInvalidatedEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryInvalidated(Action<IHMap<TKey, TValue>, MapEntryInvalidatedEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryInvalidatedEventHandler<TKey, TValue>(handler));
             return this;
@@ -115,7 +115,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryLoaded(Action<IMap<TKey, TValue>, MapEntryLoadedEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryLoaded(Action<IHMap<TKey, TValue>, MapEntryLoadedEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryLoadedEventHandler<TKey, TValue>(handler));
             return this;
@@ -126,7 +126,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryMerged(Action<IMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
+        public MapEventHandlers<TKey, TValue> EntryMerged(Action<IHMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
         {
             Add(new MapEntryMergedEventHandler<TKey, TValue>(handler));
             return this;

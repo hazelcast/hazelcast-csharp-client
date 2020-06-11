@@ -23,14 +23,11 @@ namespace Hazelcast.Exceptions
     [Serializable]
     public sealed class ClientNotConnectedException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Hazelcast client is not connected.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class.
         /// </summary>
         public ClientNotConnectedException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.ClientNotConnectedException)
         { }
 
         /// <summary>
@@ -48,7 +45,7 @@ namespace Hazelcast.Exceptions
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public ClientNotConnectedException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.ClientNotConnectedException, innerException)
         { }
 
         /// <summary>

@@ -24,14 +24,11 @@ namespace Hazelcast.Configuration
     [Serializable]
     public sealed class ConfigurationException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Invalid configuration.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationException"/> class.
         /// </summary>
         public ConfigurationException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.ConfigurationException)
         { }
 
         /// <summary>
@@ -49,7 +46,7 @@ namespace Hazelcast.Configuration
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public ConfigurationException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.ConfigurationException, innerException)
         { }
 
         /// <summary>

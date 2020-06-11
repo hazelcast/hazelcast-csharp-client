@@ -23,14 +23,11 @@ namespace Hazelcast.Exceptions
     [Serializable]
     public sealed class AuthenticationException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Failed to authenticate.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationException"/> class.
         /// </summary>
         public AuthenticationException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.AuthenticationException)
         { }
 
         /// <summary>
@@ -48,7 +45,7 @@ namespace Hazelcast.Exceptions
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public AuthenticationException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.AuthenticationException, innerException)
         { }
 
         /// <summary>

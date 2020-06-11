@@ -28,7 +28,7 @@ namespace Hazelcast.Networking
     public class ServerSocketConnection : SocketConnectionBase
     {
         // note: the socket is disposed by the SocketConnection parent class
-        private readonly Socket _socket;
+        private readonly Socket _acceptingSocket;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerSocketConnection"/> class.
@@ -38,7 +38,7 @@ namespace Hazelcast.Networking
         public ServerSocketConnection(int id, Socket socket)
             : base(id)
         {
-            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _acceptingSocket = socket ?? throw new ArgumentNullException(nameof(socket));
             HzConsole.Configure(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]"));
         }
 
@@ -58,10 +58,10 @@ namespace Hazelcast.Networking
 
             // use a stream, because we may use SSL and require an SslStream
             // TODO implement SSL or provide a Func<Stream, Stream>
-            var stream = new NetworkStream(_socket, false);
+            var stream = new NetworkStream(_acceptingSocket, false);
 
             // wire the pipe
-            OpenPipe(_socket, stream);
+            OpenPipe(_acceptingSocket, stream);
 
             HzConsole.WriteLine(this, "Connected");
         }

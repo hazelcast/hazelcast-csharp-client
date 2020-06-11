@@ -14,6 +14,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Transactions
 {
@@ -23,14 +24,11 @@ namespace Hazelcast.Transactions
     [Serializable]
     internal class TransactionNotActiveException : TransactionException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Missing an active transaction.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TransactionNotActiveException"/> class.
         /// </summary>
         public TransactionNotActiveException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.TransactionNotActiveException)
         { }
 
         /// <summary>
@@ -48,7 +46,7 @@ namespace Hazelcast.Transactions
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public TransactionNotActiveException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.TransactionNotActiveException, innerException)
         { }
 
         /// <summary>

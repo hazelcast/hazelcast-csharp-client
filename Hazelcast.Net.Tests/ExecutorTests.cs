@@ -16,7 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.Implementation.Executor;
+using Hazelcast.DistributedObjects.HExecutorImplement;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests

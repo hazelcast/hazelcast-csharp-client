@@ -19,7 +19,7 @@ namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEntryMergedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryMergedEventArgs<TKey, TValue>>
     {
-        public MapEntryMergedEventHandler(Action<IMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
+        public MapEntryMergedEventHandler(Action<IHMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
             : base(MapEventTypes.Merged, handler)
         { }
 

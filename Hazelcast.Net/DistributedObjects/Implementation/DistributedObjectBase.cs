@@ -24,7 +24,6 @@ using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using TaskExtensions = Hazelcast.Core.TaskExtensions;
 
 namespace Hazelcast.DistributedObjects.Implementation
 {

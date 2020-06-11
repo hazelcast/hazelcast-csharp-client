@@ -39,9 +39,6 @@ namespace System
     /// int[] subArray2 = someArray[1..^0]; // { 2, 3, 4, 5 }
     /// </code>
     /// </remarks>
-    [SuppressMessage("NDepend", "ND2102:AvoidDefiningMultipleTypesInASourceFile", Justification = "Imported code.")]
-    [SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation", Justification = "Imported code.")]
-    [SuppressMessage("NDepend", "ND1400:AvoidNamespacesMutuallyDependent", Justification = "Imported code.")]
     internal readonly struct Range : IEquatable<Range>
     {
         /// <summary>Represent the inclusive start index of the Range.</summary>

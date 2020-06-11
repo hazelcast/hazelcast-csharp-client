@@ -67,7 +67,7 @@ namespace Hazelcast.Core
         public static CancellationTokenSource AsCancellationTokenSource(this TimeSpan timeSpan, int defaultTimeoutMilliseconds)
         {
             var timeout = (int) timeSpan.TotalMilliseconds;
-            if (timeout < 0) return TaskExtensions.NeverCanceledSource;
+            if (timeout < 0) return TaskCoreExtensions.NeverCanceledSource;
             if (timeout == 0) timeout = defaultTimeoutMilliseconds;
             return new CancellationTokenSource(timeout);
         }

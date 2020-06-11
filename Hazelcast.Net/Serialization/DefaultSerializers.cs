@@ -24,7 +24,7 @@ namespace Hazelcast.Serialization
 {
     class DefaultSerializers
     {
-        internal class JavaClassSerializer : ConstantSerializers.SingletonSerializer<JavaClass>
+        internal class JavaClassSerializer : ConstantSerializers.SingletonSerializerBase<JavaClass>
         {
             public override int GetTypeId()
             {
@@ -42,7 +42,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal sealed class HazelcastJsonValueSerializer : ConstantSerializers.SingletonSerializer<HazelcastJsonValue>
+        internal sealed class HazelcastJsonValueSerializer : ConstantSerializers.SingletonSerializerBase<HazelcastJsonValue>
         {
             public override int GetTypeId()
             {
@@ -62,7 +62,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class DateSerializer : ConstantSerializers.SingletonSerializer<DateTime>
+        internal class DateSerializer : ConstantSerializers.SingletonSerializerBase<DateTime>
         {
             private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -92,7 +92,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class BigIntegerSerializer : ConstantSerializers.SingletonSerializer<BigInteger>
+        internal class BigIntegerSerializer : ConstantSerializers.SingletonSerializerBase<BigInteger>
         {
             public override int GetTypeId()
             {
@@ -116,7 +116,7 @@ namespace Hazelcast.Serialization
 
         // TODO: BigDecimal
 
-        internal class ListSerializer<T> : ConstantSerializers.SingletonSerializer<List<T>>
+        internal class ListSerializer<T> : ConstantSerializers.SingletonSerializerBase<List<T>>
         {
             public override int GetTypeId()
             {
@@ -147,7 +147,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class LinkedListSerializer<T> : ConstantSerializers.SingletonSerializer<LinkedList<T>>
+        internal class LinkedListSerializer<T> : ConstantSerializers.SingletonSerializerBase<LinkedList<T>>
         {
             public override int GetTypeId()
             {
@@ -181,7 +181,7 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Serialize using default .NET serialization
         /// </summary>
-        internal class SerializableSerializer : ConstantSerializers.SingletonSerializer<object>
+        internal class SerializableSerializer : ConstantSerializers.SingletonSerializerBase<object>
         {
             public override int GetTypeId()
             {
@@ -204,7 +204,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class ArrayStreamSerializer : ConstantSerializers.SingletonSerializer<object[]>
+        internal class ArrayStreamSerializer : ConstantSerializers.SingletonSerializerBase<object[]>
         {
             public override int GetTypeId() => SerializationConstants.JavaDefaultTypeArray;
 
@@ -229,7 +229,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class HashMapStreamSerializer : AbstractDictStreamSerializer<Dictionary<object, object>>
+        internal class HashMapStreamSerializer : DictStreamSerializerBase<Dictionary<object, object>>
         {
             public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashMap;
 
@@ -241,7 +241,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class ConcurrentHashMapStreamSerializer : AbstractDictStreamSerializer<ConcurrentDictionary<object, object>>
+        internal class ConcurrentHashMapStreamSerializer : DictStreamSerializerBase<ConcurrentDictionary<object, object>>
         {
             private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
 
@@ -255,7 +255,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class HashSetStreamSerializer : AbstractCollectionStreamSerializer<HashSet<object>>
+        internal class HashSetStreamSerializer : CollectionStreamSerializerBase<HashSet<object>>
         {
             public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashSet;
 
@@ -267,7 +267,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal abstract class AbstractCollectionStreamSerializer<CollectionType> : IStreamSerializer<CollectionType>
+        internal abstract class CollectionStreamSerializerBase<CollectionType> : IStreamSerializer<CollectionType>
             where CollectionType : ISet<object>
         {
             public void Destroy()
@@ -301,7 +301,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal abstract class AbstractDictStreamSerializer<DType> : IStreamSerializer<DType>
+        internal abstract class DictStreamSerializerBase<DType> : IStreamSerializer<DType>
             where DType : IDictionary<object, object>
         {
             public abstract int GetTypeId();

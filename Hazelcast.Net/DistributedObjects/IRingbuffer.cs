@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects
     /// meaning that only 1 thread is able to take an item. A ringbuffer.read is not destructive, so you can have multiple threads
     /// reading the same item multiple times.
     /// The Ringbuffer is the backing data-structure for the reliable
-    /// <see cref="ITopic{T}"/>
+    /// <see cref="IHTopic{T}"/>
     /// implementation.
     /// </remarks>
     public interface IRingbuffer<T> : IDistributedObject

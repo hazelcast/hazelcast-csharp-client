@@ -77,9 +77,10 @@ namespace Hazelcast.Predicates
         {
             unchecked
             {
-                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                // ReSharper disable NonReadonlyMemberInGetHashCode
                 return ((AttributeName != null ? AttributeName.GetHashCode(StringComparison.Ordinal) : 0)*397) ^
                        (Expression != null ? Expression.GetHashCode(StringComparison.Ordinal) : 0);
+                // ReSharper restore NonReadonlyMemberInGetHashCode
             }
         }
 

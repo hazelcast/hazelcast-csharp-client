@@ -21,7 +21,7 @@ namespace Hazelcast.Examples.Org.Website.Samples
     // ReSharper disable once UnusedMember.Global
     public class TopicExample
     {
-        private static void OnMessage(ITopic<string> sender, TopicMessageEventArgs<string> args)
+        private static void OnMessage(IHTopic<string> sender, TopicMessageEventArgs<string> args)
         {
             Console.WriteLine($"Got message " + args.Payload);
         }

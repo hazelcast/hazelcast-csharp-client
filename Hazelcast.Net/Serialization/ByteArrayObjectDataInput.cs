@@ -700,26 +700,15 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public int Read(byte[] b, int off, int len)
         {
-            if (b == null)
-            {
-                throw new ArgumentNullException(nameof(b));
-            }
-            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
-            {
-                throw new IndexOutOfRangeException();
-            }
-            if (len <= 0)
-            {
-                return 0;
-            }
-            if (Pos >= Size)
-            {
-                return -1;
-            }
-            if (Pos + len > Size)
-            {
-                len = Size - Pos;
-            }
+            if (b == null) throw new ArgumentNullException(nameof(b));
+            if (off < 0 || off > b.Length) throw new ArgumentOutOfRangeException(nameof(off));
+            if (len < 0 || off + len > b.Length || off + len < 0) throw new ArgumentOutOfRangeException(nameof(len));
+
+            if (len <= 0) return 0;
+            if (Pos >= Size) return -1;
+            
+            if (Pos + len > Size) len = Size - Pos;
+
             Buffer.BlockCopy(Data, Pos, b, off, len);
             Pos += len;
             return len;

@@ -201,7 +201,7 @@ namespace Hazelcast.Networking
         {
             if (hostname == "0.0.0.0") return IPAddress.Any;
 
-            var addresses = Dns.GetHostAddresses(hostname);
+            var addresses = DnsEx.GetHostAddresses(hostname);
 
             // prefer an IP v4, if possible
             return addresses.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork) ??
@@ -398,8 +398,8 @@ namespace Hazelcast.Networking
             // if the address is IP v6 local without a scope,
             // resolve
 
-            var hostname = Dns.GetHostName();
-            var entry = Dns.GetHostEntry(hostname);
+            var hostname = DnsEx.GetHostName();
+            var entry = DnsEx.GetHostEntry(hostname);
             foreach (var address in entry.AddressList)
             {
                 if (address.AddressFamily == AddressFamily.InterNetworkV6)

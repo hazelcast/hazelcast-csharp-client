@@ -24,14 +24,11 @@ namespace Hazelcast.Serialization
     [Serializable]
     internal class InvalidPortableFieldException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Invalid portable field.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="InvalidPortableFieldException"/> class.
         /// </summary>
         public InvalidPortableFieldException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.InvalidPortableFieldException)
         { }
 
         /// <summary>
@@ -49,7 +46,7 @@ namespace Hazelcast.Serialization
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public InvalidPortableFieldException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.InvalidPortableFieldException, innerException)
         { }
 
         /// <summary>

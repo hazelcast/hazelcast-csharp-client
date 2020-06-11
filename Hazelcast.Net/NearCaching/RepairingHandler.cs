@@ -131,7 +131,7 @@ namespace Hazelcast.NearCaching
         }
 
         /**
-         * Handles batch invalidations
+         * Handles batch invalidation
          */
         public void Handle(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids,
             IEnumerable<long> sequences)

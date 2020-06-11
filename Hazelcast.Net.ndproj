@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<NDepend AppName="HzReloaded" Platform="DotNet" FileWrittenByProductVersion="2019.3.0.9290">
+<NDepend AppName="HzReloaded" Platform="DotNet" FileWrittenByProductVersion="2020.1.0.9404">
   <OutputDir KeepXmlFiles="False">.\NDependOut</OutputDir>
   <IDEFiles />
   <Assemblies>
@@ -63,6 +63,7 @@
   <SourceFileRebasing FromPath="" ToPath="" />
   <PathVariables />
   <RuleFiles />
+  <GraphFiles />
   <ProjectRules AreActive="True" />
   <ProjectDebtSettings DebtSettingsStorage="0" SettingsFilePath="">
     <DebtSettings>
@@ -8298,6 +8299,11 @@ where
   // word that starts with an upper-case letter after the namespace name.
   // This way we avoid matching false-positive where namespace name is "Stat" and type name is "Statistic".
   (t.Name.Length == n.SimpleName.Length || char.IsUpper(t.Name[n.SimpleName.Length]))
+// custom: accept some names
+&& !t.Name.EndsWith("Options")
+&& !t.Name.EndsWith("Constants")
+&& !t.Name.EndsWith("Extensions")
+&& !t.Name.EndsWith("Exception")
 select new { 
    t, 
    namespaceName = n.SimpleName,
@@ -8830,6 +8836,8 @@ from a in Application.Assemblies
 let assemblyName = a.Name
 
 from n in a.ChildNamespaces 
+// custom: Suppress our own System.* netstandard fixes.
+//where !n.Name.StartsWith("System")
 let namespaceName = n.Name
 
 // Build the   dirShouldContain   string

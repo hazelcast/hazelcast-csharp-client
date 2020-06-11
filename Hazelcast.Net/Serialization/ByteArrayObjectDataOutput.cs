@@ -338,14 +338,12 @@ namespace Hazelcast.Serialization
 
         public virtual void Write(byte[] b, int off, int len)
         {
-            if ((off < 0) || (off > b.Length) || (len < 0) || ((off + len) > b.Length) || ((off + len) < 0))
-            {
-                throw new IndexOutOfRangeException();
-            }
-            if (len == 0)
-            {
-                return;
-            }
+            if (b == null) throw new ArgumentNullException(nameof(b));
+            if (off < 0 || off > b.Length) throw new ArgumentOutOfRangeException(nameof(off));
+            if (len < 0 || off + len > b.Length || off + len < 0) throw new ArgumentOutOfRangeException(nameof(len));
+
+            if (len <= 0) return;
+
             EnsureAvailable(len);
             System.Buffer.BlockCopy(b, off, Buffer, Pos, len);
             Pos += len;

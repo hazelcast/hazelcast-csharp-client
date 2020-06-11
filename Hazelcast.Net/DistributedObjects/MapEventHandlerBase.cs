@@ -25,9 +25,9 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="TArgs">The actual type of the arguments.</typeparam>
     internal abstract class MapEventHandlerBase<TKey, TValue, TArgs> : IMapEventHandler<TKey, TValue>
     {
-        private readonly Action<IMap<TKey, TValue>, TArgs> _handler;
+        private readonly Action<IHMap<TKey, TValue>, TArgs> _handler;
 
-        protected MapEventHandlerBase(MapEventTypes eventType, Action<IMap<TKey, TValue>, TArgs> handler)
+        protected MapEventHandlerBase(MapEventTypes eventType, Action<IHMap<TKey, TValue>, TArgs> handler)
         {
             EventType = eventType;
             _handler = handler;
@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects
 
         public MapEventTypes EventType { get; }
 
-        public void Handle(IMap<TKey, TValue> sender, MemberInfo member, int numberOfAffectedEntries)
+        public void Handle(IHMap<TKey, TValue> sender, MemberInfo member, int numberOfAffectedEntries)
             => _handler(sender, CreateEventArgs(member, numberOfAffectedEntries));
 
         protected abstract TArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries);

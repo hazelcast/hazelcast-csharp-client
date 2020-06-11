@@ -30,7 +30,7 @@ namespace Hazelcast.Predicates
         public InPredicate(string attributeName, params object[] values)
         {
             _attributeName = attributeName;
-            _values = values ?? throw new NullReferenceException("Array can't be null");
+            _values = values ?? throw new ArgumentNullException(nameof(values));
         }
 
         public void ReadData(IObjectDataInput input)
@@ -88,9 +88,10 @@ namespace Hazelcast.Predicates
         {
             unchecked
             {
-                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                // ReSharper disable NonReadonlyMemberInGetHashCode
                 return ((_attributeName != null ? _attributeName.GetHashCode(StringComparison.Ordinal) : 0)*397) ^
                        (_values != null ? _values.GetHashCode() : 0);
+                // ReSharper restore NonReadonlyMemberInGetHashCode
             }
         }
 

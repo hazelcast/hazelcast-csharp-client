@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public TopicEventHandlers<T> Message(Action<ITopic<T>, TopicMessageEventArgs<T>> handler)
+        public TopicEventHandlers<T> Message(Action<IHTopic<T>, TopicMessageEventArgs<T>> handler)
         {
             Add(new TopicMessageEventHandler<T>(handler));
             return this;

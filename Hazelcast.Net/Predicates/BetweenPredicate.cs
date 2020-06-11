@@ -83,10 +83,11 @@ namespace Hazelcast.Predicates
         {
             unchecked
             {
-                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                // ReSharper disable NonReadonlyMemberInGetHashCode
                 var hashCode = (_attributeName != null ? _attributeName.GetHashCode(StringComparison.Ordinal) : 0);
                 hashCode = (hashCode*397) ^ (_from != null ? _from.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (_to != null ? _to.GetHashCode() : 0);
+                // ReSharper restore NonReadonlyMemberInGetHashCode
                 return hashCode;
             }
         }

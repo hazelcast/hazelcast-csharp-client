@@ -24,14 +24,12 @@ namespace Hazelcast.Serialization
     [Serializable]
     public sealed class SerializationException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Serialization or de-serialization error.";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SerializationException"/> class.
         /// </summary>
         public SerializationException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.SerializationException)
         { }
 
         /// <summary>
@@ -49,7 +47,7 @@ namespace Hazelcast.Serialization
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public SerializationException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.SerializationException, innerException)
         { }
 
         /// <summary>

@@ -43,5 +43,60 @@ namespace Hazelcast.Exceptions
         /// Property is now read only and cannot be modified.
         /// </summary>
         public const string PropertyIsNowReadOnly = "The property is now readonly and cannot be modified.";
+
+        /// <summary>
+        /// Default message for the configuration exception.
+        /// </summary>
+        public const string ConfigurationException = "Invalid configuration.";
+
+        /// <summary>
+        /// Default message for the serialization exception.
+        /// </summary>
+        public const string SerializationException = "Serialization or de-serialization error.";
+
+        /// <summary>
+        /// Default message for the invalid portable field exception.
+        /// </summary>
+        public const string InvalidPortableFieldException = "Invalid portable field.";
+
+        /// <summary>
+        /// Default message for the service factory exception.
+        /// </summary>
+        public const string ServiceFactoryException = "Failed to create an instance.";
+
+        /// <summary>
+        /// Default message for the transaction exception.
+        /// </summary>
+        public const string TransactionException = "Transaction exception.";
+
+        /// <summary>
+        /// Default message for the transaction not active exception.
+        /// </summary>
+        public const string TransactionNotActiveException = "Missing an active transaction.";
+
+        /// <summary>
+        /// Default message for the transaction timed out exception.
+        /// </summary>
+        public const string TransactionTimedOutException = "Transaction timed out.";
+
+        /// <summary>
+        /// Default message for the authentication exception.
+        /// </summary>
+        public const string AuthenticationException = "Failed to authenticate.";
+
+        /// <summary>
+        /// Default message for the client not connected exception.
+        /// </summary>
+        public const string ClientNotConnectedException = "Hazelcast client is not connected.";
+
+        /// <summary>
+        /// Default message for the connection exception.
+        /// </summary>
+        public const string ConnectionException = "Failed to connect to a member.";
+
+        /// <summary>
+        /// Default message for the target disconnected exception.
+        /// </summary>
+        public const string TargetDisconnectedException = "Target disconnected.";
     }
 }

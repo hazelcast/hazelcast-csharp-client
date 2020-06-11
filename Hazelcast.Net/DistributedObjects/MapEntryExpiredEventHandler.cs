@@ -19,7 +19,7 @@ namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEntryExpiredEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryExpiredEventArgs<TKey, TValue>>
     {
-        public MapEntryExpiredEventHandler(Action<IMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>> handler)
+        public MapEntryExpiredEventHandler(Action<IHMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>> handler)
             : base(MapEventTypes.Expired, handler)
         { }
 

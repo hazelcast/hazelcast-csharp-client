@@ -49,7 +49,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException<TResult>(e);
             }
@@ -82,7 +82,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException<TResult>(e);
             }
@@ -117,7 +117,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException<TResult>(e);
             }
@@ -154,7 +154,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException<TResult>(e);
             }
@@ -193,7 +193,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException<TResult>(e);
             }
@@ -234,7 +234,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException<TResult>(e);
             }
@@ -277,7 +277,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException<TResult>(e);
             }
@@ -307,7 +307,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException(e);
             }
@@ -339,7 +339,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException(e);
             }
@@ -373,7 +373,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException(e);
             }
@@ -409,7 +409,7 @@ namespace Hazelcast.Core
             }
             catch (Exception e)
             {
-                if (cancellation != TaskExtensions.NeverCanceledSource)
+                if (cancellation != TaskCoreExtensions.NeverCanceledSource)
                     cancellation.Dispose();
                 return Task.FromException(e);
             }

@@ -26,9 +26,9 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Handles an event.
         /// </summary>
-        /// <param name="sender">The <see cref="IMap{TKey, TValue}"/> that triggered the event.</param>
+        /// <param name="sender">The <see cref="IHMap{TKey,TValue}"/> that triggered the event.</param>
         /// <param name="member">The member.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        void Handle(IMap<TKey, TValue> sender, MemberInfo member, int numberOfAffectedEntries);
+        void Handle(IHMap<TKey, TValue> sender, MemberInfo member, int numberOfAffectedEntries);
     }
 }

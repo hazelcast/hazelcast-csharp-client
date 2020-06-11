@@ -31,7 +31,7 @@ using System;
 namespace Hazelcast.Configuration.Binding
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class BinderNameAttribute : Attribute
+    public sealed class BinderNameAttribute : Attribute
     {
         public BinderNameAttribute(string name)
         {

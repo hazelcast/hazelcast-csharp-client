@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The partition key.</returns>
         /// <remarks>
         /// <para>The returned value has meaning only for non-partitioned data structures, such as
-        /// IAtomicLong. For partitioned data structures such as <see cref="IMap"/>, the returned
+        /// IAtomicLong. For partitioned data structures such as <see cref="IHMap{TKey,TValue}"/>, the returned
         /// value is not null but has no meaning.</para>
         /// </remarks>
         string PartitionKey { get; }

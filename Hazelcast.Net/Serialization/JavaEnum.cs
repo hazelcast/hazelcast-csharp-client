@@ -49,8 +49,9 @@ namespace Hazelcast.Serialization
         {
             unchecked
             {
-                // ReSharper disable twice NonReadonlyMemberInGetHashCode
+                // ReSharper disable NonReadonlyMemberInGetHashCode
                 return ((Type != null ? Type.GetHashCode(StringComparison.Ordinal) : 0)*397) ^ (Value != null ? Value.GetHashCode(StringComparison.Ordinal) : 0);
+                // ReSharper restore NonReadonlyMemberInGetHashCode
             }
         }
 

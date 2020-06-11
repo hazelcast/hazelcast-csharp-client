@@ -17,17 +17,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.Implementation.List;
-using Hazelcast.DistributedObjects.Implementation.Map;
-using Hazelcast.DistributedObjects.Implementation.Topic;
-using Hazelcast.DistributedObjects.Implementation.Set;
+using Hazelcast.DistributedObjects.HListImplement;
+using Hazelcast.DistributedObjects.HMapImplement;
+using Hazelcast.DistributedObjects.HSetImplement;
 
 namespace Hazelcast
 {
     internal partial class HazelcastClient // Distributed Objects
     {
         // TODO: implement HazelcastClient access to other Distributed Objects
-        
+
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
 
         /// <inheritdoc />
@@ -35,7 +34,7 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
+        Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
         {
             var task = TaskEx.WithTimeout(GetMapAsync<TKey, TValue>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
 
@@ -51,11 +50,11 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<IMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(Map.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync(HMap.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
-                    => new Map<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory),
+                    => new HMap<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory),
                 cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -70,7 +69,7 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ITopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default)
+        Task<IHTopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default)
         {
             var task = TaskEx.WithTimeout(GetTopicAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
 
@@ -86,11 +85,11 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ITopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken)
+        Task<IHTopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(Topic.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync(HTopic.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
-                    => new Topic<T>(n, cluster, serializationService, loggerFactory),
+                    => new DistributedObjects.HTopicImplement.HTopic<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -158,7 +157,7 @@ namespace Hazelcast
 #endif
             Task<IHSet<T>> GetSetAsync<T>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(Set.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync(HSet.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
                     => new HSet<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);

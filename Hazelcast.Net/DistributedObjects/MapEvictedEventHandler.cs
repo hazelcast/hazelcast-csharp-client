@@ -19,7 +19,7 @@ namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEvictedEventHandler<TKey, TValue> : MapEventHandlerBase<TKey, TValue, MapEvictedEventArgs>
     {
-        public MapEvictedEventHandler(Action<IMap<TKey, TValue>, MapEvictedEventArgs> handler)
+        public MapEvictedEventHandler(Action<IHMap<TKey, TValue>, MapEvictedEventArgs> handler)
             : base(MapEventTypes.AllEvicted, handler)
         { }
 

@@ -49,17 +49,12 @@ namespace Hazelcast.Serialization
         public virtual IFieldDefinition GetField(int fieldIndex)
         {
             if (fieldIndex < 0 || fieldIndex >= _fieldDefinitionsMap.Count)
-            {
-                throw new IndexOutOfRangeException("Index: " + fieldIndex + ", Size: " + _fieldDefinitionsMap.Count);
-            }
-            foreach (var fieldDefinition in _fieldDefinitionsMap.Values)
-            {
-                if (fieldIndex == fieldDefinition.GetIndex())
-                {
-                    return fieldDefinition;
-                }
-            }
-            throw new IndexOutOfRangeException("Index: " + fieldIndex + ", Size: " + _fieldDefinitionsMap.Count);
+                throw new ArgumentOutOfRangeException(nameof(fieldIndex), $"Cannot get field with index {fieldIndex}, map contains {_fieldDefinitionsMap.Count} fields.");
+
+            var fieldDefinition = _fieldDefinitionsMap.Values.FirstOrDefault(x => x.GetIndex() == fieldIndex);
+            if (fieldDefinition != null) return fieldDefinition;
+
+            throw new InvalidOperationException($"Failed to find field with index {fieldIndex} in map containing {_fieldDefinitionsMap.Count} fields.");
         }
 
         public virtual bool HasField(string fieldName)

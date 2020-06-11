@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using Hazelcast.Data;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.DistributedObjects.Implementation
 {
@@ -98,16 +99,9 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         private static void ValidateAttribute(IndexConfig config, string attributeName)
         {
-            if (attributeName == null)
-                throw new NullReferenceException($"Attribute name cannot be null: {config}");
-
-            var attributeName0 = attributeName.Trim();
-
-            if (attributeName0.Length == 0)
-                throw new ArgumentException($"Attribute name cannot be empty: {config}");
-
-            if (attributeName0.EndsWith(".", StringComparison.Ordinal))
-                throw new ArgumentException($"Attribute name cannot end with dot: {attributeName}");
+            if (string.IsNullOrEmpty(attributeName) || attributeName.Trim().EndsWith(".", StringComparison.Ordinal))
+                throw new ArgumentException($"Invalid attribute '{attributeName}' in index configuration '{config.Name}'. " +
+                                            "Attributes must not be null nor empty, nor end with a dot.");
         }
 
         private static string CanonicalizeAttribute(string attribute)

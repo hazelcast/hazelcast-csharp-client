@@ -75,8 +75,9 @@ namespace Hazelcast.Predicates
 
         public override int GetHashCode()
         {
-            // ReSharper disable twice NonReadonlyMemberInGetHashCode
+            // ReSharper disable NonReadonlyMemberInGetHashCode
             return _predicates != null ? _predicates.GetHashCode() : 0;
+            // ReSharper restore NonReadonlyMemberInGetHashCode
         }
 
         public override string ToString()

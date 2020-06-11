@@ -29,9 +29,6 @@ using System.Diagnostics.CodeAnalysis;
 // ReSharper disable once CheckNamespace
 namespace System.Runtime.CompilerServices
 {
-    [SuppressMessage("NDepend", "ND2102:AvoidDefiningMultipleTypesInASourceFile", Justification = "Imported code.")]
-    [SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation", Justification = "Imported code.")]
-    [SuppressMessage("NDepend", "ND1400:AvoidNamespacesMutuallyDependent", Justification = "Imported code.")]
     internal static class RuntimeHelpersEx
     {
         /// <summary>

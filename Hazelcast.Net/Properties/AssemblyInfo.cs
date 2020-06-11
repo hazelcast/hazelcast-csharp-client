@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Hazelcast.Net.Tests")]
@@ -23,14 +21,3 @@ using System.Runtime.CompilerServices;
 // FIXME: should we be CLSCompliant when MS is not anymore?
 //[assembly: CLSCompliant(true)]
 
-// NDepend scope can be: deep module namespace type method field
-
-// NDepend complains about 'public' methods in an 'internal' class
-// but even NDepend documentation mentions that not everyone agrees
-// see http://ericlippert.com/2014/09/15/internal-or-public/
-// we *do* use 'public' methods in 'internal' classes, so, suppress
-[assembly: SuppressMessage("NDepend",
-    "ND1807:AvoidPublicMethodsNotPubliclyVisible",
-    Scope = "deep",
-    Justification = "Accepted."
-)]

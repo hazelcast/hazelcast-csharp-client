@@ -30,10 +30,10 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Handles an event.
         /// </summary>
-        /// <param name="sender">The <see cref="ITopic{T}"/> that triggered the event.</param>
+        /// <param name="sender">The <see cref="IHTopic{T}"/> that triggered the event.</param>
         /// <param name="member">The member.</param>
         /// <param name="publishTime">The publish time.</param>
         /// <param name="payload">The topic object carried by the message.</param>
-        void Handle(ITopic<T> sender, MemberInfo member, long publishTime, T payload);
+        void Handle(IHTopic<T> sender, MemberInfo member, long publishTime, T payload);
     }
 }

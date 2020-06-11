@@ -21,14 +21,12 @@ namespace Hazelcast.Core
     [Serializable]
     public sealed class ServiceFactoryException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Failed to create an instance.";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceFactoryException"/> class.
         /// </summary>
         public ServiceFactoryException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.ServiceFactoryException)
         { }
 
         /// <summary>
@@ -46,7 +44,7 @@ namespace Hazelcast.Core
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public ServiceFactoryException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.ServiceFactoryException, innerException)
         { }
 
         /// <summary>

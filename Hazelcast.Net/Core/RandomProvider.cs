@@ -21,7 +21,6 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides safe random numbers.
     /// </summary>
-    [SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes", Justification = "No security here.")]
     public static class RandomProvider
     {
         // Notes

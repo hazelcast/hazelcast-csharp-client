@@ -33,7 +33,7 @@ namespace Hazelcast.Networking
         private const string RegexPublicStr = "(?<=public-address\":\").*?(?=\")";
 
         private readonly ILogger _logger;
-        private readonly string _endpointUrl;
+        private readonly Uri _endpointUrl;
         private readonly int _connectionTimeoutMilliseconds;
 
         internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, Uri cloudBaseUrl, ILoggerFactory loggerFactory)
@@ -41,7 +41,7 @@ namespace Hazelcast.Networking
             if (string.IsNullOrWhiteSpace(discoveryToken)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(discoveryToken));
             if (cloudBaseUrl == null) throw new ArgumentNullException(nameof(cloudBaseUrl));
 
-            _endpointUrl = cloudBaseUrl + CloudUrlPath + discoveryToken;
+            _endpointUrl = new Uri(cloudBaseUrl, CloudUrlPath + discoveryToken);
             _connectionTimeoutMilliseconds = connectionTimeoutMilliseconds;
             _logger = loggerFactory?.CreateLogger<CloudDiscovery>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
@@ -50,10 +50,8 @@ namespace Hazelcast.Networking
         {
             try
             {
-                var uri = new Uri(_endpointUrl);
-
                 // TODO: is this the best way to do an http request?
-                var httpWebRequest = (HttpWebRequest) WebRequest.Create(uri);
+                var httpWebRequest = (HttpWebRequest) WebRequest.Create(_endpointUrl);
                 httpWebRequest.Method = WebRequestMethods.Http.Get;
                 httpWebRequest.Timeout = _connectionTimeoutMilliseconds;
                 httpWebRequest.ReadWriteTimeout = _connectionTimeoutMilliseconds;

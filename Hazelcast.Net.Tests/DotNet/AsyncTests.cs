@@ -21,7 +21,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using NUnit.Framework;
-using TaskExtensions = Hazelcast.Core.TaskExtensions;
 
 namespace Hazelcast.Tests.DotNet
 {

@@ -23,14 +23,11 @@ namespace Hazelcast.Exceptions
     [Serializable]
     public sealed class ConnectionException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Failed to connect to a member.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectionException"/> class.
         /// </summary>
         public ConnectionException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.ConnectionException)
         { }
 
         /// <summary>
@@ -48,7 +45,7 @@ namespace Hazelcast.Exceptions
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public ConnectionException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.ConnectionException, innerException)
         { }
 
         /// <summary>

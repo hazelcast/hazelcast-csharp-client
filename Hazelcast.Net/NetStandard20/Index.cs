@@ -39,9 +39,6 @@ namespace System
     /// int lastElement = someArray[^1]; // lastElement = 5
     /// </code>
     /// </remarks>
-    [SuppressMessage("NDepend", "ND2102:AvoidDefiningMultipleTypesInASourceFile", Justification = "Imported code.")]
-    [SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation", Justification = "Imported code.")]
-    [SuppressMessage("NDepend", "ND1400:AvoidNamespacesMutuallyDependent", Justification = "Imported code.")]
     internal readonly struct Index : IEquatable<Index>
     {
         private readonly int _value;

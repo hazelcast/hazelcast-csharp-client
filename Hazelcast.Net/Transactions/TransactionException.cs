@@ -24,14 +24,11 @@ namespace Hazelcast.Transactions
     [Serializable]
     internal class TransactionException : HazelcastException
     {
-        // ReSharper disable once InconsistentNaming
-        private const string DefaultMessage = "Transaction exception.";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TransactionException"/> class.
         /// </summary>
         public TransactionException()
-            : base(DefaultMessage)
+            : base(ExceptionMessages.TransactionException)
         { }
 
         /// <summary>
@@ -49,7 +46,7 @@ namespace Hazelcast.Transactions
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         public TransactionException(Exception innerException)
-            : base(DefaultMessage, innerException)
+            : base(ExceptionMessages.TransactionException, innerException)
         { }
 
         /// <summary>

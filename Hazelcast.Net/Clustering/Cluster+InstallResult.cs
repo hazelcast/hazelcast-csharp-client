@@ -19,7 +19,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Defines the possible results of the installation of a subscription.
         /// </summary>
-        private enum InstallResult : byte
+        private enum InstallResult
         {
             /// <summary>
             /// Unknown (default).
