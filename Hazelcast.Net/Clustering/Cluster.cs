@@ -138,7 +138,7 @@ namespace Hazelcast.Clustering
             _objectLifecycleEventSubscription = InitializeObjectLifecycleEventSubscription();
             _partitionLostEventSubscription = InitializePartitionLostEventSubscription();
 
-            HzConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
+            HConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
         }
 
         /// <summary>

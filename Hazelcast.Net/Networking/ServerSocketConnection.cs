@@ -39,7 +39,7 @@ namespace Hazelcast.Networking
             : base(id)
         {
             _acceptingSocket = socket ?? throw new ArgumentNullException(nameof(socket));
-            HzConsole.Configure(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]"));
+            HConsole.Configure(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]"));
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Hazelcast.Networking
         /// </remarks>
         public void Accept()
         {
-            HzConsole.WriteLine(this, "Connect");
+            HConsole.WriteLine(this, "Connect");
 
             if (OnReceiveMessageBytes == null)
                 throw new InvalidOperationException("No message bytes handler has been configured.");
@@ -63,7 +63,7 @@ namespace Hazelcast.Networking
             // wire the pipe
             OpenPipe(_acceptingSocket, stream);
 
-            HzConsole.WriteLine(this, "Connected");
+            HConsole.WriteLine(this, "Connected");
         }
     }
 }

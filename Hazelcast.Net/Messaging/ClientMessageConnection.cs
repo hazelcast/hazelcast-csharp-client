@@ -76,7 +76,7 @@ namespace Hazelcast.Messaging
 
         private async ValueTask<bool> ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference<ReadOnlySequence<byte>> bufferReference)
         {
-            HzConsole.WriteLine(this, $"Received {bufferReference.Buffer.Length} bytes");
+            HConsole.WriteLine(this, $"Received {bufferReference.Buffer.Length} bytes");
             var bytes = bufferReference.Buffer;
 
             if (_bytesLength < 0)
@@ -100,12 +100,12 @@ namespace Hazelcast.Messaging
 
                 if (_currentMessage == null)
                 {
-                    HzConsole.WriteLine(this, $"Add {_currentFrame} to new fragment");
+                    HConsole.WriteLine(this, $"Add {_currentFrame} to new fragment");
                     _currentMessage = new ClientMessage(_currentFrame);
                 }
                 else
                 {
-                    HzConsole.WriteLine(this, $"Add {_currentFrame} to current fragment");
+                    HConsole.WriteLine(this, $"Add {_currentFrame} to current fragment");
                     _currentMessage.Append(_currentFrame);
                 }
             }
@@ -122,16 +122,16 @@ namespace Hazelcast.Messaging
             bufferReference.Buffer = bytes;
 
             _bytesLength = -1;
-            HzConsole.WriteLine(this, $"Frame is complete");
+            HConsole.WriteLine(this, $"Frame is complete");
 
             // we now have a fully assembled message
             // don't test _currentFrame.IsFinal, adding the frame to a message has messed it
             if (!_finalFrame) return true;
 
-            HzConsole.WriteLine(this, "Frame is final");
+            HConsole.WriteLine(this, "Frame is final");
             var message = _currentMessage;
             _currentMessage = null;
-            HzConsole.WriteLine(this, "Handle fragment");
+            HConsole.WriteLine(this, "Handle fragment");
             await HandleFragmentAsync(message).CAF();
 
             return true;
@@ -141,7 +141,7 @@ namespace Hazelcast.Messaging
         {
             if (fragment.Flags.Has(ClientMessageFlags.Unfragmented))
             {
-                HzConsole.WriteLine(this, "Handle message");
+                HConsole.WriteLine(this, "Handle message");
 
                 try
                 {
@@ -151,7 +151,7 @@ namespace Hazelcast.Messaging
                 {
                     // TODO: instrumentation
                     _logger.LogError(e, "Failed to handle an incoming message.");
-                    HzConsole.WriteLine(this, "ERROR\n" + e);
+                    HConsole.WriteLine(this, "ERROR\n" + e);
                 }
 
                 return;
@@ -188,7 +188,7 @@ namespace Hazelcast.Messaging
                 _messages.Remove(fragmentId);
 
                 // handle the message
-                HzConsole.WriteLine(this, "Handle message");
+                HConsole.WriteLine(this, "Handle message");
 
                 try
                 {
@@ -198,7 +198,7 @@ namespace Hazelcast.Messaging
                 {
                     // TODO: instrumentation
                     _logger.LogError(e, "Failed to handle an incoming message.");
-                    HzConsole.WriteLine(this, "ERROR\n" + e);
+                    HConsole.WriteLine(this, "ERROR\n" + e);
                 }
             }
             else
@@ -234,7 +234,7 @@ namespace Hazelcast.Messaging
 
             try
             {
-                HzConsole.WriteLine(this, "Send message");
+                HConsole.WriteLine(this, "Send message");
 
                 var frame = message.FirstFrame;
                 do
@@ -242,7 +242,7 @@ namespace Hazelcast.Messaging
                     if (cancellationToken.IsCancellationRequested)
                         throw new OperationCanceledException();
 
-                    HzConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
+                    HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
                     if (!await SendFrameAsync(frame, cancellationToken).CAF())
                         return false;
 

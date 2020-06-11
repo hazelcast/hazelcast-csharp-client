@@ -115,7 +115,7 @@ namespace Hazelcast.Tests.Sandbox
                 {
                     // we cannot let one handler kill everything,
                     // so are we going to swallow the exception?
-                    HzConsole.WriteLine(this, e);
+                    HConsole.WriteLine(this, e);
                 }
             }
         }

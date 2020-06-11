@@ -29,9 +29,9 @@ namespace Hazelcast.Tests
     {
         public void TestSetUp()
         {
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
-            HzConsole.Configure<Client>(config => config.SetMaxLevel(1)); // 1: logs message & frames
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
+            HConsole.Configure<Client>(config => config.SetMaxLevel(1)); // 1: logs message & frames
         }
 
         private ValueTask<IHazelcastClient> CreateOpenClientAsync()
@@ -393,7 +393,7 @@ namespace Hazelcast.Tests
             var id = await map.SubscribeAsync(on => on
                 .EntryAdded((sender, args) =>
                 {
-                    HzConsole.WriteLine(this, $"! added: {args.Key} {args.Value}");
+                    HConsole.WriteLine(this, $"! added: {args.Key} {args.Value}");
                     Interlocked.Increment(ref eventsCount);
                 }));
 
@@ -425,7 +425,7 @@ namespace Hazelcast.Tests
 
                 config.AddSubscriber(on => on.ObjectCreated((sender, args) =>
                 {
-                    HzConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
+                    HConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
                     Interlocked.Increment(ref eventsCount);
                 }));
             }

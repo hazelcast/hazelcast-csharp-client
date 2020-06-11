@@ -81,8 +81,8 @@ namespace Hazelcast.Partitioning
         {
             if (partitionsMap == null) throw new ArgumentNullException(nameof(partitionsMap));
 
-            HzConsole.WriteLine(this, $"Received partition table v{version}");
-            HzConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
+            HConsole.WriteLine(this, $"Received partition table v{version}");
+            HConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
 
             lock (_partitionsLock) // one at a time please
             {

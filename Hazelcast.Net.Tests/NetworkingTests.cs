@@ -54,7 +54,7 @@ namespace Hazelcast.Tests
 
         private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
-            HzConsole.WriteLine(this, "Respond");
+            HConsole.WriteLine(this, "Respond");
             var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
 #if NETSTANDARD2_1
             var responseText = text switch
@@ -82,7 +82,7 @@ namespace Hazelcast.Tests
             response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             await connection.SendAsync(response).CAF();
-            HzConsole.WriteLine(this, "Responded");
+            HConsole.WriteLine(this, "Responded");
         }
 
         private ClientMessage CreateErrorMessage(ClientProtocolError error)
@@ -101,10 +101,10 @@ namespace Hazelcast.Tests
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.WriteLine(this, "Begin");
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
 
-            HzConsole.WriteLine(this, "Start server");
+            HConsole.WriteLine(this, "Start server");
             Server server = null;
             server = new Server(address, async (conn, msg) =>
             {
@@ -152,7 +152,7 @@ namespace Hazelcast.Tests
                         break;
 
                     default:
-                        HzConsole.WriteLine(server, "Respond with error.");
+                        HConsole.WriteLine(server, "Respond with error.");
                         var response = CreateErrorMessage(ClientProtocolError.RetryableHazelcast);
                         await ResponseAsync(response).CAF();
                         break;
@@ -161,7 +161,7 @@ namespace Hazelcast.Tests
             AddDisposable(server);
             await server.StartAsync().CAF();
 
-            HzConsole.WriteLine(this, "Start client");
+            HConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
@@ -170,7 +170,7 @@ namespace Hazelcast.Tests
             AddDisposable(client);
             await client.OpenAsync().CAF();
 
-            HzConsole.WriteLine(this, "Send message");
+            HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
@@ -186,24 +186,24 @@ namespace Hazelcast.Tests
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.WriteLine(this, "Begin");
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
 
-            HzConsole.WriteLine(this, "Start server");
+            HConsole.WriteLine(this, "Start server");
             var count = 0;
             Server server = null;
             server = new Server(address, async (conn, msg) =>
             {
-                HzConsole.WriteLine(server, "Handle request.");
+                HConsole.WriteLine(server, "Handle request.");
                 ClientMessage response;
                 if (++count > 3)
                 {
-                    HzConsole.WriteLine(server, "Respond with success.");
+                    HConsole.WriteLine(server, "Respond with success.");
                     response = ClientPingServerCodec.EncodeResponse();
                 }
                 else
                 {
-                    HzConsole.WriteLine(server, "Respond with error.");
+                    HConsole.WriteLine(server, "Respond with error.");
                     response = CreateErrorMessage(ClientProtocolError.RetryableHazelcast);
                     response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                 }
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests
             AddDisposable(server);
             await server.StartAsync().CAF();
 
-            HzConsole.WriteLine(this, "Start client");
+            HConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
@@ -222,7 +222,7 @@ namespace Hazelcast.Tests
             AddDisposable(client);
             await client.OpenAsync().CAF();
 
-            HzConsole.WriteLine(this, "Send message");
+            HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
@@ -240,17 +240,17 @@ namespace Hazelcast.Tests
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.WriteLine(this, "Begin");
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
 
-            HzConsole.WriteLine(this, "Start server");
+            HConsole.WriteLine(this, "Start server");
             Server server = null;
             server = new Server(address, async (conn, msg) =>
             {
-                HzConsole.WriteLine(server, "Handle request (slowww...)");
+                HConsole.WriteLine(server, "Handle request (slowww...)");
                 await Task.Delay(10_000).CAF();
 
-                HzConsole.WriteLine(server, "Respond with success.");
+                HConsole.WriteLine(server, "Respond with success.");
                 var response = ClientPingServerCodec.EncodeResponse();
                 response.CorrelationId = msg.CorrelationId;
                 await conn.SendAsync(response).CAF();
@@ -258,7 +258,7 @@ namespace Hazelcast.Tests
             AddDisposable(server);
             await server.StartAsync().CAF();
 
-            HzConsole.WriteLine(this, "Start client");
+            HConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
@@ -267,7 +267,7 @@ namespace Hazelcast.Tests
             AddDisposable(client);
             await client.OpenAsync().CAF();
 
-            HzConsole.WriteLine(this, "Send message");
+            HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
             Assert.ThrowsAsync<TaskCanceledException>(async () =>
@@ -290,10 +290,10 @@ namespace Hazelcast.Tests
 
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.WriteLine(this, "Begin");
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
 
-            HzConsole.WriteLine(this, "Start server");
+            HConsole.WriteLine(this, "Start server");
             var server = new Server(address, ReceiveMessage, LoggerFactory);
             await server.StartAsync().CAF();
 
@@ -303,42 +303,42 @@ namespace Hazelcast.Tests
             });
             var clientFactory = new HazelcastClientFactory(options);
 
-            HzConsole.WriteLine(this, "Start client 1");
+            HConsole.WriteLine(this, "Start client 1");
             var client1 = (HazelcastClient) clientFactory.CreateClient();
             AddDisposable(client1);
             await client1.OpenAsync().CAF();
 
-            HzConsole.WriteLine(this, "Send message 1 to client 1");
+            HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
             var response = await client1.Cluster.SendAsync(message, CancellationToken.None).CAF();
 
-            HzConsole.WriteLine(this, "Got response: " + GetText(response));
+            HConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            HzConsole.WriteLine(this, "Start client 2");
+            HConsole.WriteLine(this, "Start client 2");
             var client2 = (HazelcastClient) clientFactory.CreateClient();
             AddDisposable(client2);
             await client2.OpenAsync().CAF();
 
-            HzConsole.WriteLine(this, "Send message 1 to client 2");
+            HConsole.WriteLine(this, "Send message 1 to client 2");
             message = CreateMessage("a");
             response = await client2.Cluster.SendAsync(message, CancellationToken.None).CAF();
 
-            HzConsole.WriteLine(this, "Got response: " + GetText(response));
+            HConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            HzConsole.WriteLine(this, "Send message 2 to client 1");
+            HConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("foo");
             response = await client1.Cluster.SendAsync(message, CancellationToken.None).CAF();
 
-            HzConsole.WriteLine(this, "Got response: " + GetText(response));
+            HConsole.WriteLine(this, "Got response: " + GetText(response));
 
             //XConsole.WriteLine(this, "Stop client");
             //await client1.CloseAsync().CAF();
 
-            HzConsole.WriteLine(this, "Stop server");
+            HConsole.WriteLine(this, "Stop server");
             await server.StopAsync().CAF();
             await Task.Delay(1000).CAF();
 
-            HzConsole.WriteLine(this, "End");
+            HConsole.WriteLine(this, "End");
             await Task.Delay(100).CAF();
         }
 
@@ -348,10 +348,10 @@ namespace Hazelcast.Tests
         {
             var address = NetworkAddress.Parse("127.0.0.1:11000");
 
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.WriteLine(this, "Begin");
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
 
-            HzConsole.WriteLine(this, "Start server");
+            HConsole.WriteLine(this, "Start server");
             var server = new Server(address, ReceiveMessage, LoggerFactory);
             AddDisposable(server);
             await server.StartAsync().CAF();
@@ -362,26 +362,26 @@ namespace Hazelcast.Tests
             });
             var clientFactory = new HazelcastClientFactory(options);
 
-            HzConsole.WriteLine(this, "Start client 1");
+            HConsole.WriteLine(this, "Start client 1");
             var client1 = (HazelcastClient)clientFactory.CreateClient();
             AddDisposable(client1);
             await client1.OpenAsync().CAF();
 
-            HzConsole.WriteLine(this, "Send message 1 to client 1");
+            HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
             var response = await client1.Cluster.SendAsync(message, CancellationToken.None).CAF();
 
-            HzConsole.WriteLine(this, "Got response: " + GetText(response));
+            HConsole.WriteLine(this, "Got response: " + GetText(response));
 
-            HzConsole.WriteLine(this, "Stop server");
+            HConsole.WriteLine(this, "Stop server");
             await server.StopAsync().CAF();
             await Task.Delay(1000).CAF();
 
-            HzConsole.WriteLine(this, "Send message 2 to client 1");
+            HConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
             Assert.ThrowsAsync<ClientNotConnectedException>(async () => await client1.Cluster.SendAsync(message, CancellationToken.None).CAF());
 
-            HzConsole.WriteLine(this, "End");
+            HConsole.WriteLine(this, "End");
             await Task.Delay(100).CAF();
         }
 
@@ -393,10 +393,10 @@ namespace Hazelcast.Tests
 
             var address = NetworkAddress.Parse("sgay-l4");
 
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.WriteLine(this, "Begin");
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
 
-            HzConsole.WriteLine(this, "Start client ");
+            HConsole.WriteLine(this, "Start client ");
             var client1 = new Client(address, new MessagingOptions(), new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync(CancellationToken.None).CAF();
 
@@ -411,20 +411,20 @@ namespace Hazelcast.Tests
             var clientName = "hz.client_0";
             var labels = new HashSet<string>();
             var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
-            HzConsole.WriteLine(this, "Send auth request");
+            HConsole.WriteLine(this, "Send auth request");
             var invocation = new Invocation(requestMessage, new MessagingOptions(), null, CancellationToken.None);
             var responseMessage = await client1.SendAsync(invocation, CancellationToken.None).CAF();
-            HzConsole.WriteLine(this, "Rcvd auth response " +
-                                     HzConsole.Lines(this, 1, responseMessage.Dump()));
+            HConsole.WriteLine(this, "Rcvd auth response " +
+                                     HConsole.Lines(this, 1, responseMessage.Dump()));
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
             var status = (AuthenticationStatus) response.Status;
             NUnit.Framework.Assert.AreEqual(AuthenticationStatus.Authenticated, status);
 
-            HzConsole.WriteLine(this, "Stop client");
+            HConsole.WriteLine(this, "Stop client");
             await client1.DisposeAsync().CAF();
 
-            HzConsole.WriteLine(this, "End");
+            HConsole.WriteLine(this, "End");
             await Task.Delay(100).CAF();
         }
 
@@ -434,10 +434,10 @@ namespace Hazelcast.Tests
         {
             // this test expects a server
 
-            HzConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HzConsole.WriteLine(this, "Begin");
+            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
 
-            HzConsole.WriteLine(this, "Cluster?");
+            HConsole.WriteLine(this, "Cluster?");
 
             var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
                 .SetVersion(1)
@@ -461,7 +461,7 @@ namespace Hazelcast.Tests
             // events?
             await Task.Delay(4000).CAF();
 
-            HzConsole.WriteLine(this, "End");
+            HConsole.WriteLine(this, "End");
             await Task.Delay(100).CAF();
         }
 

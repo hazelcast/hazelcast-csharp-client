@@ -84,9 +84,9 @@ namespace Hazelcast.DistributedObjects.Implementation
                 if (remote)
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
-                    HzConsole.WriteLine(this, "Send initialize request");
+                    HConsole.WriteLine(this, "Send initialize request");
                     _ = await _cluster.SendAsync(requestMessage, cancellationToken).CAF();
-                    HzConsole.WriteLine(this, "Received initialize response");
+                    HConsole.WriteLine(this, "Received initialize response");
                 }
 
                 x.OnInitialized();

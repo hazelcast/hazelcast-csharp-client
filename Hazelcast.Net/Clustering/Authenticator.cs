@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering
         public Authenticator(AuthenticationOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            HzConsole.Configure(this, config => config.SetIndent(4).SetPrefix("AUTH"));
+            HConsole.Configure(this, config => config.SetIndent(4).SetPrefix("AUTH"));
         }
 
         /// <inheritdoc />
@@ -116,9 +116,9 @@ namespace Hazelcast.Clustering
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            HzConsole.WriteLine(this, "Send auth request");
+            HConsole.WriteLine(this, "Send auth request");
             var responseMessage = await client.SendAsync(requestMessage, cancellationToken).CAF();
-            HzConsole.WriteLine(this, "Rcvd auth response");
+            HConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
 
             return (AuthenticationStatus) response.Status switch

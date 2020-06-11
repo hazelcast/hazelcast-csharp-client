@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 #if HZ_CONSOLE
@@ -37,9 +38,9 @@ namespace Hazelcast.Core
 
         private static void ValueChangedHandler(AsyncLocalValueChangedArgs<AsyncContext> obj)
         {
-            static string ToString(AsyncContext context) => context?.Id.ToString() ?? "x";
+            static string ToString(AsyncContext context) => context?.Id.ToString(CultureInfo.InvariantCulture) ?? "x";
 
-            HzConsole.WriteLine(HzConsoleObject, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -> {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? "(execution context change)" : "")}");
+            HConsole.WriteLine(HzConsoleObject, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -> {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? "(execution context change)" : "")}");
         }
 #endif
 

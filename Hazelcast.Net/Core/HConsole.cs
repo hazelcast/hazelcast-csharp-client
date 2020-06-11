@@ -20,7 +20,7 @@ using System;
 using System.Diagnostics;
 #if HZ_CONSOLE
 using System.Collections.Generic;
-using System.Threading;
+
 #endif
 
 namespace Hazelcast.Core
@@ -33,13 +33,13 @@ namespace Hazelcast.Core
     /// method invocations will be compiled (thanks to <see cref="ConditionalAttribute"/>)
     /// and therefore the impact on actual (production) code will be null.</para>
     /// </remarks>
-    public static class HzConsole
+    public static class HConsole
     {
 #if HZ_CONSOLE
-        private static readonly Dictionary<object, Config> SourceConfigs = new Dictionary<object, Config>();
-        private static readonly Dictionary<Type, Config> TypeConfigs = new Dictionary<Type, Config>();
+        private static readonly Dictionary<object, HConsoleConfiguration> SourceConfigs = new Dictionary<object, HConsoleConfiguration>();
+        private static readonly Dictionary<Type, HConsoleConfiguration> TypeConfigs = new Dictionary<Type, HConsoleConfiguration>();
 
-        static HzConsole()
+        static HConsole()
         {
             // setup default configuration
             Configure<object>(config =>
@@ -50,9 +50,9 @@ namespace Hazelcast.Core
             });
         }
 
-        private static Config GetConfig(object source)
+        private static HConsoleConfiguration GetConfig(object source)
         {
-            if (!SourceConfigs.TryGetValue(source, out var config)) config = new Config();
+            if (!SourceConfigs.TryGetValue(source, out var config)) config = new HConsoleConfiguration();
 
             var type = source.GetType();
             while (type != null && !config.IsComplete)
@@ -65,174 +65,9 @@ namespace Hazelcast.Core
         }
 #endif
 
-        /// <summary>
-        /// Represents a logging configuration.
-        /// </summary>
-        public sealed class Config
-        {
-#if HZ_CONSOLE
-            private bool _hasIndent;
-            private bool _hasPrefix;
-            private bool _hasMaxLevel;
-#endif
-
-            /// <summary>
-            /// Sets the indentation level.
-            /// </summary>
-            /// <param name="indent">The indentation level.</param>
-            /// <returns>This configuration object.</returns>
-            public Config SetIndent(int indent)
-            {
-#if HZ_CONSOLE
-                Indent = indent;
-                _hasIndent = true;
-#endif
-                return this;
-            }
-
-            /// <summary>
-            /// Clears the indentation level.
-            /// </summary>
-            /// <returns>This configuration object.</returns>
-            public Config ClearIndent()
-            {
-#if HZ_CONSOLE
-                Indent = default;
-                _hasIndent = false;
-#endif
-                return this;
-            }
-
-            /// <summary>
-            /// Sets the prefix.
-            /// </summary>
-            /// <param name="prefix">The prefix.</param>
-            /// <returns>This configuration object.</returns>
-            public Config SetPrefix(string prefix)
-            {
-#if HZ_CONSOLE
-                Prefix = prefix;
-                _hasPrefix = true;
-#endif
-                return this;
-            }
-
-            /// <summary>
-            /// Clears the prefix.
-            /// </summary>
-            /// <returns>This configuration object.</returns>
-            public Config ClearPrefix()
-            {
-#if HZ_CONSOLE
-                Prefix = default;
-                _hasPrefix = false;
-#endif
-                return this;
-            }
-
-            /// <summary>
-            /// Sets the maximal log level.
-            /// </summary>
-            /// <param name="maxLevel">The maximal log level.</param>
-            /// <returns>This configuration object.</returns>
-            public Config SetMaxLevel(int maxLevel)
-            {
-#if HZ_CONSOLE
-                MaxLevel = maxLevel;
-                _hasMaxLevel = true;
-#endif
-                return this;
-            }
-
-            /// <summary>
-            /// Clears the maximal log level.
-            /// </summary>
-            /// <returns>This configuration object.</returns>
-            public Config ClearMaxLevel()
-            {
-#if HZ_CONSOLE
-                MaxLevel = default;
-                _hasMaxLevel = false;
-#endif
-                return this;
-            }
-
-#if HZ_CONSOLE
-            /// <summary>
-            /// Gets the indentation level.
-            /// </summary>
-            internal int Indent { get; private set; }
-
-            /// <summary>
-            /// Gets the prefix.
-            /// </summary>
-            internal string Prefix { get; private set; }
-
-            /// <summary>
-            /// Gets the maximal log level.
-            /// </summary>
-            internal int MaxLevel { get; private set; }
-#endif
-
-            /// <summary>
-            /// Determines whether this configuration has an indentation level, a prefix and a maximal log level.
-            /// </summary>
-            internal bool IsComplete
-#if HZ_CONSOLE
-                => _hasIndent && _hasPrefix && _hasMaxLevel;
-#else
-                => true;
-#endif
-
-#if HZ_CONSOLE
-            /// <summary>
-            /// Merges another configuration into this configuration.
-            /// </summary>
-            /// <param name="config">The other configuration.</param>
-            /// <returns>This configuration.</returns>
-            public Config Merge(Config config)
-            {
-                if (!_hasIndent && config._hasIndent) SetIndent(config.Indent);
-                if (!_hasPrefix && config._hasPrefix) SetPrefix(config.Prefix);
-                if (!_hasMaxLevel && config._hasMaxLevel) SetMaxLevel(config.MaxLevel);
-                return this;
-            }
-#endif
-
-            /// <summary>
-            /// Gets the formatted prefix (with thread identifier etc).
-            /// </summary>
-            public string FormattedPrefix
-#if HZ_CONSOLE
-                => $"{new string(' ', Indent)}[{Thread.CurrentThread.ManagedThreadId:00}] {Prefix}: ";
-#else
-                => "";
-#endif
-
-            /// <summary>
-            /// Determines whether a log level should be ignored.
-            /// </summary>
-            /// <param name="level">The level.</param>
-            /// <returns>true if the level should be ignored; otherwise false.</returns>
-            public bool Ignore(int level)
-#if HZ_CONSOLE
-                => level > MaxLevel;
-#else
-                => true;
-#endif
-
-            /// <inheritdoc />
-            public override string ToString()
-#if HZ_CONSOLE
-                => $"{{Config: {(_hasIndent?Indent.ToString():"?")}, {(_hasPrefix?("\""+Prefix+"\""):"?")}, {(_hasMaxLevel?MaxLevel.ToString():"?")}}}";
-#else
-                => "";
-#endif
-        }
-
         // NOTES
         //
-        // The class above *must* exist regardless of the HZ_CONSOLE define, as
+        // The HConsoleConfiguration class *must* exist regardless of the HZ_CONSOLE define, as
         // it is exposed by the methods below, so that the code can compile,
         // and even though these methods may not be compiled (see below).
         // However, to reduce its weight, we can simplify the class body when
@@ -253,11 +88,12 @@ namespace Hazelcast.Core
         /// <param name="source">The source object.</param>
         /// <param name="configure">A action to configure the console.</param>
         [Conditional("HZ_CONSOLE")]
-        public static void Configure(object source, Action<Config> configure)
+        public static void Configure(object source, Action<HConsoleConfiguration> configure)
         {
 #if HZ_CONSOLE
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
             if (!SourceConfigs.TryGetValue(source, out var info))
-                info = SourceConfigs[source] = new Config();
+                info = SourceConfigs[source] = new HConsoleConfiguration();
             configure(info);
 #endif
         }
@@ -268,12 +104,13 @@ namespace Hazelcast.Core
         /// <typeparam name="TObject">The type of objects.</typeparam>
         /// <param name="configure">A action to configure the console.</param>
         [Conditional("HZ_CONSOLE")]
-        public static void Configure<TObject>(Action<Config> configure)
+        public static void Configure<TObject>(Action<HConsoleConfiguration> configure)
         {
 #if HZ_CONSOLE
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
             var type = typeof(TObject);
             if (!TypeConfigs.TryGetValue(type, out var info))
-                info = TypeConfigs[type] = new Config();
+                info = TypeConfigs[type] = new HConsoleConfiguration();
             configure(info);
 #endif
         }
@@ -301,6 +138,7 @@ namespace Hazelcast.Core
         public static void WriteLine(object source, int level, string text)
         {
 #if HZ_CONSOLE
+            if (source == null) throw new ArgumentNullException(nameof(source));
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
             Console.WriteLine(config.FormattedPrefix + text);
@@ -332,6 +170,7 @@ namespace Hazelcast.Core
         public static void WriteLine(object source, int level, string format, params object[] args)
         {
 #if HZ_CONSOLE
+            if (source == null) throw new ArgumentNullException(nameof(source));
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
             Console.WriteLine(config.FormattedPrefix + format, args);
@@ -361,6 +200,7 @@ namespace Hazelcast.Core
         public static void WriteLine(object source, int level, object o)
         {
 #if HZ_CONSOLE
+            if (source == null) throw new ArgumentNullException(nameof(source));
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
             Console.WriteLine(config.FormattedPrefix + o);
@@ -377,11 +217,12 @@ namespace Hazelcast.Core
         public static string Lines(object source, int level, string text)
         {
 #if HZ_CONSOLE
+            if (source == null) throw new ArgumentNullException(nameof(source));
             var info = GetConfig(source);
             if (info.Ignore(level)) return "";
             var prefix = new string(' ', info.FormattedPrefix.Length);
             text = "\n" + text;
-            return text.Replace("\n", "\n" + prefix);
+            return text.Replace("\n", "\n" + prefix, StringComparison.Ordinal);
 #else
             return "";
 #endif

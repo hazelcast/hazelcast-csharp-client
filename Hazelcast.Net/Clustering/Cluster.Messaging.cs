@@ -221,7 +221,7 @@ namespace Hazelcast.Clustering
                     if (invocation.ShouldRetry(exception, _options.Networking.RetryOnTargetDisconnected) &&
                         await invocation.CanRetryAsync(() => _correlationIdSequence.GetNext()).CAF())
                     {
-                        HzConsole.WriteLine(this, "Retrying...");
+                        HConsole.WriteLine(this, "Retrying...");
                         continue;
                     }
 

@@ -216,7 +216,7 @@ namespace Hazelcast.Networking
             }
             catch { /* ignore */ }
 
-            HzConsole.WriteLine(this, "Connection is down");
+            HConsole.WriteLine(this, "Connection is down");
 
             // notify
             _onShutdown?.Invoke(this);
@@ -243,13 +243,13 @@ namespace Hazelcast.Networking
             catch (Exception e)
             {
                 // on error, shutdown and report
-                HzConsole.WriteLine(this, "SendAsync:ERROR");
-                HzConsole.WriteLine(this, e);
+                HConsole.WriteLine(this, "SendAsync:ERROR");
+                HConsole.WriteLine(this, e);
                 _streamReadCancellationTokenSource.Cancel();
                 return false;
             }
 
-            HzConsole.WriteLine(this, $"Sent {length} bytes" + HzConsole.Lines(this, 1 , bytes.Dump(length)));
+            HConsole.WriteLine(this, $"Sent {length} bytes" + HConsole.Lines(this, 1 , bytes.Dump(length)));
             return true;
         }
 
@@ -278,7 +278,7 @@ namespace Hazelcast.Networking
 
                     if (bytesRead == 0)
                     {
-                        HzConsole.WriteLine(this, "Pipe writer received no data");
+                        HConsole.WriteLine(this, "Pipe writer received no data");
                         break;
                     }
 
@@ -287,14 +287,14 @@ namespace Hazelcast.Networking
                 catch (OperationCanceledException)
                 {
                     // expected - just break
-                    HzConsole.WriteLine(this, "Pipe writer has been cancelled");
+                    HConsole.WriteLine(this, "Pipe writer has been cancelled");
                     break;
                 }
                 catch (Exception ex)
                 {
                     // on error, shutdown and break, this will complete the reader
-                    HzConsole.WriteLine(this, "Pipe writer:ERROR");
-                    HzConsole.WriteLine(this, ex);
+                    HConsole.WriteLine(this, "Pipe writer:ERROR");
+                    HConsole.WriteLine(this, ex);
                     break;
                 }
 
@@ -306,13 +306,13 @@ namespace Hazelcast.Networking
 
                 if (result.IsCompleted)
                 {
-                    HzConsole.WriteLine(this, "Pipe is completed (in writer)");
+                    HConsole.WriteLine(this, "Pipe is completed (in writer)");
                     break;
                 }
             }
 
             // tell the PipeReader that there's no more data coming
-            HzConsole.WriteLine(this, "Pipe writer completing");
+            HConsole.WriteLine(this, "Pipe writer completing");
             await writer.CompleteAsync().CAF();
         }
 
@@ -336,13 +336,13 @@ namespace Hazelcast.Networking
                 if (state.Exception != null)
                 {
                     // TODO what shall we do with the exception?
-                    HzConsole.WriteLine(this, "ERROR " + state.Exception.SourceException);
+                    HConsole.WriteLine(this, "ERROR " + state.Exception.SourceException);
                 }
 
             }
 
             // mark the PipeReader as complete
-            HzConsole.WriteLine(this, "Pipe reader completing");
+            HConsole.WriteLine(this, "Pipe reader completing");
             await reader.CompleteAsync().CAF();
         }
 
@@ -355,18 +355,18 @@ namespace Hazelcast.Networking
         private async ValueTask<bool> ReadPipeLoop0(ReadPipeState state)
         {
             // await data from the pipe
-            HzConsole.WriteLine(this, "Pipe reader awaits data from the pipe");
+            HConsole.WriteLine(this, "Pipe reader awaits data from the pipe");
             var result = await state.Reader.ReadAsync().CAF();
             state.Buffer = result.Buffer;
 
             // no data means it's over
             if (state.Buffer.Length == 0)
             {
-                HzConsole.WriteLine(this, "Pipe reader received no data");
+                HConsole.WriteLine(this, "Pipe reader received no data");
                 return false;
             }
 
-            HzConsole.WriteLine(this, $"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
+            HConsole.WriteLine(this, $"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
 
             // process data
             while (await ReadPipeLoop1(state).CAF()) { }
@@ -381,7 +381,7 @@ namespace Hazelcast.Networking
             // stop reading if there's no more data coming
             if (result.IsCompleted)
             {
-                HzConsole.WriteLine(this, "Pipe is completed (in reader)");
+                HConsole.WriteLine(this, "Pipe is completed (in reader)");
                 return false;
             }
 
@@ -396,20 +396,20 @@ namespace Hazelcast.Networking
         /// and represents whether to continue processing.</returns>
         private async ValueTask<bool> ReadPipeLoop1(ReadPipeState state)
         {
-            HzConsole.WriteLine(this, "Pipe reader processes data" + HzConsole.Lines(this, 1, state.Buffer.Dump()));
+            HConsole.WriteLine(this, "Pipe reader processes data" + HConsole.Lines(this, 1, state.Buffer.Dump()));
 
             if (_prefixLength > 0)
             {
                 if (state.Buffer.Length < _prefixLength)
                 {
-                    HzConsole.WriteLine(this, "Pipe reader has not enough data");
+                    HConsole.WriteLine(this, "Pipe reader has not enough data");
                     return false;
                 }
 
                 // we have a prefix, handle lit
                 try
                 {
-                    HzConsole.WriteLine(this, "Pipe reader received prefix");
+                    HConsole.WriteLine(this, "Pipe reader received prefix");
                     await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength)).CAF();
                     state.Buffer = state.Buffer.Slice(_prefixLength);
                     _prefixLength = 0;
@@ -417,16 +417,16 @@ namespace Hazelcast.Networking
                 catch (Exception e)
                 {
                     // error while processing, report and shutdown
-                    HzConsole.WriteLine(this, "Pipe reader encountered an exception while handling the prefix (shutdown)");
-                    HzConsole.WriteLine(this, e);
+                    HConsole.WriteLine(this, "Pipe reader encountered an exception while handling the prefix (shutdown)");
+                    HConsole.WriteLine(this, e);
                     state.CaptureExceptionAndFail(e);
                     return false;
                 }
 
-                HzConsole.WriteLine(this, "Pipe reader processes data");
+                HConsole.WriteLine(this, "Pipe reader processes data");
             }
 
-            HzConsole.WriteLine(this, "Handle message bytes" + HzConsole.Lines(this, 1, state.Buffer.Dump()));
+            HConsole.WriteLine(this, "Handle message bytes" + HConsole.Lines(this, 1, state.Buffer.Dump()));
             try
             {
                 // handle the bytes (and slice the buffer accordingly)
@@ -435,8 +435,8 @@ namespace Hazelcast.Networking
             catch (Exception e)
             {
                 // error while processing, report
-                HzConsole.WriteLine(this, "Pipe reader encountered an exception while handling message bytes");
-                HzConsole.WriteLine(this, e);
+                HConsole.WriteLine(this, "Pipe reader encountered an exception while handling message bytes");
+                HConsole.WriteLine(this, e);
                 state.CaptureExceptionAndFail(e);
                 return false;
             }
@@ -450,12 +450,12 @@ namespace Hazelcast.Networking
 
             // requests that the pipe stops processing - which will trigger
             // ShutdownInternal which will close the socket etc
-            HzConsole.WriteLine(this, "Cancel pipe");
+            HConsole.WriteLine(this, "Cancel pipe");
             _streamReadCancellationTokenSource.Cancel();
 
             // wait for everything to be down
             await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown).CAF();
-            HzConsole.WriteLine(this, "Pipe is down");
+            HConsole.WriteLine(this, "Pipe is down");
 
             // dispose, ignore exceptions
             try

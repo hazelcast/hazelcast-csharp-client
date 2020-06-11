@@ -18,7 +18,6 @@
     <Dir>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\WPF</Dir>
     <Dir>C:\Users\sgay\.nuget\packages</Dir>
     <Dir>C:\Users\Stéphane\.nuget\packages</Dir>
-    <Dir>.\AsyncTests1\bin\Debug\netcoreapp3.1</Dir>
     <Dir>.\Hazelcast.Net\bin\Debug\netstandard2.0</Dir>
   </Dirs>
   <MergeCodeGeneratedByCompiler>True</MergeCodeGeneratedByCompiler>
