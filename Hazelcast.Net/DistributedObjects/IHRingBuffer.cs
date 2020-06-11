@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -47,7 +48,7 @@ namespace Hazelcast.DistributedObjects
     /// <see cref="IHTopic{T}"/>
     /// implementation.
     /// </remarks>
-    public interface IRingbuffer<T> : IDistributedObject
+    public interface IHRingBuffer<TItem> : IDistributedObject
     {
         /// <summary>Adds an item to the tail of the Ringbuffer.</summary>
         /// <remarks>
@@ -70,7 +71,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>the sequence of the added item.</returns>
         /// <exception cref="System.ArgumentNullException">if item is null.</exception>
         /// <seealso cref="AddAsync"/>
-        long Add(T item);
+        Task<long> AddAsync(TItem item, CancellationToken cancellationToken);
 
         /// <summary>Adds all the items of a collection to the tail of the Ringbuffer.</summary>
         /// <remarks>
@@ -91,7 +92,7 @@ namespace Hazelcast.DistributedObjects
         /// an Add or addAll, no guarantee is given that items are contiguous.
         /// The result of the future contains the sequenceId of the last written item
         /// </remarks>
-        /// <param name="collection">the batch of items to Add.</param>
+        /// <param name="items">the batch of items to Add.</param>
         /// <param name="overflowPolicy">overflow policy to use</param>
         /// <returns>the ICompletableFuture to synchronize on completion.</returns>
         /// <exception cref="System.ArgumentNullException">
@@ -100,7 +101,7 @@ namespace Hazelcast.DistributedObjects
         /// or if overflowPolicy is null
         /// </exception>
         /// <exception cref="System.ArgumentException">if collection is empty</exception>
-        Task<long> AddAllAsync<TE>(ICollection<TE> collection, OverflowPolicy overflowPolicy) where TE : T;
+        Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy, CancellationToken cancellationToken) where TAdding : TItem;
 
         /// <summary>
         /// Asynchronously writes an item with a configurable
@@ -135,11 +136,11 @@ namespace Hazelcast.DistributedObjects
         /// <param name="overflowPolicy">the OverflowPolicy to use.</param>
         /// <returns>the sequenceId of the added item, or -1 if the Add failed.</returns>
         /// <exception cref="System.ArgumentNullException">if item or overflowPolicy is null.</exception>
-        Task<long> AddAsync(T item, OverflowPolicy overflowPolicy);
+        Task<long> AddAsync(TItem item, OverflowPolicy overflowPolicy, CancellationToken cancellationToken);
 
         /// <summary>Returns the capacity of this Ringbuffer.</summary>
         /// <returns>the capacity.</returns>
-        long Capacity();
+        Task<long> GetCapacityAsync(CancellationToken cancellationToken);
 
         /// <summary>Returns the sequence of the head.</summary>
         /// <remarks>
@@ -149,7 +150,7 @@ namespace Hazelcast.DistributedObjects
         /// The initial value of the head is 0 (1 more than tail).
         /// </remarks>
         /// <returns>the sequence of the head.</returns>
-        long HeadSequence();
+        Task<long> GetHeadSequenceAsync(CancellationToken cancellationToken);
 
         /// <summary>Reads a batch of items from the Ringbuffer.</summary>
         /// <remarks>
@@ -171,7 +172,7 @@ namespace Hazelcast.DistributedObjects
         /// or if maxCount larger than the capacity of the ringbuffer
         /// or if maxCount larger than 1000 (to prevent overload)
         /// </exception>
-        Task<IList<T>> ReadManyAsync(long startSequence, int minCount, int maxCount);
+        Task<IReadOnlyList<TItem>> ReadAsync(long startSequence, int minCount, int maxCount, CancellationToken cancellationToken);
 
         /// <summary>Reads one item from the Ringbuffer.</summary>
         /// <remarks>
@@ -196,7 +197,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>the read item</returns>
         /// <exception cref="StaleSequenceException">
         /// if the sequence is smaller then
-        /// <see cref="IRingbuffer{T}.HeadSequence()"/>
+        /// <see cref="IHRingBuffer{TItem}.HeadSequence()"/>
         /// . Because a
         /// Ringbuffer won't store all event indefinitely, it can be that the data for the
         /// given sequence doesn't exist anymore and the
@@ -207,11 +208,11 @@ namespace Hazelcast.DistributedObjects
         /// </exception>
         /// <exception cref="System.ArgumentException">
         /// if sequence is smaller than 0 or larger than
-        /// <see cref="IRingbuffer{T}.TailSequence()"/>
+        /// <see cref="IHRingBuffer{TItem}.TailSequence()"/>
         /// +1.
         /// </exception>
         /// <exception cref="System.Exception">if the call is interrupted while blocking.</exception>
-        T ReadOne(long sequence);
+        ValueTask<TItem> ReadAsync(long sequence, CancellationToken cancellationToken);
 
         /// <summary>Returns the remaining capacity of the ringbuffer.</summary>
         /// <remarks>
@@ -220,7 +221,7 @@ namespace Hazelcast.DistributedObjects
         /// If ttl is not set, the remaining capacity will always be the capacity.
         /// </remarks>
         /// <returns>the remaining capacity.</returns>
-        long RemainingCapacity();
+        Task<long> GetRemainingCapacityAsync(CancellationToken cancellationToken);
 
         /// <summary>Returns number of items in the ringbuffer.</summary>
         /// <remarks>
@@ -229,7 +230,7 @@ namespace Hazelcast.DistributedObjects
         /// around the ring. This is because no items are getting retired.
         /// </remarks>
         /// <returns>the size.</returns>
-        long Size();
+        Task<long> CountAsync(CancellationToken cancellationToken);
 
         /// <summary>Returns the sequence of the tail.</summary>
         /// <remarks>
@@ -237,6 +238,6 @@ namespace Hazelcast.DistributedObjects
         /// The initial value of the tail is -1.
         /// </remarks>
         /// <returns>the sequence of the tail.</returns>
-        long TailSequence();
+        Task<long> GetTailSequenceAsync(CancellationToken cancellationToken);
     }
 }

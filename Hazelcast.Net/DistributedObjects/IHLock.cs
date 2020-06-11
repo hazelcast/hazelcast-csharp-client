@@ -19,7 +19,7 @@ namespace Hazelcast.DistributedObjects
     /// <summary>
     ///     Distributed implementation of Lock
     /// </summary>
-    public interface ILock : IDistributedObject
+    public interface IHLock : IDistributedObject
     {
         /// <summary>Releases the lock regardless of the lock owner.</summary>
         /// <remarks>

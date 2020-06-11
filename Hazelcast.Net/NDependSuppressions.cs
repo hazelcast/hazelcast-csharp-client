@@ -103,11 +103,13 @@ using System.Diagnostics.CodeAnalysis;
     Target = "System.Runtime.CompilerServices.RuntimeHelpersEx",
     Justification = "Accepted.")]
 
-// TODO: we should do better, with a custom rule?
+// do *not* suppress that one but use a customized rule
+/*
 [assembly: SuppressMessage("NDepend",
     "ND2016:MethodsPrefixedWithTryShouldReturnABoolean",
     Scope = "method",
     Justification="We have many TryXxx methods that return Attempt or are async.")]
+*/
 
 // the two issues below just don't work?!
 

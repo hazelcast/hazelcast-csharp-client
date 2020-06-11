@@ -36,6 +36,8 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<DistributedObjectBase> _onDispose;
+        private string _partitionKey;
+        private IData _partitionKeyData;
 
         private volatile int _disposed;
 
@@ -81,7 +83,10 @@ namespace Hazelcast.DistributedObjects.Implementation
 
         /// <inheritdoc />
         // FIXME: PartitionKey always uses simple String strategy = ?! (see Java?)
-        public string PartitionKey => (string) PartitioningStrategy.GetPartitionKey(Name);
+        public string PartitionKey => _partitionKey ??= (string) PartitioningStrategy.GetPartitionKey(Name);
+
+        // FIXME document
+        public IData PartitionKeyData => _partitionKeyData ??= ToData(PartitionKey);
 
         /// <inheritdoc />
         public void Destroy()

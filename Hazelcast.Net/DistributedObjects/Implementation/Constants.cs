@@ -49,11 +49,6 @@ namespace Hazelcast.DistributedObjects.Implementation
             public const string ClientEngine = "hz:impl:clientEngineService";
 
             /// <summary>
-            /// Gets the ring buffer service name.
-            /// </summary>
-            public const string Ringbuffer = "hz:impl:ringbufferService";
-
-            /// <summary>
             /// Gets the replicated-map service name.
             /// </summary>
             public const string ReplicatedMap = "hz:impl:replicatedMapService";
