@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImplement
             if (_capacity != -1) return _capacity;
 
             var requestMessage = RingbufferCapacityCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return _capacity = RingbufferCapacityCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -76,7 +76,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImplement
         public async Task<long> GetHeadSequenceAsync(CancellationToken cancellationToken)
         {
             var requestMessage = RingbufferHeadSequenceCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return RingbufferHeadSequenceCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -103,7 +103,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImplement
             if (sequence < 0) throw new ArgumentOutOfRangeException(nameof(sequence));
 
             var requestMessage = RingbufferReadOneCodec.EncodeRequest(Name, sequence);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = RingbufferReadOneCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
@@ -112,7 +112,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImplement
         public async Task<long> GetRemainingCapacityAsync(CancellationToken cancellationToken)
         {
             var requestMessage = RingbufferRemainingCapacityCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return RingbufferRemainingCapacityCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -120,7 +120,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImplement
         public async Task<long> CountAsync(CancellationToken cancellationToken)
         {
             var requestMessage = RingbufferSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return RingbufferSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -128,7 +128,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImplement
         public async Task<long> GetTailSequenceAsync(CancellationToken cancellationToken)
         {
             var requestMessage = RingbufferTailSequenceCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return RingbufferTailSequenceCodec.DecodeResponse(responseMessage).Response;
         }
     }

@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects.Implementation;
+using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -28,10 +29,9 @@ namespace Hazelcast
     /// </summary>
     internal partial class HazelcastClient : IHazelcastClient
     {
-#pragma warning disable IDE0052 // Remove unread private members - this is temp
         private readonly HazelcastOptions _options;
-#pragma warning restore IDE0052 // Remove unread private members
         private readonly DistributedObjectFactory _distributedObjectFactory;
+        private readonly NearCacheManager _nearCacheManager;
 
         private int _disposed;
 

@@ -15,11 +15,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.HListImplement;
 using Hazelcast.DistributedObjects.HMapImplement;
 using Hazelcast.DistributedObjects.HSetImplement;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast
 {
@@ -52,10 +55,18 @@ namespace Hazelcast
 #endif
         Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(HMap.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory)
-                    => new HMap<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory),
-                cancellationToken);
+            // lookup a cache configuration for the specified map
+            var nearCacheOptions = _options.NearCache.GetConfig(name);
+            var nearCache = nearCacheOptions == null
+                ? null
+                : await _nearCacheManager.GetOrCreateNearCacheAsync(name, nearCacheOptions, cancellationToken).CAF();
+
+            HMap<TKey, TValue> CreateMap(string n, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+                => nearCacheOptions == null
+                    ? new HMap<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
+                    : new HMapWithCache<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
+
+            var task = _distributedObjectFactory.GetOrCreateAsync(HMap.ServiceName, name, true, CreateMap, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

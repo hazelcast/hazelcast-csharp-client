@@ -66,10 +66,14 @@ namespace Hazelcast.NearCaching
         {
             var nearCacheConfig = _options.GetConfig(mapName);
             if (nearCacheConfig == null) return null;
+            return await GetOrCreateNearCacheAsync(mapName, nearCacheConfig, cancellationToken).CAF();
+        }
 
-            return await _caches.GetOrAddAsync(mapName, async name => 
+        public async ValueTask<NearCacheBase> GetOrCreateNearCacheAsync(string mapName, NearCacheNamedOptions options, CancellationToken cancellationToken)
+        {
+            return await _caches.GetOrAddAsync(mapName, async name =>
             {
-                var nearCache = new NearCache(name, _cluster, _serializationService, _loggerFactory, nearCacheConfig, GetMaxToleratedMissCount());
+                var nearCache = new NearCache(name, _cluster, _serializationService, _loggerFactory, options, GetMaxToleratedMissCount());
                 await InitNearCache(nearCache, cancellationToken).CAF();
                 return nearCache;
             }).CAF();
