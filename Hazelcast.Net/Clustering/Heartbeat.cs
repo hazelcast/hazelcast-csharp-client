@@ -140,15 +140,12 @@ namespace Hazelcast.Clustering
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
 
-                // cannot wait forever on a ping
-                var timeout = TimeSpan.Zero.AsCancellationTokenSource(_options.PingTimeoutMilliseconds);
-                var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
-
                 try
                 {
-                    var responseMessage = await _cluster.SendToClientAsync(requestMessage, client, cancellation.Token)
-                        .OrTimeout(timeout)
-                        .CAF();
+                    // cannot wait forever on a ping
+                    var responseMessage = await TaskEx.WithTimeout((cls, msg, clt, token) => cls.SendToClientAsync(msg, clt, token),
+                        _cluster, requestMessage, client,
+                        TimeSpan.Zero, _options.PingTimeoutMilliseconds, cancellationToken).CAF();
 
                     // just to be sure everything is ok
                     _ = ClientPingCodec.DecodeResponse(responseMessage);
@@ -161,11 +158,6 @@ namespace Hazelcast.Clustering
                 {
                     // unexpected
                     _logger.LogWarning(e, "Heartbeat has thrown an exception.");
-                }
-                finally
-                {
-                    timeout.Dispose();
-                    cancellation.Dispose();
                 }
             }
         }

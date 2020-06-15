@@ -57,19 +57,5 @@ namespace Hazelcast.Core
             var timeout = (int) timeSpan.TotalMilliseconds;
             return timeout > 0 ? timeout : timeout < 0 ? infiniteTimeout : defaultTimeout;
         }
-
-        /// <summary>
-        /// Converts a <see cref="TimeSpan"/> into a timeout <see cref="CancellationTokenSource"/>.
-        /// </summary>
-        /// <param name="timeSpan">The time span.</param>
-        /// <param name="defaultTimeoutMilliseconds">The default timeout if the time span is zero.</param>
-        /// <returns>A <see cref="CancellationTokenSource"/> that will cancel once the timeout has elapsed.</returns>
-        public static CancellationTokenSource AsCancellationTokenSource(this TimeSpan timeSpan, int defaultTimeoutMilliseconds)
-        {
-            var timeout = (int) timeSpan.TotalMilliseconds;
-            if (timeout < 0) return TaskCoreExtensions.NeverCanceledSource;
-            if (timeout == 0) timeout = defaultTimeoutMilliseconds;
-            return new CancellationTokenSource(timeout);
-        }
     }
 }

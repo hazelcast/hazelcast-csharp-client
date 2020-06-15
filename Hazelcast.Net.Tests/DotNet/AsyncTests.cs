@@ -569,7 +569,7 @@ namespace Hazelcast.Tests.DotNet
         {
             await Task.Yield();
             throw new Exception("bang");
-        } 
+        }
 
         public async Task<T> WrapThrow2<T>(CancellationToken token)
         {

@@ -28,14 +28,6 @@ namespace Hazelcast.Core
     public static class TaskCoreExtensions
     {
         /// <summary>
-        /// Gets the cancellation source that never cancels.
-        /// </summary>
-        /// <remarks>
-        /// <para>This cancellation source should *not* ever be canceled, completed, anything.</para>
-        /// </remarks>
-        internal static readonly CancellationTokenSource NeverCanceledSource = new CancellationTokenSource();
-
-        /// <summary>
         /// ConfigureAwait(false) = disable synchronization context and continue on any context.
         /// </summary>
         /// <param name="task">The task.</param>
@@ -92,69 +84,5 @@ namespace Hazelcast.Core
         // ReSharper disable once InconsistentNaming
         public static ConfiguredValueTaskAwaitable<T> CAF<T>(this ValueTask<T> task)
             => task.ConfigureAwait(false);
-
-        /// <summary>
-        /// Configures a task to handle timeouts.
-        /// </summary>
-        /// <param name="task">The task.</param>
-        /// <param name="cts">A cancellation token source controlling the timeout.</param>
-        /// <returns>A task.</returns>
-        public static Task OrTimeout([NotNull] this Task task, [NotNull] CancellationTokenSource cts)
-        {
-            if (task == null) throw new ArgumentNullException(nameof(task));
-            if (cts == NeverCanceledSource) return task;
-
-            return task.ContinueWith(x =>
-            {
-                var notTimedOut = !x.IsCanceled;
-                cts.Dispose();
-
-                if (notTimedOut) return x;
-
-                try
-                {
-                    // this is the way to get the original exception with correct stack trace
-                    task.GetAwaiter().GetResult();
-                }
-                catch (Exception e)
-                {
-                    throw new TimeoutException("Operation timed out (see inner exception).", e);
-                }
-
-                throw new TimeoutException("Operation timed out");
-            }, default, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current).Unwrap();
-        }
-
-        /// <summary>
-        /// Configures a task to handle timeouts.
-        /// </summary>
-        /// <param name="task">The task.</param>
-        /// <param name="cts">A cancellation token source controlling the timeout.</param>
-        /// <returns>A task.</returns>
-        public static Task<T> OrTimeout<T>([NotNull] this Task<T> task, [NotNull] CancellationTokenSource cts)
-        {
-            if (task == null) throw new ArgumentNullException(nameof(task));
-            if (cts == NeverCanceledSource) return task;
-
-            return task.ContinueWith(x =>
-            {
-                var notTimedOut = !x.IsCanceled;
-                cts.Dispose();
-
-                if (notTimedOut) return x;
-
-                try
-                {
-                    // this is the way to get the original exception with correct stack trace
-                    task.GetAwaiter().GetResult();
-                }
-                catch (Exception e)
-                {
-                    throw new TimeoutException("Operation timed out (see inner exception).", e);
-                }
-
-                throw new TimeoutException("Operation timed out");
-            }, default, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current).Unwrap();
-        }
     }
 }

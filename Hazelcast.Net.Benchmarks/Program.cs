@@ -19,76 +19,44 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Hazelcast.Core;
+using Microsoft.Diagnostics.Tracing.Parsers.ClrPrivate;
 
 #pragma warning disable
 
-namespace AsyncTests1.Benchmark
+namespace Hazelcast.Benchmarks
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Console.WriteLine("AsyncBench");
-            BenchmarkRunner.Run<Bench4>();
-        }
-    }
-
-    [MemoryDiagnoser]
-    public class Bench4
-    {
-        [Benchmark]
-        public async Task DoSomething()
-        {
-            await Run();
-        }
-
-        [Benchmark]
-        public async Task DoSomethingEliding()
-        {
-            await RunEliding();
-        }
-
-        public async Task Run()
-        {
-            using var disposable = new SomeDisposable();
-            await Whatever();
-        }
-
-        public Task RunEliding()
-        {
-            var disposable = new SomeDisposable();
-            //return Whatever().ThenDispose(disposable);
-            return ThenDispose(Whatever(), disposable);
-        }
-
-        public async Task Whatever()
-        {
-            await Task.Yield();
-        }
-
-        /// <summary>
-        /// Configures a task to dispose a resource after it completes.
-        /// </summary>
-        /// <param name="task">The task.</param>
-        /// <param name="disposable">The disposable resource.</param>
-        /// <returns>A task.</returns>
-        public static Task ThenDispose(Task task, IDisposable disposable)
-        {
-            if (task == null) throw new ArgumentNullException(nameof(task));
-            return task.ContinueWith(x =>
+            Console.WriteLine("Hazelcast.Net Benchmarks");
+            if (args.Length < 1)
             {
-                disposable.Dispose();
-                return x;
-            }, default, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current).Unwrap();
+                Console.WriteLine("usage: hb.exe <benchmark> [<args>]");
+                return;
+            }
+
+            var typeName = typeof (Program).FullName?.Replace(".Program", "." + args[0]);
+            var type = typeName == null ? null: Type.GetType(typeName);
+            if (type == null)
+            {
+                Console.WriteLine($"error: type '{typeName}' not found.");
+                return;
+            }
+
+            BenchmarkRunner.Run(type);
         }
-
     }
 
-    public class SomeDisposable : IDisposable
+    [InProcess] // because program name 'hb' is different from csproj
+    [MemoryDiagnoser] // ensure we get memory data
+    public class Sample
     {
-        public void Dispose()
-        { }
+        [Benchmark] // declare a benchmark
+        public void DoSomething() {}
     }
+
+    // TODO: move all benchmarks to their own files + rename & document
 
     [MemoryDiagnoser]
     public class Bench3

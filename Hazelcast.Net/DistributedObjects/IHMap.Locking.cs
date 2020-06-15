@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects
         Task LockAsync(TKey key, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Locks an entry for a given time span.
+        /// Locks an entry for a specified lease time, 
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="leaseTime">A time span.</param>
@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects
         Task LockForAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout = default);
 
         /// <summary>
-        /// Locks an entry for a given time span.
+        /// Locks an entry for a specified lease time, 
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="leaseTime">A time span.</param>
@@ -111,61 +111,61 @@ namespace Hazelcast.DistributedObjects
         /// Tries to lock an entry with a server-side timeout.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="serverTimeout">A timeout.</param>
-        /// <param name="timeout">a timeout.</param>
+        /// <param name="timeToWait">How long to wait for the lock.</param>
+        /// <param name="timeout">A timeout.</param>
         /// <returns>true if the lock was acquired; otherwise false.</returns>
         /// <remarks>
-        /// <para>If the entry cannot be locked after <paramref name="serverTimeout"/>, returns false.</para>
-        /// <para>If <paramref name="serverTimeout"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns false.</para>
+        /// <para>If <paramref name="timeToWait"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
         /// </remarks>
-        Task<bool> WaitLockAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default);
+        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default);
 
         /// <summary>
         /// Tries to lock an entry with a server-side timeout.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="serverTimeout">A timeout.</param>
+        /// <param name="timeToWait">How long to wait for the lock.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the lock was acquired; otherwise false.</returns>
         /// <remarks>
-        /// <para>If the entry cannot be locked after <paramref name="serverTimeout"/>, returns false.</para>
-        /// <para>If <paramref name="serverTimeout"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns false.</para>
+        /// <para>If <paramref name="timeToWait"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
         /// </remarks>
-        Task<bool> WaitLockAsync(TKey key, TimeSpan serverTimeout, CancellationToken cancellationToken);
+        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Tries to lock an entry with a server-side timeout.
+        /// Tries to lock an entry for a specified lease time, with a server-side timeout.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="serverTimeout">A timeout.</param>
+        /// <param name="timeToWait">How long to wait for the lock.</param>
         /// <param name="leaseTime">A lease time.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>true if the lock was acquired; otherwise false.</returns>
         /// <remarks>
-        /// <para>If the entry cannot be locked after <paramref name="serverTimeout"/>, returns false.
-        /// If <paramref name="serverTimeout"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns false.
+        /// If <paramref name="timeToWait"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
         /// <para>If acquired, the lock is automatically released after <paramref cref="leaseTime"/>.
         /// If <paramref name="leaseTime"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the lock is never
         /// released.</para>
         /// </remarks>
-        Task<bool> WaitLockForAsync(TKey key, TimeSpan serverTimeout, TimeSpan leaseTime, TimeSpan timeout = default);
+        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default);
 
         /// <summary>
-        /// Tries to lock an entry with a server-side timeout.
+        /// Tries to lock an entry for a specified lease time, with a server-side timeout.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="serverTimeout">A timeout.</param>
+        /// <param name="timeToWait">How long to wait for the lock.</param>
         /// <param name="leaseTime">A lease time.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the lock was acquired; otherwise false.</returns>
         /// <remarks>
-        /// <para>If the entry cannot be locked after <paramref name="serverTimeout"/>, returns false.
-        /// If <paramref name="serverTimeout"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns false.
+        /// If <paramref name="timeToWait"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
         /// <para>If acquired, the lock is automatically released after <paramref cref="leaseTime"/>.
         /// If <paramref name="leaseTime"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the lock is never
         /// released.</para>
         /// </remarks>
-        Task<bool> WaitLockForAsync(TKey key, TimeSpan serverTimeout, TimeSpan leaseTime, CancellationToken cancellationToken);
+        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken);
 
         /// <summary>
         /// Determines whether an entry is locked.

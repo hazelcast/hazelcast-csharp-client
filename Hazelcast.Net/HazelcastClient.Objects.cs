@@ -18,9 +18,10 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.HListImplement;
-using Hazelcast.DistributedObjects.HMapImplement;
-using Hazelcast.DistributedObjects.HSetImplement;
+using Hazelcast.DistributedObjects.HListImpl;
+using Hazelcast.DistributedObjects.HMapImpl;
+using Hazelcast.DistributedObjects.HSetImpl;
+using Hazelcast.DistributedObjects.HTopicImpl;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -100,7 +101,7 @@ namespace Hazelcast
         {
             var task = _distributedObjectFactory.GetOrCreateAsync(HTopic.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
-                    => new DistributedObjects.HTopicImplement.HTopic<T>(n, cluster, serializationService, loggerFactory),
+                    => new HTopic<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

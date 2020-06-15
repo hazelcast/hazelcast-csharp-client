@@ -46,6 +46,9 @@
     <Compile Update="DistributedObjects\IHMap.*.cs">
         <DependentUpon>IHMap.cs</DependentUpon>
     </Compile>
+    <Compile Update="DistributedObjects\IHReplicatedMap.*.cs">
+        <DependentUpon>IHReplicatedMap.cs</DependentUpon>
+    </Compile>
     <Compile Update="Networking\SocketConnectionBase+*.cs">
         <DependentUpon>SocketConnectionBase.cs</DependentUpon>
     </Compile>
