@@ -16,11 +16,13 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
 {
     internal class HReplicatedMap<TKey, TValue> : DistributedObjectBase, IHReplicatedMap<TKey, TValue>
     {
-        private readonly int _partitionId; // FIXME
+        private readonly int _partitionId;
 
-        public HReplicatedMap(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HReplicatedMap(string name, Cluster cluster, ISerializationService serializationService, int partitionId, ILoggerFactory loggerFactory)
             : base(HReplicatedMap.ServiceName, name, cluster, serializationService, loggerFactory)
-        { }
+        {
+            _partitionId = partitionId;
+        }
 
         public Task<TValue> AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout = default)
             => TaskEx.WithTimeout(AddOrReplaceAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
@@ -45,9 +47,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             => TaskEx.WithTimeout(AddOrReplaceAsync, entries, timeout, DefaultOperationTimeoutMilliseconds);
 
         public async Task AddOrReplaceAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
-        {  
-            // TODO replicated map does not partition?
-
+        {
             var entriesData = new List<KeyValuePair<IData, IData>>(entries.Count);
             foreach (var (key, value) in entries)
             {
@@ -169,13 +169,13 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
-        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 
-            var handlers = new MapEventHandlers<TKey, TValue>();
+            var handlers = new ReplicatedMapEventHandlers<TKey, TValue>();
             handle(handlers);
 
             // 0: no entryKey, no predicate
@@ -206,33 +206,33 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
             => TaskEx.WithTimeout(SubscribeAsync, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
             => SubscribeAsync(default, false, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
+        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
             => TaskEx.WithTimeout(SubscribeAsync, key, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
             => SubscribeAsync(default, false, key, true, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
             => TaskEx.WithTimeout(SubscribeAsync, predicate, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
             => SubscribeAsync(predicate, true, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
             => TaskEx.WithTimeout(SubscribeAsync, key, predicate, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
             => SubscribeAsync(predicate, true, key, true, handle, cancellationToken);
 
-        private class MapSubscriptionState : SubscriptionState<MapEventHandlers<TKey, TValue>>
+        private class MapSubscriptionState : SubscriptionState<ReplicatedMapEventHandlers<TKey, TValue>>
         {
-            public MapSubscriptionState(int mode, string name, MapEventHandlers<TKey, TValue> handlers)
+            public MapSubscriptionState(int mode, string name, ReplicatedMapEventHandlers<TKey, TValue> handlers)
                 : base(name, handlers)
             {
                 Mode = mode;
@@ -263,10 +263,10 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
                     {
                         switch (handler)
                         {
-                            case IMapEntryEventHandler<TKey, TValue> entryHandler:
+                            case IMapEntryEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> entryHandler:
                                 entryHandler.Handle(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries);
                                 break;
-                            case IMapEventHandler<TKey, TValue> mapHandler:
+                            case IMapEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> mapHandler:
                                 mapHandler.Handle(this, member, numberOfAffectedEntries);
                                 break;
                             default:

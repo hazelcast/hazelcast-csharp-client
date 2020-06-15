@@ -31,8 +31,8 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default); 
-        Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken); // fixme MapEntryEventHandlers
+        Task<Guid> SubscribeAsync(bool includeValues, Action<MultiMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(bool includeValues, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
@@ -42,8 +42,8 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default); 
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken); // fixme MapEntryEventHandlers
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         // Setting
 
@@ -197,7 +197,7 @@ namespace Hazelcast.DistributedObjects
         /// </returns>
         /// <exception cref="System.ArgumentNullException">if the specified key is null.</exception>
         /// <exception cref="System.Exception"/>
-        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default); 
+        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default);
         Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken);
 
         /// <summary>Acquires the lock for the specified key for the specified lease time.</summary>

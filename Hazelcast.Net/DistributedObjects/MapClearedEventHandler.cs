@@ -17,9 +17,9 @@ using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {
-    internal sealed class MapClearedEventHandler<TKey, TValue> : MapEventHandlerBase<TKey, TValue, MapClearedEventArgs>
+    internal sealed class MapClearedEventHandler<TKey, TValue, TSender> : MapEventHandlerBase<TKey, TValue, TSender, MapClearedEventArgs>
     {
-        public MapClearedEventHandler(Action<IHMap<TKey, TValue>, MapClearedEventArgs> handler)
+        public MapClearedEventHandler(Action<TSender, MapClearedEventArgs> handler)
             : base(MapEventTypes.AllCleared, handler)
         { }
 

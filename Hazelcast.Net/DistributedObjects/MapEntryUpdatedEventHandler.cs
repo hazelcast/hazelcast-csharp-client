@@ -17,9 +17,9 @@ using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {
-    internal sealed class MapEntryUpdatedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryUpdatedEventArgs<TKey, TValue>>
+    internal sealed class MapEntryUpdatedEventHandler<TKey, TValue, TSender> : MapEntryEventHandlerBase<TKey, TValue, TSender, MapEntryUpdatedEventArgs<TKey, TValue>>
     {
-        public MapEntryUpdatedEventHandler(Action<IHMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
+        public MapEntryUpdatedEventHandler(Action<TSender, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
             : base(MapEventTypes.Updated, handler)
         { }
 

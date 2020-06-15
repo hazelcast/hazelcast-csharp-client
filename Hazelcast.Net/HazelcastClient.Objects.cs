@@ -20,6 +20,8 @@ using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.HListImpl;
 using Hazelcast.DistributedObjects.HMapImpl;
+using Hazelcast.DistributedObjects.HMultiMapImpl;
+using Hazelcast.DistributedObjects.HReplicatedMapImpl;
 using Hazelcast.DistributedObjects.HSetImpl;
 using Hazelcast.DistributedObjects.HTopicImpl;
 using Hazelcast.Serialization;
@@ -68,6 +70,74 @@ namespace Hazelcast
                     : new HMapWithCache<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
             var task = _distributedObjectFactory.GetOrCreateAsync(HMap.ServiceName, name, true, CreateMap, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
+        {
+        var task = TaskEx.WithTimeout(GetReplicatedMapAsync<TKey, TValue>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        {
+            var partitionId = Cluster.Partitioner.GetRandomPartitionId();
+
+            var task = _distributedObjectFactory.GetOrCreateAsync(HReplicatedMap.ServiceName, name, true, 
+                (n, c, sr, lf) => new HReplicatedMap<TKey,TValue>(n, c, sr, partitionId, lf), cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
+        {
+            var task = TaskEx.WithTimeout(GetMultiMapAsync<TKey, TValue>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        {
+            var task = _distributedObjectFactory.GetOrCreateAsync(HMultiMap.ServiceName, name, true,
+                (n, c, sr, lf) => new HMultiMap<TKey, TValue>(n, c, sr, _lockReferenceIdSequence, lf), cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

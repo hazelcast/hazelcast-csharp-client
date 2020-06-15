@@ -151,10 +151,10 @@ namespace Hazelcast.DistributedObjects.HMapImpl
                     {
                         switch (handler)
                         {
-                            case IMapEntryEventHandler<TKey, TValue> entryHandler:
+                            case IMapEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler:
                                 entryHandler.Handle(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries);
                                 break;
-                            case IMapEventHandler<TKey, TValue> mapHandler:
+                            case IMapEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler:
                                 mapHandler.Handle(this, member, numberOfAffectedEntries);
                                 break;
                             default:

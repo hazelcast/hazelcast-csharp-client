@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
@@ -69,6 +68,15 @@ namespace Hazelcast.Partitioning
             return hash == int.MinValue // cannot Abs(int.MinValue)
                 ? 0
                 : Math.Abs(hash) % Count;
+        }
+
+        /// <summary>
+        /// Gets a random partition identifier.
+        /// </summary>
+        /// <returns>A random partition identifier.</returns>
+        public int GetRandomPartitionId()
+        {
+            return RandomProvider.Random.Next(Count);
         }
 
         /// <summary>

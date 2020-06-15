@@ -22,12 +22,13 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    public interface IMapEntryEventHandler<TKey, TValue> : IMapEventHandlerBase
+    /// <typeparam name="TSender">The type of the sender.</typeparam>
+    public interface IMapEntryEventHandler<TKey, TValue, in TSender> : IMapEventHandlerBase
     {
         /// <summary>
         /// Handles an event.
         /// </summary>
-        /// <param name="sender">The <see cref="IHMap{TKey,TValue}"/> that triggered the event.</param>
+        /// <param name="sender">The sender (map) that triggered the event.</param>
         /// <param name="member">The member.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
@@ -35,6 +36,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="mergeValue">The merged value.</param>
         /// <param name="eventType">The event type.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        void Handle(IHMap<TKey, TValue> sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries);
+        void Handle(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries);
     }
 }

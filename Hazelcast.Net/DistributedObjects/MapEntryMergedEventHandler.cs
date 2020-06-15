@@ -17,9 +17,9 @@ using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {
-    internal sealed class MapEntryMergedEventHandler<TKey, TValue> : MapEntryEventHandlerBase<TKey, TValue, MapEntryMergedEventArgs<TKey, TValue>>
+    internal sealed class MapEntryMergedEventHandler<TKey, TValue, TSender> : MapEntryEventHandlerBase<TKey, TValue, TSender, MapEntryMergedEventArgs<TKey, TValue>>
     {
-        public MapEntryMergedEventHandler(Action<IHMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
+        public MapEntryMergedEventHandler(Action<TSender, MapEntryMergedEventArgs<TKey, TValue>> handler)
             : base(MapEventTypes.Merged, handler)
         { }
 

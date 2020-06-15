@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
@@ -53,7 +53,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
@@ -71,7 +71,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
@@ -81,7 +81,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
@@ -91,7 +91,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Unsubscribe from events.

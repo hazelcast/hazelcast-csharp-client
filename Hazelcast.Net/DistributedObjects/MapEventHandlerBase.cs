@@ -22,12 +22,13 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
+    /// <typeparam name="TSender">The type of the sender.</typeparam>
     /// <typeparam name="TArgs">The actual type of the arguments.</typeparam>
-    internal abstract class MapEventHandlerBase<TKey, TValue, TArgs> : IMapEventHandler<TKey, TValue>
+    internal abstract class MapEventHandlerBase<TKey, TValue, TSender, TArgs> : IMapEventHandler<TKey, TValue, TSender>
     {
-        private readonly Action<IHMap<TKey, TValue>, TArgs> _handler;
+        private readonly Action<TSender, TArgs> _handler;
 
-        protected MapEventHandlerBase(MapEventTypes eventType, Action<IHMap<TKey, TValue>, TArgs> handler)
+        protected MapEventHandlerBase(MapEventTypes eventType, Action<TSender, TArgs> handler)
         {
             EventType = eventType;
             _handler = handler;
@@ -35,7 +36,7 @@ namespace Hazelcast.DistributedObjects
 
         public MapEventTypes EventType { get; }
 
-        public void Handle(IHMap<TKey, TValue> sender, MemberInfo member, int numberOfAffectedEntries)
+        public void Handle(TSender sender, MemberInfo member, int numberOfAffectedEntries)
             => _handler(sender, CreateEventArgs(member, numberOfAffectedEntries));
 
         protected abstract TArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries);

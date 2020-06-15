@@ -23,24 +23,24 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
+        public Task<Guid> SubscribeAsync(bool includeValues, Action<MultiMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
             => TaskEx.WithTimeout(SubscribeAsync, includeValues, (TKey) default, false, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
             => SubscribeAsync(includeValues, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
             => TaskEx.WithTimeout(SubscribeAsync, includeValues, key, true, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
             => SubscribeAsync(includeValues, key, true, handle, cancellationToken);
 
-        private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 
-            var handlers = new MapEventHandlers<TKey, TValue>();
+            var handlers = new MultiMapEventHandlers<TKey, TValue>();
             handle(handlers);
 
             // 0: no entryKey
@@ -67,9 +67,9 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return subscription.Id;
         }
 
-        private class MapSubscriptionState : SubscriptionState<MapEventHandlers<TKey, TValue>>
+        private class MapSubscriptionState : SubscriptionState<MultiMapEventHandlers<TKey, TValue>>
         {
-            public MapSubscriptionState(int mode, string name, MapEventHandlers<TKey, TValue> handlers)
+            public MapSubscriptionState(int mode, string name, MultiMapEventHandlers<TKey, TValue> handlers)
                 : base(name, handlers)
             {
                 Mode = mode;
@@ -100,10 +100,10 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
                     {
                         switch (handler)
                         {
-                            case IMapEntryEventHandler<TKey, TValue> entryHandler:
+                            case IMapEntryEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> entryHandler:
                                 entryHandler.Handle(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries);
                                 break;
-                            case IMapEventHandler<TKey, TValue> mapHandler:
+                            case IMapEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> mapHandler:
                                 mapHandler.Handle(this, member, numberOfAffectedEntries);
                                 break;
                             default:
