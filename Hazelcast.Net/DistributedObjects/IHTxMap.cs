@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <typeparam name="TKey">key type</typeparam>
     /// <typeparam name="TValue">Value type</typeparam>
-    public interface ITransactionalMap<TKey, TValue> : ITransactionalObject
+    public interface IHTxMap<TKey, TValue> : ITransactionalObject
     {
         /// <summary>
         /// Transactional implementation of

@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
@@ -19,20 +23,23 @@ namespace Hazelcast.DistributedObjects
     ///     <see cref="IHSet{T}">IHSet&lt;E&gt;</see>
     ///     .
     /// </summary>
-    public interface ITransactionalSet<in T> : ITransactionalObject
+    public interface IHTxSet<in TItem> : ITransactionalObject
     {
         /// <summary>Add new item to transactional set</summary>
         /// <param name="e">item</param>
         /// <returns>true if item is added successfully</returns>
-        bool Add(T e);
+        Task<bool> AddAsync(TItem item, TimeSpan timeout = default);
+        Task<bool> AddAsync(TItem item, CancellationToken cancellationToken);
 
         /// <summary>Add item from transactional set</summary>
         /// <param name="e">item</param>
         /// <returns>true if item is remove successfully</returns>
-        bool Remove(T e);
+        Task<bool> RemoveAsync(TItem item, TimeSpan timeout = default);
+        Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken);
 
         /// <summary>Returns the size of the set</summary>
         /// <returns>size</returns>
-        int Size();
+        Task<int> CountAsync(TimeSpan timeout = default);
+        Task<int> CountAsync(CancellationToken cancellationToken);
     }
 }

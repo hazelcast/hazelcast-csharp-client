@@ -82,18 +82,90 @@ namespace Hazelcast.Transactions
         /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
         /// </summary>
         /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="list">The original, non-transactional list.</param>
+        /// <param name="source">The original, non-transactional list.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>The transactional list that was retrieved or created.</returns>
-        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> list, TimeSpan timeout = default);
+        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, TimeSpan timeout = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
         /// </summary>
         /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="list">The original, non-transactional list.</param>
+        /// <param name="source">The original, non-transactional list.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional list that was retrieved or created.</returns>
-        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> list, CancellationToken cancellationToken);
+        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="name">The unique name of the set.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The transactional set that was retrieved or created.</returns>
+        Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="name">The unique name of the set.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The transactional set that was retrieved or created.</returns>
+        Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="source">The original, non-transactional set.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The transactional set that was retrieved or created.</returns>
+        Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="source">The original, non-transactional set.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The transactional set that was retrieved or created.</returns>
+        Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="name">The unique name of the queue.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The transactional queue that was retrieved or created.</returns>
+        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="name">The unique name of the v.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The transactional queue that was retrieved or created.</returns>
+        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="source">The original, non-transactional queue.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The transactional queue that was retrieved or created.</returns>
+        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="source">The original, non-transactional queue.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The transactional queue that was retrieved or created.</returns>
+        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, CancellationToken cancellationToken);
     }
 }

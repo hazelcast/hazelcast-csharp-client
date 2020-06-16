@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects.HTxListImpl;
+using Hazelcast.DistributedObjects.HTxQueueImpl;
+using Hazelcast.DistributedObjects.HTxSetImpl;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Hazelcast.Transactions;
@@ -188,28 +190,6 @@ namespace Hazelcast.DistributedObjects
             }
         }
 
-        // Objects
-
-        /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> list, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetListAsync<TItem>, list.Name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(string name, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetListAsync<TItem>, name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> list, CancellationToken cancellationToken)
-            => GetListAsync<TItem>(list.Name, cancellationToken);
-
-        /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(string name, CancellationToken cancellationToken)
-        {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxList<TItem>, HTxList<TItem>>(HList.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxList<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
-                cancellationToken);
-        }
-
         public async ValueTask DisposeAsync()
         {
             // be sure to always clear this!
@@ -228,6 +208,64 @@ namespace Hazelcast.DistributedObjects
             {
                 // FIXME what shall we do of abandoned transaction?
             }
+        }
+
+        // Objects
+
+        /// <inheritdoc />
+        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetListAsync<TItem>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        /// <inheritdoc />
+        public Task<IHTxList<TItem>> GetListAsync<TItem>(string name, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetListAsync<TItem>, name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        /// <inheritdoc />
+        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, CancellationToken cancellationToken)
+            => GetListAsync<TItem>(source.Name, cancellationToken);
+
+        /// <inheritdoc />
+        public Task<IHTxList<TItem>> GetListAsync<TItem>(string name, CancellationToken cancellationToken)
+        {
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxList<TItem>, HTxList<TItem>>(HList.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory) => new HTxList<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetSetAsync<TItem>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        /// <inheritdoc />
+        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetSetAsync<TItem>, name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        /// <inheritdoc />
+        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, CancellationToken cancellationToken)
+            => GetSetAsync<TItem>(source.Name, cancellationToken);
+
+        /// <inheritdoc />
+        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, CancellationToken cancellationToken)
+        {
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxSet<TItem>, HTxSet<TItem>>(HSet.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory) => new HTxSet<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                cancellationToken);
+        }
+
+        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetQueueAsync<TItem>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetQueueAsync<TItem>, name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, CancellationToken cancellationToken)
+            => GetQueueAsync<TItem>(source.Name, cancellationToken);
+
+        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, CancellationToken cancellationToken)
+        {
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxQueue<TItem>, HTxQueue<TItem>>(HQueue.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory) => new HTxQueue<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                cancellationToken);
         }
     }
 }

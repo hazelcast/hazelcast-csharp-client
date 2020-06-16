@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace Hazelcast.DistributedObjects
 {
-    /// <summary>
-    /// Transactional implementation of <see cref="IHList{T}">IHList&lt;E&gt;</see>
-    /// </summary>
-    public interface ITransactionalList<in T> : ITransactionalObject
+    /// <summary>Transactional implementation of MultiMap</summary>
+    public interface IHTxMultiMap<TKey, TValue> : ITransactionalObject
     {
-        /// <summary>Add new item to transactional list</summary>
-        /// <param name="e">item</param>
-        /// <returns>true if item is added successfully</returns>
-        bool Add(T e);
+        ICollection<TValue> Get(TKey key);
 
-        /// <summary>Add item from transactional list</summary>
-        /// <param name="e">item</param>
-        /// <returns>true if item is remove successfully</returns>
-        bool Remove(T e);
+        bool Put(TKey key, TValue value);
 
-        /// <summary>Returns the size of the list</summary>
-        /// <returns>size</returns>
+        bool Remove(object key, object value);
+
+        ICollection<TValue> Remove(object key);
+
         int Size();
+
+        int ValueCount(TKey key);
     }
 }
