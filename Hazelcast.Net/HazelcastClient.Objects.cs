@@ -69,7 +69,7 @@ namespace Hazelcast
                     ? new HMap<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
                     : new HMapWithCache<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
-            var task = _distributedObjectFactory.GetOrCreateAsync(HMap.ServiceName, name, true, CreateMap, cancellationToken);
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(HMap.ServiceName, name, true, CreateMap, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -103,7 +103,7 @@ namespace Hazelcast
         {
             var partitionId = Cluster.Partitioner.GetRandomPartitionId();
 
-            var task = _distributedObjectFactory.GetOrCreateAsync(HReplicatedMap.ServiceName, name, true, 
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedMap<TKey, TValue>, HReplicatedMap<TKey, TValue>>(HReplicatedMap.ServiceName, name, true,
                 (n, c, sr, lf) => new HReplicatedMap<TKey,TValue>(n, c, sr, partitionId, lf), cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -136,7 +136,7 @@ namespace Hazelcast
 #endif
         Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(HMultiMap.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiMap<TKey, TValue>, HMultiMap<TKey, TValue>>(HMultiMap.ServiceName, name, true,
                 (n, c, sr, lf) => new HMultiMap<TKey, TValue>(n, c, sr, _lockReferenceIdSequence, lf), cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -169,7 +169,7 @@ namespace Hazelcast
 #endif
         Task<IHTopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(HTopic.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(HTopic.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
                     => new HTopic<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);
@@ -204,7 +204,7 @@ namespace Hazelcast
 #endif
             Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(HList.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHList<T>, HList<T>>(HList.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
                     => new HList<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);
@@ -239,7 +239,7 @@ namespace Hazelcast
 #endif
             Task<IHSet<T>> GetSetAsync<T>(string name, CancellationToken cancellationToken)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync(HSet.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHSet<T>, HSet<T>>(HSet.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
                     => new HSet<T>(n, cluster, serializationService, loggerFactory),
                 cancellationToken);

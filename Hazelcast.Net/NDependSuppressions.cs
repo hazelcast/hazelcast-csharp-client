@@ -98,11 +98,6 @@ using System.Diagnostics.CodeAnalysis;
     Target = "Hazelcast.Core.InjectionOptions.set_Args(Dictionary<String,String>)",
     Justification = "Accepted.")]
 
-// suppress issues with our System.* extensions for dealing with netstandard versions
-[assembly: SuppressMessage("NDepend", "ND1400:AvoidNamespacesMutuallyDependent",
-    Target = "System.Runtime.CompilerServices.RuntimeHelpersEx",
-    Justification = "Accepted.")]
-
 // do *not* suppress that one but use a customized rule
 /*
 [assembly: SuppressMessage("NDepend",
@@ -111,24 +106,22 @@ using System.Diagnostics.CodeAnalysis;
     Justification="We have many TryXxx methods that return Attempt or are async.")]
 */
 
-// the two issues below just don't work?!
-
-[assembly: SuppressMessage("NDepend",
-    "ND2103:NamespaceNameShouldCorrespondToFileLocation",
+// suppress issues with our System.* extensions for dealing with netstandard versions
+// note that 'System + deep' is not supported yet, each namespace needs its rule
+[assembly: SuppressMessage("NDepend", "ND1400:AvoidNamespacesMutuallyDependent",
+    Target = "System.Runtime.CompilerServices.RuntimeHelpersEx",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation",
     Target = "System",
     Scope = "namespaceAndDescendants namespace type method field",
-    Justification = "Accepted for our System.* additions for dealing with netstandard versions.")]
-
-[assembly: SuppressMessage("NDepend",
-    "ND2104:TypesWithSourceFilesStoredInTheSameDirectoryShouldBeDeclaredInTheSameNamespace",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2104:TypesWithSourceFilesStoredInTheSameDirectoryShouldBeDeclaredInTheSameNamespace",
     Target = "System",
     Scope = "namespaceAndDescendants namespace type method field",
-    Justification = "Accepted for our System.* additions for dealing with netstandard versions.")]
-
-[assembly: SuppressMessage("NDepend",
-    "ND2102:AvoidDefiningMultipleTypesInASourceFile",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2102:AvoidDefiningMultipleTypesInASourceFile",
     Target = "System.Diagnostics.CodeAnalysis",
     Scope = "deep",
-    Justification = "Accepted for our System.* additions for dealing with netstandard versions.")]
+    Justification = "Accepted.")]
 
 #endif

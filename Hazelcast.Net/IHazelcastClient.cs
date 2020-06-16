@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Transactions;
 
 namespace Hazelcast
 {
@@ -28,7 +29,6 @@ namespace Hazelcast
         /// Opens the client.
         /// </summary>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the client is open and ready.</returns>
         /// <remarks>
         /// <para>There is no equivalent 'close' method: a client is closed when it is disposed.</para>
         /// </remarks>
@@ -38,11 +38,40 @@ namespace Hazelcast
         /// Opens the client.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the client is open and ready.</returns>
         /// <remarks>
         /// <para>There is no equivalent 'close' method: a client is closed when it is disposed.</para>
         /// </remarks>
         Task OpenAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Begins a new transaction.
+        /// </summary>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>A new transaction context.</returns>
+        Task<ITransactionContext> BeginTransactionAsync(TimeSpan timeout = default);
+
+        /// <summary>
+        /// Begins a new transaction.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A new transaction context.</returns>
+        Task<ITransactionContext> BeginTransactionAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Begins a new transaction.
+        /// </summary>
+        /// <param name="options">Transaction options.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>A new transaction context.</returns>
+        Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Begins a new transaction.
+        /// </summary>
+        /// <param name="options">Transaction options.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A new transaction context.</returns>
+        Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets an <see cref="IHMap{TKey,TValue}"/> distributed object.
@@ -51,8 +80,7 @@ namespace Hazelcast
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the map has been retrieved or created,
-        /// and represents the map that has been retrieved or created.</returns>
+        /// <returns>The map that was retrieved or created.</returns>
         Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default);
 
         /// <summary>
@@ -62,8 +90,7 @@ namespace Hazelcast
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the map has been retrieved or created,
-        /// and represents the map that has been retrieved or created.</returns>
+        /// <returns>The map that was retrieved or created.</returns>
         Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken);
 
         /// <summary>
@@ -73,8 +100,7 @@ namespace Hazelcast
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the map has been retrieved or created,
-        /// and represents the map that has been retrieved or created.</returns>
+        /// <returns>The map that was retrieved or created.</returns>
         Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name, TimeSpan timeout = default);
 
         /// <summary>
@@ -84,8 +110,7 @@ namespace Hazelcast
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the map has been retrieved or created,
-        /// and represents the map that has been retrieved or created.</returns>
+        /// <returns>The map that was retrieved or created.</returns>
         Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken);
 
         /// <summary>
@@ -95,8 +120,7 @@ namespace Hazelcast
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the map has been retrieved or created,
-        /// and represents the map that has been retrieved or created.</returns>
+        /// <returns>The map that was retrieved or created.</returns>
         Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, TimeSpan timeout = default);
 
         /// <summary>
@@ -106,18 +130,16 @@ namespace Hazelcast
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the map has been retrieved or created,
-        /// and represents the map that has been retrieved or created.</returns>
+        /// <returns>The map that was retrieved or created.</returns>
         Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken);
-        
+
         /// <summary>
         /// Gets a <see cref="IHTopic{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the topic messages.</typeparam>
         /// <param name="name">The unique name of the topic.</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the topic has been retrieved or created,
-        /// and represents the topic that has been retrieved or created.</returns>
+        /// <returns>The topic that was retrieved or created.</returns>
         Task<IHTopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default);
 
         /// <summary>
@@ -126,8 +148,7 @@ namespace Hazelcast
         /// <typeparam name="T">The type of the topic messages.</typeparam>
         /// <param name="name">The unique name of the topic.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the topic has been retrieved or created,
-        /// and represents the topic that has been retrieved or created.</returns>
+        /// <returns>The topic that was retrieved or created.</returns>
         Task<IHTopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken);
 
         /// <summary>
@@ -136,8 +157,7 @@ namespace Hazelcast
         /// <typeparam name="T">The type of the list items.</typeparam>
         /// <param name="name">The unique name of the list.</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the list has been retrieved or created,
-        /// and represents the list that has been retrieved or created.</returns>
+        /// <returns>The list that was retrieved or created.</returns>
         Task<IHList<T>> GetListAsync<T>(string name, TimeSpan timeout = default);
 
         /// <summary>
@@ -146,8 +166,7 @@ namespace Hazelcast
         /// <typeparam name="T">The type of the list items.</typeparam>
         /// <param name="name">The unique name of the list.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the list has been retrieved or created,
-        /// and represents the list that has been retrieved or created.</returns>
+        /// <returns>The list that was retrieved or created.</returns>
         Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken);
 
         /// <summary>
@@ -156,8 +175,7 @@ namespace Hazelcast
         /// <typeparam name="T">The type of the set items.</typeparam>
         /// <param name="name">The unique name of the set .</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the set has been retrieved or created,
-        /// and represents the set that has been retrieved or created.</returns>
+        /// <returns>The set that was retrieved or created.</returns>
         Task<IHSet<T>> GetSetAsync<T>(string name, TimeSpan timeout = default);
 
         /// <summary>
@@ -166,8 +184,7 @@ namespace Hazelcast
         /// <typeparam name="T">The type of the set items.</typeparam>
         /// <param name="name">The unique name of the set.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the set has been retrieved or created,
-        /// and represents the set that has been retrieved or created.</returns>
+        /// <returns>The set that was retrieved or created.</returns>
         Task<IHSet<T>> GetSetAsync<T>(string name, CancellationToken cancellationToken);
     }
 }

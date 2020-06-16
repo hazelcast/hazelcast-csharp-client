@@ -85,7 +85,7 @@ namespace Hazelcast.Clustering
             {
                 if (first) first = false;
                 else sb.AppendLine();
-                sb.Append("   at ").Append(stackTraceElement);
+                sb.Append("   ").Append(stackTraceElement);
             }
 
             exception.Data.Add("server", sb.ToString());

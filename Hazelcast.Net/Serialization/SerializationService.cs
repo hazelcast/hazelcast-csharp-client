@@ -365,11 +365,11 @@ namespace Hazelcast.Serialization
         private ISerializerAdapter CreateSerializerAdapter(Type type, ISerializer serializer)
         {
             var methodInfo = GetType()
-                .GetMethod("CreateSerializerAdapterByGeneric", BindingFlags.NonPublic | BindingFlags.Instance);
+                .GetMethod("CreateSerializerAdapterByGeneric", BindingFlags.NonPublic | BindingFlags.Static);
             if (methodInfo == null)
                 throw new InvalidOperationException($"Type {GetType()} does not expose a method named CreateSerializerAdapterByGeneric.");
             var makeGenericMethod = methodInfo.MakeGenericMethod(type);
-            var result = makeGenericMethod.Invoke(this, new object[] {serializer});
+            var result = makeGenericMethod.Invoke(this, new object[] { serializer });
             return (ISerializerAdapter) result;
         }
 

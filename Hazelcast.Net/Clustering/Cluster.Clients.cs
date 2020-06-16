@@ -24,7 +24,7 @@ namespace Hazelcast.Clustering
         /// Gets a random client.
         /// </summary>
         /// <returns>A random client.</returns>
-        private Client GetRandomClient()
+        internal Client GetRandomClient()
         {
             // In "smart mode" the clients connect to each member of the cluster. Since each
             // data partition uses the well known and consistent hashing algorithm, each client

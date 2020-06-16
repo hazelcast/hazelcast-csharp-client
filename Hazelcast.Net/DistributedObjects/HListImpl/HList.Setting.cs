@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListSetCodec.EncodeRequest(Name, index, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = ListSetCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -70,7 +70,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListAddWithIndexCodec.EncodeRequest(Name, index, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             _ = ListSetCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -79,7 +79,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListAddCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return ListAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -88,7 +88,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return ListAddAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -115,7 +115,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListAddAllWithIndexCodec.EncodeRequest(Name, index, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return ListAddAllWithIndexCodec.DecodeResponse(responseMessage).Response;
         }
 

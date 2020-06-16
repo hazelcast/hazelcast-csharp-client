@@ -16,7 +16,7 @@ namespace Hazelcast.Transactions
 {
     public enum TransactionState
     {
-        NoTxn,
+        None = 0, // default
         Active,
         Preparing,
         Prepared,

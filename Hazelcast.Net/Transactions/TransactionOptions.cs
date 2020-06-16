@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 
 namespace Hazelcast.Transactions
 {
@@ -27,135 +26,24 @@ namespace Hazelcast.Transactions
             /// The two phase commit is separated in 2 parts. First it tries to execute the prepare; if there are any conflicts,
             /// the prepare will fail. Once the prepare has succeeded, the commit (writing the changes) can be executed.
             /// Hazelcast also provides three phase transaction by automatically copying the backlog to another member so that in case
-            /// of failure during a commit, another member can continue the commit from backup. For more information see the
-            /// <see cref="TransactionOptions.SetDurability(int)"/>
+            /// of failure during a commit, another member can continue the commit from backup.
             /// </remarks>
             TwoPhase = 1,
         }
 
-        private int _durability;
-        private long _timeoutMillis;
-
-        private TransactionType _transactionType;
-
-        /// <summary>Creates a new default configured TransactionsOptions.</summary>
-        /// <remarks>
-        ///     Creates a new default configured TransactionsOptions.
-        ///     It will be configured with a timeout of 2 minutes, durability of 1 and a TransactionType.TWO_PHASE.
-        /// </remarks>
-        public TransactionOptions()
-        {
-            SetTimeout(TimeSpan.FromMinutes(2)).SetDurability(1).SetTransactionType(TransactionType.TwoPhase);
-        }
-
-        /// <summary>Creates a new TransactionOptions configured with default settings.</summary>
-        /// <remarks>Creates a new TransactionOptions configured with default settings.</remarks>
-        /// <returns>the created default TransactionOptions.</returns>
-        /// <seealso cref="TransactionOptions()">TransactionOptions()</seealso>
-        public static TransactionOptions GetDefault()
-        {
-            return new TransactionOptions();
-        }
-
-        /// <summary>Gets the transaction durability.</summary>
-        /// <remarks>Gets the transaction durability.</remarks>
-        /// <returns>the transaction durability.</returns>
-        /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
-        public int GetDurability()
-        {
-            return _durability;
-        }
-
-        /// <summary>Gets the timeout in milliseconds.</summary>
-        /// <remarks>Gets the timeout in milliseconds.</remarks>
-        /// <returns>the timeout in milliseconds.</returns>
-        /// <seealso cref="SetTimeout(long, TimeUnit)">SetTimeout(long, TimeUnit)</seealso>
-        public long GetTimeoutMillis()
-        {
-            return _timeoutMillis;
-        }
+        /// <summary>
+        /// Gets or sets the transaction durability.
+        /// </summary>
+        public int Durability { get; set; } = 1;
 
         /// <summary>
-        ///     Gets the
-        ///     <see cref="TransactionType">TransactionType</see>
-        ///     .
+        /// Gets or sets the transaction timeout.
         /// </summary>
-        /// <returns>the TransactionType.</returns>
-        public TransactionType GetTransactionType()
-        {
-            return _transactionType;
-        }
-
-        /// <summary>Sets the transaction durability.</summary>
-        /// <remarks>
-        ///     Sets the transaction durability.
-        ///     The durability is the number of machines that can take over if a member fails during a transaction
-        ///     commit or rollback. This value only has meaning when
-        ///     <see cref="TransactionType.TwoPhase">TransactionType.TwoPhase</see>
-        ///     is selected.
-        /// </remarks>
-        /// <param name="durability">the durability</param>
-        /// <returns>the updated TransactionOptions.</returns>
-        /// <exception cref="System.ArgumentException">if durability smaller than 0.</exception>
-        public TransactionOptions SetDurability(int durability)
-        {
-            if (durability < 0)
-            {
-                throw new ArgumentException("Durability cannot be negative!");
-            }
-            _durability = durability;
-            return this;
-        }
-
-        /// <summary>Sets the timeout.</summary>
-        /// <remarks>
-        ///     Sets the timeout.
-        ///     The timeout determines the maximum lifespan of a transaction. So if a transaction is configured with a
-        ///     timeout of 2 minutes, then it will automatically rollback if it hasn't committed yet.
-        /// </remarks>
-        /// <param name="timeout">the timeout.</param>
-        /// <param name="timeUnit">the TimeUnit of the timeout.</param>
-        /// <returns>the updated TransactionOptions</returns>
-        /// <exception cref="System.ArgumentException">if timeout smaller or equal than 0, or timeUnit is null.</exception>
-        /// <seealso cref="GetTimeoutMillis()">GetTimeoutMillis()</seealso>
-        public TransactionOptions SetTimeout(TimeSpan timeout)
-        {
-            var millis = (long) timeout.TotalMilliseconds;
-            if (millis <= 0)
-            {
-                throw new ArgumentException("Timeout must be positive!");
-            }
-            _timeoutMillis = millis;
-            return this;
-        }
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(2);
 
         /// <summary>
-        ///     Sets the
-        ///     <see cref="TransactionType">TransactionType</see>
-        ///     .
-        ///     A local transaction is less safe than a two phase transaction; when a member fails during the commit
-        ///     of a local transaction, it could be that some of the changes are committed, while others are not and this
-        ///     can leave your system in an inconsistent state.
+        /// Gets or sets the type of the transaction.
         /// </summary>
-        /// <param name="transactionType">the new TransactionType.</param>
-        /// <returns>the updated TransactionOptions.</returns>
-        /// <seealso cref="GetTransactionType()">GetTransactionType()</seealso>
-        /// <seealso cref="SetDurability(int)">SetDurability(int)</seealso>
-        public TransactionOptions SetTransactionType(TransactionType transactionType)
-        {
-            _transactionType = transactionType;
-            return this;
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            sb.Append("TransactionOptions");
-            sb.Append("{timeoutMillis=").Append(_timeoutMillis);
-            sb.Append(", durability=").Append(_durability);
-            sb.Append(", txType=").Append((int) _transactionType);
-            sb.Append('}');
-            return sb.ToString();
-        }
+        public TransactionType Type { get; set; } = TransactionType.TwoPhase;
     }
 }

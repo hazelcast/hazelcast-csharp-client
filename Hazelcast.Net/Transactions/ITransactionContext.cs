@@ -13,37 +13,87 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Transactions
 {
     /// <summary>
-    ///     Provides a context to do transactional operations; so beginning/committing transactions, but also retrieving
-    ///     transactional data-structures like the
-    ///     <see cref="ITransactionalMap{TKey,TValue}">Hazelcast.Core.ITransactionalMap&lt;K, V&gt;</see>
-    ///     .
+    /// Represents a transaction context.
     /// </summary>
-    public interface ITransactionContext : ITransactionalTaskContext
+    public interface ITransactionContext : IAsyncDisposable
     {
-        /// <summary>Begins a transaction.</summary>
-        /// <remarks>Begins a transaction.</remarks>
-        /// <exception cref="System.InvalidOperationException">if a transaction already is active.</exception>
-        void BeginTransaction();
+        /// <summary>
+        /// Gets the unique identifier of the transaction.
+        /// </summary>
+        Guid TransactionId { get; }
 
-        /// <summary>Commits a transaction.</summary>
-        /// <remarks>Commits a transaction.</remarks>
-        /// <exception cref="TransactionException">if no transaction is active or the transaction could not be committed.</exception>
-        /// <exception cref="TransactionException"></exception>
-        void CommitTransaction();
+        /// <summary>
+        /// Gets the state of the transaction.
+        /// </summary>
+        TransactionState State { get; }
 
-        /// <summary>Gets the id that uniquely identifies the transaction.</summary>
-        /// <remarks>Gets the id that uniquely identifies the transaction.</remarks>
-        /// <returns>the transaction id.</returns>
-        Guid GetTxnId();
+        /// <summary>
+        /// Commits the transaction.
+        /// </summary>
+        /// <param name="timeout">A timeout.</param>
+        Task CommitAsync(TimeSpan timeout = default);
 
-        /// <summary>Rollback of the current transaction.</summary>
-        /// <remarks>Rollback of the current transaction.</remarks>
-        /// <exception cref="System.InvalidOperationException">if no there is no active transaction.</exception>
-        void RollbackTransaction();
+        /// <summary>
+        /// Commits the transaction.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        Task CommitAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Rolls the transaction back.
+        /// </summary>
+        /// <param name="timeout">A timeout.</param>
+        Task RollbackAsync(TimeSpan timeout = default);
+
+        /// <summary>
+        /// Rolls the transaction back.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        Task RollbackAsync(CancellationToken cancellationToken);
+
+        // Objects
+
+        /// <summary>
+        /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="name">The unique name of the list.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The transactional list that was retrieved or created.</returns>
+        Task<IHTxList<TItem>> GetListAsync<TItem>(string name, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="name">The unique name of the list.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The transactional list that was retrieved or created.</returns>
+        Task<IHTxList<TItem>> GetListAsync<TItem>(string name, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="list">The original, non-transactional list.</param>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>The transactional list that was retrieved or created.</returns>
+        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> list, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the items.</typeparam>
+        /// <param name="list">The original, non-transactional list.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The transactional list that was retrieved or created.</returns>
+        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> list, CancellationToken cancellationToken);
     }
 }

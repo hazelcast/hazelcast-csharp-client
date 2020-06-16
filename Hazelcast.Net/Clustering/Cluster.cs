@@ -81,7 +81,7 @@ namespace Hazelcast.Clustering
         private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
         private readonly SemaphoreSlim _clusterLock = new SemaphoreSlim(1, 1); // general lock
         private volatile ClusterState _clusterState = ClusterState.NotConnected; // cluster state
-        private volatile bool _disposed; // disposed flag
+        private volatile int _disposed; // disposed flag
         private Task _clusterConnectTask; // the task that connects the cluster
         private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
 
@@ -209,7 +209,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         public Task ThrowIfDisconnected()
         {
-            if (_disposed || _clusterState != ClusterState.Connected)
+            if (_disposed == 1 || _clusterState != ClusterState.Connected)
                 throw new ClientNotConnectedException();
 
             // TODO: if connecting, wait?
@@ -238,11 +238,11 @@ namespace Hazelcast.Clustering
         {
             var tasks = new List<Task>();
 
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
             using (await _clusterLock.AcquireAsync().CAF())
             {
-                if (_disposed) return;
-                _disposed = true;
-
                 _clusterCancellation.Cancel();
 
                 if (_clusterConnectTask != null)

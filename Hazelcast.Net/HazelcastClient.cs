@@ -32,6 +32,7 @@ namespace Hazelcast
         private readonly HazelcastOptions _options;
         private readonly DistributedObjectFactory _distributedObjectFactory;
         private readonly NearCacheManager _nearCacheManager;
+        private readonly ILoggerFactory _loggerFactory;
 
         private int _disposed;
 
@@ -47,9 +48,12 @@ namespace Hazelcast
             _options = options ?? throw new ArgumentNullException(nameof(options));
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             Cluster.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
+
+            _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
 
             // every async operations using this client will need a proper async context
             AsyncContext.Ensure();
@@ -105,7 +109,8 @@ namespace Hazelcast
 
             await Task.WhenAll(
                 _distributedObjectFactory.DisposeAsync().AsTask(),
-                Cluster.DisposeAsync().AsTask()
+                Cluster.DisposeAsync().AsTask(),
+                _nearCacheManager.DisposeAsync().AsTask()
             ).CAF();
         }
     }

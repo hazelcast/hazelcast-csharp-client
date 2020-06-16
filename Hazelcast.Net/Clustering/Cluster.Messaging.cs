@@ -190,7 +190,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             // fail fast
-            if (_disposed || _clusterState != ClusterState.Connected)
+            if (_disposed == 1 || _clusterState != ClusterState.Connected)
                 throw new ClientNotConnectedException();
 
             // assign a unique identifier to the message
@@ -213,7 +213,7 @@ namespace Hazelcast.Clustering
                 catch (Exception exception)
                 {
                     // if the cluster is not connected anymore, die
-                    if (_disposed || _clusterState != ClusterState.Connected)
+                    if (_disposed == 1 || _clusterState != ClusterState.Connected)
                         throw new ClientNotConnectedException(exception);
 
                     // if it's retryable, and can be retried (no timeout etc), retry

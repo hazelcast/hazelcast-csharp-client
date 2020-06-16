@@ -59,16 +59,17 @@ namespace Hazelcast.DistributedObjects
         /// Gets or creates a distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the distributed object.</typeparam>
+        /// <typeparam name="TImpl">The type of the implementation.</typeparam>
         /// <param name="serviceName">The unique name of the service.</param>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="remote">Whether to create the object remotely too.</param>
         /// <param name="factory">The object factory.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The distributed object.</returns>
-        public async Task<T> GetOrCreateAsync<T>(string serviceName, string name, bool remote,
-                                                 Func<string, Cluster, ISerializationService, ILoggerFactory, T> factory,
+        public async Task<T> GetOrCreateAsync<T, TImpl>(string serviceName, string name, bool remote,
+                                                 Func<string, Cluster, ISerializationService, ILoggerFactory, TImpl> factory,
                                                  CancellationToken cancellationToken)
-            where T: DistributedObjectBase
+            where TImpl : DistributedObjectBase, T
         {
             if (_disposed == 1) throw new ObjectDisposedException("DistributedObjectFactory");
             await _cluster.ThrowIfDisconnected().CAF();
@@ -78,7 +79,7 @@ namespace Hazelcast.DistributedObjects
             async ValueTask<DistributedObjectBase> CreateAsync()
             {
                 var x = factory(name, _cluster, _serializationService, _loggerFactory);
-                x.OnDispose = ObjectDisposed;
+                x.OnDispose = ObjectDisposed; // this is why is has to be DistributedObjectBase
 
                 // initialize the object
                 if (remote)
