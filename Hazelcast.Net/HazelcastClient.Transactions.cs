@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
@@ -21,14 +23,27 @@ namespace Hazelcast
 {
     internal partial class HazelcastClient // Transactions
     {
-        // fixme timeout, cancellation token, options, whatnot
-        // fixme cannot have default transaction options coming from the options file?!
+        private int DefaultOperationTimeoutMilliseconds => _options.Messaging.DefaultOperationTimeoutMilliseconds;
 
-        public async Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options = null)
+        /// <inheritdoc />
+        public Task<ITransactionContext> BeginTransactionAsync(TimeSpan timeout = default)
+            => TaskEx.WithTimeout(BeginTransactionAsync, new TransactionOptions(), timeout, DefaultOperationTimeoutMilliseconds);
+
+        /// <inheritdoc />
+        public Task<ITransactionContext> BeginTransactionAsync(CancellationToken cancellationToken)
+            => BeginTransactionAsync(new TransactionOptions(), cancellationToken);
+
+        /// <inheritdoc />
+        public Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(BeginTransactionAsync, options, timeout, DefaultOperationTimeoutMilliseconds);
+
+        /// <inheritdoc />
+        public async Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken)
         {
-            var transactionContext = new TransactionContext(Cluster, options ?? new TransactionOptions(), SerializationService, _loggerFactory);
-            await transactionContext.ConnectAsync().CAF();
-            await transactionContext.BeginAsync().CAF();
+            options ??= new TransactionOptions();
+
+            var transactionContext = new TransactionContext(Cluster, options, DefaultOperationTimeoutMilliseconds, SerializationService, _loggerFactory);
+            await transactionContext.BeginAsync(cancellationToken).CAF();
             return transactionContext;
         }
     }

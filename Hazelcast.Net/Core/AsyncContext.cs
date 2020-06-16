@@ -58,6 +58,11 @@ namespace Hazelcast.Core
         public long Id { get; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether the current asynchronous context is in a transaction.
+        /// </summary>
+        public bool InTransaction { get; set; } // see discussion in TransactionContext
+
+        /// <summary>
         /// Gets the current context.
         /// </summary>
         public static AsyncContext CurrentContext => Current.Value ??= new AsyncContext();

@@ -14,6 +14,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
 namespace Hazelcast.Clustering
@@ -23,8 +26,12 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets a random client.
         /// </summary>
+        /// <param name="throwIfNoClient">Whether to throw if no client can be obtained immediately.</param>
         /// <returns>A random client.</returns>
-        internal Client GetRandomClient()
+        /// <remarks>
+        /// <para>Throws if not client can be obtained immediately.</para>
+        /// </remarks>
+        internal Client GetRandomClient(bool throwIfNoClient = true)
         {
             // In "smart mode" the clients connect to each member of the cluster. Since each
             // data partition uses the well known and consistent hashing algorithm, each client
@@ -47,7 +54,7 @@ namespace Hazelcast.Clustering
                 }
 
                 var client = _clients.Values.FirstOrDefault();
-                if (client == null)
+                if (client == null && throwIfNoClient)
                     throw new HazelcastException("Could not get a client.");
 
                 return client;
@@ -55,9 +62,34 @@ namespace Hazelcast.Clustering
 
             // there should be only one
             var singleClient = _clients.Values.FirstOrDefault();
-            if (singleClient == null)
+            if (singleClient == null && throwIfNoClient)
                 throw new HazelcastException("Could not get a client.");
             return singleClient;
+        }
+
+        /// <summary>
+        /// Gets a random client.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A random client.</returns>
+        /// <remarks>
+        /// <para>Tries to get a client for as long as <paramref name="cancellationToken"/> is not canceled.</para>
+        /// </remarks>
+        internal async ValueTask<Client> GetRandomClient(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                // this is just basically retrieving a random client
+                var client = GetRandomClient(false);
+                if (client != null) return client;
+
+                // no clients => wait for clients
+                await Task.Delay(_options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();
+            }
+
+            // this *will* throw
+            cancellationToken.ThrowIfCancellationRequested();
+            return default;
         }
 
         /// <summary>

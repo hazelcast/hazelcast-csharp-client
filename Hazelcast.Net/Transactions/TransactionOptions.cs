@@ -21,14 +21,27 @@ namespace Hazelcast.Transactions
     {
         public enum TransactionType
         {
-            /// <summary>The two phase commit is separated in 2 parts.</summary>
+            /// <summary>
+            /// Commits the transaction in two distinct phases.
+            /// </summary>
             /// <remarks>
-            /// The two phase commit is separated in 2 parts. First it tries to execute the prepare; if there are any conflicts,
-            /// the prepare will fail. Once the prepare has succeeded, the commit (writing the changes) can be executed.
-            /// Hazelcast also provides three phase transaction by automatically copying the backlog to another member so that in case
-            /// of failure during a commit, another member can continue the commit from backup.
+            /// <para>Two-phase commits commits in two phases: the first phase tries to prepare the commit, and fails in
+            /// case of conflicts. The second phase actually writes the changes. If the first phase succeeded, then the
+            /// second phase is guaranteed to succeed.</para>
+            /// <para>Hazelcast also provides three phases transactions, by automatically copying the backlog to another
+            /// member so that in case of failure during a commit, another member can result the commit from backup.</para>
             /// </remarks>
             TwoPhase = 1,
+
+            /// <summary>
+            /// Commits the transaction in one single final phase.
+            /// </summary>
+            /// <remarks>
+            /// <para>Because there is no preparation of the transaction, conflicts are not detected. If there is a conflict,
+            /// then when the transaction commits, some of the changes are written while others are not, leaving the system
+            /// in a potentially permanent inconsistent state.</para>
+            /// </remarks>
+            OnePhase = 2
         }
 
         /// <summary>

@@ -206,7 +206,7 @@ namespace Hazelcast.Clustering
             {
                 try
                 {
-                    client ??= GetRandomClient();
+                    client ??= GetRandomClient(false);
                     if (client == null) throw new ClientNotConnectedException();
                     return await client.SendAsync(invocation, cancellationToken).CAF();
                 }

@@ -73,7 +73,7 @@ namespace Hazelcast.Clustering
             // cancelled, when the cluster goes down (and never up again)
             while (!cancellationToken.IsCancellationRequested)
             {
-                client ??= GetRandomClient();
+                client ??= GetRandomClient(false);
 
                 if (client == null)
                 {
