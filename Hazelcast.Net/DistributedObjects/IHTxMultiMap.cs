@@ -12,23 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>Transactional implementation of MultiMap</summary>
     public interface IHTxMultiMap<TKey, TValue> : ITransactionalObject
     {
-        ICollection<TValue> Get(TKey key);
+        Task<IReadOnlyList<TValue>> GetAsync(TKey key, TimeSpan timeout = default);
+        Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken);
 
-        bool Put(TKey key, TValue value);
+        Task<bool> TryAddAsync(TKey key, TValue value, TimeSpan timeout = default);
+        Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken);
 
-        bool Remove(object key, object value);
+        Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default);
+        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken);
 
-        ICollection<TValue> Remove(object key);
+        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, TimeSpan timeout = default);
+        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken);
 
-        int Size();
+        Task<int> CountAsync(TimeSpan timeout = default);
+        Task<int> CountAsync(CancellationToken cancellationToken);
 
-        int ValueCount(TKey key);
+        Task<int> ValueCountAsync(TKey key, TimeSpan timeout = default);
+        Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken);
     }
 }

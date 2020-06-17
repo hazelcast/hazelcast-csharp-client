@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects.HTxListImpl;
+using Hazelcast.DistributedObjects.HTxMapImpl;
+using Hazelcast.DistributedObjects.HTxMultiMapImpl;
 using Hazelcast.DistributedObjects.HTxQueueImpl;
 using Hazelcast.DistributedObjects.HTxSetImpl;
 using Hazelcast.Protocol.Codecs;
@@ -265,6 +267,38 @@ namespace Hazelcast.DistributedObjects
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxQueue<TItem>, HTxQueue<TItem>>(HQueue.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory) => new HTxQueue<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                cancellationToken);
+        }
+
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetMultiMapAsync<TKey, TValue>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetMultiMapAsync<TKey, TValue>, name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, CancellationToken cancellationToken)
+            => GetMultiMapAsync<TKey, TValue>(source.Name, cancellationToken);
+
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        {
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(HMultiMap.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory) => new HTxMultiMap<TKey, TValue>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                cancellationToken);
+        }
+
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetMapAsync<TKey, TValue>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(GetMapAsync<TKey, TValue>, name, timeout, _defaultOperationTimeoutMilliseconds);
+
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, CancellationToken cancellationToken)
+            => GetMapAsync<TKey, TValue>(source.Name, cancellationToken);
+
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        {
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(HMap.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory) => new HTxMap<TKey, TValue>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
     }

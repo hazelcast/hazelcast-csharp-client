@@ -21,24 +21,24 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHMap<TKey, TValue> // Removing
     {
         /// <summary>
-        /// Tries to remove an entry from the map within a timeout.
+        /// Tries to remove an entry from this map.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="serverTimeout">A server timeout.</param>
+        /// <param name="timeToWait">The time to wait for a lock on the key.</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>true if the entry was removed; otherwise false.</returns>
+        /// <returns><c>true</c> if the entry was deleted; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>This method returns false when no lock on the key could be
+        /// <para>This method returns <c>false</c> when no lock on the key could be
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default);
 
         /// <summary>
-        /// Tries to remove an entry from the map within a timeout.
+        /// Tries to remove an entry from this map.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="serverTimeout">A server timeout.</param>
+        /// <param name="timeToWait">The time to wait for a lock on the key.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
@@ -46,31 +46,31 @@ namespace Hazelcast.DistributedObjects
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, CancellationToken cancellationToken);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Removes an entry from this map, and returns the corresponding value if any.
+        /// Removes an entry from this map and returns the removed value, if any.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="timeout">A timeout.</param>
-        /// <returns>The value, if any, or default(TValue).</returns>
+        /// <returns>The value, if any, or <c>default(TValue)</c>.</returns>
         /// <remarks>
         /// <para>This method serializes the return value. For performance reasons, prefer
-        /// <see cref="DeleteAsync"/> when the returned value is not used.</para>
+        /// <see cref="RemoveAsync(TKey,System.TimeSpan)"/> when the returned value is not used.</para>
         /// </remarks>
-        Task<TValue> RemoveAsync(TKey key, TimeSpan timeout = default);
+        Task<TValue> RemoveAndReturnAsync(TKey key, TimeSpan timeout = default);
 
         /// <summary>
-        /// Removes an entry from this map, and returns the corresponding value if any.
+        /// Removes an entry from this map and returns the removed value, if any.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The value, if any, or default(TValue).</returns>
+        /// <returns>The value, if any, or <c>default(TValue)</c>.</returns>
         /// <remarks>
         /// <para>This method serializes the return value. For performance reasons, prefer
-        /// <see cref="DeleteAsync"/> when the returned value is not used.</para>
+        /// <see cref="RemoveAsync(TKey,System.Threading.CancellationToken)"/> when the returned value is not used.</para>
         /// </remarks>
-        Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken);
+        Task<TValue> RemoveAndReturnAsync(TKey key, CancellationToken cancellationToken);
 
         /// <summary>
         /// Removes an entry from this map.
@@ -105,9 +105,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="timeout">A timeout.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the value. Prefer
-        /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
+        /// <see cref="RemoveAndReturnAsync"/> if the value is required.</para>
         /// </remarks>
-        Task DeleteAsync(TKey key, TimeSpan timeout = default); // FIXME rename
+        Task RemoveAsync(TKey key, TimeSpan timeout = default);
 
         /// <summary>
         /// Removes an entry from this map.
@@ -116,18 +116,18 @@ namespace Hazelcast.DistributedObjects
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the value. Prefer
-        /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
+        /// <see cref="RemoveAndReturnAsync(TKey,System.Threading.CancellationToken)"/> if the value is required.</para>
         /// </remarks>
-        Task DeleteAsync(TKey key, CancellationToken cancellationToken); // FIXME rename
+        Task RemoveAsync(TKey key, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Empties this map.
+        /// Removes all entries from this map.
         /// </summary>
         /// <param name="timeout">A timeout.</param>
         Task ClearAsync(TimeSpan timeout = default);
 
         /// <summary>
-        /// Empties this map.
+        /// Removes all entries from this map.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         Task ClearAsync(CancellationToken cancellationToken);

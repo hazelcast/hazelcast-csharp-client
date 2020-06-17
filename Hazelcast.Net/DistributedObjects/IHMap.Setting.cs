@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHMap<TKey, TValue> // Setting
     {
         /// <summary>
-        /// Adds or replaces an entry and returns the previous value.
+        /// Adds or replaces an entry and returns the previous value, if any.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -32,10 +32,10 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the operation times out, there is no guarantee on what was actually performed,
         /// and on whether value have been modified on the servers on not.</para>
         /// </remarks>
-        Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, TimeSpan timeout = default);
+        Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, TimeSpan timeout = default);
 
         /// <summary>
-        /// Adds or replaces an entry and returns the previous value.
+        /// Adds or replaces an entry and returns the previous value, if any.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -45,7 +45,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
         /// and on whether value have been modified on the servers on not.</para>
         /// </remarks>
-        Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, CancellationToken cancellationToken);
+        Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds or replaces an entry.
@@ -87,7 +87,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the operation times out, there is no guarantee on what was actually performed,
         /// and on whether value have been modified on the servers on not.</para>
         /// </remarks>
-        Task<TValue> AddOrReplaceWithValueTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default);
+        Task<TValue> AndOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default);
 
         /// <summary>
         /// Adds or replaces an entry with a time-to-live and returns the previous value.
@@ -103,7 +103,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
         /// and on whether value have been modified on the servers on not.</para>
         /// </remarks>
-        Task<TValue> AddOrReplaceWithValueTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken);
+        Task<TValue> AndOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds or replaces an entry with a time-to-live.
@@ -174,7 +174,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the operation times out, there is no guarantee on what was actually performed,
         /// and on whether value have been modified on the servers on not.</para>
         /// </remarks>
-        Task<TValue> ReplaceAsync(TKey key, TValue newValue, TimeSpan timeout = default);
+        Task<TValue> ReplaceAndReturnAsync(TKey key, TValue newValue, TimeSpan timeout = default);
 
         /// <summary>
         /// Replaces an existing entry.
@@ -187,7 +187,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
         /// and on whether value have been modified on the servers on not.</para>
         /// </remarks>
-        Task<TValue> ReplaceAsync(TKey key, TValue newValue, CancellationToken cancellationToken);
+        Task<TValue> ReplaceAndReturnAsync(TKey key, TValue newValue, CancellationToken cancellationToken);
 
         /// <summary>
         /// Replaces an existing entry.

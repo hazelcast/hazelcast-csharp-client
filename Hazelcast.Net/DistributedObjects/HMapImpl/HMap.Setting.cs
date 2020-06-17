@@ -29,9 +29,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, TimeSpan timeout = default)
+        Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(AddOrReplaceWithValueAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(AddOrReplaceAndReturnAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -45,9 +45,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> AddOrReplaceWithValueAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
-            var task = AddOrReplaceWithValueTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
+            var task = AndOrReplaceAndReturnTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -93,9 +93,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> AddOrReplaceWithValueTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
+        Task<TValue> AndOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(AddOrReplaceWithValueTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(AndOrReplaceAndReturnTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -109,7 +109,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> AddOrReplaceWithValueTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
+        Task<TValue> AndOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = AddOrReplaceWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
@@ -303,9 +303,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> ReplaceAsync(TKey key, TValue newValue, TimeSpan timeout = default)
+        Task<TValue> ReplaceAndReturnAsync(TKey key, TValue newValue, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(ReplaceAsync, key, newValue, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(ReplaceAndReturnAsync, key, newValue, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -315,7 +315,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public async Task<TValue> ReplaceAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
+        public async Task<TValue> ReplaceAndReturnAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 

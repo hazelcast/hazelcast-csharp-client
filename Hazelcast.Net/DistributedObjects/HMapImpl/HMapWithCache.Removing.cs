@@ -37,9 +37,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
     internal partial class HMapWithCache<TKey, TValue> // Removing
     {
         /// <inheritdoc />
-        protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            var removed = await base.TryRemoveAsync(keyData, serverTimeout, cancellationToken).CAF();
+            var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CAF();
             if (removed) _cache.Invalidate(keyData);
             return removed;
         }

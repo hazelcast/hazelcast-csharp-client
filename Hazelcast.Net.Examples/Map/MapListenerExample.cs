@@ -57,7 +57,7 @@ namespace Hazelcast.Examples.Map
 
             await map.AddOrReplaceAsync("key", "value"); // add
             await map.AddOrReplaceAsync("key", "valueNew"); //update
-            await map.RemoveAsync("key");
+            await map.RemoveAndReturnAsync("key");
 
             // wait for events
             await counted.WaitAsync();

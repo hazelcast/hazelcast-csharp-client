@@ -28,9 +28,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, TimeSpan timeout = default)
+            Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(TryRemoveAsync, key, serverTimeout, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(TryRemoveAsync, key, timeToWait, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -44,9 +44,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> TryRemoveAsync(TKey key, TimeSpan serverTimeout, CancellationToken cancellationToken)
+            Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            var task = TryRemoveAsync(ToSafeData(key), serverTimeout, cancellationToken);
+            var task = TryRemoveAsync(ToSafeData(key), timeToWait, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// Tries to remove an entry from the map within a timeout.
         /// </summary>
         /// <param name="keyData">A key.</param>
-        /// <param name="serverTimeout">A timeout.</param>
+        /// <param name="timeToWait">A timeout.</param>
         /// <param name="cancellationToken">A canecllation token.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
@@ -67,9 +67,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
-        protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            var timeoutMs = serverTimeout.CodecMilliseconds(0);
+            var timeoutMs = timeToWait.CodecMilliseconds(0);
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ThreadId, timeoutMs);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
@@ -82,9 +82,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> RemoveAsync(TKey key, TimeSpan timeout = default)
+        Task<TValue> RemoveAndReturnAsync(TKey key, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(RemoveAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(RemoveAndReturnAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -98,7 +98,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken)
+        Task<TValue> RemoveAndReturnAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = RemoveAsync(ToSafeData(key), cancellationToken);
 
@@ -180,9 +180,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task DeleteAsync(TKey key, TimeSpan timeout = default)
+        Task RemoveAsync(TKey key, TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(DeleteAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(RemoveAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -196,7 +196,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-         Task DeleteAsync(TKey key, CancellationToken cancellationToken)
+         Task RemoveAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = DeleteAsync(ToSafeData(key), cancellationToken);
 
