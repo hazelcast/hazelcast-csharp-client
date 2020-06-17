@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup Label="build">
-        <Version>3.12.3-alpha</Version>
+        <Version>3.12.4-alpha</Version>
         <Product>Hazelcast</Product>
         <Company>Hazelcast Inc.</Company>
         <Copyright>Copyright (c) 2008-2020, Hazelcast, Inc</Copyright>
