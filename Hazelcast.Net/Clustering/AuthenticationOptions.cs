@@ -58,10 +58,6 @@ namespace Hazelcast.Clustering
             get => default;
             set
             {
-                // we need to pass the options to the authenticator
-                // and maybe also anything else? how can this work?!
-                var args = value.Args ?? new Dictionary<string, string>();
-                //args["options"] = this; FIXME FIXME
                 Authenticator.Creator = () => ServiceFactory.CreateInstance<IAuthenticator>(value.TypeName, null, this);
             }
         }

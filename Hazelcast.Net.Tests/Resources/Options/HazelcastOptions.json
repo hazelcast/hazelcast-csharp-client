@@ -123,8 +123,6 @@
         "tcpNoDelay": true
       },
 
-      "outboundPorts": "??", // not supported for now
-
       // socket interception
       "socketInterception": {
 
@@ -257,8 +255,7 @@
           "maxIdleSeconds": 1000,
           "maxSize": 1001,
           "timeToLiveSeconds": 1002,
-          "invalidateOnChange": true,
-          "serializeKeys": true // WTF?
+          "invalidateOnChange": true
         },
 
         // another
@@ -269,8 +266,7 @@
           "maxIdleSeconds": 2000,
           "maxSize": 2001,
           "timeToLiveSeconds": 2002,
-          "invalidateOnChange": false,
-          "serializeKeys": false // WTF?
+          "invalidateOnChange": false
         }
 
       }

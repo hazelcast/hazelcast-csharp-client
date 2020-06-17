@@ -73,8 +73,10 @@ namespace Hazelcast.NearCaching
             StaleSequence = 0;
         }
 
-        // FIXME nonsense
-        // this method is weird + there's a public setter on Guid?!
+        // TODO: it is unclear why we need this method
+        // only place where the mutex is used and it is used only
+        // once and it is unclear what decision is made based on
+        // the returned value
         public bool TrySetGuid(Guid guid)
         {
             if (Monitor.TryEnter(_guidMutex))

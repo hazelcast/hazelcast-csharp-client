@@ -48,8 +48,7 @@ namespace Hazelcast.Core
         private const string NullTaskMessage = "The function produced a null Task.";
         private const string TimeoutMessage = "Operation timed out (see inner exception).";
 
-        // FIXME: also for ValueTask
-        // FIXME: more overloads
+        // FIXME: implement missing overloads + support for ValueTask
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static (CancellationTokenSource, CancellationToken) GetTimeoutCancellation(TimeSpan timeout, int defaultTimeoutMilliseconds)

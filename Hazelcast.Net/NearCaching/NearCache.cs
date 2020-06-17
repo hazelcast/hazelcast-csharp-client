@@ -26,7 +26,6 @@ namespace Hazelcast.NearCaching
     internal class NearCache : NearCacheBase
     {
         private readonly int _maxToleratedMissCount;
-        private RepairingHandler _repairingHandler;
 
         public NearCache(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheNamedOptions nearCacheNamedOptions, int maxToleratedMissCount)
             : base(name, cluster, serializationService, loggerFactory, nearCacheNamedOptions)
@@ -34,14 +33,19 @@ namespace Hazelcast.NearCaching
             _maxToleratedMissCount = maxToleratedMissCount;
         }
 
-        // FIXME: why is this public?
-        public RepairingHandler RepairingHandler => _repairingHandler;
+        /// <summary>
+        /// Gets or sets the repairing handler.
+        /// </summary>
+        /// <remarks>
+        /// <para>The repairing handler is used by the <see cref="NearCacheManager"/>.</para>
+        /// </remarks>
+        public RepairingHandler RepairingHandler { get; private set; }
 
         public override void Init()
         {
             if (InvalidateOnChange)
             {
-                _repairingHandler = new RepairingHandler(Cluster.ClientId, this, _maxToleratedMissCount, Cluster.Partitioner, SerializationService, LoggerFactory);
+                RepairingHandler = new RepairingHandler(Cluster.ClientId, this, _maxToleratedMissCount, Cluster.Partitioner, SerializationService, LoggerFactory);
                 RegisterInvalidateListener();
             }
         }
@@ -55,33 +59,33 @@ namespace Hazelcast.NearCaching
 
         protected override bool IsStaleRead(IData key, NearCacheEntry entry)
         {
-            if (_repairingHandler == null)
+            if (RepairingHandler == null)
             {
                 return false;
             }
-            var latestMetaData = _repairingHandler.GetMetaDataContainer(entry.PartitionId);
+            var latestMetaData = RepairingHandler.GetMetaDataContainer(entry.PartitionId);
             return entry.Guid != latestMetaData.Guid || entry.Sequence < latestMetaData.StaleSequence;
         }
 
         private void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids,
             IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
         {
-            _repairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
+            RepairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
         }
 
         private void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
-            _repairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
+            RepairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
         }
 
         private void InitInvalidationMetadata(NearCacheEntry newEntry)
         {
-            if (_repairingHandler == null)
+            if (RepairingHandler == null)
             {
                 return;
             }
             var partitionId = Cluster.Partitioner.GetPartitionId(newEntry.Key);
-            var metadataContainer = _repairingHandler.GetMetaDataContainer(partitionId);
+            var metadataContainer = RepairingHandler.GetMetaDataContainer(partitionId);
             newEntry.PartitionId = partitionId;
             newEntry.Sequence = metadataContainer.Sequence;
             newEntry.Guid = metadataContainer.Guid;

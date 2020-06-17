@@ -40,7 +40,6 @@ namespace Hazelcast.Networking
             ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
             WaitForClientMilliseconds = other.WaitForClientMilliseconds;
             ReconnectMode = other.ReconnectMode;
-            OutboundPorts = new HashSet<string>(other.OutboundPorts);
 
             Ssl = other.Ssl.Clone();
             Cloud = other.Cloud.Clone();
@@ -122,11 +121,6 @@ namespace Hazelcast.Networking
         /// Gets the socket options.
         /// </summary>
         public SocketOptions Socket { get; } = new SocketOptions();
-
-        /// <summary>
-        /// FIXME what is this + why strings?
-        /// </summary>
-        public ISet<string> OutboundPorts { get; } = new HashSet<string>();
 
         /// <summary>
         /// Gets the socket interceptor options.

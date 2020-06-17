@@ -39,7 +39,6 @@ namespace Hazelcast.NearCaching
             MaxSize = other.MaxSize;
             TimeToLiveSeconds = other.TimeToLiveSeconds;
             InvalidateOnChange = other.InvalidateOnChange;
-            SerializeKeys = other.SerializeKeys;
         }
 
         /// <summary>
@@ -78,11 +77,6 @@ namespace Hazelcast.NearCaching
         /// <para>Changes to the local Hazelcast instance always invalidate the cache immediately.</para>
         /// </remarks>
         public bool InvalidateOnChange { get; set; } = true;
-
-        /// <summary>
-        /// FIXME: usage?
-        /// </summary>
-        public bool SerializeKeys { get; set; }
 
         /// <inheritdoc />
         public override string ToString()

@@ -54,12 +54,12 @@ namespace Hazelcast.Messaging
         }
 
         /// <summary>
-        /// Gets or sets FIXME document IsRetryable
+        /// Whether the operation carried by this message can be retried.
         /// </summary>
         public bool IsRetryable { get; set; }
 
         /// <summary>
-        /// Gets or sets FIXME document OperationName
+        /// Gets or sets the name of the operation carried by this message.
         /// </summary>
         public string OperationName { get; set; }
 

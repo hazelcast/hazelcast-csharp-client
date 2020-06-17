@@ -138,15 +138,11 @@ namespace Hazelcast.NearCaching
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
                 return false;
 
-            // FIXME why is the cache entry an AsyncLazy and not a plain Lazy of some sort?!
-            // plus we keep creating the lazy which in many cases is not appropriate?!
-            // also note that GetOrAdd does NOT guarantee that the factory runs only once!!
-
-            ValueTask<NearCacheEntry> CreateCacheEntry(IData keyData)
+            ValueTask<NearCacheEntry> CreateCacheEntry(IData _)
             {
-                // FIXME have to trust caller - uh?
-                var ncValue = value; //ToEntryValue(value);
-                var entry = CreateEntry(keyData, ncValue);
+                // trust that the caller send the proper internal cache value
+                // and we don't have to ToEntryValue(value) again
+                var entry = CreateEntry(keyData, value);
                 Statistics.IncrementEntryCount();
                 return new ValueTask<NearCacheEntry>(entry);
             }
@@ -195,7 +191,7 @@ namespace Hazelcast.NearCaching
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKey(keyData).CAF())
                 return Attempt.Fail(await valueFactory(keyData).CAF());
 
-            async ValueTask<NearCacheEntry> CreateCacheEntry(IData keyData)
+            async ValueTask<NearCacheEntry> CreateCacheEntry(IData _)
             {
                 var valueData = await valueFactory(keyData).CAF();
                 var cachedValue = ToEntryValue(valueData);
@@ -315,12 +311,16 @@ namespace Hazelcast.NearCaching
 
         private async ValueTask DoCacheEvict()
         {
+            if (_evictionPolicy == EvictionPolicy.None || _entries.Count < _maxSize)
+                return;
+
             var entries = new SortedSet<NearCacheEntry>(_comparer);
             await foreach (var (_, value) in _entries)
                 entries.Add(value);
 
-            //var records = new SortedSet<AsyncLazy<NearCacheEntry>>(_entries.Values, _comparer);
-            var evictCount = _entries.Count * EvictionPercentage / 100;
+            var evictCount = entries.Count * EvictionPercentage / 100;
+            if (evictCount < 1) 
+                return;
 
             var count = 0;
 
@@ -332,15 +332,13 @@ namespace Hazelcast.NearCaching
 
                 Statistics.DecrementEntryCount();
                 Statistics.IncrementEviction();
+
                 if (++count > evictCount)
                     break;
             }
 
-            // FIXME wtf?
-            if (_entries.Count >= _maxSize)
-            {
-                await TryCacheEvict().CAF();
-            }
+            // original code would repeat if (_entries.Count >= _maxSize)
+            // but that can potentially lead to endless loops - removing
         }
 
         private async ValueTask TryTtlCleanup()

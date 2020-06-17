@@ -171,7 +171,7 @@ namespace Hazelcast.Clustering
             _logger.LogWarning("Heartbeat timeout for client {ClientId}, stopping.", client.Id);
             await client.DieAsync().CAF(); // does not throw
 
-            // FIXME: should pass a reason?
+            // TODO: original code has reasons for closing connections
             //connection.Close(reason, new TargetDisconnectedException($"Heartbeat timed out to connection {connection}"));
         }
     }
