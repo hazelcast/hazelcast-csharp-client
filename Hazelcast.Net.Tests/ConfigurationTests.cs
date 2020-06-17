@@ -118,7 +118,7 @@ namespace Hazelcast.Tests
         {
             var options = ReadResource(Resources.HazelcastOptions).Core;
 
-            Assert.AreEqual(1000, options.Clock.Offset);
+            Assert.AreEqual(1000, options.Clock.OffsetMilliseconds);
         }
 
         [Test]
@@ -128,7 +128,6 @@ namespace Hazelcast.Tests
 
             Assert.AreEqual(1000, options.MaxFastInvocationCount);
             Assert.AreEqual(1001, options.MinRetryDelayMilliseconds);
-            Assert.AreEqual(1002, options.DefaultTimeoutMilliseconds);
             Assert.AreEqual(1003, options.DefaultOperationTimeoutMilliseconds);
         }
 
@@ -174,7 +173,7 @@ namespace Hazelcast.Tests
             Assert.AreEqual("url", cloudOptions.UrlBase);
 
             var socketOptions = options.Socket;
-            Assert.AreEqual(1000, socketOptions.BufferSize);
+            Assert.AreEqual(1000, socketOptions.BufferSizeKiB);
             Assert.IsFalse(socketOptions.KeepAlive);
             Assert.AreEqual(1001, socketOptions.LingerSeconds);
             Assert.IsFalse(socketOptions.ReuseAddress);

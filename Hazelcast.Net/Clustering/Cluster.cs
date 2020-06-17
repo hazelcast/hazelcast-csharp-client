@@ -82,8 +82,9 @@ namespace Hazelcast.Clustering
         private readonly SemaphoreSlim _clusterLock = new SemaphoreSlim(1, 1); // general lock
         private volatile ClusterState _clusterState = ClusterState.NotConnected; // cluster state
         private volatile int _disposed; // disposed flag
-        private Task _clusterConnectTask; // the task that connects the cluster
+        private Task _clusterConnectTask; // the task that connects the first client of the cluster
         private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
+        private Task _clusterMembersTask; // the task that connects clients for all members of the cluster
 
         private Client _clusterEventsClient; // the client which handles 'cluster events'
         private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
@@ -249,6 +250,8 @@ namespace Hazelcast.Clustering
                     tasks.Add(_clusterConnectTask);
                 if (_clusterEventsTask != null)
                     tasks.Add(_clusterEventsTask);
+                if (_clusterMembersTask != null)
+                    tasks.Add(_clusterMembersTask);
             }
 
             foreach (var (_, client) in _clients)

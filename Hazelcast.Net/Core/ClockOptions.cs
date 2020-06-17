@@ -36,7 +36,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets or sets the clock offset.
         /// </summary>
-        public long Offset { get; set; }
+        public long OffsetMilliseconds { get; set; }
 
         /// <summary>
         /// Clones the options.
@@ -45,7 +45,7 @@ namespace Hazelcast.Core
         {
             return new ClockOptions
             {
-                Offset = Offset
+                OffsetMilliseconds = OffsetMilliseconds
             };
         }
     }

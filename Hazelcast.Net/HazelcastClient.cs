@@ -76,7 +76,7 @@ namespace Hazelcast
 #endif
         Task OpenAsync(TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(OpenAsync, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(OpenAsync, timeout, _options.Networking.ConnectionTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

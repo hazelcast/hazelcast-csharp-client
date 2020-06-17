@@ -63,6 +63,9 @@ namespace Hazelcast.Clustering
                 await _firstMembersView.WaitAsync(cancellationToken).CAF();
                 _firstMembersView = null;
 
+                // start connecting members
+                _clusterMembersTask = ConnectAllClientsAsync(cancellationToken);
+
                 // execute subscribers
                 foreach (var subscriber in _clusterEventSubscribers)
                     await subscriber.SubscribeAsync(this, cancellationToken).CAF();
@@ -147,6 +150,29 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Connects clients for each members.
+        /// </summary>
+        private async Task ConnectAllClientsAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000, cancellationToken).CAF();
+
+                var members = _memberTable?.Members.Values; // capture
+                if (members == null || members.Count == 0) return;
+
+                foreach (var member in members)
+                {
+                    if (cancellationToken.IsCancellationRequested) break;
+                    await TryConnectAsync(member.Address, cancellationToken).CAF(); // does not throw
+
+                    // ignore result
+                    // TryConnectAsync does add the client to _clients etc
+                }
+            }
+        }
+
+        /// <summary>
         /// Tries to get, or open, a connection to an address.
         /// </summary>
         /// <param name="address">The address.</param>
@@ -218,7 +244,7 @@ namespace Hazelcast.Clustering
             address = _addressProvider.Map(address);
 
             // create the client
-            var client = new Client(address, _options.Messaging, _correlationIdSequence, _loggerFactory)
+            var client = new Client(address, _options.Messaging, _options.Networking.Socket, _correlationIdSequence, _loggerFactory)
             {
                 OnReceiveEventMessage = OnEventMessage,
                 OnShutdown = HandleClientShutdown
@@ -250,7 +276,11 @@ namespace Hazelcast.Clustering
                 // if client is not active anymore, we can't continue - there is no
                 // race condition here because the client shutdown handler also lock
                 // on _clusterStateLock
-                if (!client.Active) throw new HazelcastException();
+                if (!client.Active) 
+                    throw new HazelcastException("Client is not active.");
+
+                if (_clients.ContainsKey(info.MemberId))
+                    throw new HazelcastException("Duplicate client.");
 
                 _clients[info.MemberId] = client;
                 _addressClients[address] = client;

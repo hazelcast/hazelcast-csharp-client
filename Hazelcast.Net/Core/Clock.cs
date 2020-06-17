@@ -28,7 +28,7 @@ namespace Hazelcast.Core
         private static readonly DateTime Jan1St1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         private static int _initialized;
-        private static long _offset;
+        private static long _offsetMilliseconds;
 
         /// <summary>
         /// Initializes the clock.
@@ -38,7 +38,7 @@ namespace Hazelcast.Core
         {
             if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1)
                 return;
-            _offset = options.Offset;
+            _offsetMilliseconds = options.OffsetMilliseconds;
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Hazelcast.Core
         /// <param name="epochMilliseconds">The epoch time in milliseconds.</param>
         /// <returns>The corresponding UTC <see cref="DateTime"/>.</returns>
         public static DateTime ToDateTime(long epochMilliseconds)
-            => Jan1St1970.AddMilliseconds(epochMilliseconds - _offset);
+            => Jan1St1970.AddMilliseconds(epochMilliseconds - _offsetMilliseconds);
 
         /// <summary>
         /// Gets the epoch time in milliseconds corresponding to an UTC <see cref="DateTime"/>.
@@ -68,6 +68,6 @@ namespace Hazelcast.Core
         /// <param name="dateTime">The <see cref="DateTime"/>.</param>
         /// <returns>The epoch time in milliseconds corresponding to the <see cref="DateTime"/>.</returns>
         public static long ToEpoch(DateTime dateTime)
-            => (long) (dateTime - Jan1St1970).TotalMilliseconds + _offset;
+            => (long) (dateTime - Jan1St1970).TotalMilliseconds + _offsetMilliseconds;
     }
 }

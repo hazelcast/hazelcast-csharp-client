@@ -31,17 +31,20 @@ namespace Hazelcast.Networking
     public class ClientSocketConnection : SocketConnectionBase
     {
         private readonly IPEndPoint _endpoint;
+        private readonly SocketOptions _options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientSocketConnection"/> class.
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="endpoint">The socket endpoint.</param>
+        /// <param name="options">Socket options.</param>
         /// <param name="prefixLength">An optional prefix length.</param>
-        public ClientSocketConnection(int id, IPEndPoint endpoint, int prefixLength = 0)
+        public ClientSocketConnection(int id, IPEndPoint endpoint, SocketOptions options, int prefixLength = 0)
             : base(id, prefixLength)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
             HConsole.Configure(this, config => config.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]"));
         }
 
@@ -63,10 +66,19 @@ namespace Hazelcast.Networking
 
             // create the socket
             var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, _options.KeepAlive);
+            socket.NoDelay = _options.TcpNoDelay;
+            socket.ReceiveBufferSize = socket.SendBufferSize = _options.BufferSizeKiB * 1024;
+
+            if (_options.LingerSeconds > 0)
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, new LingerOption(true, _options.LingerSeconds));
+            else
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, null);
 
             // connect to server
             HConsole.WriteLine(this, "Connect to server");
-            await socket.ConnectAsync(_endpoint, cancellationToken).CAF();
+            var connectionTimeout = TimeSpan.FromMilliseconds(_options.ConnectionTimeoutMilliseconds);
+            await TaskEx.WithTimeout((s, ep, token) => s.ConnectAsync(ep, token), socket, _endpoint, connectionTimeout, cancellationToken).CAF();
             HConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream

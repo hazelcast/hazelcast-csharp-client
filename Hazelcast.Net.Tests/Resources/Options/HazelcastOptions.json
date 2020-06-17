@@ -36,7 +36,7 @@
       "clock": {
 
         // clock offset
-        "offset": 1000
+        "offsetMilliseconds": 1000
       }
     },
 
@@ -120,7 +120,8 @@
         "keepAlive": false,
         "lingerSeconds": 1001,
         "reuseAddress": false,
-        "tcpNoDelay": true
+        "tcpNoDelay": true,
+        "connectionTimeoutMilliseconds": 30000
       },
 
       // socket interception

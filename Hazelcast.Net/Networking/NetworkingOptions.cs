@@ -89,12 +89,14 @@ namespace Hazelcast.Networking
         public bool RetryOnTargetDisconnected { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the connection timeout in milliseconds.
+        /// Gets or sets the connection timeout.
         /// </summary>
         /// <remarks>
-        /// <para></para> FIXME: timeout for ?
+        /// <para>Specifies the Hazelcast client connection timeout, i.e. the maximum amount of time
+        /// the Hazelcast can spend trying to establish a connection to the cluster. See <see cref="SocketOptions"/>
+        /// for specifying the individual socket connection timeout.</para>
         /// </remarks>
-        public int ConnectionTimeoutMilliseconds { get; set; } = 5*1000;
+        public int ConnectionTimeoutMilliseconds { get; set; } = 60_000;
 
         /// <summary>
         /// Gets or sets the reconnection mode in case the client is disconnected.

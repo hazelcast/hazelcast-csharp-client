@@ -91,7 +91,8 @@ namespace Hazelcast.Core
         /// <param name="function"></param>
         /// <param name="timeout">The timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult>(Func<CancellationToken, Task<TResult>> function, TimeSpan timeout)
+        public static Task<TResult> WithTimeout<TResult>(Func<CancellationToken, Task<TResult>> function,
+            TimeSpan timeout)
             => WithTimeout(function, timeout, -1);
 
         /// <summary>
@@ -102,7 +103,8 @@ namespace Hazelcast.Core
         /// <param name="timeout">The timeout.</param>
         /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult>(Func<CancellationToken, Task<TResult>> function, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task<TResult> WithTimeout<TResult>(Func<CancellationToken, Task<TResult>> function,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -137,7 +139,9 @@ namespace Hazelcast.Core
         /// <param name="arg1">The first argument.</param>
         /// <param name="timeout">The timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult, TArg1>(Func<TArg1, CancellationToken, Task<TResult>> function, TArg1 arg1, TimeSpan timeout)
+        public static Task<TResult> WithTimeout<TResult, TArg1>(Func<TArg1, CancellationToken, Task<TResult>> function,
+            TArg1 arg1,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, timeout, -1);
 
         /// <summary>
@@ -150,7 +154,9 @@ namespace Hazelcast.Core
         /// <param name="timeout">The timeout.</param>
         /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult, TArg1>(Func<TArg1, CancellationToken, Task<TResult>> function, TArg1 arg1, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task<TResult> WithTimeout<TResult, TArg1>(Func<TArg1, CancellationToken, Task<TResult>> function,
+            TArg1 arg1,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -187,7 +193,9 @@ namespace Hazelcast.Core
         /// <param name="arg1">The first argument.</param>
         /// <param name="arg2">The second argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TimeSpan timeout)
+        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, arg2, timeout, -1);
 
         /// <summary>
@@ -202,7 +210,9 @@ namespace Hazelcast.Core
         /// <param name="arg1">The first argument.</param>
         /// <param name="arg2">The second argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -241,7 +251,9 @@ namespace Hazelcast.Core
         /// <param name="arg2">The second argument.</param>
         /// <param name="arg3">The third argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TimeSpan timeout)
+        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, arg2, arg3, timeout, -1);
 
         /// <summary>
@@ -258,7 +270,9 @@ namespace Hazelcast.Core
         /// <param name="arg2">The second argument.</param>
         /// <param name="arg3">The third argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -298,7 +312,9 @@ namespace Hazelcast.Core
         /// <param name="arg3">The third argument.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TimeSpan timeout, CancellationToken cancellationToken)
+        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3,
+            TimeSpan timeout, CancellationToken cancellationToken)
             => WithTimeout(function, arg1, arg2, arg3, timeout, -1, cancellationToken);
 
         /// <summary>
@@ -316,7 +332,9 @@ namespace Hazelcast.Core
         /// <param name="arg3">The third argument.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TimeSpan timeout, int defaultTimeoutMilliseconds, CancellationToken cancellationToken)
+        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3,
+            TimeSpan timeout, int defaultTimeoutMilliseconds, CancellationToken cancellationToken)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -358,7 +376,9 @@ namespace Hazelcast.Core
         /// <param name="arg3">The third argument.</param>
         /// <param name="arg4">The third argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4>(Func<TArg1, TArg2, TArg3, TArg4, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TimeSpan timeout)
+        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4>(Func<TArg1, TArg2, TArg3, TArg4, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, arg2, arg3, arg4, timeout, -1);
 
         /// <summary>
@@ -377,7 +397,9 @@ namespace Hazelcast.Core
         /// <param name="arg3">The third argument.</param>
         /// <param name="arg4">The third argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4>(Func<TArg1, TArg2, TArg3, TArg4, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4>(Func<TArg1, TArg2, TArg3, TArg4, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -420,7 +442,9 @@ namespace Hazelcast.Core
         /// <param name="arg4">The fourth argument.</param>
         /// <param name="arg5">The fifth argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TimeSpan timeout)
+        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, arg2, arg3, arg4, arg5, timeout, -1);
 
         /// <summary>
@@ -441,7 +465,9 @@ namespace Hazelcast.Core
         /// <param name="arg4">The fourth argument.</param>
         /// <param name="arg5">The fifth argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -486,7 +512,9 @@ namespace Hazelcast.Core
         /// <param name="arg5">The fifth argument.</param>
         /// <param name="arg6">The sixth argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TimeSpan timeout)
+        public static Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, arg2, arg3, arg4, arg5, arg6, timeout, -1);
 
         /// <summary>
@@ -509,7 +537,9 @@ namespace Hazelcast.Core
         /// <param name="arg5">The fifth argument.</param>
         /// <param name="arg6">The sixth argument.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, CancellationToken, Task<TResult>> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task<TResult> WithTimeout<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, CancellationToken, Task<TResult>> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -541,7 +571,8 @@ namespace Hazelcast.Core
         /// <param name="function"></param>
         /// <param name="timeout">The timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task WithTimeout(Func<CancellationToken, Task> function, TimeSpan timeout)
+        public static Task WithTimeout(Func<CancellationToken, Task> function,
+            TimeSpan timeout)
             => WithTimeout(function, timeout, -1);
 
         /// <summary>
@@ -551,7 +582,8 @@ namespace Hazelcast.Core
         /// <param name="timeout">The timeout.</param>
         /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task WithTimeout(Func<CancellationToken, Task> function, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task WithTimeout(Func<CancellationToken, Task> function,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -585,7 +617,9 @@ namespace Hazelcast.Core
         /// <param name="arg1">The first argument.</param>
         /// <param name="timeout">The timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task WithTimeout<TArg1>(Func<TArg1, CancellationToken, Task> function, TArg1 arg1, TimeSpan timeout)
+        public static Task WithTimeout<TArg1>(Func<TArg1, CancellationToken, Task> function,
+            TArg1 arg1,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, timeout, -1);
 
         /// <summary>
@@ -597,7 +631,9 @@ namespace Hazelcast.Core
         /// <param name="timeout">The timeout.</param>
         /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task WithTimeout<TArg1>(Func<TArg1, CancellationToken, Task> function, TArg1 arg1, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task WithTimeout<TArg1>(Func<TArg1, CancellationToken, Task> function,
+            TArg1 arg1,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -633,7 +669,9 @@ namespace Hazelcast.Core
         /// <param name="arg2">The second argument.</param>
         /// <param name="timeout">The timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task WithTimeout<TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task> function, TArg1 arg1, TArg2 arg2, TimeSpan timeout)
+        public static Task WithTimeout<TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task> function,
+            TArg1 arg1, TArg2 arg2,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, arg2, timeout, -1);
 
         /// <summary>
@@ -647,7 +685,9 @@ namespace Hazelcast.Core
         /// <param name="timeout">The timeout.</param>
         /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task WithTimeout<TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task> function, TArg1 arg1, TArg2 arg2, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task WithTimeout<TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task> function,
+            TArg1 arg1, TArg2 arg2,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 
@@ -678,6 +718,63 @@ namespace Hazelcast.Core
         /// </summary>
         /// <typeparam name="TArg1">The type of the first argument.</typeparam>
         /// <typeparam name="TArg2">The type of the second argument.</typeparam>
+        /// <param name="function"></param>
+        /// <param name="arg1">The first argument.</param>
+        /// <param name="arg2">The second argument.</param>
+        /// <param name="timeout">The timeout.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The task, with a timeout applied to it.</returns>
+        public static Task WithTimeout<TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task> function,
+            TArg1 arg1, TArg2 arg2,
+            TimeSpan timeout, CancellationToken cancellationToken)
+            => WithTimeout(function, arg1, arg2, timeout, -1, cancellationToken);
+
+        /// <summary>
+        /// Applies a timeout to a task.
+        /// </summary>
+        /// <typeparam name="TArg1">The type of the first argument.</typeparam>
+        /// <typeparam name="TArg2">The type of the second argument.</typeparam>
+        /// <param name="function"></param>
+        /// <param name="arg1">The first argument.</param>
+        /// <param name="arg2">The second argument.</param>
+        /// <param name="timeout">The timeout.</param>
+        /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The task, with a timeout applied to it.</returns>
+        public static async Task WithTimeout<TArg1, TArg2>(Func<TArg1, TArg2, CancellationToken, Task> function,
+            TArg1 arg1, TArg2 arg2,
+            TimeSpan timeout, int defaultTimeoutMilliseconds, CancellationToken cancellationToken)
+        {
+            if (function == null) throw new ArgumentNullException(nameof(function));
+
+            var (timeoutCancellation, combinedCancellation, token) = GetTimeoutCancellation(timeout, defaultTimeoutMilliseconds, cancellationToken);
+
+            try
+            {
+                // trusting the function to abort if the token cancels
+                var task = function(arg1, arg2, token);
+                if (task == null) throw new InvalidOperationException(NullTaskMessage);
+                await task.CAF();
+            }
+            catch (OperationCanceledException c)
+            {
+                if (timeoutCancellation == null || !timeoutCancellation.IsCancellationRequested)
+                    throw; // not caused by the timeout cancellation
+
+                throw new TimeoutException(TimeoutMessage, c);
+            }
+            finally
+            {
+                combinedCancellation?.Dispose();
+                timeoutCancellation?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Applies a timeout to a task.
+        /// </summary>
+        /// <typeparam name="TArg1">The type of the first argument.</typeparam>
+        /// <typeparam name="TArg2">The type of the second argument.</typeparam>
         /// <typeparam name="TArg3">The type of the second argument.</typeparam>
         /// <param name="function"></param>
         /// <param name="arg1">The first argument.</param>
@@ -685,7 +782,9 @@ namespace Hazelcast.Core
         /// <param name="arg3">The third argument.</param>
         /// <param name="timeout">The timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static Task WithTimeout<TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TimeSpan timeout)
+        public static Task WithTimeout<TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3,
+            TimeSpan timeout)
             => WithTimeout(function, arg1, arg2, arg3, timeout, -1);
 
         /// <summary>
@@ -701,7 +800,9 @@ namespace Hazelcast.Core
         /// <param name="timeout">The timeout.</param>
         /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
-        public static async Task WithTimeout<TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task> function, TArg1 arg1, TArg2 arg2, TArg3 arg3, TimeSpan timeout, int defaultTimeoutMilliseconds)
+        public static async Task WithTimeout<TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, CancellationToken, Task> function,
+            TArg1 arg1, TArg2 arg2, TArg3 arg3,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
             if (function == null) throw new ArgumentNullException(nameof(function));
 

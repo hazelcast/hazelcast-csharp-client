@@ -30,17 +30,21 @@ namespace Hazelcast.Networking
         /// </summary>
         private SocketOptions(SocketOptions other)
         {
-            BufferSize = other.BufferSize;
+            BufferSizeKiB = other.BufferSizeKiB;
             KeepAlive = other.KeepAlive;
             LingerSeconds = other.LingerSeconds;
             ReuseAddress = other.ReuseAddress;
             TcpNoDelay = other.TcpNoDelay;
+            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
         }
 
         /// <summary>
-        /// Gets or sets the buffer size.
+        /// The buffer size.
         /// </summary>
-        public int BufferSize { get; set; } = 128; // TODO: bytes? kilobytes?
+        /// <remarks>
+        /// <para>The buffer size is expressed in Kibibytes, ie units of 1024 bytes.</para>
+        /// </remarks>
+        public int BufferSizeKiB { get; set; } = 128;
 
         /// <summary>
         /// Whether to keep the socket alive.
@@ -48,7 +52,7 @@ namespace Hazelcast.Networking
         public bool KeepAlive { get; set; } = true;
 
         /// <summary>
-        /// TODO: document
+        /// The number of seconds to remain connected after the socket Close() method is called, or zero to disconnect immediately.
         /// </summary>
         public int LingerSeconds { get; set; } = 3;
 
@@ -58,9 +62,14 @@ namespace Hazelcast.Networking
         public bool ReuseAddress { get; set; } = true;
 
         /// <summary>
-        /// TODO: document
+        /// Whether the socket is using the Nagle algorithm.
         /// </summary>
         public bool TcpNoDelay { get; set; }
+
+        /// <summary>
+        /// The socket connection timeout.
+        /// </summary>
+        public int ConnectionTimeoutMilliseconds { get; set; } = 30_000;
 
         /// <summary>
         /// Clones the options.
