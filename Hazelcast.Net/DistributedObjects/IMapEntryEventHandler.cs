@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
@@ -36,6 +38,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="mergeValue">The merged value.</param>
         /// <param name="eventType">The event type.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        void Handle(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries);
+        /// <param name="cancellationToken">A cancellation token.</param>
+        ValueTask HandleAsync(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries, CancellationToken cancellationToken);
     }
 }

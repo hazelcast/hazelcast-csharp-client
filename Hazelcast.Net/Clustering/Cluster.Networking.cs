@@ -64,7 +64,8 @@ namespace Hazelcast.Clustering
                 _firstMembersView = null;
 
                 // start connecting members
-                _clusterMembersTask = ConnectAllClientsAsync(cancellationToken);
+                // this is a background task that cancels with the cluster
+                _clusterMembersTask = ConnectAllClientsAsync(_clusterCancellation.Token);
 
                 // execute subscribers
                 foreach (var subscriber in _clusterEventSubscribers)
@@ -322,10 +323,10 @@ namespace Hazelcast.Clustering
                 var subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
                 client.StartBackgroundTask(token => InstallSubscriptionsOnNewClient(client, subscriptions, token), _clusterCancellation.Token);
 
-                OnConnectionAdded(client); // does not throw
+                await OnConnectionAdded(client, cancellationToken).CAF(); // does not throw
 
                 if (firstClient)
-                    OnClientLifecycleEvent(ClientLifecycleState.Connected); // does not throw
+                    await OnClientLifecycleEvent(ClientLifecycleState.Connected, cancellationToken).CAF(); // does not throw
             }
 
             return client;
@@ -344,10 +345,12 @@ namespace Hazelcast.Clustering
 
                 var lastClient = _clients.Count == 0;
 
-                if (lastClient)
-                    OnClientLifecycleEvent(ClientLifecycleState.Disconnected); // does not throw
+                var cancellationToken = CancellationToken.None; // FIXME CANCELLATION
 
-                OnConnectionRemoved(client); // does not throw
+                if (lastClient)
+                    await OnClientLifecycleEvent(ClientLifecycleState.Disconnected, cancellationToken).CAF(); // does not throw
+
+                await OnConnectionRemoved(client, cancellationToken).CAF(); // does not throw
 
                 // just clear subscriptions, cannot unsubscribes from the server since
                 // the client is not connected anymore

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
@@ -34,6 +36,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="member">The member.</param>
         /// <param name="publishTime">The publish time.</param>
         /// <param name="payload">The topic object carried by the message.</param>
-        void Handle(IHTopic<T> sender, MemberInfo member, long publishTime, T payload);
+        /// <param name="cancellationToken">A cancellation token.</param>
+        ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload, CancellationToken cancellationToken);
     }
 }

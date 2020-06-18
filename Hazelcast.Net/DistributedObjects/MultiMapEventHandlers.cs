@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
@@ -31,6 +33,17 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The handlers.</returns>
         public MultiMapEventHandlers<TKey, TValue> Cleared(Action<IHMultiMap<TKey, TValue>, MapClearedEventArgs> handler)
         {
+            Add(new MapClearedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when the map is cleared.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MultiMapEventHandlers<TKey, TValue> Cleared(Func<IHMultiMap<TKey, TValue>, MapClearedEventArgs, CancellationToken, ValueTask> handler)
+        {
             Add(new MapClearedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
@@ -41,6 +54,17 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
         public MultiMapEventHandlers<TKey, TValue> EntryUpdated(Action<IHMultiMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is updated.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MultiMapEventHandlers<TKey, TValue> EntryUpdated(Func<IHMultiMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
         {
             Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
@@ -53,6 +77,17 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The handlers.</returns>
         public MultiMapEventHandlers<TKey, TValue> EntryRemoved(Action<IHMultiMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>> handler)
         {
+            Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is removed.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MultiMapEventHandlers<TKey, TValue> EntryRemoved(Func<IHMultiMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        {
             Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
@@ -64,6 +99,17 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The handlers.</returns>
         public MultiMapEventHandlers<TKey, TValue> EntryAdded(Action<IHMultiMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>> handler)
         {
+            Add(new MapEntryAddedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is added.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MultiMapEventHandlers<TKey, TValue> EntryAdded(Func<IHMultiMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        {
             Add(new MapEntryAddedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
@@ -74,6 +120,17 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
         public MultiMapEventHandlers<TKey, TValue> EntryMerged(Action<IHMultiMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
+        {
+            Add(new MapEntryMergedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a map entry is merged.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public MultiMapEventHandlers<TKey, TValue> EntryMerged(Func<IHMultiMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
         {
             Add(new MapEntryMergedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;

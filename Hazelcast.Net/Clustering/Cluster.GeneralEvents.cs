@@ -247,7 +247,7 @@ namespace Hazelcast.Clustering
             try
             {
                 var unsubscribeResponse = await SendToClientAsync(unsubscribeRequest, client, cancellationToken).CAF();
-                var unsubscribed = subscription.DecodeUnsubscribeResponse(unsubscribeResponse);
+                var unsubscribed = subscription.ReadUnsubscribeResponse(unsubscribeResponse);
                 return unsubscribed
                     ? new InstallAttempt(InstallResult.SubscriptionNotActive)
                     : new InstallAttempt(InstallResult.ConfusedServer);
@@ -349,7 +349,7 @@ namespace Hazelcast.Clustering
             // trigger the server-side un-subscribe
             var unsubscribeRequest = clientSubscription.ClusterSubscription.CreateUnsubscribeRequest(clientSubscription.ServerSubscriptionId);
             var responseMessage = await SendToClientAsync(unsubscribeRequest, clientSubscription.Client, cancellationToken).CAF();
-            return clientSubscription.ClusterSubscription.DecodeUnsubscribeResponse(responseMessage);
+            return clientSubscription.ClusterSubscription.ReadUnsubscribeResponse(responseMessage);
         }
     }
 }

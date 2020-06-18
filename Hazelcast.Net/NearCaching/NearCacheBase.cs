@@ -103,7 +103,7 @@ namespace Hazelcast.NearCaching
             _entries.Clear();
         }
 
-        public abstract void Init();
+        public abstract ValueTask InitializeAsync();
 
         public void Invalidate(IData key)
         {
@@ -319,7 +319,7 @@ namespace Hazelcast.NearCaching
                 entries.Add(value);
 
             var evictCount = entries.Count * EvictionPercentage / 100;
-            if (evictCount < 1) 
+            if (evictCount < 1)
                 return;
 
             var count = 0;

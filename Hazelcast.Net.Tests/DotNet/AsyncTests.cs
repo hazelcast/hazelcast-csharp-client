@@ -579,6 +579,7 @@ namespace Hazelcast.Tests.DotNet
         }
 
         [Test]
+        [Explicit("throws - just to see how NUnit reports exceptions")]
         public async Task Throwing1()
         {
             // Throw1 throws
@@ -586,6 +587,7 @@ namespace Hazelcast.Tests.DotNet
         }
 
         [Test]
+        [Explicit("throws - just to see how NUnit reports exceptions")]
         public async Task Throwing2()
         {
             // Throw2 is gone from stack traces ;(
@@ -593,6 +595,7 @@ namespace Hazelcast.Tests.DotNet
         }
 
         [Test]
+        [Explicit("throws - just to see how NUnit reports exceptions")]
         public async Task Throwing3()
         {
             // Throw3 shows even if indirectly
@@ -600,6 +603,7 @@ namespace Hazelcast.Tests.DotNet
         }
 
         [Test]
+        [Explicit("throws - just to see how NUnit reports exceptions")]
         public async Task Throwing4()
         {
             // Throw4 ?

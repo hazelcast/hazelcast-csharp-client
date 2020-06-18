@@ -198,7 +198,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
                 ReadSubscribeResponse,
                 CreateUnsubscribeRequest,
                 ReadUnsubscribeResponse,
-                HandleEvent,
+                HandleEventAsync,
                 new MapSubscriptionState(mode, Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
@@ -241,11 +241,11 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             public int Mode { get; }
         }
 
-        private void HandleEvent(ClientMessage eventMessage, object state)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
         {
             var sstate = ToSafeState<MapSubscriptionState>(state);
 
-            void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
+            async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, CancellationToken token)
             {
                 var eventType = (MapEventTypes)eventTypeData;
                 if (eventType == MapEventTypes.Nothing) return;
@@ -259,40 +259,27 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
                 // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                 foreach (var handler in sstate.Handlers)
                 {
-                    if (handler.EventType.HasFlag(eventType)) // FIXME has any or...
+                    if (handler.EventType.HasAll(eventType))
                     {
-                        switch (handler)
+                        var task = handler switch
                         {
-                            case IMapEntryEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> entryHandler:
-                                entryHandler.Handle(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries);
-                                break;
-                            case IMapEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> mapHandler:
-                                mapHandler.Handle(this, member, numberOfAffectedEntries);
-                                break;
-                            default:
-                                throw new NotSupportedException();
-                        }
+                            IMapEntryEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, token),
+                            IMapEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, token),
+                            _ => throw new NotSupportedException()
+                        };
+                        await task.CAF();
                     }
                 }
             }
 
-            switch (sstate.Mode)
+            return sstate.Mode switch
             {
-                case 0:
-                    ReplicatedMapAddEntryListenerCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                case 1:
-                    ReplicatedMapAddEntryListenerToKeyCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                case 2:
-                    ReplicatedMapAddEntryListenerWithPredicateCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                case 3:
-                    ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                default:
-                    throw new NotSupportedException();
-            }
+                0 => ReplicatedMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
+                1 => ReplicatedMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
+                2 => ReplicatedMapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
+                3 => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
+                _ => throw new NotSupportedException()
+            };
         }
 
         private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)

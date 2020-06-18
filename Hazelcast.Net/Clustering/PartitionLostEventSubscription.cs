@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -35,19 +37,21 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddPartitionLostListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemovePartitionLostListenerCodec.EncodeRequest(id),
                 (message, state) => ClientRemovePartitionLostListenerCodec.DecodeResponse(message).Response,
-                (message, state) => ClientAddPartitionLostListenerCodec.HandleEvent(message, HandleInternal, LoggerFactory));
+                (message, state, cancellationToken) => ClientAddPartitionLostListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory, cancellationToken));
         }
 
-        internal Action<PartitionLostEventArgs> Handle { get; set; }
+        internal Func<PartitionLostEventArgs, CancellationToken, ValueTask> Handle { get; set; }
 
-        private void HandleInternal(int partitionId, int lostBackupCount, Guid memberId)
+        private ValueTask HandleInternal(int partitionId, int lostBackupCount, Guid memberId, CancellationToken cancellationToken)
         {
+            if (Handle == null) return default;
+
             // TODO: document + avoid hard-coded constants
             const int maxLostBackupCount = 6;
 
             var member = Cluster.GetMember(memberId);
 
-            Handle(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member));
+            return Handle(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member), cancellationToken);
         }
     }
 }

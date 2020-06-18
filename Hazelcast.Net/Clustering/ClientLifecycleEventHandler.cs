@@ -13,32 +13,15 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.Clustering
 {
-    internal class ClientLifecycleEventHandler : IClusterEventHandler
+    internal class ClientLifecycleEventHandler : ClusterEventHandlerBase<ClientLifecycleEventArgs>
     {
-        private readonly Action<Cluster, ClientLifecycleEventArgs> _handler;
-
-        public ClientLifecycleEventHandler(Action<Cluster, ClientLifecycleEventArgs> handler)
-        {
-            _handler = handler;
-        }
-
-        /// <summary>
-        /// Handle the event.
-        /// </summary>
-        /// <param name="sender">The originating cluster.</param>
-        /// <param name="state">The new state.</param>
-        public void Handle(Cluster sender, ClientLifecycleState state)
-            => _handler(sender, new ClientLifecycleEventArgs(state));
-
-        /// <summary>
-        /// Handle the event.
-        /// </summary>
-        /// <param name="sender">The originating cluster.</param>
-        /// <param name="args">The event arguments.</param>
-        public void Handle(Cluster sender, ClientLifecycleEventArgs args)
-            => _handler(sender, args);
+        public ClientLifecycleEventHandler(Func<Cluster, ClientLifecycleEventArgs, CancellationToken, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

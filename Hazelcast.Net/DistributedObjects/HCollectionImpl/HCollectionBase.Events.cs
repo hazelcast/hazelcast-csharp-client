@@ -52,10 +52,7 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
 
             var subscription = new ClusterSubscription(
                 CreateSubscribeRequest(includeValue, Cluster.IsSmartRouting),
-                ReadSubscribeResponse,
-                CreateUnsubscribeRequest,
-                ReadUnsubscribeResponse,
-                HandleEvent,
+                ReadSubscribeResponse, CreateUnsubscribeRequest, ReadUnsubscribeResponse, HandleEventAsync,
                 new SubscriptionState<CollectionItemEventHandlers<T>>(Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
@@ -63,13 +60,13 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
             return subscription.Id;
         }
 
-        private void HandleEvent(ClientMessage eventMessage, object state)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
         {
             var sstate = ToSafeState<SubscriptionState<CollectionItemEventHandlers<T>>>(state);
 
-            void HandleItemEvent(IData itemData, Guid memberId, int eventTypeData)
+            async ValueTask HandleItemEventAsync(IData itemData, Guid memberId, int eventTypeData, CancellationToken token)
             {
-                var eventType = (CollectionItemEventTypes)eventTypeData;
+                var eventType = (CollectionItemEventTypes) eventTypeData;
                 if (eventType == CollectionItemEventTypes.Nothing) return;
 
                 var member = Cluster.GetMember(memberId);
@@ -78,14 +75,14 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
                 // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                 foreach (var handler in sstate.Handlers)
                 {
-                    if (handler.EventType.HasFlag(eventType)) // FIXME has any or...
+                    if (handler.EventType.HasAll(eventType))
                     {
-                        handler.Handle(this, member, item);
+                        await handler.HandleAsync(this, member, item, token).CAF();
                     }
                 }
             }
 
-            ListAddListenerCodec.HandleEvent(eventMessage, HandleItemEvent, LoggerFactory);
+            return ListAddListenerCodec.HandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory, cancellationToken);
         }
 
         protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);

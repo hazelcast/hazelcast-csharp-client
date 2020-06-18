@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
                 ReadSubscribeResponse,
                 CreateUnsubscribeRequest,
                 ReadUnsubscribeResponse,
-                HandleEvent,
+                HandleEventAsync,
                 new SubscriptionState<TopicEventHandlers<T>>(Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
@@ -62,11 +62,11 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
             return subscription.Id;
         }
 
-        private void HandleEvent(ClientMessage eventMessage, object state)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
         {
             var sstate = ToSafeState<SubscriptionState<TopicEventHandlers<T>>>(state);
 
-            void HandleEvent(IData itemData, long publishTime, Guid memberId)
+            async ValueTask HandleEventAsync(IData itemData, long publishTime, Guid memberId, CancellationToken token)
             {
                 var member = Cluster.GetMember(memberId);
 
@@ -77,11 +77,11 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
                 foreach (var handler in sstate.Handlers)
                 {
                     // there is only one event type...
-                    handler.Handle(this, member, publishTime, item);
+                    await handler.HandleAsync(this, member, publishTime, item, token).CAF();
                 }
             }
 
-            TopicAddMessageListenerCodec.HandleEvent(eventMessage, HandleEvent, LoggerFactory);
+            return TopicAddMessageListenerCodec.HandleEventAsync(eventMessage, HandleEventAsync, LoggerFactory, cancellationToken);
         }
 
         private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)

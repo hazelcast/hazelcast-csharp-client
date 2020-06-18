@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
 
@@ -29,7 +31,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public CollectionItemEventHandlers<T> ItemAdded(Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
+        public CollectionItemEventHandlers<T> ItemAdded(Func<IHCollection<T>, CollectionItemEventArgs<T>, CancellationToken, ValueTask> handler)
         {
             Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Added, handler));
             return this;
@@ -40,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public CollectionItemEventHandlers<T> ItemRemoved(Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
+        public CollectionItemEventHandlers<T> ItemRemoved(Func<IHCollection<T>, CollectionItemEventArgs<T>, CancellationToken, ValueTask> handler)
         {
             Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Removed, handler));
             return this;

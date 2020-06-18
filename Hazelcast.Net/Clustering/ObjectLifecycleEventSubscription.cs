@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -35,24 +37,21 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddDistributedObjectListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id),
                 (message, state) => ClientRemoveDistributedObjectListenerCodec.DecodeResponse(message).Response,
-                (message, state) => ClientAddDistributedObjectListenerCodec.HandleEvent(message, HandleInternal, LoggerFactory));
+                (message, state, cancellationToken) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory, cancellationToken));
         }
 
-        internal Action<ClusterObjectLifecycleEventType, ClusterObjectLifecycleEventArgs> Handle { get; set; }
+        internal Func<ClusterObjectLifecycleEventType, ClusterObjectLifecycleEventArgs, CancellationToken, ValueTask> Handle { get; set; }
 
-        private void HandleInternal(string name, string serviceName, string eventTypeName, Guid memberId)
+        private ValueTask HandleInternal(string name, string serviceName, string eventTypeName, Guid memberId, CancellationToken cancellationToken)
         {
-            switch (eventTypeName)
+            if (Handle == null) return default;
+
+            return eventTypeName switch
             {
-                case "CREATED":
-                    Handle(ClusterObjectLifecycleEventType.Created, new ClusterObjectLifecycleEventArgs(serviceName, name, memberId));
-                    break;
-                case "DESTROYED":
-                    Handle(ClusterObjectLifecycleEventType.Destroyed, new ClusterObjectLifecycleEventArgs(serviceName, name, memberId));
-                    break;
-                default:
-                    throw new NotSupportedException($"Event type \"{eventTypeName}\" is not supported.");
-            }
+                "CREATED" => Handle(ClusterObjectLifecycleEventType.Created, new ClusterObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
+                "DESTROYED" => Handle(ClusterObjectLifecycleEventType.Destroyed, new ClusterObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
+                _ => throw new NotSupportedException($"Event type \"{eventTypeName}\" is not supported.")
+            };
         }
     }
 }

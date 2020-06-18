@@ -38,7 +38,8 @@ namespace Hazelcast.Tests
         {
             return CreateOpenClientAsync(configuration =>
             {
-                configuration.Networking.Addresses.Add("sgay-l4");
+                //configuration.Networking.Addresses.Add("sgay-l4");
+                configuration.Networking.Addresses.Add("localhost");
             });
         }
 
@@ -101,7 +102,7 @@ namespace Hazelcast.Tests
             await map.AddOrReplaceAsync("key", 42).CAF();
 
             // add-or-replace with a 3 seconds timeout and a potential TimeoutException
-            await map.AddOrReplaceAsync("key", 42, TimeSpan.FromSeconds(3)).CAF();
+            await map.AddOrReplaceAsync("key", 43, TimeSpan.FromSeconds(3)).CAF();
 
             // this is what happens under the scene but we cannot ask ppl to do this really
             // => no
@@ -155,7 +156,8 @@ namespace Hazelcast.Tests
         {
             TestSetUp();
 
-            var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            RemoveDisposable(client); // 'using' is taking care of it FIXME
 
             var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
@@ -451,6 +453,39 @@ namespace Hazelcast.Tests
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
+        public async Task AsyncEvents()
+        {
+            TestSetUp();
+
+            var client = await CreateOpenClientAsync().CAF();
+
+            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+
+            var eventsCount = 0;
+            var id = await map.SubscribeAsync(on => on
+                .EntryAdded(async (sender, args, cancellationToken) =>
+                {
+                    await Task.Yield();
+                    HConsole.WriteLine(this, $"! added: {args.Key} {args.Value}");
+                    Interlocked.Increment(ref eventsCount);
+                }));
+
+            await map.AddOrReplaceAndReturnAsync("a", 1).CAF();
+            await map.AddOrReplaceAndReturnAsync("b", 2).CAF();
+
+            while (eventsCount < 2)
+                await Task.Delay(500).CAF();
+
+            await map.UnsubscribeAsync(id).CAF();
+
+            await map.AddOrReplaceAndReturnAsync("c", 3).CAF();
+            await Task.Delay(500).CAF();
+
+            Assert.AreEqual(2, eventsCount);
+        }
+
+        [Test]
+        [Timeout(TimeoutMilliseconds)]
         public async Task ConfiguredEvents()
         {
             TestSetUp();
@@ -459,7 +494,8 @@ namespace Hazelcast.Tests
 
             void ConfigureClient(HazelcastOptions config)
             {
-                config.Networking.Addresses.Add("sgay-l4");
+                //config.Networking.Addresses.Add("sgay-l4");
+                config.Networking.Addresses.Add("localhost");
 
                 config.AddSubscriber(on => on.ObjectCreated((sender, args) =>
                 {

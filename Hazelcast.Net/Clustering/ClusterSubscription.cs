@@ -16,7 +16,10 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Messaging;
+using Hazelcast.Core;
 
 namespace Hazelcast.Clustering
 {
@@ -27,10 +30,10 @@ namespace Hazelcast.Clustering
     {
         private readonly object _activeLock = new object();
         private readonly ConcurrentDictionary<Client, ClientSubscription> _clientSubscriptions = new ConcurrentDictionary<Client, ClientSubscription>();
-        private readonly Func<ClientMessage, object, Guid> _subscribeResponseParser;
+        private readonly Func<ClientMessage, object, Guid> _subscribeResponseReader;
         private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
-        private readonly Func<ClientMessage, object, bool> _unsubscribeResponseDecoder;
-        private readonly Action<ClientMessage, object> _eventHandler;
+        private readonly Func<ClientMessage, object, bool> _unsubscribeResponseReader;
+        private readonly Func<ClientMessage, object, CancellationToken, ValueTask> _eventHandler;
 
         private volatile bool _active = true; // always start as active
 
@@ -38,18 +41,18 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="ClusterSubscription"/> class with an auto-assigned identifier.
         /// </summary>
         /// <param name="subscribeRequest">The subscribe request message.</param>
-        /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
+        /// <param name="subscribeResponseReader">The subscribe response message reader.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
-        /// <param name="unsubscribeResponseDecoder">An unsubscribe response decoder.</param>
+        /// <param name="unsubscribeResponseReader">An unsubscribe response reader.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
         public ClusterSubscription(ClientMessage subscribeRequest,
-            Func<ClientMessage, object, Guid> subscribeResponseParser,
+            Func<ClientMessage, object, Guid> subscribeResponseReader,
             Func<Guid, object, ClientMessage> unsubscribeRequestFactory,
-            Func<ClientMessage, object, bool> unsubscribeResponseDecoder,
-            Action<ClientMessage, object> eventHandler,
+            Func<ClientMessage, object, bool> unsubscribeResponseReader,
+            Func<ClientMessage, object, CancellationToken, ValueTask> eventHandler,
             object state = null)
-            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseParser, unsubscribeRequestFactory, unsubscribeResponseDecoder, eventHandler, state)
+            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseReader, unsubscribeRequestFactory, unsubscribeResponseReader, eventHandler, state)
         { }
 
         /// <summary>
@@ -57,23 +60,23 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="id">The unique identifier of the subscription.</param>
         /// <param name="subscribeRequest">The subscribe request message.</param>
-        /// <param name="subscribeResponseParser">The subscribe response message parser.</param>
+        /// <param name="subscribeResponseReader">The subscribe response message reader.</param>
         /// <param name="unsubscribeRequestFactory">The unsubscribe request message factory.</param>
-        /// <param name="unsubscribeResponseDecoder">An unsubscribe response decoder.</param>
+        /// <param name="unsubscribeResponseReader">An unsubscribe response reader.</param>
         /// <param name="eventHandler">The event handler.</param>
         /// <param name="state">A state object.</param>
         public ClusterSubscription(Guid id, ClientMessage subscribeRequest,
-            Func<ClientMessage, object, Guid> subscribeResponseParser,
+            Func<ClientMessage, object, Guid> subscribeResponseReader,
             Func<Guid, object, ClientMessage> unsubscribeRequestFactory,
-            Func<ClientMessage, object, bool> unsubscribeResponseDecoder,
-            Action<ClientMessage, object> eventHandler,
+            Func<ClientMessage, object, bool> unsubscribeResponseReader,
+            Func<ClientMessage, object, CancellationToken, ValueTask> eventHandler,
             object state = null)
         {
             Id = id;
             SubscribeRequest = subscribeRequest;
-            _subscribeResponseParser = subscribeResponseParser;
+            _subscribeResponseReader = subscribeResponseReader;
             _unsubscribeRequestFactory = unsubscribeRequestFactory;
-            _unsubscribeResponseDecoder = unsubscribeResponseDecoder;
+            _unsubscribeResponseReader = unsubscribeResponseReader;
             _eventHandler = eventHandler;
             State = state;
         }
@@ -87,7 +90,7 @@ namespace Hazelcast.Clustering
         /// because it is bound to a client and just dies when the client dies. It will not have any
         /// associated client subscriptions.</para>
         /// </remarks>
-        internal ClusterSubscription(Action<ClientMessage, object> eventHandler)
+        internal ClusterSubscription(Func<ClientMessage, object, CancellationToken, ValueTask> eventHandler)
         {
             _eventHandler = eventHandler;
         }
@@ -131,7 +134,7 @@ namespace Hazelcast.Clustering
         /// <returns>Whether the client subscription was added, and its server identifier.</returns>
         public (bool, Guid) TryAddClientSubscription(ClientMessage message, Client client)
         {
-            var serverSubscriptionId = _subscribeResponseParser(message, State);
+            var serverSubscriptionId = _subscribeResponseReader(message, State);
 
             bool active;
             lock (_activeLock)
@@ -164,22 +167,20 @@ namespace Hazelcast.Clustering
         /// Handles an event message.
         /// </summary>
         /// <param name="eventMessage">The event message.</param>
-        public void Handle(ClientMessage eventMessage)
+        public async ValueTask HandleAsync(ClientMessage eventMessage, CancellationToken cancellationToken)
         {
-            if (!_active)
-                return;
-
-            _eventHandler(eventMessage, State);
+            if (!_active) return;
+            await _eventHandler(eventMessage, State, cancellationToken).CAF();
         }
 
         /// <summary>
-        /// Decodes the unsubscribe response.
+        /// Reads the unsubscribe response.
         /// </summary>
         /// <param name="message">The unsubscribe response.</param>
         /// <returns>Whether the operation was successful.</returns>
-        public bool DecodeUnsubscribeResponse(ClientMessage message)
+        public bool ReadUnsubscribeResponse(ClientMessage message)
         {
-            return _unsubscribeResponseDecoder(message, State);
+            return _unsubscribeResponseReader(message, State);
         }
 
         /// <inheritdoc />

@@ -90,7 +90,7 @@ namespace Hazelcast.NearCaching
         private async ValueTask FetchMetadataAsync(CancellationToken cancellationToken)
         {
             var names = new List<string>();
-            
+
             await foreach (var (key, value) in _caches)
                 names.Add(value.Name);
 
@@ -158,7 +158,7 @@ namespace Hazelcast.NearCaching
         {
             try
             {
-                baseNearCache.Init();
+                await baseNearCache.InitializeAsync().CAF(); // FIXME CANCELLATION
                 var nearCache = baseNearCache as NearCache;
 
                 var repairingHandler = nearCache?.RepairingHandler;

@@ -15,6 +15,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Hazelcast.Core;
 
 namespace Hazelcast.Messaging
 {
@@ -163,17 +164,17 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Determines whether the message is backup-aware.
         /// </summary>
-        public bool IsBackupAware => Flags.Has(ClientMessageFlags.BackupAware);
+        public bool IsBackupAware => Flags.HasAll(ClientMessageFlags.BackupAware);
 
         /// <summary>
         /// Determines whether the message carries a backup event.
         /// </summary>
-        public bool IsBackupEvent => Flags.Has(ClientMessageFlags.BackupEvent);
+        public bool IsBackupEvent => Flags.HasAll(ClientMessageFlags.BackupEvent);
 
         /// <summary>
         /// Determines whether the message carries an event.
         /// </summary>
-        public bool IsEvent => Flags.Has(ClientMessageFlags.Event);
+        public bool IsEvent => Flags.HasAll(ClientMessageFlags.Event);
 
         /// <summary>
         /// Gets or sets the message type.

@@ -13,49 +13,27 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.Clustering
 {
-    internal class ClusterMemberLifecycleEventHandler : IClusterEventHandler
+    internal class ClusterMemberLifecycleEventHandler : ClusterEventHandlerBase<ClusterMemberLifecycleEventArgs>
     {
-        private readonly Action<Cluster, ClusterMemberLifecycleEventArgs> _handler;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterObjectLifecycleEventHandler"/> class.
         /// </summary>
         /// <param name="eventType">The type of the event.</param>
         /// <param name="handler">An action to execute</param>
-        public ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType eventType, Action<Cluster, ClusterMemberLifecycleEventArgs> handler)
+        public ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType eventType, Func<Cluster, ClusterMemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
+            : base(handler)
         {
             EventType = eventType;
-            _handler = handler;
         }
 
         /// <summary>
         /// Gets the type of the event.
         /// </summary>
         public ClusterMemberLifecycleEventType EventType { get; }
-
-        /// <summary>
-        /// Handles the event.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="member">The member.</param>
-        /// <param name="serviceName">The unique name of the service managing the object.</param>
-        /// <param name="name">The unique name of the object.</param>
-        public void Handle(Cluster sender, MemberInfo member)
-            => _handler(sender, CreateEventArgs(member));
-
-        public void Handle(Cluster sender, ClusterMemberLifecycleEventArgs args)
-            => _handler(sender, args);
-
-        /// <summary>
-        /// Creates event arguments.
-        /// </summary>
-        /// <param name="member">The member.</param>
-        /// <returns>Event arguments.</returns>
-        private static ClusterMemberLifecycleEventArgs CreateEventArgs(MemberInfo member)
-            => new ClusterMemberLifecycleEventArgs(member);
     }
 }

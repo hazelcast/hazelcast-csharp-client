@@ -20,16 +20,6 @@ namespace Hazelcast.Messaging
     public static class FrameFlagsExtensions
     {
         /// <summary>
-        /// Determines whether all the specified flags are set in the current instance.
-        /// </summary>
-        /// <param name="value">The instance.</param>
-        /// <param name="flags">The flags</param>
-        /// <returns>True if all specified flags are set.</returns>
-        public static bool Has(this FrameFlags value, FrameFlags flags)
-            // Enum.HasFlag is slower
-            => ((ushort) value & (ushort) flags) == (ushort) flags;
-
-        /// <summary>
         /// Converts the value of a <see cref="FrameFlags"/> instance to its equivalent string representation.
         /// </summary>
         /// <param name="value">The value.</param>

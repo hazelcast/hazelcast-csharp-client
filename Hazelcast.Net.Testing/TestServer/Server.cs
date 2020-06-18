@@ -16,6 +16,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
@@ -136,7 +137,7 @@ namespace Hazelcast.Testing.TestServer
             await connection.SendAsync(eventMessage).CAF();
         }
 
-        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
+        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage, CancellationToken cancellationToken)
         {
             var correlationId = requestMessage.CorrelationId;
 

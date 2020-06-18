@@ -124,22 +124,22 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Determines whether the frame is a structure end frame.
         /// </summary>
-        public bool IsEndStruct => Flags.Has(FrameFlags.EndStruct);
+        public bool IsEndStruct => Flags.HasAll(FrameFlags.EndStruct);
 
         /// <summary>
         /// Determines whether the frame is a structure begin frame.
         /// </summary>
-        public bool IsBeginStruct => Flags.Has(FrameFlags.BeginStruct);
+        public bool IsBeginStruct => Flags.HasAll(FrameFlags.BeginStruct);
 
         /// <summary>
         /// Determines whether the frame is a null frame.
         /// </summary>
-        public bool IsNull => Flags.Has(FrameFlags.Null);
+        public bool IsNull => Flags.HasAll(FrameFlags.Null);
 
         /// <summary>
         /// Determines whether the frame is a final frame.
         /// </summary>
-        public bool IsFinal => Flags.Has(FrameFlags.Final);
+        public bool IsFinal => Flags.HasAll(FrameFlags.Final);
 
         /// <summary>
         /// Shallow clone the frame.

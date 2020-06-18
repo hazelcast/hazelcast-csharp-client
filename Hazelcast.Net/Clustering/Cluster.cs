@@ -129,6 +129,7 @@ namespace Hazelcast.Clustering
 
             _addressProvider = new AddressProvider(options.Networking, loggerFactory);
             _heartbeat = new Heartbeat(this, options.Heartbeat, loggerFactory);
+            _heartbeat.Start(_clusterCancellation.Token); // FIXME CANCELLATION AND STUFF
 
             Name = string.IsNullOrWhiteSpace(clusterName) ? "dev" : clusterName;
             ClientName = string.IsNullOrWhiteSpace(clientName)
@@ -237,11 +238,22 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            var tasks = new List<Task>();
-
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
+            // stop heartbeat
+            try
+            {
+                // TODO: make it a task just like the others
+                await _heartbeat.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Caught an exception while disposing the heartbeat.");
+            }
+
+            // stop background tasks
+            var tasks = new List<Task>();
             using (await _clusterLock.AcquireAsync().CAF())
             {
                 _clusterCancellation.Cancel();
@@ -253,7 +265,16 @@ namespace Hazelcast.Clustering
                 if (_clusterMembersTask != null)
                     tasks.Add(_clusterMembersTask);
             }
+            try
+            {
+                await Task.WhenAll(tasks).CAF();
+            }
+            catch (OperationCanceledException)
+            {
+                // expected
+            }
 
+            // terminate all clients
             foreach (var (_, client) in _clients)
             {
                 try
@@ -264,24 +285,6 @@ namespace Hazelcast.Clustering
                 {
                     _logger.LogWarning(e, "Caught an exception while disposing a client.");
                 }
-            }
-
-            try
-            {
-                await Task.WhenAll(tasks).CAF();
-            }
-            catch (OperationCanceledException)
-            {
-                // expected
-            }
-
-            try
-            {
-                await _heartbeat.DisposeAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Caught an exception while disposing the heartbeat.");
             }
 
             _clusterCancellation.Dispose();

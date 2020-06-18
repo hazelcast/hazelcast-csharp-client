@@ -15,7 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -41,12 +43,12 @@ namespace Hazelcast.NearCaching
         /// </remarks>
         public RepairingHandler RepairingHandler { get; private set; }
 
-        public override void Init()
+        public override async ValueTask InitializeAsync()
         {
             if (InvalidateOnChange)
             {
                 RepairingHandler = new RepairingHandler(Cluster.ClientId, this, _maxToleratedMissCount, Cluster.Partitioner, SerializationService, LoggerFactory);
-                RegisterInvalidateListener();
+                await RegisterInvalidateListenerAsync().CAF();
             }
         }
 
@@ -67,15 +69,18 @@ namespace Hazelcast.NearCaching
             return entry.Guid != latestMetaData.Guid || entry.Sequence < latestMetaData.StaleSequence;
         }
 
-        private void HandleIMapBatchInvalidationEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids,
-            IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
+        private ValueTask HandleIMapBatchInvalidationEventAsync(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences, CancellationToken cancellationToken)
         {
+            // TODO: consider making RepairingHandler async
             RepairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
+            return default;
         }
 
-        private void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
+        private ValueTask HandleIMapInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence, CancellationToken cancellationToken)
         {
+            // TODO: consider making RepairingHandler async
             RepairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
+            return default;
         }
 
         private void InitInvalidationMetadata(NearCacheEntry newEntry)
@@ -92,31 +97,19 @@ namespace Hazelcast.NearCaching
         }
 
 
-        private void RegisterInvalidateListener()
+        private async ValueTask RegisterInvalidateListenerAsync()
         {
             try
             {
-                /*
-                var request =
-                    MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) EntryEventType.Invalidation, false);
-
-                void Handle(ClientMessage message)
-                    => MapAddNearCacheInvalidationListenerCodec.EventHandler.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent);
-
-                RegistrationId = Client.ListenerService.RegisterListener(request,
-                    message => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
-                    id => MapRemoveEntryListenerCodec.EncodeRequest(Name, id), (Action<ClientMessage>) Handle);
-                */
-
                 var subscription = new ClusterSubscription(
                     MapAddNearCacheInvalidationListenerCodec.EncodeRequest(Name, (int) MapEventTypes.Invalidated, false),
                     (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                     (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
                     (message, state) => MapRemoveEntryListenerCodec.DecodeResponse(message).Response,
-                    (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEvent(message, HandleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent, LoggerFactory),
+                    (message, state, cancellationToken) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync, LoggerFactory, cancellationToken),
                     new EventState { Name = Name });
 
-                Cluster.InstallSubscriptionAsync(subscription, CancellationToken.None).Wait(); // FIXME: async oops!
+                await Cluster.InstallSubscriptionAsync(subscription, CancellationToken.None).CAF();
                 RegistrationId = subscription.Id;
             }
             catch (Exception e)

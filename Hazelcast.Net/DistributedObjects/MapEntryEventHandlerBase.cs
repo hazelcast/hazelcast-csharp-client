@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
@@ -26,9 +28,9 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="TArgs">The actual type of the arguments.</typeparam>
     internal abstract class MapEntryEventHandlerBase<TKey, TValue, TSender, TArgs> : IMapEntryEventHandler<TKey, TValue, TSender>
     {
-        private readonly Action<TSender, TArgs> _handler;
+        private readonly Func<TSender, TArgs, CancellationToken, ValueTask> _handler;
 
-        protected MapEntryEventHandlerBase(MapEventTypes eventType, Action<TSender, TArgs> handler)
+        protected MapEntryEventHandlerBase(MapEventTypes eventType, Func<TSender, TArgs, CancellationToken, ValueTask> handler)
         {
             EventType = eventType;
             _handler = handler;
@@ -36,8 +38,8 @@ namespace Hazelcast.DistributedObjects
 
         public MapEventTypes EventType { get; }
 
-        public void Handle(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries)
-            => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergeValue, eventType, numberOfAffectedEntries));
+        public ValueTask HandleAsync(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries, CancellationToken cancellationToken)
+            => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergeValue, eventType, numberOfAffectedEntries), cancellationToken);
 
         protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, MapEventTypes eventType, int numberOfAffectedEntries);
     }

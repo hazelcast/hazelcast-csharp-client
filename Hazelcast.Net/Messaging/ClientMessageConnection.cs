@@ -37,7 +37,7 @@ namespace Hazelcast.Messaging
         private readonly SemaphoreSlim _writer;
         private readonly ILogger _logger;
 
-        private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
+        private Func<ClientMessageConnection, ClientMessage, CancellationToken, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
         private Frame _currentFrame;
         private bool _finalFrame;
@@ -63,7 +63,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets or sets the function that handles messages.
         /// </summary>
-        public Func<ClientMessageConnection, ClientMessage, ValueTask> OnReceiveMessage
+        public Func<ClientMessageConnection, ClientMessage, CancellationToken, ValueTask> OnReceiveMessage
         {
             get => _onReceiveMessage;
             set
@@ -132,20 +132,20 @@ namespace Hazelcast.Messaging
             var message = _currentMessage;
             _currentMessage = null;
             HConsole.WriteLine(this, "Handle fragment");
-            await HandleFragmentAsync(message).CAF();
+            await HandleFragmentAsync(message, default).CAF(); // FIXME CANCELLATION
 
             return true;
         }
 
-        private async ValueTask HandleFragmentAsync(ClientMessage fragment)
+        private async ValueTask HandleFragmentAsync(ClientMessage fragment, CancellationToken cancellationToken)
         {
-            if (fragment.Flags.Has(ClientMessageFlags.Unfragmented))
+            if (fragment.Flags.HasAll(ClientMessageFlags.Unfragmented))
             {
                 HConsole.WriteLine(this, "Handle message");
 
                 try
                 {
-                    await _onReceiveMessage(this, fragment).CAF();
+                    await _onReceiveMessage(this, fragment, cancellationToken).CAF();
                 }
                 catch (Exception e)
                 {
@@ -162,7 +162,7 @@ namespace Hazelcast.Messaging
 
             var fragmentId = fragment.FirstFrame.ReadFragmentId();
 
-            if (fragment.Flags.Has(ClientMessageFlags.BeginFragment))
+            if (fragment.Flags.HasAll(ClientMessageFlags.BeginFragment))
             {
                 // new message
                 if (_messages.TryGetValue(fragmentId, out _))
@@ -174,7 +174,7 @@ namespace Hazelcast.Messaging
                 // start accumulating
                 _messages[fragmentId] = new ClientMessage().AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
             }
-            else if (fragment.Flags.Has(ClientMessageFlags.EndFragment))
+            else if (fragment.Flags.HasAll(ClientMessageFlags.EndFragment))
             {
                 // completed message
                 if (!_messages.TryGetValue(fragmentId, out var message))
@@ -192,7 +192,7 @@ namespace Hazelcast.Messaging
 
                 try
                 {
-                    await _onReceiveMessage(this, message).CAF();
+                    await _onReceiveMessage(this, message, cancellationToken).CAF();
                 }
                 catch (Exception e)
                 {

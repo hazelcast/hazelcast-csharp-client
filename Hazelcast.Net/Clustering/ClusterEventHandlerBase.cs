@@ -15,17 +15,19 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Data;
 
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Clustering
 {
-    internal sealed class MapClearedEventHandler<TKey, TValue, TSender> : MapEventHandlerBase<TKey, TValue, TSender, MapClearedEventArgs>
+    internal abstract class ClusterEventHandlerBase<TArgs> : IClusterEventHandler
     {
-        public MapClearedEventHandler(Func<TSender, MapClearedEventArgs, CancellationToken, ValueTask> handler)
-            : base(MapEventTypes.AllCleared, handler)
-        { }
+        private readonly Func<Cluster, TArgs, CancellationToken, ValueTask> _handler;
 
-        protected override MapClearedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries)
-            => new MapClearedEventArgs(member, numberOfAffectedEntries);
+        protected ClusterEventHandlerBase(Func<Cluster, TArgs, CancellationToken, ValueTask> handler)
+        {
+            _handler = handler;
+        }
+
+        public ValueTask HandleAsync(Cluster cluster, TArgs args, CancellationToken cancellationToken)
+            => _handler(cluster, args, cancellationToken);
     }
 }

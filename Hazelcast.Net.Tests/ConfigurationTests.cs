@@ -170,7 +170,7 @@ namespace Hazelcast.Tests
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);
             Assert.AreEqual("token", cloudOptions.DiscoveryToken);
-            Assert.AreEqual("url", cloudOptions.UrlBase);
+            Assert.AreEqual(new Uri("http://cloud"), cloudOptions.UrlBase);
 
             var socketOptions = options.Socket;
             Assert.AreEqual(1000, socketOptions.BufferSizeKiB);

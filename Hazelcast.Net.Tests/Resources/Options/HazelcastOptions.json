@@ -112,11 +112,11 @@
       "cloud": {
         "enabled": true,
         "discoveryToken": "token",
-        "urlBase": "url"
+        "urlBase": "http://cloud"
       },
 
       "socket": {
-        "bufferSize": 1000, // UNIT?
+        "bufferSizeKiB": 1000,
         "keepAlive": false,
         "lingerSeconds": 1001,
         "reuseAddress": false,

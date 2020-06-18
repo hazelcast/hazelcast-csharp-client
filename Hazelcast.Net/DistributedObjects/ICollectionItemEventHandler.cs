@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
@@ -34,6 +36,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="sender">The <see cref="IHCollection{T}"/> that triggered the event.</param>
         /// <param name="member">The member.</param>
         /// <param name="item">The item.</param>
-        void Handle(IHCollection<T> sender, MemberInfo member, Lazy<T> item);
+        /// <param name="cancellationToken">A cancellation token.</param>
+        ValueTask HandleAsync(IHCollection<T> sender, MemberInfo member, Lazy<T> item, CancellationToken cancellationToken);
     }
 }

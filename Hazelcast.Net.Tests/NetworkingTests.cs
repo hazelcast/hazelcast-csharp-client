@@ -391,7 +391,8 @@ namespace Hazelcast.Tests
         {
             // need to start a real server (not the RC thing!)
 
-            var address = NetworkAddress.Parse("sgay-l4");
+            //var address = NetworkAddress.Parse("sgay-l4");
+            var address = NetworkAddress.Parse("localhost");
 
             HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
@@ -445,7 +446,8 @@ namespace Hazelcast.Tests
 
             var options = new HazelcastOptions();
 
-            options.Networking.Addresses.Add("sgay-l4");
+            //options.Networking.Addresses.Add("sgay-l4");
+            options.Networking.Addresses.Add("localhost");
             options.Authentication.Authenticator.Creator = ()
                 => new Authenticator(options.Authentication);
 

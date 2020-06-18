@@ -13,19 +13,15 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.Clustering
 {
-    internal class PartitionsUpdatedEventHandler : IClusterEventHandler
+    internal class PartitionsUpdatedEventHandler : ClusterEventHandlerBase<EventArgs>
     {
-        private readonly Action<Cluster, EventArgs> _handler;
-
-        public PartitionsUpdatedEventHandler(Action<Cluster, EventArgs> handler)
-        {
-            _handler = handler;
-        }
-
-        public void Handle(Cluster cluster, EventArgs args)
-            => _handler(cluster, args);
+        public PartitionsUpdatedEventHandler(Func<Cluster, EventArgs, CancellationToken, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

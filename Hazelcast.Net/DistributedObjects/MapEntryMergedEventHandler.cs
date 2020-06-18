@@ -13,13 +13,15 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEntryMergedEventHandler<TKey, TValue, TSender> : MapEntryEventHandlerBase<TKey, TValue, TSender, MapEntryMergedEventArgs<TKey, TValue>>
     {
-        public MapEntryMergedEventHandler(Action<TSender, MapEntryMergedEventArgs<TKey, TValue>> handler)
+        public MapEntryMergedEventHandler(Func<TSender, MapEntryMergedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
             : base(MapEventTypes.Merged, handler)
         { }
 

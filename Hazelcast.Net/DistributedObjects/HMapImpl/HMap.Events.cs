@@ -27,8 +27,6 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 {
     internal partial class HMap<TKey, TValue> // Events
     {
-        // TODO: could any of these events be ASYNC?!
-
         private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
@@ -62,7 +60,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
                 ReadSubscribeResponse,
                 CreateUnsubscribeRequest,
                 ReadUnsubscribeResponse,
-                HandleEvent,
+                HandleEventAsync,
                 new MapSubscriptionState(mode, Name, handlers));
 
             await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
@@ -129,13 +127,13 @@ namespace Hazelcast.DistributedObjects.HMapImpl
             public int Mode { get; }
         }
 
-        private void HandleEvent(ClientMessage eventMessage, object state)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
         {
             var sstate = ToSafeState<MapSubscriptionState>(state);
 
-            void HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
+            async ValueTask HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, CancellationToken token)
             {
-                var eventType = (MapEventTypes)eventTypeData;
+                var eventType = (MapEventTypes) eventTypeData;
                 if (eventType == MapEventTypes.Nothing) return;
 
                 var member = Cluster.GetMember(memberId);
@@ -147,40 +145,27 @@ namespace Hazelcast.DistributedObjects.HMapImpl
                 // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                 foreach (var handler in sstate.Handlers)
                 {
-                    if (handler.EventType.HasFlag(eventType)) // FIXME has any or...
+                    if (handler.EventType.HasAll(eventType))
                     {
-                        switch (handler)
+                        var task = handler switch
                         {
-                            case IMapEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler:
-                                entryHandler.Handle(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries);
-                                break;
-                            case IMapEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler:
-                                mapHandler.Handle(this, member, numberOfAffectedEntries);
-                                break;
-                            default:
-                                throw new NotSupportedException();
-                        }
+                            IMapEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, token),
+                            IMapEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, token),
+                            _ => throw new NotSupportedException()
+                        };
+                        await task.CAF();
                     }
                 }
             }
 
-            switch (sstate.Mode)
+            return sstate.Mode switch
             {
-                case 0:
-                    MapAddEntryListenerCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                case 1:
-                    MapAddEntryListenerToKeyCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                case 2:
-                    MapAddEntryListenerWithPredicateCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                case 3:
-                    MapAddEntryListenerToKeyWithPredicateCodec.HandleEvent(eventMessage, HandleEntryEvent, LoggerFactory);
-                    break;
-                default:
-                    throw new NotSupportedException();
-            }
+                0 => MapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
+                1 => MapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
+                2 => MapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
+                3 => MapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
+                _ => throw new NotSupportedException()
+            };
         }
 
         private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)

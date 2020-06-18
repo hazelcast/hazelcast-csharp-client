@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
@@ -29,6 +31,17 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
         public TopicEventHandlers<T> Message(Action<IHTopic<T>, TopicMessageEventArgs<T>> handler)
+        {
+            Add(new TopicMessageEventHandler<T>(handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when a message is submitted.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public TopicEventHandlers<T> Message(Func<IHTopic<T>, TopicMessageEventArgs<T>, CancellationToken, ValueTask> handler)
         {
             Add(new TopicMessageEventHandler<T>(handler));
             return this;

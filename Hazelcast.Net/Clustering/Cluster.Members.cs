@@ -120,16 +120,16 @@ namespace Hazelcast.Clustering
             HConsole.WriteLine(this, "subscribe");
 
             // handles the event
-            void HandleEvent(ClientMessage message, object state)
-                => ClientAddClusterViewListenerCodec.HandleEvent(message,
+            ValueTask HandleEventAsync(ClientMessage message, object state, CancellationToken token)
+                => ClientAddClusterViewListenerCodec.HandleEventAsync(message,
                     HandleMemberViewEvent,
-                    (version, partitions) => HandlePartitionViewEvent(client.Id, version, partitions),
-                    _loggerFactory);
+                    (version, partitions, tk) => HandlePartitionViewEvent(client.Id, version, partitions, tk),
+                    _loggerFactory, token);
 
             try
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
-                _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEvent);
+                _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await SendToClientAsync(subscribeRequest, client, correlationId, cancellationToken).CAF();
                 HConsole.WriteLine(this, "subscribed");
                 return true;
@@ -162,7 +162,7 @@ namespace Hazelcast.Clustering
         /// <param name="clientId">The unique identifier of the client.</param>
         /// <param name="version">The version.</param>
         /// <param name="partitions">The partitions.</param>
-        private void HandlePartitionViewEvent(Guid clientId, int version, IEnumerable<KeyValuePair<Guid, IList<int>>> partitions)
+        private async ValueTask HandlePartitionViewEvent(Guid clientId, int version, IEnumerable<KeyValuePair<Guid, IList<int>>> partitions, CancellationToken cancellationToken)
         {
             Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
 
@@ -170,7 +170,9 @@ namespace Hazelcast.Clustering
             //if (Interlocked.CompareExchange(ref _firstPartitionsViewed, 1, 0) == 0)
             //    _firstPartitionsView.Release();
 
-            OnPartitionsUpdated();
+            // raise event
+            // On... does not throw
+            await OnPartitionsUpdated(cancellationToken);
         }
 
         /// <summary>
@@ -178,7 +180,8 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="version">The version.</param>
         /// <param name="members">The members.</param>
-        private void HandleMemberViewEvent(int version, ICollection<MemberInfo> members)
+        /// <param name="cancellationToken">A cancellation token.</param>
+        private async ValueTask HandleMemberViewEvent(int version, ICollection<MemberInfo> members, CancellationToken cancellationToken)
         {
             // get a new table
             var table = new MemberTable(version, members);
@@ -222,7 +225,7 @@ namespace Hazelcast.Clustering
                         HConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
                         if (_clients.TryGetValue(member.Id, out var client))
-                            client.Die(); // dies in the background, will self-removed once down
+                            await client.DieAsync().CAF(); // TODO: should die in the background, will self-removed once down
                         break;
 
                     case 2: // new but not old = added
@@ -238,9 +241,9 @@ namespace Hazelcast.Clustering
                 }
             }
 
-            // raise events
+            // raise events (On... does not throw)
             foreach (var (eventType, args) in eventArgs)
-                OnMemberLifecycleEvent(eventType, args);
+                await OnMemberLifecycleEvent(eventType, args, cancellationToken).CAF();
         }
 
         /// <summary>

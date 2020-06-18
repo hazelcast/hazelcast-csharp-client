@@ -13,23 +13,15 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.Clustering
 {
-    internal class PartitionLostEventHandler : IClusterEventHandler
+    internal class PartitionLostEventHandler : ClusterEventHandlerBase<PartitionLostEventArgs>
     {
-        private readonly Action<Cluster, PartitionLostEventArgs> _handler;
-
-        public PartitionLostEventHandler(Action<Cluster, PartitionLostEventArgs> handler)
-        {
-            _handler = handler;
-        }
-
-        public void Handle(Cluster cluster, int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
-            => _handler(cluster, new PartitionLostEventArgs(partitionId, lostBackupCount, isAllReplicasInPartitionLost, member));
-
-        public void Handle(Cluster cluster, PartitionLostEventArgs args)
-            => _handler(cluster, args);
+        public PartitionLostEventHandler(Func<Cluster, PartitionLostEventArgs, CancellationToken, ValueTask> handler)
+        : base(handler)
+        { }
     }
 }
