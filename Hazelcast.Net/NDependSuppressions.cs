@@ -21,6 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 // and should not be compiled into the final Release version that ships.
 
 // scope can be: deep module namespace type method field
+// and also: namespaceAndDescendants
 //
 // If no scope is specified, only issues related to code element tagged will
 // be suppressed. For example when you suppress issues on a class, it suppresses
@@ -113,11 +114,35 @@ using System.Diagnostics.CodeAnalysis;
     Justification = "Accepted.")]
 [assembly: SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation",
     Target = "System",
-    Scope = "namespaceAndDescendants namespace type method field",
+    Scope = "deep",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation",
+    Target = "System.IO",
+    Scope = "deep",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation",
+    Target = "System.Buffers",
+    Scope = "deep",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation",
+    Target = "System.Threading.Tasks",
+    Scope = "deep",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation",
+    Target = "System.Collections.Generic",
+    Scope = "deep",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2103:NamespaceNameShouldCorrespondToFileLocation",
+    Target = "System.Diagnostics.CodeAnalysis",
+    Scope = "deep",
     Justification = "Accepted.")]
 [assembly: SuppressMessage("NDepend", "ND2104:TypesWithSourceFilesStoredInTheSameDirectoryShouldBeDeclaredInTheSameNamespace",
     Target = "System",
-    Scope = "namespaceAndDescendants namespace type method field",
+    Scope = "deep",
+    Justification = "Accepted.")]
+[assembly: SuppressMessage("NDepend", "ND2104:TypesWithSourceFilesStoredInTheSameDirectoryShouldBeDeclaredInTheSameNamespace",
+    Target = "System.Diagnostics.CodeAnalysis",
+    Scope = "deep",
     Justification = "Accepted.")]
 [assembly: SuppressMessage("NDepend", "ND2102:AvoidDefiningMultipleTypesInASourceFile",
     Target = "System.Diagnostics.CodeAnalysis",
