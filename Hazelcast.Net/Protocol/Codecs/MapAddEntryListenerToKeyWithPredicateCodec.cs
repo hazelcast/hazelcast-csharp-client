@@ -24,6 +24,8 @@
 // ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -93,7 +95,7 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-        public static void HandleEvent(ClientMessage clientMessage, HandleEntryEvent handleEntryEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleEntryEventAsync handleEntryEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
         {
             var messageType = clientMessage.MessageType;
             var iterator = clientMessage.GetEnumerator();
@@ -106,13 +108,13 @@ namespace Hazelcast.Protocol.Codecs
                 var @value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var oldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var mergingValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                handleEntryEvent(key, @value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
-                return;
+                return handleEntryEventAsync(key, @value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries, cancellationToken);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleEntryEvent(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries);
+        public delegate ValueTask HandleEntryEventAsync(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries, CancellationToken cancellationToken);
     }
 }
 

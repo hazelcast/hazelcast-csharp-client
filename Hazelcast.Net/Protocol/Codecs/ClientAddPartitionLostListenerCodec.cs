@@ -24,6 +24,8 @@
 // ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -85,7 +87,7 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-        public static void HandleEvent(ClientMessage clientMessage, HandlePartitionLostEvent handlePartitionLostEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandlePartitionLostEventAsync handlePartitionLostEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
         {
             var messageType = clientMessage.MessageType;
             var iterator = clientMessage.GetEnumerator();
@@ -94,13 +96,13 @@ namespace Hazelcast.Protocol.Codecs
                 var partitionId =  initialFrame.Bytes.ReadInt(EventPartitionLostPartitionIdFieldOffset);
                 var lostBackupCount =  initialFrame.Bytes.ReadInt(EventPartitionLostLostBackupCountFieldOffset);
                 var source =  initialFrame.Bytes.ReadGuid(EventPartitionLostSourceFieldOffset);
-                handlePartitionLostEvent(partitionId, lostBackupCount, source);
-                return;
+                return handlePartitionLostEventAsync(partitionId, lostBackupCount, source, cancellationToken);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandlePartitionLostEvent(int partitionId, int lostBackupCount, Guid source);
+        public delegate ValueTask HandlePartitionLostEventAsync(int partitionId, int lostBackupCount, Guid source, CancellationToken cancellationToken);
     }
 }
 

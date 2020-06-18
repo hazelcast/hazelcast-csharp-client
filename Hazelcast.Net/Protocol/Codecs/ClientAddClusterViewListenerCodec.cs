@@ -24,6 +24,8 @@
 // ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -79,7 +81,7 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-        public static void HandleEvent(ClientMessage clientMessage, HandleMembersViewEvent handleMembersViewEvent, HandlePartitionsViewEvent handlePartitionsViewEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleMembersViewEventAsync handleMembersViewEventAsync, HandlePartitionsViewEventAsync handlePartitionsViewEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
         {
             var messageType = clientMessage.MessageType;
             var iterator = clientMessage.GetEnumerator();
@@ -87,22 +89,21 @@ namespace Hazelcast.Protocol.Codecs
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadInt(EventMembersViewVersionFieldOffset);
                 var memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
-                handleMembersViewEvent(version, memberInfos);
-                return;
+                return handleMembersViewEventAsync(version, memberInfos, cancellationToken);
             }
             if (messageType == EventPartitionsViewMessageType) {
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadInt(EventPartitionsViewVersionFieldOffset);
                 var partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
-                handlePartitionsViewEvent(version, partitions);
-                return;
+                return handlePartitionsViewEventAsync(version, partitions, cancellationToken);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleMembersViewEvent(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos);
+        public delegate ValueTask HandleMembersViewEventAsync(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos, CancellationToken cancellationToken);
 
-        public delegate void HandlePartitionsViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions);
+        public delegate ValueTask HandlePartitionsViewEventAsync(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions, CancellationToken cancellationToken);
     }
 }
 

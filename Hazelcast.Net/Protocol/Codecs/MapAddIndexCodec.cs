@@ -24,6 +24,8 @@
 // ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -31,7 +33,6 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
-using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -47,7 +48,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
-        public static ClientMessage EncodeRequest(string name, IndexConfig indexConfig)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Data.IndexConfig indexConfig)
         {
             var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;

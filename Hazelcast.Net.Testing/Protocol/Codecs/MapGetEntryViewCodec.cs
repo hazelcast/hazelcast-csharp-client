@@ -32,7 +32,6 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
-using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -70,7 +69,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long ThreadId { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
             var clientMessage = new ClientMessage();
@@ -96,14 +95,14 @@ namespace Hazelcast.Protocol.Codecs
             request.Key = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public MapEntry<IData, IData> Response { get; set; }
+            public Hazelcast.Data.MapEntry<IData, IData> Response { get; set; }
 
             /// <summary>
             /// Last set max idle in millis.
@@ -111,7 +110,7 @@ namespace Hazelcast.Protocol.Codecs
             public long MaxIdle { get; set; }
         }
 
-        public static ClientMessage EncodeResponse(MapEntry<IData, IData> response, long maxIdle)
+        public static ClientMessage EncodeResponse(Hazelcast.Data.MapEntry<IData, IData> response, long maxIdle)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
@@ -121,7 +120,7 @@ namespace Hazelcast.Protocol.Codecs
             CodecUtil.EncodeNullable(clientMessage, response, SimpleEntryViewCodec.Encode);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
@@ -132,6 +131,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-
+    
     }
 }

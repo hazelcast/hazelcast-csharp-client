@@ -32,7 +32,6 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
-using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -59,10 +58,10 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Index configuration.
             ///</summary>
-            public IndexConfig IndexConfig { get; set; }
+            public Hazelcast.Data.IndexConfig IndexConfig { get; set; }
         }
-
-        public static ClientMessage EncodeRequest(string name, IndexConfig indexConfig)
+    
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Data.IndexConfig indexConfig)
         {
             var clientMessage = new ClientMessage();
             clientMessage.IsRetryable = false;
@@ -86,7 +85,7 @@ namespace Hazelcast.Protocol.Codecs
             request.IndexConfig = IndexConfigCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
         }
@@ -99,7 +98,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
@@ -109,6 +108,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-
+    
     }
 }

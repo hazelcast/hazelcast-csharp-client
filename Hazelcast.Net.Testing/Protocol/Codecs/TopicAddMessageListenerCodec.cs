@@ -67,7 +67,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool LocalOnly { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, bool localOnly)
         {
             var clientMessage = new ClientMessage();
@@ -91,7 +91,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -110,7 +110,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
@@ -133,7 +133,7 @@ namespace Hazelcast.Protocol.Codecs
             DataCodec.Encode(clientMessage, item);
             return clientMessage;
         }
-
+    
         public static void HandleEvent(ClientMessage clientMessage, HandleTopicEvent handleTopicEvent, ILoggerFactory loggerFactory)
         {
             var messageType = clientMessage.MessageType;

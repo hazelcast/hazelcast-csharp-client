@@ -24,6 +24,8 @@
 // ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -31,7 +33,6 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Logging;
 using Hazelcast.Clustering;
-using Hazelcast.Data;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -72,7 +73,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public MapEntry<IData, IData> Response { get; set; }
+            public Hazelcast.Data.MapEntry<IData, IData> Response { get; set; }
 
             /// <summary>
             /// Last set max idle in millis.

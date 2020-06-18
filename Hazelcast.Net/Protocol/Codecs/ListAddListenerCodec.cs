@@ -24,6 +24,8 @@
 // ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -87,7 +89,7 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-        public static void HandleEvent(ClientMessage clientMessage, HandleItemEvent handleItemEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleItemEventAsync handleItemEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
         {
             var messageType = clientMessage.MessageType;
             var iterator = clientMessage.GetEnumerator();
@@ -96,13 +98,13 @@ namespace Hazelcast.Protocol.Codecs
                 var uuid =  initialFrame.Bytes.ReadGuid(EventItemUuidFieldOffset);
                 var eventType =  initialFrame.Bytes.ReadInt(EventItemEventTypeFieldOffset);
                 var item = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                handleItemEvent(item, uuid, eventType);
-                return;
+                return handleItemEventAsync(item, uuid, eventType, cancellationToken);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleItemEvent(IData item, Guid uuid, int eventType);
+        public delegate ValueTask HandleItemEventAsync(IData item, Guid uuid, int eventType, CancellationToken cancellationToken);
     }
 }
 

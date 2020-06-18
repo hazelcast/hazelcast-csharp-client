@@ -24,6 +24,8 @@
 // ReSharper disable RedundantUsingDirective
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -91,7 +93,7 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-        public static void HandleEvent(ClientMessage clientMessage, HandleIMapInvalidationEvent handleIMapInvalidationEvent, HandleIMapBatchInvalidationEvent handleIMapBatchInvalidationEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleIMapInvalidationEventAsync handleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync handleIMapBatchInvalidationEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
         {
             var messageType = clientMessage.MessageType;
             var iterator = clientMessage.GetEnumerator();
@@ -101,8 +103,7 @@ namespace Hazelcast.Protocol.Codecs
                 var partitionUuid =  initialFrame.Bytes.ReadGuid(EventIMapInvalidationPartitionUuidFieldOffset);
                 var sequence =  initialFrame.Bytes.ReadLong(EventIMapInvalidationSequenceFieldOffset);
                 var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                handleIMapInvalidationEvent(key, sourceUuid, partitionUuid, sequence);
-                return;
+                return handleIMapInvalidationEventAsync(key, sourceUuid, partitionUuid, sequence, cancellationToken);
             }
             if (messageType == EventIMapBatchInvalidationMessageType) {
                 //empty initial frame
@@ -111,15 +112,15 @@ namespace Hazelcast.Protocol.Codecs
                 var sourceUuids = ListUUIDCodec.Decode(iterator);
                 var partitionUuids = ListUUIDCodec.Decode(iterator);
                 var sequences = ListLongCodec.Decode(iterator);
-                handleIMapBatchInvalidationEvent(keys, sourceUuids, partitionUuids, sequences);
-                return;
+                return handleIMapBatchInvalidationEventAsync(keys, sourceUuids, partitionUuids, sequences, cancellationToken);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence);
+        public delegate ValueTask HandleIMapInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence, CancellationToken cancellationToken);
 
-        public delegate void HandleIMapBatchInvalidationEvent(ICollection<IData> keys, ICollection<Guid> sourceUuids, ICollection<Guid> partitionUuids, ICollection<long> sequences);
+        public delegate ValueTask HandleIMapBatchInvalidationEventAsync(ICollection<IData> keys, ICollection<Guid> sourceUuids, ICollection<Guid> partitionUuids, ICollection<long> sequences, CancellationToken cancellationToken);
     }
 }
 
