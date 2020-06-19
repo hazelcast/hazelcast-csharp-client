@@ -85,7 +85,7 @@ namespace Hazelcast.Tests.DotNet
             Task DoSomethingWrappedSwitched3()
         {
 #if FAST_ASYNC
-            try { return 
+            try { return
 #else
             await
 #endif

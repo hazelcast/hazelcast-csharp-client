@@ -40,7 +40,7 @@ namespace Hazelcast.Predicates
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            
+
             _attributeName = input.ReadUtf();
             _value = input.ReadObject<object>();
             _equal = input.ReadBoolean();

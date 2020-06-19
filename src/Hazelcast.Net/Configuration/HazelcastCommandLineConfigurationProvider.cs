@@ -57,7 +57,7 @@ namespace Hazelcast.Configuration
                 // as mapping will take place after we have replaced the dots
 
                 if (arg.StartsWith("/hazelcast.", StringComparison.Ordinal) ||
-                    arg.StartsWith("--hazelcast.", StringComparison.Ordinal) || 
+                    arg.StartsWith("--hazelcast.", StringComparison.Ordinal) ||
                     arg.StartsWith("-hazelcast.", StringComparison.Ordinal))
                 {
                     if ((pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)

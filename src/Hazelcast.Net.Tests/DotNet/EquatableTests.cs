@@ -4,7 +4,7 @@ namespace Hazelcast.Tests.DotNet
 {
     public class EquatableTests
     {
-        // contains reference implementations of equatable and equality 
+        // contains reference implementations of equatable and equality
 
         public class ThingClass : IEquatable<ThingClass>
         {

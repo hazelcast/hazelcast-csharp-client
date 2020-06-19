@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects
         Task<TItem> TryDequeueAsync(TimeSpan timeToWait);
         Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken);
 
-        Task<int> CountAsync(TimeSpan timeout = default); 
+        Task<int> CountAsync(TimeSpan timeout = default);
         Task<int> CountAsync(CancellationToken cancellationToken);
 
         Task<TItem> DequeueAsync(TimeSpan timeout = default);

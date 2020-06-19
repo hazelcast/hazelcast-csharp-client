@@ -61,7 +61,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Interceptor { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, IData interceptor)
         {
             var clientMessage = new ClientMessage();
@@ -86,7 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Interceptor = DataCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -105,7 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             StringCodec.Encode(clientMessage, response);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
@@ -116,6 +116,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
 }

@@ -13,7 +13,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
 {
     internal class HTxMultiMap<TKey, TValue> : TransactionalDistributedObjectBase, IHTxMultiMap<TKey, TValue>
     {
-        public HTxMultiMap(string name, Cluster cluster, Client transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory) 
+        public HTxMultiMap(string name, Cluster cluster, Client transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HMultiMap.ServiceName, name, cluster, transactionClient, transactionId, serializationService, loggerFactory)
         { }
 

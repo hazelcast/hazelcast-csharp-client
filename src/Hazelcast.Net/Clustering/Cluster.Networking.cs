@@ -277,7 +277,7 @@ namespace Hazelcast.Clustering
                 // if client is not active anymore, we can't continue - there is no
                 // race condition here because the client shutdown handler also lock
                 // on _clusterStateLock
-                if (!client.Active) 
+                if (!client.Active)
                     throw new HazelcastException("Client is not active.");
 
                 if (_clients.ContainsKey(info.MemberId))

@@ -33,7 +33,7 @@ namespace Hazelcast.Messaging
         public MessagingOptions(MessagingOptions other)
         {
             if (other == null) throw new ArgumentNullException(nameof(other));
-            
+
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
             DefaultOperationTimeoutMilliseconds = other.DefaultOperationTimeoutMilliseconds;

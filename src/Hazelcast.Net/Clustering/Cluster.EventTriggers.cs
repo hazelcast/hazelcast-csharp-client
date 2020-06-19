@@ -33,9 +33,9 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         private ValueTask OnObjectLifecycleEvent(ClusterObjectLifecycleEventType eventType, ClusterObjectLifecycleEventArgs args, CancellationToken cancellationToken)
         {
-            return ForEachHandler<ClusterObjectLifecycleEventHandler, ClusterObjectLifecycleEventArgs>((handler, sender, a, token) => 
-                handler.EventType == eventType 
-                    ? handler.HandleAsync(sender, a, token) 
+            return ForEachHandler<ClusterObjectLifecycleEventHandler, ClusterObjectLifecycleEventArgs>((handler, sender, a, token) =>
+                handler.EventType == eventType
+                    ? handler.HandleAsync(sender, a, token)
                     : default,
                 args,
                 cancellationToken);
@@ -49,9 +49,9 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         private ValueTask OnMemberLifecycleEvent(ClusterMemberLifecycleEventType eventType, ClusterMemberLifecycleEventArgs args, CancellationToken cancellationToken)
         {
-            return ForEachHandler<ClusterMemberLifecycleEventHandler, ClusterMemberLifecycleEventArgs>((handler, sender, a, token) => 
-                handler.EventType == eventType 
-                    ? handler.HandleAsync(sender, a, token) 
+            return ForEachHandler<ClusterMemberLifecycleEventHandler, ClusterMemberLifecycleEventArgs>((handler, sender, a, token) =>
+                handler.EventType == eventType
+                    ? handler.HandleAsync(sender, a, token)
                     : default,
                 args,
                 cancellationToken);
@@ -101,9 +101,9 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         private ValueTask OnConnectionAdded(Client client, CancellationToken cancellationToken)
         {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) => 
-                handler.EventType == ConnectionLifecycleEventType.Added 
-                    ? handler.HandleAsync(sender, args, token) 
+            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) =>
+                handler.EventType == ConnectionLifecycleEventType.Added
+                    ? handler.HandleAsync(sender, args, token)
                     : default,
                 new ConnectionLifecycleEventArgs(client),
                 cancellationToken);
@@ -116,9 +116,9 @@ namespace Hazelcast.Clustering
         /// <param name="cancellationToken">A cancellation token.</param>
         private ValueTask OnConnectionRemoved(Client client, CancellationToken cancellationToken)
         {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) => 
-                handler.EventType == ConnectionLifecycleEventType.Removed 
-                    ? handler.HandleAsync(sender, args, token) 
+            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) =>
+                handler.EventType == ConnectionLifecycleEventType.Removed
+                    ? handler.HandleAsync(sender, args, token)
                     : default,
                 new ConnectionLifecycleEventArgs(client),
                 cancellationToken);

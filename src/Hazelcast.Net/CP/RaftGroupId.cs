@@ -66,8 +66,8 @@ namespace Hazelcast.CP
         public static bool operator !=(RaftGroupId left, RaftGroupId right) => !Equals(left, right);
 
         private static bool EqualsN(RaftGroupId left, RaftGroupId right)
-            => left.Id == right.Id && 
-               left.Seed == right.Seed && 
+            => left.Id == right.Id &&
+               left.Seed == right.Seed &&
                left.Name == right.Name;
 
         public override string ToString() => $"{nameof(Id)}: {Id}, {nameof(Seed)}: {Seed}, {nameof(Name)}: {Name}";

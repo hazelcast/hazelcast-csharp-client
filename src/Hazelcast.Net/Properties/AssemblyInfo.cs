@@ -20,4 +20,3 @@ using System.Runtime.CompilerServices;
 
 // FIXME: should we be CLSCompliant when MS is not anymore?
 //[assembly: CLSCompliant(true)]
-

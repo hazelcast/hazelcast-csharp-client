@@ -86,7 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Filter { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, long startSequence, int minCount, int maxCount, IData filter)
         {
             var clientMessage = new ClientMessage();
@@ -116,7 +116,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Filter = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -153,7 +153,7 @@ namespace Hazelcast.Protocol.Codecs
             CodecUtil.EncodeNullable(clientMessage, itemSeqs, LongArrayCodec.Encode);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
@@ -166,6 +166,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
 }

@@ -36,7 +36,7 @@ namespace Hazelcast.Predicates
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            
+
             _attributeName = input.ReadUtf();
             var size = input.ReadInt();
             _values = new object[size];

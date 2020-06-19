@@ -706,7 +706,7 @@ namespace Hazelcast.Serialization
 
             if (len <= 0) return 0;
             if (Pos >= Size) return -1;
-            
+
             if (Pos + len > Size) len = Size - Pos;
 
             Buffer.BlockCopy(Data, Pos, b, off, len);

@@ -33,7 +33,7 @@ namespace Hazelcast.DistributedObjects
 
         Task ClearAsync(TimeSpan timeout = default);
         Task ClearAsync(CancellationToken cancellationToken);
-        
+
         Task<bool> ContainsAsync(T item, TimeSpan timeout = default);
         Task<bool> ContainsAsync(T item, CancellationToken cancellationToken);
 

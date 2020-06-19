@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects
         Task LockAsync(TKey key, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Locks an entry for a specified lease time, 
+        /// Locks an entry for a specified lease time,
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="leaseTime">A time span.</param>
@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects
         Task LockForAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout = default);
 
         /// <summary>
-        /// Locks an entry for a specified lease time, 
+        /// Locks an entry for a specified lease time,
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="leaseTime">A time span.</param>
