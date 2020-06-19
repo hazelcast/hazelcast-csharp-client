@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <NDepend AppName="HzReloaded" Platform="DotNet" FileWrittenByProductVersion="2020.1.0.9404">
-  <OutputDir KeepXmlFiles="False">.\NDependOut</OutputDir>
+  <OutputDir KeepXmlFiles="False">.\temp\ndepend.out</OutputDir>
   <IDEFiles />
   <Assemblies>
     <Name>Hazelcast.Net</Name>
@@ -17,8 +17,7 @@
     <Dir>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319</Dir>
     <Dir>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\WPF</Dir>
     <Dir>C:\Users\sgay\.nuget\packages</Dir>
-    <Dir>C:\Users\Stéphane\.nuget\packages</Dir>
-    <Dir>.\Hazelcast.Net\bin\Debug\netstandard2.0</Dir>
+    <Dir>.\src\Hazelcast.Net\bin\Debug\netstandard2.0</Dir>
   </Dirs>
   <MergeCodeGeneratedByCompiler>True</MergeCodeGeneratedByCompiler>
   <ZipSourceFiles>True</ZipSourceFiles>
