@@ -41,8 +41,6 @@ namespace Hazelcast.Benchmarks
     // although the difference is not massive, the async/await is generally better, plus the
     // implementation feels cleaner
 
-    [InProcess] // because program name 'hb' is different from csproj
-    [MemoryDiagnoser] // ensure we get memory data
     public class TimeoutWithAsyncAwaitOrContinuation
     {
         private const int TaskDelay = 1000; // ms

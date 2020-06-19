@@ -33,9 +33,6 @@ namespace Hazelcast.Benchmarks
     //
     // is is cheaper to pay for the async/await state machine that to use a continuation.
 
-
-    [InProcess]
-    [MemoryDiagnoser]
     public class DisposeWithAsyncAwaitOrContinuation
     {
         [Benchmark]

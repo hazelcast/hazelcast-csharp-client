@@ -17,16 +17,25 @@ using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using Hazelcast.Core;
-using Microsoft.Diagnostics.Tracing.Parsers.ClrPrivate;
 
 #pragma warning disable
 
 namespace Hazelcast.Benchmarks
 {
+    /// <summary>
+    /// Represents the benchmarks launcher.
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// Main.
+        /// </summary>
+        /// <param name="args">Arguments.</param>
         public static void Main(string[] args)
         {
             Console.WriteLine("Hazelcast.Net Benchmarks");
@@ -44,12 +53,18 @@ namespace Hazelcast.Benchmarks
                 return;
             }
 
-            BenchmarkRunner.Run(type);
+            var config = DefaultConfig.Instance // start with default configuration
+                //.WithArtifactsPath("./temp/benchmarkDotNet") // relocate output
+                .AddDiagnoser(MemoryDiagnoser.Default) // with memory diagnostics
+                .AddJob(Job.InProcess); // run in-process (exe name 'hb' is different from csproj name)
+
+            BenchmarkRunner.Run(type, config);
         }
     }
 
-    [InProcess] // because program name 'hb' is different from csproj
-    [MemoryDiagnoser] // ensure we get memory data
+
+
+
     public class Sample
     {
         [Benchmark] // declare a benchmark
@@ -58,7 +73,6 @@ namespace Hazelcast.Benchmarks
 
     // TODO: move all benchmarks to their own files + rename & document
 
-    [MemoryDiagnoser]
     public class Bench3
     {
         public int I;
@@ -126,7 +140,6 @@ namespace Hazelcast.Benchmarks
         }
     }
 
-    [MemoryDiagnoser]
     public class Bench2
     {
         private readonly object _lock = new object();
@@ -156,7 +169,6 @@ namespace Hazelcast.Benchmarks
         }
     }
 
-    [MemoryDiagnoser]
     public class Bench
     {
         public ReadOnlySequence<byte> CreateSequence()

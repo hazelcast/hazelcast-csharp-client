@@ -1,12 +1,13 @@
 obj/
 bin/
-.vs/
-.idea/
+/.vs/
+/temp/
+/local/
+/.idea/
+
 *.user
 *.suo
 *.snk
-
-temp/
 
 _UpgradeReport_Files/
 Backup*/
