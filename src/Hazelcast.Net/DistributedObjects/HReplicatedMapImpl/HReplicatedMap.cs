@@ -141,10 +141,10 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
         }
 
-        public Task<int> Count(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(Count, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<int> CountAsync(TimeSpan timeout = default)
+            => TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task<int> Count(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken)
         {
             var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();

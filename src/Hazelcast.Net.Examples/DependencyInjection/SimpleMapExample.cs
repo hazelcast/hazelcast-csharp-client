@@ -15,6 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
+using Hazelcast.Core;
 using Hazelcast.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,10 +28,11 @@ namespace Hazelcast.Examples.DependencyInjection
     {
         public static async Task Run(params string[] args)
         {
+            // create a service collection
             var services = new ServiceCollection();
 
             // build the configuration
-            // alternatively, configuration may from from a 'host'
+            // alternatively, configuration may come from a 'host'
             // but even then, it is important to AddHazelcast()
             var configurationBuilder = new ConfigurationBuilder();
             configurationBuilder.AddHazelcast(args);
@@ -38,19 +40,19 @@ namespace Hazelcast.Examples.DependencyInjection
 
             // add hazelcast to services
             // this adds the options + the client factory
-            // this also wires logging to get
+            // this also wires logging to get a logger from the container
             services.AddHazelcast(configuration);
 
-            // add logging the normal way
+            // add logging to the container, the normal way
             services.AddLogging(builder => builder.AddConfiguration(configuration.GetSection("logging")).AddConsole());
 
-            // wire a client
-            services.AddSingleton(provider => provider.GetService<HazelcastClientFactory>().CreateClient());
+            // add hz client to the container
+            services.AddTransient(provider => provider.GetService<HazelcastClientFactory>().CreateClient());
 
-            // configure (can do it multiple times..)
+            // configure hazelcast (can do it multiple times..)
             services.Configure<HazelcastOptions>(options =>
             {
-                options.Networking.ConnectionTimeoutMilliseconds = 2_000;
+                options.Networking.ConnectionTimeoutMilliseconds = 45_000;
             });
 
             services.AddTransient<A>();
@@ -59,6 +61,10 @@ namespace Hazelcast.Examples.DependencyInjection
             var serviceProvider = services.BuildServiceProvider();
             var a = serviceProvider.GetService<A>();
             await a.RunAsync();
+
+            // dispose the service provider,
+            // will dispose (and shutdown) the hazelcast client etc
+            await serviceProvider.DisposeAsync().CAF();
         }
 
         public class A
@@ -82,17 +88,19 @@ namespace Hazelcast.Examples.DependencyInjection
                 // would be managed elsewhere - and the class would expect to
                 // receive a connected client - and, that 'elsewhere' would also
                 // dispose the client, etc.
-                await _client.OpenAsync();
+                await _client.OpenAsync().CAF();
 
                 // get distributed map from cluster
-                var map = await _client.GetMapAsync<string, string>("simple-example");
+                var map = await _client.GetMapAsync<string, string>("simple-example").CAF();
 
-                await map.AddOrReplaceAsync("key", "value");
-                var value = await map.GetAsync("key");
+                await map.AddOrReplaceAsync("key", "value").CAF();
+                var value = await map.GetAsync("key").CAF();
                 if (value != "value") throw new Exception("Error!");
 
+                Console.WriteLine("It worked.");
+
                 // destroy the map
-                map.Destroy();
+                await _client.DestroyAsync(map).CAF();
             }
         }
     }

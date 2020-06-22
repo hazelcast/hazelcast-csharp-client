@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Examples.Topic
 {
@@ -63,7 +64,7 @@ namespace Hazelcast.Examples.Topic
             await counted.WaitAsync();
 
             // destroy the topic
-            topic.Destroy();
+            await hz.DestroyAsync(topic).CAF();
 
             // terminate the client
             await hz.DisposeAsync();

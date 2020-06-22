@@ -71,6 +71,5 @@ namespace Hazelcast.Serialization.Collections
         /// Determines whether the entry has its key already.
         /// </summary>
         public bool HasKey { get; private set; }
-
     }
 }

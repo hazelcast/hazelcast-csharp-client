@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Examples.Org.Website.Samples
@@ -45,7 +46,7 @@ namespace Hazelcast.Examples.Org.Website.Samples
             await Task.Delay(1_000);
 
             // destroy the topic
-            topic.Destroy();
+            await hz.DestroyAsync(topic).CAF();
 
             // terminate the client
             await hz.DisposeAsync();

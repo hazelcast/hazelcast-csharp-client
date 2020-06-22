@@ -101,7 +101,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets or sets the reconnection mode in case the client is disconnected.
         /// </summary>
-        public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.ReconnectSync;
+        public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
 
         /// <summary>
         /// Gets or sets the delay to pause for when looking for a client

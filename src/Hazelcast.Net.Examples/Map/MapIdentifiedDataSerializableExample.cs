@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Examples.Models;
 
 namespace Hazelcast.Examples.Map
@@ -21,35 +22,34 @@ namespace Hazelcast.Examples.Map
     // ReSharper disable once UnusedMember.Global
     public class MapIdentifiedDataSerializableExample : ExampleBase
     {
-        public static async Task Run(params string[] args)
+        public static async Task Run(string[] args)
         {
+            // creates the example options
             var options = BuildExampleOptions(args);
 
+            // customize options for this example
             options.Serialization.AddDataSerializableFactory(
                 ExampleDataSerializableFactory.FactoryId,
                 new ExampleDataSerializableFactory());
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            var map = await hz.GetMapAsync<int, Employee>("identified-data-serializable-example");
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<int, Employee>("identified-data-serializable-example").CAF();
 
-            var employee = new Employee { Id = 1, Name = "the employee"};
+            // create and add an employee
+            Console.WriteLine("Adding employee 'the employee'.");
+            var employee = new Employee { Id = 1, Name = "the employee" };
+            await map.AddOrReplaceAsync(employee.Id, employee).CAF();
 
-            Console.WriteLine("Adding employee: " + employee);
-
-            await map.AddOrReplaceAsync(employee.Id, employee);
-
-            var e = await map.GetAsync(employee.Id);
-
-            Console.WriteLine("Gotten employee: " + e);
+            // retrieve employee
+            var e = await map.GetAsync(employee.Id).CAF();
+            Console.WriteLine($"Gotten employee '{e.Name}'.");
 
             // destroy the map
-            map.Destroy();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

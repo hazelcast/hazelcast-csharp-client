@@ -15,6 +15,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Testing;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
@@ -52,7 +53,7 @@ namespace Hazelcast.Tests
             NUnit.Framework.Assert.AreEqual(1, items.Count);
             NUnit.Framework.Assert.IsTrue(items.Contains("item2"));
 
-            list.Destroy(); // FIXME that should be async too + it's not implemented
+            await client.DestroyAsync(list).CAF();
             // but ... other than that... the test runs ok! ;)
 
             // original code from ClientTxnListTest.cs

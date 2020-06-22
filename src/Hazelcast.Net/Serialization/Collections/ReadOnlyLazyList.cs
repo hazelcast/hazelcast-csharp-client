@@ -35,6 +35,15 @@ namespace Hazelcast.Serialization.Collections
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue}"/> class.
         /// </summary>
+        /// <param name="serializationService">The serialization service.</param>
+        public ReadOnlyLazyList(ISerializationService serializationService)
+        {
+            _serializationService = serializationService;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue}"/> class.
+        /// </summary>
         /// <param name="valueObjects">Value objects.</param>
         /// <param name="serializationService">The serialization service.</param>
         public ReadOnlyLazyList(IEnumerable<object> valueObjects, ISerializationService serializationService)
@@ -42,6 +51,15 @@ namespace Hazelcast.Serialization.Collections
             _serializationService = serializationService;
             foreach (var valueObject in valueObjects)
                 _content.Add(new ReadOnlyLazyEntry<TValue>(valueObject));
+        }
+
+        /// <summary>
+        /// Adds a value.
+        /// </summary>
+        /// <param name="valueObject"></param>
+        public void Add(object valueObject)
+        {
+            _content.Add(new ReadOnlyLazyEntry<TValue>(valueObject));
         }
 
         /// <summary>

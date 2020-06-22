@@ -34,6 +34,16 @@ namespace Hazelcast
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
 
         /// <inheritdoc />
+        public ValueTask DestroyAsync(IDistributedObject o, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(DestroyAsync, o, timeout, DefaultOperationTimeoutMilliseconds);
+
+        /// <inheritdoc />
+        public async ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken)
+        {
+            await _distributedObjectFactory.DestroyAsync(o.ServiceName, o.Name, cancellationToken).CAF();
+        }
+
+        /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
             async

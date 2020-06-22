@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Examples.Org.Website.Samples
 {
@@ -37,7 +38,7 @@ namespace Hazelcast.Examples.Org.Website.Samples
             await map.ReplaceAsync("key", "value", "newvalue");
 
             // destroy the map
-            map.Destroy();
+            await hz.DestroyAsync(map).CAF();
 
             // terminate the client
             await hz.DisposeAsync();

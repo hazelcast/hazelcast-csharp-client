@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 
@@ -22,29 +21,37 @@ namespace Hazelcast.Examples.Map
     // ReSharper disable once UnusedMember.Global
     public class MapLockExample : ExampleBase
     {
-        // server address can be configured via the command line, e.g.
-        // hazelcast.network.addresses.0=127.0.0.1
-
-        public static async Task Run(params string[] args)
+        public static async Task Run(string[] args)
         {
             // uncomment and enable HzConsole to see the context changes
             //HzConsole.Configure<AsyncContext>(config => { config.SetMaxLevel(0); });
 
+            // creates the example options
             var options = BuildExampleOptions(args);
 
-            // FIXME: this is temp, we should have a better way to tear down a client
+            // FIXME: this should not be required since we dispose the client?! or ?!
+            // we need a better mechanism
+            // in a dependency-injection app, the logger factory would be disposed when
+            // the container is disposed - we *want* to dispose the logger factory to flush
+            // the loggers buffers before the app stops - in a non-DI app,
+            // we cannot ask the Hazelcast client, or the client factory, to dispose the
+            // logger factory since it does not *own* the factory
+            // unless we dispose everything returned by a Creator - but how can we tell
+            // it needs to be disposed? shall the creator return an instance + ownership?
             using var ensureLoggerFactoryIsDisposed = options.Logging.LoggerFactory.Service;
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            var map = await hz.GetMapAsync<string, string>("map-lock-example");
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<string, string>("map-lock-example").CAF();
 
-            await map.AddOrReplaceAsync("key", "value");
+            // add value
+            await map.AddOrReplaceAsync("key", "value").CAF();
 
             // locking in the current context
-            await map.LockAsync("key");
+            await map.LockAsync("key").CAF();
 
             // start a task that immediately update the value, in a new context
             // because it is a new context it will wait until the lock is released!
@@ -54,31 +61,30 @@ namespace Hazelcast.Examples.Map
             //
             var task = AsyncContext.RunDetached(async () =>
             {
-                await map.AddOrReplaceAsync("key", "value1");
+                await map.AddOrReplaceAsync("key", "value1").CAF();
                 Console.WriteLine("Put new value");
             });
 
             try
             {
-                var value = await map.GetAsync("key");
+                var value = await map.GetAsync("key").CAF();
                 // pretend to do something with the value..
-                Thread.Sleep(5000);
-                await map.AddOrReplaceAsync("key", "value2");
+                await Task.Delay(5000);
+                await map.AddOrReplaceAsync("key", "value2").CAF();
             }
             finally
             {
-                await map.UnlockAsync("key");
+                await map.UnlockAsync("key").CAF();
             }
 
-            task.Wait();
+            // now wait for the background task
+            await task.CAF();
 
+            // report
             Console.WriteLine("New value (should be 'value1'): " + await map.GetAsync("key")); // should be value1
 
             // destroy the map
-            map.Destroy();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

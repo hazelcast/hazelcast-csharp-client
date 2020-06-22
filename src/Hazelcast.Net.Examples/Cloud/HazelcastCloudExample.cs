@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Examples.Cloud
 {
@@ -38,7 +39,7 @@ namespace Hazelcast.Examples.Cloud
             await map.AddOrReplaceAsync("key", "value");
             var value = await map.GetAsync("key");
             Console.WriteLine($"\"key\": \"{value}\"");
-            map.Destroy();
+            await hz.DestroyAsync(map).CAF();
 
             // terminate the client
             await hz.DisposeAsync();

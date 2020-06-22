@@ -16,44 +16,45 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Examples.Map
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapCustomSerializerExample
+    public class MapCustomSerializerExample : ExampleBase
     {
-        public static async Task Run()
+        public static async Task Run(string[] args)
         {
-            static void Configure(HazelcastOptions configuration)
+            // creates the example options
+            var options = BuildExampleOptions(args);
+
+            // customize options for this example
+            options.Serialization.Serializers.Add(new SerializerOptions
             {
-                configuration.Serialization.Serializers.Add(new SerializerOptions
-                {
-                        SerializedType = typeof(Person),
-                        Creator = () => new CustomSerializer()
-                });
-            }
+                SerializedType = typeof(Person),
+                Creator = () => new CustomSerializer()
+            });
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
-            await hz.OpenAsync();
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            var mapCustomers = await hz.GetMapAsync<string, Person>("persons");
-            await mapCustomers.AddOrReplaceAsync("1", new Person("Joe", "Smith"));
-            await mapCustomers.AddOrReplaceAsync("2", new Person("Ali", "Selam"));
-            await mapCustomers.AddOrReplaceAsync("3", new Person("Avi", "Noyan"));
+            // get the distributed map from the cluster
+            var mapCustomers = await hz.GetMapAsync<string, Person>("persons").CAF();
 
-            var persons = await mapCustomers.GetValuesAsync();
+            // add values
+            await mapCustomers.AddOrReplaceAsync("1", new Person("Joe", "Smith")).CAF();
+            await mapCustomers.AddOrReplaceAsync("2", new Person("Ali", "Selam")).CAF();
+            await mapCustomers.AddOrReplaceAsync("3", new Person("Avi", "Noyan")).CAF();
+
+            // get values
+            var persons = await mapCustomers.GetValuesAsync().CAF();
             foreach (var person in persons)
-            {
-                Console.WriteLine(person.ToString());
-            }
+                Console.WriteLine(person);
 
             // destroy the map
-            mapCustomers.Destroy();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await hz.DestroyAsync(mapCustomers).CAF();
         }
     }
 

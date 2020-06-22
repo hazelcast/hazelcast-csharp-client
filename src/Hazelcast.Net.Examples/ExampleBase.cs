@@ -30,13 +30,14 @@ namespace Hazelcast.Examples
                 if (!d.ContainsKey(k)) d.Add(k, v);
             }
 
+            // add Microsoft logging configuration
             AddIfMissing(keyValues, "Logging:LogLevel:Default", "Debug");
             AddIfMissing(keyValues, "Logging:LogLevel:System", "Information");
             AddIfMissing(keyValues, "Logging:LogLevel:Microsoft", "Information");
 
             return HazelcastOptions.Build(args, keyValues, optionsFilePath, optionsFileName, environmentName,(configuration, options) =>
             {
-                // configure logging factory (providers)
+                // configure logging factory and add the console provider
                 options.Logging.LoggerFactory.Creator = () =>
                     LoggerFactory.Create(builder =>
                         builder

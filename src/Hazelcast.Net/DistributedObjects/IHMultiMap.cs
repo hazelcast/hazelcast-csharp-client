@@ -70,8 +70,8 @@ namespace Hazelcast.DistributedObjects
         ///     the set of key-value pairs in the multimap. Returned set might be modifiable
         ///     but it has no effect on the multimap
         /// </returns>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(TimeSpan timeout = default);
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(CancellationToken cancellationToken);
+        Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync(TimeSpan timeout = default);
+        Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync(CancellationToken cancellationToken);
 
         /// <summary>Returns the set of keys in the multimap.</summary>
         /// <returns>

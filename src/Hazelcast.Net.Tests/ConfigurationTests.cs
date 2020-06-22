@@ -176,7 +176,6 @@ namespace Hazelcast.Tests
             Assert.AreEqual(1000, socketOptions.BufferSizeKiB);
             Assert.IsFalse(socketOptions.KeepAlive);
             Assert.AreEqual(1001, socketOptions.LingerSeconds);
-            Assert.IsFalse(socketOptions.ReuseAddress);
             Assert.IsTrue(socketOptions.TcpNoDelay);
 
             var interceptorOptions = options.SocketInterception;

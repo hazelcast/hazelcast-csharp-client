@@ -13,52 +13,48 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Client;
-using Hazelcast.Configuration;
-using Hazelcast.Examples.Models;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Predicates;
 
 namespace Hazelcast.Examples.Map
 {
-    public class MapPartitionPredicateExample
+    // ReSharper disable once UnusedMember.Global
+    public class MapPartitionPredicateExample : ExampleBase
     {
-        public static void Run(string[] args)
+        public static async Task Run(string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            // creates the example options
+            var options = BuildExampleOptions(args);
 
-            var config = new ClientConfig();
+            // create an Hazelcast client and connect to a server running on localhost
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<int, int>("predicate-example").CAF();
 
-            var client = HazelcastClient.NewHazelcastClient(config);
-
-            var map = client.GetMap<int, int>("predicate-example");
-
+            // add values
             Console.WriteLine("Populating map");
+            for (var i = 0; i < 1000; i++)
+                await map.AddOrReplaceAsync(i, i);
 
-            for (int i = 0; i < 1000; i++)
-            {
-                map.Put(i, i);
-            }
+            // count
+            Console.WriteLine("Map size: " + await map.CountAsync().CAF());
 
-            Console.WriteLine("Map size: " + map.Size());
+            // report
+            const int partitionKey = 10;
 
-            var partitionKey = 10;
+            // all keys on the same partition of the partitionKey will be returned
+            var partitionKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.True()));
+            Console.Write("Partition keys: " + string.Join(", ", partitionKeys));
 
-            //all keys on the same partition of the partitionKey will be returned
-            var allPartitionKeys = map.KeySet(new PartitionPredicate(partitionKey, Predicates.Predicates.True()));
+            // keys less than 100 and on the same partition of the partitionKey will be returned
+            var filteredKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.IsLessThan("this",100)));
+            Console.Write("Filtered keys: " + string.Join(", ", filteredKeys));
 
-            //keys less than 100 and on the same partition of the partitionKey will be returned
-            var result = map.KeySet(new PartitionPredicate(partitionKey, Predicates.Predicates.IsLessThan("this",100)));
-
-            Console.Write("\nKey set: ");
-            foreach (var key in result)
-            {
-                Console.Write(key + ", ");
-            }
-
-            client.Shutdown();
+            // destroy the map
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

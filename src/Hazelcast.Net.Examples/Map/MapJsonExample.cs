@@ -22,31 +22,29 @@ namespace Hazelcast.Examples.Map
     // ReSharper disable once UnusedMember.Global
     public class MapJsonExample : ExampleBase
     {
-        public static async Task Run(params string[] args)
+        public static async Task Run(string[] args)
         {
+            // creates the example options
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            var map = await hz.GetMapAsync<string, HazelcastJsonValue>("json-example");
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<string, HazelcastJsonValue>("json-example").CAF();
 
-            await map.AddOrReplaceAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
-            await map.AddOrReplaceAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
+            // add values
+            await map.AddOrReplaceAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }")).CAF();
+            await map.AddOrReplaceAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }")).CAF();
 
-            var result = await map.GetValuesAsync(Predicates.Predicate.IsLessThan("age", 6));
-
+            // read
+            var result = await map.GetValuesAsync(Predicates.Predicate.IsLessThan("age", 6)).CAF();
             Console.WriteLine("Retrieved " + result.Count + " values whose age is less than 6.");
-            Console.WriteLine("Entry is: " + result.First().ToString());
-
-            Console.WriteLine("Finished");
+            Console.WriteLine("Entry is: " + result.First());
 
             // destroy the map
-            map.Destroy();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

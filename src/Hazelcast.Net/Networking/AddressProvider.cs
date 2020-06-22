@@ -69,10 +69,7 @@ namespace Hazelcast.Networking
         /// <returns>All addresses.</returns>
         public IEnumerable<NetworkAddress> GetAddresses()
         {
-            if (_privateToPublic == null)
-                _privateToPublic = _createMap();
-
-            return _privateToPublic.Keys;
+            return (_privateToPublic ??= _createMap()).Keys;
         }
 
         /// <summary>

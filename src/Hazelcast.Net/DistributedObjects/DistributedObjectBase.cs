@@ -20,6 +20,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -86,13 +87,6 @@ namespace Hazelcast.DistributedObjects
 
         // FIXME document
         public IData PartitionKeyData => _partitionKeyData ??= ToData(PartitionKey);
-
-        /// <inheritdoc />
-        public void Destroy()
-        {
-            // FIXME: implement Destroy()
-            throw new NotImplementedException();
-        }
 
         /// <summary>
         /// Gets the current "thread identifier".

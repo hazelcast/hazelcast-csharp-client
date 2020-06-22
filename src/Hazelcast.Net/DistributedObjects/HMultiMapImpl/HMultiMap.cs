@@ -177,15 +177,15 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(TimeSpan timeout = default)
+        public Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync(TimeSpan timeout = default)
             => TaskEx.WithTimeout(GetAllAsync, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MultiMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MultiMapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
+            return new ReadOnlyLazyDictionary2<TKey, TValue>(SerializationService) { response };
         }
 
         public Task<IReadOnlyList<TKey>> GetKeysAsync(TimeSpan timeout = default)

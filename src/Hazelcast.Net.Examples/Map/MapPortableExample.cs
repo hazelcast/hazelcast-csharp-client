@@ -13,36 +13,51 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Client;
-using Hazelcast.Configuration;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Examples.Models;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Examples.Map
 {
-    internal class MapPortableExample
+    // ReSharper disable once UnusedMember.Global
+    public class MapPortableExample : ExampleBase
     {
-        public static void Run(string[] args)
+        public static async Task Run(string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            // creates the example options
+            var options = BuildExampleOptions(args);
 
-            var config = new ClientConfig();
-            config.GetSerializationConfig().AddPortableFactory(1, new ExamplePortableFactory());
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
-            var client = HazelcastClient.NewHazelcastClient(config);
+            // customize options for this example
+            options.Serialization.AddPortableFactory(1, new ExamplePortableFactory());
 
-            var map = client.GetMap<int, Customer>("portable-example");
+            // note: this is another way to do it, which lazily creates the factory when and if needed
+            /*
+            options.Serialization.PortableFactories.Add(new FactoryOptions<IPortableFactory>
+            {
+                Id = 1,
+                Creator = () => new ExamplePortableFactory()
+            });
+            */
 
-            var customer = new Customer {Id = 1, LastOrder = DateTime.UtcNow, Name = "first-customer"};
+            // create an Hazelcast client and connect to a server running on localhost
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            Console.WriteLine("Adding customer: " + customer);
-            map.Put(customer.Id, customer);
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<int, Customer>("portable-example").CAF();
 
-            var c = map.Get(customer.Id);
+            // create an add a customer
+            Console.WriteLine("Add customer 'first-customer'.");
+            var customer = new Customer { Id = 1, LastOrder = DateTime.UtcNow, Name = "first-customer" };
+            await map.AddOrReplaceAsync(customer.Id, customer).CAF();
 
-            Console.WriteLine("Gotten customer: " + c);
+            // retrieve customer
+            var c = await map.GetAsync(customer.Id).CAF();
+            Console.WriteLine($"Got customer '{c.Name}'.");
 
-            client.Shutdown();
+            // destroy the map
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

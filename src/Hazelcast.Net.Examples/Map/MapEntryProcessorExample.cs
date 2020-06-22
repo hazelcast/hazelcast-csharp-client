@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Examples.Models;
 
 namespace Hazelcast.Examples.Map
@@ -21,41 +22,41 @@ namespace Hazelcast.Examples.Map
     // ReSharper disable once UnusedMember.Global
     public class MapEntryProcessorExample : ExampleBase
     {
-        public static async Task Run(params string[] args)
+        public static async Task Run(string[] args)
         {
+            // creates the example options
             var options = BuildExampleOptions(args);
 
+            // customize options for this example
             options.Serialization.AddDataSerializableFactory(
                 EntryProcessorDataSerializableFactory.FactoryId,
                 new EntryProcessorDataSerializableFactory());
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            var map = await hz.GetMapAsync<int, string>("entry-processor-example");
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<int, string>("entry-processor-example").CAF();
 
-            Console.WriteLine("Populating map");
-
+            // add values
+            Console.WriteLine("Populate map");
             for (var i = 0; i < 10; i++)
-            {
-                await map.AddOrReplaceAsync(i, "value" + i);
-            }
+                await map.AddOrReplaceAsync(i, "value" + i).CAF();
 
-            Console.WriteLine("Map size: " + await map.CountAsync());
+            // verify
+            Console.WriteLine("Count: " + await map.CountAsync().CAF());
 
+            // process
             var result = await map.ExecuteAsync(
                 new UpdateEntryProcessor("value-UPDATED"),
-                Predicates.Predicate.Sql("this==value5"));
+                Predicates.Predicate.Sql("this==value5")).CAF();
 
             Console.WriteLine("Updated value result: " + result[5]);
-            Console.WriteLine("The same value from  the map: " + await map.GetAsync(5));
+            Console.WriteLine("The same value from  the map: " + await map.GetAsync(5).CAF());
 
             // destroy the map
-            map.Destroy();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

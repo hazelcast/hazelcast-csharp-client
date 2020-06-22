@@ -74,6 +74,20 @@ namespace Hazelcast
         Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Destroys a distributed object.
+        /// </summary>
+        /// <param name="o">The object to destroy.</param>
+        /// <param name="timeout">A timeout.</param>
+        ValueTask DestroyAsync(IDistributedObject o, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Destroys a distributed object.
+        /// </summary>
+        /// <param name="o">The object to destroy.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Gets an <see cref="IHMap{TKey,TValue}"/> distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>

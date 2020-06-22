@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Examples.Map
 {
@@ -23,53 +24,53 @@ namespace Hazelcast.Examples.Map
     {
         public static async Task Run(params string[] args)
         {
+            // creates the example options
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            var map = await hz.GetMapAsync<string, string>("listener-example");
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<string, string>("listener-example").CAF();
 
             var count = 3;
             var counted = new SemaphoreSlim(0);
 
-            // subscribe
-            var id = await map.SubscribeAsync(on => on
-                .EntryAdded((map, args) =>
+            // subscribe to events
+            var id = await map.SubscribeAsync(handle => handle
+                .EntryAdded((m, a) =>
                 {
-                    Console.WriteLine("Added '{0}': '{1}'", args.Key, args.Value);
+                    Console.WriteLine("Added '{0}': '{1}'", a.Key, a.Value);
                     if (Interlocked.Decrement(ref count) == 0)
                         counted.Release();
                 })
-                .EntryUpdated((map, args) =>
+                .EntryUpdated((m, a) =>
                 {
-                    Console.WriteLine("Updated '{0}': '{1}' (was: '{2}')", args.Key, args.Value, args.OldValue);
+                    Console.WriteLine("Updated '{0}': '{1}' (was: '{2}')", a.Key, a.Value, a.OldValue);
                     if (Interlocked.Decrement(ref count) == 0)
                         counted.Release();
                 })
-                .EntryRemoved((map, args) =>
+                .EntryRemoved((m, a) =>
                 {
-                    Console.WriteLine("Removed'{0}': '{1}'", args.Key, args.OldValue);
+                    Console.WriteLine("Removed '{0}': '{1}'", a.Key, a.OldValue);
                     if (Interlocked.Decrement(ref count) == 0)
                         counted.Release();
-                }));
+                })).CAF();
 
-            await map.AddOrReplaceAsync("key", "value"); // add
-            await map.AddOrReplaceAsync("key", "valueNew"); //update
-            await map.RemoveAndReturnAsync("key");
+            // trigger events
+            await map.AddOrReplaceAsync("key", "value").CAF(); // add
+            await map.AddOrReplaceAsync("key", "valueNew").CAF(); //update
+            await map.RemoveAndReturnAsync("key").CAF();
 
             // wait for events
-            await counted.WaitAsync();
+            await counted.WaitAsync().CAF();
 
             // unsubscribe
-            await map.UnsubscribeAsync(id);
+            await map.UnsubscribeAsync(id).CAF();
 
             // destroy the map
-            map.Destroy();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

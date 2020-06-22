@@ -89,8 +89,8 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Returns the number of entries in this map.</summary>
         /// <remarks>Returns the number of entries in this map.</remarks>
         /// <returns>the number of entries in this map</returns>
-        Task<int> Count(TimeSpan timeout = default);
-        Task<int> Count(CancellationToken cancellationToken);
+        Task<int> CountAsync(TimeSpan timeout = default);
+        Task<int> CountAsync(CancellationToken cancellationToken);
 
         /// <summary>Returns <c>true</c> if this map contains no entries.</summary>
         /// <returns><c>true</c> if this map contains no entries</returns>

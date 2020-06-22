@@ -146,6 +146,12 @@ namespace Hazelcast.Clustering
             } while (canRetry);
 
             var aggregate = new AggregateException(exceptions);
+
+            // throw the right exception
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException($"The cluster connection operation to \"{Name}\" has been canceled. " +
+                    $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
+
             throw new InvalidOperationException($"Unable to connect to the cluster \"{Name}\". " +
                 $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
         }
@@ -365,7 +371,15 @@ namespace Hazelcast.Clustering
                 if (!lastClient)
                     return;
 
-                _logger.LogInformation("Disconnected (reconnect mode:{ReconnectMode})", _options.Networking.ReconnectMode);
+                _logger.LogInformation("Disconnected (reconnect mode: {ReconnectMode}, {ReconnectAction})",
+                    _options.Networking.ReconnectMode,
+                    _options.Networking.ReconnectMode switch
+                    {
+                        ReconnectMode.DoNotReconnect => "remain disconnected",
+                        ReconnectMode.ReconnectSync => "not supported",
+                        ReconnectMode.ReconnectAsync => "trying to reconnect",
+                        _ => "Meh?"
+                    });
 
                 switch (_options.Networking.ReconnectMode)
                 {
@@ -378,7 +392,7 @@ namespace Hazelcast.Clustering
                         _clusterState = ClusterState.Connecting;
                         // TODO: implement ReconnectSync
                         // in original code this does ReconnectAsync
-                        throw new NotSupportedException();
+                        throw new NotSupportedException("Reconnect mode 'ReconnectSync' is not supported.");
 
                     case ReconnectMode.ReconnectAsync:
                         _clusterState = ClusterState.Connecting;

@@ -33,7 +33,6 @@ namespace Hazelcast.Networking
             BufferSizeKiB = other.BufferSizeKiB;
             KeepAlive = other.KeepAlive;
             LingerSeconds = other.LingerSeconds;
-            ReuseAddress = other.ReuseAddress;
             TcpNoDelay = other.TcpNoDelay;
             ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
         }
@@ -55,11 +54,6 @@ namespace Hazelcast.Networking
         /// The number of seconds to remain connected after the socket Close() method is called, or zero to disconnect immediately.
         /// </summary>
         public int LingerSeconds { get; set; } = 3;
-
-        /// <summary>
-        /// TODO: document
-        /// </summary>
-        public bool ReuseAddress { get; set; } = true;
 
         /// <summary>
         /// Whether the socket is using the Nagle algorithm.

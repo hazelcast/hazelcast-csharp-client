@@ -147,8 +147,25 @@ namespace Hazelcast.DistributedObjects
         /// <param name="o">The object.</param>
         private void ObjectDisposed(DistributedObjectBase o)
         {
+            // simply disposing the distributed object removes it from the list
             var k = new DistributedObjectInfo(o.ServiceName, o.Name);
             _objects.TryRemove(k);
+        }
+
+        /// <summary>
+        /// Destroys a distributed object.
+        /// </summary>
+        /// <param name="serviceName">The service name.</param>
+        /// <param name="name">The unique object name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        public async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken)
+        {
+            var k = new DistributedObjectInfo(serviceName, name);
+            _objects.TryRemove(k);
+
+            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
+            var responseMessage = await _cluster.SendAsync(clientMessage, cancellationToken).CAF();
+            _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }
 
         /// <inheritdoc />

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Examples.Map
 {
@@ -23,15 +24,17 @@ namespace Hazelcast.Examples.Map
     {
         public static async Task Run(params string[] args)
         {
+            // creates the example options
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
 
-            // get distributed map from cluster
-            var map = await hz.GetMapAsync<string, string>("simple-example");
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<string, string>("simple-example").CAF();
 
+            // create tasks that add values to the map
             var tasks = new List<Task>();
             for (var i = 0; i < 100; i++)
             {
@@ -40,13 +43,11 @@ namespace Hazelcast.Examples.Map
                 tasks.Add(task);
             }
 
-            Task.WaitAll(tasks.ToArray());
+            // await all tasks
+            await Task.WhenAll(tasks.ToArray()).CAF();
 
             // destroy the map
-            map.Destroy();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

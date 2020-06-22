@@ -25,53 +25,13 @@ namespace Hazelcast.Core
     /// </summary>
     public static class SocketExtensions
     {
-        public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)
-        {
-            // this is the code that the runtime uses, unchanged
+        public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)
+            => socket.ConnectAsync(endPoint, timeoutMilliseconds, default);
 
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
+        public static Task ConnectAsync(this Socket socket, EndPoint endPoint, CancellationToken cancellationToken)
+            => socket.ConnectAsync(endPoint, -1, cancellationToken);
 
-            var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(endPoint, iar =>
-            {
-                var innerTcs = (TaskCompletionSource<bool>) iar.AsyncState;
-                try
-                {
-                    ((Socket) innerTcs.Task.AsyncState).EndConnect(iar);
-                    innerTcs.TrySetResult(true);
-                }
-                catch (Exception e) { innerTcs.TrySetException(e); }
-            }, tcs);
-
-            // only, we don't return the task, but handle the timeout
-            //return tcs.Task;
-
-            var cancellation = new CancellationTokenSource();
-            var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token)).CAF();
-
-            if (t == tcs.Task)
-            {
-                cancellation.Cancel(); // cancel the delay
-                await t.CAF(); // throw or return
-                cancellation.Dispose();
-                return;
-            }
-
-            // else the delay has expired, kill the socket
-            cancellation.Dispose();
-            try
-            {
-                // triggers the callback, thus EndConnect
-                socket.Close();
-                socket.Dispose();
-            }
-            // ReSharper disable once EmptyGeneralCatchClause
-            catch { }
-
-            throw new TimeoutException();
-        }
-
-        public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, CancellationToken cancellationToken)
+        public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
         {
             // this is the code that the runtime uses, unchanged
 
@@ -92,29 +52,54 @@ namespace Hazelcast.Core
             // only, we don't return the task, but handle the cancellation
             //return tcs.Task;
 
-            var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var t = await Task.WhenAny(tcs.Task, Task.Delay(-1, cancellation.Token)).CAF();
+            var cancellation = cancellationToken == default 
+                ? new CancellationTokenSource() 
+                : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            if (t == tcs.Task)
-            {
-                cancellation.Cancel(); // cancel the delay
-                await t.CAF(); // throw or return
-                cancellation.Dispose();
-                return;
-            }
-
-            // else the delay has been cancelled, kill the socket
-            cancellation.Dispose();
             try
             {
-                // triggers the callback, thus EndConnect
+                var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token)).CAF();
+
+                // if the connect task has completed successfully...
+                if (t == tcs.Task)
+                {
+                    cancellation.Cancel(); // cancel the delay
+                    await t.CAF(); // may throw
+                    return;
+                }
+            }
+            finally
+            {
+                cancellation.Dispose(); // make sure we dispose the cancellation
+            }
+
+            // else the delay has been cancelled due to either timeout, or cancellation
+            // we need to close and dispose the socket,
+            // and this will trigger the callback, thus EndConnect, which will throw,
+            // and this will fault the connection task, so await will throw too,
+            // and then everything will be ok
+
+            try
+            {
                 socket.Close();
                 socket.Dispose();
             }
             // ReSharper disable once EmptyGeneralCatchClause
-            catch { }
+            catch { /* expected */ }
 
-            throw new TimeoutException();
+            try
+            {
+                await tcs.Task.CAF(); // TODO is this working?
+            }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch { /* expected */ }
+
+            // finally, throw the correct exception
+            // favor cancellation over timeout
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException("The socket connection operation has been canceled.");
+
+            throw new TimeoutException("The socket connection operation has timed out.");
         }
     }
 }

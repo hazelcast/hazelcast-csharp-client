@@ -14,56 +14,55 @@
 
 using System;
 using System.Diagnostics;
-using Hazelcast.Client;
-using Hazelcast.Configuration;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.NearCaching;
 
 namespace Hazelcast.Examples.Map
 {
-    internal class MapNearCacheExample
+    // ReSharper disable once UnusedMember.Global
+    internal class MapNearCacheExample : ExampleBase
     {
-        public static void Run(string[] args)
+        public static async Task Run(string[] args)
         {
-            Environment.SetEnvironmentVariable("hazelcast.logging.level", "info");
-            Environment.SetEnvironmentVariable("hazelcast.logging.type", "console");
+            // creates the example options
+            var options = BuildExampleOptions(args);
 
-            var config = new ClientConfig();
-
-            var nearCacheConfig = new NearCacheConfig();
-            nearCacheConfig.SetMaxSize(1000)
-                .SetInvalidateOnChange(true)
-                .SetEvictionPolicy("Lru")
-                .SetInMemoryFormat(InMemoryFormat.Binary);
-
-            config.AddNearCacheConfig("nearcache-map-*", nearCacheConfig);
-            config.GetNetworkConfig().AddAddress("127.0.0.1");
-
-            var client = HazelcastClient.NewHazelcastClient(config);
-
-            var map = client.GetMap<string, string>("nearcache-map-1");
-
-            for (var i = 0; i < 1000; i++)
+            // configure NearCache
+            options.NearCache.Configurations["nearcache-map-*"] = new NearCacheNamedOptions
             {
-                map.Put("key" + i, "value" + i);
-            }
+                MaxSize = 1000,
+                InvalidateOnChange = true,
+                EvictionPolicy = EvictionPolicy.Lru,
+                InMemoryFormat = InMemoryFormat.Binary
+            };
 
+            // create an Hazelcast client and connect to a server running on localhost
+            await using var hz = new HazelcastClientFactory(options).CreateClient();
+            await hz.OpenAsync().CAF();
+
+            // get the distributed map from the cluster
+            var map = await hz.GetMapAsync<string, string>("nearcache-map-1").CAF();
+
+            // add values
+            for (var i = 0; i < 1000; i++)
+                await map.AddOrReplaceAsync("key" + i, "value" + i).CAF();
+
+            // get values, first pass
             var sw = new Stopwatch();
-
             sw.Start();
             for (var i = 0; i < 1000; i++)
-            {
-                map.Get("key" + i);
-            }
+                await map.GetAsync("key" + i).CAF();
             Console.WriteLine("Got values in " + sw.ElapsedMilliseconds + " millis");
 
+            // get values, second pass
             sw.Restart();
             for (var i = 0; i < 1000; i++)
-            {
-                map.Get("key" + i);
-            }
+                await map.GetAsync("key" + i).CAF();
             Console.WriteLine("Got cached values in " + sw.ElapsedMilliseconds + " millis");
 
-            map.Destroy();
-            client.Shutdown();
+            // destroy the map
+            await hz.DestroyAsync(map).CAF();
         }
     }
 }

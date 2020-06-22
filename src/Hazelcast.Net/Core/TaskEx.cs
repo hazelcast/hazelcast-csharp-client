@@ -612,6 +612,39 @@ namespace Hazelcast.Core
         /// <summary>
         /// Applies a timeout to a task.
         /// </summary>
+        /// <param name="function"></param>
+        /// <param name="timeout">The timeout.</param>
+        /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
+        /// <returns>The task, with a timeout applied to it.</returns>
+        public static async ValueTask WithTimeout(Func<CancellationToken, ValueTask> function,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
+        {
+            if (function == null) throw new ArgumentNullException(nameof(function));
+
+            var (cancellation, token) = GetTimeoutCancellation(timeout, defaultTimeoutMilliseconds);
+
+            try
+            {
+                // trusting the function to abort if the token cancels
+                var task = function(token);
+                await task.CAF();
+            }
+            catch (OperationCanceledException c)
+            {
+                if (cancellation == null || !cancellation.IsCancellationRequested)
+                    throw; // not caused by the timeout cancellation
+
+                throw new TimeoutException(TimeoutMessage, c);
+            }
+            finally
+            {
+                cancellation?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Applies a timeout to a task.
+        /// </summary>
         /// <typeparam name="TArg1">The type of the first argument.</typeparam>
         /// <param name="function"></param>
         /// <param name="arg1">The first argument.</param>
@@ -644,6 +677,42 @@ namespace Hazelcast.Core
                 // trusting the function to abort if the token cancels
                 var task = function(arg1, token);
                 if (task == null) throw new InvalidOperationException(NullTaskMessage);
+                await task.CAF();
+            }
+            catch (OperationCanceledException c)
+            {
+                if (cancellation == null || !cancellation.IsCancellationRequested)
+                    throw; // not caused by the timeout cancellation
+
+                throw new TimeoutException(TimeoutMessage, c);
+            }
+            finally
+            {
+                cancellation?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Applies a timeout to a task.
+        /// </summary>
+        /// <typeparam name="TArg1">The type of the first argument.</typeparam>
+        /// <param name="function"></param>
+        /// <param name="arg1">The first argument.</param>
+        /// <param name="timeout">The timeout.</param>
+        /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
+        /// <returns>The task, with a timeout applied to it.</returns>
+        public static async ValueTask WithTimeout<TArg1>(Func<TArg1, CancellationToken, ValueTask> function,
+            TArg1 arg1,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
+        {
+            if (function == null) throw new ArgumentNullException(nameof(function));
+
+            var (cancellation, token) = GetTimeoutCancellation(timeout, defaultTimeoutMilliseconds);
+
+            try
+            {
+                // trusting the function to abort if the token cancels
+                var task = function(arg1, token);
                 await task.CAF();
             }
             catch (OperationCanceledException c)
