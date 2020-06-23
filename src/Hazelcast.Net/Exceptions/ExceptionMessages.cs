@@ -17,7 +17,7 @@ namespace Hazelcast.Exceptions
     /// <summary>
     /// Defines common exception messages.
     /// </summary>
-    public static class ExceptionMessages
+    internal static class ExceptionMessages
     {
         /// <summary>
         /// Not enough bytes.

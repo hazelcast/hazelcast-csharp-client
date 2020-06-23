@@ -22,7 +22,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // Messaging
+    internal partial class Cluster // Messaging
     {
         /// <summary>
         /// Sends a message to a random target.

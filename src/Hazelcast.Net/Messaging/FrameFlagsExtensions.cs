@@ -17,7 +17,7 @@ namespace Hazelcast.Messaging
     /// <summary>
     /// Provides extension methods to the <see cref="FrameFlags"/> enumeration.
     /// </summary>
-    public static class FrameFlagsExtensions
+    internal static class FrameFlagsExtensions
     {
         /// <summary>
         /// Converts the value of a <see cref="FrameFlags"/> instance to its equivalent string representation.

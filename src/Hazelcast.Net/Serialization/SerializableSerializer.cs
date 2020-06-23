@@ -15,17 +15,15 @@
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Serialize using default .NET serialization
     /// </summary>
-    internal class SerializableSerializer : ConstantSerializers.SingletonSerializerBase<object>
+    internal class SerializableSerializer : SingletonSerializerBase<object>
     {
         public override int GetTypeId()
-        {
-            return SerializationConstants.CsharpClrSerializationType;
-        }
+            => SerializationConstants.CsharpClrSerializationType;
 
         public override object Read(IObjectDataInput input)
         {

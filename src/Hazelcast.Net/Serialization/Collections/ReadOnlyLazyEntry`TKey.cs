@@ -12,58 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-
 namespace Hazelcast.Serialization.Collections
 {
-    internal class ReadOnlyLazyEntry2<TKey, TValue>
-    {
-        private TKey _key;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ReadOnlyLazyEntry2{TKey,TValue}"/> class.
-        /// </summary>
-        /// <param name="keyData">The key.</param>
-        /// <param name="values">Values.</param>
-        public ReadOnlyLazyEntry2(IData keyData, ReadOnlyLazyList<TValue> values)
-        {
-            KeyData = keyData;
-            Values = values;
-        }
-
-        /// <summary>
-        /// Gets or sets the key source data.
-        /// </summary>
-        /// <remarks>
-        /// <para>Once <see cref="Key"/> has been assigned, this property is reset to null.</para>
-        /// </remarks>
-        public IData KeyData { get; private set; }
-
-        /// <summary>
-        /// Gets or sets the key.
-        /// </summary>
-        public TKey Key
-        {
-            get => _key;
-            set
-            {
-                _key = value;
-                HasKey = true;
-                KeyData = default;
-            }
-        }
-
-        /// <summary>
-        /// Determines whether the entry has its key already.
-        /// </summary>
-        public bool HasKey { get; private set; }
-
-        /// <summary>
-        /// Gets the list of values.
-        /// </summary>
-        public ReadOnlyLazyList<TValue> Values { get; }
-    }
-
     /// <summary>
     /// Represents an entry in a lazy collection.
     /// </summary>

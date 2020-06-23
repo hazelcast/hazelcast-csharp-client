@@ -26,7 +26,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a cluster subscription to a server event.
     /// </summary>
-    public class ClusterSubscription : IEnumerable<ClientSubscription>
+    internal class ClusterSubscription : IEnumerable<ClientSubscription>
     {
         private readonly object _activeLock = new object();
         private readonly ConcurrentDictionary<Client, ClientSubscription> _clientSubscriptions = new ConcurrentDictionary<Client, ClientSubscription>();

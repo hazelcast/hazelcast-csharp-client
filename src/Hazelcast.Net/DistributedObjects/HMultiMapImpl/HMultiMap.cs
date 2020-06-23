@@ -185,7 +185,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             var requestMessage = MultiMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MultiMapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyDictionary2<TKey, TValue>(SerializationService) { response };
+            return new ReadOnlyLazyDictionaryOfList<TKey, TValue>(SerializationService) { response };
         }
 
         public Task<IReadOnlyList<TKey>> GetKeysAsync(TimeSpan timeout = default)

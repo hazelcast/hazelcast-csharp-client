@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization.ConstantSerializers
+namespace Hazelcast.Events
 {
-    internal sealed class NullSerializer : SingletonSerializerBase<object>
+    /// <summary>
+    /// Defines the types of object lifecycle events.
+    /// </summary>
+    public enum DistributedObjectLifecycleEventType
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeNull;
-        }
+        /// <summary>
+        /// Nothing (default)
+        /// </summary>
+        Nothing = 0,
 
-        public override object Read(IObjectDataInput input)
-        {
-            return null;
-        }
+        /// <summary>
+        /// The object was created.
+        /// </summary>
+        Created,
 
-        public override void Write(IObjectDataOutput output, object obj)
-        {
-        }
+        /// <summary>
+        /// The object was destroyed.
+        /// </summary>
+        Destroyed
     }
 }

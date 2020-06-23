@@ -40,7 +40,7 @@ namespace Hazelcast.Aggregating
     /// count aggregation on "person.postalCodes" will return 1 for each input object and not the size of the collection.
     /// In order to calculate the size of the collection use the [any] operator, e.g. "person.postalCodes[any]".
     /// </remarks>
-    public static class Aggregators
+    public static class Aggregator
     {
         /// <summary>
         /// Counts input values (accepts nulls).

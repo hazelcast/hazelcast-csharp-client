@@ -29,7 +29,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents the default <see cref="IAuthenticator"/>.
     /// </summary>
-    public class Authenticator : IAuthenticator
+    internal class Authenticator : IAuthenticator
     {
         private static string _clientVersion;
         private readonly AuthenticationOptions _options;

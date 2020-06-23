@@ -17,7 +17,7 @@ namespace Hazelcast.Messaging.FrameFields
     /// <summary>
     /// Defines constants representing the size of frame fields.
     /// </summary>
-    public static class SizeOf
+    internal static class SizeOf
     {
         /// <summary>
         /// Gets the size of the length field.

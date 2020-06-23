@@ -14,7 +14,7 @@
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class ArrayStreamSerializer : ConstantSerializers.SingletonSerializerBase<object[]>
+    internal class ArrayStreamSerializer : SingletonSerializerBase<object[]>
     {
         public override int GetTypeId() => SerializationConstants.JavaDefaultTypeArray;
 

@@ -12,26 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Events;
+
+namespace Hazelcast
 {
-    /// <summary>
-    /// Defines the types of object lifecycle events.
-    /// </summary>
-    public enum ClusterObjectLifecycleEventType
+    internal class ClientLifecycleEventHandler : HazelcastClientEventHandlerBase<ClientLifecycleEventArgs>
     {
-        /// <summary>
-        /// Nothing (default)
-        /// </summary>
-        Nothing = 0,
-
-        /// <summary>
-        /// The object was created.
-        /// </summary>
-        Created,
-
-        /// <summary>
-        /// The object was destroyed.
-        /// </summary>
-        Destroyed
+        public ClientLifecycleEventHandler(Func<IHazelcastClient, ClientLifecycleEventArgs, CancellationToken, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

@@ -19,14 +19,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.Events;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // Networking
+    internal partial class Cluster // Networking
     {
+        private Func<CancellationToken, ValueTask> _onFirstClientConnected;
+
+        public Func<CancellationToken, ValueTask> OnFirstClientConnected
+        {
+            get => _onFirstClientConnected;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onFirstClientConnected = value;
+            }
+        }
+
         /// <summary>
         /// Connects to the server-side cluster.
         /// </summary>
@@ -68,12 +82,7 @@ namespace Hazelcast.Clustering
                 _clusterMembersTask = ConnectAllClientsAsync(_clusterCancellation.Token);
 
                 // execute subscribers
-                foreach (var subscriber in _clusterEventSubscribers)
-                    await subscriber.SubscribeAsync(this, cancellationToken).CAF();
-
-                // once subscribers have run, they have created subscriptions
-                // and we don't need them anymore - only their subscriptions
-                _clusterEventSubscribers = null;
+                await OnFirstClientConnected(cancellationToken).CAF();
             }
             catch
             {
@@ -329,7 +338,7 @@ namespace Hazelcast.Clustering
                 var subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
                 client.StartBackgroundTask(token => InstallSubscriptionsOnNewClient(client, subscriptions, token), _clusterCancellation.Token);
 
-                await OnConnectionAdded(client, cancellationToken).CAF(); // does not throw
+                await OnConnectionAdded(/*client,*/ cancellationToken).CAF(); // does not throw
 
                 if (firstClient)
                     await OnClientLifecycleEvent(ClientLifecycleState.Connected, cancellationToken).CAF(); // does not throw
@@ -356,7 +365,7 @@ namespace Hazelcast.Clustering
                 if (lastClient)
                     await OnClientLifecycleEvent(ClientLifecycleState.Disconnected, cancellationToken).CAF(); // does not throw
 
-                await OnConnectionRemoved(client, cancellationToken).CAF(); // does not throw
+                await OnConnectionRemoved(/*client,*/ cancellationToken).CAF(); // does not throw
 
                 // just clear subscriptions, cannot unsubscribes from the server since
                 // the client is not connected anymore

@@ -18,7 +18,7 @@ namespace System.Threading.Tasks
     /// <summary>
     /// Provides extension methods for the <see cref="Task"/> class.
     /// </summary>
-    public static class TaskExtensions
+    internal static class TaskExtensions
     {
         /// <summary>
         /// Determines whether the task ran to successful completion.

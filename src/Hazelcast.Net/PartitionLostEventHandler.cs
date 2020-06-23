@@ -15,17 +15,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Events;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast
 {
-    internal class ConnectionLifecycleEventHandler : ClusterEventHandlerBase<ConnectionLifecycleEventArgs>
+    internal class PartitionLostEventHandler : HazelcastClientEventHandlerBase<PartitionLostEventArgs>
     {
-        public ConnectionLifecycleEventHandler(ConnectionLifecycleEventType eventType, Func<Cluster, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
-            : base(handler)
-        {
-            EventType = eventType;
-        }
-
-        public ConnectionLifecycleEventType EventType { get; }
+        public PartitionLostEventHandler(Func<IHazelcastClient, PartitionLostEventArgs, CancellationToken, ValueTask> handler)
+        : base(handler)
+        { }
     }
 }

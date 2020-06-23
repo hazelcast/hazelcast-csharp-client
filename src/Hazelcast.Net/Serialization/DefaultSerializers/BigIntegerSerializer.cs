@@ -17,7 +17,7 @@ using System.Numerics;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class BigIntegerSerializer : ConstantSerializers.SingletonSerializerBase<BigInteger>
+    internal class BigIntegerSerializer : SingletonSerializerBase<BigInteger>
     {
         public override int GetTypeId()
         {

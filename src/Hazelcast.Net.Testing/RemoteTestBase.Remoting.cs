@@ -90,7 +90,7 @@ namespace Hazelcast.Testing
             var added = new SemaphoreSlim(0);
             var partitions = new SemaphoreSlim(0);
 
-            var subscriptionId = await clientInternal.Cluster.SubscribeAsync(on => on
+            var subscriptionId = await clientInternal.SubscribeAsync(on => on
                 .MemberAdded((sender, args) =>
                 {
                     added.Release();
@@ -109,7 +109,7 @@ namespace Hazelcast.Testing
             _ = map.GetAsync(new object());
 
             await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
-            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
+            await clientInternal.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
 
             var partitioner = clientInternal.Cluster.Partitioner;
             var partitionsCount = partitioner.Count;
@@ -147,7 +147,7 @@ namespace Hazelcast.Testing
             var clientInternal = (HazelcastClient) client;
             var removed = new SemaphoreSlim(0);
 
-            var subscriptionId = await clientInternal.Cluster.SubscribeAsync(on => on
+            var subscriptionId = await clientInternal.SubscribeAsync(on => on
                 .MemberRemoved((sender, args) =>
                 {
                     removed.Release();
@@ -156,7 +156,7 @@ namespace Hazelcast.Testing
 
             await rc.StopMemberAsync(cluster, member).CAF();
             await removed.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
-            await clientInternal.Cluster.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
+            await clientInternal.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
         }
 
         /// <summary>

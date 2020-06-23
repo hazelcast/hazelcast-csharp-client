@@ -19,7 +19,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // ClusterEvents
+    internal partial class Cluster // ClusterEvents
     {
         /// <summary>
         /// Initializes the object lifecycle event.
@@ -46,69 +46,31 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Subscribes to events.
+        /// Adds an object lifecycle event subscription.
         /// </summary>
-        /// <param name="on">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        // TODO: is this a public API? (needing a timeout + etc)
-        public async Task<Guid> SubscribeAsync(Action<ClusterEventHandlers> on, CancellationToken cancellationToken)
-        {
-            if (on == null) throw new ArgumentNullException(nameof(on));
-
-            var handlers = new ClusterEventHandlers();
-            on(handlers);
-
-            foreach (var handler in handlers)
-            {
-                switch (handler)
-                {
-                    case ClusterObjectLifecycleEventHandler _:
-                        await _objectLifecycleEventSubscription.AddSubscription(cancellationToken).CAF();
-                        break;
-
-                    case PartitionLostEventHandler _:
-                        await _partitionLostEventSubscription.AddSubscription(cancellationToken).CAF();
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
-                }
-            }
-
-            var id = Guid.NewGuid();
-            _clusterHandlers[id] = handlers;
-            return id;
-        }
+        public Task AddObjectLifecycleEventSubscription(CancellationToken cancellationToken)
+            => _objectLifecycleEventSubscription.AddSubscription(cancellationToken);
 
         /// <summary>
-        /// Unsubscribe from events.
+        /// Adds a partition lost event subscription.
         /// </summary>
-        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>Whether the un-registration was successful.</returns>
-        // TODO: is this a public API? (needing a timeout + etc)
-        public async Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken)
-        {
-            if (!_clusterHandlers.TryRemove(subscriptionId, out var clusterHandlers))
-                return;
+        public Task AddPartitionLostEventSubscription(CancellationToken cancellationToken)
+            => _partitionLostEventSubscription.AddSubscription(cancellationToken);
 
-            foreach (var handler in clusterHandlers)
-            {
-                switch (handler)
-                {
-                    case ClusterObjectLifecycleEventHandler _:
-                        await _objectLifecycleEventSubscription.RemoveSubscription(cancellationToken).CAF();
-                        break;
+        /// <summary>
+        /// Removes an object lifecycle event subscription.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        public Task RemoveObjectLifecycleEventSubscription(CancellationToken cancellationToken)
+            => _objectLifecycleEventSubscription.RemoveSubscription(cancellationToken);
 
-                    case PartitionLostEventHandler _:
-                        await _partitionLostEventSubscription.RemoveSubscription(cancellationToken).CAF();
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
-                }
-            }
-        }
+        /// <summary>
+        /// Removes a partition lost event subscription.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        public Task RemovePartitionLostEventSubscription(CancellationToken cancellationToken)
+            => _partitionLostEventSubscription.RemoveSubscription(cancellationToken);
     }
 }

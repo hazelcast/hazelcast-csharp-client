@@ -16,7 +16,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class LinkedListSerializer<T> : ConstantSerializers.SingletonSerializerBase<LinkedList<T>>
+    internal class LinkedListSerializer<T> : SingletonSerializerBase<LinkedList<T>>
     {
         public override int GetTypeId()
         {

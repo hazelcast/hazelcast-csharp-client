@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Hazelcast.Clustering
+namespace Hazelcast.Events
 {
-    internal class PartitionLostEventHandler : ClusterEventHandlerBase<PartitionLostEventArgs>
+    public enum ClientLifecycleState
     {
-        public PartitionLostEventHandler(Func<Cluster, PartitionLostEventArgs, CancellationToken, ValueTask> handler)
-        : base(handler)
-        { }
+        Starting,
+        Started,
+        ShuttingDown,
+        Shutdown,
+        Connected,
+        Disconnected
     }
 }

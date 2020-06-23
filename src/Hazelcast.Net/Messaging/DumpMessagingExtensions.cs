@@ -20,7 +20,7 @@ namespace Hazelcast.Messaging
     /// <summary>
     /// Provides extension methods for dumping objects.
     /// </summary>
-    public static class DumpMessagingExtensions
+    internal static class DumpMessagingExtensions
     {
         /// <summary>
         /// Dumps a client message into a readable string.

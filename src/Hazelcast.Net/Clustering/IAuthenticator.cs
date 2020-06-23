@@ -24,7 +24,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Defines a service that can authenticate a client.
     /// </summary>
-    public interface IAuthenticator
+    internal interface IAuthenticator
     {
         /// <summary>
         /// Authenticates the client.

@@ -24,7 +24,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // GeneralEvents
+    internal partial class Cluster // GeneralEvents
     {
         /// <summary>
         /// Installs a subscription on the cluster.

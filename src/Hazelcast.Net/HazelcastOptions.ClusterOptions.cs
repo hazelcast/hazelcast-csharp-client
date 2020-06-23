@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.Events;
 
 namespace Hazelcast
 {
@@ -41,7 +42,7 @@ namespace Hazelcast
         /// Gets the subscribers.
         /// </summary>
         [BinderIgnore]
-        public IList<IClusterEventSubscriber> Subscribers { get; }
+        public IList<IHazelcastClientEventSubscriber> Subscribers { get; }
 
         // used for configuration binding
         [BinderName("subscribers")]
@@ -53,10 +54,10 @@ namespace Hazelcast
         /// </summary>
         /// <param name="on">An action defining event handlers.</param>
         /// <returns>The options.</returns>
-        public HazelcastOptions AddSubscriber(Action<ClusterEventHandlers> on)
+        public HazelcastOptions AddSubscriber(Action<HazelcastClientEventHandlers> on)
         {
-            Subscribers.Add(new ClusterEventSubscriber((cluster, cancellationToken)
-                => cluster.SubscribeAsync(on, cancellationToken)));
+            Subscribers.Add(new HazelcastClientEventSubscriber((hazelcastClient, cancellationToken)
+                => hazelcastClient.SubscribeAsync(on, cancellationToken)));
             return this;
         }
 
@@ -65,9 +66,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="subscriber">The subscriber.</param>
         /// <returns>The options.</returns>
-        public HazelcastOptions AddSubscriber(IClusterEventSubscriber subscriber)
+        public HazelcastOptions AddSubscriber(IHazelcastClientEventSubscriber subscriber)
         {
-            Subscribers.Add(new ClusterEventSubscriber(subscriber));
+            Subscribers.Add(new HazelcastClientEventSubscriber(subscriber));
             return this;
         }
 
@@ -77,9 +78,9 @@ namespace Hazelcast
         /// <typeparam name="T">The type of the subscriber.</typeparam>
         /// <returns>The options.</returns>
         public HazelcastOptions AddSubscriber<T>()
-            where T : IClusterEventSubscriber
+            where T : IHazelcastClientEventSubscriber
         {
-            Subscribers.Add(new ClusterEventSubscriber(typeof(T)));
+            Subscribers.Add(new HazelcastClientEventSubscriber(typeof(T)));
             return this;
         }
 
@@ -90,7 +91,7 @@ namespace Hazelcast
         /// <returns>The options.</returns>
         public HazelcastOptions AddSubscriber(Type type)
         {
-            Subscribers.Add(new ClusterEventSubscriber(type));
+            Subscribers.Add(new HazelcastClientEventSubscriber(type));
             return this;
         }
 
@@ -101,7 +102,7 @@ namespace Hazelcast
         /// <returns>The options.</returns>
         public HazelcastOptions AddSubscriber(string typename)
         {
-            Subscribers.Add(new ClusterEventSubscriber(typename));
+            Subscribers.Add(new HazelcastClientEventSubscriber(typename));
             return this;
         }
     }

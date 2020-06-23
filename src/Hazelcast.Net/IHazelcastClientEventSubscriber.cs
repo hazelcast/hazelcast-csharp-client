@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast
 {
     /// <summary>
-    /// Defines the base contract for all transactional Hazelcast distributed objects.
+    /// Defines an interface for classes that can subscribe to cluster events.
     /// </summary>
-    public interface ITransactionalDistributedObject : IDistributedObject
+    public interface IHazelcastClientEventSubscriber
     {
         /// <summary>
-        /// Gets the unique identifier of the transaction.
+        /// Subscribes to events.
         /// </summary>
-        Guid TransactionId { get; }
+        /// <param name="cluster">The cluster.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when events have been subscribed to.</returns>
+        Task SubscribeAsync(IHazelcastClient hazelcastClient, CancellationToken cancellationToken);
     }
 }

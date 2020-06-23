@@ -16,7 +16,7 @@ using System;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // InstallAttempt
+    internal partial class Cluster // InstallAttempt
     {
         private readonly struct InstallAttempt
         {

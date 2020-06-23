@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast
 {
-    public class ClientLifecycleEventArgs
+    internal abstract class HazelcastClientEventHandlerBase<TArgs> : IHazelcastClientEventHandler
     {
-        public ClientLifecycleEventArgs(ClientLifecycleState state)
+        private readonly Func<IHazelcastClient, TArgs, CancellationToken, ValueTask> _handler;
+
+        protected HazelcastClientEventHandlerBase(Func<IHazelcastClient, TArgs, CancellationToken, ValueTask> handler)
         {
-            State = state;
+            _handler = handler;
         }
 
-        /// <summary>
-        /// Gets the new state.
-        /// </summary>
-        public ClientLifecycleState State { get; }
+        public ValueTask HandleAsync(IHazelcastClient hazelcastClient, TArgs args, CancellationToken cancellationToken)
+            => _handler(hazelcastClient, args, cancellationToken);
     }
 }

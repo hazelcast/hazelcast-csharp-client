@@ -19,7 +19,7 @@ namespace Hazelcast.Messaging
     /// <summary>
     /// Provides extension methods to the <see cref="ClientMessage"/> class.
     /// </summary>
-    public static class ClientMessageExtensions
+    internal static class ClientMessageExtensions
     {
         /// <summary>
         /// Clones the message with a new correlation identifier.

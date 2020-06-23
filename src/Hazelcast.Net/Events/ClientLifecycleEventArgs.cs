@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Events
 {
-    public enum ClientLifecycleState
+    public class ClientLifecycleEventArgs
     {
-        Starting,
-        Started,
-        ShuttingDown,
-        Shutdown,
-        Connected,
-        Disconnected
+        public ClientLifecycleEventArgs(ClientLifecycleState state)
+        {
+            State = state;
+        }
+
+        /// <summary>
+        /// Gets the new state.
+        /// </summary>
+        public ClientLifecycleState State { get; }
     }
 }

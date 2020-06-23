@@ -40,11 +40,6 @@ namespace Hazelcast.Clustering
         ISet<string> Labels { get; }
 
         /// <summary>
-        /// Gets the subscribers.
-        /// </summary>
-        IList<IClusterEventSubscriber> Subscribers { get; }
-
-        /// <summary>
         /// Gets the authentication options.
         /// </summary>
         AuthenticationOptions Authentication { get; }

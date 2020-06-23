@@ -16,7 +16,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal sealed class HazelcastJsonValueSerializer : ConstantSerializers.SingletonSerializerBase<HazelcastJsonValue>
+    internal sealed class HazelcastJsonValueSerializer : SingletonSerializerBase<HazelcastJsonValue>
     {
         public override int GetTypeId()
         {

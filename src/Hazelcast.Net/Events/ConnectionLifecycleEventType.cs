@@ -12,22 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Hazelcast.Clustering
+namespace Hazelcast.Events
 {
-    internal abstract class ClusterEventHandlerBase<TArgs> : IClusterEventHandler
+    /// <summary>
+    /// Defines the types of connection lifecycle events.
+    /// </summary>
+    internal enum ConnectionLifecycleEventType
     {
-        private readonly Func<Cluster, TArgs, CancellationToken, ValueTask> _handler;
+        /// <summary>
+        /// Nothing (default).
+        /// </summary>
+        Nothing = 0,
 
-        protected ClusterEventHandlerBase(Func<Cluster, TArgs, CancellationToken, ValueTask> handler)
-        {
-            _handler = handler;
-        }
+        /// <summary>
+        /// A connection was added.
+        /// </summary>
+        Added,
 
-        public ValueTask HandleAsync(Cluster cluster, TArgs args, CancellationToken cancellationToken)
-            => _handler(cluster, args, cancellationToken);
+        /// <summary>
+        /// A connection was removed.
+        /// </summary>
+        Removed
     }
 }

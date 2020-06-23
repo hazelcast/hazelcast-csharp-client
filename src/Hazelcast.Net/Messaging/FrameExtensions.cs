@@ -21,7 +21,7 @@ namespace Hazelcast.Messaging
     /// <summary>
     /// Provides extension methods to the <see cref="Frame"/> class.
     /// </summary>
-    public static class FrameExtensions
+    internal static class FrameExtensions
     {
         /// <summary>
         /// Reads the message type.

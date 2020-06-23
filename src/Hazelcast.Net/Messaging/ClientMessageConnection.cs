@@ -30,7 +30,7 @@ namespace Hazelcast.Messaging
     /// <para>A message connection wraps a socket connection and provides a
     /// message-level communication channel.</para>
     /// </remarks>
-    public class ClientMessageConnection : IAsyncDisposable
+    internal class ClientMessageConnection : IAsyncDisposable
     {
         private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
         private readonly SocketConnectionBase _connection;

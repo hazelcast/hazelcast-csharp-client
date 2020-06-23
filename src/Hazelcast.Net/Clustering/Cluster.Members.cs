@@ -19,13 +19,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.Events;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // Members
+    internal partial class Cluster // Members
     {
         /// <summary>
         /// Clears a client currently handling cluster events.
@@ -216,21 +217,21 @@ namespace Hazelcast.Clustering
                 _firstMembersView.Release();
 
             // process changes, gather events
-            var eventArgs = new List<(ClusterMemberLifecycleEventType, ClusterMemberLifecycleEventArgs)>();
+            var eventArgs = new List<(MemberLifecycleEventType, MemberLifecycleEventArgs)>();
             foreach (var (member, status) in diff)
             {
                 switch (status)
                 {
                     case 1: // old but not new = removed
                         HConsole.WriteLine(this, $"Removed member {member.Id}");
-                        eventArgs.Add((ClusterMemberLifecycleEventType.Removed, new ClusterMemberLifecycleEventArgs(member)));
+                        eventArgs.Add((MemberLifecycleEventType.Removed, new MemberLifecycleEventArgs(member)));
                         if (_clients.TryGetValue(member.Id, out var client))
                             await client.DieAsync().CAF(); // TODO: should die in the background, will self-removed once down
                         break;
 
                     case 2: // new but not old = added
                         HConsole.WriteLine(this, $"Added member {member.Id}");
-                        eventArgs.Add((ClusterMemberLifecycleEventType.Added, new ClusterMemberLifecycleEventArgs(member)));
+                        eventArgs.Add((MemberLifecycleEventType.Added, new MemberLifecycleEventArgs(member)));
                         break;
 
                     case 3: // old and new = no change

@@ -31,7 +31,7 @@ namespace Hazelcast.Testing.TestServer
     /// <summary>
     /// Represents a test server.
     /// </summary>
-    public class Server : IAsyncDisposable
+    internal class Server : IAsyncDisposable
     {
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
         private readonly Func<ClientMessageConnection, ClientMessage, ValueTask> _handler;

@@ -1,9 +1,9 @@
 ﻿using System;
 using Hazelcast.Core;
 
-namespace Hazelcast.Protocol
+namespace Hazelcast.Core
 {
-    public static class ProtocolBytesExtensions
+    public static partial class BytesExtensions // Protocol
     {
         public static void WriteLongL(this byte[] bytes, int position, long value)
             => bytes.WriteLong(position, value, Endianness.LittleEndian);

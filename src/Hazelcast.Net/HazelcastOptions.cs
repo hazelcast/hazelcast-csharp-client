@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Events;
 
 namespace Hazelcast
 {
@@ -29,9 +30,9 @@ namespace Hazelcast
         /// </summary>
         public HazelcastOptions()
         {
-            Subscribers = new List<IClusterEventSubscriber>();
+            Subscribers = new List<IHazelcastClientEventSubscriber>();
             SubscribersBinder = new CollectionBinder<InjectionOptions>(x
-                => Subscribers.Add(new ClusterEventSubscriber(x.TypeName)));
+                => Subscribers.Add(new HazelcastClientEventSubscriber(x.TypeName)));
         }
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace Hazelcast
         {
             ClientName = other.ClientName;
             ClusterName = other.ClusterName;
-            Subscribers = new List<IClusterEventSubscriber>(other.Subscribers);
+            Subscribers = new List<IHazelcastClientEventSubscriber>(other.Subscribers);
             Labels = new HashSet<string>(other.Labels);
             AsyncStart = other.AsyncStart;
 

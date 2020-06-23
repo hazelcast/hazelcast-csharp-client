@@ -39,7 +39,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a client.
     /// </summary>
-    public class Client : IAsyncDisposable
+    internal class Client : IAsyncDisposable
     {
         private static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 

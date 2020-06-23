@@ -15,7 +15,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Numerics;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Hazelcast.Core;
@@ -65,6 +66,7 @@ namespace Hazelcast.Serialization
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
             IDictionary<int, IPortableFactory> portableFactories, ICollection<IClassDefinition> classDefinitions,
             SerializerHooks hooks,
+            IEnumerable<ISerializerDefinitions> definitions,
             bool checkClassDefErrors, IPartitioningStrategy partitioningStrategy, int initialOutputBufferSize,
             ILoggerFactory loggerFactory)
         {
@@ -74,263 +76,331 @@ namespace Hazelcast.Serialization
             _outputBufferSize = initialOutputBufferSize;
             _bufferPoolThreadLocal = new BufferPoolThreadLocal(this);
             _portableContext = new PortableContext(this, version);
-            _dataSerializerAdapter =
-                CreateSerializerAdapterByGeneric<IIdentifiedDataSerializable>(
-                    new DataSerializer(hooks, dataSerializableFactories, loggerFactory));
-            _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
-            _portableSerializerAdapter = CreateSerializerAdapterByGeneric<IPortable>(_portableSerializer);
-            _nullSerializerAdapter = CreateSerializerAdapterByGeneric<object>(new ConstantSerializers.NullSerializer());
-            _serializableSerializerAdapter =
-                CreateSerializerAdapterByGeneric<object>(new DefaultSerializers.SerializableSerializer());
 
-            RegisterConstantSerializers();
-            RegisterDefaultSerializers();
+            // create data serializer
+            var dataSerializer = new DataSerializer(hooks, dataSerializableFactories, loggerFactory);
+            _dataSerializerAdapter = CreateSerializerAdapter<IIdentifiedDataSerializable>(dataSerializer);
+
+            // TODO: why add it?
+            AddConstantSerializer<IIdentifiedDataSerializable>(_dataSerializerAdapter);
+
+            // create portable serializer
+            _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
+            _portableSerializerAdapter = CreateSerializerAdapter<IPortable>(_portableSerializer);
+
+            // TODO: why add it?
+            AddConstantSerializer<IPortable>(_portableSerializerAdapter);
+
+            // create the serializer of null objects
+            _nullSerializerAdapter = CreateSerializerAdapter<object>(new NullSerializer());
+
+            // TODO: why add it?
+            AddConstantSerializer(null, _nullSerializerAdapter);
+
+            // create the serializable adapter
+            _serializableSerializerAdapter = CreateSerializerAdapter<object>(new SerializableSerializer());
+
+            // TODO: why?
+            _idMap.TryAdd(_serializableSerializerAdapter.GetTypeId(), _serializableSerializerAdapter);
+
+            // add defined serializers
+            foreach (var definition in definitions)
+                definition.AddSerializers(this);
+
+            // add class definitions
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
         }
 
-        public IData ToData(object obj)
-        {
-            return ToData(obj, GlobalPartitioningStrategy);
-        }
+        public byte GetVersion() => SerializerVersion;
 
-        public IData ToData(object obj, IPartitioningStrategy strategy)
+        public virtual IPortableContext GetPortableContext() => _portableContext;
+
+        public virtual Endianness Endianness => _inputOutputFactory.Endianness;
+
+        public virtual bool IsActive() => _isActive;
+
+        #region ToData, WriteObject, ToObject, ReadObject
+
+        public IData ToData(object o)
+            => ToData(o, GlobalPartitioningStrategy);
+
+        public IData ToData(object o, IPartitioningStrategy strategy)
         {
-            switch (obj)
-            {
-                case null:
-                    return null;
-                case IData data:
-                    return data;
-            }
+            if (o is null) return null;
+            if (o is IData data) return data;
 
             var pool = _bufferPoolThreadLocal.Get();
-            var @out = pool.TakeOutputBuffer();
+            var output = pool.TakeOutputBuffer();
+
             try
             {
-                var serializer = SerializerFor(obj);
-                var partitionHash = CalculatePartitionHash(obj, strategy);
-                @out.WriteInt(partitionHash, Endianness.BigEndian);
-                @out.WriteInt(serializer.GetTypeId(), Endianness.BigEndian);
-                serializer.Write(@out, obj);
-                return new HeapData(@out.ToByteArray());
+                var serializer = SerializerFor(o);
+                var partitionHash = CalculatePartitionHash(o, strategy);
+                output.WriteInt(partitionHash, Endianness.BigEndian);
+                output.WriteInt(serializer.GetTypeId(), Endianness.BigEndian);
+                serializer.Write(output, o);
+                return new HeapData(output.ToByteArray());
             }
-            catch (Exception e)
+            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
             {
-                throw HandleException(e);
+                throw new SerializationException(e);
             }
             finally
             {
-                pool.ReturnOutputBuffer(@out);
+                pool.ReturnOutputBuffer(output);
             }
         }
 
-        public T ToObject<T>(object @object)
+        public T ToObject<T>(object o)
         {
-            var o = ToObject(@object);
-            return o == null ? default : (T) o;
+            var oo = ToObject(o);
+            return oo switch
+            {
+                null => default,
+                T ot => ot,
+                _ => throw new InvalidCastException($"Deserialized object is of type {oo.GetType()}, not {typeof (T)}.")
+            };
         }
 
-        public object ToObject(object @object)
+        public object ToObject(object o)
         {
-            if (!(@object is IData))
-            {
-                return @object;
-            }
+            if (!(o is IData data))
+                return o;
 
-            var data = (IData) @object;
-            if (IsNullData(data))
-            {
-                return null;
-            }
             var pool = _bufferPoolThreadLocal.Get();
-            var @in = pool.TakeInputBuffer(data);
+            var input = pool.TakeInputBuffer(data);
+
             try
             {
                 var typeId = data.TypeId;
                 var serializer = SerializerFor(typeId);
-                if (serializer == null)
-                {
-                    if (_isActive)
-                    {
-                        throw new SerializationException("There is no suitable de-serializer for type " +
-                                                                  typeId);
-                    }
-                    throw new ClientNotConnectedException();
-                }
-                var obj = serializer.Read(@in);
-                return obj;
+                if (serializer == null) ThrowMissingSerializer(typeId);
+                return serializer.Read(input);
             }
-            catch (Exception e)
+            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
             {
-                throw HandleException(e);
+                throw new SerializationException(e);
             }
             finally
             {
-                pool.ReturnInputBuffer(@in);
+                pool.ReturnInputBuffer(input);
             }
         }
 
-        public void WriteObject(IObjectDataOutput output, object obj)
+        public void WriteObject(IObjectDataOutput output, object o)
         {
-            if (obj is IData)
-            {
-                throw new SerializationException(
-                    "Cannot write a Data instance! Use #writeData(ObjectDataOutput out, Data data) instead.");
-            }
+            if (output == null) throw new ArgumentNullException(nameof(output));
+            if (o is IData) throw new SerializationException("Cannot write IData. Use WriteData instead.");
+
             try
             {
-                var serializer = SerializerFor(obj);
+                var serializer = SerializerFor(o);
                 output.WriteInt(serializer.GetTypeId());
-                serializer.Write(output, obj);
+                serializer.Write(output, o);
             }
-            catch (Exception e)
+            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
             {
-                throw HandleException(e);
+                throw new SerializationException(e);
             }
-        }
-
-        public byte GetVersion()
-        {
-            return SerializerVersion;
         }
 
         public T ReadObject<T>(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+
             try
             {
                 var typeId = input.ReadInt();
                 var serializer = SerializerFor(typeId);
                 if (serializer == null)
-                {
-                    if (_isActive)
-                    {
-                        throw new SerializationException("There is no suitable de-serializer for type "
-                                                                  + typeId);
-                    }
-                    throw new ClientNotConnectedException();
-                }
-                var obj = serializer.Read(input);
-                try
-                {
-                    return (T) obj;
-                }
-                catch (NullReferenceException)
-                {
-                    throw new SerializationException("Trying to cast null value to value type " +
-                                                          typeof (T));
-                }
+                    ThrowMissingSerializer(typeId);
+
+                var o = serializer.Read(input);
+                if (o is T ot) return ot;
+                throw new InvalidCastException($"Deserialized object is of type {o.GetType()}, not {typeof (T)}.");
             }
-            catch (Exception e)
+            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
             {
-                throw HandleException(e);
+                throw new SerializationException(e);
             }
         }
 
-        public virtual void DisposeData(IData data)
+        [DoesNotReturn]
+        private void ThrowMissingSerializer(int typeId)
         {
+            if (!_isActive)
+                throw new ClientNotConnectedException();
+
+            throw new SerializationException($"Could not find a serializer for type {typeId}.");
         }
+
+        [DoesNotReturn]
+        private void ThrowMissingSerializer(Type type)
+        {
+            if (!_isActive)
+                throw new ClientNotConnectedException();
+
+            throw new SerializationException($"Could not find a serializer for type {type}.");
+        }
+
+        #endregion
+
+        #region Create object data input/output
 
         public IBufferObjectDataInput CreateObjectDataInput(byte[] data)
-        {
-            return _inputOutputFactory.CreateInput(data, this);
-        }
+            => _inputOutputFactory.CreateInput(data, this);
 
         public IBufferObjectDataInput CreateObjectDataInput(IData data)
-        {
-            return _inputOutputFactory.CreateInput(data, this);
-        }
+            => _inputOutputFactory.CreateInput(data, this);
 
         public IBufferObjectDataOutput CreateObjectDataOutput(int size)
-        {
-            return _inputOutputFactory.CreateOutput(size, this);
-        }
+            => _inputOutputFactory.CreateOutput(size, this);
 
         public IBufferObjectDataOutput CreateObjectDataOutput()
+            => _inputOutputFactory.CreateOutput(_outputBufferSize, this);
+
+        #endregion
+
+        #region Register constant serializers (cannot be overriden)
+
+        private void AddConstantSerializer(Type type, ISerializerAdapter adapter)
         {
-            return _inputOutputFactory.CreateOutput(_outputBufferSize, this);
+            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
+
+            if (type != null)
+                _constantTypesMap.Add(type, adapter);
+
+            _constantTypeIds[IndexForDefaultType(adapter.GetTypeId())] = adapter;
         }
 
-        public virtual IPortableContext GetPortableContext()
-        {
-            return _portableContext;
-        }
+        private void AddConstantSerializer(Type type, ISerializer serializer)
+            => AddConstantSerializer(type, CreateSerializerAdapter(type, serializer));
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public IPortableReader CreatePortableReader(IData data)
+        public void AddConstantSerializer<TSerialized>(ISerializerAdapter adapter)
+            => AddConstantSerializer(typeof (TSerialized), adapter);
+
+        public void AddConstantSerializer<TSerialized>(ISerializer serializer)
+            => AddConstantSerializer<TSerialized>(CreateSerializerAdapter<TSerialized>(serializer));
+
+        private static MethodInfo _createSerializerAdapter;
+
+        private ISerializerAdapter CreateSerializerAdapter(Type type, ISerializer serializer)
         {
-            if (!data.IsPortable)
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            if (_createSerializerAdapter == null)
             {
-                throw new ArgumentException("Given data is not Portable! -> " + data.TypeId);
+                var method = typeof (SerializationService).GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+                    .FirstOrDefault(x => x.Name == nameof(CreateSerializerAdapter) && x.IsGenericMethod);
+                if (method == null) throw new Exception("panic");
+                _createSerializerAdapter = method.GetGenericMethodDefinition();
             }
-            var input = CreateObjectDataInput(data);
-            return _portableSerializer.CreateReader(input);
+
+            var createSerializerAdapter = _createSerializerAdapter.MakeGenericMethod(type);
+            return (ISerializerAdapter) createSerializerAdapter.Invoke(this, new object[] { serializer });
         }
 
-        public virtual void Destroy()
+        private static ISerializerAdapter CreateSerializerAdapter<T>(ISerializer serializer)
         {
-            _isActive = false;
-            foreach (var serializer in _typeMap.Values)
+            return serializer switch
             {
-                serializer.Destroy();
-            }
-            _typeMap.Clear();
-            _idMap.Clear();
-            Interlocked.Exchange(ref _global, null);
-            _constantTypesMap.Clear();
-            _bufferPoolThreadLocal.Dispose();
+                IStreamSerializer<T> streamSerializer => new StreamSerializerAdapter<T>(streamSerializer),
+                IByteArraySerializer<T> arraySerializer => new ByteArraySerializerAdapter<T>(arraySerializer),
+                _ => throw new ArgumentException("Serializer must be instance of either StreamSerializer or ByteArraySerializer.")
+            };
         }
 
-        public virtual Endianness Endianness => _inputOutputFactory.Endianness;
+        #endregion
 
-        public virtual bool IsActive()
-        {
-            return _isActive;
-        }
+        #region Register configured serializers (cannot override constants)
 
-        public void Register(Type type, ISerializer serializer)
+        public void AddConfiguredSerializer(Type type, ISerializer serializer)
         {
-            if (type == null)
-            {
-                throw new ArgumentException("Class type information is required!");
-            }
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
             if (serializer.GetTypeId() <= 0)
-            {
-                throw new ArgumentException("Type id must be positive! Current: " + serializer.GetTypeId() +
-                                            ", Serializer: " + serializer);
-            }
-            SafeRegister(type, CreateSerializerAdapter(type, serializer));
+                throw new ArgumentException($"Serializer {serializer} has invalid id {serializer.GetTypeId()}", nameof(serializer));
+
+            AddSerializer(type, CreateSerializerAdapter(type, serializer));
         }
 
-        public void RegisterGlobal(ISerializer serializer, bool overrideClrSerialization)
+        private bool AddSerializer(Type type, ISerializerAdapter adapter)
         {
-            var adapter = CreateSerializerAdapterByGeneric<object>(serializer);
+            if (_constantTypesMap.ContainsKey(type))
+                throw new ArgumentException($"Type {type} is a constant type and its serializer cannot be overridden.", nameof(type));
+
+            var added = true;
+
+            if (!_typeMap.TryAdd(type, adapter))
+            {
+                added = false;
+                var existing = _typeMap[type];
+                if (existing.GetImpl().GetType() != adapter.GetImpl().GetType())
+                    throw new InvalidOperationException($"Serializer {existing.GetImpl()} has already been registered for type {type}.");
+            }
+
+            if (!_idMap.TryAdd(adapter.GetTypeId(), adapter))
+            {
+                added = false;
+                var existing = _idMap[adapter.GetTypeId()];
+                if (existing.GetImpl().GetType() != adapter.GetImpl().GetType())
+                    throw new InvalidOperationException($"Serializer {existing.GetImpl()} has already been registered for type id {adapter.GetTypeId()}.");
+            }
+
+            return added;
+        }
+
+        private void AddSerializer(Type type, ISerializer serializer)
+        {
+            AddSerializer(type, CreateSerializerAdapter(type, serializer));
+        }
+
+        public void SetGlobalSerializer(ISerializer serializer, bool overrideClrSerialization)
+        {
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            var adapter = CreateSerializerAdapter<object>(serializer);
             if (Interlocked.CompareExchange(ref _global, adapter, null) != null)
-            {
                 throw new InvalidOperationException("Global serializer is already registered!");
-            }
+
             _overrideClrSerialization = overrideClrSerialization;
-            var current = _idMap.GetOrAdd(serializer.GetTypeId(), adapter);
-            if (current != null && current.GetImpl().GetType() != adapter.GetImpl().GetType())
+            if (!_idMap.TryAdd(serializer.GetTypeId(), adapter))
             {
-                Interlocked.CompareExchange(ref _global, null, adapter);
-                _overrideClrSerialization = false;
-                throw new InvalidOperationException("Serializer [" + current.GetImpl() +
-                                                    "] has been already registered for type-id: "
-                                                    + serializer.GetTypeId());
+                var existing = _idMap[serializer.GetTypeId()];
+                if (existing.GetImpl().GetType() != adapter.GetImpl().GetType())
+                {
+                    Interlocked.CompareExchange(ref _global, null, adapter);
+                    _overrideClrSerialization = false;
+                    throw new InvalidOperationException($"Serializer {existing.GetImpl()} has already been registered for type id {adapter.GetTypeId()}.");
+                }
             }
         }
 
-        protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
+        #endregion
+
+        #region Get serializers
+
+        private ISerializerAdapter SerializerFor(object obj)
         {
-            var partitionHash = 0;
-            var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
-            var pk = partitioningStrategy?.GetPartitionKey(obj);
-            if (pk != null && pk != obj)
-            {
-                var partitionKey = ToData(pk, TheEmptyPartitioningStrategy);
-                partitionHash = partitionKey?.PartitionHash ?? 0;
-            }
-            return partitionHash;
+            // try
+            // - null serializer if object is null
+            // - default
+            // - custom
+            // - clr
+            // - global
+
+            if (obj == null) return _nullSerializerAdapter;
+
+            var type = obj.GetType();
+
+            var serializer = LookupDefaultSerializer(type) ??
+                             LookupCustomSerializer(type) ??
+                             (_overrideClrSerialization ? null : LookupSerializableSerializer(type)) ??
+                             LookupGlobalSerializer(type);
+
+            if (serializer == null) ThrowMissingSerializer(type);
+            return serializer;
         }
 
         protected internal ISerializerAdapter SerializerFor(int typeId)
@@ -344,76 +414,30 @@ namespace Hazelcast.Serialization
                     return _constantTypeIds[index];
                 }
             }
+
             return _idMap.TryGetValue(typeId, out var result) ? result : default;
         }
 
-        internal PortableSerializer GetPortableSerializer()
+        // lookup default serializer
+        // - data serializable
+        // - portable
+        // - constant types
+        private ISerializerAdapter LookupDefaultSerializer(Type type)
         {
-            return _portableSerializer;
-        }
+            // fast path for data serializable
+            if (typeof(IIdentifiedDataSerializable).IsAssignableFrom(type))
+                return _dataSerializerAdapter;
 
-        internal static bool IsNullData(IData data)
-        {
-            return data.DataSize == 0 && data.TypeId == SerializationConstants.ConstantTypeNull;
-        }
+            // fast path for portable serialization
+            if (typeof(IPortable).IsAssignableFrom(type))
+                return _portableSerializerAdapter;
 
-        internal virtual void SafeRegister(Type type, ISerializer serializer)
-        {
-            SafeRegister(type, CreateSerializerAdapter(type, serializer));
-        }
+            // else, look for constant serializer
+            if (!_constantTypesMap.TryGetValue(type, out var serializer))
+                return null;
 
-        private ISerializerAdapter CreateSerializerAdapter(Type type, ISerializer serializer)
-        {
-            var methodInfo = GetType()
-                .GetMethod("CreateSerializerAdapterByGeneric", BindingFlags.NonPublic | BindingFlags.Static);
-            if (methodInfo == null)
-                throw new InvalidOperationException($"Type {GetType()} does not expose a method named CreateSerializerAdapterByGeneric.");
-            var makeGenericMethod = methodInfo.MakeGenericMethod(type);
-            var result = makeGenericMethod.Invoke(this, new object[] { serializer });
-            return (ISerializerAdapter) result;
-        }
-
-        private static ISerializerAdapter CreateSerializerAdapterByGeneric<T>(ISerializer serializer)
-        {
-            return serializer switch
-            {
-                IStreamSerializer<T> streamSerializer => new StreamSerializerAdapter<T>(streamSerializer),
-                IByteArraySerializer<T> arraySerializer => new ByteArraySerializerAdapter<T>(arraySerializer),
-                _ => throw new ArgumentException("Serializer must be instance of either StreamSerializer or ByteArraySerializer.")
-            };
-        }
-
-        private static void GetInterfaces(Type type, ICollection<Type> interfaces)
-        {
-            var types = type.GetInterfaces();
-            if (types.Length > 0)
-            {
-                foreach (var t in types)
-                {
-                    interfaces.Add(t);
-                }
-                foreach (var cl in types)
-                {
-                    GetInterfaces(cl, interfaces);
-                }
-            }
-        }
-
-        private static Exception HandleException(Exception e)
-        {
-            switch (e)
-            {
-                case OutOfMemoryException _:
-                case SerializationException _:
-                    return e;
-                default:
-                    return new SerializationException(e);
-            }
-        }
-
-        private static int IndexForDefaultType(int typeId)
-        {
-            return -typeId;
+            if (serializer == null) throw new Exception("panic");
+            return serializer;
         }
 
         private ISerializerAdapter LookupCustomSerializer(Type type)
@@ -451,48 +475,103 @@ namespace Hazelcast.Serialization
             return serializer;
         }
 
-        private ISerializerAdapter LookupDefaultSerializer(Type type)
+        // lookup for CLR serialization (IsSerializable type)
+        private ISerializerAdapter LookupSerializableSerializer(Type type)
         {
-            if (typeof (IIdentifiedDataSerializable).IsAssignableFrom(type))
+            if (!type.IsSerializable) return null;
+
+            // register so we find it faster next time
+            if (AddSerializer(type, _serializableSerializerAdapter))
             {
-                return _dataSerializerAdapter;
-            }
-            if (typeof (IPortable).IsAssignableFrom(type))
-            {
-                return _portableSerializerAdapter;
+                _logger.LogWarning("Performance hint: Serialization service will use the CLR serialization " +
+                                   $"for type {type}. Please consider using a faster serialization option such as " +
+                                   "IIdentifiedDataSerializable.");
             }
 
-            if (_constantTypesMap.TryGetValue(type, out var serializer) && serializer != null)
-            {
-                return serializer;
-            }
-            return null;
+            return _serializableSerializerAdapter;
         }
 
+        // fallback to global serializer
         private ISerializerAdapter LookupGlobalSerializer(Type type)
         {
             var serializer = _global;
+
+            // register so we find it faster next time
             if (serializer != null)
-            {
-                SafeRegister(type, serializer);
-            }
+                AddSerializer(type, serializer);
+
             return serializer;
         }
 
-        private ISerializerAdapter LookupSerializableSerializer(Type type)
+        #endregion
+
+        public virtual void DisposeData(IData data)
+        { }
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public IPortableReader CreatePortableReader(IData data)
         {
-            if (type.IsSerializable)
+            if (!data.IsPortable)
             {
-                if (SafeRegister(type, _serializableSerializerAdapter))
-                {
-                    _logger.LogWarning("Performance Hint: Serialization service will use CLR Serialization for : " + type
-                                   +
-                                   ". Please consider using a faster serialization option such as IIdentifiedDataSerializable.");
-                }
-                return _serializableSerializerAdapter;
+                throw new ArgumentException("Given data is not Portable! -> " + data.TypeId);
             }
-            return null;
+            var input = CreateObjectDataInput(data);
+            return _portableSerializer.CreateReader(input);
         }
+
+        public virtual void Destroy()
+        {
+            _isActive = false;
+            foreach (var serializer in _typeMap.Values)
+            {
+                serializer.Destroy();
+            }
+            _typeMap.Clear();
+            _idMap.Clear();
+            Interlocked.Exchange(ref _global, null);
+            _constantTypesMap.Clear();
+            _bufferPoolThreadLocal.Dispose();
+        }
+
+        protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
+        {
+            var partitionHash = 0;
+            var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
+            var pk = partitioningStrategy?.GetPartitionKey(obj);
+            if (pk != null && pk != obj)
+            {
+                var partitionKey = ToData(pk, TheEmptyPartitioningStrategy);
+                partitionHash = partitionKey?.PartitionHash ?? 0;
+            }
+            return partitionHash;
+        }
+
+        internal static bool IsNullData(IData data)
+        {
+            return data.DataSize == 0 && data.TypeId == SerializationConstants.ConstantTypeNull;
+        }
+
+        private static void GetInterfaces(Type type, ICollection<Type> interfaces)
+        {
+            var types = type.GetInterfaces();
+            if (types.Length > 0)
+            {
+                foreach (var t in types)
+                {
+                    interfaces.Add(t);
+                }
+                foreach (var cl in types)
+                {
+                    GetInterfaces(cl, interfaces);
+                }
+            }
+        }
+
+        private static int IndexForDefaultType(int typeId)
+        {
+            return -typeId;
+        }
+
 
         private void RegisterClassDefinition(IClassDefinition cd, IDictionary<int, IClassDefinition> classDefMap,
             bool checkClassDefErrors)
@@ -541,147 +620,12 @@ namespace Hazelcast.Serialization
             }
         }
 
-        private void RegisterConstant(Type type, ISerializer serializer)
-        {
-            RegisterConstant(type, CreateSerializerAdapter(type, serializer));
-        }
-
-        private void RegisterConstant(Type type, ISerializerAdapter serializer)
-        {
-            if (type != null)
-            {
-                _constantTypesMap.Add(type, serializer);
-            }
-            _constantTypeIds[IndexForDefaultType(serializer.GetTypeId())] = serializer;
-        }
-
-        private void RegisterConstantSerializers()
-        {
-            RegisterConstant(null, _nullSerializerAdapter);
-            RegisterConstant(typeof (IIdentifiedDataSerializable), _dataSerializerAdapter);
-            RegisterConstant(typeof (IPortable), _portableSerializerAdapter);
-            RegisterConstant(typeof (byte), new ConstantSerializers.ByteSerializer());
-            RegisterConstant(typeof (bool), new ConstantSerializers.BooleanSerializer());
-            RegisterConstant(typeof (char), new ConstantSerializers.CharSerializer());
-            RegisterConstant(typeof (short), new ConstantSerializers.ShortSerializer());
-            RegisterConstant(typeof (int), new ConstantSerializers.IntegerSerializer());
-            RegisterConstant(typeof (long), new ConstantSerializers.LongSerializer());
-            RegisterConstant(typeof (float), new ConstantSerializers.FloatSerializer());
-            RegisterConstant(typeof (double), new ConstantSerializers.DoubleSerializer());
-            RegisterConstant(typeof (string), new ConstantSerializers.StringSerializer());
-            RegisterConstant(typeof (Guid), new ConstantSerializers.GuidSerializer());
-            RegisterConstant(typeof (KeyValuePair<object,object>), new ConstantSerializers.KeyValuePairSerializer());
-            RegisterConstant(typeof (bool[]), new ConstantSerializers.BooleanArraySerializer());
-            RegisterConstant(typeof (byte[]), new ConstantSerializers.ByteArraySerializer());
-            RegisterConstant(typeof (char[]), new ConstantSerializers.CharArraySerializer());
-            RegisterConstant(typeof (short[]), new ConstantSerializers.ShortArraySerializer());
-            RegisterConstant(typeof (int[]), new ConstantSerializers.IntegerArraySerializer());
-            RegisterConstant(typeof (long[]), new ConstantSerializers.LongArraySerializer());
-            RegisterConstant(typeof (float[]), new ConstantSerializers.FloatArraySerializer());
-            RegisterConstant(typeof (double[]), new ConstantSerializers.DoubleArraySerializer());
-            RegisterConstant(typeof (string[]), new ConstantSerializers.StringArraySerializer());
-        }
-
-        private void RegisterDefaultSerializers()
-        {
-
-            //TODO: proper support for generic types
-            RegisterConstant(typeof (JavaClass), new DefaultSerializers.JavaClassSerializer());
-            RegisterConstant(typeof (DateTime), new DefaultSerializers.DateSerializer());
-            RegisterConstant(typeof (BigInteger), new DefaultSerializers.BigIntegerSerializer());
-
-
-            RegisterConstant(typeof (object[]), new DefaultSerializers.ArrayStreamSerializer());
-
-            //TODO map server side collection types.
-            RegisterConstant(typeof (List<object>), new DefaultSerializers.ListSerializer<object>());
-            RegisterConstant(typeof (LinkedList<object>), new DefaultSerializers.LinkedListSerializer<object>());
-
-            RegisterConstant(typeof(Dictionary<object, object>), new DefaultSerializers.HashMapStreamSerializer());
-            RegisterConstant(typeof(ConcurrentDictionary<object, object>), new DefaultSerializers.ConcurrentHashMapStreamSerializer());
-
-            RegisterConstant(typeof(HashSet<object>), new DefaultSerializers.HashSetStreamSerializer());
-
-            RegisterConstant(typeof(HazelcastJsonValue), new DefaultSerializers.HazelcastJsonValueSerializer());
-            _idMap.TryAdd(_serializableSerializerAdapter.GetTypeId(), _serializableSerializerAdapter);
-        }
-
         private ISerializerAdapter RegisterFromSuperType(Type type, Type superType)
         {
             _typeMap.TryGetValue(superType, out var serializer);
             if (serializer != null)
             {
-                SafeRegister(type, serializer);
-            }
-            return serializer;
-        }
-
-        private bool SafeRegister(Type type, ISerializerAdapter serializer)
-        {
-            if (_constantTypesMap.ContainsKey(type))
-            {
-                throw new ArgumentException("[" + type + "] serializer cannot be overridden!");
-            }
-
-            // uh? that should be
-            // if (_typeMap.TryAdd(type, serializer)) ...
-
-            var current = _typeMap.GetOrAdd(type, serializer);
-            if (current != null && current.GetImpl().GetType() != serializer.GetImpl().GetType())
-            {
-                throw new InvalidOperationException("Serializer[" + current.GetImpl() +
-                                                    "] has been already registered for type: " + type);
-            }
-            current = _idMap.GetOrAdd(serializer.GetTypeId(), serializer);
-            if (current != null && current.GetImpl().GetType() != serializer.GetImpl().GetType())
-            {
-                throw new InvalidOperationException("Serializer [" + current.GetImpl() +
-                                                    "] has been already registered for type-id: " +
-                                                    serializer.GetTypeId());
-            }
-            return current == null;
-        }
-
-        /// <summary>
-        /// Searches for a serializer for the provided object
-        /// Serializers will be  searched in this order;
-        ///  1-NULL serializer
-        ///  2-Default serializers, like primitives, arrays, String and some C# types
-        ///  3-Custom registered types by user
-        ///  4-CLR serialization if type is Serializable
-        ///  5-Global serializer if registered by user
-        ///
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        private ISerializerAdapter SerializerFor(object obj)
-        {
-            if (obj == null)
-            {
-                return _nullSerializerAdapter;
-            }
-            var type = obj.GetType();
-
-            var serializer = LookupDefaultSerializer(type);
-            if (serializer == null)
-            {
-                serializer = LookupCustomSerializer(type);
-            }
-            if (serializer == null && !_overrideClrSerialization)
-            {
-                serializer = LookupSerializableSerializer(type);
-            }
-            if (serializer == null)
-            {
-                serializer = LookupGlobalSerializer(type);
-            }
-            if (serializer == null)
-            {
-                if (_isActive)
-                {
-                    throw new SerializationException("There is no suitable serializer for " + type);
-                }
-                throw new ClientNotConnectedException();
+                AddSerializer(type, serializer);
             }
             return serializer;
         }

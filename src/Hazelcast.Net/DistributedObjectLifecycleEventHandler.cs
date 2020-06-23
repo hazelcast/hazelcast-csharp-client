@@ -15,20 +15,21 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Events;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast
 {
     /// <summary>
     /// Represents a handler for a cluster object lifecycle event.
     /// </summary>
-    internal class ClusterObjectLifecycleEventHandler : ClusterEventHandlerBase<ClusterObjectLifecycleEventArgs>
+    internal class DistributedObjectLifecycleEventHandler : HazelcastClientEventHandlerBase<DistributedObjectLifecycleEventArgs>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterObjectLifecycleEventHandler"/> class.
+        /// Initializes a new instance of the <see cref="DistributedObjectLifecycleEventHandler"/> class.
         /// </summary>
         /// <param name="eventType">The type of the event.</param>
         /// <param name="handler">An action to execute</param>
-        public ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType eventType, Func<Cluster, ClusterObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType eventType, Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
             : base(handler)
         {
             EventType = eventType;
@@ -37,6 +38,6 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the type of the event.
         /// </summary>
-        public ClusterObjectLifecycleEventType EventType { get; }
+        public DistributedObjectLifecycleEventType EventType { get; }
     }
 }

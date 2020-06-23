@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Events;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 

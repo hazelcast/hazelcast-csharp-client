@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,20 +16,21 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Events;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast
 {
     /// <summary>
     /// Represents the cluster events.
     /// </summary>
-    public sealed class ClusterEventHandlers : EventHandlersBase<IClusterEventHandler>
+    public sealed class HazelcastClientEventHandlers : EventHandlersBase<IHazelcastClientEventHandler>
     {
         /// <summary>
         /// Adds an handler which runs when a partition is lost.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers PartitionLost(Action<Cluster, PartitionLostEventArgs> handler)
+        public HazelcastClientEventHandlers PartitionLost(Action<IHazelcastClient, PartitionLostEventArgs> handler)
         {
             Add(new PartitionLostEventHandler(handler.AsAsync()));
             return this;
@@ -40,7 +41,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers PartitionLost(Func<Cluster, PartitionLostEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers PartitionLost(Func<IHazelcastClient, PartitionLostEventArgs, CancellationToken, ValueTask> handler)
         {
             Add(new PartitionLostEventHandler(handler));
             return this;
@@ -51,7 +52,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers PartitionsUpdated(Action<Cluster, EventArgs> handler)
+        public HazelcastClientEventHandlers PartitionsUpdated(Action<IHazelcastClient, EventArgs> handler)
         {
             Add(new PartitionsUpdatedEventHandler(handler.AsAsync()));
             return this;
@@ -62,7 +63,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers PartitionsUpdated(Func<Cluster, EventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers PartitionsUpdated(Func<IHazelcastClient, EventArgs, CancellationToken, ValueTask> handler)
         {
             Add(new PartitionsUpdatedEventHandler(handler));
             return this;
@@ -73,9 +74,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers MemberAdded(Action<Cluster, ClusterMemberLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers MemberAdded(Action<IHazelcastClient, MemberLifecycleEventArgs> handler)
         {
-            Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Added, handler.AsAsync()));
+            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Added, handler.AsAsync()));
             return this;
         }
 
@@ -84,9 +85,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers MemberAdded(Func<Cluster, ClusterMemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers MemberAdded(Func<IHazelcastClient, MemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
         {
-            Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Added, handler));
+            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Added, handler));
             return this;
         }
 
@@ -95,9 +96,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers MemberRemoved(Action<Cluster, ClusterMemberLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers MemberRemoved(Action<IHazelcastClient, MemberLifecycleEventArgs> handler)
         {
-            Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Removed, handler.AsAsync()));
+            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Removed, handler.AsAsync()));
             return this;
         }
 
@@ -106,9 +107,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers MemberRemoved(Func<Cluster, ClusterMemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers MemberRemoved(Func<IHazelcastClient, MemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
         {
-            Add(new ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType.Removed, handler));
+            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Removed, handler));
             return this;
         }
 
@@ -117,9 +118,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ObjectCreated(Action<Cluster, ClusterObjectLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers ObjectCreated(Action<IHazelcastClient, DistributedObjectLifecycleEventArgs> handler)
         {
-            Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Created, handler.AsAsync()));
+            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Created, handler.AsAsync()));
             return this;
         }
 
@@ -128,9 +129,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ObjectCreated(Func<Cluster, ClusterObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ObjectCreated(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
         {
-            Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Created, handler));
+            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Created, handler));
             return this;
         }
 
@@ -139,9 +140,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ObjectDestroyed(Action<Cluster, ClusterObjectLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers ObjectDestroyed(Action<IHazelcastClient, DistributedObjectLifecycleEventArgs> handler)
         {
-            Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Destroyed, handler.AsAsync()));
+            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Destroyed, handler.AsAsync()));
             return this;
         }
 
@@ -150,9 +151,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ObjectDestroyed(Func<Cluster, ClusterObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ObjectDestroyed(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
         {
-            Add(new ClusterObjectLifecycleEventHandler(ClusterObjectLifecycleEventType.Destroyed, handler));
+            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Destroyed, handler));
             return this;
         }
 
@@ -161,7 +162,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ConnectionAdded(Action<Cluster, ConnectionLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers ConnectionAdded(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler.AsAsync()));
             return this;
@@ -172,7 +173,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ConnectionAdded(Func<Cluster, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ConnectionAdded(Func<IHazelcastClient, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler));
             return this;
@@ -183,7 +184,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ConnectionRemoved(Action<Cluster, ConnectionLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers ConnectionRemoved(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler.AsAsync()));
             return this;
@@ -194,7 +195,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ConnectionRemoved(Func<Cluster, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler));
             return this;
@@ -208,7 +209,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ClientStateChanged(Action<Cluster, ClientLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers ClientStateChanged(Action<IHazelcastClient, ClientLifecycleEventArgs> handler)
         {
             Add(new ClientLifecycleEventHandler(handler.AsAsync()));
             return this;
@@ -219,7 +220,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ClusterEventHandlers ClientStateChanged(Func<Cluster, ClientLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ClientStateChanged(Func<IHazelcastClient, ClientLifecycleEventArgs, CancellationToken, ValueTask> handler)
         {
             Add(new ClientLifecycleEventHandler(handler));
             return this;

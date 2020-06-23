@@ -17,7 +17,7 @@ using System;
 namespace Hazelcast.Configuration.Binding
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public sealed class BinderIgnoreAttribute : Attribute
+    internal sealed class BinderIgnoreAttribute : Attribute
     {
         public BinderIgnoreAttribute(bool ignore = true)
         {

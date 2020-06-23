@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Events;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -40,7 +41,7 @@ namespace Hazelcast.Clustering
                 (message, state, cancellationToken) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory, cancellationToken));
         }
 
-        internal Func<ClusterObjectLifecycleEventType, ClusterObjectLifecycleEventArgs, CancellationToken, ValueTask> Handle { get; set; }
+        internal Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> Handle { get; set; }
 
         private ValueTask HandleInternal(string name, string serviceName, string eventTypeName, Guid memberId, CancellationToken cancellationToken)
         {
@@ -48,8 +49,8 @@ namespace Hazelcast.Clustering
 
             return eventTypeName switch
             {
-                "CREATED" => Handle(ClusterObjectLifecycleEventType.Created, new ClusterObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
-                "DESTROYED" => Handle(ClusterObjectLifecycleEventType.Destroyed, new ClusterObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
+                "CREATED" => Handle(DistributedObjectLifecycleEventType.Created, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
+                "DESTROYED" => Handle(DistributedObjectLifecycleEventType.Destroyed, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
                 _ => throw new NotSupportedException($"Event type \"{eventTypeName}\" is not supported.")
             };
         }

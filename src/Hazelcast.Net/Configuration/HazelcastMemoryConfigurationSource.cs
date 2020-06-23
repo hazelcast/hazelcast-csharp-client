@@ -20,7 +20,7 @@ namespace Hazelcast.Configuration
     /// <summary>
     /// Represents Hazelcast in-memory arguments as an <see cref="IConfigurationSource"/>.
     /// </summary>
-    public class HazelcastMemoryConfigurationSource : IConfigurationSource
+    internal class HazelcastMemoryConfigurationSource : IConfigurationSource
     {
         /// <summary>
         /// Gets or sets the initial key value configuration pairs.

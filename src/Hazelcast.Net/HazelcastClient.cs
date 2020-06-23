@@ -33,6 +33,7 @@ namespace Hazelcast
         private readonly DistributedObjectFactory _distributedObjectFactory;
         private readonly NearCacheManager _nearCacheManager;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
 
         private int _disposed;
 
@@ -49,6 +50,7 @@ namespace Hazelcast
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger<IHazelcastClient>();
 
             _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             Cluster.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
@@ -116,7 +118,7 @@ namespace Hazelcast
             }
             catch (Exception e)
             {
-                _loggerFactory.CreateLogger<HazelcastClient>().LogError(e, "Caught exception while disposing the near cache manager.");
+                _logger.LogError(e, "Caught exception while disposing the near cache manager.");
             }
 
             try
@@ -125,7 +127,7 @@ namespace Hazelcast
             }
             catch (Exception e)
             {
-                _loggerFactory.CreateLogger<HazelcastClient>().LogError(e, "Caught exception while disposing the distributed object factory.");
+                _logger.LogError(e, "Caught exception while disposing the distributed object factory.");
             }
 
             try
@@ -134,7 +136,7 @@ namespace Hazelcast
             }
             catch (Exception e)
             {
-                _loggerFactory.CreateLogger<HazelcastClient>().LogError(e, "Caught exception while disposing the cluster.");
+                _logger.LogError(e, "Caught exception while disposing the cluster.");
             }
         }
     }

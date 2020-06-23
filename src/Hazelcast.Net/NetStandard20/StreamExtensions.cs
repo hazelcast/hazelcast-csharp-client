@@ -23,7 +23,7 @@ namespace System.IO
     /// <summary>
     /// Provides extension methods for the <see cref="Stream"/> class.
     /// </summary>
-    public static class StreamExtensions
+    internal static class StreamExtensions
     {
         /// <summary>
         /// Reads from a stream.

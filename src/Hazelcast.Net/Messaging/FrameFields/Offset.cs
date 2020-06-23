@@ -17,7 +17,7 @@ namespace Hazelcast.Messaging.FrameFields
     /// <summary>
     /// Defines constants representing the offset of frame fields.
     /// </summary>
-    public static class Offset
+    internal static class Offset
     {
         /// <summary>
         /// Gets the offset of the length field.

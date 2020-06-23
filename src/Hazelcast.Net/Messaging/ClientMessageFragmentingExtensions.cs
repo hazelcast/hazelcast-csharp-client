@@ -29,7 +29,7 @@ namespace Hazelcast.Messaging
     /// MF1(final) then FF1, MF2, MF3 then FF2(end), MF4, MF5(final) with the fragmentation
     /// frames (FF) containing the fragment identifier.</para>
     /// </remarks>
-    public static class ClientMessageFragmentingExtensions
+    internal static class ClientMessageFragmentingExtensions
     {
         // we can use one single static sequence of fragment identifiers
         // Java uses a static CallIdSequenceWithoutBackPressure

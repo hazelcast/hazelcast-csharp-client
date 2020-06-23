@@ -23,6 +23,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.Events;
 using Hazelcast.NearCaching;
 using Hazelcast.Networking;
 using Hazelcast.Security;
@@ -98,7 +99,7 @@ namespace Hazelcast.Tests
 
             Assert.AreEqual(1, options.Subscribers.Count);
             var subscriber = options.Subscribers[0];
-            Assert.IsInstanceOf<ClusterEventSubscriber>(subscriber);
+            Assert.IsInstanceOf<HazelcastClientEventSubscriber>(subscriber);
 
             TestSubscriber.Ctored = false;
             await subscriber.SubscribeAsync(null, CancellationToken.None);
@@ -215,11 +216,11 @@ namespace Hazelcast.Tests
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
         }
 
-        public class TestSubscriber : IClusterEventSubscriber
+        public class TestSubscriber : IHazelcastClientEventSubscriber
         {
             public static bool Ctored { get; set; }
 
-            public Task SubscribeAsync(Cluster cluster, CancellationToken cancellationToken)
+            public Task SubscribeAsync(IHazelcastClient client, CancellationToken cancellationToken)
             {
                 Ctored = true;
                 return Task.CompletedTask;

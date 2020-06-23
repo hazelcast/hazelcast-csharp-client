@@ -29,7 +29,7 @@ using Partitioner = Hazelcast.Partitioning.Partitioner;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster : IAsyncDisposable
+    internal partial class Cluster : IAsyncDisposable
     {
         // generates unique cluster identifiers
         private static readonly ISequence<int> ClusterIdSequence = new Int32Sequence();
@@ -51,10 +51,6 @@ namespace Hazelcast.Clustering
         // each client has its own correlation id, so there can be many entries per cluster subscription
         private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions = new ConcurrentDictionary<long, ClusterSubscription>();
 
-        // subscription id -> event handlers
-        // for cluster client-level events (not wired to the server)
-        private readonly ConcurrentDictionary<Guid, ClusterEventHandlers> _clusterHandlers = new ConcurrentDictionary<Guid, ClusterEventHandlers>();
-
         private readonly IClusterOptions _options;
 
         private readonly ISequence<long> _correlationIdSequence;
@@ -69,9 +65,6 @@ namespace Hazelcast.Clustering
         // events subscriptions
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
-
-        // configured subscribers
-        private IList<IClusterEventSubscriber> _clusterEventSubscribers;
 
         // _onXxx
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
@@ -118,7 +111,6 @@ namespace Hazelcast.Clustering
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
             _logger = _loggerFactory.CreateLogger<Cluster>();
-            _clusterEventSubscribers = options.Subscribers;
             _correlationIdSequence = new Int64Sequence();
 
             DefaultOperationTimeoutMilliseconds = options.Messaging.DefaultOperationTimeoutMilliseconds;

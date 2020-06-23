@@ -50,6 +50,7 @@ namespace Hazelcast.Serialization
             new HashSet<IClassDefinition>();
 
         private readonly SerializerHooks _hooks;
+        private readonly List<ISerializerDefinitions> _definitions = new List<ISerializerDefinitions>();
 
         private SerializationOptions _options;
 
@@ -87,6 +88,12 @@ namespace Hazelcast.Serialization
         public ISerializationServiceBuilder AddHook(Type type)
         {
             _hooks.Add(type);
+            return this;
+        }
+
+        public ISerializationServiceBuilder AddDefinitions(ISerializerDefinitions definition)
+        {
+            _definitions.Add(definition);
             return this;
         }
 
@@ -180,6 +187,7 @@ namespace Hazelcast.Serialization
                 _portableFactories,
                 _classDefinitions,
                 _hooks,
+                _definitions,
                 _checkClassDefErrors,
                 _partitioningStrategy,
                 _initialOutputBufferSize,
@@ -189,10 +197,10 @@ namespace Hazelcast.Serialization
             {
                 var globalSerializer = _options.DefaultSerializer;
                 if (globalSerializer != null)
-                    ss.RegisterGlobal(globalSerializer.Service, globalSerializer.OverrideClr);
+                    ss.SetGlobalSerializer(globalSerializer.Service, globalSerializer.OverrideClr);
 
                 foreach (var serializer in _options.Serializers)
-                    ss.Register(serializer.SerializedType, serializer.Service);
+                    ss.AddConfiguredSerializer(serializer.SerializedType, serializer.Service);
             }
             return ss;
         }

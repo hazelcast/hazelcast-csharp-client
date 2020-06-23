@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using Hazelcast.Data;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Events
 {
-    internal class PartitionsUpdatedEventHandler : ClusterEventHandlerBase<EventArgs>
+    public class MemberLifecycleEventArgs
     {
-        public PartitionsUpdatedEventHandler(Func<Cluster, EventArgs, CancellationToken, ValueTask> handler)
-            : base(handler)
-        { }
+        public MemberLifecycleEventArgs(MemberInfo member)
+        {
+            Member = member;
+        }
+
+        public MemberInfo Member { get; }
+
+        // TODO: original event args (MembershipEvent class) also carried the complete list of members
     }
 }

@@ -18,7 +18,7 @@ using System.Globalization;
 namespace System.Net
 {
     // ReSharper disable once InconsistentNaming
-    public static class IPEndPointEx
+    internal static class IPEndPointEx
     {
         // this code is directly copied from .NET Core runtime, with minor adjustments
         // ReSharper disable all

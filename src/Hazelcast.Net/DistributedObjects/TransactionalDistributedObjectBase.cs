@@ -37,14 +37,16 @@ namespace Hazelcast.DistributedObjects
         protected TransactionalDistributedObjectBase(string serviceName, string name, Cluster cluster, Client transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(serviceName, name, cluster, serializationService, loggerFactory)
         {
-            TransactionClient = transactionClient;
             TransactionId = transactionId;
+            TransactionClient = transactionClient;
         }
 
         /// <inheritdoc />
         public Guid TransactionId { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the client supporting the transaction.
+        /// </summary>
         public Client TransactionClient { get; }
     }
 }

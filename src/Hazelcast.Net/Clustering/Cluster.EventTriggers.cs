@@ -13,141 +13,121 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Events;
+using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // EventTriggers
+    internal partial class Cluster // EventTriggers
     {
-        /// <summary>
-        /// Triggers an object lifecycle event.
-        /// </summary>
-        /// <param name="eventType">The type of the events.</param>
-        /// <param name="args">The event arguments.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask OnObjectLifecycleEvent(ClusterObjectLifecycleEventType eventType, ClusterObjectLifecycleEventArgs args, CancellationToken cancellationToken)
-        {
-            return ForEachHandler<ClusterObjectLifecycleEventHandler, ClusterObjectLifecycleEventArgs>((handler, sender, a, token) =>
-                handler.EventType == eventType
-                    ? handler.HandleAsync(sender, a, token)
-                    : default,
-                args,
-                cancellationToken);
-        }
+        private Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> _onObjectLifeCycleEvent;
+        private Func<MemberLifecycleEventType, MemberLifecycleEventArgs, CancellationToken, ValueTask> _onMemberLifecycleEvent;
+        private Func<ClientLifecycleState, CancellationToken, ValueTask> _onClientLifecycleEvent;
+        private Func<CancellationToken, ValueTask> _onPartitionUpdated;
+        private Func<PartitionLostEventArgs, CancellationToken, ValueTask> _onPartitionLost;
+        private Func<CancellationToken, ValueTask> _onConnectionAdded;
+        private Func<CancellationToken, ValueTask> _onConnectionRemoved;
 
         /// <summary>
-        /// Triggers a member lifecycle event.
+        /// Gets or sets the function that triggers an object lifecycle event.
         /// </summary>
-        /// <param name="eventType">The event type.</param>
-        /// <param name="args">The event arguments.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask OnMemberLifecycleEvent(ClusterMemberLifecycleEventType eventType, ClusterMemberLifecycleEventArgs args, CancellationToken cancellationToken)
+        public Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> OnObjectLifecycleEvent
         {
-            return ForEachHandler<ClusterMemberLifecycleEventHandler, ClusterMemberLifecycleEventArgs>((handler, sender, a, token) =>
-                handler.EventType == eventType
-                    ? handler.HandleAsync(sender, a, token)
-                    : default,
-                args,
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Triggers a client lifecycle event.
-        /// </summary>
-        /// <param name="state">The new state.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask OnClientLifecycleEvent(ClientLifecycleState state, CancellationToken cancellationToken)
-        {
-            return ForEachHandler<ClientLifecycleEventHandler, ClientLifecycleEventArgs>((handler, sender, args, token) =>
-                handler.HandleAsync(sender, args, token),
-                new ClientLifecycleEventArgs(state),
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Triggers a partitions updated event.
-        /// </summary>
-        private ValueTask OnPartitionsUpdated(CancellationToken cancellationToken)
-        {
-            return ForEachHandler<PartitionsUpdatedEventHandler, EventArgs>((handler, sender, args, token) =>
-                handler.HandleAsync(sender, args, token),
-                EventArgs.Empty,
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Triggers a partition list event.
-        /// </summary>
-        /// <param name="args">The event arguments.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask OnPartitionLost(PartitionLostEventArgs args, CancellationToken cancellationToken)
-        {
-            return ForEachHandler<PartitionLostEventHandler, PartitionLostEventArgs>((handler, sender, a, token) =>
-                handler.HandleAsync(sender, a, token),
-                args,
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Triggers a connection added event.
-        /// </summary>
-        /// <param name="client">The new client.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask OnConnectionAdded(Client client, CancellationToken cancellationToken)
-        {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) =>
-                handler.EventType == ConnectionLifecycleEventType.Added
-                    ? handler.HandleAsync(sender, args, token)
-                    : default,
-                new ConnectionLifecycleEventArgs(client),
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Triggers a connection removed event.
-        /// </summary>
-        /// <param name="client">The removed client.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask OnConnectionRemoved(Client client, CancellationToken cancellationToken)
-        {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) =>
-                handler.EventType == ConnectionLifecycleEventType.Removed
-                    ? handler.HandleAsync(sender, args, token)
-                    : default,
-                new ConnectionLifecycleEventArgs(client),
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Triggers events.
-        /// </summary>
-        /// <typeparam name="THandler">The type of the handlers to trigger.</typeparam>
-        /// <typeparam name="TArgs">The type of the event data.</typeparam>
-        /// <param name="action">The trigger action.</param>
-        /// <param name="args">Event data.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private async ValueTask ForEachHandler<THandler, TArgs>(Func<THandler, Cluster, TArgs, CancellationToken, ValueTask> action, TArgs args, CancellationToken cancellationToken)
-        {
-            // TODO: consider running on background threads + limiting concurrency
-
-            foreach (var (_, clusterEvents) in _clusterHandlers)
-            foreach (var handler in clusterEvents.OfType<THandler>())
+            get => _onObjectLifeCycleEvent;
+            set
             {
-                try
-                {
-                    await action(handler, this, args, cancellationToken).CAF();
-                }
-                catch (Exception e)
-                {
-                    Instrumentation.CountExceptionInEventHandler(e);
-                    _logger.LogError(e, "Caught exception in event handler.");
-                }
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onObjectLifeCycleEvent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that triggers a member lifecycle event.
+        /// </summary>
+        public Func<MemberLifecycleEventType, MemberLifecycleEventArgs, CancellationToken, ValueTask> OnMemberLifecycleEvent
+        {
+            get => _onMemberLifecycleEvent;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onMemberLifecycleEvent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that triggers a client lifecycle event.
+        /// </summary>
+        public Func<ClientLifecycleState, CancellationToken, ValueTask> OnClientLifecycleEvent
+        {
+            get => _onClientLifecycleEvent;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onClientLifecycleEvent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that triggers a partitions updated event.
+        /// </summary>
+        public Func<CancellationToken, ValueTask> OnPartitionsUpdated
+        {
+            get => _onPartitionUpdated;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onPartitionUpdated = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that triggers a partition list event.
+        /// </summary>
+        public Func<PartitionLostEventArgs, CancellationToken, ValueTask> OnPartitionLost
+        {
+            get => _onPartitionLost;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onPartitionLost = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that triggers a connection added event.
+        /// </summary>
+        public Func<CancellationToken, ValueTask> OnConnectionAdded
+        {
+            get => _onConnectionAdded;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onConnectionAdded = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that triggers a connection removed event.
+        /// </summary>
+        public Func<CancellationToken, ValueTask> OnConnectionRemoved
+        {
+            get => _onConnectionRemoved;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _onConnectionRemoved = value;
             }
         }
 

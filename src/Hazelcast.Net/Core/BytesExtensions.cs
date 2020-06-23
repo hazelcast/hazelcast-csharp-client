@@ -22,7 +22,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods to byte buffers.
     /// </summary>
-    public static class BytesExtensions
+    public static partial class BytesExtensions
     {
         /// <summary>
         /// Gets the native endianness of the computer architecture where the code is executing.

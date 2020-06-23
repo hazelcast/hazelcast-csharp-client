@@ -28,7 +28,7 @@ namespace Hazelcast.Messaging
     /// <para>Frames form a linked list through their <see cref="Next"/> property, with the
     /// <see cref="ClientMessage"/> keeping track of the first and last frame of the list.</para>
     /// </remarks>
-    public class Frame
+    internal class Frame
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Frame"/> class representing an empty frame.

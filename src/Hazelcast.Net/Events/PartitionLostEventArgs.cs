@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+using Hazelcast.Data;
+
+namespace Hazelcast.Events
 {
-    /// <summary>
-    /// Defines the types of connection lifecycle events.
-    /// </summary>
-    internal enum ConnectionLifecycleEventType
+    public class PartitionLostEventArgs
     {
-        /// <summary>
-        /// Nothing (default).
-        /// </summary>
-        Nothing = 0,
+        public PartitionLostEventArgs(int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
+        {
+            PartitionId = partitionId;
+            LostBackupCount = lostBackupCount;
+            IsAllReplicasInPartitionLost = isAllReplicasInPartitionLost;
+            Member = member;
+        }
 
-        /// <summary>
-        /// A connection was added.
-        /// </summary>
-        Added,
+        public int PartitionId { get; }
 
-        /// <summary>
-        /// A connection was removed.
-        /// </summary>
-        Removed
+        public int LostBackupCount { get; }
+
+        public bool IsAllReplicasInPartitionLost { get; }
+
+        public MemberInfo Member { get; }
     }
 }

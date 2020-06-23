@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Hazelcast.Clustering
+namespace Hazelcast.Serialization
 {
-    /// <summary>
-    /// Defines an interface for classes that can subscribe to cluster events.
-    /// </summary>
-    public interface IClusterEventSubscriber
+    internal sealed class NullSerializer : SingletonSerializerBase<object>
     {
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="cluster">The cluster.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when events have been subscribed to.</returns>
-        Task SubscribeAsync(Cluster cluster, CancellationToken cancellationToken);
+        public override int GetTypeId()
+            => SerializationConstants.ConstantTypeNull;
+
+        public override object Read(IObjectDataInput input)
+            => null;
+
+        public override void Write(IObjectDataOutput output, object obj)
+        { }
     }
 }

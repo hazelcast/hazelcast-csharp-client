@@ -32,7 +32,7 @@ namespace Hazelcast.Configuration.Binding
     /// <summary>
     /// Static helper class that allows binding strongly typed objects to configuration values.
     /// </summary>
-    public static class ConfigurationBinder
+    internal static class ConfigurationBinder
     {
         /// <summary>
         /// Attempts to bind the configuration instance to a new instance of type T.

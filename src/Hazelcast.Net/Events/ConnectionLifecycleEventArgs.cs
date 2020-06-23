@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Data;
-
-namespace Hazelcast.Clustering
+namespace Hazelcast.Events
 {
-    public class PartitionLostEventArgs
+    /// <summary>
+    /// Represents event data for connection lifecycle events.
+    /// </summary>
+    public class ConnectionLifecycleEventArgs
     {
-        public PartitionLostEventArgs(int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionLifecycleEventArgs"/> class.
+        /// </summary>
+        ///// <param name="client">The client.</param>
+        public ConnectionLifecycleEventArgs(/*Client client*/)
         {
-            PartitionId = partitionId;
-            LostBackupCount = lostBackupCount;
-            IsAllReplicasInPartitionLost = isAllReplicasInPartitionLost;
-            Member = member;
+            //Client = client;
         }
 
-        public int PartitionId { get; }
+        // TODO: shall the event be internal entirely? or else?
 
-        public int LostBackupCount { get; }
-
-        public bool IsAllReplicasInPartitionLost { get; }
-
-        public MemberInfo Member { get; }
+        ///// <summary>
+        ///// Gets the client.
+        ///// </summary>
+        //public Client Client { get; }
     }
 }

@@ -18,7 +18,7 @@ namespace System.Buffers
     /// <summary>
     /// Provides extension methods for the <see cref="ReadOnlySequence{T}"/> struct.
     /// </summary>
-    public static class ReadOnlySequenceExtensions
+    internal static class ReadOnlySequenceExtensions
     {
         /// <summary>
         /// Gets the first span of a sequence.

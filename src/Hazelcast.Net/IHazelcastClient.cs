@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Events;
 using Hazelcast.Transactions;
 
 namespace Hazelcast
@@ -72,6 +73,38 @@ namespace Hazelcast
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new transaction context.</returns>
         Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="timeout">An optional timeout.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> on, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Subscribes to events.
+        /// </summary>
+        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> on, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Unsubscribe from events.
+        /// </summary>
+        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
+        /// <param name="timeout">An optional timeout.</param>
+        /// <returns>Whether the un-registration was successful.</returns>
+        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default);
+
+        /// <summary>
+        /// Unsubscribe from events.
+        /// </summary>
+        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>Whether the un-registration was successful.</returns>
+        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Destroys a distributed object.

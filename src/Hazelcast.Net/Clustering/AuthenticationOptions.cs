@@ -45,8 +45,13 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the authenticator service factory.
         /// </summary>
+        //
+        // NOTE: the Authenticator option is internal for now, we don't allow users
+        // to override authentication, as this would require exposing the whole messaging
+        // infrastructure
+        //
         [BinderIgnore]
-        public SingletonServiceFactory<IAuthenticator> Authenticator { get; }
+        internal SingletonServiceFactory<IAuthenticator> Authenticator { get; }
 
         [BinderName("authenticator")]
         [BinderIgnore(false)]

@@ -14,20 +14,20 @@
 
 using System;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Events
 {
     /// <summary>
     /// Represents event data for a cluster object lifecycle event.
     /// </summary>
-    public class ClusterObjectLifecycleEventArgs
+    public class DistributedObjectLifecycleEventArgs
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterObjectLifecycleEventArgs"/> class.
+        /// Initializes a new instance of the <see cref="DistributedObjectLifecycleEventArgs"/> class.
         /// </summary>
         /// <param name="serviceName">The service unique name.</param>
         /// <param name="name">The object unique name.</param>
         /// <param name="sourceMemberId">The unique identifier of the source member.</param>
-        public ClusterObjectLifecycleEventArgs(string serviceName, string name, Guid sourceMemberId)
+        public DistributedObjectLifecycleEventArgs(string serviceName, string name, Guid sourceMemberId)
         {
             ServiceName = serviceName;
             Name = name;

@@ -20,7 +20,7 @@ namespace System.Collections.Generic
     /// <summary>
     /// Provides extension methods for the <see cref="KeyValuePair{TKey,TValue}"/> struct.
     /// </summary>
-    public static class KeyValuePairExtensions
+    internal static class KeyValuePairExtensions
     {
         /// <summary>
         /// Deconstructs a <see cref="KeyValuePair{TKey,TValue}"/>.

@@ -28,7 +28,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents an ongoing server invocation.
     /// </summary>
-    public class Invocation
+    internal class Invocation
     {
         private readonly MessagingOptions _messagingOptions;
         private readonly CancellationToken _cancellationToken;

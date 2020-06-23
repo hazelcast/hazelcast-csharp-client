@@ -15,17 +15,18 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Events;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast
 {
-    internal class ClusterMemberLifecycleEventHandler : ClusterEventHandlerBase<ClusterMemberLifecycleEventArgs>
+    internal class MemberLifecycleEventHandler : HazelcastClientEventHandlerBase<MemberLifecycleEventArgs>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterObjectLifecycleEventHandler"/> class.
+        /// Initializes a new instance of the <see cref="MemberLifecycleEventHandler"/> class.
         /// </summary>
         /// <param name="eventType">The type of the event.</param>
         /// <param name="handler">An action to execute</param>
-        public ClusterMemberLifecycleEventHandler(ClusterMemberLifecycleEventType eventType, Func<Cluster, ClusterMemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public MemberLifecycleEventHandler(MemberLifecycleEventType eventType, Func<IHazelcastClient, MemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
             : base(handler)
         {
             EventType = eventType;
@@ -34,6 +35,6 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the type of the event.
         /// </summary>
-        public ClusterMemberLifecycleEventType EventType { get; }
+        public MemberLifecycleEventType EventType { get; }
     }
 }

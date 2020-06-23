@@ -20,7 +20,7 @@ namespace Hazelcast.Messaging
     /// Defines the <see cref="Frame"/> flags.
     /// </summary>
     [Flags]
-    public enum FrameFlags
+    internal enum FrameFlags
     {
         /// <summary>
         /// Default value (no flags).

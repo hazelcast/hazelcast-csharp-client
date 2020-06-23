@@ -21,7 +21,7 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Clustering
 {
-    public partial class Cluster // Clients
+    internal partial class Cluster // Clients
     {
         /// <summary>
         /// Gets a random client.

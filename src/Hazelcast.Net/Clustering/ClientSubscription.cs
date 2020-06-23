@@ -19,7 +19,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a client subscription to a server event.
     /// </summary>
-    public class ClientSubscription
+    internal class ClientSubscription
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientSubscription"/> class.

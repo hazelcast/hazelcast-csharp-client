@@ -12,25 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Events
 {
-    /// <summary>
-    /// Represents event data for connection lifecycle events.
-    /// </summary>
-    public class ConnectionLifecycleEventArgs
+    public enum MemberLifecycleEventType
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConnectionLifecycleEventArgs"/> class.
-        /// </summary>
-        /// <param name="client">The client.</param>
-        public ConnectionLifecycleEventArgs(Client client)
-        {
-            Client = client;
-        }
-
-        /// <summary>
-        /// Gets the client.
-        /// </summary>
-        public Client Client { get; }
+        Nothing,
+        Added,
+        Removed
     }
 }

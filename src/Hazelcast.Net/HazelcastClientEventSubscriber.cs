@@ -18,66 +18,66 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast
 {
-    internal class ClusterEventSubscriber : IClusterEventSubscriber
+    internal class HazelcastClientEventSubscriber : IHazelcastClientEventSubscriber
     {
-        private readonly Func<Cluster, CancellationToken, Task> _subscribeAsync;
+        private readonly Func<IHazelcastClient, CancellationToken, Task> _subscribeAsync;
         private readonly Type _type;
         private readonly string _typename;
-        private readonly IClusterEventSubscriber _subscriber;
+        private readonly IHazelcastClientEventSubscriber _subscriber;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterEventSubscriber"/> class.
+        /// Initializes a new instance of the <see cref="HazelcastClientEventSubscriber"/> class.
         /// </summary>
         /// <param name="subscribeAsync">A subscribe method.</param>
-        public ClusterEventSubscriber(Func<Cluster, CancellationToken, Task> subscribeAsync)
+        public HazelcastClientEventSubscriber(Func<IHazelcastClient, CancellationToken, Task> subscribeAsync)
         {
             _subscribeAsync = subscribeAsync ?? throw new ArgumentNullException(nameof(subscribeAsync));
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterEventSubscriber"/> class.
+        /// Initializes a new instance of the <see cref="HazelcastClientEventSubscriber"/> class.
         /// </summary>
         /// <param name="type">A subscriber class type.</param>
-        public ClusterEventSubscriber(Type type)
+        public HazelcastClientEventSubscriber(Type type)
         {
             _type = type ?? throw new ArgumentNullException(nameof(type));
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterEventSubscriber"/> class.
+        /// Initializes a new instance of the <see cref="HazelcastClientEventSubscriber"/> class.
         /// </summary>
         /// <param name="typename">A subscriber class type name.</param>
-        public ClusterEventSubscriber(string typename)
+        public HazelcastClientEventSubscriber(string typename)
         {
             if (string.IsNullOrWhiteSpace(typename)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typename));
             _typename = typename;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterEventSubscriber"/> class.
+        /// Initializes a new instance of the <see cref="HazelcastClientEventSubscriber"/> class.
         /// </summary>
         /// <param name="subscriber">A subscriber class instance.</param>
-        public ClusterEventSubscriber(IClusterEventSubscriber subscriber)
+        public HazelcastClientEventSubscriber(IHazelcastClientEventSubscriber subscriber)
         {
             _subscriber = subscriber ?? throw new ArgumentNullException(nameof(subscriber));
         }
 
         /// <inheritdoc />
-        public async Task SubscribeAsync(Cluster cluster, CancellationToken cancellationToken)
+        public async Task SubscribeAsync(IHazelcastClient hazelcastClient, CancellationToken cancellationToken)
         {
             if (_subscribeAsync != null)
             {
-                await _subscribeAsync(cluster, cancellationToken).CAF();
+                await _subscribeAsync(hazelcastClient, cancellationToken).CAF();
             }
             else
             {
                 var subscriber = _subscriber ?? (_type == null
-                    ? ServiceFactory.CreateInstance<IClusterEventSubscriber>(_typename, null)
-                    : ServiceFactory.CreateInstance<IClusterEventSubscriber>(_type, null));
+                    ? ServiceFactory.CreateInstance<IHazelcastClientEventSubscriber>(_typename, null)
+                    : ServiceFactory.CreateInstance<IHazelcastClientEventSubscriber>(_type, null));
 
-                await subscriber.SubscribeAsync(cluster, cancellationToken).CAF();
+                await subscriber.SubscribeAsync(hazelcastClient, cancellationToken).CAF();
             }
         }
     }

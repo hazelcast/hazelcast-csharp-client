@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Events;
+
+namespace Hazelcast
 {
-    public enum ClusterMemberLifecycleEventType
+    internal class PartitionsUpdatedEventHandler : HazelcastClientEventHandlerBase<EventArgs>
     {
-        Nothing,
-        Added,
-        Removed
+        public PartitionsUpdatedEventHandler(Func<IHazelcastClient, EventArgs, CancellationToken, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

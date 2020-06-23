@@ -17,7 +17,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Messaging
 {
-    public partial class ClientMessage // FrameEnumerator
+    internal partial class ClientMessage // FrameEnumerator
     {
         /// <summary>
         /// Represents an enumerator of frames.

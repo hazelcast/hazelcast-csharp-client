@@ -34,7 +34,7 @@ namespace Hazelcast.Messaging
     /// <see cref="LastFrame"/>. The last frame always has the <see cref="FrameFlags.Final"/>
     /// flag set.</para>
     /// </remarks>
-    public partial class ClientMessage : IEnumerable<Frame>
+    internal partial class ClientMessage : IEnumerable<Frame>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientMessage"/> class.

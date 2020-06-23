@@ -15,9 +15,9 @@
 namespace Hazelcast.Configuration.Binding
 {
     /// <summary>
-    /// Options class used by the <see cref="Microsoft.Extensions.Configuration.ConfigurationBinder"/>.
+    /// Options class used by the configuration binder.
     /// </summary>
-    public class BinderOptions
+    internal class BinderOptions
     {
         /// <summary>
         /// When false (the default), the binder will only attempt to set public properties.

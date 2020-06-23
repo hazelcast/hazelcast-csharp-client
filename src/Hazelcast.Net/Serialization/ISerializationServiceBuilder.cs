@@ -33,5 +33,6 @@ namespace Hazelcast.Serialization
         ISerializationServiceBuilder SetVersion(byte version);
         ISerializationServiceBuilder AddHook<T>();
         ISerializationServiceBuilder AddHook(Type type);
+        ISerializationServiceBuilder AddDefinitions(ISerializerDefinitions definition);
     }
 }
