@@ -56,13 +56,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, int index, ICollection<IData> valueList)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "List.AddAllWithIndex";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "List.AddAllWithIndex"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteInt(RequestIndexFieldOffset, index);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestIndexFieldOffset, index);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             ListMultiFrameCodec.Encode(clientMessage, valueList, DataCodec.Encode);
@@ -83,7 +85,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBool(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 

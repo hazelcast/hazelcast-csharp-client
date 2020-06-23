@@ -54,15 +54,17 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, long timeout)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "TransactionalQueue.Poll";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "TransactionalQueue.Poll"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteGuid(RequestTxnIdFieldOffset, txnId);
-            initialFrame.Bytes.WriteLong(RequestThreadIdFieldOffset, threadId);
-            initialFrame.Bytes.WriteLong(RequestTimeoutFieldOffset, timeout);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(RequestTxnIdFieldOffset, txnId);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestTimeoutFieldOffset, timeout);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -81,8 +83,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }

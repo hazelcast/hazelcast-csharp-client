@@ -62,15 +62,17 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, long startSequence, int minSize, int maxSize, IData predicate, IData projection)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "Map.EventJournalRead";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "Map.EventJournalRead"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestStartSequenceFieldOffset, startSequence);
-            initialFrame.Bytes.WriteInt(RequestMinSizeFieldOffset, minSize);
-            initialFrame.Bytes.WriteInt(RequestMaxSizeFieldOffset, maxSize);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestStartSequenceFieldOffset, startSequence);
+            initialFrame.Bytes.WriteIntL(RequestMinSizeFieldOffset, minSize);
+            initialFrame.Bytes.WriteIntL(RequestMaxSizeFieldOffset, maxSize);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             CodecUtil.EncodeNullable(clientMessage, predicate, DataCodec.Encode);
@@ -107,8 +109,8 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.ReadCount = initialFrame.Bytes.ReadInt(ResponseReadCountFieldOffset);
-            response.NextSeq = initialFrame.Bytes.ReadLong(ResponseNextSeqFieldOffset);
+            response.ReadCount = initialFrame.Bytes.ReadIntL(ResponseReadCountFieldOffset);
+            response.NextSeq = initialFrame.Bytes.ReadLongL(ResponseNextSeqFieldOffset);
             response.Items = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             response.ItemSeqs = CodecUtil.DecodeNullable(iterator, LongArrayCodec.Decode);
             return response;

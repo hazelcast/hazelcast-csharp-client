@@ -67,16 +67,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long ReferenceId { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, IData key, long referenceId)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "MultiMap.ForceUnlock";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "MultiMap.ForceUnlock"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestReferenceIdFieldOffset, referenceId);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestReferenceIdFieldOffset, referenceId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -88,12 +90,12 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.ReferenceId = initialFrame.Bytes.ReadLong(RequestReferenceIdFieldOffset);
+            request.ReferenceId = initialFrame.Bytes.ReadLongL(RequestReferenceIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
         }
@@ -102,20 +104,20 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            
+            iterator.Take(); // empty initial frame
             return response;
         }
 
-
+    
     }
 }

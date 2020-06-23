@@ -85,18 +85,20 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long MaxIdle { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl, long maxIdle)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Map.PutTransientWithMaxIdle";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Map.PutTransientWithMaxIdle"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestThreadIdFieldOffset, threadId);
-            initialFrame.Bytes.WriteLong(RequestTtlFieldOffset, ttl);
-            initialFrame.Bytes.WriteLong(RequestMaxIdleFieldOffset, maxIdle);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestTtlFieldOffset, ttl);
+            initialFrame.Bytes.WriteLongL(RequestMaxIdleFieldOffset, maxIdle);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -109,15 +111,15 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.ThreadId = initialFrame.Bytes.ReadLong(RequestThreadIdFieldOffset);
-            request.Ttl = initialFrame.Bytes.ReadLong(RequestTtlFieldOffset);
-            request.MaxIdle = initialFrame.Bytes.ReadLong(RequestMaxIdleFieldOffset);
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
+            request.MaxIdle = initialFrame.Bytes.ReadLongL(RequestMaxIdleFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             request.Value = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -131,22 +133,22 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            
+            iterator.Take(); // empty initial frame
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
-
+    
     }
 }

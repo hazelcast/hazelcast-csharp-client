@@ -52,13 +52,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<int, int>> iterationPointers, int batch, IData projection, IData predicate)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "Map.FetchWithQuery";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "Map.FetchWithQuery"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteInt(RequestBatchFieldOffset, batch);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestBatchFieldOffset, batch);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             EntryListIntegerIntegerCodec.Encode(clientMessage, iterationPointers);
@@ -85,8 +87,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             response.Results = ListMultiFrameCodec.DecodeContainsNullable(iterator, DataCodec.Decode);
             response.IterationPointers = EntryListIntegerIntegerCodec.Decode(iterator);
             return response;

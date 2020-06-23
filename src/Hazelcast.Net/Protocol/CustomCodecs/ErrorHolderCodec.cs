@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteInt(ErrorCodeFieldOffset, errorHolder.ErrorCode);
+            initialFrame.Bytes.WriteIntL(ErrorCodeFieldOffset, errorHolder.ErrorCode);
             clientMessage.Append(initialFrame);
 
             StringCodec.Encode(clientMessage, errorHolder.ClassName);
@@ -62,7 +62,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var errorCode = initialFrame.Bytes.ReadInt(ErrorCodeFieldOffset);
+            var errorCode = initialFrame.Bytes.ReadIntL(ErrorCodeFieldOffset);
 
             var className = StringCodec.Decode(iterator);
             var message = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);

@@ -63,15 +63,17 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Hazelcast.Protocol.Data.PagingPredicateHolder Predicate { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Data.PagingPredicateHolder predicate)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "Map.KeySetWithPagingPredicate";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "Map.KeySetWithPagingPredicate"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             PagingPredicateHolderCodec.Encode(clientMessage, predicate);
@@ -82,13 +84,12 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
             request.Predicate = PagingPredicateHolderCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -107,24 +108,24 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
             ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             AnchorDataListHolderCodec.Encode(clientMessage, anchorDataList);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            
+            iterator.Take(); // empty initial frame
             response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             response.AnchorDataList = AnchorDataListHolderCodec.Decode(iterator);
             return response;
         }
 
-
+    
     }
 }

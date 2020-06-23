@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteInt(TypeFieldOffset, indexConfig.Type);
+            initialFrame.Bytes.WriteIntL(TypeFieldOffset, indexConfig.Type);
             clientMessage.Append(initialFrame);
 
             CodecUtil.EncodeNullable(clientMessage, indexConfig.Name, StringCodec.Encode);
@@ -62,7 +62,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var type = initialFrame.Bytes.ReadInt(TypeFieldOffset);
+            var type = initialFrame.Bytes.ReadIntL(TypeFieldOffset);
 
             var name = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
             var attributes = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);

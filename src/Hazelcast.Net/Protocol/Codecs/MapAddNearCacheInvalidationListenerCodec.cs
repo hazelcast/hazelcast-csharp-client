@@ -62,14 +62,16 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Map.AddNearCacheInvalidationListener";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Map.AddNearCacheInvalidationListener"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteInt(RequestListenerFlagsFieldOffset, listenerFlags);
-            initialFrame.Bytes.WriteBool(RequestLocalOnlyFieldOffset, localOnly);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestListenerFlagsFieldOffset, listenerFlags);
+            initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -89,7 +91,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -99,9 +101,9 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             if (messageType == EventIMapInvalidationMessageType) {
                 var initialFrame = iterator.Take();
-                var sourceUuid =  initialFrame.Bytes.ReadGuid(EventIMapInvalidationSourceUuidFieldOffset);
-                var partitionUuid =  initialFrame.Bytes.ReadGuid(EventIMapInvalidationPartitionUuidFieldOffset);
-                var sequence =  initialFrame.Bytes.ReadLong(EventIMapInvalidationSequenceFieldOffset);
+                var sourceUuid =  initialFrame.Bytes.ReadGuidL(EventIMapInvalidationSourceUuidFieldOffset);
+                var partitionUuid =  initialFrame.Bytes.ReadGuidL(EventIMapInvalidationPartitionUuidFieldOffset);
+                var sequence =  initialFrame.Bytes.ReadLongL(EventIMapInvalidationSequenceFieldOffset);
                 var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 return handleIMapInvalidationEventAsync(key, sourceUuid, partitionUuid, sequence, cancellationToken);
             }

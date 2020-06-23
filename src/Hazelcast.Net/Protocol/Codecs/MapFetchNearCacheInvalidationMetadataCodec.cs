@@ -51,13 +51,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(ICollection<string> names, Guid uuid)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Map.FetchNearCacheInvalidationMetadata";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Map.FetchNearCacheInvalidationMetadata"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteGuid(RequestUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(RequestUuidFieldOffset, uuid);
             clientMessage.Append(initialFrame);
             ListMultiFrameCodec.Encode(clientMessage, names, StringCodec.Encode);
             return clientMessage;
@@ -81,8 +83,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             response.NamePartitionSequenceList = EntryListCodec.Decode(iterator, StringCodec.Decode, EntryListIntegerLongCodec.Decode);
             response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(iterator);
             return response;

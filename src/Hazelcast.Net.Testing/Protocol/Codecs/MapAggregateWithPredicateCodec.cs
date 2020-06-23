@@ -65,15 +65,17 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Predicate { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, IData aggregator, IData predicate)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "Map.AggregateWithPredicate";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "Map.AggregateWithPredicate"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, aggregator);
@@ -85,14 +87,13 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
             request.Aggregator = DataCodec.Decode(iterator);
             request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -106,22 +107,22 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            
+            iterator.Take(); // empty initial frame
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
-
+    
     }
 }

@@ -64,16 +64,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long Sequence { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, long sequence)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "Ringbuffer.ReadOne";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "Ringbuffer.ReadOne"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestSequenceFieldOffset, sequence);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestSequenceFieldOffset, sequence);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -84,11 +86,11 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Sequence = initialFrame.Bytes.ReadLong(RequestSequenceFieldOffset);
+            request.Sequence = initialFrame.Bytes.ReadLongL(RequestSequenceFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -102,22 +104,22 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            
+            iterator.Take(); // empty initial frame
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
-
+    
     }
 }

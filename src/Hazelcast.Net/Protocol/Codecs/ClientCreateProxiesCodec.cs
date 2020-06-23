@@ -54,12 +54,14 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(ICollection<KeyValuePair<string, string>> proxies)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Client.CreateProxies";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Client.CreateProxies"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             EntryListCodec.Encode(clientMessage, proxies, StringCodec.Encode, StringCodec.Encode);
             return clientMessage;
@@ -73,8 +75,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             return response;
         }
 

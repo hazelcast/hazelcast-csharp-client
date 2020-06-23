@@ -49,9 +49,9 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteByte(MajorFieldOffset, memberVersion.Major);
-            initialFrame.Bytes.WriteByte(MinorFieldOffset, memberVersion.Minor);
-            initialFrame.Bytes.WriteByte(PatchFieldOffset, memberVersion.Patch);
+            initialFrame.Bytes.WriteByteL(MajorFieldOffset, memberVersion.Major);
+            initialFrame.Bytes.WriteByteL(MinorFieldOffset, memberVersion.Minor);
+            initialFrame.Bytes.WriteByteL(PatchFieldOffset, memberVersion.Patch);
             clientMessage.Append(initialFrame);
 
             clientMessage.Append(Frame.CreateEndStruct());
@@ -63,9 +63,9 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var major = initialFrame.Bytes.ReadByte(MajorFieldOffset);
-            var minor = initialFrame.Bytes.ReadByte(MinorFieldOffset);
-            var patch = initialFrame.Bytes.ReadByte(PatchFieldOffset);
+            var major = initialFrame.Bytes.ReadByteL(MajorFieldOffset);
+            var minor = initialFrame.Bytes.ReadByteL(MinorFieldOffset);
+            var patch = initialFrame.Bytes.ReadByteL(PatchFieldOffset);
 
             iterator.SkipToStructEnd();
 

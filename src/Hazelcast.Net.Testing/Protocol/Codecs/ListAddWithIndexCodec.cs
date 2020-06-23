@@ -67,16 +67,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Value { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, int index, IData @value)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "List.AddWithIndex";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "List.AddWithIndex"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteInt(RequestIndexFieldOffset, index);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestIndexFieldOffset, index);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, @value);
@@ -88,12 +90,12 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Index = initialFrame.Bytes.ReadInt(RequestIndexFieldOffset);
+            request.Index = initialFrame.Bytes.ReadIntL(RequestIndexFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Value = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
         }
@@ -102,20 +104,20 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            
+            iterator.Take(); // empty initial frame
             return response;
         }
 
-
+    
     }
 }

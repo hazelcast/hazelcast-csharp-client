@@ -68,16 +68,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long TimeoutMillis { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string name, IData @value, long timeoutMillis)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Queue.Offer";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Queue.Offer"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestTimeoutMillisFieldOffset, timeoutMillis);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestTimeoutMillisFieldOffset, timeoutMillis);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, @value);
@@ -89,12 +91,12 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.TimeoutMillis = initialFrame.Bytes.ReadLong(RequestTimeoutMillisFieldOffset);
+            request.TimeoutMillis = initialFrame.Bytes.ReadLongL(RequestTimeoutMillisFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Value = DataCodec.Decode(iterator);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -108,21 +110,21 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBool(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBool(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
-
+    
     }
 }

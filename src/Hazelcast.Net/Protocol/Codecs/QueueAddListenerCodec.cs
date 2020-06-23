@@ -58,14 +58,16 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Queue.AddListener";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Queue.AddListener"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteBool(RequestIncludeValueFieldOffset, includeValue);
-            initialFrame.Bytes.WriteBool(RequestLocalOnlyFieldOffset, localOnly);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBoolL(RequestIncludeValueFieldOffset, includeValue);
+            initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -85,7 +87,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -95,8 +97,8 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             if (messageType == EventItemMessageType) {
                 var initialFrame = iterator.Take();
-                var uuid =  initialFrame.Bytes.ReadGuid(EventItemUuidFieldOffset);
-                var eventType =  initialFrame.Bytes.ReadInt(EventItemEventTypeFieldOffset);
+                var uuid =  initialFrame.Bytes.ReadGuidL(EventItemUuidFieldOffset);
+                var eventType =  initialFrame.Bytes.ReadIntL(EventItemEventTypeFieldOffset);
                 var item = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 return handleItemEventAsync(item, uuid, eventType, cancellationToken);
             }

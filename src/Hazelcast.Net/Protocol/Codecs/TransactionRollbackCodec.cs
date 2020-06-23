@@ -52,14 +52,16 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(Guid transactionId, long threadId)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Transaction.Rollback";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Transaction.Rollback"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteGuid(RequestTransactionIdFieldOffset, transactionId);
-            initialFrame.Bytes.WriteLong(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(RequestTransactionIdFieldOffset, transactionId);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -72,8 +74,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             return response;
         }
 

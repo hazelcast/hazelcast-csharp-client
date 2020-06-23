@@ -81,19 +81,21 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long ThreadId { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(long timeout, int durability, int transactionType, long threadId)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Transaction.Create";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Transaction.Create"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestTimeoutFieldOffset, timeout);
-            initialFrame.Bytes.WriteInt(RequestDurabilityFieldOffset, durability);
-            initialFrame.Bytes.WriteInt(RequestTransactionTypeFieldOffset, transactionType);
-            initialFrame.Bytes.WriteLong(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestTimeoutFieldOffset, timeout);
+            initialFrame.Bytes.WriteIntL(RequestDurabilityFieldOffset, durability);
+            initialFrame.Bytes.WriteIntL(RequestTransactionTypeFieldOffset, transactionType);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -103,13 +105,13 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Timeout = initialFrame.Bytes.ReadLong(RequestTimeoutFieldOffset);
-            request.Durability = initialFrame.Bytes.ReadInt(RequestDurabilityFieldOffset);
-            request.TransactionType = initialFrame.Bytes.ReadInt(RequestTransactionTypeFieldOffset);
-            request.ThreadId = initialFrame.Bytes.ReadLong(RequestThreadIdFieldOffset);
+            request.Timeout = initialFrame.Bytes.ReadLongL(RequestTimeoutFieldOffset);
+            request.Durability = initialFrame.Bytes.ReadIntL(RequestDurabilityFieldOffset);
+            request.TransactionType = initialFrame.Bytes.ReadIntL(RequestTransactionTypeFieldOffset);
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -123,21 +125,21 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteGuid(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
-
+    
     }
 }

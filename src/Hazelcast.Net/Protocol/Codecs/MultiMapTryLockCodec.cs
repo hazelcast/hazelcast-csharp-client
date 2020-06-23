@@ -58,16 +58,18 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, IData key, long threadId, long lease, long timeout, long referenceId)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "MultiMap.TryLock";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "MultiMap.TryLock"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestThreadIdFieldOffset, threadId);
-            initialFrame.Bytes.WriteLong(RequestLeaseFieldOffset, lease);
-            initialFrame.Bytes.WriteLong(RequestTimeoutFieldOffset, timeout);
-            initialFrame.Bytes.WriteLong(RequestReferenceIdFieldOffset, referenceId);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestLeaseFieldOffset, lease);
+            initialFrame.Bytes.WriteLongL(RequestTimeoutFieldOffset, timeout);
+            initialFrame.Bytes.WriteLongL(RequestReferenceIdFieldOffset, referenceId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -88,7 +90,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBool(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 

@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.Codecs
     /// Puts an entry into this map with a given ttl (time to live) value and maxIdle.
     /// Entry will expire and get evicted after the ttl or maxIdle, whichever comes first.
     /// If ttl and maxIdle are 0, then the entry lives forever.
-    ///
+    /// 
     /// Similar to the put operation except that set doesn't return the old value, which is more efficient.
     ///</summary>
     internal static class MapSetWithMaxIdleCodec
@@ -57,15 +57,17 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl, long maxIdle)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "Map.SetWithMaxIdle";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "Map.SetWithMaxIdle"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLong(RequestThreadIdFieldOffset, threadId);
-            initialFrame.Bytes.WriteLong(RequestTtlFieldOffset, ttl);
-            initialFrame.Bytes.WriteLong(RequestMaxIdleFieldOffset, maxIdle);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestTtlFieldOffset, ttl);
+            initialFrame.Bytes.WriteLongL(RequestMaxIdleFieldOffset, maxIdle);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -86,8 +88,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            //empty initial frame
-            iterator.Take();
+            iterator.Take(); // empty initial frame
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }

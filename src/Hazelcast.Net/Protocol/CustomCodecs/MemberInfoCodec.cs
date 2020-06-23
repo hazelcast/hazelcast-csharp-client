@@ -47,8 +47,8 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteGuid(UuidFieldOffset, memberInfo.Uuid);
-            initialFrame.Bytes.WriteBool(LiteMemberFieldOffset, memberInfo.IsLiteMember);
+            initialFrame.Bytes.WriteGuidL(UuidFieldOffset, memberInfo.Uuid);
+            initialFrame.Bytes.WriteBoolL(LiteMemberFieldOffset, memberInfo.IsLiteMember);
             clientMessage.Append(initialFrame);
 
             AddressCodec.Encode(clientMessage, memberInfo.Address);
@@ -64,8 +64,8 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var uuid = initialFrame.Bytes.ReadGuid(UuidFieldOffset);
-            var liteMember = initialFrame.Bytes.ReadBool(LiteMemberFieldOffset);
+            var uuid = initialFrame.Bytes.ReadGuidL(UuidFieldOffset);
+            var liteMember = initialFrame.Bytes.ReadBoolL(LiteMemberFieldOffset);
 
             var address = AddressCodec.Decode(iterator);
             var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);

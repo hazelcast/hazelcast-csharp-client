@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteInt(PortFieldOffset, address.Port);
+            initialFrame.Bytes.WriteIntL(PortFieldOffset, address.Port);
             clientMessage.Append(initialFrame);
 
             StringCodec.Encode(clientMessage, address.Host);
@@ -60,7 +60,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var port = initialFrame.Bytes.ReadInt(PortFieldOffset);
+            var port = initialFrame.Bytes.ReadIntL(PortFieldOffset);
 
             var host = StringCodec.Decode(iterator);
 

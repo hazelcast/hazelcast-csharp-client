@@ -59,14 +59,16 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = false;
-            clientMessage.OperationName = "ReplicatedMap.AddNearCacheEntryListener";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = false,
+                OperationName = "ReplicatedMap.AddNearCacheEntryListener"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteBool(RequestIncludeValueFieldOffset, includeValue);
-            initialFrame.Bytes.WriteBool(RequestLocalOnlyFieldOffset, localOnly);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBoolL(RequestIncludeValueFieldOffset, includeValue);
+            initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -86,7 +88,7 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadGuid(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -96,9 +98,9 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             if (messageType == EventEntryMessageType) {
                 var initialFrame = iterator.Take();
-                var eventType =  initialFrame.Bytes.ReadInt(EventEntryEventTypeFieldOffset);
-                var uuid =  initialFrame.Bytes.ReadGuid(EventEntryUuidFieldOffset);
-                var numberOfAffectedEntries =  initialFrame.Bytes.ReadInt(EventEntryNumberOfAffectedEntriesFieldOffset);
+                var eventType =  initialFrame.Bytes.ReadIntL(EventEntryEventTypeFieldOffset);
+                var uuid =  initialFrame.Bytes.ReadGuidL(EventEntryUuidFieldOffset);
+                var numberOfAffectedEntries =  initialFrame.Bytes.ReadIntL(EventEntryNumberOfAffectedEntriesFieldOffset);
                 var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var @value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var oldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);

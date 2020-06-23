@@ -105,17 +105,19 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IList<string> Labels { get; set; }
         }
-
+    
         public static ClientMessage EncodeRequest(string clusterName, string username, string password, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection<string> labels)
         {
-            var clientMessage = new ClientMessage();
-            clientMessage.IsRetryable = true;
-            clientMessage.OperationName = "Client.Authentication";
+            var clientMessage = new ClientMessage
+            {
+                IsRetryable = true,
+                OperationName = "Client.Authentication"
+            };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteGuid(RequestUuidFieldOffset, uuid);
-            initialFrame.Bytes.WriteByte(RequestSerializationVersionFieldOffset, serializationVersion);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(RequestUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteByteL(RequestSerializationVersionFieldOffset, serializationVersion);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, clusterName);
             CodecUtil.EncodeNullable(clientMessage, username, StringCodec.Encode);
@@ -132,8 +134,8 @@ namespace Hazelcast.Protocol.Codecs
             var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Uuid = initialFrame.Bytes.ReadGuid(RequestUuidFieldOffset);
-            request.SerializationVersion = initialFrame.Bytes.ReadByte(RequestSerializationVersionFieldOffset);
+            request.Uuid = initialFrame.Bytes.ReadGuidL(RequestUuidFieldOffset);
+            request.SerializationVersion = initialFrame.Bytes.ReadByteL(RequestSerializationVersionFieldOffset);
             request.ClusterName = StringCodec.Decode(iterator);
             request.Username = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
             request.Password = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
@@ -143,7 +145,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Labels = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
             return request;
         }
-
+        
         public sealed class ResponseParameters
         {
 
@@ -193,35 +195,35 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteInt(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteByte(ResponseStatusFieldOffset, status);
-            initialFrame.Bytes.WriteGuid(ResponseMemberUuidFieldOffset, memberUuid);
-            initialFrame.Bytes.WriteByte(ResponseSerializationVersionFieldOffset, serializationVersion);
-            initialFrame.Bytes.WriteInt(ResponsePartitionCountFieldOffset, partitionCount);
-            initialFrame.Bytes.WriteGuid(ResponseClusterIdFieldOffset, clusterId);
-            initialFrame.Bytes.WriteBool(ResponseFailoverSupportedFieldOffset, failoverSupported);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteByteL(ResponseStatusFieldOffset, status);
+            initialFrame.Bytes.WriteGuidL(ResponseMemberUuidFieldOffset, memberUuid);
+            initialFrame.Bytes.WriteByteL(ResponseSerializationVersionFieldOffset, serializationVersion);
+            initialFrame.Bytes.WriteIntL(ResponsePartitionCountFieldOffset, partitionCount);
+            initialFrame.Bytes.WriteGuidL(ResponseClusterIdFieldOffset, clusterId);
+            initialFrame.Bytes.WriteBoolL(ResponseFailoverSupportedFieldOffset, failoverSupported);
             clientMessage.Append(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, address, AddressCodec.Encode);
             StringCodec.Encode(clientMessage, serverHazelcastVersion);
             return clientMessage;
         }
-
+    
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Status = initialFrame.Bytes.ReadByte(ResponseStatusFieldOffset);
-            response.MemberUuid = initialFrame.Bytes.ReadGuid(ResponseMemberUuidFieldOffset);
-            response.SerializationVersion = initialFrame.Bytes.ReadByte(ResponseSerializationVersionFieldOffset);
-            response.PartitionCount = initialFrame.Bytes.ReadInt(ResponsePartitionCountFieldOffset);
-            response.ClusterId = initialFrame.Bytes.ReadGuid(ResponseClusterIdFieldOffset);
-            response.FailoverSupported = initialFrame.Bytes.ReadBool(ResponseFailoverSupportedFieldOffset);
+            response.Status = initialFrame.Bytes.ReadByteL(ResponseStatusFieldOffset);
+            response.MemberUuid = initialFrame.Bytes.ReadGuidL(ResponseMemberUuidFieldOffset);
+            response.SerializationVersion = initialFrame.Bytes.ReadByteL(ResponseSerializationVersionFieldOffset);
+            response.PartitionCount = initialFrame.Bytes.ReadIntL(ResponsePartitionCountFieldOffset);
+            response.ClusterId = initialFrame.Bytes.ReadGuidL(ResponseClusterIdFieldOffset);
+            response.FailoverSupported = initialFrame.Bytes.ReadBoolL(ResponseFailoverSupportedFieldOffset);
             response.Address = CodecUtil.DecodeNullable(iterator, AddressCodec.Decode);
             response.ServerHazelcastVersion = StringCodec.Decode(iterator);
             return response;
         }
 
-
+    
     }
 }

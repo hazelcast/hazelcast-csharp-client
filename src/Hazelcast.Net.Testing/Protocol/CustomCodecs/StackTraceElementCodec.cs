@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteInt(LineNumberFieldOffset, stackTraceElement.LineNumber);
+            initialFrame.Bytes.WriteIntL(LineNumberFieldOffset, stackTraceElement.LineNumber);
             clientMessage.Append(initialFrame);
 
             StringCodec.Encode(clientMessage, stackTraceElement.ClassName);
@@ -63,7 +63,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var lineNumber = initialFrame.Bytes.ReadInt(LineNumberFieldOffset);
+            var lineNumber = initialFrame.Bytes.ReadIntL(LineNumberFieldOffset);
 
             var className = StringCodec.Decode(iterator);
             var methodName = StringCodec.Decode(iterator);

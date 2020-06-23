@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteInt(UniqueKeyTransformationFieldOffset, bitmapIndexOptions.UniqueKeyTransformation);
+            initialFrame.Bytes.WriteIntL(UniqueKeyTransformationFieldOffset, bitmapIndexOptions.UniqueKeyTransformation);
             clientMessage.Append(initialFrame);
 
             StringCodec.Encode(clientMessage, bitmapIndexOptions.UniqueKey);
@@ -60,7 +60,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var uniqueKeyTransformation = initialFrame.Bytes.ReadInt(UniqueKeyTransformationFieldOffset);
+            var uniqueKeyTransformation = initialFrame.Bytes.ReadIntL(UniqueKeyTransformationFieldOffset);
 
             var uniqueKey = StringCodec.Decode(iterator);
 
