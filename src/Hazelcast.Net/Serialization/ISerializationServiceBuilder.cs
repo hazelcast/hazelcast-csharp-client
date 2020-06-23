@@ -30,7 +30,6 @@ namespace Hazelcast.Serialization
         ISerializationServiceBuilder SetInitialOutputBufferSize(int initialOutputBufferSize);
         ISerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitioningStrategy);
         ISerializationServiceBuilder SetPortableVersion(int version);
-        ISerializationServiceBuilder SetUseNativeByteOrder(bool useNativeByteOrder);
         ISerializationServiceBuilder SetVersion(byte version);
         ISerializationServiceBuilder AddHook<T>();
         ISerializationServiceBuilder AddHook(Type type);

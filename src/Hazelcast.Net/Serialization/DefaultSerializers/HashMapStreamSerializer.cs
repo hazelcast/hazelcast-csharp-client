@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization
+using System.Collections.Generic;
+
+namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal interface IOutputStream
+    internal class HashMapStreamSerializer : DictStreamSerializerBase<Dictionary<object, object>>
     {
-        void Close();
+        public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashMap;
 
-        void Flush();
-
-        void Write(int b);
-
-        void Write(byte[] b);
-
-        void Write(byte[] b, int off, int len);
+        public override Dictionary<object, object> Read(IObjectDataInput input)
+        {
+            var size = input.ReadInt();
+            var dict = new Dictionary<object, object>(size);
+            return DeserializeEntries(input, size, dict);
+        }
     }
 }

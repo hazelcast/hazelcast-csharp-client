@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal interface IOutputStream
+    internal sealed class NullSerializer : SingletonSerializerBase<object>
     {
-        void Close();
+        public override int GetTypeId()
+        {
+            return SerializationConstants.ConstantTypeNull;
+        }
 
-        void Flush();
+        public override object Read(IObjectDataInput input)
+        {
+            return null;
+        }
 
-        void Write(int b);
-
-        void Write(byte[] b);
-
-        void Write(byte[] b, int off, int len);
+        public override void Write(IObjectDataOutput output, object obj)
+        {
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The message type.</returns>
         public static int ReadMessageType(this Frame frame)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.MessageType);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.MessageType, Endianness.LittleEndian);
 
         /// <summary>
         /// Writes the message type.
@@ -37,7 +37,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="type">The message type.</param>
         public static void WriteMessageType(this Frame frame, int type)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.MessageType, type);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.MessageType, type, Endianness.LittleEndian);
 
         /// <summary>
         /// Reads the correlation id.
@@ -45,7 +45,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The correlation id.</returns>
         public static long ReadCorrelationId(this Frame frame)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.CorrelationId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.CorrelationId, Endianness.LittleEndian);
 
         /// <summary>
         /// Writes the correlation id.
@@ -53,7 +53,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="correlationId">The correlation id.</param>
         public static void WriteCorrelationId(this Frame frame, long correlationId)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.CorrelationId, correlationId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.CorrelationId, correlationId, Endianness.LittleEndian);
 
         /// <summary>
         /// Reads the partition id.
@@ -61,7 +61,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The partition id.</returns>
         public static int ReadPartitionId(this Frame frame)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.PartitionId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.PartitionId, Endianness.LittleEndian);
 
         /// <summary>
         /// Writes the partition id.
@@ -69,7 +69,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="partionId">The partition id.</param>
         public static void WritePartitionId(this Frame frame, int partionId)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.PartitionId, partionId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.PartitionId, partionId, Endianness.LittleEndian);
 
         /// <summary>
         /// Reads the fragment id.
@@ -77,7 +77,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <returns>The fragment id.</returns>
         public static long ReadFragmentId(this Frame frame)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.FragmentId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.FragmentId, Endianness.LittleEndian);
 
         /// <summary>
         /// Writes the fragment id.
@@ -85,7 +85,7 @@ namespace Hazelcast.Messaging
         /// <param name="frame">The frame.</param>
         /// <param name="fragmentId">The fragment id.</param>
         public static void WriteFragmentId(this Frame frame, long fragmentId)
-            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.FragmentId, fragmentId);
+            => (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.FragmentId, fragmentId, Endianness.LittleEndian);
 
         /// <summary>
         /// Takes the current frame and moves to the next frame.

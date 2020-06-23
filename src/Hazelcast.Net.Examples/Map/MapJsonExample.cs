@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 
@@ -24,6 +23,9 @@ namespace Hazelcast.Examples.Map
     {
         public static async Task Run(string[] args)
         {
+            //HConsole.Configure<object>(config => config.SetMaxLevel(2));
+            HConsole.Configure<AsyncContext>(config => config.SetMaxLevel(-1));
+
             // creates the example options
             var options = BuildExampleOptions(args);
 
@@ -35,13 +37,26 @@ namespace Hazelcast.Examples.Map
             var map = await hz.GetMapAsync<string, HazelcastJsonValue>("json-example").CAF();
 
             // add values
+            Console.WriteLine("Populate map");
             await map.AddOrReplaceAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }")).CAF();
             await map.AddOrReplaceAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }")).CAF();
 
+            // count
+            Console.WriteLine("Count");
+            Console.WriteLine($"{await map.CountAsync().CAF()} entries");
+
+            // get all
+            Console.WriteLine("List");
+            var entries = await map.GetAsync().CAF();
+            foreach (var (key, value) in entries)
+                Console.WriteLine($"[{key}]: {value}");
+
             // read
-            var result = await map.GetValuesAsync(Predicates.Predicate.IsLessThan("age", 6)).CAF();
-            Console.WriteLine("Retrieved " + result.Count + " values whose age is less than 6.");
-            Console.WriteLine("Entry is: " + result.First());
+            Console.WriteLine("Query");
+            var values = await map.GetValuesAsync(Predicates.Predicate.IsLessThan("age", 6)).CAF();
+            Console.WriteLine($"Retrieved {values.Count} entries with 'age < 6'.");
+            foreach (var value in values)
+                Console.WriteLine($"Entry value: {value}");
 
             // destroy the map
             await hz.DestroyAsync(map).CAF();

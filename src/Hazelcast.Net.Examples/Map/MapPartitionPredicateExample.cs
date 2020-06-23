@@ -47,11 +47,11 @@ namespace Hazelcast.Examples.Map
 
             // all keys on the same partition of the partitionKey will be returned
             var partitionKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.True()));
-            Console.Write("Partition keys: " + string.Join(", ", partitionKeys));
+            Console.WriteLine("Partition keys: " + string.Join(", ", partitionKeys));
 
             // keys less than 100 and on the same partition of the partitionKey will be returned
             var filteredKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.IsLessThan("this",100)));
-            Console.Write("Filtered keys: " + string.Join(", ", filteredKeys));
+            Console.WriteLine("Filtered keys: " + string.Join(", ", filteredKeys));
 
             // destroy the map
             await hz.DestroyAsync(map).CAF();

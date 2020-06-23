@@ -39,6 +39,7 @@ namespace Hazelcast.Core
             switch (endianness)
             {
                 case Endianness.Unspecified:
+                    return Endianness.BigEndian;
                 case Endianness.Native:
                     return NativeEndianness;
                 case Endianness.LittleEndian:

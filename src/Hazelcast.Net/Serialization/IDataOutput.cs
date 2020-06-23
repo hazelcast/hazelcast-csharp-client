@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -19,12 +21,6 @@ namespace Hazelcast.Serialization
     /// </summary>
     public interface IDataOutput
     {
-        /// <summary>
-        /// Writes an <see cref="int"/> (int) value.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        void Write(int value); // fixme duplicate (see below)?
-
         /// <summary>
         /// Writes a <see cref="bool"/> (bool) value.
         /// </summary>
@@ -41,31 +37,36 @@ namespace Hazelcast.Serialization
         /// Writes a <see cref="double"/> (double) value.
         /// </summary>
         /// <param name="value">The value.</param>
-        void WriteDouble(double value);
+        /// <param name="endianness">The optional endianness.</param>
+        void WriteDouble(double value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
         /// Writes a <see cref="float"/> (float) value.
         /// </summary>
         /// <param name="value">The value.</param>
-        void WriteFloat(float value); // fixme name
+        /// <param name="endianness">The optional endianness.</param>
+        void WriteFloat(float value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
         /// Writes an <see cref="int"/> (int) value.
         /// </summary>
         /// <param name="value">The value.</param>
-        void WriteInt(int value); // fixme name
+        /// <param name="endianness">The optional endianness.</param>
+        void WriteInt(int value, Endianness endianness = Endianness.Unspecified); // fixme name
 
         /// <summary>
         /// Writes an <see cref="long"/> (long) value.
         /// </summary>
         /// <param name="value">The value.</param>
-        void WriteLong(long value); // fixme name
+        /// <param name="endianness">The optional endianness.</param>
+        void WriteLong(long value, Endianness endianness = Endianness.Unspecified); // fixme name
 
         /// <summary>
         /// Writes a <see cref="short"/> (short) value.
         /// </summary>
         /// <param name="value">The value.</param>
-        void WriteShort(int value); // fixme name
+        /// <param name="endianness">The optional endianness.</param>
+        void WriteShort(int value, Endianness endianness = Endianness.Unspecified); // fixme name
 
         /// <summary>
         /// Writes a <see cref="string"/> (string) value.

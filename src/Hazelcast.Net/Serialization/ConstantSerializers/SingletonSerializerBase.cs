@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal interface IOutputStream
-    {
-        void Close();
+    internal abstract class SingletonSerializerBase<T> : IStreamSerializer<T>
+        {
+            public virtual void Destroy()
+            { }
 
-        void Flush();
+            public abstract int GetTypeId();
 
-        void Write(int b);
+            public abstract T Read(IObjectDataInput input);
 
-        void Write(byte[] b);
-
-        void Write(byte[] b, int off, int len);
-    }
+            public abstract void Write(IObjectDataOutput output, T obj);
+        }
 }

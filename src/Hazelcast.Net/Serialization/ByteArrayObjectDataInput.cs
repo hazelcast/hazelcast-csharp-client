@@ -19,28 +19,19 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    internal class ByteArrayObjectDataInput : IInputStream, IBufferObjectDataInput
+    internal class ByteArrayObjectDataInput : ByteArrayObjectDataInputOuputBase, IInputStream, IBufferObjectDataInput
     {
-        private readonly Endianness _endianness;
-        private readonly ISerializationService _service;
-
         internal ByteArrayObjectDataInput(byte[] data, ISerializationService service, Endianness endianness)
             : this(data, 0, service, endianness)
         { }
 
         internal ByteArrayObjectDataInput(byte[] data, int offset, ISerializationService service, Endianness endianness)
+            : base(service, endianness)
         {
             Data = data;
             Size = data?.Length ?? 0;
-            _service = service;
             Pos = offset;
-            _endianness = endianness;
         }
-
-        private Endianness ResolveEndianness(Endianness endianness)
-            => endianness == Endianness.Unspecified ? _endianness : endianness;
-
-        public Endianness Endianness => _endianness;
 
         internal char[] CharBuffer { get; set; }
 
@@ -146,7 +137,7 @@ namespace Hazelcast.Serialization
         public virtual char ReadChar(int position)
         {
             CheckAvailable(position, BytesExtensions.SizeOfChar);
-            return Data.ReadChar(position, _endianness);
+            return Data.ReadChar(position, DefaultEndianness);
         }
 
         /// <summary>
@@ -277,7 +268,7 @@ namespace Hazelcast.Serialization
         public virtual int ReadInt(int position)
         {
             CheckAvailable(position, BytesExtensions.SizeOfInt);
-            return Data.ReadInt(position, _endianness);
+            return Data.ReadInt(position, DefaultEndianness);
         }
 
         public int ReadInt(Endianness endianness)
@@ -290,7 +281,7 @@ namespace Hazelcast.Serialization
         public int ReadInt(int position, Endianness endianness)
         {
             CheckAvailable(position, BytesExtensions.SizeOfInt);
-            return Data.ReadInt(position, ResolveEndianness(endianness));
+            return Data.ReadInt(position, ValueOrDefault(endianness));
         }
 
         /// <summary>
@@ -323,7 +314,7 @@ namespace Hazelcast.Serialization
         public virtual long ReadLong(int position)
         {
             CheckAvailable(position, BytesExtensions.SizeOfLong);
-            return Data.ReadLong(position, _endianness);
+            return Data.ReadLong(position, DefaultEndianness);
         }
 
         public long ReadLong(Endianness endianness)
@@ -336,7 +327,7 @@ namespace Hazelcast.Serialization
         public long ReadLong(int position, Endianness endianness)
         {
             CheckAvailable(position, BytesExtensions.SizeOfLong);
-            var l = Data.ReadLong(position, ResolveEndianness(endianness));
+            var l = Data.ReadLong(position, ValueOrDefault(endianness));
             Pos += BytesExtensions.SizeOfLong;
             return l;
         }
@@ -371,7 +362,7 @@ namespace Hazelcast.Serialization
         public virtual short ReadShort(int position)
         {
             CheckAvailable(position, BytesExtensions.SizeOfShort);
-            return Data.ReadShort(position, _endianness);
+            return Data.ReadShort(position, DefaultEndianness);
         }
 
         public short ReadShort(Endianness endianness)
@@ -384,7 +375,7 @@ namespace Hazelcast.Serialization
         public short ReadShort(int position, Endianness endianness)
         {
             CheckAvailable(position, BytesExtensions.SizeOfShort);
-            return Data.ReadShort(position, ResolveEndianness(endianness));
+            return Data.ReadShort(position, ValueOrDefault(endianness));
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -528,7 +519,7 @@ namespace Hazelcast.Serialization
 
         public T ReadObject<T>()
         {
-            return _service.ReadObject<T>(this);
+            return SerializationService.ReadObject<T>(this);
         }
 
         /// <summary>
@@ -602,19 +593,16 @@ namespace Hazelcast.Serialization
         {
             var charCount = ReadInt();
             if (charCount == ArraySerializer.NullArrayLength)
-            {
                 return null;
-            }
+
             if (CharBuffer == null || charCount > CharBuffer.Length)
-            {
                 CharBuffer = new char[charCount];
-            }
+
+            var pos = Pos;
             for (var i = 0; i < charCount; i++)
-            {
-                var pos = Pos;
                 CharBuffer[i] = Data.ReadUtf8Char(ref pos);
-                Pos = pos;
-            }
+
+            Pos = pos;
             return new string(CharBuffer, 0, charCount);
         }
 

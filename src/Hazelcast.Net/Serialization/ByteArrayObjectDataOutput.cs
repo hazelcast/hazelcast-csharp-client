@@ -20,22 +20,16 @@ namespace Hazelcast.Serialization
 {
     // TODO: globally refactor byte array management
 
-    internal class ByteArrayObjectDataOutput : IOutputStream, IBufferObjectDataOutput
+    internal class ByteArrayObjectDataOutput : ByteArrayObjectDataInputOuputBase, IOutputStream, IBufferObjectDataOutput
     {
         private readonly int _initialSize;
-        private readonly Endianness _endianness;
-        private readonly ISerializationService _service;
 
         internal ByteArrayObjectDataOutput(int size, ISerializationService service, Endianness endianness)
+            : base(service, endianness)
         {
             _initialSize = size;
             Buffer = new byte[size];
-            _service = service;
-            _endianness = endianness;
         }
-
-        private Endianness ResolveEndianness(Endianness endianness)
-            => endianness == Endianness.Unspecified ? _endianness : endianness;
 
         internal byte[] Buffer { get; set; }
 
@@ -48,7 +42,7 @@ namespace Hazelcast.Serialization
 
         public virtual void WriteBoolean(bool v)
         {
-            Write(v ? 1 : 0);
+            WriteByte(v ? 1 : 0);
         }
 
         public virtual void WriteBoolean(int position, bool v)
@@ -56,9 +50,13 @@ namespace Hazelcast.Serialization
             Write(position, v ? 1 : 0);
         }
 
+        // TODO: why do we have this?
+        void IOutputStream.Write(int v) => WriteByte(v);
+
         public void WriteByte(int v)
         {
-            Write(v);
+            EnsureAvailable(1);
+            Buffer[Pos++] = unchecked((byte)(v));
         }
 
         public virtual void WriteByte(int position, int v)
@@ -69,7 +67,7 @@ namespace Hazelcast.Serialization
         public void WriteZeroBytes(int count)
         {
             for (var k = 0; k < count; k++)
-                Write(0);
+                WriteByte(0);
         }
 
         public virtual void WriteBytes(string s)
@@ -83,13 +81,13 @@ namespace Hazelcast.Serialization
         public virtual void WriteChar(int v)
         {
             EnsureAvailable(BytesExtensions.SizeOfChar);
-            Buffer.WriteChar(Pos, (char) v, _endianness);
+            Buffer.WriteChar(Pos, (char) v, DefaultEndianness);
             Pos += BytesExtensions.SizeOfChar;
         }
 
         public virtual void WriteChar(int position, int v)
         {
-            Buffer.WriteChar(position, (char) v, _endianness);
+            Buffer.WriteChar(position, (char) v, DefaultEndianness);
         }
 
         public virtual void WriteChars(string s)
@@ -104,9 +102,6 @@ namespace Hazelcast.Serialization
             }
         }
 
-        // FIXME we should not need this - only because base interfaes define it?!
-        public void WriteDouble(double v) => WriteDouble(v, Endianness.Native);
-
         public void WriteDouble(double v, Endianness endianness = Endianness.Unspecified)
         {
             WriteLong(BitConverter.DoubleToInt64Bits(v), endianness);
@@ -116,9 +111,6 @@ namespace Hazelcast.Serialization
         {
             WriteLong(position, BitConverter.DoubleToInt64Bits(v), endianness);
         }
-
-        // FIXME we should not need this - only because base interfaes define it?!
-        public void WriteFloat(float v) => WriteFloat(v, Endianness.Native);
 
         public void WriteFloat(float v, Endianness endianness = Endianness.Unspecified)
         {
@@ -130,56 +122,47 @@ namespace Hazelcast.Serialization
             WriteInt(position, BitConverter.ToInt32(BitConverter.GetBytes(v), 0), endianness);
         }
 
-        // FIXME we should not need this - only because base interfaes define it?!
-        public void WriteInt(int v) => WriteInt(v, Endianness.Native);
-
         public void WriteInt(int v, Endianness endianness = Endianness.Unspecified)
         {
             EnsureAvailable(BytesExtensions.SizeOfInt);
-            Buffer.WriteInt(Pos, v, ResolveEndianness(endianness));
+            Buffer.WriteInt(Pos, v, ValueOrDefault(endianness));
             Pos += BytesExtensions.SizeOfInt;
         }
 
         public void WriteInt(int position, int v, Endianness endianness = Endianness.Unspecified)
         {
-            Buffer.WriteInt(position, v, ResolveEndianness(endianness));
+            Buffer.WriteInt(position, v, ValueOrDefault(endianness));
         }
-
-        // FIXME we should not need this - only because base interfaes define it?!
-        public void WriteLong(long v) => WriteLong(v, Endianness.Native);
 
         public void WriteLong(long v, Endianness endianness = Endianness.Unspecified)
         {
             EnsureAvailable(BytesExtensions.SizeOfLong);
-            Buffer.WriteLong(Pos, v, ResolveEndianness(endianness));
+            Buffer.WriteLong(Pos, v, ValueOrDefault(endianness));
             Pos += BytesExtensions.SizeOfLong;
         }
 
         public void WriteLong(int position, long v, Endianness endianness = Endianness.Unspecified)
         {
-            Buffer.WriteLong(position, v, ResolveEndianness(endianness));
+            Buffer.WriteLong(position, v, ValueOrDefault(endianness));
         }
-
-        // FIXME we should not need this - only because base interfaes define it?!
-        public void WriteShort(int v) => WriteShort(v, Endianness.Native);
 
         public void WriteShort(int v, Endianness endianness = Endianness.Unspecified)
         {
             EnsureAvailable(BytesExtensions.SizeOfShort);
-            Buffer.WriteShort(Pos, (short) v, ResolveEndianness(endianness));
+            Buffer.WriteShort(Pos, (short) v, ValueOrDefault(endianness));
             Pos += BytesExtensions.SizeOfShort;
         }
 
         public void WriteShort(int position, int v, Endianness endianness = Endianness.Unspecified)
         {
-            Buffer.WriteShort(position, (short)v, ResolveEndianness(endianness));
+            Buffer.WriteShort(position, (short)v, ValueOrDefault(endianness));
         }
 
         public virtual void WriteUtf(string str)
         {
             var len = str?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (str == null || len <= 0) return;
 
             EnsureAvailable(len*3);
             var pos = Pos;
@@ -192,7 +175,7 @@ namespace Hazelcast.Serialization
         {
             var len = bytes?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (bytes == null || len <= 0) return;
 
             Write(bytes, 0, len);
         }
@@ -201,7 +184,7 @@ namespace Hazelcast.Serialization
         {
             var len = bools?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (bools == null || len <= 0) return;
 
             foreach (var b in bools)
                 WriteBoolean(b);
@@ -211,7 +194,7 @@ namespace Hazelcast.Serialization
         {
             var len = chars?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (chars == null || len <= 0) return;
 
             foreach (var c in chars)
                 WriteChar(c);
@@ -221,7 +204,7 @@ namespace Hazelcast.Serialization
         {
             var len = ints?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (ints == null || len <= 0) return;
 
             foreach (var i in ints)
                 WriteInt(i);
@@ -231,7 +214,7 @@ namespace Hazelcast.Serialization
         {
             var len = longs?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (longs == null || len <= 0) return;
 
             foreach (var l in longs)
                 WriteLong(l);
@@ -241,7 +224,7 @@ namespace Hazelcast.Serialization
         {
             var len = doubles?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (doubles == null || len <= 0) return;
 
             foreach (var d in doubles)
                 WriteDouble(d);
@@ -251,7 +234,7 @@ namespace Hazelcast.Serialization
         {
             var len = floats?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (floats == null || len <= 0) return;
 
             foreach (var f in floats)
                 WriteFloat(f);
@@ -261,7 +244,7 @@ namespace Hazelcast.Serialization
         {
             var len = shorts?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (shorts == null || len <= 0) return;
 
             foreach (var s in shorts)
                 WriteShort(s);
@@ -271,7 +254,7 @@ namespace Hazelcast.Serialization
         {
             var len = strings?.Length ?? ArraySerializer.NullArrayLength;
             WriteInt(len);
-            if (len <= 0) return;
+            if (strings == null || len <= 0) return;
 
             foreach (var s in strings)
                 WriteUtf(s);
@@ -279,7 +262,7 @@ namespace Hazelcast.Serialization
 
         public virtual void WriteObject(object @object)
         {
-            _service.WriteObject(this, @object);
+            SerializationService.WriteObject(this, @object);
         }
 
         public virtual void WriteData(IData data)
@@ -321,14 +304,6 @@ namespace Hazelcast.Serialization
         public void Dispose()
         {
             Close();
-        }
-
-        public virtual Endianness Endianness => _endianness;
-
-        public void Write(int b)
-        {
-            EnsureAvailable(1);
-            Buffer[Pos++] = unchecked((byte) (b));
         }
 
         public void Write(byte[] b)

@@ -71,29 +71,26 @@ namespace Hazelcast.Messaging
         /// Reads the length of the frame from a sequence of bytes, and slice the sequence accordingly.
         /// </summary>
         /// <param name="bytes">The sequence of bytes.</param>
-        /// <param name="endianness">The endianness.</param>
         /// <returns>The length of the frame.</returns>
-        public static int ReadLength(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
-            => BytesExtensions.ReadInt(ref bytes, endianness);
+        public static int ReadLength(ref ReadOnlySequence<byte> bytes)
+            => BytesExtensions.ReadInt(ref bytes, Endianness.LittleEndian);
 
         /// <summary>
         /// Reads the flags of the frame from a sequence of bytes, and slice the sequence accordingly.
         /// </summary>
         /// <param name="bytes">The sequence of bytes.</param>
-        /// <param name="endianness">The endianness.</param>
         /// <returns>The flags of the frame.</returns>
-        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
-            => (FrameFlags) BytesExtensions.ReadUshort(ref bytes, endianness);
+        public static FrameFlags ReadFlags(ref ReadOnlySequence<byte> bytes)
+            => (FrameFlags) BytesExtensions.ReadUshort(ref bytes, Endianness.LittleEndian);
 
         /// <summary>
         /// Writes the length and flags of the frame to an array of bytes.
         /// </summary>
         /// <param name="bytes">An array of bytes.</param>
-        /// <param name="endianness">The endianness.</param>
-        public void WriteLengthAndFlags(byte[] bytes, Endianness endianness = Endianness.Unspecified)
+        public void WriteLengthAndFlags(byte[] bytes)
         {
-            bytes.WriteInt(0, Length, endianness);
-            bytes.WriteUshort(FrameFields.SizeOf.Length, (ushort) Flags, endianness);
+            bytes.WriteInt(0, Length, Endianness.LittleEndian);
+            bytes.WriteUshort(FrameFields.SizeOf.Length, (ushort) Flags, Endianness.LittleEndian);
         }
 
         /// <summary>

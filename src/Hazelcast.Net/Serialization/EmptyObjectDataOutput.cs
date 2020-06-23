@@ -47,22 +47,22 @@ namespace Hazelcast.Serialization
         public void WriteByte(int v)
         { }
 
-        public void WriteShort(int v)
+        public void WriteShort(int v, Endianness endianness = Endianness.Unspecified)
         { }
 
         public void WriteChar(int v)
         { }
 
-        public void WriteInt(int v)
+        public void WriteInt(int v, Endianness endianness = Endianness.Unspecified)
         { }
 
-        public void WriteLong(long v)
+        public void WriteLong(long v, Endianness endianness = Endianness.Unspecified)
         { }
 
-        public void WriteFloat(float v)
+        public void WriteFloat(float v, Endianness endianness = Endianness.Unspecified)
         { }
 
-        public void WriteDouble(double v)
+        public void WriteDouble(double v, Endianness endianness = Endianness.Unspecified)
         { }
 
         public void WriteBytes(string s)

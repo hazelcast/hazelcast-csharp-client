@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Core;
-
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -21,11 +19,6 @@ namespace Hazelcast.Serialization
     /// </summary>
     public interface IObjectDataOutput : IDataOutput
     {
-        /// <summary>
-        /// Gets the endianness to use when serializing.
-        /// </summary>
-        Endianness Endianness { get; } // fixme why not on IDataOutput?
-
         /// <summary>
         /// Gets a byte array representation of the object.
         /// </summary>

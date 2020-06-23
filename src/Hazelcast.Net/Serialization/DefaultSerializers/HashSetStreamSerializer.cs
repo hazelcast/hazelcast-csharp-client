@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization
+using System.Collections.Generic;
+
+namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal interface IOutputStream
+    internal class HashSetStreamSerializer : CollectionStreamSerializerBase<HashSet<object>>
     {
-        void Close();
+        public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashSet;
 
-        void Flush();
-
-        void Write(int b);
-
-        void Write(byte[] b);
-
-        void Write(byte[] b, int off, int len);
+        public override HashSet<object> Read(IObjectDataInput input)
+        {
+            var size = input.ReadInt();
+            var set = new HashSet<object>();
+            return DeserializeEntries(input, size, set);
+        }
     }
 }

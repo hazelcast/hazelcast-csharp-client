@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Core;
-
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -26,11 +24,6 @@ namespace Hazelcast.Serialization
     /// </remarks>
     public interface IObjectDataInput : IDataInput
     {
-        /// <summary>
-        /// Gets the endianness to use when deserializing.
-        /// </summary>
-        Endianness Endianness { get; } // fixme why not on IDataInput?
-
         #region Reads
 
         /// <summary>

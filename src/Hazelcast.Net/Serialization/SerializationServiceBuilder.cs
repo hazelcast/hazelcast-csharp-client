@@ -53,15 +53,11 @@ namespace Hazelcast.Serialization
 
         private SerializationOptions _options;
 
-        // PM.DI
-        //private IHazelcastInstance _hazelcastInstance;
-
         private int _initialOutputBufferSize = DefaultOutBufferSize;
 
         private IPartitioningStrategy _partitioningStrategy;
 
         private int _portableVersion = -1;
-        private bool _useNativeByteOrder;
         private byte _version = SerializationService.SerializerVersion;
 
         public SerializationServiceBuilder(ILoggerFactory loggerFactory)
@@ -113,8 +109,8 @@ namespace Hazelcast.Serialization
             }
 
             _checkClassDefErrors = options.ValidateClassDefinitions;
-            _useNativeByteOrder = options.Endianness == Endianness.Native;
             _endianness = options.Endianness;
+
             return this;
         }
 
@@ -142,24 +138,11 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationServiceBuilder SetUseNativeByteOrder(bool useNativeByteOrder)
-        {
-            _useNativeByteOrder = useNativeByteOrder;
-            return this;
-        }
-
         public ISerializationServiceBuilder SetEndianness(Endianness endianness)
         {
             _endianness = endianness;
             return this;
         }
-
-        // PM.DI
-        //public ISerializationServiceBuilder SetHazelcastInstance(IHazelcastInstance hazelcastInstance)
-        //{
-        //    _hazelcastInstance = hazelcastInstance;
-        //    return this;
-        //}
 
         public ISerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitionStrategy)
         {
@@ -214,7 +197,6 @@ namespace Hazelcast.Serialization
             return ss;
         }
 
-
         private static void AddConfigDataSerializableFactories(IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationOptions options)
         {
             foreach (var factoryOptions in options.DataSerializableFactories)
@@ -247,9 +229,6 @@ namespace Hazelcast.Serialization
         {
             if (_endianness == Endianness.Unspecified)
                 _endianness = Endianness.BigEndian;
-
-            if (_useNativeByteOrder)
-                _endianness = Endianness.Native;
 
             return new ByteArrayInputOutputFactory(_endianness);
         }

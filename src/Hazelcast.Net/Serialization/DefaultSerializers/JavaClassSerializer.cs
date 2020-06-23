@@ -12,18 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization
+namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal interface IOutputStream
+    internal class JavaClassSerializer : ConstantSerializers.SingletonSerializerBase<JavaClass>
     {
-        void Close();
+        public override int GetTypeId()
+        {
+            return SerializationConstants.JavaDefaultTypeClass;
+        }
 
-        void Flush();
+        public override JavaClass Read(IObjectDataInput input)
+        {
+            return new JavaClass(input.ReadUtf());
+        }
 
-        void Write(int b);
-
-        void Write(byte[] b);
-
-        void Write(byte[] b, int off, int len);
+        public override void Write(IObjectDataOutput output, JavaClass obj)
+        {
+            output.WriteUtf(obj.Name);
+        }
     }
 }

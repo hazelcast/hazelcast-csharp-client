@@ -96,7 +96,6 @@ namespace Hazelcast
                 .AddHook<PredicateDataSerializerHook>() // shouldn't they be configurable?
                 .AddHook<AggregatorDataSerializerHook>()
                 .AddHook<ProjectionDataSerializerHook>()
-                .SetEndianness(Endianness.LittleEndian)
                 ;
             var serializationService = serializationServiceBuilder.Build();
 
