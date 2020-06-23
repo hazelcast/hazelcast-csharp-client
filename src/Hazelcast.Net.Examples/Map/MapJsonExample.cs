@@ -23,9 +23,6 @@ namespace Hazelcast.Examples.Map
     {
         public static async Task Run(string[] args)
         {
-            //HConsole.Configure<object>(config => config.SetMaxLevel(2));
-            HConsole.Configure<AsyncContext>(config => config.SetMaxLevel(-1));
-
             // creates the example options
             var options = BuildExampleOptions(args);
 

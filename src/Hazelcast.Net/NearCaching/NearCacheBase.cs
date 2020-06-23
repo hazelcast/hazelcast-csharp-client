@@ -25,92 +25,127 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.NearCaching
 {
     // TODO: document and cleanup + the implementation may be broken (later)
+    /// <summary>
+    /// Provides a base class for Near Caches.
+    /// </summary>
     internal abstract class NearCacheBase
     {
         private const int EvictionPercentage = 20;
         private const int CleanupInterval = 5000;
 
-        private int _canCleanUp;
-        private int _canEvict;
-
         private readonly ConcurrentAsyncDictionary<IData, NearCacheEntry> _entries;
         private readonly EvictionPolicy _evictionPolicy;
         private readonly InMemoryFormat _inMemoryFormat;
-        protected readonly bool InvalidateOnChange;
-        protected readonly ILoggerFactory LoggerFactory;
-        //private readonly ILogger _logger;
         private readonly long _maxIdleMilliseconds;
-
         private readonly int _maxSize;
-
-        private readonly IComparer<NearCacheEntry> _comparer;
+        private readonly IComparer<NearCacheEntry> _evictionComparer;
         private readonly long _timeToLiveMillis;
 
-        private long _lastCleanup;
-        protected Guid RegistrationId;
+        private int _canExpire; // 0 when expiring
+        private int _canEvict; // 0 when evicting
+        private long _lastExpire; // last time expiration ran
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NearCacheBase"/> class.
+        /// </summary>
+        /// <param name="name">The name of the cache.</param>
+        /// <param name="cluster">The cluster.</param>
+        /// <param name="serializationService">The localization service.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
+        /// <param name="nearCacheNamedOptions">NearCache options.</param>
         protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheNamedOptions nearCacheNamedOptions)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
             Name = name;
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            Options = nearCacheNamedOptions ?? throw new ArgumentNullException(nameof(nearCacheNamedOptions));
 
             _entries = new ConcurrentAsyncDictionary<IData, NearCacheEntry>();
             Statistics = new NearCacheStatistics();
 
-            _canCleanUp = 1;
+            _canExpire = 1;
             _canEvict = 1;
-            _lastCleanup = Clock.Milliseconds;
+            _lastExpire = Clock.Milliseconds;
 
             _maxSize = nearCacheNamedOptions.MaxSize;
             _maxIdleMilliseconds = nearCacheNamedOptions.MaxIdleSeconds * 1000;
             _inMemoryFormat = nearCacheNamedOptions.InMemoryFormat;
             _timeToLiveMillis = nearCacheNamedOptions.TimeToLiveSeconds * 1000;
             _evictionPolicy = nearCacheNamedOptions.EvictionPolicy;
-            _comparer = GetComparer(_evictionPolicy);
-            InvalidateOnChange = nearCacheNamedOptions.InvalidateOnChange;
-
-            LoggerFactory = loggerFactory;
-            //_logger = loggerFactory.CreateLogger<NearCacheBase>();
+            _evictionComparer = GetEvictionComparer(_evictionPolicy);
         }
 
-        protected Cluster Cluster { get; }
-
-        protected ISerializationService SerializationService { get; }
-
+        /// <summary>
+        /// Gets the name of the cache.
+        /// </summary>
         public string Name { get; }
 
+        /// <summary>
+        /// Gets the options for this cache.
+        /// </summary>
+        protected NearCacheNamedOptions Options { get; }
+
+        /// <summary>
+        /// Whether the cache is invalidating.
+        /// </summary>
+        public bool Invalidating { get; protected set; }
+
+        /// <summary>
+        /// Gets the cluster.
+        /// </summary>
+        protected Cluster Cluster { get; }
+
+        /// <summary>
+        /// Gets the serialization service.
+        /// </summary>
+        protected ISerializationService SerializationService { get; }
+
+        /// <summary>
+        /// Gets the logger factory.
+        /// </summary>
+        protected ILoggerFactory LoggerFactory { get; }
+
+        /// <summary>
+        /// Gets or sets the identifier of the invalidation event subscription.
+        /// </summary>
+        protected Guid SubscriptionId { get; set; }
+
+        /// <summary>
+        /// Gets statistics
+        /// </summary>
         public NearCacheStatistics Statistics { get; }
 
-        public void Clear()
-        {
-            _entries.Clear();
-            Statistics.EntryCount = 0L;
-        }
+        #region Initialize & Destroy
 
-        public async ValueTask<bool> ContainsKey(IData keyData)
-        {
-            var (contains, _) = await TryGetValue(keyData).CAF();
-            return contains;
-        }
+        /// <summary>
+        /// Initializes the cache.
+        /// </summary>
+        public abstract ValueTask InitializeAsync();
 
+        /// <summary>
+        /// Destroys the cache.
+        /// </summary>
+        // TODO: consider IDisposable?
         public virtual async ValueTask DestroyAsync()
         {
-            if (RegistrationId != default)
-                await Cluster.RemoveSubscriptionAsync(RegistrationId, CancellationToken.None).CAF();
+            if (SubscriptionId != default)
+                await Cluster.RemoveSubscriptionAsync(SubscriptionId, CancellationToken.None).CAF();
 
             _entries.Clear();
         }
 
-        public abstract ValueTask InitializeAsync();
+        #endregion
+
+        #region Invalidate
+
+        // TODO: use Remove() and Clear() instead?!
 
         public void Invalidate(IData key)
         {
             if (_entries.TryRemove(key))
-            {
                 Statistics.DecrementEntryCount();
-            }
         }
 
         public void InvalidateAll()
@@ -118,21 +153,21 @@ namespace Hazelcast.NearCaching
             _entries.Clear();
         }
 
-        public bool Remove(IData key)
-        {
-            if (_entries.TryRemove(key))
-            {
-                Statistics.DecrementEntryCount();
-                return true;
-            }
-            return false;
-        }
+        #endregion
 
+        #region Add, Get, Contains, Remove & Clear
+
+        /// <summary>
+        /// Tries to add a value to the cache.
+        /// </summary>
+        /// <param name="keyData">The key data.</param>
+        /// <param name="value">The value.</param>
+        /// <returns></returns>
         public async Task<bool> TryAdd(IData keyData, object value)
         {
             // kick eviction policy if needed
             if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
-                await TryCacheEvict().CAF();
+                await EvictEntries().CAF();
 
             // cannot add if the cache is full
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
@@ -142,9 +177,9 @@ namespace Hazelcast.NearCaching
             {
                 // trust that the caller send the proper internal cache value
                 // and we don't have to ToEntryValue(value) again
-                var entry = CreateEntry(keyData, value);
+                var e = CreateEntry(keyData, value);
                 Statistics.IncrementEntryCount();
-                return new ValueTask<NearCacheEntry>(entry);
+                return new ValueTask<NearCacheEntry>(e);
             }
 
             var (added, task) = _entries.TryAdd(keyData, CreateCacheEntry);
@@ -165,11 +200,11 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
-        /// Tries to get or add a value in the cache.
+        /// Tries to get a value from, or add a value to, the cache.
         /// </summary>
         /// <param name="keyData">The key data.</param>
         /// <param name="valueFactory">A factory that accepts the key data and returns the value data.</param>
-        /// <returns>A tuple containing the success or the call, and the resulting object.</returns>
+        /// <returns>An attempt containing the resulting object.</returns>
         /// <remarks>
         /// <para>Depending on the cache configuration, the returned object can be in serialized form (i.e.
         /// an <see cref="IData"/> instance) or already de-serialized.</para>
@@ -185,7 +220,7 @@ namespace Hazelcast.NearCaching
 
             // kick eviction policy if needed
             if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
-                await TryCacheEvict().CAF();
+                await EvictEntries().CAF();
 
             // if the cache is full, directly return the un-cached value
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKey(keyData).CAF())
@@ -195,55 +230,60 @@ namespace Hazelcast.NearCaching
             {
                 var valueData = await valueFactory(keyData).CAF();
                 var cachedValue = ToEntryValue(valueData);
-                var entry = CreateEntry(keyData, cachedValue);
+                var e = CreateEntry(keyData, cachedValue);
                 Statistics.IncrementEntryCount();
-                return entry;
+                return e;
             }
 
             // insert into cache
             var (added, task) = _entries.TryAdd(keyData, CreateCacheEntry);
-            if (added)
+            if (!added)
             {
-                // we have inserted a new cache entry in the cache - but, if the factory
-                // fails, it's not really there and will be removed from the cache - so we
-                // need to get the value back and ensure it is ok
+                // failed to add, was added by another thread?
+                (hasEntry, o) = await TryGetValue(keyData).CAF();
+                if (hasEntry) return o;
 
-                // having doubts as to whether this all does what we want...
-
-                NearCacheEntry entry;
-                try
-                {
-                    entry = await task.CAF();
-                }
-                catch
-                {
-                    Invalidate(keyData);
-                    throw;
-                }
-
-                if (entry.Value != null)
-                    return entry.Value;
-
-                Invalidate(keyData);
-                return Attempt.Failed;
+                // otherwise, add the uncached value
+                return Attempt.Fail(await valueFactory(keyData).CAF());
             }
 
-            // failed to add, was added by another thread?
-            (hasEntry, o) = await TryGetValue(keyData).CAF();
-            if (hasEntry) return o;
+            // we have inserted a new cache entry in the cache - but, if the factory
+            // fails, it's not really there and will be removed from the cache - so we
+            // need to get the value back and ensure it is ok
 
-            // otherwise, add the uncached value
-            return Attempt.Fail(await valueFactory(keyData).CAF());
+            // having doubts as to whether this all does what we want...
+
+            NearCacheEntry entry;
+            try
+            {
+                entry = await task.CAF();
+            }
+            catch
+            {
+                Invalidate(keyData);
+                throw;
+            }
+
+            if (entry.Value != null)
+                return entry.Value;
+
+            Invalidate(keyData);
+            return Attempt.Failed;
         }
 
+        /// <summary>
+        /// Tries to get a value from the cache.
+        /// </summary>
+        /// <param name="keyData">The key data.</param>
+        /// <returns>An attempt containing the resulting object.</returns>
         public async ValueTask<Attempt<object>> TryGetValue(IData keyData)
         {
-            await TryTtlCleanup().CAF();
+            await ExpireEntries().CAF();
 
             var (hasEntry, entry) = await _entries.TryGetValue(keyData).CAF();
             if (!hasEntry || entry.Value == null) return Attempt.Failed;
 
-            if (IsStaleRead(keyData, entry) || entry.Value == null)
+            if (IsStaleRead(entry) || entry.Value == null)
             {
                 Invalidate(keyData);
                 Statistics.IncrementMiss();
@@ -263,6 +303,42 @@ namespace Hazelcast.NearCaching
             return entry.Value;
         }
 
+        /// <summary>
+        /// Determines whether the cache contains an entry.
+        /// </summary>
+        /// <param name="keyData">The key data.</param>
+        /// <returns>Whether the cache contains an entry with the specified key.</returns>
+        public async ValueTask<bool> ContainsKey(IData keyData)
+        {
+            var (contains, _) = await TryGetValue(keyData).CAF();
+            return contains;
+        }
+
+        /// <summary>
+        /// Removes an entry from the cache.
+        /// </summary>
+        /// <param name="key">The key data.</param>
+        /// <returns>Whether an entry was removed.</returns>
+        public bool Remove(IData key)
+        {
+            if (!_entries.TryRemove(key))
+                return false;
+
+            Statistics.DecrementEntryCount();
+            return true;
+        }
+
+        /// <summary>
+        /// Clears the cache.
+        /// </summary>
+        public void Clear()
+        {
+            _entries.Clear();
+            Statistics.EntryCount = 0;
+        }
+
+        #endregion
+
         protected virtual NearCacheEntry CreateEntry(IData key, object value)
         {
             var created = Clock.Milliseconds;
@@ -270,10 +346,12 @@ namespace Hazelcast.NearCaching
             return new NearCacheEntry(key, value, created, expires);
         }
 
-        protected virtual bool IsStaleRead(IData key, NearCacheEntry entry)
-        {
-            return false;
-        }
+        /// <summary>
+        /// Determines whether a cached entry is stale.
+        /// </summary>
+        /// <param name="entry">The entry.</param>
+        /// <returns>Whether the entry is stale.</returns>
+        protected virtual bool IsStaleRead(NearCacheEntry entry) => false;
 
         /// <summary>
         /// Converts a value object to the internal cached value.
@@ -292,7 +370,15 @@ namespace Hazelcast.NearCaching
                 : SerializationService.ToObject<object>(o);
         }
 
-        private async ValueTask TryCacheEvict()
+        #region Evict & Expire
+
+        // entries are evicted on each add (TryAdd, TryGetOrAdd)
+        // entries are expired on each get (TryGetValue)
+
+        /// <summary>
+        /// Evicts entries if not already evicting.
+        /// </summary>
+        private async ValueTask EvictEntries()
         {
             try
             {
@@ -300,7 +386,7 @@ namespace Hazelcast.NearCaching
                 if (Interlocked.CompareExchange(ref _canEvict, 0, 1) == 0)
                     return;
 
-                await DoCacheEvict().CAF();
+                await DoEvictEntries().CAF();
             }
             finally
             {
@@ -309,12 +395,16 @@ namespace Hazelcast.NearCaching
             }
         }
 
-        private async ValueTask DoCacheEvict()
+        /// <summary>
+        /// Evicts entries.
+        /// </summary>
+        /// <returns></returns>
+        private async ValueTask DoEvictEntries()
         {
             if (_evictionPolicy == EvictionPolicy.None || _entries.Count < _maxSize)
                 return;
 
-            var entries = new SortedSet<NearCacheEntry>(_comparer);
+            var entries = new SortedSet<NearCacheEntry>(_evictionComparer);
             await foreach (var (_, value) in _entries)
                 entries.Add(value);
 
@@ -341,30 +431,36 @@ namespace Hazelcast.NearCaching
             // but that can potentially lead to endless loops - removing
         }
 
-        private async ValueTask TryTtlCleanup()
+        /// <summary>
+        /// Expires entries if not already expiring.
+        /// </summary>
+        private async ValueTask ExpireEntries()
         {
             // run when it is time to run
-            if (Clock.Milliseconds < _lastCleanup + CleanupInterval)
+            if (Clock.Milliseconds < _lastExpire + CleanupInterval)
                 return;
 
             try
             {
                 // only one at a time please
-                if (Interlocked.CompareExchange(ref _canCleanUp, 0, 1) == 0)
+                if (Interlocked.CompareExchange(ref _canExpire, 0, 1) == 0)
                     return;
 
-                _lastCleanup = Clock.Milliseconds;
+                _lastExpire = Clock.Milliseconds;
 
-                await DoTtlCleanup().CAF();
+                await DoExpireEntries().CAF();
             }
             finally
             {
                 // make sure to release the lock
-                Interlocked.Exchange(ref _canCleanUp, 1);
+                Interlocked.Exchange(ref _canExpire, 1);
             }
         }
 
-        private async ValueTask DoTtlCleanup()
+        /// <summary>
+        /// Expire entries.
+        /// </summary>
+        private async ValueTask DoExpireEntries()
         {
             await foreach (var (key, entry) in _entries)
             {
@@ -380,7 +476,7 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="policy">The eviction policy.</param>
         /// <returns>The record comparer corresponding to the specified eviction policy.</returns>
-        private static IComparer<NearCacheEntry> GetComparer(EvictionPolicy policy)
+        private static IComparer<NearCacheEntry> GetEvictionComparer(EvictionPolicy policy)
         {
             return policy switch
             {
@@ -401,5 +497,7 @@ namespace Hazelcast.NearCaching
             var now = Clock.Milliseconds;
             return entry.IsExpiredAt(now) || entry.IsIdleAt(_maxIdleMilliseconds, now);
         }
+
+        #endregion
     }
 }

@@ -24,7 +24,7 @@ namespace Hazelcast.NearCaching
         private readonly long _creationTime;
         private readonly long _expirationTime;
 
-        private long _sequence; // sequence number of last received invalidation event
+        private long _sequence;
         private long _hits;
 
         private long _lastHitTime;

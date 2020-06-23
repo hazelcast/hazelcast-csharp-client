@@ -307,13 +307,19 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <inheritdoc />
-        public virtual ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return default;
 
             _onDispose(this);
-            return default;
+
+            return DisposeAsyncInternal();
         }
+
+        /// <summary>
+        /// Disposes resources.
+        /// </summary>
+        protected virtual ValueTask DisposeAsyncInternal() => default;
     }
 }

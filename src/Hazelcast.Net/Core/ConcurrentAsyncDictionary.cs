@@ -113,6 +113,25 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Tries to remove an entry, and returns the removed entry.
+        /// </summary>
+        /// <param name="key">The key identifying the entry.</param>
+        /// <returns>An attempt at removing the value associated with the specified key.</returns>
+        public async ValueTask<Attempt<TValue>> TryRemoveAndReturn(TKey key)
+        {
+            if (!_dictionary.TryRemove(key, out var lazy)) return Attempt.Failed;
+
+            try
+            {
+                return await lazy.Value.CAF();
+            }
+            catch // bogus entry is taken care of elsewhere
+            {
+                return Attempt.Failed;
+            }
+        }
+
+        /// <summary>
         /// Tries to remove an entry.
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>

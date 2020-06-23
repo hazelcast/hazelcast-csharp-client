@@ -160,8 +160,13 @@ namespace Hazelcast.DistributedObjects
         /// <param name="cancellationToken">A cancellation token.</param>
         public async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken)
         {
+            // try to get the object - and then, dispose it:  disposing will trigger
+            // the onDisposed handler which will in turn remove the object from _objects
+
             var k = new DistributedObjectInfo(serviceName, name);
-            _objects.TryRemove(k);
+            var attempt = await _objects.TryGetValue(k).CAF();
+            if (attempt)
+                await attempt.Value.DisposeAsync().CAF();
 
             var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
             var responseMessage = await _cluster.SendAsync(clientMessage, cancellationToken).CAF();

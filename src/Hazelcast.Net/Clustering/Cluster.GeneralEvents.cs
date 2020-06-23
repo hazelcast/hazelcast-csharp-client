@@ -93,7 +93,10 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken)
+        private ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken)
+            => RemoveSubscriptionAsync(subscription, false, cancellationToken);
+
+        private async ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, bool throwOnError, CancellationToken cancellationToken)
         {
             subscription.Deactivate();
 
@@ -127,7 +130,19 @@ namespace Hazelcast.Clustering
             {
                 _subscriptions.TryRemove(subscription.Id, out _);
             }
-            return allRemoved;
+
+            if (!throwOnError) return allRemoved;
+
+            // if at least an exception was thrown, rethrow
+            if (exceptions != null)
+                throw new AggregateException("Failed to fully remove the subscription (and the server may be confused).", exceptions.ToArray());
+
+            // if !allRemoved, everything has been removed from the client side,
+            // but the server may still think it needs to send events, so it's kinda dirty.
+            if (!allRemoved)
+                throw new HazelcastException("Failed to fully remove the subscription (and the server may be confused).");
+
+            return true;
         }
 
         /// <summary>
@@ -283,48 +298,7 @@ namespace Hazelcast.Clustering
                     return;
             }
 
-            // deactivate the subscription, so that new clients don't use it
-            subscription.Deactivate();
-
-            List<Exception> exceptions = null;
-            var allRemoved = true;
-
-            // un-subscribe each client
-            foreach (var clientSubscription in subscription)
-            {
-                // if one client fails, keep the exception but continue with other clients
-                try
-                {
-                    // this does
-                    // - remove the correlated subscription
-                    // - tries to properly unsubscribe from the server
-                    allRemoved &= await RemoveSubscriptionAsync(clientSubscription, cancellationToken).CAF();
-                }
-                catch (Exception e)
-                {
-                    exceptions ??= new List<Exception>();
-                    exceptions.Add(e);
-                    allRemoved = false;
-                }
-            }
-
-            // remove the subscription
-            // so whatever happens, nothing remains of the original subscription
-            // (but the client may be "dirty" ie the server may still think it needs
-            // to send events, which will be ignored)
-            using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
-            {
-                _subscriptions.TryRemove(subscription.Id, out _);
-            }
-
-            // if at least an exception was thrown, rethrow
-            if (exceptions != null)
-                throw new AggregateException("Failed to fully remove the subscription (and the server may be confused).", exceptions.ToArray());
-
-            // if !allRemoved, everything has been removed from the client side,
-            // but the server may still think it needs to send events, so it's kinda dirty.
-            if (!allRemoved)
-                throw new HazelcastException("Failed to fully remove the subscription (and the server may be confused).");
+            await RemoveSubscriptionAsync(subscription, true, cancellationToken).CAF();
         }
 
         /// <summary>

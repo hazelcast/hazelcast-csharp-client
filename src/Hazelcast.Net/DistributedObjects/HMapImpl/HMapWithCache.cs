@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.NearCaching;
@@ -50,6 +51,10 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         // TODO: refactor Map and CachedMap, so we don't need to serialize key to keyData all the time!
         //       generally, Map+NearCache can be greatly optimized, but we'll do that later
 
-        // TODO: split regions
+        /// <inheritdoc />
+        protected override ValueTask DisposeAsyncInternal()
+        {
+            return _cache.DestroyAsync();
+        }
     }
 }

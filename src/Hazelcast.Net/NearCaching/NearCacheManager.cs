@@ -74,7 +74,7 @@ namespace Hazelcast.NearCaching
             return await _caches.GetOrAddAsync(mapName, async name =>
             {
                 var nearCache = new NearCache(name, _cluster, _serializationService, _loggerFactory, options, GetMaxToleratedMissCount());
-                await InitNearCache(nearCache, cancellationToken).CAF();
+                await InitializeNearCache(nearCache, cancellationToken).CAF();
                 return nearCache;
             }).CAF();
         }
@@ -87,6 +87,10 @@ namespace Hazelcast.NearCaching
             return value;
         }
 
+        /// <summary>
+        /// Fetches and processes meta data for all managed caches.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
         private async ValueTask FetchMetadataAsync(CancellationToken cancellationToken)
         {
             var names = new List<string>();
@@ -97,14 +101,20 @@ namespace Hazelcast.NearCaching
             if (names.Count == 0)
                 return;
 
-            await FetchMetadataAsyncInternal(names, async responseParameter =>
+            await FetchMetadataAsync(names, async response =>
             {
-                await RepairGuids(responseParameter.PartitionUuidList).CAF();
-                await RepairSequences(responseParameter.NamePartitionSequenceList).CAF();
+                await RepairGuids(response.PartitionUuidList).CAF();
+                await RepairSequences(response.NamePartitionSequenceList).CAF();
             }, cancellationToken).CAF();
         }
 
-        private async ValueTask FetchMetadataAsyncInternal(IList<string> names, Func<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters, ValueTask> process, CancellationToken cancellationToken)
+        /// <summary>
+        /// Fetches and processes meta data for specified caches.
+        /// </summary>
+        /// <param name="names">The names of the caches.</param>
+        /// <param name="process">A function to execute to process meta data.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        private async ValueTask FetchMetadataAsync(ICollection<string> names, Func<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters, ValueTask> process, CancellationToken cancellationToken)
         {
             var dataMembers = _cluster.LiteMembers;
             foreach (var member in dataMembers)
@@ -115,13 +125,13 @@ namespace Hazelcast.NearCaching
                 {
                     var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
                     var responseMessage = await _cluster.SendToMemberAsync(requestMessage, member.Id, cancellationToken).CAF();
-                    var responseParameter = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
+                    var response = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
 
-                    await process(responseParameter).CAF();
+                    await process(response).CAF();
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, $"Cant fetch invalidation meta-data from address:{member.Address}.");
+                    _logger.LogWarning(e, $"An exception was thrown while processing invalidation meta data from address {member.Address}.");
                 }
             }
         }
@@ -154,29 +164,33 @@ namespace Hazelcast.NearCaching
             return reconciliationIntervalSeconds;
         }
 
-        private async ValueTask InitNearCache(NearCacheBase baseNearCache, CancellationToken cancellationToken)
+        private async ValueTask InitializeNearCache(NearCacheBase baseNearCache, CancellationToken cancellationToken)
         {
             try
             {
                 await baseNearCache.InitializeAsync().CAF(); // FIXME CANCELLATION
-                var nearCache = baseNearCache as NearCache;
 
-                var repairingHandler = nearCache?.RepairingHandler;
-                if (repairingHandler == null) return;
+                if (!baseNearCache.Invalidating) return;
+
+                if (!(baseNearCache is NearCache nearCache))
+                    throw new NotSupportedException($"Cache type {baseNearCache.GetType()} is not supported here.");
+
+                var repairingHandler = nearCache.RepairingHandler;
+                if (repairingHandler == null) return; // through that should never happen
 
                 var names = new List<string> { nearCache.Name };
-                await FetchMetadataAsyncInternal(names, responseParameter =>
+                await FetchMetadataAsync(names, response =>
                 {
-                    repairingHandler.InitGuids(responseParameter.PartitionUuidList);
-                    repairingHandler.InitSequences(responseParameter.NamePartitionSequenceList);
+                    repairingHandler.InitializeGuids(response.PartitionUuidList);
+                    repairingHandler.InitializeSequences(response.NamePartitionSequenceList);
                     return default;
                 }, cancellationToken).CAF();
 
-                //start repairing task if not started
+                // start repairing task if not started
                 if (Interlocked.CompareExchange(ref _running, 1, 0) == 0)
                 {
                     _repairingCancellation = new CancellationTokenSource();
-                    _repairing = Task.Run(() => Repair(_repairingCancellation.Token));
+                    _repairing = Repair(_repairingCancellation.Token).AsTask();
 
                     Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
                 }
@@ -222,7 +236,7 @@ namespace Hazelcast.NearCaching
                 {
                     var nc = cache as NearCache;
                     var ncRepairingHandler = nc?.RepairingHandler;
-                    ncRepairingHandler?.CheckOrRepairGuid(pair.Key, pair.Value);
+                    ncRepairingHandler?.UpdateUuid(pair.Key, pair.Value);
                 }
             }
         }
@@ -238,7 +252,7 @@ namespace Hazelcast.NearCaching
                     {
                         var nc = cache as NearCache;
                         var ncRepairingHandler = nc?.RepairingHandler;
-                        ncRepairingHandler?.CheckOrRepairSequence(subPair.Key, subPair.Value, true);
+                        ncRepairingHandler?.UpdateSequence(subPair.Key, subPair.Value, true);
                     }
                 }
             }
@@ -278,10 +292,10 @@ namespace Hazelcast.NearCaching
                 _repairingCancellation.Dispose();
             }
 
-            await foreach (var (key, value) in _caches)
+            await foreach (var (name, cache) in _caches)
             {
-                _caches.TryRemove(key); // ok with concurrent dictionary
-                await value.DestroyAsync().CAF();
+                _caches.TryRemove(name); // ok with concurrent dictionary
+                await cache.DestroyAsync().CAF();
             }
         }
     }

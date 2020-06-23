@@ -15,177 +15,230 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Hazelcast.Core;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.NearCaching
 {
+    /// <summary>
+    /// Represents a Near Cache repairing handler.
+    /// </summary>
     internal class RepairingHandler
     {
         private readonly ILogger _logger;
-
-        private readonly Guid _localUuid;
+        private readonly Guid _clusterClientId;
         private readonly int _maxToleratedMissCount;
-        private readonly MetaData[] _metaDataContainers;
-
+        private readonly MetaData[] _metadataTable;
         private readonly NearCache _nearCache;
         private readonly int _partitionCount;
-
         private readonly ISerializationService _serializationService;
         private readonly Partitioner _partitioner;
 
-        public RepairingHandler(Guid localUuid, NearCache nearCache, int maxToleratedMissCount, Partitioner partitioner, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RepairingHandler"/> class.
+        /// </summary>
+        /// <param name="clusterClientId">The unique identifier of the cluster, as assigned by the client.</param>
+        /// <param name="nearCache">The near cache instance.</param>
+        /// <param name="maxToleratedMissCount">The max tolerated miss count.</param>
+        /// <param name="partitioner">The partitioner.</param>
+        /// <param name="serializationService">The serialization service.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
+        public RepairingHandler(Guid clusterClientId, NearCache nearCache, int maxToleratedMissCount, Partitioner partitioner, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
-            _localUuid = localUuid;
+            _clusterClientId = clusterClientId;
             _nearCache = nearCache;
             _partitioner = partitioner;
             _partitionCount = partitioner.Count;
-            _metaDataContainers = CreateMetadataContainers(_partitionCount);
+            _metadataTable = CreateMetadataTable(_partitionCount);
             _maxToleratedMissCount = maxToleratedMissCount;
             _serializationService = serializationService;
             _logger = loggerFactory.CreateLogger<RepairingHandler>();
         }
 
         // multiple threads can concurrently call this method: one is anti-entropy, other one is event service thread
-        public void CheckOrRepairGuid(int partition, Guid newUuid)
+        // TODO: understand and document what those GUIDs are?!
+        /// <summary>
+        /// Updates the ???
+        /// </summary>
+        /// <param name="partitionId">The partition identifier.</param>
+        /// <param name="newUuid">???</param>
+        public void UpdateUuid(int partitionId, Guid newUuid)
         {
-            Debug.Assert(newUuid != Guid.Empty);
-            var metaData = GetMetaDataContainer(partition);
+            if (newUuid == default) throw new ArgumentOutOfRangeException(nameof(newUuid));
+
+            var metadata = GetMetadata(partitionId);
+
             while (true)
             {
-                var prevUuid = metaData.Guid;
-                if (prevUuid.Equals(newUuid))
-                {
+                var currentUuid = metadata.Guid;
+
+                // ignore if not changed
+                if (currentUuid.Equals(newUuid))
                     break;
-                }
-                if (metaData.TrySetGuid(newUuid))
-                {
-                    metaData.ResetSequences();
-                    _logger.LogDebug($"Invalid UUID, lost remote partition data unexpectedly:[name={_nearCache.Name},partition={partition},prevUuid={prevUuid},newUuid={newUuid}]");
-                    break;
-                }
+
+                // try to update the ???, loop if current ??? is locked?
+                // assuming that eventually, the new ??? will be accepted
+                if (!metadata.TrySetGuid(newUuid))
+                    continue;
+
+                // reset and report
+                metadata.ResetSequences();
+                _logger.LogDebug($"Invalid UUID, lost remote partition data unexpectedly " +
+                                 $"(map={_nearCache.Name}, partition={partitionId}, current={currentUuid}, new={newUuid})");
+
+                // we're done
+                break;
             }
         }
 
-        // Checks nextSequence against current one. And updates current sequence if next one is bigger.
-        // multiple threads can concurrently call this method: one is anti-entropy, other one is event service thread
-        public void CheckOrRepairSequence(int partition, long nextSequence, bool viaAntiEntropy)
+        /// <summary>
+        /// Updates the sequence of a partition.
+        /// </summary>
+        /// <param name="partitionId">The partition identifier.</param>
+        /// <param name="newSequence">The new sequence value.</param>
+        /// <param name="viaAntiEntropy">Whether the method is invoked by the anti-entropy task.</param>
+        public void UpdateSequence(int partitionId, long newSequence, bool viaAntiEntropy)
         {
-            Debug.Assert(nextSequence > 0);
+            if (newSequence < 0) throw new ArgumentOutOfRangeException(nameof(newSequence));
 
-            var metaData = GetMetaDataContainer(partition);
+            var metadata = GetMetadata(partitionId);
+
             while (true)
             {
-                var currentSequence = metaData.Sequence;
-                if (currentSequence >= nextSequence)
-                {
-                    break;
-                }
-                if (metaData.UpdateSequence(currentSequence, nextSequence))
-                {
-                    var sequenceDiff = nextSequence - currentSequence;
-                    if (viaAntiEntropy || sequenceDiff > 1L)
-                    {
-                        // we have found at least one missing sequence between current and next sequences. if miss is detected by
-                        // anti-entropy, number of missed sequences will be `miss = next - current`, otherwise it means miss is
-                        // detected by observing received invalidation event sequence numbers and number of missed sequences will be
-                        // `miss = next - current - 1`.
-                        var missCount = viaAntiEntropy ? sequenceDiff : sequenceDiff - 1;
-                        var totalMissCount = metaData.AddMissedSequences(missCount);
+                var currentSequence = metadata.Sequence;
 
-                        _logger.LogDebug($"Invalid sequence (map={_nearCache.Name}, partition={partition}, " +
-                                        $"currentSeq={currentSequence}, nextSeq={nextSequence}, totalMiss={totalMissCount})");
-                    }
+                // ignore an obsolete new sequence
+                if (currentSequence >= newSequence)
                     break;
+
+                // try to update the sequence, loop if current sequence has changed in the meantime
+                // assuming that, eventually, the new sequence will either be accepted, or obsolete
+                if (!metadata.UpdateSequence(currentSequence, newSequence))
+                    continue;
+
+                // sequence has been updated - handle the change
+                var sequenceDelta = newSequence - currentSequence;
+                if (viaAntiEntropy || sequenceDelta > 1L)
+                {
+                    // we have found at least one missing sequence between current and new sequences. if miss is detected by
+                    // anti-entropy, number of missed sequences will be 'miss = new - current', otherwise it means miss is
+                    // detected by observing received invalidation event sequence numbers and number of missed sequences will be
+                    // 'miss =  new - current - 1'.
+                    var missCount = viaAntiEntropy ? sequenceDelta : sequenceDelta - 1;
+                    var totalMissCount = metadata.AddMissedSequences(missCount);
+
+                    // report
+                    _logger.LogDebug($"Invalid sequence (map={_nearCache.Name}, partition={partitionId}, " +
+                                     $"current={currentSequence}, new={newSequence}, totalMiss={totalMissCount})");
                 }
+
+                // we're done
+                break;
             }
         }
 
-        public MetaData GetMetaDataContainer(int partition)
+        #region Meta data
+
+        /// <summary>
+        /// Populates a meta data table.
+        /// </summary>
+        /// <param name="partitionCount">The number of partitions.</param>
+        /// <returns>A meta data table.</returns>
+        private static MetaData[] CreateMetadataTable(int partitionCount)
         {
-            return _metaDataContainers[partition];
+            var metaData = new MetaData[partitionCount];
+            for (var partitionId = 0; partitionId < partitionCount; partitionId++)
+                metaData[partitionId] = new MetaData();
+            return metaData;
         }
 
-        //Handles a single invalidation
-        public void Handle(IData key, Guid sourceUuid, Guid partitionGuid, long sequence)
+        /// <summary>
+        /// Gets meta data for a partition.
+        /// </summary>
+        /// <param name="partitionId">The partition identifier.</param>
+        /// <returns>Meta data for the specified partition.</returns>
+        public MetaData GetMetadata(int partitionId)
+            => _metadataTable[partitionId];
+
+        #endregion
+
+        /// <summary>
+        /// Handles an invalidation.
+        /// </summary>
+        /// <param name="key">The invalidated key.</param>
+        /// <param name="sourceClusterClientId">The identifier of the cluster client originating the event.</param>
+        /// <param name="partitionGuid">???</param>
+        /// <param name="sequence">The sequence.</param>
+        public void Handle(IData key, Guid sourceClusterClientId, Guid partitionGuid, long sequence)
         {
-            // apply invalidation if it's not originated by local member/client (because local
-            // Near Caches are invalidated immediately there is no need to invalidate them twice)
-            if (!_localUuid.Equals(sourceUuid))
+            // apply invalidation if it's not originated by the cluster client (Hazelcast client)
+            // running this code, because local Near Caches are invalidated immediately.
+            if (!_clusterClientId.Equals(sourceClusterClientId))
             {
-                // sourceUuid is allowed to be `null`
+                // sourceClusterClientId is allowed to be null, meaning: all
                 if (key == null)
-                {
                     _nearCache.Clear();
-                }
                 else
-                {
                     _nearCache.Remove(key);
-                }
             }
 
             var partitionId = GetPartitionIdOrDefault(key);
-            CheckOrRepairGuid(partitionId, partitionGuid);
-            CheckOrRepairSequence(partitionId, sequence, false);
+            UpdateUuid(partitionId, partitionGuid);
+            UpdateSequence(partitionId, sequence, false);
         }
 
-        /**
-         * Handles batch invalidation
-         */
-        public void Handle(IEnumerable<IData> keys, IEnumerable<Guid> sourceUuids, IEnumerable<Guid> partitionUuids,
+        /// <summary>
+        /// Handles an invalidation.
+        /// </summary>
+        /// <param name="keys">The invalidated keys.</param>
+        /// <param name="sourceClusterClientIds">The identifiers of the cluster client originating the event.</param>
+        /// <param name="partitionUuids"></param>
+        /// <param name="sequences">The sequences.</param>
+        public void Handle(IEnumerable<IData> keys, IEnumerable<Guid> sourceClusterClientIds, IEnumerable<Guid> partitionUuids,
             IEnumerable<long> sequences)
         {
-            var keyIterator = keys.GetEnumerator();
-            var sequenceIterator = sequences.GetEnumerator();
-            var partitionUuidIterator = partitionUuids.GetEnumerator();
-            var sourceUuidsIterator = sourceUuids.GetEnumerator();
-            try
+            foreach (var (key, sourceClusterClientId, partitionUuid, sequence) in EnumerableExtensions.Combine(keys, sourceClusterClientIds, partitionUuids, sequences))
+                Handle(key, sourceClusterClientId, partitionUuid, sequence);
+        }
+
+        /// <summary>
+        /// Initializes the ????
+        /// </summary>
+        /// <param name="partitionUuidList"></param>
+        public void InitializeGuids(IList<KeyValuePair<int, Guid>> partitionUuidList)
+        {
+            // received from server:
+            // (partition id -> partition ???), (...), ...
+
+            foreach (var (partitionId, partitionUuid) in partitionUuidList)
             {
-                while (keyIterator.MoveNext() && sourceUuidsIterator.MoveNext() && partitionUuidIterator.MoveNext() &&
-                       sequenceIterator.MoveNext())
-                {
-                    Handle(keyIterator.Current, sourceUuidsIterator.Current, partitionUuidIterator.Current,
-                        sequenceIterator.Current);
-                }
-            }
-            finally
-            {
-                keyIterator.Dispose();
-                sequenceIterator.Dispose();
-                partitionUuidIterator.Dispose();
-                sourceUuidsIterator.Dispose();
+                var metadata = GetMetadata(partitionId);
+                metadata.Guid = partitionUuid;
             }
         }
 
-        public void InitGuids(IList<KeyValuePair<int, Guid>> partitionUuidList)
+        /// <summary>
+        /// Initializes the partition sequences.
+        /// </summary>
+        /// <param name="partitionSequencesTable">The partition sequences table.</param>
+        public void InitializeSequences(IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> partitionSequencesTable)
         {
-            foreach (var pair in partitionUuidList)
-            {
-                var partitionId = pair.Key;
-                var partitionUuid = pair.Value;
-                var metaData = GetMetaDataContainer(partitionId);
-                metaData.Guid = partitionUuid;
-            }
-        }
+            // received from server:
+            // cache name -> ( partition id -> partition sequence ), (...), ...
 
-        public void InitSequences(IList<KeyValuePair<string, IList<KeyValuePair<int, long>>>> namePartitionSequenceList)
-        {
-            foreach (var pair in namePartitionSequenceList)
+            foreach (var (_, partitionSequences) in partitionSequencesTable)
+            foreach (var (partitionId, partitionSequence) in partitionSequences)
             {
-                foreach (var seqPair in pair.Value)
-                {
-                    var partitionId = seqPair.Key;
-                    var partitionSequence = seqPair.Value;
-                    var metaData = GetMetaDataContainer(partitionId);
-                    metaData.Sequence = partitionSequence;
-                }
+                var metadata = GetMetadata(partitionId);
+                metadata.Sequence = partitionSequence;
             }
         }
 
         public override string ToString()
         {
-            return $"RepairingHandler{{name='{_nearCache.Name}', localUuid='{_localUuid}'}}";
+            return $"RepairingHandler{{name='{_nearCache.Name}', localUuid='{_clusterClientId}'}}";
         }
 
         internal void FixSequenceGap()
@@ -194,16 +247,6 @@ namespace Hazelcast.NearCaching
             {
                 UpdateLastKnownStaleSequences();
             }
-        }
-
-        private static MetaData[] CreateMetadataContainers(int partitionCount)
-        {
-            var metaData = new MetaData[partitionCount];
-            for (var partition = 0; partition < partitionCount; partition++)
-            {
-                metaData[partition] = new MetaData();
-            }
-            return metaData;
         }
 
         private int GetPartitionIdOrDefault(IData key)
@@ -222,7 +265,7 @@ namespace Hazelcast.NearCaching
             long missCount = 0;
             do
             {
-                var metaData = GetMetaDataContainer(partition);
+                var metaData = GetMetadata(partition);
                 missCount += metaData.MissedSequenceCount;
 
                 if (missCount > _maxToleratedMissCount)
@@ -236,7 +279,7 @@ namespace Hazelcast.NearCaching
 
         private void UpdateLastKnownStaleSequences()
         {
-            foreach (var metaDataContainer in _metaDataContainers)
+            foreach (var metaDataContainer in _metadataTable)
             {
                 var missCount = metaDataContainer.MissedSequenceCount;
                 if (metaDataContainer.MissedSequenceCount != 0)

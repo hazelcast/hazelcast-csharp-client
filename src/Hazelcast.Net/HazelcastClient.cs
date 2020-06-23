@@ -107,11 +107,35 @@ namespace Hazelcast
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            await Task.WhenAll(
-                _distributedObjectFactory.DisposeAsync().AsTask(),
-                Cluster.DisposeAsync().AsTask(),
-                _nearCacheManager.DisposeAsync().AsTask()
-            ).CAF();
+            // order is important,
+            // don't dispose the cluster before the rest!
+
+            try
+            {
+                await _nearCacheManager.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _loggerFactory.CreateLogger<HazelcastClient>().LogError(e, "Caught exception while disposing the near cache manager.");
+            }
+
+            try
+            {
+                await _distributedObjectFactory.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _loggerFactory.CreateLogger<HazelcastClient>().LogError(e, "Caught exception while disposing the distributed object factory.");
+            }
+
+            try
+            {
+                await Cluster.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _loggerFactory.CreateLogger<HazelcastClient>().LogError(e, "Caught exception while disposing the cluster.");
+            }
         }
     }
 }

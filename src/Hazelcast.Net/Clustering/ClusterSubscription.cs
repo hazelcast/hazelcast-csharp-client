@@ -179,9 +179,7 @@ namespace Hazelcast.Clustering
         /// <param name="message">The unsubscribe response.</param>
         /// <returns>Whether the operation was successful.</returns>
         public bool ReadUnsubscribeResponse(ClientMessage message)
-        {
-            return _unsubscribeResponseReader(message, State);
-        }
+            => _unsubscribeResponseReader(message, State);
 
         /// <inheritdoc />
         public IEnumerator<ClientSubscription> GetEnumerator()
