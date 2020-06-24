@@ -23,6 +23,7 @@ using Hazelcast.Core;
 using Hazelcast.IO;
 using Hazelcast.IO.Serialization;
 using Hazelcast.Map;
+using Hazelcast.Test;
 using NUnit.Framework;
 
 namespace Hazelcast.Client.Test
@@ -676,7 +677,8 @@ namespace Hazelcast.Client.Test
                 delegate { },
                 delegate { },
                 delegate { },
-                delegate { latchClearAll.Signal(); });
+                delegate { latchClearAll.Signal(); },
+                delegate { });
 
             var reg1 = map.AddEntryListener(listener1, false);
 
@@ -822,6 +824,33 @@ namespace Hazelcast.Client.Test
             map.Put("key1", "value1");
 
             Assert.IsFalse(latch1Add.Wait(TimeSpan.FromSeconds(1)));
+        }
+
+        [Test]
+        public void TestListenerLoaded()
+        {
+            var latch1Loaded = new CountdownEvent(1);
+            var map = Client.GetMap<string, string>("mapstore-test");
+
+            var listener1 = new EntryAdapter<string, string>(
+                delegate { },
+                delegate { },
+                delegate { },
+                delegate { },
+                delegate { },
+                delegate { },
+                delegate { latch1Loaded.Signal(); });
+
+            var reg1 = map.AddEntryListener(listener1, false);
+
+            map.Put("some-key", "some-value", 1, TimeUnit.Seconds);
+
+            Thread.Sleep(2000);
+
+            var res = map.Get("some-key");
+
+            Assert.IsTrue(latch1Loaded.Wait(TimeSpan.FromSeconds(5)));
+            Assert.AreEqual("some-value", res);
         }
 
         /// <exception cref="System.Exception"></exception>

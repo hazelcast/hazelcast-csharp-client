@@ -43,6 +43,7 @@ namespace Hazelcast.Client.Test
             public CountdownEvent Update { get; set; }
             public CountdownEvent Remove { get; set; }
             public CountdownEvent Evict { get; set; }
+            public CountdownEvent Loaded { get; set; }
             public CountdownEvent ClearAll { get; set; }
 
             public void EntryAdded(EntryEvent<int?, string> @event)
@@ -63,6 +64,11 @@ namespace Hazelcast.Client.Test
             public void EntryEvicted(EntryEvent<int?, string> @event)
             {
                 Evict.Signal();
+            }
+
+            public void EntryLoaded(EntryEvent<int?, string> @event)
+            {
+                Loaded.Signal();
             }
 
             public void MapCleared(MapEvent @event)

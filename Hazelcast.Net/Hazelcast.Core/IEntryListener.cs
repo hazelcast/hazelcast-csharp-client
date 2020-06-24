@@ -25,7 +25,7 @@ namespace Hazelcast.Core
     /// <typeparam name="TKey">the type of key</typeparam>
     /// <typeparam name="TValue">the type of value</typeparam>
     public interface IEntryListener<TKey, TValue> : EntryAddedListener<TKey, TValue>,
-        EntryUpdatedListener<TKey, TValue>, EntryRemovedListener<TKey, TValue>, EntryEvictedListener<TKey, TValue>,
+        EntryUpdatedListener<TKey, TValue>, EntryRemovedListener<TKey, TValue>, EntryEvictedListener<TKey, TValue>, EntryLoadedListener<TKey, TValue>,
         MapClearedListener, MapEvictedListener
 
     {

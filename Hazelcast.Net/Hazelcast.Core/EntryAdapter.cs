@@ -33,7 +33,7 @@ namespace Hazelcast.Core
 
         public EntryAdapter(Action<EntryEvent<TKey, TValue>> fAdded, Action<EntryEvent<TKey, TValue>> fRemoved,
             Action<EntryEvent<TKey, TValue>> fUpdated, Action<EntryEvent<TKey, TValue>> fEvicted,
-            Action<MapEvent> fEvictAll, Action<MapEvent> fClearAll)
+            Action<MapEvent> fEvictAll, Action<MapEvent> fClearAll, Action<EntryEvent<TKey, TValue>> fLoaded)
         {
             Added = fAdded;
             Removed = fRemoved;
@@ -41,12 +41,14 @@ namespace Hazelcast.Core
             Evicted = fEvicted;
             EvictAll = fEvictAll;
             ClearAll = fClearAll;
+            Loaded = fLoaded;
         }
 
         public Action<EntryEvent<TKey, TValue>> Added { get; set; }
         public Action<EntryEvent<TKey, TValue>> Evicted { get; set; }
         public Action<EntryEvent<TKey, TValue>> Removed { get; set; }
         public Action<EntryEvent<TKey, TValue>> Updated { get; set; }
+        public Action<EntryEvent<TKey, TValue>> Loaded { get; set; }
         public Action<MapEvent> EvictAll { get; set; }
         public Action<MapEvent> ClearAll { get; set; }
 
@@ -68,6 +70,11 @@ namespace Hazelcast.Core
         public void EntryEvicted(EntryEvent<TKey, TValue> @event)
         {
             Evicted?.Invoke(@event);
+        }
+
+        public void EntryLoaded(EntryEvent<TKey, TValue> @event)
+        {
+            Loaded?.Invoke(@event);
         }
 
         public void MapEvicted(MapEvent @event)
