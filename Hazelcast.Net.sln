@@ -14,6 +14,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD4710D4-ECC2-452E-A7C6-0320AFAFF124}"
 	ProjectSection(SolutionItems) = preProject
 		src\Directory.Build.props = src\Directory.Build.props
+		LICENSE = LICENSE
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Examples", "src\Hazelcast.Net.Examples\Hazelcast.Net.Examples.csproj", "{44933339-75E4-46D0-8688-6687D112E6C9}"
@@ -21,6 +23,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.DependencyInjection", "src\Hazelcast.Net.DependencyInjection\Hazelcast.Net.DependencyInjection.csproj", "{4CABE35C-8941-43B4-AED8-2ADB6334469D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.JetBrainsAnnotations", "src\Hazelcast.Net.JetBrainsAnnotations\Hazelcast.Net.JetBrainsAnnotations.csproj", "{8516E872-D7ED-4FD8-BBF6-9002B2329E86}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{25300DF5-472C-4D9B-898A-820577F2F9C7}"
+	ProjectSection(SolutionItems) = preProject
+		build\build.proj = build\build.proj
+		build\build.ps1 = build\build.ps1
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +67,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{25300DF5-472C-4D9B-898A-820577F2F9C7} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
+		{EF8A8E32-7CB0-4439-9696-F240A0E477AD} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}

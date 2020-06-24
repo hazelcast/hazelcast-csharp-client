@@ -1,0 +1,48 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [ "Hazelcast.Net/Hazelcast.Net.csproj" ],
+          "exclude": [ "**/obj/**", "**/bin/**" ]
+        }
+      ],
+      "dest": "obj/api",
+      "disableGitFeatures": true,
+      "disableDefaultFilter": false,
+      "properties": { "TargetFramework":  "netstandard2.0" }
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "src": "obj/api",
+        "files": [
+          "**.yml",
+          "index.md"
+        ],
+        "dest": "api"
+      },
+      {
+        "files": [
+          "api/**.md",
+          "articles/**.md",
+          "articles/**/toc.yml",
+          "toc.yml",
+          "*.md"
+        ],
+        "exclude": [
+          "obj/**"
+        ]
+      }
+    ],
+    "globalMetadata": {
+      "_appTitle": "Hazelcast CSharp Client Documentation",
+      "_enableSearch": true,
+      "_disableContribution": true
+    },
+    "dest": "../temp/docfx.site",
+    "disableGitFeatures": true
+  }
+}
