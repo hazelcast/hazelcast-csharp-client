@@ -14,6 +14,9 @@
 
 using System.Runtime.CompilerServices;
 
+// NOTE: do NOT make this assembly visible to Hazelcast.Net.Examples, as
+// the whole point of examples is to show how *users* can use the library!
+
 [assembly: InternalsVisibleTo("Hazelcast.Net.Tests")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
