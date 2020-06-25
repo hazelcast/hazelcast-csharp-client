@@ -29,7 +29,11 @@ namespace Hazelcast
     /// <summary>
     /// Creates <see cref="IHazelcastClient"/> instances.
     /// </summary>
-    public class HazelcastClientFactory
+    /// <remarks>
+    /// <para>Client instances are heavyweight, multi-threaded objects. It is recommended to create one client,
+    /// and reuse it in the application. Creating and disposing many clients is not recommended.</para>
+    /// </remarks>
+    public sealed class HazelcastClientFactory
     {
         private readonly HazelcastOptions _options;
 
@@ -44,21 +48,27 @@ namespace Hazelcast
             // this ensures that the clock is correctly configured before anything else
             // happens - remember the clock is static - so we are doing it here - and
             // the clock will actually initialize once
-            // TODO: make the clock non-static (low)
+            // TODO: make the clock non-static (low priority)
             Clock.Initialize(options.Core.Clock);
         }
 
         /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance.
+        /// Creates an <see cref="IHazelcastClient"/> instance with the factory options.
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         public IHazelcastClient CreateClient()
             => CreateClient(_options);
 
         /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance.
+        /// Creates an <see cref="IHazelcastClient"/> instance with options.
         /// </summary>
+        /// <param name="configure">An <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
+        /// <remarks>
+        /// <para>The factory options are cloned and passed to the <paramref name="configure"/>
+        /// method, where they can be refined and adjusted, before being used to create
+        /// the client.</para>
+        /// </remarks>
         public IHazelcastClient CreateClient(Action<HazelcastOptions> configure)
             => CreateClient(GetClientOptions(configure));
 
@@ -76,9 +86,13 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance.
+        /// Creates an <see cref="IHazelcastClient"/> instance with options.
         /// </summary>
+        /// <param name="options">Options.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
+        /// <remarks>
+        /// <para>When options are supplied, the factory options are completely ignored.</para>
+        /// </remarks>
 #pragma warning disable CA1822 // Mark members as static - no
         public IHazelcastClient CreateClient(HazelcastOptions options)
 #pragma warning restore CA1822

@@ -18,14 +18,14 @@ using System.Threading.Tasks;
 namespace Hazelcast
 {
     /// <summary>
-    /// Defines an interface for classes that can subscribe to cluster events.
+    /// Defines an interface for classes that can subscribe to client events.
     /// </summary>
     public interface IHazelcastClientEventSubscriber
     {
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="cluster">The cluster.</param>
+        /// <param name="hazelcastClient">The Hazelcast client.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when events have been subscribed to.</returns>
         Task SubscribeAsync(IHazelcastClient hazelcastClient, CancellationToken cancellationToken);

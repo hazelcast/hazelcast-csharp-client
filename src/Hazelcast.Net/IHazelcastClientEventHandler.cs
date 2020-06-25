@@ -15,7 +15,7 @@
 namespace Hazelcast
 {
     /// <summary>
-    /// Specifies a Hazelcast client event handler.
+    /// Defines a Hazelcast client event handler.
     /// </summary>
     public interface IHazelcastClientEventHandler
     { }

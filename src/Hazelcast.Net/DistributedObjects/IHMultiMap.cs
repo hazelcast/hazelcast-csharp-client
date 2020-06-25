@@ -116,8 +116,8 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Returns number of values matching to given key in the multimap.</summary>
         /// <param name="key">the key whose values count are to be returned</param>
         /// <returns>number of values matching to given key in the multimap.</returns>
-        Task<int> ValueCountAsync(TKey key, TimeSpan timeout = default);
-        Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken);
+        Task<int> CountValuesAsync(TKey key, TimeSpan timeout = default);
+        Task<int> CountValuesAsync(TKey key, CancellationToken cancellationToken);
 
         // Removing
 
@@ -164,8 +164,8 @@ namespace Hazelcast.DistributedObjects
         ///     if the waiting time elapsed before the lock was acquired.
         /// </returns>
         /// <exception cref="System.Exception"></exception>
-        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default);
-        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken);
+        Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default);
+        Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken);
 
         /// <summary>Tries to acquire the lock for the specified key for the specified lease time.</summary>
         /// <remarks>
@@ -197,8 +197,8 @@ namespace Hazelcast.DistributedObjects
         /// </returns>
         /// <exception cref="System.ArgumentNullException">if the specified key is null.</exception>
         /// <exception cref="System.Exception"/>
-        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default);
-        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken);
+        Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default);
+        Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken);
 
         /// <summary>Acquires the lock for the specified key for the specified lease time.</summary>
         /// <param name="key">key to lock.</param>

@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> AddAsync(T item, CancellationToken cancellationToken)
+        Task<bool> AddAsync(T item, CancellationToken cancellationToken)
         {
             var task = EnqueueAsync(item, TimeToWait.Zero, false, cancellationToken);
 
@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> TryEnqueueAsync(T item)
+        Task<bool> TryEnqueueAsync(T item)
         {
             var task = EnqueueAsync(item, TimeToWait.Zero, false, CancellationToken.None);
 
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> TryEnqueueAsync(T item, CancellationToken cancellationToken)
+        Task<bool> TryEnqueueAsync(T item, CancellationToken cancellationToken)
         {
             var task = EnqueueAsync(item, TimeToWait.Zero, false, cancellationToken);
 
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait)
+        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait)
         {
             var task = EnqueueAsync(item, timeToWait, false, CancellationToken.None);
 
@@ -97,7 +97,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken)
+        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var task = EnqueueAsync(item, timeToWait, false, cancellationToken);
 
@@ -114,7 +114,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task EnqueueAsync(T item, TimeSpan timeout = default)
+        Task EnqueueAsync(T item, TimeSpan timeout = default)
         {
             var task = TaskEx.WithTimeout(EnqueueAsync, item, TimeToWait.InfiniteTimeSpan, true, timeout, DefaultOperationTimeoutMilliseconds);
 
@@ -131,7 +131,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task EnqueueAsync(T item, CancellationToken cancellationToken)
+        Task EnqueueAsync(T item, CancellationToken cancellationToken)
         {
             var task = EnqueueAsync(item, TimeToWait.InfiniteTimeSpan, true, cancellationToken);
 

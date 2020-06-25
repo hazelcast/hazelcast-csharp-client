@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,12 +21,16 @@ using Hazelcast.Events;
 namespace Hazelcast
 {
     /// <summary>
-    /// Represents the cluster events.
+    /// Represents the client events.
     /// </summary>
+    /// <remarks>
+    /// <para>Handlers for events can be synchronous or asynchronous. Asynchronous handlers are defined by
+    /// an <c>Action{IHazelcastClient, TArgs}</c> whereas... </para>
+    /// </remarks>
     public sealed class HazelcastClientEventHandlers : EventHandlersBase<IHazelcastClientEventHandler>
     {
         /// <summary>
-        /// Adds an handler which runs when a partition is lost.
+        /// Adds a handler which runs when a partition is lost.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -37,7 +41,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a partition is lost.
+        /// Adds a handler which runs when a partition is lost.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -48,7 +52,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when partitions are updated.
+        /// Adds a handler which runs when partitions are updated.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -59,7 +63,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when partitions are updated.
+        /// Adds a handler which runs when partitions are updated.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -70,7 +74,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a member is added.
+        /// Adds a handler which runs when a member is added.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -81,7 +85,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a member is added.
+        /// Adds a handler which runs when a member is added.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -92,7 +96,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a member is removed.
+        /// Adds a handler which runs when a member is removed.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -103,7 +107,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a member is removed.
+        /// Adds a handler which runs when a member is removed.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -114,7 +118,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a distributed object is created.
+        /// Adds a handler which runs when a distributed object is created.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -125,7 +129,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a distributed object is created.
+        /// Adds a handler which runs when a distributed object is created.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -136,7 +140,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a distributed object is destroyed.
+        /// Adds a handler which runs when a distributed object is destroyed.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -147,7 +151,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a distributed object is destroyed.
+        /// Adds a handler which runs when a distributed object is destroyed.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -158,7 +162,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a connection is added.
+        /// Adds a handler which runs when a connection is added.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -169,7 +173,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a connection is added.
+        /// Adds a handler which runs when a connection is added.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -180,7 +184,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a connection is removed.
+        /// Adds a handler which runs when a connection is removed.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -191,7 +195,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when a connection is removed.
+        /// Adds a handler which runs when a connection is removed.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -205,7 +209,7 @@ namespace Hazelcast
         // original code has 1 unique 'StateChanged' event, could we have eg ClientStarting, ClientStarted, etc...?
 
         /// <summary>
-        /// Adds an handler which runs when the client state changes.
+        /// Adds a handler which runs when the client state changes.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
@@ -216,7 +220,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds an handler which runs when the client state changes.
+        /// Adds a handler which runs when the client state changes.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>

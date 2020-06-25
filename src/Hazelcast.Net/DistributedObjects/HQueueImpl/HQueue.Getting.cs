@@ -72,9 +72,9 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<int> RemainingCapacityAsync(TimeSpan timeout = default)
+            Task<int> GetRemainingCapacityAsync(TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(RemainingCapacityAsync, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(GetRemainingCapacityAsync, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -84,7 +84,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         }
 
         // <inheritdoc />
-        public async Task<int> RemainingCapacityAsync(CancellationToken cancellationToken)
+        public async Task<int> GetRemainingCapacityAsync(CancellationToken cancellationToken)
         {
             var requestMessage = QueueRemainingCapacityCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();

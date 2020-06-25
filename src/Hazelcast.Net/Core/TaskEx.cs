@@ -48,8 +48,6 @@ namespace Hazelcast.Core
         private const string NullTaskMessage = "The function produced a null Task.";
         private const string TimeoutMessage = "Operation timed out (see inner exception).";
 
-        // FIXME: implement missing overloads + support for ValueTask
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static (CancellationTokenSource, CancellationToken) GetTimeoutCancellation(TimeSpan timeout, int defaultTimeoutMilliseconds)
         {
@@ -152,6 +150,20 @@ namespace Hazelcast.Core
         /// <param name="function"></param>
         /// <param name="arg1">The first argument.</param>
         /// <param name="timeout">The timeout.</param>
+        /// <returns>The task, with a timeout applied to it.</returns>
+        public static ValueTask<TResult> WithTimeout<TResult, TArg1>(Func<TArg1, CancellationToken, ValueTask<TResult>> function,
+            TArg1 arg1,
+            TimeSpan timeout)
+            => WithTimeout(function, arg1, timeout, -1);
+
+        /// <summary>
+        /// Applies a timeout to a task.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result produced by the task.</typeparam>
+        /// <typeparam name="TArg1">The type of the first argument.</typeparam>
+        /// <param name="function"></param>
+        /// <param name="arg1">The first argument.</param>
+        /// <param name="timeout">The timeout.</param>
         /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
         /// <returns>The task, with a timeout applied to it.</returns>
         public static async Task<TResult> WithTimeout<TResult, TArg1>(Func<TArg1, CancellationToken, Task<TResult>> function,
@@ -167,6 +179,43 @@ namespace Hazelcast.Core
                 // trusting the function to abort if the token cancels
                 var task = function(arg1, token);
                 if (task == null) throw new InvalidOperationException(NullTaskMessage);
+                return await task.CAF();
+            }
+            catch (OperationCanceledException c)
+            {
+                if (cancellation == null || !cancellation.IsCancellationRequested)
+                    throw; // not caused by the timeout cancellation
+
+                throw new TimeoutException(TimeoutMessage, c);
+            }
+            finally
+            {
+                cancellation?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Applies a timeout to a task.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result produced by the task.</typeparam>
+        /// <typeparam name="TArg1">The type of the first argument.</typeparam>
+        /// <param name="function"></param>
+        /// <param name="arg1">The first argument.</param>
+        /// <param name="timeout">The timeout.</param>
+        /// <param name="defaultTimeoutMilliseconds">The default timeout.</param>
+        /// <returns>The task, with a timeout applied to it.</returns>
+        public static async ValueTask<TResult> WithTimeout<TResult, TArg1>(Func<TArg1, CancellationToken, ValueTask<TResult>> function,
+            TArg1 arg1,
+            TimeSpan timeout, int defaultTimeoutMilliseconds)
+        {
+            if (function == null) throw new ArgumentNullException(nameof(function));
+
+            var (cancellation, token) = GetTimeoutCancellation(timeout, defaultTimeoutMilliseconds);
+
+            try
+            {
+                // trusting the function to abort if the token cancels
+                var task = function(arg1, token);
                 return await task.CAF();
             }
             catch (OperationCanceledException c)

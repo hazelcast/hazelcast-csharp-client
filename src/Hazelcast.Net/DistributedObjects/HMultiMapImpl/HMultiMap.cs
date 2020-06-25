@@ -253,10 +253,10 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<int> ValueCountAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ValueCountAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<int> CountValuesAsync(TKey key, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(CountValuesAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<int> CountValuesAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToData(key);
             var requestMessage = MultiMapValueCountCodec.EncodeRequest(Name, keyData, ThreadId);
@@ -313,16 +313,16 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             throw new NotImplementedException();
         }
 
-        public Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(WaitLockForAsync, key, timeToWait, LeaseTime.InfiniteTimeSpan, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(TryWaitLockForAsync, key, timeToWait, LeaseTime.InfiniteTimeSpan, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
-            => WaitLockForAsync(key, timeToWait, LeaseTime.InfiniteTimeSpan, cancellationToken);
+        public Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
+            => TryWaitLockForAsync(key, timeToWait, LeaseTime.InfiniteTimeSpan, cancellationToken);
 
-        public Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(WaitLockForAsync, key, timeToWait, leaseTime, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(TryWaitLockForAsync, key, timeToWait, leaseTime, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken)
+        public async Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);

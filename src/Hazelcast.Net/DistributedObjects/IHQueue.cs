@@ -178,8 +178,8 @@ namespace Hazelcast.DistributedObjects
         ///</p>
         ///</summary>
         ///<returns>the remaining capacity </returns>
-        Task<int> RemainingCapacityAsync(TimeSpan timeout = default);
-        Task<int> RemainingCapacityAsync(CancellationToken cancellationToken);
+        Task<int> GetRemainingCapacityAsync(TimeSpan timeout = default);
+        Task<int> GetRemainingCapacityAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
@@ -188,7 +188,7 @@ namespace Hazelcast.DistributedObjects
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
         /// </remarks>
         /// <returns>the head of this queue</returns>
-        Task<T> DequeueAsync(bool waitForItem, TimeSpan timeout = default);
-        Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken);
+        Task<T> DequeueAsync(bool timeToWait, TimeSpan timeout = default);
+        Task<T> DequeueAsync(bool timeToWait, CancellationToken cancellationToken);
     }
 }

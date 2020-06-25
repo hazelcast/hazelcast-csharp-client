@@ -21,9 +21,11 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.HListImpl;
 using Hazelcast.DistributedObjects.HMapImpl;
 using Hazelcast.DistributedObjects.HMultiMapImpl;
+using Hazelcast.DistributedObjects.HQueueImpl;
 using Hazelcast.DistributedObjects.HReplicatedMapImpl;
 using Hazelcast.DistributedObjects.HSetImpl;
 using Hazelcast.DistributedObjects.HTopicImpl;
+using Hazelcast.DistributedObjects.HRingBufferImpl;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -250,6 +252,77 @@ namespace Hazelcast
             var task = _distributedObjectFactory.GetOrCreateAsync<IHSet<T>, HSet<T>>(HSet.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
                     => new HSet<T>(n, cluster, serializationService, loggerFactory),
+                cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHQueue<T>> GetQueueAsync<T>(string name, TimeSpan timeout = default)
+        {
+            var task = TaskEx.WithTimeout(GetQueueAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHQueue<T>> GetQueueAsync<T>(string name, CancellationToken cancellationToken)
+        {
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHQueue<T>, HQueue<T>>(HQueue.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory)
+                    => new HQueue<T>(n, cluster, serializationService, loggerFactory),
+                cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name, TimeSpan timeout = default)
+        {
+            var task = TaskEx.WithTimeout(GetRingBufferAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CAF();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name, CancellationToken cancellationToken)
+        {
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(HRingBuffer.ServiceName, name, true,
+                (n, cluster, serializationService, loggerFactory)
+                    // TODO: maxBatchSize was a constant, should become an option
+                    => new HRingBuffer<T>(n, cluster, 1000, serializationService, loggerFactory),
                 cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

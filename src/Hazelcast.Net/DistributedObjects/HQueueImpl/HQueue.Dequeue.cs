@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<T> PeekAsync(TimeSpan timeout = default) // peek but throw - was Element
+        Task<T> PeekAsync(TimeSpan timeout = default) // peek but throw - was Element
         {
             var task = TaskEx.WithTimeout(PeekAsync, timeout, DefaultOperationTimeoutMilliseconds);
 
@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<T> TryPeekAsync(TimeSpan timeout = default) // peek, or null
+        Task<T> TryPeekAsync(TimeSpan timeout = default) // peek, or null
         {
             var task = TaskEx.WithTimeout(TryPeekAsync, timeout, DefaultOperationTimeoutMilliseconds);
 
@@ -74,7 +74,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<T> TryDequeueAsync() // was poll = take immediately with zero timeout = infinite? default?
+        Task<T> TryDequeueAsync() // was poll = take immediately with zero timeout = infinite? default?
         {
             var task = TryDequeueAsync(TimeToWait.Zero, CancellationToken.None);
 
@@ -90,7 +90,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<T> TryDequeueAsync(CancellationToken cancellationToken) // was poll = take immediately with zero timeout = infinite? default?
+        Task<T> TryDequeueAsync(CancellationToken cancellationToken) // was poll = take immediately with zero timeout = infinite? default?
         {
             var task = TryDequeueAsync(TimeToWait.Zero, cancellationToken);
 
@@ -107,7 +107,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<T> TryDequeueAsync(TimeSpan timeToWait) // was poll, take with timeout
+        Task<T> TryDequeueAsync(TimeSpan timeToWait) // was poll, take with timeout
         {
             var task = TryDequeueAsync(timeToWait, CancellationToken.None);
 
@@ -133,9 +133,9 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<T> DequeueAsync(bool waitForItem, TimeSpan timeout = default) // was take, wail until an element is avail
+            Task<T> DequeueAsync(bool timeToWait, TimeSpan timeout = default) // was take, wail until an element is avail
         {
-            var task = TaskEx.WithTimeout(DequeueAsync, waitForItem, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(DequeueAsync, timeToWait, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -145,9 +145,9 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         }
 
         /// <inheritdoc />
-        public async Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken) // was take, wail until an element is avail
+        public async Task<T> DequeueAsync(bool timeToWait, CancellationToken cancellationToken) // was take, wail until an element is avail
         {
-            if (!waitForItem)
+            if (!timeToWait)
                 return await TryDequeueAsync(TimeToWait.Zero, cancellationToken).CAF() ??
                        throw new InvalidOperationException("The queue is empty.");
 
