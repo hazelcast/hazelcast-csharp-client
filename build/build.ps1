@@ -264,7 +264,6 @@ $envPath = $env:Path
 $env:Path = "$docfxDir;$env:Path"
 docfx metadata "$docDir\docfx.json"
 docfx build "$docDir\docfx.json"
-#docfx docs/docfx.json --serve
 $env:Path = $envPath
 
 # prepare for tests
