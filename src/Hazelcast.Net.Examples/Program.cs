@@ -22,6 +22,11 @@ namespace Hazelcast.Examples
 {
     public class Program
     {
+        // NOTE
+        //
+        // run examples with 'Hazelcast.Examples.exe' for Framework 4.6.2 and Core 3.x
+        // run examples with 'dotnet Hazelcast.Examples.dll' for Core 2.1 (does not produce platform-specific exes)
+
         public static async Task Main(string[] args)
         {
             if (args.Length < 1)
@@ -36,7 +41,12 @@ namespace Hazelcast.Examples
             }
 
             var filter = args[0];
+            
+#if NETCOREAPP
             if (filter.EndsWith('*'))
+#else
+            if (filter.EndsWith("*"))
+#endif
             {
                 filter = "Hazelcast.Examples." + filter.TrimEnd('*');
                 var types = typeof (Program).Assembly

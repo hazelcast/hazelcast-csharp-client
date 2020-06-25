@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if NETSTANDARD2_0
+#if !NETSTANDARD2_1
 
 // ReSharper disable once CheckNamespace
 namespace System.Collections.Generic

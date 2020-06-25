@@ -45,8 +45,13 @@ namespace Hazelcast.Examples.Map
             // get all
             Console.WriteLine("List");
             var entries = await map.GetAsync().CAF();
+#if NETCOREAPP
             foreach (var (key, value) in entries)
                 Console.WriteLine($"[{key}]: {value}");
+#else
+            foreach (var kvp in entries)
+                Console.WriteLine($"[{kvp.Key}]: {kvp.Value}");
+#endif
 
             // read
             Console.WriteLine("Query");

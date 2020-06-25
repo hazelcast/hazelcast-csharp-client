@@ -26,7 +26,7 @@ namespace Hazelcast.Examples.DependencyInjection
     // ReSharper disable once UnusedMember.Global
     public class SimpleMapExample : ExampleBase
     {
-        public static async Task Run(params string[] args)
+        public static async Task Run(string[] args)
         {
             // create a service collection
             var services = new ServiceCollection();
