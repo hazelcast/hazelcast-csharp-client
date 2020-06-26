@@ -46,7 +46,7 @@ namespace Hazelcast.Examples.Map
 
             // add values
             for (var i = 0; i < 1000; i++)
-                await map.AddOrReplaceAsync("key" + i, "value" + i).CAF();
+                await map.AddOrUpdateAsync("key" + i, "value" + i).CAF();
 
             // get values, first pass
             var sw = new Stopwatch();

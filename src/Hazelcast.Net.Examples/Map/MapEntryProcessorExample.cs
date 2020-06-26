@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.Map
             // add values
             Console.WriteLine("Populate map");
             for (var i = 0; i < 10; i++)
-                await map.AddOrReplaceAsync(i, "value" + i).CAF();
+                await map.AddOrUpdateAsync(i, "value" + i).CAF();
 
             // verify
             Console.WriteLine("Count: " + await map.CountAsync().CAF());

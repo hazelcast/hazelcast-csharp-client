@@ -111,16 +111,16 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrReplaceAndReturnTtlAsync, key, value, TimeToLive.InfiniteTimeSpan, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(AddOrUpdateAndReturnTtlAsync, key, value, TimeToLive.InfiniteTimeSpan, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken)
-            => AddOrReplaceAndReturnTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
+        public Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken)
+            => AddOrUpdateAndReturnTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
-        public Task<TValue> AddOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrReplaceAndReturnTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<TValue> AddOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(AddOrUpdateAndReturnTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task<TValue> AddOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
+        public async Task<TValue> AddOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
@@ -130,10 +130,10 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
             return ToObject<TValue>(response);
         }
 
-        public Task<TValue> AddIfMissing(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddIfMissing, key, value, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<TValue> AddAsync(TKey key, TValue value, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(AddAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task<TValue> AddIfMissing(TKey key, TValue value, CancellationToken cancellationToken)
+        public async Task<TValue> AddAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
@@ -191,10 +191,10 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
             return TransactionalMapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrReplaceAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(AddOrUpdateAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task AddOrReplaceAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        public async Task AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
 

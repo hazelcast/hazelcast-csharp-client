@@ -39,7 +39,7 @@ namespace Hazelcast.Examples.Map
             for (var i = 0; i < 100; i++)
             {
                 var key = "key " + i;
-                var task = map.AddOrReplaceAsync(key, " value " + i).ContinueWith(t => { Console.WriteLine("Added " + key); });
+                var task = map.AddOrUpdateAsync(key, " value " + i).ContinueWith(t => { Console.WriteLine("Added " + key); });
                 tasks.Add(task);
             }
 

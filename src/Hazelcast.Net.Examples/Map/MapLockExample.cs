@@ -48,7 +48,7 @@ namespace Hazelcast.Examples.Map
             var map = await hz.GetMapAsync<string, string>("map-lock-example").CAF();
 
             // add value
-            await map.AddOrReplaceAsync("key", "value").CAF();
+            await map.AddOrUpdateAsync("key", "value").CAF();
 
             // locking in the current context
             await map.LockAsync("key").CAF();
@@ -62,7 +62,7 @@ namespace Hazelcast.Examples.Map
             //
             var task = TaskEx.WithNewContext(async () =>
             {
-                await map.AddOrReplaceAsync("key", "value1").CAF();
+                await map.AddOrUpdateAsync("key", "value1").CAF();
                 Console.WriteLine("Put new value");
             });
 
@@ -71,7 +71,7 @@ namespace Hazelcast.Examples.Map
                 var value = await map.GetAsync("key").CAF();
                 // pretend to do something with the value..
                 await Task.Delay(5000);
-                await map.AddOrReplaceAsync("key", "value2").CAF();
+                await map.AddOrUpdateAsync("key", "value2").CAF();
             }
             finally
             {

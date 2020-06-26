@@ -50,7 +50,7 @@ namespace Hazelcast.Examples.Map
             // create an add a customer
             Console.WriteLine("Add customer 'first-customer'.");
             var customer = new Customer { Id = 1, LastOrder = DateTime.UtcNow, Name = "first-customer" };
-            await map.AddOrReplaceAsync(customer.Id, customer).CAF();
+            await map.AddOrUpdateAsync(customer.Id, customer).CAF();
 
             // retrieve customer
             var c = await map.GetAsync(customer.Id).CAF();

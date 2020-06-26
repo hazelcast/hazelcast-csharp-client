@@ -34,8 +34,8 @@ namespace Hazelcast.Examples.Map
             var map = await hz.GetReplicatedMapAsync<string, string>("replicatedMap-example").CAF();
 
             // add values
-            await map.AddOrReplaceAsync("key", "value").CAF();
-            await map.AddOrReplaceAsync("key2", "value2").CAF();
+            await map.AddOrUpdateAsync("key", "value").CAF();
+            await map.AddOrUpdateAsync("key2", "value2").CAF();
 
             // report
             Console.WriteLine("Key: " + await map.GetAsync("key"));

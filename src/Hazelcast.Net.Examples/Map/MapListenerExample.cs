@@ -59,8 +59,8 @@ namespace Hazelcast.Examples.Map
                 })).CAF();
 
             // trigger events
-            await map.AddOrReplaceAsync("key", "value").CAF(); // add
-            await map.AddOrReplaceAsync("key", "valueNew").CAF(); //update
+            await map.AddOrUpdateAsync("key", "value").CAF(); // add
+            await map.AddOrUpdateAsync("key", "valueNew").CAF(); //update
             await map.RemoveAndReturnAsync("key").CAF();
 
             // wait for events

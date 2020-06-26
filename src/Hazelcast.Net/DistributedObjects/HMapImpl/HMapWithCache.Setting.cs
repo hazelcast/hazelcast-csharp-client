@@ -29,10 +29,10 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<TValue> AddOrReplaceWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+        Task<TValue> AddOrUpdateWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            var task = base.AddOrReplaceWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.AddOrUpdateWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task AddOrReplaceAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
+        Task AddOrUpdateAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
         {
             // see comments on the base Map class
             // this should be no different except for this entry invalidation method,
@@ -84,9 +84,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        protected override async Task<bool> TryAddOrReplaceAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        protected override async Task<bool> TryAddOrUpdateAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var added = await base.TryAddOrReplaceAsync(keyData, valueData, serverTimeout, cancellationToken).CAF();
+            var added = await base.TryAddOrUpdateAsync(keyData, valueData, serverTimeout, cancellationToken).CAF();
             if (added) _cache.Invalidate(keyData);
             return added;
         }
@@ -96,10 +96,10 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<TValue> AddIfMissingAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+            Task<TValue> AddAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            var task = base.AddIfMissingAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.AddAsync(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -113,10 +113,10 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task AddOrReplaceTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+            Task AddOrUpdateTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            var task = base.AddOrReplaceTransientAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.AddOrUpdateTransientAsync(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

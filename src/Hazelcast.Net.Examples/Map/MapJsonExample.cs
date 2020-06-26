@@ -35,8 +35,8 @@ namespace Hazelcast.Examples.Map
 
             // add values
             Console.WriteLine("Populate map");
-            await map.AddOrReplaceAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }")).CAF();
-            await map.AddOrReplaceAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }")).CAF();
+            await map.AddOrUpdateAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }")).CAF();
+            await map.AddOrUpdateAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }")).CAF();
 
             // count
             Console.WriteLine("Count");

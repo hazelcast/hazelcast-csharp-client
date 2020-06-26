@@ -37,7 +37,7 @@ namespace Hazelcast.Examples.Map
             // add values
             Console.WriteLine("Populating map");
             for (var i = 0; i < 1000; i++)
-                await map.AddOrReplaceAsync(i, i);
+                await map.AddOrUpdateAsync(i, i);
 
             // count
             Console.WriteLine("Map size: " + await map.CountAsync().CAF());

@@ -44,9 +44,9 @@ namespace Hazelcast.Examples.Map
             var mapCustomers = await hz.GetMapAsync<string, Person>("persons").CAF();
 
             // add values
-            await mapCustomers.AddOrReplaceAsync("1", new Person("Joe", "Smith")).CAF();
-            await mapCustomers.AddOrReplaceAsync("2", new Person("Ali", "Selam")).CAF();
-            await mapCustomers.AddOrReplaceAsync("3", new Person("Avi", "Noyan")).CAF();
+            await mapCustomers.AddOrUpdateAsync("1", new Person("Joe", "Smith")).CAF();
+            await mapCustomers.AddOrUpdateAsync("2", new Person("Ali", "Selam")).CAF();
+            await mapCustomers.AddOrUpdateAsync("3", new Person("Avi", "Noyan")).CAF();
 
             // get values
             var persons = await mapCustomers.GetValuesAsync().CAF();

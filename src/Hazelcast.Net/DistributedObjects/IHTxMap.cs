@@ -100,8 +100,8 @@ namespace Hazelcast.DistributedObjects
         /// The object to be put will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Put(K, V)"/>
-        Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, TimeSpan timeout = default);
-        Task<TValue> AddOrReplaceAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken);
+        Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value, TimeSpan timeout = default);
+        Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken);
 
         /// <summary>
         /// Transactional implementation of
@@ -111,8 +111,8 @@ namespace Hazelcast.DistributedObjects
         /// The object to be put will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Put(K, V, long, TimeUnit)"/>
-        Task<TValue> AddOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default);
-        Task<TValue> AddOrReplaceAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken);
+        Task<TValue> AddOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default);
+        Task<TValue> AddOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken);
 
         /// <summary>
         /// Transactional implementation of
@@ -122,8 +122,8 @@ namespace Hazelcast.DistributedObjects
         /// The object to be put will be accessible only in the current transaction context until the transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.PutIfAbsent(K, V)"/>
-        Task<TValue> AddIfMissing(TKey key, TValue value, TimeSpan timeout = default);
-        Task<TValue> AddIfMissing(TKey key, TValue value, CancellationToken cancellationToken);
+        Task<TValue> AddAsync(TKey key, TValue value, TimeSpan timeout = default);
+        Task<TValue> AddAsync(TKey key, TValue value, CancellationToken cancellationToken);
 
         /// <summary>
         /// Transactional implementation of
@@ -177,8 +177,8 @@ namespace Hazelcast.DistributedObjects
         /// The object to be set will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Set(K, V)"/>
-        Task AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout = default);
-        Task AddOrReplaceAsync(TKey key, TValue value, CancellationToken cancellationToken);
+        Task AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeout = default);
+        Task AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken);
 
         /// <summary>
         /// Transactional implementation of

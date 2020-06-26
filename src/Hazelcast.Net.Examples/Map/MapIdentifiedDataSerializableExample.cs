@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.Map
             // create and add an employee
             Console.WriteLine("Adding employee 'the employee'.");
             var employee = new Employee { Id = 1, Name = "the employee" };
-            await map.AddOrReplaceAsync(employee.Id, employee).CAF();
+            await map.AddOrUpdateAsync(employee.Id, employee).CAF();
 
             // retrieve employee
             var e = await map.GetAsync(employee.Id).CAF();

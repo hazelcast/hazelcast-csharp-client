@@ -51,7 +51,7 @@ namespace Hazelcast.Examples.Client
             // generate stats
             for (var i = 0; i < 100000; i++)
             {
-                await map.AddOrReplaceAsync("key-" + i, "value-" + i);
+                await map.AddOrUpdateAsync("key-" + i, "value-" + i);
                 Thread.Sleep(500);
             }
 

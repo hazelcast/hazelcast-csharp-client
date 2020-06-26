@@ -38,16 +38,16 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             _partitionId = partitionId;
         }
 
-        public Task<TValue> AddOrReplaceAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrReplaceAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(AddOrUpdateAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public Task<TValue> AddOrReplaceAsync(TKey key, TValue value, CancellationToken cancellationToken)
-            => AddOrReplaceTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
+        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken)
+            => AddOrUpdateTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
-        public Task<TValue> AddOrReplaceTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrReplaceTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(AddOrUpdateTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task<TValue> AddOrReplaceTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
+        public async Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
@@ -57,10 +57,10 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return ToObject<TValue>(response);
         }
 
-        public Task AddOrReplaceAsync(IDictionary<TKey, TValue> entries, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrReplaceAsync, entries, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(AddOrUpdateAsync, entries, timeout, DefaultOperationTimeoutMilliseconds);
 
-        public async Task AddOrReplaceAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
+        public async Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
         {
             var entriesData = new List<KeyValuePair<IData, IData>>(entries.Count);
             foreach (var (key, value) in entries)

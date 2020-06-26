@@ -34,8 +34,8 @@ namespace Hazelcast.Examples.Map
             var map = await hz.GetMapAsync<string, string>("simple-example").CAF();
 
             // add values
-            await map.AddOrReplaceAsync("key", "value").CAF();
-            await map.AddOrReplaceAsync("key2", "value2").CAF();
+            await map.AddOrUpdateAsync("key", "value").CAF();
+            await map.AddOrUpdateAsync("key2", "value2").CAF();
 
             // get values, count, etc...
             Console.WriteLine("Key: " + await map.GetAsync("key"));

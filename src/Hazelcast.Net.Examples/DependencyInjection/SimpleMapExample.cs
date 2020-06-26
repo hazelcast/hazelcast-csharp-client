@@ -93,7 +93,7 @@ namespace Hazelcast.Examples.DependencyInjection
                 // get distributed map from cluster
                 var map = await _client.GetMapAsync<string, string>("simple-example").CAF();
 
-                await map.AddOrReplaceAsync("key", "value").CAF();
+                await map.AddOrUpdateAsync("key", "value").CAF();
                 var value = await map.GetAsync("key").CAF();
                 if (value != "value") throw new Exception("Error!");
 

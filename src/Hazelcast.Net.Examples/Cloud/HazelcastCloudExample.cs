@@ -36,7 +36,7 @@ namespace Hazelcast.Examples.Cloud
 
             // use a map
             var map = await hz.GetMapAsync<string, string>("ssl-example");
-            await map.AddOrReplaceAsync("key", "value");
+            await map.AddOrUpdateAsync("key", "value");
             var value = await map.GetAsync("key");
             Console.WriteLine($"\"key\": \"{value}\"");
             await hz.DestroyAsync(map).CAF();
