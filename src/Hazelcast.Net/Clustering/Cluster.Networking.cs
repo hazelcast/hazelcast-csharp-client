@@ -198,7 +198,7 @@ namespace Hazelcast.Clustering
         /// <remarks>
         /// <para>This method does not throw but returns a failed attempt.</para>
         /// </remarks>
-        private async Task<Attempt<Client>> TryConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
+        private async Task<Attempt<ClientConnection>> TryConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // ReSharper disable once InconsistentlySynchronizedField
             if (_addressClients.TryGetValue(address, out var client))
@@ -244,7 +244,7 @@ namespace Hazelcast.Clustering
             }
             catch (Exception e)
             {
-                return Attempt.Fail<Client>(e);
+                return Attempt.Fail<ClientConnection>(e);
             }
         }
 
@@ -254,13 +254,13 @@ namespace Hazelcast.Clustering
         /// <param name="address">The address.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
-        private async Task<Client> ConnectWithLockAsync(NetworkAddress address, CancellationToken cancellationToken)
+        private async Task<ClientConnection> ConnectWithLockAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // map private address to public address
             address = _addressProvider.Map(address);
 
             // create the client
-            var client = new Client(address, _options.Messaging, _options.Networking.Socket, _correlationIdSequence, _loggerFactory)
+            var client = new ClientConnection(address, _options.Messaging, _options.Networking.Socket, _correlationIdSequence, _loggerFactory)
             {
                 OnReceiveEventMessage = OnEventMessage,
                 OnShutdown = HandleClientShutdown
@@ -347,7 +347,7 @@ namespace Hazelcast.Clustering
             return client;
         }
 
-        private async ValueTask HandleClientShutdown(Client client)
+        private async ValueTask HandleClientShutdown(ClientConnection client)
         {
             // this runs when a client signals that it is shutting down
 

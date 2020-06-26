@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
 {
     internal class HTxQueue<TItem> : TransactionalDistributedObjectBase, IHTxQueue<TItem>
     {
-        public HTxQueue(string name, Cluster cluster, Client transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxQueue(string name, Cluster cluster, ClientConnection transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HQueue.ServiceName, name, cluster, transactionClient, transactionId, serializationService, loggerFactory)
         { }
 

@@ -31,7 +31,7 @@ namespace Hazelcast.Clustering
         /// <remarks>
         /// <para>Throws if not client can be obtained immediately.</para>
         /// </remarks>
-        internal Client GetRandomClient(bool throwIfNoClient = true)
+        internal ClientConnection GetRandomClient(bool throwIfNoClient = true)
         {
             // In "smart mode" the clients connect to each member of the cluster. Since each
             // data partition uses the well known and consistent hashing algorithm, each client
@@ -75,7 +75,7 @@ namespace Hazelcast.Clustering
         /// <remarks>
         /// <para>Tries to get a client for as long as <paramref name="cancellationToken"/> is not canceled.</para>
         /// </remarks>
-        internal async ValueTask<Client> GetRandomClient(CancellationToken cancellationToken)
+        internal async ValueTask<ClientConnection> GetRandomClient(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -96,7 +96,7 @@ namespace Hazelcast.Clustering
         /// Gets a snapshot of the current clients.
         /// </summary>
         /// <returns>A snapshot of the current clients.</returns>
-        internal IList<Client> SnapshotClients()
+        internal IList<ClientConnection> SnapshotClients()
             => _clients.Values.ToList();
     }
 }

@@ -31,7 +31,7 @@ namespace Hazelcast.Tests
         {
             HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             HConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
-            HConsole.Configure<Client>(config => config.SetMaxLevel(1)); // 1: logs message & frames
+            HConsole.Configure<ClientConnection>(config => config.SetMaxLevel(1)); // 1: logs message & frames
         }
 
         private ValueTask<IHazelcastClient> CreateOpenClientAsync()

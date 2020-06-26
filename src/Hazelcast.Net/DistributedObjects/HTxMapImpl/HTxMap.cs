@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
 {
     internal class HTxMap<TKey, TValue> : TransactionalDistributedObjectBase, IHTxMap<TKey, TValue>
     {
-        public HTxMap(string name, Cluster cluster, Client transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxMap(string name, Cluster cluster, ClientConnection transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HMap.ServiceName, name, cluster, transactionClient, transactionId, serializationService, loggerFactory)
         { }
 

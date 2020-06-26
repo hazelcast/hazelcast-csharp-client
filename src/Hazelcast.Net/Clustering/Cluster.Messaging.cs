@@ -71,7 +71,7 @@ namespace Hazelcast.Clustering
         /// <param name="client">The target.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, ClientConnection client, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
@@ -88,7 +88,7 @@ namespace Hazelcast.Clustering
         /// <param name="correlationId">A correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, ClientConnection client, long correlationId, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
@@ -166,7 +166,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendAsyncInternal(ClientMessage message, Client client, CancellationToken cancellationToken)
+        Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection client, CancellationToken cancellationToken)
         {
             var task = SendAsyncInternal(message, client, _correlationIdSequence.GetNext(), cancellationToken);
 
@@ -185,7 +185,7 @@ namespace Hazelcast.Clustering
         /// <param name="correlationId">A correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, Client client, long correlationId, CancellationToken cancellationToken)
+        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection client, long correlationId, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 

@@ -36,11 +36,11 @@ namespace Hazelcast.Clustering
 
         // member id -> client
         // the master clients list
-        private readonly ConcurrentDictionary<Guid, Client> _clients = new ConcurrentDictionary<Guid, Client>();
+        private readonly ConcurrentDictionary<Guid, ClientConnection> _clients = new ConcurrentDictionary<Guid, ClientConnection>();
 
         // address -> client
         // used for fast querying of _memberClients by network address
-        private readonly ConcurrentDictionary<NetworkAddress, Client> _addressClients = new ConcurrentDictionary<NetworkAddress, Client>();
+        private readonly ConcurrentDictionary<NetworkAddress, ClientConnection> _addressClients = new ConcurrentDictionary<NetworkAddress, ClientConnection>();
 
         // subscription id -> subscription
         // the master subscriptions list
@@ -79,7 +79,7 @@ namespace Hazelcast.Clustering
         private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
         private Task _clusterMembersTask; // the task that connects clients for all members of the cluster
 
-        private Client _clusterEventsClient; // the client which handles 'cluster events'
+        private ClientConnection _clusterEventsClient; // the client which handles 'cluster events'
         private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
 
         private MemberTable _memberTable;

@@ -28,7 +28,7 @@ namespace Hazelcast.Clustering
         /// <param name="serverSubscriptionId">The unique identifier assigned by the server to the client subscription.</param>
         /// <param name="correlationId">The correlation identifier.</param>
         /// <param name="client">The subscribed client.</param>
-        public ClientSubscription(ClusterSubscription clusterSubscription, Guid serverSubscriptionId, long correlationId, Client client)
+        public ClientSubscription(ClusterSubscription clusterSubscription, Guid serverSubscriptionId, long correlationId, ClientConnection client)
         {
             ClusterSubscription = clusterSubscription;
             ServerSubscriptionId = serverSubscriptionId;
@@ -60,6 +60,6 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the client.
         /// </summary>
-        public Client Client { get; }
+        public ClientConnection Client { get; }
     }
 }

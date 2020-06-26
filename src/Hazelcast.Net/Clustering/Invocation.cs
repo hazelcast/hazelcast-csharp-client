@@ -43,7 +43,7 @@ namespace Hazelcast.Clustering
         /// <remarks>
         /// <para>When an invocation is bound to a client, it cannot be retried if the client dies.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, Client client, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, ClientConnection client, CancellationToken cancellationToken)
         {
             RequestMessage = requestMessage ?? throw new ArgumentNullException(nameof(requestMessage));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
@@ -64,7 +64,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// The client, if the invocation is bound to a client, otherwise null.
         /// </summary>
-        public Client Client { get; }
+        public ClientConnection Client { get; }
 
         /// <summary>
         /// Gets the correlation identifier.

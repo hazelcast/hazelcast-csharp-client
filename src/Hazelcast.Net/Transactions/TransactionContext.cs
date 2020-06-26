@@ -38,7 +38,7 @@ namespace Hazelcast.Transactions
 
         private long _threadId; // the "threadId", i.e. async context, which owns the transaction
         private long _startTime; // the start time of the transaction
-        private Client _client; // the client supporting the transaction
+        private ClientConnection _client; // the client supporting the transaction
 
         // FIXME transactions need some TLC
         // how is two-phases commit supposed to work? is it all server-side (and then, why

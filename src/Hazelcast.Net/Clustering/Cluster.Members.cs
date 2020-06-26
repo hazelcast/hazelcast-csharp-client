@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">A client.</param>
         /// <returns>true if the current client matched the specified client, and was cleared; otherwise false.</returns>
-        private bool ClearClusterEventsClientWithLock(Client client)
+        private bool ClearClusterEventsClientWithLock(ClientConnection client)
         {
             // if the specified client is *not* the cluster events client, ignore
             if (_clusterEventsClient != client)
@@ -51,7 +51,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="client">A candidate client.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        private void StartSetClusterEventsClientWithLock(Client client, CancellationToken cancellationToken)
+        private void StartSetClusterEventsClientWithLock(ClientConnection client, CancellationToken cancellationToken)
         {
             // there can only be one instance of that task running at a time
             // and it runs in the background, and at any time any client could
@@ -68,7 +68,7 @@ namespace Hazelcast.Clustering
         /// <param name="client">An optional candidate client.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when a new client has been assigned to handle cluster events.</returns>
-        private async Task SetClusterEventsClientAsync(Client client, CancellationToken cancellationToken)
+        private async Task SetClusterEventsClientAsync(ClientConnection client, CancellationToken cancellationToken)
         {
             // this will only exit once a client is assigned, or the task is
             // cancelled, when the cluster goes down (and never up again)
@@ -115,7 +115,7 @@ namespace Hazelcast.Clustering
         /// <param name="correlationId">The correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the subscription has been processed, and represent whether it was successful.</returns>
-        private async Task<bool> SubscribeToClusterEventsAsync(Client client, long correlationId, CancellationToken cancellationToken)
+        private async Task<bool> SubscribeToClusterEventsAsync(ClientConnection client, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
             HConsole.WriteLine(this, "subscribe");

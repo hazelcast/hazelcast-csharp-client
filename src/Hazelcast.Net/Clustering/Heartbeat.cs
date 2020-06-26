@@ -118,7 +118,7 @@ namespace Hazelcast.Clustering
             await Task.WhenAll(tasks).CAF();
         }
 
-        private async Task RunAsync(Client client, DateTime now, CancellationToken cancellationToken)
+        private async Task RunAsync(ClientConnection client, DateTime now, CancellationToken cancellationToken)
         {
             // must ensure that timeout > interval ?!
 
@@ -162,7 +162,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async Task KillClient(Client client)
+        private async Task KillClient(ClientConnection client)
         {
             // dead already?
             if (!client.Active) return;

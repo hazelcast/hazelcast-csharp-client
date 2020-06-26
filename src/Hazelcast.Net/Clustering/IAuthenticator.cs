@@ -37,6 +37,6 @@ namespace Hazelcast.Clustering
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is authenticated.</returns>
-        ValueTask<AuthenticationResult> AuthenticateAsync(Client client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken);
+        ValueTask<AuthenticationResult> AuthenticateAsync(ClientConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken);
     }
 }

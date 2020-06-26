@@ -37,7 +37,7 @@ namespace Hazelcast.Clustering
             if (subscription == null) throw new ArgumentNullException(nameof(subscription));
 
             // capture active clients, and adds the subscription - atomically.
-            List<Client> clients;
+            List<ClientConnection> clients;
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 clients = _clients.Values.Where(x => x.Active).ToList();
@@ -152,7 +152,7 @@ namespace Hazelcast.Clustering
         /// <param name="subscriptions">The subscriptions</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client has subscribed to server events.</returns>
-        private async Task InstallSubscriptionsOnNewClient(Client client, IReadOnlyCollection<ClusterSubscription> subscriptions, CancellationToken cancellationToken)
+        private async Task InstallSubscriptionsOnNewClient(ClientConnection client, IReadOnlyCollection<ClusterSubscription> subscriptions, CancellationToken cancellationToken)
         {
             // the client has been added to _clients, and subscriptions have been
             // captured already, all within a _clientsLock, but the caller
@@ -196,7 +196,7 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private void ClearClientSubscriptions(IEnumerable<ClusterSubscription> subscriptions, Client client)
+        private void ClearClientSubscriptions(IEnumerable<ClusterSubscription> subscriptions, ClientConnection client)
         {
             foreach (var subscription in subscriptions)
             {
@@ -214,7 +214,7 @@ namespace Hazelcast.Clustering
         /// <param name="subscription">The subscription.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client has subscribed to the server event.</returns>
-        private async ValueTask<InstallAttempt> InstallSubscriptionOnClientAsync(ClusterSubscription subscription, Client client, CancellationToken cancellationToken)
+        private async ValueTask<InstallAttempt> InstallSubscriptionOnClientAsync(ClusterSubscription subscription, ClientConnection client, CancellationToken cancellationToken)
         {
             // if we already know the client is not active anymore, ignore it
             // otherwise, install on this client - may throw if the client goes away in the meantime
