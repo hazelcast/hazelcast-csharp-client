@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = TransactionalMapContainsKeyCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData);
+            var requestMessage = TransactionalMapContainsKeyCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             return TransactionalMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task RemoveAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = TransactionalMapDeleteCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData);
+            var requestMessage = TransactionalMapDeleteCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             _ = TransactionalMapDeleteCodec.DecodeResponse(responseMessage);
         }
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = TransactionalMapGetCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData);
+            var requestMessage = TransactionalMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapGetCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -72,7 +72,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task<TValue> GetForUpdateAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = TransactionalMapGetForUpdateCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData);
+            var requestMessage = TransactionalMapGetForUpdateCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapGetForUpdateCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -83,7 +83,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
 
         public async Task<bool> IsEmpty(CancellationToken cancellationToken)
         {
-            var requestMessage = TransactionalMapIsEmptyCodec.EncodeRequest(Name, TransactionId, ThreadId);
+            var requestMessage = TransactionalMapIsEmptyCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             return TransactionalMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
@@ -93,7 +93,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
 
         public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = TransactionalMapKeySetCodec.EncodeRequest(Name, TransactionId, ThreadId);
+            var requestMessage = TransactionalMapKeySetCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapKeySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
@@ -105,7 +105,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             var predicateData = ToSafeData(predicate);
-            var requestMessage = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(Name, TransactionId, ThreadId, predicateData);
+            var requestMessage = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
@@ -124,7 +124,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
-            var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData, valueData, timeToLiveMilliseconds);
+            var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMilliseconds);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -137,7 +137,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = TransactionalMapPutIfAbsentCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData, valueData);
+            var requestMessage = TransactionalMapPutIfAbsentCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -149,7 +149,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task<TValue> RemoveAndReturnAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = TransactionalMapRemoveCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData);
+            var requestMessage = TransactionalMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -161,7 +161,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var requestMessage = TransactionalMapRemoveIfSameCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData, valueData);
+            var requestMessage = TransactionalMapRemoveIfSameCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             return TransactionalMapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
         }
@@ -173,7 +173,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = TransactionalMapReplaceCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData, valueData);
+            var requestMessage = TransactionalMapReplaceCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapReplaceCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -186,7 +186,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         {
             var (keyData, oldValueData, newValueData) = ToSafeData(key, oldValue, newValue);
 
-            var requestMessage = TransactionalMapReplaceIfSameCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData, oldValueData, newValueData);
+            var requestMessage = TransactionalMapReplaceIfSameCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, oldValueData, newValueData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             return TransactionalMapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
         }
@@ -198,7 +198,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ThreadId, keyData, valueData);
+            var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
         }
@@ -208,7 +208,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
 
         public async Task<int> CountAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = TransactionalMapSizeCodec.EncodeRequest(Name, TransactionId, ThreadId);
+            var requestMessage = TransactionalMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             return TransactionalMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
@@ -218,7 +218,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
 
         public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = TransactionalMapValuesCodec.EncodeRequest(Name, TransactionId, ThreadId);
+            var requestMessage = TransactionalMapValuesCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapValuesCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
@@ -230,7 +230,7 @@ namespace Hazelcast.DistributedObjects.HTxMapImpl
         public async Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             var predicateData = ToSafeData(predicate);
-            var requestMessage = TransactionalMapValuesWithPredicateCodec.EncodeRequest(Name, TransactionId, ThreadId, predicateData);
+            var requestMessage = TransactionalMapValuesWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalMapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);

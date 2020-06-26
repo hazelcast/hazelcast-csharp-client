@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var keyData = ToSafeData(key);
 
-            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await TaskEx.WithTimeout(Cluster.SendToKeyPartitionOwnerAsync, requestMessage, keyData, timeout, DefaultOperationTimeoutMilliseconds).CAF();
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var keyData = ToSafeData(key);
 
-            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
             return response;

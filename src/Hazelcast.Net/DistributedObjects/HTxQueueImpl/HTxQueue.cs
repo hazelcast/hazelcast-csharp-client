@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
         {
             var itemData = ToSafeData(item);
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
-            var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ThreadId, itemData, timeToWaitMilliseconds);
+            var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMilliseconds);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
@@ -61,7 +61,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
         public async Task<TItem> TryPeekAsync(TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
-            var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ThreadId, timeToWaitMilliseconds);
+            var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
@@ -79,7 +79,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
         public async Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
-            var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ThreadId, timeToWaitMilliseconds);
+            var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
@@ -90,7 +90,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
 
         public async Task<int> CountAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ThreadId);
+            var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
@@ -100,7 +100,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
 
         public async Task<TItem> DequeueAsync(CancellationToken cancellationToken)
         {
-            var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ThreadId);
+            var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
             var response = TransactionalQueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);

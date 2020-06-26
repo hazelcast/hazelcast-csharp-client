@@ -173,7 +173,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
             var timeToWaitMs = timeToWait.CodecMilliseconds(0);
 
-            var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ThreadId, leaseTimeMs, timeToWaitMs, refId);
+            var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -221,7 +221,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 
             var refId = _lockReferenceIdSequence.GetNext();
 
-            var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ThreadId, refId);
+            var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ContextId, refId);
             var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

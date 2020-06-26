@@ -281,120 +281,116 @@ namespace Hazelcast.Tests.DotNet
         [Test]
         public async Task AsyncContextWhenAsync()
         {
+            // TODO: use manual reset events instead of timers
+
+            Console.WriteLine("There is no ambient context, so each task + continuation creates its own.");
+
+            long x1 = 0, x2 = 0, x3 = 0;
+
             await AsyncContextWhenAsyncSub("x1")
                 .ContinueWith(x =>
                 {
-                    var id = AsyncContext.CurrentContext.Id;
-                    var t = Thread.CurrentThread.ManagedThreadId;
-                    Console.WriteLine($"x3 [{t}] {id}");
+                    x1 = x.Result;
+                    x2 = AsyncContext.CurrentContext.Id;
+                    Console.WriteLine($"-x2: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
                 })
-                .ContinueWith(async x => await AsyncContextWhenAsyncSub("x2"));
+                .ContinueWith(async x => x3 = await AsyncContextWhenAsyncSub("x3"));
 
-            // no value by default = the first task will set one,
-            // but that value will *not* be seen by any continuation
-            await AsyncContextWhenAsyncSub("y1")
-                .ContinueWith(async x => await AsyncContextWhenAsyncSub("y2"));
+            Assert.AreNotEqual(x1, x2);
+            Assert.AreNotEqual(x1, x3);
+            Assert.AreNotEqual(x2, x3);
+
+            await Task.Delay(500); // complete above code
+            Console.WriteLine("--");
+
+
+            Console.WriteLine("If we ensure a context (as HazelcastClient does) then we have a context that flows.");
 
             // first time we get a context = creates a context
-
-            var id1 = AsyncContext.CurrentContext.Id;
-            var t1 = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"1: [{t1}] {id1}");
+            var z1 = AsyncContext.CurrentContext.Id;
+            Console.WriteLine($"-z1: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
 
             await Task.Yield();
 
-            var id2 = AsyncContext.CurrentContext.Id;
-            var t2 = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"2: [{t2}] {id2}");
+            var z2 = AsyncContext.CurrentContext.Id;
+            Console.WriteLine($"-z2: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
 
-            Assert.AreEqual(id1, id2);
-            //Assert.AreNotEqual(t1, t2);
+            Assert.Greater(z1, x3);
+            Assert.AreEqual(z1, z2);
 
-            /*
-            long id3 = 0, id4 = 0;
-            int t3 = 0, t4 = 0;
-
-            await Task.Run(() =>
-            {
-                // the context, being async local, flows here
-                // we need to explicitly indicate that we are starting something new
-                AsyncContext.NewContext();
-
-                // FIXME: that cannot work - does not flow to continuations
-                // changing it... well it's all the *same* context
-                // see https://github.com/StephenCleary/AsyncEx/blob/master/src/Nito.AsyncEx.Context/AsyncContext.cs
-                // but... that is quite a beast... to implement a *new* thing
-
-                // however, *all* map operations need this "context id" so we cannot
-                // require that ppl pass it along to all operations, it has to be
-                // an "ambiant" thing
-
-                id3 = AsyncContext.CurrentContext.Id;
-                t3 = Thread.CurrentThread.ManagedThreadId;
-                Console.WriteLine($"[{t3}] {id3}");
-            }).ContinueWith(t =>
-            {
-                id4 = AsyncContext.CurrentContext.Id;
-                t4 = Thread.CurrentThread.ManagedThreadId;
-                Console.WriteLine($"[{t4}] {id4}");
-            }, TaskContinuationOptions.RunContinuationsAsynchronously);
-            */
-
-            await AsyncContextWhenAsyncSub("a");
-            await AsyncContextWhenAsyncSub("b");
-            //AsyncContext.NewContext();
-            await AsyncContext.RunDetached(async () =>
-            {
-                await AsyncContextWhenAsyncSub("c").ContinueWith(async x => await AsyncContextWhenAsyncSub("c2"));
-            });
-
-            Task task = null;
+            await Task.Delay(500); // complete above code
             Console.WriteLine("--");
-            await AsyncContext.RunDetached(() => task = AsyncContextWhenAsyncSub("z"));
-            Console.WriteLine("--");
-            await task;
 
-            _ = AsyncContext.RunDetached(() =>
+            Console.WriteLine("Running detached code creates a new context, which flows.");
+
+            long c1 = 0, c2 = 0, c4 = 0;
+
+            var cx = await TaskEx.WithNewContext(async () =>
             {
-                Task.Run(async () =>
+                return await AsyncContextWhenAsyncSub("c1").ContinueWith(async x =>
                 {
-                    await Task.Delay(2000);
-                    await AsyncContextWhenAsyncSub("d");
-                });
+                    c1 = x.Result;
+                    c2 = await AsyncContextWhenAsyncSub("c2");
+                    return c2;
+                }).Unwrap();
             });
 
-            var id5 = AsyncContext.CurrentContext.Id;
-            var t5 = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"5: [{t5}] {id5}");
+            await Task.Delay(500); // complete above code
+            Console.WriteLine("-cx: [  ] " + cx);
+            Console.WriteLine("--");
 
-            Assert.AreEqual(id1, id5);
-            //Assert.AreNotEqual(id1, id3);
-            //Assert.AreEqual(id3, id4);
+            Task<long> task = null;
+            await TaskEx.WithNewContext(() => task = AsyncContextWhenAsyncSub("c3"));
 
-            //Assert.AreNotEqual(t3, t4);
+            Console.WriteLine("--");
+            var c3 = await task;
 
-            await Task.Delay(2000);
+            _ = TaskEx.WithNewContext(async () =>
+            {
+                await Task.Delay(100);
+                c4 = await AsyncContextWhenAsyncSub("c4");
+            });
+
+            await Task.Delay(500); // complete above code
+
+            Assert.AreEqual(cx, c1);
+            Assert.Greater(c1, z2);
+            Assert.AreEqual(c1, c2);
+            Assert.Greater(c3, c1);
+            Assert.Greater(c4, c3);
+
+            Console.WriteLine("--");
+
+            Console.WriteLine("This operation is still in the same context");
+            var z3 = AsyncContext.CurrentContext.Id;
+            Console.WriteLine($"-z3: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+            Assert.AreEqual(z1, z3);
+
+            await Task.Delay(500);
         }
 
-        private static async Task AsyncContextWhenAsyncSub(string n)
+        private static async Task<long> AsyncContextWhenAsyncSub(string n)
         {
             var id = AsyncContext.CurrentContext.Id;
-            var t = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"3{n}: [{t}] {id}");
+            Console.WriteLine($">{n}: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
 
-            async Task f()
+            async Task F(long i)
             {
-                Console.WriteLine($"3{n}!: [{Thread.CurrentThread.ManagedThreadId}] {AsyncContext.CurrentContext.Id}");
-                await Task.Yield();
+                Assert.AreEqual(i, AsyncContext.CurrentContext.Id);
+                Console.WriteLine($">{n}:   [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+                await Task.Delay(10);
+                Assert.AreEqual(i, AsyncContext.CurrentContext.Id);
+                Console.WriteLine($">{n}:   [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
             }
 
-            await Task.Delay(500);
-            await f();
-            await Task.Delay(500);
+            await Task.Delay(10);
+            await F(id);
+            await Task.Delay(10);
 
-            id = AsyncContext.CurrentContext.Id;
-            t = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"3{n}: [{t}] {id}");
+            Assert.AreEqual(id, AsyncContext.CurrentContext.Id);
+            Console.WriteLine($">{n}: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+
+            return id;
         }
 
         [Test]

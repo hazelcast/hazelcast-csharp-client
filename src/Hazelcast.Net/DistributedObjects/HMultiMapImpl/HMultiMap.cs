@@ -160,7 +160,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         public async Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var requestMessage = MultiMapPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
+            var requestMessage = MultiMapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             return MultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
@@ -171,7 +171,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         public async Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = MultiMapGetCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MultiMapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MultiMapGetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
@@ -216,7 +216,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         public async Task<bool> ContainsEntryAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var requestMessage = MultiMapContainsEntryCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
+            var requestMessage = MultiMapContainsEntryCodec.EncodeRequest(Name, keyData, valueData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             return MultiMapContainsEntryCodec.DecodeResponse(responseMessage).Response;
         }
@@ -227,7 +227,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         public async Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToData(key);
-            var requestMessage = MultiMapContainsKeyCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MultiMapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             return MultiMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
@@ -259,7 +259,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         public async Task<int> CountValuesAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToData(key);
-            var requestMessage = MultiMapValueCountCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MultiMapValueCountCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             return MultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
         }
@@ -271,7 +271,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            var requestMessage = MultiMapRemoveEntryCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
+            var requestMessage = MultiMapRemoveEntryCodec.EncodeRequest(Name, keyData, valueData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             return MultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
@@ -283,7 +283,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         {
             var keyData = ToData(key);
 
-            var requestMessage = MultiMapRemoveCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MultiMapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MultiMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
@@ -327,7 +327,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             var keyData = ToSafeData(key);
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
             var timeToWaitMs = timeToWait.CodecMilliseconds(0);
-            var requestMessage = MultiMapTryLockCodec.EncodeRequest(Name, keyData, ThreadId, leaseTimeMs, timeToWaitMs, _lockReferenceIdSequence.GetNext());
+            var requestMessage = MultiMapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             return MultiMapTryLockCodec.DecodeResponse(responseMessage).Response;
         }
@@ -339,7 +339,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         {
             var keyData = ToSafeData(key);
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
-            var requestMessage = MultiMapLockCodec.EncodeRequest(Name, keyData, ThreadId, leaseTimeMs, _lockReferenceIdSequence.GetNext());
+            var requestMessage = MultiMapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             _ = MultiMapLockCodec.DecodeResponse(responseMessage);
         }
@@ -361,7 +361,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
         public async Task UnlockAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
-            var requestMessage = MultiMapUnlockCodec.EncodeRequest(Name, keyData, ThreadId, _lockReferenceIdSequence.GetNext());
+            var requestMessage = MultiMapUnlockCodec.EncodeRequest(Name, keyData, ContextId, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             _ = MultiMapUnlockCodec.DecodeResponse(responseMessage);
         }

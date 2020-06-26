@@ -72,7 +72,7 @@ namespace Hazelcast.Transactions
         public TransactionState State { get; private set; }
 
         /// <summary>
-        /// Gets the current "thread identifier".
+        /// Gets the current context identifier.
         /// </summary>
         /// <remarks>
         /// Hazelcast APIs call this the thread identified and maintain locks "per threads",
@@ -80,7 +80,7 @@ namespace Hazelcast.Transactions
         /// identifier anymore - it is attached to the async context so it can flow with
         /// async operations.
         /// </remarks>
-        private static long ThreadId => AsyncContext.CurrentContext.Id;
+        private static long ContextId => AsyncContext.CurrentContext.Id;
 
         /// <summary>
         /// Gets or sets a value indicating whether the current asynchronous context is in a transaction.
@@ -112,13 +112,13 @@ namespace Hazelcast.Transactions
 
             _client = await _cluster.GetRandomClient(cancellationToken).CAF();
             InTransaction = true;
-            _threadId = ThreadId;
+            _threadId = ContextId;
             _startTime = Clock.Milliseconds;
 
             try
             {
                 var timeoutMilliseconds = _options.Timeout.TimeoutMilliseconds(0, int.MaxValue);
-                var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMilliseconds, _options.Durability, (int) _options.Type, ThreadId);
+                var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMilliseconds, _options.Durability, (int) _options.Type, ContextId);
                 var responseMessage = await _cluster.SendToClientAsync(requestMessage, _client, cancellationToken).CAF();
                 TransactionId = TransactionCreateCodec.DecodeResponse(responseMessage).Response;
                 State = TransactionState.Active;
@@ -144,7 +144,7 @@ namespace Hazelcast.Transactions
             if (State != TransactionState.Active)
                 throw new InvalidOperationException("There is no active transaction to commit.");
 
-            if (_threadId != ThreadId)
+            if (_threadId != ContextId)
                 throw new InvalidOperationException("Transactions cannot span multiple threads.");
 
             var timeoutMilliseconds = _options.Timeout.TimeoutMilliseconds(0, int.MaxValue);
@@ -153,7 +153,7 @@ namespace Hazelcast.Transactions
 
             try
             {
-                var requestMessage = TransactionCommitCodec.EncodeRequest(TransactionId, ThreadId);
+                var requestMessage = TransactionCommitCodec.EncodeRequest(TransactionId, ContextId);
                 var responseMessage = await _cluster.SendToClientAsync(requestMessage, _client, cancellationToken).CAF();
                 _ = TransactionCommitCodec.DecodeResponse(responseMessage);
                 State = TransactionState.Committed;
@@ -185,12 +185,12 @@ namespace Hazelcast.Transactions
             if (State != TransactionState.Active)
                 throw new InvalidOperationException("There is no active transaction to roll back.");
 
-            if (_threadId != ThreadId)
+            if (_threadId != ContextId)
                 throw new InvalidOperationException("Transactions cannot span multiple threads.");
 
             try
             {
-                var requestMessage = TransactionRollbackCodec.EncodeRequest(TransactionId, ThreadId);
+                var requestMessage = TransactionRollbackCodec.EncodeRequest(TransactionId, ContextId);
                 var responseMessage = await _cluster.SendToClientAsync(requestMessage, _client, cancellationToken).CAF();
                 _ = TransactionRollbackCodec.DecodeResponse(responseMessage);
                 State = TransactionState.RolledBack;

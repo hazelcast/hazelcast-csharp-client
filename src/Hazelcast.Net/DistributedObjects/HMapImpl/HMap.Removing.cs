@@ -71,7 +71,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var timeoutMs = timeToWait.CodecMilliseconds(0);
 
-            var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ThreadId, timeoutMs);
+            var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ContextId, timeoutMs);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapTryRemoveCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -117,7 +117,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <returns>The value, if any, or default(TValue).</returns>
         protected virtual async Task<TValue> RemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -169,7 +169,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// </remarks>
         protected virtual async Task<bool> RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
+            var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -222,7 +222,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #endif
             Task DeleteAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ContextId);
             var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

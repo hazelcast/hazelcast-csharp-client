@@ -13,11 +13,9 @@
 // limitations under the License.
 
 using System;
-using System.Globalization;
 using System.Threading;
-using System.Threading.Tasks;
 #if HZ_CONSOLE
-
+using System.Globalization;
 #endif
 
 namespace Hazelcast.Core
@@ -76,85 +74,41 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Action)"/>) with a new <see cref="AsyncContext"/>.
+        /// Starts an asynchronous task with a new <see cref="AsyncContext"/>.
         /// </summary>
-        /// <param name="action">The work to execute asynchronously.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task RunDetached(Action action)
-            => Detached(() => Task.Run(action));
-
-        /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Action, CancellationToken)"/>) with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="action">The work to execute asynchronously.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task RunDetached(Action action, CancellationToken cancellationToken)
-            => Detached(() => Task.Run(action, cancellationToken));
-
-        /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Func{TResult})"/>) with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">The work to execute asynchronously.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task<TResult> RunDetached<TResult>(Func<TResult> function)
-            => Detached(() => Task.Run(function));
-
-        /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Func{TResult}, CancellationToken)"/>) with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">The work to execute asynchronously.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task<TResult> RunDetached<TResult>(Func<TResult> function, CancellationToken cancellationToken)
-            => Detached(() => Task.Run(function, cancellationToken));
-
-        /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Func{Task})"/>) with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">The work to execute asynchronously.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task RunDetached(Func<Task> function)
-            => Detached(() => Task.Run(function));
-
-        /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Func{Task}, CancellationToken)"/>) with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">The work to execute asynchronously.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task RunDetached(Func<Task> function, CancellationToken cancellationToken)
-            => Detached(() => Task.Run(function, cancellationToken));
-
-        /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Func{Task{TResult}})"/>) with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">The work to execute asynchronously.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task<TResult> RunDetached<TResult>(Func<Task<TResult>> function)
-            => Detached(() => Task.Run(function));
-
-        /// <summary>
-        /// Queues the specified work to run on the thread pool (same as <see cref="Task.Run(Func{Tash{TResult}}, CancellationToken)"/>) with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">The work to execute asynchronously.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that represents the work queued to execute in the thread pool.</returns>
-        public static Task<TResult> RunDetached<TResult>(Func<Task<TResult>> function, CancellationToken cancellationToken)
-            => Detached(() => Task.Run(function, cancellationToken));
-
-        /// <summary>
-        /// Executes a function with a new context.
-        /// </summary>
-        /// <param name="function">The function to execute.</param>
-        /// <returns>The result of the function.</returns>
-        private static T Detached<T>(Func<T> function)
+        /// <param name="function">A function starting and returning an asynchronous task.</param>
+        /// <returns>The asynchronous task that was started.</returns>
+        internal static T WithNewContextInternal<T>(Func<T> function)
         {
+            if (function == null) throw new ArgumentNullException(nameof(function));
+
             var savedContext = Current.Value;
             Current.Value = new AsyncContext();
             try
             {
                 return function();
+            }
+            finally
+            {
+                Current.Value = savedContext;
+            }
+        }
+
+        /// <summary>
+        /// Starts an asynchronous task with a new <see cref="AsyncContext"/>.
+        /// </summary>
+        /// <param name="function">A function starting and returning an asynchronous task.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The asynchronous task that was started.</returns>
+        internal static T WithNewContextInternal<T>(Func<CancellationToken, T> function, CancellationToken cancellationToken)
+        {
+            if (function == null) throw new ArgumentNullException(nameof(function));
+
+            var savedContext = Current.Value;
+            Current.Value = new AsyncContext();
+            try
+            {
+                return function(cancellationToken);
             }
             finally
             {

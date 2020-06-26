@@ -20,9 +20,9 @@ using System.Threading.Tasks;
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Provides utilities for running <see cref="Task"/>.
+    /// Provides utility methods for running <see cref="Task"/>.
     /// </summary>
-    public static class TaskEx
+    public static partial class TaskEx // Timeouts
     {
         // NOTES
         //

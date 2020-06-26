@@ -72,7 +72,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// </remarks>
         protected virtual async Task<object> ExecuteAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
+            var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
             return ToObject<object>(response);
@@ -231,7 +231,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 
         protected virtual async Task<object> ApplyAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapSubmitToKeyCodec.EncodeRequest(Name, processorData, keyData, ThreadId);
+            var requestMessage = MapSubmitToKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapSubmitToKeyCodec.DecodeResponse(responseMessage).Response;
             return ToObject<object>(response);

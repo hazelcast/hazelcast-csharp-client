@@ -56,10 +56,11 @@ namespace Hazelcast.Examples.Map
             // start a task that immediately update the value, in a new context
             // because it is a new context it will wait until the lock is released!
             //
-            // simply using Task.Run here would break the example, as Task.Run would
-            // queue work with the same context, i.e. the context that has the lock
+            // simply running the code here would break the example, as it would run
+            // with the same context, i.e. the context that has the lock, so we need
+            // to start it with a new context
             //
-            var task = AsyncContext.RunDetached(async () =>
+            var task = TaskEx.WithNewContext(async () =>
             {
                 await map.AddOrReplaceAsync("key", "value1").CAF();
                 Console.WriteLine("Put new value");

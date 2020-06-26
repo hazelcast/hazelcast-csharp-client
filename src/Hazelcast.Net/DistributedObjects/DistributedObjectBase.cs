@@ -89,7 +89,7 @@ namespace Hazelcast.DistributedObjects
         public IData PartitionKeyData => _partitionKeyData ??= ToData(PartitionKey);
 
         /// <summary>
-        /// Gets the current "thread identifier".
+        /// Gets the current context identifier.
         /// </summary>
         /// <remarks>
         /// Hazelcast APIs call this the thread identified and maintain locks "per threads",
@@ -97,7 +97,7 @@ namespace Hazelcast.DistributedObjects
         /// identifier anymore - it is attached to the async context so it can flow with
         /// async operations.
         /// </remarks>
-        protected static long ThreadId => AsyncContext.CurrentContext.Id;
+        protected static long ContextId => AsyncContext.CurrentContext.Id;
 
         /// <summary>
         /// Gets the serialization service.

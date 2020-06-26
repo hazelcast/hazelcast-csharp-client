@@ -65,7 +65,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <returns>The value data for the specified key, or null if the map does not contain an entry with this key.</returns>
         protected virtual async Task<IData> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapGetCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -180,7 +180,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var keyData = ToSafeData(key);
 
-            var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapGetEntryViewCodec.DecodeResponse(responseMessage).Response;
 
@@ -506,7 +506,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
         protected virtual async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ThreadId);
+            var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapContainsKeyCodec.DecodeResponse(responseMessage).Response;
             return response;

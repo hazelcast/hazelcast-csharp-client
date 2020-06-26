@@ -136,7 +136,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         protected virtual async Task<TValue> AddOrReplaceWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
-            var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
+            var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -195,7 +195,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
-            var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
+            var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
             var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -319,7 +319,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 
-            var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ThreadId);
+            var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapReplaceCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -368,7 +368,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <returns>true if the entry was replaced; otherwise false.</returns>
         protected async Task<bool> ReplaceAsync(IData keyData, IData expectedData, IData newData, CancellationToken cancellationToken)
         {
-            var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ThreadId);
+            var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -423,7 +423,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var timeoutMs = serverTimeout.CodecMilliseconds(0);
 
-            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeoutMs);
+            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeoutMs);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
             return response;
@@ -510,7 +510,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
-            var requestMessage = MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
+            var requestMessage = MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
@@ -564,7 +564,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
-            var requestMessage = MapPutTransientCodec.EncodeRequest(Name, keyData, valueData, ThreadId, timeToLiveMs);
+            var requestMessage = MapPutTransientCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
             var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
