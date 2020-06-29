@@ -21,7 +21,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents a logging configuration.
     /// </summary>
-    public sealed class HConsoleConfiguration
+    internal sealed class HConsoleConfiguration
     {
 #if HZ_CONSOLE
         private bool _hasIndent;

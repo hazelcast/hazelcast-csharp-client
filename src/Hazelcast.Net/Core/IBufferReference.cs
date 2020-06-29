@@ -25,7 +25,7 @@ namespace Hazelcast.Core
     /// may be struct, such as <see cref="ReadOnlySequence{T}"/>, which cannot be
     /// passed as 'ref' parameters in asynchronous calls.</para>
     /// </remarks>
-    public interface IBufferReference<T>
+    internal interface IBufferReference<T>
     {
         /// <summary>
         /// Gets or sets the buffer.

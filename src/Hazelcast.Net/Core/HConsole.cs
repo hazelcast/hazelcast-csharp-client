@@ -33,7 +33,7 @@ namespace Hazelcast.Core
     /// method invocations will be compiled (thanks to <see cref="ConditionalAttribute"/>)
     /// and therefore the impact on actual (production) code will be null.</para>
     /// </remarks>
-    public static class HConsole
+    internal static class HConsole
     {
 #if HZ_CONSOLE
         private static readonly Dictionary<object, HConsoleConfiguration> SourceConfigs = new Dictionary<object, HConsoleConfiguration>();

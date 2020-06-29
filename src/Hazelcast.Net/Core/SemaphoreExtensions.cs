@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Hazelcast.Core
 {
-    public static class SemaphoreExtensions
+    internal static class SemaphoreExtensions
     {
         /// <summary>
         /// Acquires a semaphore.

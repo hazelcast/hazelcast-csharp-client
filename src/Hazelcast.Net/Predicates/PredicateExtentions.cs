@@ -16,7 +16,10 @@ using System;
 
 namespace Hazelcast.Predicates
 {
-    public static class PredicateExt
+    /// <summary>
+    /// Provides extension methods for the <see cref="IPredicate"/> interface.
+    /// </summary>
+    public static class PredicateExtentions
     {
 
         public static AndPredicate And(this IPredicate firstPredicate, IPredicate secondPredicate)

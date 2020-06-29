@@ -23,7 +23,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods for dumping objects.
     /// </summary>
-    public static class DumpCoreExtensions
+    internal static class DumpCoreExtensions
     {
         /// <summary>
         /// Dumps an array of bytes into a readable format.

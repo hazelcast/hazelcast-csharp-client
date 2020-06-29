@@ -30,7 +30,7 @@ namespace Hazelcast.Networking
     /// <remarks>
     /// <para>The socket connection handle message bytes, and manages the network socket.</para>
     /// </remarks>
-    public abstract partial class SocketConnectionBase : IAsyncDisposable
+    internal abstract partial class SocketConnectionBase : IAsyncDisposable
     {
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
 

@@ -25,7 +25,7 @@ namespace Hazelcast.Networking
     /// <para>The server socket connection handles a client and its message
     /// bytes, and manages the network socket. It is used by the server.</para>
     /// </remarks>
-    public class ServerSocketConnection : SocketConnectionBase
+    internal class ServerSocketConnection : SocketConnectionBase
     {
         // note: the socket is disposed by the SocketConnection parent class
         private readonly Socket _acceptingSocket;

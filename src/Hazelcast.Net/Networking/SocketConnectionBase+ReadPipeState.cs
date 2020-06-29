@@ -20,7 +20,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Networking
 {
-    public abstract partial class SocketConnectionBase
+    internal abstract partial class SocketConnectionBase
     {
         /// <summary>
         /// Represents the state of the reading loop.

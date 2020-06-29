@@ -32,13 +32,13 @@ namespace Hazelcast.Core
 #else
         private static readonly AsyncLocal<AsyncContext> Current = new AsyncLocal<AsyncContext>(ValueChangedHandler);
 
-        private static AsyncContext HzConsoleObject { get; } = new AsyncContext();
+        private static AsyncContext HConsoleObject { get; } = new AsyncContext();
 
         private static void ValueChangedHandler(AsyncLocalValueChangedArgs<AsyncContext> obj)
         {
             static string ToString(AsyncContext context) => context?.Id.ToString(CultureInfo.InvariantCulture) ?? "x";
 
-            HConsole.WriteLine(HzConsoleObject, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -> {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? "(execution context change)" : "")}");
+            HConsole.WriteLine(HConsoleObject, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -> {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? "(execution context change)" : "")}");
         }
 #endif
 

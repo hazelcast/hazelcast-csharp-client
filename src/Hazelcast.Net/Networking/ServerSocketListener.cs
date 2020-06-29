@@ -24,7 +24,7 @@ namespace Hazelcast.Networking
     /// <summary>
     /// Represents a server listener.
     /// </summary>
-    public sealed class ServerSocketListener : IAsyncDisposable
+    internal sealed class ServerSocketListener : IAsyncDisposable
     {
         private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
         private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
