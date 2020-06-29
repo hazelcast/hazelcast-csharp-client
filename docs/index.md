@@ -1,4 +1,4 @@
-# Hazelcast .NET Client
+# Hazelcast .NET
 
 Hazelcast .NET brings the full power of the [Hazelcast](https://hazelcast.com) high-performance, 
 in-memory computing platform to the Microsoft .NET ecosystem. The 
@@ -9,15 +9,17 @@ and mutual authentication.
 
 ### [Documentation](articles/index.md)
 Complete documentation with examples, guides and FAQs.
-Also has an *Internals* entry for all internal documentation for contributors.
+
+Will eventually also have an *Internals* entry for all internal documentation for contributors.
 
 ### [API Reference](api/index.md)
 Reference documentation for the public API.
 
 ### [Contributing](articles/contributing.md)
-The complete Hazelcast .NET solution is Open Source, released under the [Foo license](). Learn how to
-obtain the source code, build the solution, and contribute.
-Pointers to GitHub repo, branches, community contacts, NuGet, etc.
+The complete Hazelcast .NET solution is Open Source, released under the
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), and welcomes contributions.
+Learn how to obtain the source code, build the solution, interact with the community, and 
+contribute.
 
 ### [Internals Reference](code/index.md)
 Reference documentation for the entire code base. This is the reference documentation for the public API,

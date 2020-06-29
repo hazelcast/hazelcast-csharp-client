@@ -2,4 +2,5 @@
 
 <a class="navbar-brand" href="{{_rel}}index.html">
   <img id="logo" src="{{_rel}}images/hazelcast-logo.png" alt="{{_appName}}" />
+  <span>Hazelcast .NET</span>
 </a>

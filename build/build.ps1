@@ -243,6 +243,19 @@ function ensureDocFx() {
 $docfxDir = ensureDocFx
 $docfxDir = "$docFxDir\tools"
 
+# ensure memberpage
+function ensureMemberPage() {
+	Write-Host ""
+	Write-Host "Detected DocFX MemberPage"
+	$v = findLatestVersion "$($env:USERPROFILE)\.nuget\packages\memberpage"
+	Write-Host "  v$v"
+	$dir = "$($env:USERPROFILE)\.nuget\packages\memberpage\$v"
+	Write-Host "  -> $dir"
+
+	return $v
+}
+$memberpageVersion = ensureMemberPage
+
 # build the solution
 Write-Host ""
 Write-Host "Build solution..."
@@ -263,7 +276,8 @@ Write-Host "Build documentation..."
 $envPath = $env:Path
 $env:Path = "$docfxDir;$env:Path"
 docfx metadata "$docDir\docfx.json"
-docfx build "$docDir\docfx.json"
+write-host docfx build "$docDir\docfx.json" --template "default,$($env:USERPROFILE)\.nuget\packages\memberpage\$memberpageVersion\content,templates/hz"
+docfx build "$docDir\docfx.json" --template "default,$($env:USERPROFILE)\.nuget\packages\memberpage\$memberpageVersion\content,templates/hz"
 $env:Path = $envPath
 
 # prepare for tests
