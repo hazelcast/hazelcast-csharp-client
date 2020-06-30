@@ -38,16 +38,11 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
         /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="client">An optional client, that the invocation is bound to.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <remarks>
-        /// <para>When an invocation is bound to a client, it cannot be retried if the client dies.</para>
-        /// </remarks>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, ClientConnection client, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, CancellationToken cancellationToken)
         {
             RequestMessage = requestMessage ?? throw new ArgumentNullException(nameof(requestMessage));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
-            Client = client; // may be null if not bound to a client
             CorrelationId = requestMessage.CorrelationId;
             CompletionSource = new TaskCompletionSource<ClientMessage>();
             _cancellationToken = cancellationToken;
@@ -57,14 +52,75 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Invocation"/> class.
+        /// </summary>
+        /// <param name="requestMessage">The request message.</param>
+        /// <param name="messagingOptions">Messaging options.</param>
+        /// <param name="targetClient">An optional client, that the invocation is bound to.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <remarks>
+        /// <para>When an invocation is bound to a client, it will only be sent to that client,
+        /// and it cannot and will not be retried if the client dies.</para>
+        /// </remarks>
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, ClientConnection targetClient, CancellationToken cancellationToken)
+            : this(requestMessage, messagingOptions, cancellationToken)
+        {
+            TargetClient = targetClient ?? throw new ArgumentNullException(nameof(targetClient));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Invocation"/> class.
+        /// </summary>
+        /// <param name="requestMessage">The request message.</param>
+        /// <param name="messagingOptions">Messaging options.</param>
+        /// <param name="partitionId">The identifier of the target partition.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <remarks>
+        /// <para>If the target partition cannot be mapped to an available member, another random member will be used.</para>
+        /// </remarks>
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, int partitionId, CancellationToken cancellationToken)
+            : this(requestMessage, messagingOptions, cancellationToken)
+        {
+            if (partitionId < 0) throw new ArgumentException("Must be a positive integer.", nameof(partitionId));
+            TargetPartitionId = partitionId;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Invocation"/> class.
+        /// </summary>
+        /// <param name="requestMessage">The request message.</param>
+        /// <param name="messagingOptions">Messaging options.</param>
+        /// <param name="targetMemberId">The identifier of the target member.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <remarks>
+        /// <para>If the target member is not available, another random member will be used.</para>
+        /// </remarks>
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, Guid targetMemberId, CancellationToken cancellationToken)
+            : this(requestMessage, messagingOptions, cancellationToken)
+        {
+            if (targetMemberId == default) throw new ArgumentException("Must be a non-default Guid.", nameof(targetMemberId));
+            TargetMemberId = targetMemberId;
+        }
+        
+        /// <summary>
         /// Gets the request message.
         /// </summary>
         public ClientMessage RequestMessage { get; }
 
         /// <summary>
-        /// The client, if the invocation is bound to a client, otherwise null.
+        /// Gets the target client, if any, otherwise <c>null</c>.
         /// </summary>
-        public ClientConnection Client { get; }
+        public ClientConnection TargetClient { get; }
+
+        /// <summary>
+        /// Gets the unique identifier of the target partition, if any, otherwise <c>-1</c>.
+        /// </summary>
+        public int TargetPartitionId { get; }
+
+        /// <summary>
+        /// Gets the unique identifier of the target member, if any, otherwise <c>default(Guid)</c>.
+        /// </summary>
+        public Guid TargetMemberId { get; }
 
         /// <summary>
         /// Gets the correlation identifier.
@@ -127,7 +183,7 @@ namespace Hazelcast.Clustering
             switch (exception)
             {
                 case IOException _:
-                    return Client == null; // not bound to a client
+                    return TargetClient == null; // not bound to a client
 
                 case SocketException _:
                 case ClientProtocolException cpe when cpe.Retryable:
@@ -137,7 +193,7 @@ namespace Hazelcast.Clustering
                 // because we need to perform more checks on the client and message
                 case ClientProtocolException cpe when cpe.Error == ClientProtocolError.TargetDisconnected:
                 case TargetDisconnectedException _:
-                    return Client == null && // not bound to a client
+                    return TargetClient == null && // not bound to a client
                            (RequestMessage.IsRetryable || retryOnTargetDisconnected);
 
                 default:

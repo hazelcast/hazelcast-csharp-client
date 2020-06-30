@@ -35,7 +35,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            return await SendAsyncInternal(message, null, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, null, -1, default, cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -53,15 +53,8 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            // try to get the specified member, else use a random member
-            // connections to members are maintained elsewhere - we don't lazy-connect on demand
-            if (memberId == default || !_clients.TryGetValue(memberId, out var client))
-                client = GetRandomClient();
-
-            if (client == null) throw new InvalidOperationException("Could not get a client.");
-
             using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            return await SendAsyncInternal(message, client, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, null, -1, memberId, cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -77,7 +70,7 @@ namespace Hazelcast.Clustering
             if (client == null) throw new ArgumentNullException(nameof(client));
 
             using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            return await SendAsyncInternal(message, client, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, client, -1, default, cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -94,7 +87,7 @@ namespace Hazelcast.Clustering
             if (client == null) throw new ArgumentNullException(nameof(client));
 
             using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
-            return await SendAsyncInternal(message, client, correlationId, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, client, -1, default, correlationId, cancellation.Token).CAF();
         }
 
         /// <summary>
@@ -116,7 +109,8 @@ namespace Hazelcast.Clustering
             var partitionId = Partitioner.GetPartitionId(key);
             if (partitionId < 0) throw new ArgumentException("Could not get a partition for this key.", nameof(key));
 
-            var task = SendToPartitionOwnerAsync(message, partitionId, cancellationToken);
+            message.PartitionId = partitionId;
+            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -142,11 +136,7 @@ namespace Hazelcast.Clustering
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
 
             message.PartitionId = partitionId;
-
-            var memberId = Partitioner.GetPartitionOwner(partitionId);
-            var task = memberId == default
-                ? SendAsync(message, cancellationToken)
-                : SendToMemberAsync(message, memberId, cancellationToken);
+            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -159,16 +149,18 @@ namespace Hazelcast.Clustering
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message to send.</param>
-        /// <param name="client">An optional client.</param>
+        /// <param name="targetClient">An optional target client.</param>
+        /// <param name="targetPartitionId">An optional target partition identifier.</param>
+        /// <param name="targetMemberId">An optional target member identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         private
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection client, CancellationToken cancellationToken)
+        Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection targetClient, int targetPartitionId, Guid targetMemberId, CancellationToken cancellationToken)
         {
-            var task = SendAsyncInternal(message, client, _correlationIdSequence.GetNext(), cancellationToken);
+            var task = SendAsyncInternal(message, targetClient, targetPartitionId, targetMemberId, _correlationIdSequence.GetNext(), cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -181,11 +173,13 @@ namespace Hazelcast.Clustering
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message to send.</param>
-        /// <param name="client">An optional client.</param>
+        /// <param name="targetClient">An optional target client.</param>
+        /// <param name="targetPartitionId">An optional target partition identifier.</param>
+        /// <param name="targetMemberId">An optional target member identifier.</param>
         /// <param name="correlationId">A correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection client, long correlationId, CancellationToken cancellationToken)
+        /// <returns>The response message.</returns>
+        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection targetClient, int targetPartitionId, Guid targetMemberId, long correlationId, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -199,14 +193,27 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            // note that 'client' here may be null if the invocation is not bound to a client
-            var invocation = new Invocation(message, _options.Messaging, client, cancellationToken);
+            var invocation = targetClient != null ? new Invocation(message, _options.Messaging, targetClient, cancellationToken) :
+                             targetPartitionId >= 0 ? new Invocation(message, _options.Messaging, targetPartitionId, cancellationToken) :
+                             targetMemberId != default ? new Invocation(message, _options.Messaging, targetMemberId, cancellationToken) :
+                             new Invocation(message, _options.Messaging, cancellationToken);
 
+            return await SendAsyncInternal(invocation, cancellationToken).CAF();
+        }
+
+        /// <summary>
+        /// Sends an invocation request message.
+        /// </summary>
+        /// <param name="invocation">The invocation.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The response message.</returns>
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
+        {
             while (true)
             {
                 try
                 {
-                    client ??= GetRandomClient(false);
+                    var client = GetInvocationClient(invocation);
                     if (client == null) throw new ClientNotConnectedException();
                     return await client.SendAsync(invocation, cancellationToken).CAF();
                 }
@@ -229,6 +236,36 @@ namespace Hazelcast.Clustering
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets a client for an invocation.
+        /// </summary>
+        /// <param name="invocation">The invocation.</param>
+        /// <returns>A client for the invocation.</returns>
+        private ClientConnection GetInvocationClient(Invocation invocation)
+        {
+            // try the target client
+            var client = invocation.TargetClient;
+            if (client != null) return client;
+
+            // try the partition
+            if (invocation.TargetPartitionId >= 0)
+            {
+                var memberId = Partitioner.GetPartitionOwner(invocation.TargetPartitionId);
+                if (_clients.TryGetValue(memberId, out client))
+                    return client;
+            }
+
+            // try the member
+            if (invocation.TargetMemberId != default)
+            {
+                if (_clients.TryGetValue(invocation.TargetMemberId, out client))
+                    return client;
+            }
+
+            // fail over to random client
+            return GetRandomClient(false);
         }
     }
 }
