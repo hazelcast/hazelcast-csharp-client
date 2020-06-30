@@ -19,7 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 
-namespace Hazelcast.Networking
+namespace Hazelcast.Testing.TestServer
 {
     /// <summary>
     /// Represents a server listener.

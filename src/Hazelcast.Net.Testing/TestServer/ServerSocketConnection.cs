@@ -15,8 +15,9 @@
 using System;
 using System.Net.Sockets;
 using Hazelcast.Core;
+using Hazelcast.Networking;
 
-namespace Hazelcast.Networking
+namespace Hazelcast.Testing.TestServer
 {
     /// <summary>
     /// Represents a server socket connection.
