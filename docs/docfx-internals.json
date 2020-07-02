@@ -8,17 +8,17 @@
           "exclude": [ "**/obj/**", "**/bin/**" ]
         }
       ],
-      "dest": "obj/api",
+      "dest": "obj/internals",
       "disableGitFeatures": true,
-      "disableDefaultFilter": false,
+      "disableDefaultFilter": true,
       "properties": { "TargetFramework":  "netstandard2.0" }
     }
   ],
   "build": {
     "content": [
       {
-        "src": "obj/api",
-        "dest": "api",
+        "src": "obj/internals",
+        "dest": "internals",
         "files": [ "**/*.yml" ]
       },
       {

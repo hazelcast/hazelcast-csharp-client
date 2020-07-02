@@ -1,6 +1,9 @@
 - name: Documentation
-  href: articles/
-  homepage: articles/index.md
+  href: doc/
+  homepage: doc/index.md
 - name: Api Reference
   href: obj/api/
   homepage: api/index.md
+- name: Internals Reference
+  href: obj/internals/
+  homepage: internals/index.md

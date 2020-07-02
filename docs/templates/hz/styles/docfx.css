@@ -1013,6 +1013,7 @@ div.embeddedvideo iframe {
 
 .sidefilter{
     top: 110px;
+    padding-right: 0;
 }
 
 .sidetoc{
@@ -1100,4 +1101,12 @@ article h5{
 
 .inheritance .level0:before, .inheritance .level1:before, .inheritance .level2:before, .inheritance .level3:before, .inheritance .level4:before, .inheritance .level5:before{
     content: '-';
+}
+
+.level0.summary{
+    margin-bottom: 1em;
+}
+
+.level0.conceptual{
+    margin-bottom: 2em;    
 }
