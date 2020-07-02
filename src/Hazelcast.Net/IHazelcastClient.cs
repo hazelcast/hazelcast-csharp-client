@@ -23,17 +23,6 @@ namespace Hazelcast
     /// <summary>
     /// Represents the Hazelcast client.
     /// </summary>
-    /// <remarks>
-    /// <para>The Hazelcast client is the entry point to the Hazelcast cluster. Clients are
-    /// created by the <see cref="HazelcastClientFactory"/>. Before it can be used, a client
-    /// needs to be opened via the <see cref="OpenAsync"/> method. After it has been used,
-    /// a client needs to be disposed in order to properly release its resources.</para>
-    /// <para>A typical pattern would be:<c>
-    /// var client = ClientFactory.CreateClient();
-    /// client.Dispose();
-    /// </c>
-    /// </para>
-    /// </remarks>
     public interface IHazelcastClient : IAsyncDisposable
     {
         /// <summary>
@@ -41,9 +30,6 @@ namespace Hazelcast
         /// </summary>
         /// <param name="timeout">A timeout.</param>
         /// <returns>A task that will complete when the client is opened.</returns>
-        /// <remarks>
-        /// <para>There is no equivalent 'close' method: a client is closed when it is disposed.</para>
-        /// </remarks>
         Task OpenAsync(TimeSpan timeout = default);
 
         /// <summary>
@@ -51,9 +37,6 @@ namespace Hazelcast
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is opened.</returns>
-        /// <remarks>
-        /// <para>There is no equivalent 'close' method: a client is closed when it is disposed.</para>
-        /// </remarks>
         Task OpenAsync(CancellationToken cancellationToken);
 
         /// <summary>
@@ -61,10 +44,6 @@ namespace Hazelcast
         /// </summary>
         /// <param name="timeout">A timeout.</param>
         /// <returns>A new transaction context.</returns>
-        /// <remarks>
-        /// <para>The transaction context can be used to obtain transactional distributed objects,
-        /// and to commit or roll the transaction back.</para>
-        /// </remarks>
         Task<ITransactionContext> BeginTransactionAsync(TimeSpan timeout = default);
 
         /// <summary>
@@ -72,10 +51,6 @@ namespace Hazelcast
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new transaction context.</returns>
-        /// <remarks>
-        /// <para>The transaction context can be used to obtain transactional distributed objects,
-        /// and to commit or roll the transaction back.</para>
-        /// </remarks>
         Task<ITransactionContext> BeginTransactionAsync(CancellationToken cancellationToken);
 
         /// <summary>
@@ -84,10 +59,6 @@ namespace Hazelcast
         /// <param name="options">Transaction options.</param>
         /// <param name="timeout">A timeout.</param>
         /// <returns>A new transaction context.</returns>
-        /// <remarks>
-        /// <para>The transaction context can be used to obtain transactional distributed objects,
-        /// and to commit or roll the transaction back.</para>
-        /// </remarks>
         Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, TimeSpan timeout = default);
 
         /// <summary>
@@ -96,27 +67,23 @@ namespace Hazelcast
         /// <param name="options">Transaction options.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new transaction context.</returns>
-        /// <remarks>
-        /// <para>The transaction context can be used to obtain transactional distributed objects,
-        /// and to commit or roll the transaction back.</para>
-        /// </remarks>
         Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="timeout">An optional timeout.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> on, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle, TimeSpan timeout = default);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="on">An event handlers collection builder.</param>
+        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> on, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle, CancellationToken cancellationToken);
 
         /// <summary>
         /// Unsubscribe from events.

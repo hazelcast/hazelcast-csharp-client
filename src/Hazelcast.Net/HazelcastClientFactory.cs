@@ -29,10 +29,6 @@ namespace Hazelcast
     /// <summary>
     /// Creates <see cref="IHazelcastClient"/> instances.
     /// </summary>
-    /// <remarks>
-    /// <para>Client instances are heavyweight, multi-threaded objects. It is recommended to create one client,
-    /// and reuse it in the application. Creating and disposing many clients is not recommended.</para>
-    /// </remarks>
     public sealed class HazelcastClientFactory
     {
         private readonly HazelcastOptions _options;
@@ -60,7 +56,7 @@ namespace Hazelcast
             => CreateClient(_options);
 
         /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance with options.
+        /// Creates an <see cref="IHazelcastClient"/> instance with options derived from the factory options.
         /// </summary>
         /// <param name="configure">An <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>

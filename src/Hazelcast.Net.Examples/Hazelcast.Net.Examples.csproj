@@ -1,8 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' " >
+    <TargetFrameworks>net462;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' " >
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net462;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Hazelcast.Examples</RootNamespace>
     <AssemblyName>Hazelcast.Examples</AssemblyName>
   </PropertyGroup>

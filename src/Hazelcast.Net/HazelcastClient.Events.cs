@@ -32,16 +32,16 @@ namespace Hazelcast
             = new ConcurrentDictionary<Guid, HazelcastClientEventHandlers>();
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> on, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, on, timeout, DefaultOperationTimeoutMilliseconds);
+        public Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle, TimeSpan timeout = default)
+            => TaskEx.WithTimeout(SubscribeAsync, handle, timeout, DefaultOperationTimeoutMilliseconds);
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> on, CancellationToken cancellationToken)
+        public async Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle, CancellationToken cancellationToken)
         {
-            if (on == null) throw new ArgumentNullException(nameof(on));
+            if (handle == null) throw new ArgumentNullException(nameof(handle));
 
             var handlers = new HazelcastClientEventHandlers();
-            on(handlers);
+            handle(handlers);
 
             foreach (var handler in handlers)
             {

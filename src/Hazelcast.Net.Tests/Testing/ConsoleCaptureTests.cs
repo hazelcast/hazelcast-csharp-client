@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Testing
             {
                 Console.WriteLine("test");
             }
-            Assert.AreEqual("test\r\n", capture.ReadToEnd());
+            Assert.AreEqual("test" + Environment.NewLine, capture.ReadToEnd());
         }
     }
 }
