@@ -72,6 +72,36 @@
     <Compile Update="HazelcastOptions.*.cs">
       <DependentUpon>HazelcastOptions.cs</DependentUpon>
     </Compile>
+    <Compile Update="DistributedObjects\Impl\HCollectionBase.*.cs">
+      <DependentUpon>HCollectionBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HList.*.cs">
+      <DependentUpon>HList.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.*.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMapWithCache.*.cs">
+      <DependentUpon>HMapWithCache.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMultiMap.*.cs">
+      <DependentUpon>HMultiMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HQueue.*.cs">
+      <DependentUpon>HQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HReplicatedMap.*.cs">
+      <DependentUpon>HReplicatedMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HRingBuffer.*.cs">
+      <DependentUpon>HRingBuffer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HSet.*.cs">
+      <DependentUpon>HSet.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HTopic.*.cs">
+      <DependentUpon>HTopic.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

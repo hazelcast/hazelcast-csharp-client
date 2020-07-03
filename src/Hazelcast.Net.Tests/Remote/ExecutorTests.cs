@@ -16,7 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.HExecutorImpl;
+using Hazelcast.DistributedObjects.Impl;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
