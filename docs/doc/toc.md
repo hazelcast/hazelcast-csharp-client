@@ -8,5 +8,6 @@
 # [Events](events.md)
 # [Examples](examples.md)
 # [Internals](internals.md)
+## [Sources](sources.md)
 ## [Building](building.md)
 ## [Other...](other.md)

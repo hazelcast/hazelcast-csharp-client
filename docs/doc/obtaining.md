@@ -17,7 +17,7 @@ Or via the .NET CLI:
 > dotnet add package Hazelcast.NET
 ```
 
-Or added to the project as a package reference:
+Or manually added to the project as a package reference:
 
 ```
 <PackageReference Include="Hazelcast.NET" Version="4.0.0" />
