@@ -33,23 +33,23 @@ namespace Hazelcast.Examples.Map
                 new ExampleDataSerializableFactory());
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<int, Employee>("identified-data-serializable-example").CAF();
+            await using var map = await client.GetMapAsync<int, Employee>("identified-data-serializable-example");
 
             // create and add an employee
             Console.WriteLine("Adding employee 'the employee'.");
             var employee = new Employee { Id = 1, Name = "the employee" };
-            await map.AddOrUpdateAsync(employee.Id, employee).CAF();
+            await map.AddOrUpdateAsync(employee.Id, employee);
 
             // retrieve employee
-            var e = await map.GetAsync(employee.Id).CAF();
+            var e = await map.GetAsync(employee.Id);
             Console.WriteLine($"Gotten employee '{e.Name}'.");
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

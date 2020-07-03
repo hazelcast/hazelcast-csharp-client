@@ -38,18 +38,15 @@ namespace Hazelcast.Examples.Ssl
             //options.Networking.Ssl.CertificateName = "CERTIFICATE CN OR SAN VALUE HERE";
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // use a map
-            var map = await hz.GetMapAsync<string, string>("ssl-example");
+            await using var map = await client.GetMapAsync<string, string>("ssl-example");
             await map.AddOrUpdateAsync("key", "value");
             var value = await map.GetAsync("key");
             Console.WriteLine($"\"key\": \"{value}\"");
-            await hz.DestroyAsync(map).CAF();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await client.DestroyAsync(map);
         }
     }
 }

@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Core
@@ -25,7 +24,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension method to the <see cref="Task"/> and <see cref="Task{T}"/> classes.
     /// </summary>
-    public static class TaskCoreExtensions
+    internal static class TaskCoreExtensions
     {
         /// <summary>
         /// ConfigureAwait(false) = disable synchronization context and continue on any context.

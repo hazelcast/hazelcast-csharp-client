@@ -93,14 +93,10 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="Cluster"/> class.
         /// </summary>
-        /// <param name="clusterName">The cluster name.</param>
-        /// <param name="clientName">The client name.</param>
         /// <param name="options">The cluster configuration.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public Cluster(
-            string clusterName,
-            string clientName,
             IClusterOptions options,
             ISerializationService serializationService,
             ILoggerFactory loggerFactory)
@@ -123,10 +119,10 @@ namespace Hazelcast.Clustering
             _heartbeat = new Heartbeat(this, options.Heartbeat, loggerFactory);
             _heartbeat.Start(_clusterCancellation.Token); // FIXME CANCELLATION AND STUFF
 
-            Name = string.IsNullOrWhiteSpace(clusterName) ? "dev" : clusterName;
-            ClientName = string.IsNullOrWhiteSpace(clientName)
-                ? options.DefaultClientNamePrefix + ClusterIdSequence.GetNext()
-                : clientName;
+            Name = string.IsNullOrWhiteSpace(options.ClusterName) ? "dev" : options.ClusterName;
+            ClientName = string.IsNullOrWhiteSpace(options.ClientName)
+                ? options.ClientNamePrefix + ClusterIdSequence.GetNext()
+                : options.ClientName;
 
             // setup events
             _objectLifecycleEventSubscription = InitializeObjectLifecycleEventSubscription();

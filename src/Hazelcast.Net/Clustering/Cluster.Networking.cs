@@ -277,9 +277,13 @@ namespace Hazelcast.Clustering
             if (info == null) throw new HazelcastException("Failed to authenticate");
             client.NotifyAuthenticated(info);
 
-            _logger.LogInformation("Authenticated with server member {MemberId} running version {HazelcastServerVersion}" +
+            _logger.LogInformation("Authenticated client \"{ClientName}\" ({ClientId})" +
+                                   " with cluster \"{ClusterName}\" member {MemberId}" +
+                                   " running version {HazelcastServerVersion}" +
                                    " at {RemoteAddress} via {LocalAddress}.",
-                info.MemberId, info.ServerVersion, info.MemberAddress, client.LocalEndPoint);
+                ClientName, ClientId.ToString("N").Substring(0, 7),
+                Name, info.MemberId.ToString("N").Substring(0, 7),
+                info.ServerVersion, info.MemberAddress, client.LocalEndPoint);
 
             // notify partitioner (may throw)
             Partitioner.NotifyPartitionsCount(info.PartitionCount);

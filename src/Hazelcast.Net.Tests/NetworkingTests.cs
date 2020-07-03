@@ -163,7 +163,7 @@ namespace Hazelcast.Tests
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
-            var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
+            var options = HazelcastOptions.Build(configure: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
@@ -215,7 +215,7 @@ namespace Hazelcast.Tests
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
-            var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
+            var options = HazelcastOptions.Build(configure: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
@@ -260,7 +260,7 @@ namespace Hazelcast.Tests
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
-            var options = HazelcastOptions.Build(configureOptions: (configuration, options) =>
+            var options = HazelcastOptions.Build(configure: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
@@ -298,7 +298,7 @@ namespace Hazelcast.Tests
             var server = new Server(address, ReceiveMessage, LoggerFactory);
             await server.StartAsync().CAF();
 
-            var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
+            var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
@@ -357,7 +357,7 @@ namespace Hazelcast.Tests
             AddDisposable(server);
             await server.StartAsync().CAF();
 
-            var options = HazelcastOptions.Build(Array.Empty<string>(), configureOptions: (configuration, options) =>
+            var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11000");
             });
@@ -452,10 +452,7 @@ namespace Hazelcast.Tests
             options.Authentication.Authenticator.Creator = ()
                 => new Authenticator(options.Authentication);
 
-            var cluster = new Cluster("dev", "hz.client",
-                options,
-                serializationService,
-                new NullLoggerFactory());
+            var cluster = new Cluster(options, serializationService, new NullLoggerFactory());
             await cluster.ConnectAsync(CancellationToken.None).CAF();
 
             // now we can send messages...

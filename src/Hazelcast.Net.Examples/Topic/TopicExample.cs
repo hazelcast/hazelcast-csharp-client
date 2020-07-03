@@ -27,11 +27,11 @@ namespace Hazelcast.Examples.Topic
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get distributed topic from cluster
-            var topic = await hz.GetTopicAsync<string>("topic-example");
+            await using var topic = await client.GetTopicAsync<string>("topic-example");
 
             var count = 100;
             var counted = new SemaphoreSlim(0);
@@ -64,10 +64,7 @@ namespace Hazelcast.Examples.Topic
             await counted.WaitAsync();
 
             // destroy the topic
-            await hz.DestroyAsync(topic).CAF();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await client.DestroyAsync(topic);
         }
     }
 }

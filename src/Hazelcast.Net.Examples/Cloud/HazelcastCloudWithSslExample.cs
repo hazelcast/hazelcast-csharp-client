@@ -36,18 +36,15 @@ namespace Hazelcast.Examples.Cloud
             }
 
             // create an Hazelcast client and connect to a Cloud server
-            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
-            await hz.OpenAsync();
+            await using var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
+            await client.OpenAsync();
 
             // use a map
-            var map = await hz.GetMapAsync<string, string>("ssl-example");
+            await using var map = await client.GetMapAsync<string, string>("ssl-example");
             await map.AddOrUpdateAsync("key", "value");
             var value = await map.GetAsync("key");
             Console.WriteLine($"\"key\": \"{value}\"");
-            await hz.DestroyAsync(map).CAF();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await client.DestroyAsync(map);
         }
     }
 }

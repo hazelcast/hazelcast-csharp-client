@@ -28,11 +28,11 @@ namespace Hazelcast.Examples.Map
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<int, int>("predicate-example").CAF();
+            await using var map = await client.GetMapAsync<int, int>("predicate-example");
 
             // add values
             Console.WriteLine("Populating map");
@@ -40,7 +40,7 @@ namespace Hazelcast.Examples.Map
                 await map.AddOrUpdateAsync(i, i);
 
             // count
-            Console.WriteLine("Map size: " + await map.CountAsync().CAF());
+            Console.WriteLine("Map size: " + await map.CountAsync());
 
             // report
             const int partitionKey = 10;
@@ -54,7 +54,7 @@ namespace Hazelcast.Examples.Map
             Console.WriteLine("Filtered keys: " + string.Join(", ", filteredKeys));
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

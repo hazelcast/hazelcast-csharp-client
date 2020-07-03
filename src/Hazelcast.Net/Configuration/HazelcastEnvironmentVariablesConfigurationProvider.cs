@@ -23,6 +23,9 @@ namespace Hazelcast.Configuration
     /// <summary>
     /// An environment variables based Hazelcast <see cref="ConfigurationProvider"/>.
     /// </summary>
+    /// <remarks>
+    /// <para>Adds support for the hazelcast.x.y variables that do not respect the standard hazelcast__x__y pattern.</para>
+    /// </remarks>
     internal class HazelcastEnvironmentVariablesConfigurationProvider : ConfigurationProvider
     {
         /// <inheritdoc />
@@ -38,9 +41,10 @@ namespace Hazelcast.Configuration
             {
                 var key = (string) envVariable.Key;
 
-                if (key.StartsWith("hazelcast.", StringComparison.OrdinalIgnoreCase))
-                    key = key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
-                Data[key] = (string) envVariable.Value;
+                if (!key.StartsWith("hazelcast.", StringComparison.OrdinalIgnoreCase)) continue;
+
+                key = key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+                Data[key] = (string)envVariable.Value;
             }
         }
     }

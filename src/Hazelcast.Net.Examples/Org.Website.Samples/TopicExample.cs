@@ -30,11 +30,11 @@ namespace Hazelcast.Examples.Org.Website.Samples
         public static async Task Run()
         {
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient();
-            await hz.OpenAsync();
+            await using var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient();
+            await client.OpenAsync();
 
             // get distributed topic from cluster
-            var topic = await hz.GetTopicAsync<string>("my-distributed-topic");
+            await using var topic = await client.GetTopicAsync<string>("my-distributed-topic");
 
             // subscribe to event
             await topic.SubscribeAsync(on => on.Message(OnMessage));
@@ -46,10 +46,7 @@ namespace Hazelcast.Examples.Org.Website.Samples
             await Task.Delay(1_000);
 
             // destroy the topic
-            await hz.DestroyAsync(topic).CAF();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await client.DestroyAsync(topic);
         }
     }
 }

@@ -25,11 +25,6 @@ namespace Hazelcast
     public partial class HazelcastOptions // Misc
     {
         /// <summary>
-        /// Gets the client name.
-        /// </summary>
-        public string ClientName { get; set; }
-
-        /// <summary>
         /// Whether to start the client asynchronously.
         /// </summary>
         // TODO: should AsyncStart still exist (and what would it mean)?
@@ -41,26 +36,6 @@ namespace Hazelcast
         public LoggingOptions Logging { get; } = new LoggingOptions();
 
         /// <summary>
-        /// Gets the heartbeat options.
-        /// </summary>
-        public HeartbeatOptions Heartbeat { get; } = new HeartbeatOptions();
-
-        /// <summary>
-        /// Gets the networking options.
-        /// </summary>
-        public NetworkingOptions Networking { get; } = new NetworkingOptions();
-
-        /// <summary>
-        /// Gets the authentication options.
-        /// </summary>
-        public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
-
-        /// <summary>
-        /// Gets the load balancing options.
-        /// </summary>
-        public LoadBalancingOptions LoadBalancing { get; } = new LoadBalancingOptions();
-
-        /// <summary>
         /// Gets the serialization options.
         /// </summary>
         public SerializationOptions Serialization { get; } = new SerializationOptions();
@@ -69,10 +44,5 @@ namespace Hazelcast
         /// Gets  the NearCache options.
         /// </summary>
         public NearCacheOptions NearCache { get; } = new NearCacheOptions();
-
-        /// <summary>
-        /// Gets the messaging options.
-        /// </summary>
-        public MessagingOptions Messaging { get; } = new MessagingOptions();
     }
 }

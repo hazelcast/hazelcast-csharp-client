@@ -47,6 +47,10 @@ namespace Hazelcast.Configuration
         /// </summary>
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
+        /// <remarks>
+        /// <para>Adds support for the hazelcast.x.y variables that do not respect the standard hazelcast__x__y pattern.</para>
+        /// <para>Does not add default support for environment variables.</para>
+        /// </remarks>
         public static IConfigurationBuilder AddHazelcastEnvironmentVariables(this IConfigurationBuilder configurationBuilder)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
@@ -59,6 +63,10 @@ namespace Hazelcast.Configuration
         /// </summary>
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
+        /// <remarks>
+        /// <para>Adds support for hazelcast.x.y arguments that do not respect the standard hazelcast:x:y pattern.</para>
+        /// <para>Does not add default support for command line arguments.</para>
+        /// </remarks>
         public static IConfigurationBuilder AddHazelcastCommandLine(this IConfigurationBuilder configurationBuilder, string[] args)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
@@ -87,6 +95,12 @@ namespace Hazelcast.Configuration
         /// <param name="optionsFilePath">The optional path to the options file.</param>
         /// <param name="environmentName">An optional environment name.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
+        /// <remarks>
+        /// <para>Adds support for hazelcast-specific sources. Does not add default support for other sources.</para>
+        /// <para>If <paramref name="environmentName"/> is missing, the environment name is determined using
+        /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
+        /// specified, the environment name is <c>Production</c>.</para>
+        /// </remarks>
         public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, string[] args, IEnumerable<KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
@@ -105,6 +119,34 @@ namespace Hazelcast.Configuration
 
             if (keyValues != null)
                 configurationBuilder.AddHazelcastInMemoryCollection(keyValues);
+
+            return configurationBuilder;
+        }
+
+        /// <summary>
+        /// Adds the default <see cref="IConfigurationProvider"/> instances.
+        /// </summary>
+        /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
+        /// <param name="args">The command line args.</param>
+        /// <param name="environmentName">An optional environment name.</param>
+        /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
+        /// <remarks>
+        /// <para>Adds support for appsettings.json, environment variables and command line arguments. This is
+        /// only useful in non-hosted environments where a configuration builder is created from scratch.</para>
+        /// <para>If <paramref name="environmentName"/> is missing, the environment name is determined using
+        /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
+        /// specified, the environment name is <c>Production</c>.</para>
+        /// </remarks>
+        public static IConfigurationBuilder AddDefaults(this IConfigurationBuilder configurationBuilder, string[] args, string environmentName = null)
+        {
+            configurationBuilder
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{DetermineEnvironment(environmentName)}.json", optional: true, reloadOnChange: true);
+
+            configurationBuilder.AddEnvironmentVariables();
+
+            if (args != null)
+                configurationBuilder.AddCommandLine(args);
 
             return configurationBuilder;
         }

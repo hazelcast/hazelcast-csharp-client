@@ -38,31 +38,31 @@ namespace Hazelcast.Examples.Map
             };
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<string, string>("nearcache-map-1").CAF();
+            await using var map = await client.GetMapAsync<string, string>("nearcache-map-1");
 
             // add values
             for (var i = 0; i < 1000; i++)
-                await map.AddOrUpdateAsync("key" + i, "value" + i).CAF();
+                await map.AddOrUpdateAsync("key" + i, "value" + i);
 
             // get values, first pass
             var sw = new Stopwatch();
             sw.Start();
             for (var i = 0; i < 1000; i++)
-                await map.GetAsync("key" + i).CAF();
+                await map.GetAsync("key" + i);
             Console.WriteLine("Got values in " + sw.ElapsedMilliseconds + " millis");
 
             // get values, second pass
             sw.Restart();
             for (var i = 0; i < 1000; i++)
-                await map.GetAsync("key" + i).CAF();
+                await map.GetAsync("key" + i);
             Console.WriteLine("Got cached values in " + sw.ElapsedMilliseconds + " millis");
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

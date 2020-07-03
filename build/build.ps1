@@ -15,7 +15,7 @@ param(
   # TODO: should this be a target (cover)?
   [switch]
   $coverage = $false,
-  
+
   # targets
   [Alias("t")]
   [string]
@@ -316,7 +316,7 @@ function ensureMsBuild() {
 }
 if ($isWindows) {
     $msBuild = ensureMsBuild
-}    
+}
 
 # ensure docfx
 function ensureDocFx() {

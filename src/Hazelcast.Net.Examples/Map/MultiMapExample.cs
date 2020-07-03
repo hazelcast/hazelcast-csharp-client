@@ -21,34 +21,34 @@ namespace Hazelcast.Examples.Map
     // ReSharper disable once UnusedMember.Global
     public class MultiMapExample : ExampleBase
     {
-        private static async Task Run(string[] args)
+        public static async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMultiMapAsync<string, string>("multimap-example").CAF();
+            await using var map = await client.GetMultiMapAsync<string, string>("multimap-example");
 
             // add values
-            await map.TryAddAsync("key", "value").CAF();
-            await map.TryAddAsync("key", "value2").CAF();
-            await map.TryAddAsync("key2", "value3").CAF();
+            await map.TryAddAsync("key", "value");
+            await map.TryAddAsync("key", "value2");
+            await map.TryAddAsync("key2", "value3");
 
             // report
-            Console.WriteLine("Value: " + string.Join(", ", await map.GetAsync("key").CAF()));
-            Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync().CAF()));
-            Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync().CAF()));
-            Console.WriteLine("Count: " + await map.CountAsync().CAF());
-            Console.WriteLine("Entries: " + string.Join(", ", await map.GetAllAsync().CAF()));
-            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key").CAF());
-            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value").CAF());
+            Console.WriteLine("Value: " + string.Join(", ", await map.GetAsync("key")));
+            Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
+            Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
+            Console.WriteLine("Count: " + await map.CountAsync());
+            Console.WriteLine("Entries: " + string.Join(", ", await map.GetAllAsync()));
+            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
+            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

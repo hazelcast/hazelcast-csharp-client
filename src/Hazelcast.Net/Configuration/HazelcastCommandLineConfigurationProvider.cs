@@ -22,6 +22,9 @@ namespace Hazelcast.Configuration
     /// <summary>
     /// A command line based Hazelcast <see cref="ConfigurationProvider"/>.
     /// </summary>
+    /// <remarks>
+    /// <para>Adds support for hazelcast.x.y arguments that do not respect the standard hazelcast:x:y pattern.</para>
+    /// </remarks>
     internal class HazelcastCommandLineConfigurationProvider : CommandLineConfigurationProvider
     {
         /// <summary>
@@ -89,11 +92,8 @@ namespace Hazelcast.Configuration
                     // yield the value
                     yield return arg.Substring(pos + 1);
                 }
-                else
-                {
-                    // just pass the arg unchanged
-                    yield return arg;
-                }
+
+                // else ignore that arg (handled by the default command line provider)
             }
         }
     }

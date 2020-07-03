@@ -20,19 +20,24 @@ using Hazelcast.Networking;
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Defines cluster options.
+    /// Represents cluster-level options.
     /// </summary>
     public interface IClusterOptions
     {
         /// <summary>
-        /// Gets or sets the cluster name.
+        /// Gets the cluster name.
         /// </summary>
-        string ClusterName { get; set; }
+        string ClusterName { get; }
 
         /// <summary>
-        /// Gets the default client name prefix.
+        /// Gets the client name.
         /// </summary>
-        string DefaultClientNamePrefix { get; }
+        string ClientName { get; }
+
+        /// <summary>
+        /// Gets the client name prefix.
+        /// </summary>
+        string ClientNamePrefix { get; }
 
         /// <summary>
         /// Gets the client labels.

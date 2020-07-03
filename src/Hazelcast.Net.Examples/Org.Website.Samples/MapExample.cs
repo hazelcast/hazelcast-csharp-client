@@ -23,11 +23,11 @@ namespace Hazelcast.Examples.Org.Website.Samples
         public static async Task Run()
         {
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient();
-            await hz.OpenAsync();
+            await using var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient();
+            await client.OpenAsync();
 
             // get distributed map from cluster
-            var map = await hz.GetMapAsync<string, string>("my-distributed-map");
+            await using var map = await client.GetMapAsync<string, string>("my-distributed-map");
 
             // set/get
             await map.AddOrUpdateAsync("key", "value");
@@ -38,10 +38,7 @@ namespace Hazelcast.Examples.Org.Website.Samples
             await map.ReplaceAsync("key", "value", "newvalue");
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
-
-            // terminate the client
-            await hz.DisposeAsync();
+            await client.DestroyAsync(map);
         }
     }
 }

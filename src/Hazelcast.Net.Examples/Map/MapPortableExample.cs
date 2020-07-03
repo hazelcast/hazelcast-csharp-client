@@ -42,22 +42,22 @@ namespace Hazelcast.Examples.Map
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await hz.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<int, Customer>("portable-example").CAF();
+            await using var map = await hz.GetMapAsync<int, Customer>("portable-example");
 
             // create an add a customer
             Console.WriteLine("Add customer 'first-customer'.");
             var customer = new Customer { Id = 1, LastOrder = DateTime.UtcNow, Name = "first-customer" };
-            await map.AddOrUpdateAsync(customer.Id, customer).CAF();
+            await map.AddOrUpdateAsync(customer.Id, customer);
 
             // retrieve customer
-            var c = await map.GetAsync(customer.Id).CAF();
+            var c = await map.GetAsync(customer.Id);
             Console.WriteLine($"Got customer '{c.Name}'.");
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await hz.DestroyAsync(map);
         }
     }
 }

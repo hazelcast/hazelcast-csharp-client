@@ -28,11 +28,11 @@ namespace Hazelcast.Examples.Map
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<string, string>("simple-example").CAF();
+            await using var map = await client.GetMapAsync<string, string>("simple-example");
 
             // create tasks that add values to the map
             var tasks = new List<Task>();
@@ -44,10 +44,10 @@ namespace Hazelcast.Examples.Map
             }
 
             // await all tasks
-            await Task.WhenAll(tasks.ToArray()).CAF();
+            await Task.WhenAll(tasks.ToArray());
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

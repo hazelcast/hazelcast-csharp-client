@@ -27,15 +27,15 @@ namespace Hazelcast.Examples.Map
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetReplicatedMapAsync<string, string>("replicatedMap-example").CAF();
+            await using var map = await client.GetReplicatedMapAsync<string, string>("replicatedMap-example");
 
             // add values
-            await map.AddOrUpdateAsync("key", "value").CAF();
-            await map.AddOrUpdateAsync("key2", "value2").CAF();
+            await map.AddOrUpdateAsync("key", "value");
+            await map.AddOrUpdateAsync("key2", "value2");
 
             // report
             Console.WriteLine("Key: " + await map.GetAsync("key"));
@@ -43,11 +43,11 @@ namespace Hazelcast.Examples.Map
             Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
             Console.WriteLine("Count: " + await map.CountAsync());
             Console.WriteLine("Entries: " + string.Join(", ", await map.GetAllAsync()));
-            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key").CAF());
-            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value").CAF());
+            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
+            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

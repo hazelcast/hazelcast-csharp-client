@@ -29,26 +29,27 @@ namespace Hazelcast
         /// </summary>
         /// <param name="args">Optional command-line arguments.</param>
         /// <param name="keyValues">Optional key-value pairs.</param>
-        /// <param name="optionsFilePath">The options file path (without filename).</param>
-        /// <param name="optionsFileName">The options file name (without path).</param>
+        /// <param name="optionsFilePath">Optional options file path (without filename).</param>
+        /// <param name="optionsFileName">Optional options file name (without path, with extension).</param>
         /// <param name="environmentName">Optional environment name.</param>
-        /// <param name="configureOptions">Optional action to further configure the options.</param>
+        /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
-        public static HazelcastOptions Build(string[] args = null, IEnumerable<KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configureOptions = null)
+        public static HazelcastOptions Build(string[] args = null, IEnumerable<KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configure = null)
         {
             return Build(builder =>
             {
+                builder.AddDefaults(args, environmentName);
                 builder.AddHazelcast(args, keyValues, optionsFilePath, optionsFileName, environmentName);
-            }, configureOptions);
+            }, configure);
         }
 
         /// <summary>
         /// Builds Hazelcast options.
         /// </summary>
-        /// <param name="setup">An <see cref="IConfigurationBuilder"/> setup action.</param>
-        /// <param name="configureOptions">Optional action to further configure the options.</param>
+        /// <param name="setup">An <see cref="IConfigurationBuilder"/> setup delegate.</param>
+        /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
-        public static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configureOptions = null)
+        public static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure = null)
         {
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
@@ -56,16 +57,16 @@ namespace Hazelcast
             setup(builder);
             var configuration = builder.Build();
 
-            return Build(configuration, configureOptions);
+            return Build(configuration, configure);
         }
 
         /// <summary>
         /// Builds Hazelcast options.
         /// </summary>
         /// <param name="configuration">An <see cref="IConfiguration"/> instance.</param>
-        /// <param name="configureOptions">Optional action to further configure the options.</param>
+        /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
-        public static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configureOptions = null)
+        public static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure = null)
         {
             // must HzBind here and not simply Bind because we use our custom
             // binder which handles more situations such as ignoring and/or
@@ -73,7 +74,7 @@ namespace Hazelcast
 
             var options = new HazelcastOptions();
             configuration.HzBind(Hazelcast, options);
-            configureOptions?.Invoke(configuration, options);
+            configure?.Invoke(configuration, options);
             return options;
         }
     }

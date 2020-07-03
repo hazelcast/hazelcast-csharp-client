@@ -41,17 +41,17 @@ namespace Hazelcast.Examples.Map
             using var ensureLoggerFactoryIsDisposed = options.Logging.LoggerFactory.Service;
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<string, string>("map-lock-example").CAF();
+            await using var map = await client.GetMapAsync<string, string>("map-lock-example");
 
             // add value
-            await map.AddOrUpdateAsync("key", "value").CAF();
+            await map.AddOrUpdateAsync("key", "value");
 
             // locking in the current context
-            await map.LockAsync("key").CAF();
+            await map.LockAsync("key");
 
             // start a task that immediately update the value, in a new context
             // because it is a new context it will wait until the lock is released!
@@ -62,30 +62,30 @@ namespace Hazelcast.Examples.Map
             //
             var task = TaskEx.WithNewContext(async () =>
             {
-                await map.AddOrUpdateAsync("key", "value1").CAF();
+                await map.AddOrUpdateAsync("key", "value1");
                 Console.WriteLine("Put new value");
             });
 
             try
             {
-                var value = await map.GetAsync("key").CAF();
+                var value = await map.GetAsync("key");
                 // pretend to do something with the value..
                 await Task.Delay(5000);
-                await map.AddOrUpdateAsync("key", "value2").CAF();
+                await map.AddOrUpdateAsync("key", "value2");
             }
             finally
             {
-                await map.UnlockAsync("key").CAF();
+                await map.UnlockAsync("key");
             }
 
             // now wait for the background task
-            await task.CAF();
+            await task;
 
             // report
             Console.WriteLine("New value (should be 'value1'): " + await map.GetAsync("key")); // should be value1
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

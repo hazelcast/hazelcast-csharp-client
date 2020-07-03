@@ -58,7 +58,7 @@ namespace Hazelcast
         /// <summary>
         /// Creates an <see cref="IHazelcastClient"/> instance with options derived from the factory options.
         /// </summary>
-        /// <param name="configure">An <see cref="HazelcastOptions"/> configuration delegate.</param>
+        /// <param name="configure">A <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
         /// <para>The factory options are cloned and passed to the <paramref name="configure"/>
@@ -113,11 +113,7 @@ namespace Hazelcast
                 ;
             var serializationService = serializationServiceBuilder.Build();
 
-            var cluster = new Cluster(options.ClientName, null,
-                options,
-                serializationService,
-                loggerFactory);
-
+            var cluster = new Cluster(options, serializationService, loggerFactory);
             var client = new HazelcastClient(options, cluster, serializationService, loggerFactory);
 
             // wire events

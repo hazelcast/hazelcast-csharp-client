@@ -33,30 +33,30 @@ namespace Hazelcast.Examples.Map
                 new EntryProcessorDataSerializableFactory());
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<int, string>("entry-processor-example").CAF();
+            await using var map = await client.GetMapAsync<int, string>("entry-processor-example");
 
             // add values
             Console.WriteLine("Populate map");
             for (var i = 0; i < 10; i++)
-                await map.AddOrUpdateAsync(i, "value" + i).CAF();
+                await map.AddOrUpdateAsync(i, "value" + i);
 
             // verify
-            Console.WriteLine("Count: " + await map.CountAsync().CAF());
+            Console.WriteLine("Count: " + await map.CountAsync());
 
             // process
             var result = await map.ExecuteAsync(
                 new UpdateEntryProcessor("value-UPDATED"),
-                Predicates.Predicate.Sql("this==value5")).CAF();
+                Predicates.Predicate.Sql("this==value5"));
 
             Console.WriteLine("Updated value result: " + result[5]);
-            Console.WriteLine("The same value from  the map: " + await map.GetAsync(5).CAF());
+            Console.WriteLine("The same value from  the map: " + await map.GetAsync(5));
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }

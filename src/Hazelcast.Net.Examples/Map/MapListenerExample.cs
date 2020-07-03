@@ -28,11 +28,11 @@ namespace Hazelcast.Examples.Map
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<string, string>("listener-example").CAF();
+            await using var map = await client.GetMapAsync<string, string>("listener-example");
 
             var count = 3;
             var counted = new SemaphoreSlim(0);
@@ -56,21 +56,18 @@ namespace Hazelcast.Examples.Map
                     Console.WriteLine("Removed '{0}': '{1}'", a.Key, a.OldValue);
                     if (Interlocked.Decrement(ref count) == 0)
                         counted.Release();
-                })).CAF();
+                }));
 
             // trigger events
-            await map.AddOrUpdateAsync("key", "value").CAF(); // add
-            await map.AddOrUpdateAsync("key", "valueNew").CAF(); //update
-            await map.RemoveAndReturnAsync("key").CAF();
+            await map.AddOrUpdateAsync("key", "value"); // add
+            await map.AddOrUpdateAsync("key", "valueNew"); //update
+            await map.RemoveAndReturnAsync("key");
 
             // wait for events
-            await counted.WaitAsync().CAF();
+            await counted.WaitAsync();
 
             // unsubscribe
-            await map.UnsubscribeAsync(id).CAF();
-
-            // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await map.UnsubscribeAsync(id);
         }
     }
 }

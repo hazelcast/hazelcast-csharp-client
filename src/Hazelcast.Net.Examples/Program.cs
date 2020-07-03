@@ -41,7 +41,7 @@ namespace Hazelcast.Examples
             }
 
             var filter = args[0];
-            
+
 #if NETCOREAPP
             if (filter.EndsWith('*'))
 #else
@@ -124,7 +124,7 @@ namespace Hazelcast.Examples
                     Console.WriteLine($"Error: static method {type.Name}.Run returned a null task.");
                     return;
                 }
-                await task.CAF();
+                await task;
             }
             else
             {

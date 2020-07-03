@@ -14,17 +14,17 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Events;
 
 namespace Hazelcast
 {
     /// <summary>
-    /// Main options to setup a Hazelcast Client.
+    /// Represents the Hazelcast client options.
     /// </summary>
     public sealed partial class HazelcastOptions
     {
+        private string _clientNamePrefix;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
         /// </summary>
@@ -58,18 +58,13 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Gets the default client name prefix.
-        /// </summary>
-        public string DefaultClientNamePrefix => "hz.client_";
-
-        /// <summary>
-        /// Gets or sets the service provider.
+        /// Gets the service provider.
         /// </summary>
         /// <remarks>
         /// <para>In dependency-injection scenario the service provider may be available,
         /// so that service factories can return injected services.</para>
         /// </remarks>
-        public IServiceProvider ServiceProvider { get; set; }
+        public IServiceProvider ServiceProvider { get; internal set; }
 
         /// <summary>
         /// Gets the core options.

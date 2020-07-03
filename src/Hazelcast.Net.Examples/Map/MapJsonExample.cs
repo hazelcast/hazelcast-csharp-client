@@ -27,24 +27,24 @@ namespace Hazelcast.Examples.Map
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = new HazelcastClientFactory(options).CreateClient();
-            await hz.OpenAsync().CAF();
+            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await client.OpenAsync();
 
             // get the distributed map from the cluster
-            var map = await hz.GetMapAsync<string, HazelcastJsonValue>("json-example").CAF();
+            await using var map = await client.GetMapAsync<string, HazelcastJsonValue>("json-example");
 
             // add values
             Console.WriteLine("Populate map");
-            await map.AddOrUpdateAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }")).CAF();
-            await map.AddOrUpdateAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }")).CAF();
+            await map.AddOrUpdateAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
+            await map.AddOrUpdateAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
 
             // count
             Console.WriteLine("Count");
-            Console.WriteLine($"{await map.CountAsync().CAF()} entries");
+            Console.WriteLine($"{await map.CountAsync()} entries");
 
             // get all
             Console.WriteLine("List");
-            var entries = await map.GetAsync().CAF();
+            var entries = await map.GetAsync();
 #if NETCOREAPP
             foreach (var (key, value) in entries)
                 Console.WriteLine($"[{key}]: {value}");
@@ -55,13 +55,13 @@ namespace Hazelcast.Examples.Map
 
             // read
             Console.WriteLine("Query");
-            var values = await map.GetValuesAsync(Predicates.Predicate.IsLessThan("age", 6)).CAF();
+            var values = await map.GetValuesAsync(Predicates.Predicate.IsLessThan("age", 6));
             Console.WriteLine($"Retrieved {values.Count} entries with 'age < 6'.");
             foreach (var value in values)
                 Console.WriteLine($"Entry value: {value}");
 
             // destroy the map
-            await hz.DestroyAsync(map).CAF();
+            await client.DestroyAsync(map);
         }
     }
 }
