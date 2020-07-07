@@ -1,5 +1,6 @@
 # [About Hazelcast](about.md)
 # [Obtaining Hazelcast](obtaining.md)
+# [Migrating From v3](migratingFrom3.md)
 # [Hazelcast Client](hazelcastClient.md)
 # [Configuration](configuration.md)
 # [Distributed Objects](distributedObjects.md)
