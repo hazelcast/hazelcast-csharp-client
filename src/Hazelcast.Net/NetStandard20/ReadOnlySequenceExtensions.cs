@@ -31,7 +31,7 @@ namespace System.Buffers
         /// </remarks>
         public static ReadOnlySpan<T> FirstSpan<T>(this ReadOnlySequence<T> sequence)
         {
-#if NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
             return sequence.First.Span;
 #endif
 #if NETSTANDARD2_1

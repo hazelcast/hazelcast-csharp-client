@@ -29,7 +29,7 @@ namespace Hazelcast.Clustering
         {
             return new ObjectLifecycleEventSubscription(this, _loggerFactory, IsSmartRouting)
             {
-                Handle = OnObjectLifecycleEvent
+                Handle = (eventType, args, cancellationToken) => _onObjectLifeCycleEvent(eventType, args, cancellationToken)
             };
         }
 
@@ -41,7 +41,7 @@ namespace Hazelcast.Clustering
         {
             return new PartitionLostEventSubscription(this, _loggerFactory, IsSmartRouting)
             {
-                Handle = OnPartitionLost
+                Handle = (args, cancellationToken) => _onPartitionLost(args, cancellationToken)
             };
         }
 

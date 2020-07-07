@@ -46,15 +46,15 @@ namespace Hazelcast
             Labels = new HashSet<string>(other.Labels);
             AsyncStart = other.AsyncStart;
 
-            Core = Core.Clone();
-            Logging = Logging.Clone();
-            Heartbeat = Heartbeat.Clone();
-            Networking = Networking.Clone();
-            Authentication = Authentication.Clone();
-            LoadBalancing = LoadBalancing.Clone();
-            Serialization = Serialization.Clone();
-            NearCache = NearCache.Clone();
-            Messaging = Messaging.Clone();
+            Core = other.Core.Clone();
+            Logging = other.Logging.Clone();
+            Heartbeat = other.Heartbeat.Clone();
+            Networking = other.Networking.Clone();
+            Authentication = other.Authentication.Clone();
+            LoadBalancing = other.LoadBalancing.Clone();
+            Serialization = other.Serialization.Clone();
+            NearCache = other.NearCache.Clone();
+            Messaging = other.Messaging.Clone();
         }
 
         /// <summary>

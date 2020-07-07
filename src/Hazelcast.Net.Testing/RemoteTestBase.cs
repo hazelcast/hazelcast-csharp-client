@@ -14,9 +14,9 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Networking;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
@@ -47,6 +47,39 @@ namespace Hazelcast.Testing
             _unobservedExceptions.Enqueue(e);
         }
 
+        [OneTimeSetUp]
+        public async Task BaseOneTimeSetUp()
+        {
+            RcClient = await CreateRemoteControllerAsync().CAF();
+            RcCluster = await RcClient.CreateClusterAsync(ClusterConfiguration).CAF();
+        }
+
+        /// <summary>
+        /// Gets the cluster configuration.
+        /// </summary>
+        protected string ClusterConfiguration => Remote.Resources.hazelcast;
+
+        /// <summary>
+        /// Gets the remote controller client.
+        /// </summary>
+        protected Remote.IRemoteControllerClient RcClient { get; private set; }
+
+        /// <summary>
+        /// Gets the remote controller cluster.
+        /// </summary>
+        protected Remote.Cluster RcCluster { get; private set; }
+
+        [OneTimeTearDown]
+        public async Task BaseOneTimeTearDown()
+        {
+            if (RcClient != null)
+            {
+                if (RcCluster != null)
+                    await RcClient.ShutdownClusterAsync(RcCluster).CAF();
+                await RcClient.ExitAsync().CAF();
+            }
+        }
+
         [TearDown]
         public void BaseTearDown()
         {
@@ -66,28 +99,42 @@ namespace Hazelcast.Testing
         }
 
         /// <summary>
-        /// Configures the client.
+        /// Creates the Hazelcast options.
         /// </summary>
-        /// <param name="options">The client configuration.</param>
-        protected virtual void ConfigureClient(HazelcastOptions options)
+        protected virtual HazelcastOptions CreateHazelcastOptions()
         {
+            var options = HazelcastOptions.Build();
+
             options.AsyncStart = false;
 
-            var n = options.Networking;
-            n.Addresses.Add("localhost:5701");
-            n.ReconnectMode = ReconnectMode.ReconnectSync;
+            options.ClusterName = RcCluster?.Id ?? options.ClusterName;
 
-            var r = n.ConnectionRetry;
-            r.ClusterConnectionTimeoutMilliseconds = 60 * 1000;
-            r.InitialBackoffMilliseconds = 2 * 1000;
+            options.Networking.Addresses.Clear();
+            options.Networking.Addresses.Add("127.0.0.1:5701");
+
+            //n.ReconnectMode = ReconnectMode.ReconnectSync;
+
+            //var r = n.ConnectionRetry;
+            //r.ClusterConnectionTimeoutMilliseconds = 60 * 1000;
+            //r.InitialBackoffMilliseconds = 2 * 1000;
+
+            return options;
         }
+
+        protected virtual TimeSpan CreateOpenClientTimeout { get; } = TimeSpan.FromSeconds(60);
 
         /// <summary>
         /// Creates a client.
         /// </summary>
         /// <returns>A client.</returns>
         protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync()
-            => await CreateOpenClientAsync(ConfigureClient).CAF();
+        {
+            Logger.LogInformation("Create new client");
+
+            var client = new HazelcastClientFactory(CreateHazelcastOptions()).CreateClient();
+            await client.OpenAsync(CreateOpenClientTimeout).CAF();
+            return client;
+        }
 
         /// <summary>
         /// Creates a client.
@@ -95,23 +142,11 @@ namespace Hazelcast.Testing
         /// <returns>A client.</returns>
         protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastOptions> configure)
         {
-            Logger.LogInformation("Creating new client");
+            Logger.LogInformation("Create new client");
 
-            var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(configure);
-
-            try
-            {
-                // TODO: set a timeout on OpenAsync
-                AddDisposable(client);
-                await client.OpenAsync().CAF();
-                return client;
-            }
-            catch
-            {
-                await client.DisposeAsync().CAF();
-                RemoveDisposable(client);
-                throw;
-            }
+            var client = new HazelcastClientFactory(CreateHazelcastOptions()).CreateClient(configure);
+            await client.OpenAsync(CreateOpenClientTimeout).CAF();
+            return client;
         }
 
         protected object GenerateKeyForPartition(IHazelcastClient client, int partitionId)

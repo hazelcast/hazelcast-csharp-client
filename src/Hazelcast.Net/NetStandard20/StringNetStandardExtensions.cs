@@ -17,7 +17,7 @@ namespace System
 {
     internal static class StringNetStandardExtensions
     {
-#if NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
 #pragma warning disable CA1801 // Review unused parameters - we need them
 #pragma warning disable IDE0060 // Remove unused parameter
 

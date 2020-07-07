@@ -85,7 +85,7 @@ namespace Hazelcast.Exceptions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-#if NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
             unchecked
             {
                 var hashCode = (ClassName != null ? ClassName.GetHashCode() : 0);

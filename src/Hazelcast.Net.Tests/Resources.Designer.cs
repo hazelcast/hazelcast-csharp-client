@@ -10,8 +10,8 @@
 
 namespace Hazelcast.Tests {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,15 +23,15 @@ namespace Hazelcast.Tests {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
-
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Hazelcast.Tests {
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,7 +59,25 @@ namespace Hazelcast.Tests {
                 resourceCulture = value;
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
+        ///
+        ///  &lt;properties&gt;
+        ///    &lt;property name=&quot;hazelcast.map.invalidation.batch.enabled&quot;&gt;false&lt;/property&gt;
+        ///    &lt;property name=&quot;hazelcast.cache.invalidation.batch.size&quot;&gt;10&lt;/property&gt;
+        ///    &lt;property name=&quot;haze [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Cluster_Default {
+            get {
+                return ResourceManager.GetString("Cluster_Default", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
@@ -72,7 +90,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Empty", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
@@ -85,39 +103,33 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("EmptyWithComments", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
+        ///    // name of the client
         ///    &quot;clientName&quot;: &quot;client&quot;,
+        ///
+        ///    // name of the cluster
         ///    &quot;clusterName&quot;: &quot;cluster&quot;,
+        ///
+        ///    // whether to start async (FIXME USAGE?)
         ///    &quot;asyncStart&quot;: true,
         ///
+        ///    // client labels
         ///    &quot;labels&quot;: [
         ///      &quot;label_1&quot;,
         ///      &quot;label_2&quot;
         ///    ],
         ///
+        ///    // client events subscribers
         ///    &quot;subscribers&quot;: [
-        ///      { &quot;typeName&quot;: &quot;Hazelcast.Tests.ConfigurationTests+TestSubscriber, Hazelcast.Net.Tests&quot; }
-        ///    ],
         ///
-        ///    &quot;logging&quot;: {},
-        ///
-        ///    // core options
-        ///    &quot;core&quot;: {
-        ///
-        ///      // clock options
-        ///      &quot;clock&quot;: {
-        ///
-        ///        // clock offset
-        ///        &quot;offset&quot;: 1000
-        ///      }
-        ///    },
-        ///
-        ///    // messaging options
-        ///    &quot;messaging [rest of string was truncated]&quot;;.
+        ///      // a subscriber
+        ///      {
+        ///        // name of the type of the subscriber
+        ///        &quot;typeName&quot;: &quot;Hazelcast.Tests.ConfigurationTests+TestSubscriber, Haze [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string HazelcastOptions {
             get {

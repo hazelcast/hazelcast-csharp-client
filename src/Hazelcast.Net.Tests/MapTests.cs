@@ -16,66 +16,52 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Networking;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
 {
     [TestFixture]
-    public class MapTests : HazelcastTestBase
+    public class MapTests : RemoteTestBase
     {
-        public void TestSetUp()
+        private Hazelcast.Testing.Remote.Member _member;
+
+        [SetUp]
+        public void SetUp()
         {
+            /**/
             HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
-            HConsole.Configure<SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
-            HConsole.Configure<ClientConnection>(config => config.SetMaxLevel(1)); // 1: logs message & frames
+            HConsole.Configure<Networking.SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
+            HConsole.Configure<Clustering.ClientConnection>(config => config.SetMaxLevel(1)); // 1: logs message & frames
+            HConsole.Configure<Clustering.Cluster>(config => config.SetMaxLevel(1));
+            /**/
         }
 
-        private ValueTask<IHazelcastClient> CreateOpenClientAsync()
+        [OneTimeSetUp]
+        public async Task OneTimeSetUp()
         {
-            return CreateOpenClientAsync(configuration =>
-            {
-                //configuration.Networking.Addresses.Add("sgay-l4");
-                configuration.Networking.Addresses.Add("localhost");
-            });
+            _member = await RcClient.StartMemberAsync(RcCluster);
         }
 
-        private async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastOptions> configure)
+        [OneTimeTearDown]
+        public async Task OneTimeTearDown()
         {
-            var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(configure);
-            try
-            {
-                AddDisposable(client);
-                await client.OpenAsync().CAF();
-            }
-            catch
-            {
-                await client.DisposeAsync().CAF();
-                RemoveDisposable(client);
-                throw;
-            }
-            return client;
+            await RcClient.StopMemberAsync(RcCluster, _member);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task AddOrUpdate()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and does not return anything
             // NOTE: no way to know whether it added or replaced?
 
             await map.AddOrUpdateAsync("key", 42).CAF();
-
             await map.AddOrUpdateAsync("key", 43).CAF();
 
             var value = await map.GetAsync("key").CAF();
@@ -83,17 +69,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task AddOrUpdateWithTimeout()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and does not return anything
@@ -121,17 +106,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task AddOrUpdateAndReturn()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and returns the existing value, or the default value
@@ -148,18 +132,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task Add()
         {
-            TestSetUp();
-
             await using var client = await CreateOpenClientAsync().CAF();
-            RemoveDisposable(client); // 'using' is taking care of it FIXME
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // TryAdd adds a new value if no value exists already,
             // and returns the existing value, or the default value
@@ -181,17 +163,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(2, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task AddOrUpdateMany()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds new values, or replaces existing values
             // NOTE: no way to know what happened
@@ -215,17 +196,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(2, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task ReplaceByKey()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
@@ -240,17 +220,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task ReplaceByKeyAndValue()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
@@ -265,17 +244,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task AddOrUpdateWithTimeToLive()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and does not return anything
@@ -292,17 +270,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(0, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task AddOrUdateTransient()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddTransient adds a new value, or replaces an existing value,
             // and does not return anything
@@ -320,17 +297,16 @@ namespace Hazelcast.Tests
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(2, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task TryAddOrUpdate()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // TryAddOrReplace is like AddOrReplace but with a timeout
 
@@ -345,17 +321,15 @@ namespace Hazelcast.Tests
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
 
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task Clear()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var entries = new Dictionary<string, int>();
             for (var i = 0; i < 100; i++)
@@ -370,17 +344,16 @@ namespace Hazelcast.Tests
 
             count = await map.CountAsync().CAF();
             Assert.AreEqual(0, count);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task GetAll()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var entries = new Dictionary<string, int>();
             for (var i = 0; i < 100; i++)
@@ -417,17 +390,16 @@ namespace Hazelcast.Tests
 
             // TODO: is there a way to get 'all'?
             //var all = await map.GetAsync().CAF();
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task Events()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var eventsCount = 0;
             var id = await map.SubscribeAsync(on => on
@@ -449,17 +421,16 @@ namespace Hazelcast.Tests
             await Task.Delay(500).CAF();
 
             Assert.AreEqual(2, eventsCount);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task AsyncEvents()
         {
-            TestSetUp();
-
-            var client = await CreateOpenClientAsync().CAF();
-
-            var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var eventsCount = 0;
             var id = await map.SubscribeAsync(on => on
@@ -482,34 +453,30 @@ namespace Hazelcast.Tests
             await Task.Delay(500).CAF();
 
             Assert.AreEqual(2, eventsCount);
+
+            await client.DestroyAsync(map);
         }
 
         [Test]
         [Timeout(TimeoutMilliseconds)]
         public async Task ConfiguredEvents()
         {
-            TestSetUp();
+            var eventHandled = new SemaphoreSlim(0);
 
-            var eventsCount = 0;
-
-            void ConfigureClient(HazelcastOptions config)
+            void ConfigureClient(HazelcastOptions options)
             {
-                //config.Networking.Addresses.Add("sgay-l4");
-                config.Networking.Addresses.Add("localhost");
-
-                config.AddSubscriber(on => on.ObjectCreated((sender, args) =>
+                options.AddSubscriber(handle => handle.ObjectCreated((sender, args) =>
                 {
                     HConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
-                    Interlocked.Increment(ref eventsCount);
+                    eventHandled.Release();
                 }));
             }
 
-            var client = await CreateOpenClientAsync(ConfigureClient).CAF();
+            await using var client = await CreateOpenClientAsync(ConfigureClient).CAF();
+            await using var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
-            _ = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
-
-            while (eventsCount < 1)
-                await Task.Delay(500).CAF();
+            await eventHandled.WaitAsync();
+            await client.DestroyAsync(map);
         }
     }
 }

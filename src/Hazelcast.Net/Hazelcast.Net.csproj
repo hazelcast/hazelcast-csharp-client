@@ -32,6 +32,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.IdentityModel.Selectors" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Clustering\Cluster.*.cs">
         <DependentUpon>Cluster.cs</DependentUpon>
     </Compile>

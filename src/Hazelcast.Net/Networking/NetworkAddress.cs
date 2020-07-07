@@ -301,7 +301,7 @@ namespace Hazelcast.Networking
 
             string hostNameString;
 
-#if NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
             if (IPAddress.TryParse(hostName.ToString(), out var ipAddress))
 #endif
 #if NETSTANDARD2_1

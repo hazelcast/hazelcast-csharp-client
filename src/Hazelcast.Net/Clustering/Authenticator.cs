@@ -94,7 +94,6 @@ namespace Hazelcast.Clustering
 
             var serializationVersion = serializationService.GetVersion();
             var clientVersion = ClientVersion;
-
             var credentials = credentialsFactory.NewCredentials();
 
             ClientMessage requestMessage;

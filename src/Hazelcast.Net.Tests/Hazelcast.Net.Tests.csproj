@@ -33,7 +33,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2020.1.3" />
   </ItemGroup>

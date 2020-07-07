@@ -16,6 +16,12 @@
 
 param(
 
+    # Targets.
+    # (make sure it remains in the first position)
+    [Alias("t")]
+    [string[]]
+    $targets = @("clean", "build", "docsIfWindows", "tests"),
+
     # Whether to test enterprise features.
     [switch]
     $enterprise = $false,
@@ -27,19 +33,11 @@ param(
     # Target framework(s).
     [Alias("f")]
     [string]
-    $framework,
-
-    # Targets.
-    [Alias("t")]
-    [string[]]
-    $targets = @("clean", "build", "docsIfWindows", "tests")
+    $framework
 )
 
 # clear rogue environment variable
 $env:FrameworkPathOverride=""
-
-# deal with maven oddities
-$env:MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true --add-opens java.base/java.lang=ALL-UNNAMED"
 
 # determine platform
 $platform = "windows"
@@ -51,6 +49,18 @@ if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
 # validate targets and define actions ($doXxx)
 foreach ($t in $targets) {
     switch ($t.Trim()) {
+        "help" {
+            Write-Output "build.ps1 <targets>+ [-enterprise] [-serverVersion <version>] [-framework <version>]"
+            Write-Output "<targets> is a csv list of:"
+            Write-Output "  clean: cleans the solution"
+            Write-Output "  build: builds the solution"
+            Write-Output "  docs:  builds the documentation"
+            Write-Output "  tests: runs the tests"
+            Write-Output "  cover: when running tests, covers tests"
+            Write-Output "  nuget: builds the NuGet package"
+            Write-Output "  rc: runs the remote controller for tests"
+            exit 0
+		}
         "clean" { $doClean = $true }
         "build" { $doBuild = $true }
         "docs" { $doDocs = $true }
@@ -58,8 +68,9 @@ foreach ($t in $targets) {
         "tests" { $doTests = $true }
         "cover" { $doCover = $true }
         "nuget" { $doNuget = $true }
+        "rc" { $doRc = $true }
         default {
-            throw "Unknown target '$($t.Trim())'."
+            throw "Unknown target '$($t.Trim())' - use 'help' to list targets."
         }
     }
 }
@@ -69,7 +80,7 @@ if ($doDocs -and -not $isWindows) {
     throw "DocFX is not supported on platform '$platform', cannot build documentation."
 }
 $enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
-if ($doTests -and $enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
+if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
     throw "Enterprise features require an enterprise key in HAZELCAST_ENTERPRISE_KEY environment variable."
 }
 
@@ -127,18 +138,6 @@ $docDir = [System.IO.Path]::GetFullPath("$slnRoot/docs")
 $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
-
-if ($doClean) {
-    # remove all the bins and objs recursively
-    Get-ChildItem $slnRoot -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
-
-    # clears directories
-    if (test-path $outDir) { remove-item $outDir -force -recurse }
-    if (test-path "$tmpDir/tests") { remove-item "$tmpDir/tests" -force -recurse }
-}
-
-if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
-if (-not (test-path $outDir)) { mkdir $outDir >$null }
 
 # finds latest version of a NuGet package in the ~/.nuget cache
 function findLatestVersion($path) {
@@ -199,18 +198,20 @@ function ensureNuGet() {
     }
 }
 
-# ensure we have vswhere
+# ensure we have vswhere -> $script:vswhere
 function ensureVsWhere() {
     Write-Output ""
     Write-Output "Detected VsWhere"
     $v = $vswhereVersion
     Write-Output "  v$v"
     $dir = "$userHome/.nuget/packages/vswhere/$v"
-    Write-Output "  at '$dir/tools/vswhere.exe'"
-    return $dir
+    $vswhere = "$dir/tools/vswhere.exe"
+    Write-Output "  at '$vswhere'"
+
+    $script:vswhere = $vswhere
 }
 
-# find MsBuild
+# find MsBuild -> $script:msBuild
 function ensureMsBuild() {
     $vsPath = ""
     $vsVer = ""
@@ -283,18 +284,21 @@ function ensureMsBuild() {
         Write-Output "Selecting $vsName ($vsVersion)"
         Write-Output "  at '$msBuild'"
     }
-    return $msBuild
+
+    $script:msBuild = $msBuild
 }
 
-# ensure docfx
+# ensure docfx -> $script:docfx
 function ensureDocFx() {
     Write-Output ""
     Write-Output "Detected DocFX"
     $v = $docfxVersion
     Write-Output "  v$v"
     $dir = "$userHome/.nuget/packages/docfx.console/$v"
-    Write-Output "  -> $dir"
-    return $dir
+    $docfx = "$dir/tools/docfx.exe"
+    Write-Output "  at '$docfx'"
+
+    $script:docfx = $docfx
 }
 
 # ensure memberpage
@@ -308,7 +312,7 @@ function ensureMemberPage() {
     return $v
 }
 
-function ensureJar($classpath, $jar, $repo, $artifact) {
+function ensureJar($jar, $repo, $artifact) {
     if(Test-Path "$tmpDir/tests/lib/$jar") {
         Write-Output "Detected $jar."
     } else {
@@ -317,27 +321,65 @@ function ensureJar($classpath, $jar, $repo, $artifact) {
     }
     $s = ";"
     if (-not $isWindows) { $s = ":" }
+    $classpath = $script:classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
     $classpath += "$tmpDir/tests/lib/$jar"
-    return $classpath
+    $script:classpath = $classpath
 }
 
 # say hello
-Write-Output "Hazelcast.NET Client Build"
-Write-Output "  Platform       : $platform"
-Write-Output "  Targets        : $targets"
-Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
-Write-Output "  Server version : $serverVersion"
-Write-Output "  Building to    : $outDir"
+Write-Output "Hazelcast .NET Client"
 Write-Output ""
 
-if ($doTests) {
-    if ($doCover) { Write-Output "Hazelcast.NET Client Tests + Coverage" }
-    else { Write-Output "Hazelcast.NET Client Tests" }
-    Write-Output "  Enterprise     : $enterprise"
-    Write-Output "  Exclude param  : $testCategory"
+if ($doBuild) {
+    Write-Output "Build"
+    Write-Output "  Platform       : $platform"
+    Write-Output "  Targets        : $targets"
+    Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
+    Write-Output "  Building to    : $outDir"
     Write-Output ""
 }
+
+if ($doTests) {
+    Write-Output "Tests"
+    Write-Output "  Server version : $serverVersion"
+    Write-Output "  Enterprise     : $enterprise"
+    Write-Output "  Exclude param  : $testCategory"
+    Write-Output "  Results        : $tmpDir/tests/results"
+    Write-Output ""
+}
+
+if ($doCover) {
+    Write-Output "Test Coverage"
+    Write-Output "  Reports        : $tmpDir/tests/cover"
+    Write-Output ""
+}
+
+if ($doNuget) {
+    Write-Output "Package"
+    Write-Output "  To             : (tbd)"
+    Write-Output ""
+}
+
+if ($doRc) {
+    Write-Output "Remote Controller"
+    Write-Output "  Server version : $serverVersion"
+    Write-Output "  Enterprise     : $enterprise"
+    Write-Output ""
+}
+
+# cleanup, prepare
+if ($doClean) {
+    # remove all the bins and objs recursively
+    Get-ChildItem $slnRoot -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
+
+    # clears directories
+    if (test-path $outDir) { remove-item $outDir -force -recurse }
+    if (test-path "$tmpDir/tests") { remove-item "$tmpDir/tests" -force -recurse }
+}
+
+if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
+if (-not (test-path $outDir)) { mkdir $outDir >$null }
 
 # ensure we have NuGet
 if ($isWindows) {
@@ -350,9 +392,11 @@ Write-Output ""
 Write-Output "Restore NuGet packages for building and testing..."
 if ($isWindows) {
     &$nuget restore "$buildDir/build.proj"
+    Write-Output ""
 }
 else {
     dotnet restore "$buildDir/build.proj"
+    Write-Output ""
 }
 
 # get the required packages version (as specified in build.proj)
@@ -371,9 +415,10 @@ $buildLibs.PSObject.Properties.Name | Foreach-Object {
 }
 
 if ($doBuild -and $isWindows) {
-    $vswhere = ensureVsWhere
-    $vswhere = "$vswhere/tools/vswhere.exe"
-    $msBuild = ensureMsBuild
+    $vswhere = ""
+    ensureVsWhere
+    $msBuild = ""
+    ensureMsBuild
 }
 
 # ensure we have dotnet for build and tests
@@ -383,17 +428,31 @@ if ($doBuild -or -$doTests) {
 
 # ensure we have docfx for documentation
 if ($doDocs) {
-    $docfxDir = ensureDocFx
-    $docfxDir = "$docFxDir/tools"
-    $docfx = "$docfxDir/docfx.exe"
+    ensureDocFx
     $memberpageVersion = ensureMemberPage
 }
 
 # ensure Java and Maven for tests
-if ($doTests) {
+$java = "java"
+$javaFix=@()
+if ($isWindows) { $java = "javaw" }
+if ($doTests -or $doRc) {
     Write-Output ""
-    ensureCommand "java"
+    ensureCommand $java
     ensureCommand "mvn"
+
+    # sad java
+    $v = & java -version 2>&1
+    $v = $v[0].ToString()
+    $p0 = $v.IndexOf('"')
+    $p1 = $v.LastIndexOf('"')
+    $v = $v.SubString($p0+1,$p1-$p0-1)
+
+    if (-not $v.StartsWith("1.8")) {
+        # starting with Java 9 ... weird things can happen
+        $javaFix = @( "-Dcom.google.inject.internal.cglib.\$experimental_asm7=true",  "--add-opens java.base/java.lang=ALL-UNNAMED" )
+        $env:MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true --add-opens java.base/java.lang=ALL-UNNAMED"
+	}
 }
 
 # build the solution
@@ -460,31 +519,39 @@ if ($doDocs) {
     remove-item -recurse -force "$tmpDir/docfx-internals.site" # remove leftovers
 }
 
-function StartRemoteController($classpath) {
+function StartRemoteController() {
 
     if (-not (test-path "$tmpDir/tests/rc")) { mkdir "$tmpDir/tests/rc" >$null }
 
-    # start the remote controller
     Write-Output ""
     Write-Output "Starting Remote Controller..."
-    $p = Start-Process -FilePath java -ArgumentList ( `
-            "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
-            "-cp", "$classpath", `
-            "com.hazelcast.remotecontroller.Main" `
-        ) -RedirectStandardOutput "$tmpDir/tests/rc/rc_stdout.log" -RedirectStandardError "$tmpDir/tests/rc/rc_stderr.log" -PassThru
+
+    # start the remote controller
+    $args = @( `
+        "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
+        "-cp", "$script:classpath", `
+        "com.hazelcast.remotecontroller.Main" `
+    ) + $javaFix
+
+    $script:remoteController = Start-Process -FilePath $java -ArgumentList $args `
+        -RedirectStandardOutput "$tmpDir/tests/rc/rc_stdout.log" -RedirectStandardError "$tmpDir/tests/rc/rc_stderr.log" -PassThru
     Start-Sleep -Seconds 4
-    Write-Output "Started remote controller with pid=$($p.Id)"
-    return $p
+
+    Write-Output "Started remote controller with pid=$($script:remoteController.Id)"
+
+    if ($script:remoteController.HasExited) {
+        throw "Remote controller has exited immediately."
+	}
 }
 
-function StopRemoteController($remoteController) {
+function StopRemoteController() {
 
     # stop the remote controller
     Write-Output ""
-    if ($remoteController -and $remoteController.Id) {
+    if ($script:remoteController -and $script:remoteController.Id -and -not $script:remoteController.HasExited) {
         Write-Output "Stopping remote controller..."
-        Stop-Process -Force -Id $remoteController.Id
-        #$remoteController.Kill($true)
+        Stop-Process -Force -Id $script:remoteController.Id
+        #$script:remoteController.Kill($true)
 	}
     else {
         Write-Output "Remote controller is not running."
@@ -604,32 +671,32 @@ function RunDotNetFrameworkTests($f) {
     }
 }
 
-if ($doTests) {
-
-    # prepare for tests
+if ($doTests -or $doRc) {
+   # prepare for tests
     Write-Output ""
     Write-Output "Prepare for tests..."
     if (-not (test-path "$tmpDir/tests/lib")) { mkdir "$tmpDir/tests/lib" >$null }
     [string]$classpath=""
 
-    # ensure we have the remote controller jar
-    $classpath = ensureJar $classpath "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
-    # ensure we have the hazelcast test jar
-    $classpath = ensureJar $classpath "hazelcast-${hzVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}:jar:tests"
+    # ensure we have the remote controller + hazelcast test jar
+    ensureJar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
+    ensureJar "hazelcast-${hzVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}:jar:tests"
 
-    if($enterprise){
-        # ensure we have the hazelcast jar
-        $classpath = ensureJar $classpath "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
-        # ensure we have the hazelcast enterprise test jar
-        $classpath = ensureJar $classpath "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
+    if ($enterprise) {
+        # ensure we have the hazelcast enterprise server + test jar
+        ensureJar "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
+        ensureJar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
     } else {
-        # ensure we have the hazelcast jar
-        $classpath = ensureJar $classpath "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+        # ensure we have the hazelcast server jar
+        ensureJar "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
     }
+}
+
+if ($doTests) {
 
     # run tests
     try {
-        $remoteController = StartRemoteController $classpath
+        StartRemoteController
 
         Write-Output ""
         Write-Output "Run tests..."
@@ -641,15 +708,26 @@ if ($doTests) {
                 RunDotNetFrameworkTests $framework
             }
             else {
-                # must run tests with .NET Core for Core tests
-                # this mean 'dotnet test', there is no Core running for NUnit yet
-                # FIXME but... on Windows, could it work?
+                # anything else can run with 'dotnet test'
                 RunDotNetCoreTests $framework
             }
         }
     }
     finally {
-        StopRemoteController $remoteController
+        StopRemoteController
+    }
+}
+
+if ($doRc) {
+    try {
+        StartRemoteController
+
+        Write-Output ""
+        Write-Output "Remote controller is running..."
+        Read-Host "Press ENTER to stop"
+    }
+    finally {
+        StopRemoteController
     }
 }
 
