@@ -1,37 +1,79 @@
+## Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+## http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+## Hazelcast.NET Build Script
+
 param(
-  # whether to test enterprise features
-  [switch]
-  $enterprise = $false,
 
-  # whether to test ??
-  [switch]
-  $netcore =  $false,
+    # Whether to test enterprise features.
+    [switch]
+    $enterprise = $false,
 
-  # the server version
-  [string]
-  $serverVersion = "4.0",
+    # The Hazelcast server version.
+    [string]
+    $serverVersion = "4.0",
 
-  # whether to run tests coverage
-  # TODO: should this be a target (cover)?
-  [switch]
-  $coverage = $false,
+    # Target framework(s).
+    [Alias("f")]
+    [string]
+    $framework,
 
-  # targets
-  [Alias("t")]
-  [string]
-  $targets="build,docs,tests"
+    # Targets.
+    [Alias("t")]
+    [string[]]
+    $targets = @("clean", "build", "docsIfWindows", "tests")
 )
-
-# targets
-$t = $targets.ToLower().Split(',') | foreach { $_.Trim() }
-$doBuild = $t.Contains("build")
-$doDocs = $t.Contains("docs")
-$doTests = $t.Contains("tests")
 
 # clear rogue environment variable
 $env:FrameworkPathOverride=""
 
-# versions and configuration
+# deal with maven oddities
+$env:MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true --add-opens java.base/java.lang=ALL-UNNAMED"
+
+# determine platform
+$platform = "windows"
+if ($isLinux) { $platform = "linux" }
+if ($isWindows) { $platform = "windows" }
+if ($isMacOS) { $platform = "macOS" }
+if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
+
+# validate targets and define actions ($doXxx)
+foreach ($t in $targets) {
+    switch ($t.Trim()) {
+        "clean" { $doClean = $true }
+        "build" { $doBuild = $true }
+        "docs" { $doDocs = $true }
+        "docsIfWindows" { $doDocs = $isWindows }
+        "tests" { $doTests = $true }
+        "cover" { $doCover = $true }
+        "nuget" { $doNuget = $true }
+        default {
+            throw "Unknown target '$($t.Trim())'."
+        }
+    }
+}
+
+# validate targets / platform
+if ($doDocs -and -not $isWindows) {
+    throw "DocFX is not supported on platform '$platform', cannot build documentation."
+}
+$enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
+if ($doTests -and $enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
+    throw "Enterprise features require an enterprise key in HAZELCAST_ENTERPRISE_KEY environment variable."
+}
+
+# set versions and configure
 $hzVersion = $serverVersion
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
 $configuration = "Release" # or Debug, but should always be Release
@@ -40,7 +82,7 @@ $hzToolsCache = 12 #days
 $hzVsMajor = 16 # force VS major version, default to 16 (VS2019) for now
 $hzVsPreview = $false # whether to look for previews of VS
 
-# determine code repositories
+# determine java code repositories for tests
 $mvnOssSnapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot/"
 $mvnOssReleaseRepo = "http://repo1.maven.apache.org/maven2"
@@ -54,153 +96,258 @@ if ($serverVersion.Contains("SNAPSHOT")) {
     $mvnEntRepo = $mvnEntReleaseRepo
 }
 
-# determine platform
-$platform = "windows"
-if ($isLinux) { $platform = "linux" }
-if ($isWindows) { $platform = "windows" }
-if ($isMacOS) { $platform = "macOS" }
-if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
-
-# determine target .NET framework
-$fwkTarget = "net462"
-$coreTarget = "netcoreapp3.1"
-if ($netcore) {
-    $targetFramework = $coreTarget
+# determine framework(s)
+$frameworks = @( "net462", "netcoreapp2.1", "netcoreapp3.1" )
+if (-not $isWindows) {
+    $frameworks = @( "netcoreapp2.1", "netcoreapp3.1" )
 }
-else {
-    if ($isWindows) {
-        $targetFramework = $fwkTarget
+if (-not [System.String]::IsNullOrWhiteSpace($framework)) {
+    $framework = $framework.ToLower()
+    if (-not $frameworks.Contains($framework)) {
+        throw "Framework '$framework' is not supported on platform '$platform', supported frameworks are: " + `
+              [System.String]::Join(", ", $frameworks) + "."
     }
-    else {
-        $targetFramework = $coreTarget
-    }
+    $frameworks = @( $framework )
 }
 
 # determine tests categories
 $testCategory = ""
 if(!($enterprise)) {
-	$testCategory +="cat != enterprise"
+    $testCategory += "cat != enterprise"
 }
 
 # prepare directories
-$scriptRoot = "$PSScriptRoot" # expected to be build/
+$scriptRoot = "$PSScriptRoot" # expected to be ./build/
 $slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot/..")
 
-$srcDir = "$slnRoot/src"
-$tmpDir = "$slnRoot/temp"
-$outDir = "$slnRoot/temp/output"
-$docDir = "$slnRoot/docs"
-$buildDir = "$slnRoot/build"
+$srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
+$tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
+$outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
+$docDir = [System.IO.Path]::GetFullPath("$slnRoot/docs")
+$buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
-if ($isWindows) {
-    $userHome = $env:USERPROFILE
-}
-else {
-    $userHome = $env:HOME
-}
+if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
-if ($doBuild) {
-  # remove all the bins and objs recursively
-  Get-ChildItem ./ -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
+if ($doClean) {
+    # remove all the bins and objs recursively
+    Get-ChildItem $slnRoot -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
 
-  # clears the output directory
-  if (test-path $outDir) { remove-item $outDir -force -recurse }
+    # clears directories
+    if (test-path $outDir) { remove-item $outDir -force -recurse }
+    if (test-path "$tmpDir/tests") { remove-item "$tmpDir/tests" -force -recurse }
 }
 
 if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
 if (-not (test-path $outDir)) { mkdir $outDir >$null }
 
-# functions
+# finds latest version of a NuGet package in the ~/.nuget cache
 function findLatestVersion($path) {
-	if ([System.IO.Directory]::Exists($path)) {
-		$v = ls $path | `
-			 foreach-object { [Version]::Parse($_.Name) } | `
-			 sort -descending | `
-			 select -first 1
-	}
-	else {
-		$l = [System.IO.Path]::GetDirectoryname($path).Length
-		$l = $path.Length - $l
-		$v = ls "$path.*" | `
-			 foreach-object { [Version]::Parse($_.Name.SubString($l)) } | `
-			 sort -descending | `
-			 select -first 1
-	}
-	return $v
+    if ([System.IO.Directory]::Exists($path)) {
+        $v = ls $path | `
+            foreach-object { [Version]::Parse($_.Name) } | `
+                sort -descending | `
+                select -first 1
+    }
+    else {
+        $l = [System.IO.Path]::GetDirectoryname($path).Length
+        $l = $path.Length - $l
+        $v = ls "$path.*" | `
+                foreach-object { [Version]::Parse($_.Name.SubString($l)) } | `
+                    sort -descending | `
+                    select -first 1
+    }
+    return $v
 }
 
+# ensures that a command exists in the path
 function ensureCommand($command) {
     $r = get-command $command 2>&1
-    #return $r.Name -ne $null
     if ($r.Name -eq $null) {
-        Write-Host "Command '$command' is missing."
+        Write-Output "Command '$command' is missing."
         exit 1
     }
-}
-
-if ($enterprise) {
-    #TODO: verify we have an enterprise key
-}
-
-# say hello
-Write-Host "Hazelcast.NET Client Build"
-Write-Host "  Platform       : $platform"
-Write-Host "  Targets        : $targets"
-if (-not $isWindows -and $doDocs) {
-  Write-Host "                   WARN: DocFX is not supported on this platform"
-  $doDocs = $false
-}
-Write-Host "  Server version : $serverVersion"
-Write-Host "  Framework      : $targetFramework"
-Write-Host "  Building to    : $outDir"
-Write-Host ""
-if ($doTests) {
-    Write-Host "Hazelcast.NET Client Tests"
-    Write-Host "  Enterprise     : $enterprise"
-    Write-Host "  Exclude param  : $testCategory"
-    Write-Host "  Code coverage  : $coverage"
-    Write-Host ""
-}
-
-# ensure we have dotnet
-if (-not $isWindows) {
-    ensureCommand "dotnet"
+    else {
+        Write-Output "Detected $command"
+        Write-Output "  at '$($r.Source)'"
+    }
 }
 
 # ensure we have NuGet
 function ensureNuGet() {
-	if (-not $hzLocalBuild)
-	{
-		$source = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-		if ((test-path $nuget) -and ((ls $nuget).CreationTime -lt [DateTime]::Now.AddDays(-$hzToolsCache)))
-		{
-			Remove-Item $nuget -force -errorAction SilentlyContinue > $null
-		}
-		if (-not (test-path $nuget))
-		{
-			Write-Host "Download NuGet..."
-			Invoke-WebRequest $source -OutFile $nuget
-			if (-not $?) { throw "Failed to download NuGet." }
-			Write-Host "  -> $nuget"
-		}
-		else {
-			Write-Host "Detected NuGet"
-			Write-Host "  at '$nuget'"
-		}
-	}
-	elseif (-not (test-path $nuget))
-	{
-		throw "Failed to locate NuGet.exe."
-	}
+    if (-not $hzLocalBuild)
+    {
+        $source = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+        if ((test-path $nuget) -and ((ls $nuget).CreationTime -lt [DateTime]::Now.AddDays(-$hzToolsCache)))
+        {
+            Remove-Item $nuget -force -errorAction SilentlyContinue > $null
+        }
+        if (-not (test-path $nuget))
+        {
+            Write-Output "Download NuGet..."
+            Invoke-WebRequest $source -OutFile $nuget
+            if (-not $?) { throw "Failed to download NuGet." }
+            Write-Output "  -> $nuget"
+        }
+        else {
+            Write-Output "Detected NuGet"
+            Write-Output "  at '$nuget'"
+        }
+    }
+    elseif (-not (test-path $nuget))
+    {
+        throw "Failed to locate NuGet.exe."
+    }
 }
+
+# ensure we have vswhere
+function ensureVsWhere() {
+    Write-Output ""
+    Write-Output "Detected VsWhere"
+    $v = $vswhereVersion
+    Write-Output "  v$v"
+    $dir = "$userHome/.nuget/packages/vswhere/$v"
+    Write-Output "  at '$dir/tools/vswhere.exe'"
+    return $dir
+}
+
+# find MsBuild
+function ensureMsBuild() {
+    $vsPath = ""
+    $vsVer = ""
+    $msBuild = ""
+
+    $vsMajor = $hzVsMajor
+
+    $vsPaths = new-object System.Collections.Generic.List[System.String]
+    $vsVersions = new-object System.Collections.Generic.List[System.Version]
+    $vsNames = new-object System.Collections.Generic.List[System.String]
+
+    Write-Output ""
+
+    # parse vswhere output
+    $params = @()
+    if ($hzVsPreview) { $params += "-prerelease" }
+    &$vswhere @params | ForEach-Object {
+        if ($_.StartsWith("installationPath:")) { $vsPaths.Add($_.SubString("installationPath:".Length).Trim()) }
+        if ($_.StartsWith("installationVersion:")) { $vsVersions.Add([System.Version]::Parse($_.SubString("installationVersion:".Length).Trim())) }
+        if ($_.StartsWith("displayName:")) { $vsNames.Add($_.SubString("displayName:".Length).Trim()) }
+    }
+
+    # get higest version lower than or equal to vsMajor
+    $vsIx1 = -1
+    $vsIx2 = -1
+    $vsVersion = [System.Version]::Parse("0.0.0.0")
+    $vsVersions | ForEach-Object {
+
+        $vsIx1 = $vsIx1 + 1
+        Write-Output "Detected $($vsNames[$vsIx1]) ($_)"
+        Write-Output "  at '$($vsPaths[$vsIx1])'"
+
+        if ($_.Major -le $vsMajor -and $_ -gt $vsVersion) {
+            $vsVersion = $_
+            $vsIx2 = $vsIx1
+        }
+    }
+    if ($vsIx2 -ge 0) {
+        $vsPath = $vsPaths[$vsIx2]
+        $vsName = $vsNames[$vsIx2]
+
+        if ($vsVersion.Major -eq 16) {
+            $msBuild = "$vsPath/MSBuild/Current/Bin/MsBuild.exe"
+        }
+        elseif ($vsVersion.Major -eq 15) {
+            $msBuild = "$vsPath/MSBuild/$($vsVersion.Major).0/Bin/MsBuild.exe"
+        }
+    }
+
+    dir 'C:/Program Files (x86)/Microsoft Visual Studio/*/BuildTools/MSBuild/*/Bin/MSBuild.exe' | ForEach-Object {
+        $msBuildVersion = &$_ -nologo -version
+        $msBuildVersion = [System.Version]::Parse($msBuildVersion)
+        $msBuildExe = $_.FullName.Replace('\', '/')
+        $toolsPath = $msBuildExe.SubString(0, $msBuildExe.IndexOf("/MSBuild/"))
+        $toolsYear = $msBuildExe.SubString('C:/Program Files (x86)/Microsoft Visual Studio/'.Length, 4)
+        Write-Output "Detected BuildTools $toolsYear ($msBuildVersion)"
+        Write-Output "  at '$toolsPath'"
+
+        if ($msBuildVersion.Major -le $vsMajor -and $msBuildVersion -gt $vsVersion)  {
+            $msBuild = $msBuildExe
+            $vsVersion = $msBuildVersion
+            $vsName = "BuildTools "
+        }
+    }
+
+    if (-not (test-path $msBuild)) {
+        throw "Failed to locate MsBuild.exe."
+    }
+    else {
+        Write-Output "Selecting $vsName ($vsVersion)"
+        Write-Output "  at '$msBuild'"
+    }
+    return $msBuild
+}
+
+# ensure docfx
+function ensureDocFx() {
+    Write-Output ""
+    Write-Output "Detected DocFX"
+    $v = $docfxVersion
+    Write-Output "  v$v"
+    $dir = "$userHome/.nuget/packages/docfx.console/$v"
+    Write-Output "  -> $dir"
+    return $dir
+}
+
+# ensure memberpage
+function ensureMemberPage() {
+    Write-Output ""
+    Write-Output "Detected DocFX MemberPage"
+    $v = $memberpageVersion
+    Write-Output "  v$v"
+    $dir = "$userHome/.nuget/packages/memberpage/$v"
+    Write-Output "  -> $dir"
+    return $v
+}
+
+function ensureJar($classpath, $jar, $repo, $artifact) {
+    if(Test-Path "$tmpDir/tests/lib/$jar") {
+        Write-Output "Detected $jar."
+    } else {
+        Write-Output "Downloading $jar ..."
+        &"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/tests/lib/$jar"
+    }
+    $s = ";"
+    if (-not $isWindows) { $s = ":" }
+    if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
+    $classpath += "$tmpDir/tests/lib/$jar"
+    return $classpath
+}
+
+# say hello
+Write-Output "Hazelcast.NET Client Build"
+Write-Output "  Platform       : $platform"
+Write-Output "  Targets        : $targets"
+Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
+Write-Output "  Server version : $serverVersion"
+Write-Output "  Building to    : $outDir"
+Write-Output ""
+
+if ($doTests) {
+    if ($doCover) { Write-Output "Hazelcast.NET Client Tests + Coverage" }
+    else { Write-Output "Hazelcast.NET Client Tests" }
+    Write-Output "  Enterprise     : $enterprise"
+    Write-Output "  Exclude param  : $testCategory"
+    Write-Output ""
+}
+
+# ensure we have NuGet
 if ($isWindows) {
     $nuget = "$tmpDir/nuget.exe"
     ensureNuGet
 }
 
-# ensure we have the required NuGet packages for building and testing
-Write-Host ""
-Write-Host "Restore NuGet packages for building..."
+# use NuGet to ensure we have the required packages for building and testing
+Write-Output ""
+Write-Output "Restore NuGet packages for building and testing..."
 if ($isWindows) {
     &$nuget restore "$buildDir/build.proj"
 }
@@ -212,138 +359,29 @@ else {
 $buildAssets = (get-content "$buildDir/obj/project.assets.json" | ConvertTo-Json | ConvertFrom-Json).Value | ConvertFrom-Json
 $buildLibs = $buildAssets.Libraries
 $buildLibs.PSObject.Properties.Name | Foreach-Object {
-  $p = $_.Split('/')
-  $name = $p[0].ToLower()
-  $version = $p[1]
-  if ($name -eq "vswhere") { $vswhereVersion = $version }
-  if ($name -eq "nunit.consolerunner") { $nunitVersion = $version }
-  if ($name -eq "jetbrains.dotcover.commandlinetools") { $dotcoverVersion = $version }
-  if ($name -eq "docfx.console") { $docfxVersion = $version }
-  if ($name -eq "memberpage") { $memberpageVersion = $version }
+    $p = $_.Split('/')
+    $name = $p[0].ToLower()
+    $version = $p[1]
+    if ($name -eq "vswhere") { $vswhereVersion = $version }
+    if ($name -eq "nunit.consolerunner") { $nunitVersion = $version }
+    if ($name -eq "jetbrains.dotcover.commandlinetools") { $dotcoverVersion = $version }
+    if ($name -eq "jetbrains.dotcover.commandlinetools.linux") { $dotcoverLinuxVersion = $version }
+    if ($name -eq "docfx.console") { $docfxVersion = $version }
+    if ($name -eq "memberpage") { $memberpageVersion = $version }
 }
 
-# ensure we have vswhere
-function ensureVsWhere() {
-	Write-Host ""
-	Write-Host "Detected VsWhere"
-	#$v = findLatestVersion "$userHome/.nuget/packages/vswhere"
-  $v = $vswhereVersion
-	Write-Host "  v$v"
-	$dir = "$userHome/.nuget/packages/vswhere/$v"
-	Write-Host "  -> $dir"
-
-	return $dir
-}
-if ($isWindows) {
+if ($doBuild -and $isWindows) {
     $vswhere = ensureVsWhere
     $vswhere = "$vswhere/tools/vswhere.exe"
-}
-
-# find MsBuild
-function ensureMsBuild() {
-	$vsPath = ""
-	$vsVer = ""
-	$msBuild = ""
-
-	$vsMajor = $hzVsMajor
-
-	$vsPaths = new-object System.Collections.Generic.List[System.String]
-	$vsVersions = new-object System.Collections.Generic.List[System.Version]
-	$vsNames = new-object System.Collections.Generic.List[System.String]
-
-	Write-Host ""
-
-	# parse vswhere output
-	$params = @()
-	if ($hzVsPreview) { $params += "-prerelease" }
-	&$vswhere @params | ForEach-Object {
-		if ($_.StartsWith("installationPath:")) { $vsPaths.Add($_.SubString("installationPath:".Length).Trim()) }
-		if ($_.StartsWith("installationVersion:")) { $vsVersions.Add([System.Version]::Parse($_.SubString("installationVersion:".Length).Trim())) }
-		if ($_.StartsWith("displayName:")) { $vsNames.Add($_.SubString("displayName:".Length).Trim()) }
-	}
-
-	# get higest version lower than or equal to vsMajor
-	$vsIx1 = -1
-	$vsIx2 = -1
-	$vsVersion = [System.Version]::Parse("0.0.0.0")
-	$vsVersions | ForEach-Object {
-
-		$vsIx1 = $vsIx1 + 1
-		Write-Host "Detected $($vsNames[$vsIx1]) ($_)"
-		Write-Host "  at '$($vsPaths[$vsIx1])'"
-
-		if ($_.Major -le $vsMajor -and $_ -gt $vsVersion) {
-			$vsVersion = $_
-			$vsIx2 = $vsIx1
-		}
-	}
-	if ($vsIx2 -ge 0) {
-		$vsPath = $vsPaths[$vsIx2]
-		$vsName = $vsNames[$vsIx2]
-
-		if ($vsVersion.Major -eq 16) {
-			$msBuild = "$vsPath/MSBuild/Current/Bin/MsBuild.exe"
-		}
-		elseif ($vsVersion.Major -eq 15) {
-			$msBuild = "$vsPath/MSBuild/$($vsVersion.Major).0/Bin/MsBuild.exe"
-		}
-	}
-
-	dir 'C:/Program Files (x86)/Microsoft Visual Studio/*/BuildTools/MSBuild/*/Bin/MSBuild.exe' | ForEach-Object {
-		$msBuildVersion = &$_ -nologo -version
-		$msBuildVersion = [System.Version]::Parse($msBuildVersion)
-		$msBuildExe = $_.FullName
-		$toolsPath = $msBuildExe.SubString(0, $msBuildExe.IndexOf("/MSBuild/"))
-		$toolsYear = $msBuildExe.SubString('C:/Program Files (x86)/Microsoft Visual Studio/'.Length, 4)
-		Write-Host "Detected BuildTools $toolsYear ($msBuildVersion)"
-		Write-Host "  at '$toolsPath'"
-
-		if ($msBuildVersion.Major -le $vsMajor -and $msBuildVersion -gt $vsVersion)  {
-			$msBuild = $msBuildExe
-			$vsVersion = $msBuildVersion
-			$vsName = "BuildTools "
-		}
-	}
-
-	if (-not (test-path $msBuild)) {
-		throw "Failed to locate MsBuild.exe."
-	}
-	else {
-		Write-Host "Selecting $vsName ($vsVersion)"
-		Write-Host "  at '$msBuild'"
-	}
-	return $msBuild
-}
-if ($isWindows) {
     $msBuild = ensureMsBuild
 }
 
-# ensure docfx
-function ensureDocFx() {
-	Write-Host ""
-	Write-Host "Detected DocFX"
-	#$v = findLatestVersion "$userHome/.nuget/packages/docfx.console"
-  $v = $docfxVersion
-	Write-Host "  v$v"
-	$dir = "$userHome/.nuget/packages/docfx.console/$v"
-	Write-Host "  -> $dir"
-
-	return $dir
+# ensure we have dotnet for build and tests
+if ($doBuild -or -$doTests) {
+  ensureCommand "dotnet"
 }
 
-# ensure memberpage
-function ensureMemberPage() {
-	Write-Host ""
-	Write-Host "Detected DocFX MemberPage"
-	#$v = findLatestVersion "$userHome/.nuget/packages/memberpage"
-  $v = $memberpageVersion
-	Write-Host "  v$v"
-	$dir = "$userHome/.nuget/packages/memberpage/$v"
-	Write-Host "  -> $dir"
-
-	return $v
-}
-
+# ensure we have docfx for documentation
 if ($doDocs) {
     $docfxDir = ensureDocFx
     $docfxDir = "$docFxDir/tools"
@@ -353,221 +391,269 @@ if ($doDocs) {
 
 # ensure Java and Maven for tests
 if ($doTests) {
-    Write-Host ""
+    Write-Output ""
     ensureCommand "java"
     ensureCommand "mvn"
 }
 
 # build the solution
+# on Windows, build with MsBuild - else use dotnet
 if ($doBuild) {
-  Write-Host ""
-  Write-Host "Build solution..."
-  if ($isWindows) {
-      &$msBuild "$slnRoot/Hazelcast.Net.sln" `
-        /p:Configuration=$configuration `
-        /target:"Restore;Build"
-        #/p:TargetFramework=$targetFramework `
-  }
-  else {
-    dotnet build "$slnRoot/Hazelcast.Net.sln" -c $configuration # -f $targetFramework
-  }
-
-  # if it failed, we can stop here
-  if ($LASTEXITCODE) {
-    Write-Host "Build failed, aborting."
-    exit $LASTEXITCODE
-  }
-}
-
-# build docs
-if ($doDocs) {
-  Write-Host ""
-  Write-Host "Build documentation..."
-  if (test-path "$tmpDir/docfx.site") {
-    rm -recurse -force "$tmpDir/docfx.site"
-  }
-  &$docfx metadata "$docDir/docfx-internals.json" --disableDefaultFilter
-  &$docfx build "$docDir/docfx-internals.json" --template "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,templates/hz"
-  mv -force "$tmpDir/docfx.site/internals/index.html" "$tmpDir/docfx.site/internals/index.html.temp"
-  #&$docfx metadata "$docDir/docfx.json"
-  #&$docfx build "$docDir/docfx.json" --template "default,$userHome/.nuget/packages/memberpage\$memberpageVersion/content,templates/hz"
-  #mv -force "$tmpDir/docfx.site/internals/index.html.temp" "$tmpDir/docfx.site/internals/index.html"
-}
-
-if (-not $doTests) {
-  exit # temp
-}
-
-# prepare for tests
-Write-Host ""
-Write-Host "Prepare for tests..."
-if (-not (test-path "$tmpDir/lib")) { mkdir "$tmpDir/lib" >$null }
-[string]$classpath=""
-
-# ensure we have the remote controller jar
-if(Test-Path "$tmpDir/lib/hazelcast-remote-controller-${hzRCVersion}.jar") {
-	Write-Host "Detected hazelcast-remote-controller-${hzRCVersion}.jar."
-} else {
-	Write-Host "Downloading hazelcast-remote-controller-${hzRCVersion}.jar ..."
-    &"mvn" -q "dependency:get" "-DrepoUrl=${mvnOssSnapshotRepo}" `
-		"-Dartifact=com.hazelcast:hazelcast-remote-controller:${hzRCVersion}" `
-		"-Ddest=$tmpDir/lib/hazelcast-remote-controller-${hzRCVersion}.jar"
-}
-
-$classpath += "$tmpDir/lib/hazelcast-remote-controller-${hzRCVersion}.jar;"
-
-# ensure we have the hazelcast test jar
-if(Test-Path "$tmpDir/lib/hazelcast-${hzVersion}-tests.jar") {
-	Write-Host "Detected hazelcast-${hzVersion}-tests.jar."
-} else {
-	Write-Host "Downloading hazelcast-${hzVersion}-tests.jar ..."
-    &"mvn" -q "dependency:get" "-DrepoUrl=${mvnOssRepo}" `
-		"-Dartifact=com.hazelcast:hazelcast:${hzVersion}:jar:tests" `
-		"-Ddest=$tmpDir/lib/hazelcast-${hzVersion}-tests.jar"
-}
-
-$classpath += "$tmpDir/lib/hazelcast-${hzVersion}-tests.jar;"
-
-if($enterprise){
-
-	# ensure we have the hazelcast jar
-	if (Test-Path "$tmpDir/lib/hazelcast-enterprise-${hzVersion}.jar") {
-		Write-Host "Detected hazelcast-enterprise-${hzVersion}.jar."
-	} else {
-		Write-Host "Downloading hazelcast-enterprise-${hzVersion}.jar ..."
-		&"mvn" -q "dependency:get" "-DrepoUrl=${mvnEntRepo}" `
-			"-Dartifact=com.hazelcast:hazelcast-enterprise:${hzVersion}" `
-			"-Ddest=$tmpDir/lib/hazelcast-enterprise-${hzVersion}.jar"
-	}
-
-	$classpath += "$tmpDir/lib/hazelcast-enterprise-${hzVersion}.jar;"
-
-	# ensure we have the hazelcast enterprise test jar
-	if (Test-Path "$tmpDir/lib/hazelcast-enterprise-${hzVersion}-tests.jar") {
-		Write-Host "Detected hazelcast-enterprise-${hzVersion}-tests.jar."
-	} else {
-		Write-Host "Downloading hazelcast-enterprise-${hzVersion}-tests.jar ..."
-		&"mvn" -q "dependency:get" "-DrepoUrl=${mvnEntRepo}" `
-			"-Dartifact=com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests" `
-			"-Ddest=$tmpDir/lib/hazelcast-enterprise-${hzVersion}-tests.jar"
-	}
-
-	$classpath += "$tmpDir/lib/hazelcast-enterprise-${hzVersion}-tests.jar;"
-
-} else {
-
-	# ensure we have the hazelcast jar
-	if(Test-Path "$tmpDir/lib/hazelcast-${hzVersion}.jar") {
-		Write-Host "Detected hazelcast-${hzVersion}.jar."
-	} else {
-		Write-Host "Downloading hazelcast-${hzVersion}.jar ..."
-		&"mvn" -q "dependency:get" "-DrepoUrl=${mvnOssRepo}" `
-			"-Dartifact=com.hazelcast:hazelcast:${hzVersion}" "-Ddest=$tmpDir/lib/hazelcast-${hzVersion}.jar"
-	}
-
-	$classpath += "$tmpDir/lib/hazelcast-${hzVersion}.jar;"
-}
-
-function StartRemoteController() {
-
-    if (-not (test-path "$tmpDir/rc")) {
-        mkdir "$tmpDir/rc"
+    Write-Output ""
+    Write-Output "Build solution..."
+    if ($isWindows) {
+        &$msBuild "$slnRoot/Hazelcast.Net.sln" `
+            /p:Configuration=$configuration `
+            /target:"Restore;Build"
+            #/p:TargetFramework=$framework `
+    }
+    else {
+        dotnet build "$slnRoot/Hazelcast.Net.sln" -c $configuration # -f $framework
     }
 
-	# start the remote controller
-	Write-Host ""
-	Write-Host "Starting Remote Controller..."
-	$p = Start-Process -FilePath java -ArgumentList ( `
-			"-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY", `
-			"-cp", "$classpath", `
-			"com.hazelcast.remotecontroller.Main" `
-		) -RedirectStandardOutput "$tmpDir/rc/rc_stdout.log" -RedirectStandardError "$tmpDir/rc/rc_stderr.log" -PassThru
-	Write-Host "Started remote controller with pid=$($p.Id)"
-	return $p
+    # if it failed, we can stop here
+    if ($LASTEXITCODE) {
+        Write-Output "Build failed, aborting."
+        exit $LASTEXITCODE
+    }
+}
+
+# build documentation
+if ($doDocs) {
+    Write-Output ""
+    Write-Output "Build documentation..."
+
+    # clear target
+    if (test-path "$tmpDir/docfx.site") {
+        remove-item -recurse -force "$tmpDir/docfx.site"
+    }
+    if (test-path "$tmpDir/docfx.site-internals") {
+        remove-item -recurse -force "$tmpDir/docfx-internals.site"
+    }
+
+    $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
+
+    # note: have to take care of metadata caches to avoid conflict - not pretty but works
+    # (and docfx does not seem to allow alternate xdoc locations)
+
+    # build internals reference + doc
+    remove-item -recurse -force "$srcDir/Hazelcast.Net/obj/xdoc"
+    if (test-path "$srcDir/Hazelcast.Net/obj/xdoc.api") {
+        move-item "$srcDir/Hazelcast.Net/obj/xdoc.api" "$srcDir/Hazelcast.Net/obj/xdoc"
+    }
+    &$docfx metadata "$docDir/docfx-internals/docfx.json" --disableDefaultFilter
+    &$docfx build "$docDir/docfx-internals/docfx.json" --template $template
+    move-item "$srcDir/Hazelcast.Net/obj/xdoc" "$srcDir/Hazelcast.Net/obj/xdoc.api"
+
+    # build public api reference + doc
+    remove-item -recurse -force "$srcDir/Hazelcast.Net/obj/xdoc"
+    if (test-path "$srcDir/Hazelcast.Net/obj/xdoc.internals") {
+        move-item "$srcDir/Hazelcast.Net/obj/xdoc.internals" "$srcDir/Hazelcast.Net/obj/xdoc"
+    }
+    &$docfx metadata "$docDir/docfx/docfx.json"
+    &$docfx build "$docDir/docfx/docfx.json" --template $template
+    move-item "$srcDir/Hazelcast.Net/obj/xdoc" "$srcDir/Hazelcast.Net/obj/xdoc.internals"
+
+    # merge
+    remove-item -recurse -force "$tmpDir/docfx.site/internals" # going to override it
+    move-item -force "$tmpDir/docfx-internals.site/internals" "$tmpDir/docfx.site/internals" # override
+    remove-item -recurse -force "$tmpDir/docfx-internals.site" # remove leftovers
+}
+
+function StartRemoteController($classpath) {
+
+    if (-not (test-path "$tmpDir/tests/rc")) { mkdir "$tmpDir/tests/rc" >$null }
+
+    # start the remote controller
+    Write-Output ""
+    Write-Output "Starting Remote Controller..."
+    $p = Start-Process -FilePath java -ArgumentList ( `
+            "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
+            "-cp", "$classpath", `
+            "com.hazelcast.remotecontroller.Main" `
+        ) -RedirectStandardOutput "$tmpDir/tests/rc/rc_stdout.log" -RedirectStandardError "$tmpDir/tests/rc/rc_stderr.log" -PassThru
+    Start-Sleep -Seconds 4
+    Write-Output "Started remote controller with pid=$($p.Id)"
+    return $p
 }
 
 function StopRemoteController($remoteController) {
 
-	# stop the remote controller
-	Write-Host ""
-	Write-Host "Stopping remote controller..."
-	Stop-Process -Force -Id $remoteController.Id
+    # stop the remote controller
+    Write-Output ""
+    if ($remoteController -and $remoteController.Id) {
+        Write-Output "Stopping remote controller..."
+        Stop-Process -Force -Id $remoteController.Id
+        #$remoteController.Kill($true)
+	}
+    else {
+        Write-Output "Remote controller is not running."
+	}
 }
 
-function RunDotNetCoreTests() {
+function RunDotNetCoreTests($f) {
 
-	# run .NET Core unit tests
-	# note:
-	#   on some machines (??) MSBuild does not copy the NUnit adapter to the bin directory,
-	#   but the 'dotnet test' command does copy it, provided that we don't use the --no-build
-	#   option - it does not do a full build anyways - just sets tests up
+    # run .NET Core unit tests
+    # note:
+    #   on some machines (??) MSBuild does not copy the NUnit adapter to the bin directory,
+    #   but the 'dotnet test' command does copy it, provided that we don't use the --no-build
+    #   option - it does not do a full build anyways - just sets tests up
     #
-    #   can we avoid -f $coreTarget to run on all .NET Core targets?
-    #   TODO: redirect output, capture!
-    dotnet test $srcDir/Hazelcast.Tests/Hazelcast.Tests.csproj -c $configuration --no-restore -f $coreTarget -v normal
+    # used to have to do (but not anymore):
+    #    <PackageReference Include="NunitXml.TestLogger" Version="2.1.62" />
+    #    --logger:"nunit;LogFilePath=$tmpDir/tests/results/tests-$f.xml"
+    # instead: http://blog.prokrams.com/2019/12/16/nunit3-filter-dotnet/
+    #
+    if ($doCover) {
+        $coveragePath = "$tmpDir/tests/cover/cover-$f"
+        if (!(test-path $coveragePath)) {
+            mkdir $coveragePath > $null
+        }
+
+        $dotCoverArgs = @( "test", `
+            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj", `
+            "-c", "$configuration", `
+            "--no-restore", `
+            "-f", "$f", `
+            "-v", "normal", `
+            `
+            "--dotCoverFilters=-:Hazelcast.Test", `
+            "--dotCoverOutput=$coveragePath/index.html", `
+            "--dotCoverReportType=HTML", `
+            `
+            "--", `
+            `
+            "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
+            "NUnit.TestOutputXml=`".`"", `
+            "NUnit.Labels=Before", `
+            "NUnit.Where=`"$testCategory`"" )
+
+
+        Write-Output "exec: dotnet dotcover $dotCoverArgs"
+        pushd "$srcDir/Hazelcast.Net.Tests"
+        dotnet dotcover $dotCoverArgs
+        popd
+    }
+    else {
+        $dotnetArgs = @( "test", `
+            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj", `
+            "-c", "$configuration", `
+            "--no-restore", `
+            "-f", "$f", `
+            "-v", "normal", `
+            `
+            "--", `
+            `
+            "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
+            "NUnit.TestOutputXml=`".`"", `
+            "NUnit.Labels=Before", `
+            "NUnit.Where=`"$testCategory`"" )
+
+        Write-Output "exec: dotnet $dotnetArgs"
+        dotnet $dotnetArgs
+    }
+
+    # NUnit adapter does not support configuring the file name, move
+    move-item -force "$tmpDir/tests/results/Hazelcast.Net.Tests.xml" "$tmpDir/tests/results/tests-$f.xml"
 }
 
-function RunDotNetFrameworkTests() {
+function RunDotNetFrameworkTests($f) {
 
-	# run .NET Framework unit tests
-	$testDLL="$srcDir/Hazelcast.Tests/bin/${configuration}/${fwkTarget}/Hazelcast.Tests.dll"
+    # run .NET Framework unit tests
+    $testDLL="$srcDir/Hazelcast.Net.Tests/bin/${configuration}/${f}/Hazelcast.Net.Tests.dll"
 
-	#$v = findLatestVersion "$userHome/.nuget/packages/nunit.consolerunner"
+    switch ($f) {
+        "net462" { $nuf = "net-4.6.2" }
+        default { throw "Framework '$f' not supported here." }
+    }
+
     $v = $nunitVersion
-	$nunit = "$userHome/.nuget/packages/nunit.consolerunner/$v/tools/nunit3-console.exe"
-	$nunitArgs=@("`"${testDLL}`"", "--labels=All", "--result=`"tmpDir/tests/console-text.xml`"", "--framework=v4.6.2")
+    $nunit = "$userHome/.nuget/packages/nunit.consolerunner/$v/tools/nunit3-console.exe"
+    $nunitArgs=@("`"${testDLL}`"", "--labels=Before", "--result=`"$tmpDir/tests/results/results-$f.xml`"", "--framework=$nuf")
 
-	if($testCategory.Length -gt 0) {
-		$nunitArgs += @("--where=`"${testCategory}`"")
-	}
+    if ($testCategory.Length -gt 0) {
+        $nunitArgs += @("--where=`"${testCategory}`"")
+    }
 
-	if($coverage) {
+    if ($doCover) {
 
-		$coveragePath = "$tmpDir/coverage"
-		if (!(test-path $coveragePath)) {
-			mkdir $coveragePath > $null
-		}
+        $coveragePath = "$tmpDir/tests/cover/cover-$f"
+        if (!(test-path $coveragePath)) {
+            mkdir $coveragePath > $null
+        }
 
-		#$v = findLatestVersion "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools"
-    $v = $dotcoverVersion
-		$dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools/$v/tools/dotCover.exe"
-		$dotCoverArgs=@( "cover", `
-			"/Filters=-:Hazelcast.Test", `
-			"/TargetWorkingDir=.", `
-			"/Output=$coveragePath/index.html", `
-			"/ReportType=HTML", `
-			"/TargetExecutable=${nunit}", `
-			"/TargetArguments=${nunitArgs}")
+        $v = $dotcoverVersion
+        $dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools/$v/tools/dotCover.exe"
+        #$dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools.linux/$v/tools/dotCover.sh"
 
-		Write-Host "$dotCoverCmd $dotCoverArgs"
-		&$dotCover $dotCoverArgs
+        $dotCoverArgs = @( "cover", `
+            "--Filters=-:Hazelcast.Test", `
+            "--TargetWorkingDir=.", `
+            "--Output=$coveragePath/index.html", `
+            "--ReportType=HTML", `
+            "--TargetExecutable=${nunit}", `
+            "--") + $nunitArgs
 
-	} else {
+        Write-Output "exec: $dotCover $dotCoverArgs"
+        &$dotCover $dotCoverArgs
 
-		Write-Host "$nunit $nunitArgs"
-		&$nunit $nunitArgs
-	}
+    } else {
+
+        Write-Output "exec: $nunit $nunitArgs"
+        &$nunit $nunitArgs
+    }
 }
 
-# run tests
-try {
-	$remoteController = StartRemoteController
+if ($doTests) {
 
-	Write-Host ""
-	Write-Host "Run tests..."
-	Write-Host "TESTS ARE DISABLED FOR NOW"
-	#if ($netcore) {
-	#	RunDotNetCoreTests
-	#}
-	#else {
-	#	RunDotNetFrameworkTests
-	#}
-}
-finally {
-	StopRemoteController $remoteController
+    # prepare for tests
+    Write-Output ""
+    Write-Output "Prepare for tests..."
+    if (-not (test-path "$tmpDir/tests/lib")) { mkdir "$tmpDir/tests/lib" >$null }
+    [string]$classpath=""
+
+    # ensure we have the remote controller jar
+    $classpath = ensureJar $classpath "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
+    # ensure we have the hazelcast test jar
+    $classpath = ensureJar $classpath "hazelcast-${hzVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}:jar:tests"
+
+    if($enterprise){
+        # ensure we have the hazelcast jar
+        $classpath = ensureJar $classpath "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
+        # ensure we have the hazelcast enterprise test jar
+        $classpath = ensureJar $classpath "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
+    } else {
+        # ensure we have the hazelcast jar
+        $classpath = ensureJar $classpath "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+    }
+
+    # run tests
+    try {
+        $remoteController = StartRemoteController $classpath
+
+        Write-Output ""
+        Write-Output "Run tests..."
+        foreach ($framework in $frameworks) {
+            Write-Output ""
+            Write-Output "Run tests for $framework..."
+            if ($framework -eq "net462") {
+                # must run tests with .NET Framework for Framework tests
+                RunDotNetFrameworkTests $framework
+            }
+            else {
+                # must run tests with .NET Core for Core tests
+                # this mean 'dotnet test', there is no Core running for NUnit yet
+                # FIXME but... on Windows, could it work?
+                RunDotNetCoreTests $framework
+            }
+        }
+    }
+    finally {
+        StopRemoteController $remoteController
+    }
 }
 
-Write-Host ""
-Write-Host "Done."
+Write-Output ""
+Write-Output "Done."
 
 # eof
