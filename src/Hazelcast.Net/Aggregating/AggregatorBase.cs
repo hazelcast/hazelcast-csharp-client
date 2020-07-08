@@ -74,10 +74,10 @@ namespace Hazelcast.Aggregating
         protected abstract void WriteAggregatorData(IObjectDataOutput output);
 
         /// <inheritdoc />
-        public int GetFactoryId() => FactoryIds.AggregatorDsFactoryId;
+        public int FactoryId => FactoryIds.AggregatorDsFactoryId;
 
         /// <inheritdoc />
-        public abstract int GetId();
+        public abstract int ClassId { get; }
     }
 
     // TODO: implement BigDecimalAverageAggregator

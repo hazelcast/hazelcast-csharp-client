@@ -29,6 +29,8 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
     /// <typeparam name="T">The type of the message objects.</typeparam>
     internal sealed partial class HTopic<T> : DistributedObjectBase, IHTopic<T>
     {
+        private IData _keyData;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Topic{T}"/> class.
         /// </summary>
@@ -37,7 +39,7 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public HTopic(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(DistributedObjects.HTopic.ServiceName, name, cluster, serializationService, loggerFactory)
+            : base(HTopic.ServiceName, name, cluster, serializationService, loggerFactory)
         { }
 
         /// <inheritdoc />
@@ -45,7 +47,7 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task PublishAsync(T message, TimeSpan timeout)
+        Task PublishAsync(T message, TimeSpan timeout)
         {
             var task = TaskEx.WithTimeout(PublishAsync, message, timeout, DefaultOperationTimeoutMilliseconds);
 
@@ -61,11 +63,13 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task PublishAsync(T message, CancellationToken cancellationToken)
+        Task PublishAsync(T message, CancellationToken cancellationToken)
         {
+            _keyData ??= ToData(Name);
+
             var messageData = ToSafeData(message);
             var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
-            var task = Cluster.SendAsync(requestMessage, cancellationToken);
+            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, _keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

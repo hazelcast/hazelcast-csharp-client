@@ -218,11 +218,16 @@ namespace Hazelcast.Transactions
             catch
             { /* ignore */ } // TODO: log?
 
-            if (State != TransactionState.None ||
-                State != TransactionState.Committed ||
-                State != TransactionState.RolledBack)
+            if (State == TransactionState.Active)
             {
-                // FIXME what shall we do of abandoned transaction?
+                // abandoned transaction, roll it back
+
+                try
+                {
+                    await RollbackAsync().CAF();
+                }
+                catch
+                { /* ignore */ } // TODO: log?
             }
         }
 

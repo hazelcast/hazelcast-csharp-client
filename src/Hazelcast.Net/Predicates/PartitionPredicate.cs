@@ -72,15 +72,8 @@ namespace Hazelcast.Predicates
             output.WriteObject(predicate);
         }
 
-        public int GetFactoryId()
-        {
-            return FactoryIds.PredicateFactoryId;
-        }
+        public int FactoryId => FactoryIds.PredicateFactoryId;
 
-        public int GetId()
-        {
-            return PredicateDataSerializerHook.PartitionPredicate;
-        }
-
+        public int ClassId => PredicateDataSerializerHook.PartitionPredicate;
     }
 }

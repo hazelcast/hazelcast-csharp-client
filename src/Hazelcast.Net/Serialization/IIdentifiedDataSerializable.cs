@@ -48,7 +48,7 @@ namespace Hazelcast.Serialization
         /// Gets the identifier of the <see cref="IDataSerializableFactory"/> that can create instances of the class.
         /// </summary>
         /// <returns>The identifier of the factory.</returns>
-        int GetFactoryId(); // fixme make it a property + rename FactoryId
+        int FactoryId { get; }
 
         /// <summary>
         /// Gets the identifier of the class.
@@ -59,6 +59,6 @@ namespace Hazelcast.Serialization
         /// so that the corresponding <see cref="IDataSerializableFactory"/> can re-create the
         /// proper instances. The identifier should therefore be unique per factory.</para>
         /// </remarks>
-        int GetId(); // fixme make it a property + rename TypeId
+        int ClassId { get; }
     }
 }

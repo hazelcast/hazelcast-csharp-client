@@ -23,10 +23,7 @@ namespace Hazelcast.Predicates
             : base(attributeName, expression)
         { }
 
-        public override int GetId()
-        {
-            return PredicateDataSerializerHook.ILikePredicate;
-        }
+        public override int ClassId => PredicateDataSerializerHook.ILikePredicate;
 
         public override string ToString()
         {

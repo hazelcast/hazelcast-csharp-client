@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         public async Task<T> TryPeekAsync(CancellationToken cancellationToken) // peek, or null
         {
             var requestMessage = QueuePeekCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = QueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -123,7 +123,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = QueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -133,9 +133,9 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<T> DequeueAsync(bool timeToWait, TimeSpan timeout = default) // was take, wail until an element is avail
+            Task<T> DequeueAsync(bool waitForItem, TimeSpan timeout = default) // was take, wail until an element is avail
         {
-            var task = TaskEx.WithTimeout(DequeueAsync, timeToWait, timeout, DefaultOperationTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(DequeueAsync, waitForItem, timeout, DefaultOperationTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -145,14 +145,14 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         }
 
         /// <inheritdoc />
-        public async Task<T> DequeueAsync(bool timeToWait, CancellationToken cancellationToken) // was take, wail until an element is avail
+        public async Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken) // was take, wail until an element is avail
         {
-            if (!timeToWait)
+            if (!waitForItem)
                 return await TryDequeueAsync(TimeToWait.Zero, cancellationToken).CAF() ??
                        throw new InvalidOperationException("The queue is empty.");
 
             var requestMessage = QueueTakeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = QueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -183,7 +183,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
             where TItem : T
         {
             var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = QueueDrainToCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add((TItem)ToObject<T>(itemData));
@@ -212,7 +212,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
             where TItem : T
         {
             var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, count);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add((TItem)ToObject<T>(itemData));

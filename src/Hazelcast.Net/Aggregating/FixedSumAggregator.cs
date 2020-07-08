@@ -51,9 +51,6 @@ namespace Hazelcast.Aggregating
         }
 
         /// <inheritdoc />
-        public override int GetId()
-        {
-            return AggregatorDataSerializerHook.FixedSum;
-        }
+        public override int ClassId => AggregatorDataSerializerHook.FixedSum;
     }
 }

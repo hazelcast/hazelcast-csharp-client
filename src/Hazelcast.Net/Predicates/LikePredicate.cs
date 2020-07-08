@@ -47,15 +47,9 @@ namespace Hazelcast.Predicates
             output.WriteUtf(Expression);
         }
 
-        public int GetFactoryId()
-        {
-            return FactoryIds.PredicateFactoryId;
-        }
+        public int FactoryId => FactoryIds.PredicateFactoryId;
 
-        public virtual int GetId()
-        {
-            return PredicateDataSerializerHook.LikePredicate;
-        }
+        public virtual int ClassId => PredicateDataSerializerHook.LikePredicate;
 
         public override bool Equals(object obj)
         {

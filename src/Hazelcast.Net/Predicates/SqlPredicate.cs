@@ -45,15 +45,9 @@ namespace Hazelcast.Predicates
             _sql = input.ReadUtf();
         }
 
-        public int GetFactoryId()
-        {
-            return FactoryIds.PredicateFactoryId;
-        }
+        public int FactoryId => FactoryIds.PredicateFactoryId;
 
-        public int GetId()
-        {
-            return PredicateDataSerializerHook.SqlPredicate;
-        }
+        public int ClassId => PredicateDataSerializerHook.SqlPredicate;
 
         public override bool Equals(object obj)
         {

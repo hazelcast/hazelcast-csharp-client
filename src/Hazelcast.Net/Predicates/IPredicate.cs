@@ -18,7 +18,5 @@ namespace Hazelcast.Predicates
 {
 
     public interface IPredicate : IIdentifiedDataSerializable
-    {
-
-    }
+    { }
 }

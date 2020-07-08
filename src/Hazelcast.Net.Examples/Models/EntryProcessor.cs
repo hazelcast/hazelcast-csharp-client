@@ -25,7 +25,7 @@ namespace Hazelcast.Examples.Models
     /// </summary>
     public class UpdateEntryProcessor : IEntryProcessor, IIdentifiedDataSerializable
     {
-        public const int ClassId = 1;
+        public const int ClassIdConst = 1;
 
         private string value;
 
@@ -44,15 +44,9 @@ namespace Hazelcast.Examples.Models
             output.WriteUtf(value);
         }
 
-        public int GetFactoryId()
-        {
-            return EntryProcessorDataSerializableFactory.FactoryId;
-        }
+        public int FactoryId => EntryProcessorDataSerializableFactory.FactoryId;
 
-        public int GetId()
-        {
-            return ClassId;
-        }
+        public int ClassId => ClassIdConst;
     }
 
 
@@ -62,7 +56,7 @@ namespace Hazelcast.Examples.Models
 
         public IIdentifiedDataSerializable Create(int typeId)
         {
-            if(typeId == UpdateEntryProcessor.ClassId)
+            if(typeId == UpdateEntryProcessor.ClassIdConst)
             {
                     return new UpdateEntryProcessor();
             }

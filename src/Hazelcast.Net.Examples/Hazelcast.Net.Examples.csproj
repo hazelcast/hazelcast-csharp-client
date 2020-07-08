@@ -19,36 +19,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Collections\CollectionListenerExample.cs" />
-    <Compile Remove="Collections\ListExample.cs" />
-    <Compile Remove="Collections\QueueExample.cs" />
-    <Compile Remove="Collections\RingbufferExample.cs" />
-    <Compile Remove="Collections\SetExample.cs" />
-    <Compile Remove="Org.Website.Samples\CustomSerializerSample.cs" />
-    <Compile Remove="Org.Website.Samples\EntryProcessorSample.cs" />
-    <Compile Remove="Org.Website.Samples\GlobalSerializerSample.cs" />
-    <Compile Remove="Org.Website.Samples\IdentifiedDataSerializableSample.cs" />
-    <Compile Remove="Org.Website.Samples\ListSample.cs" />
-    <Compile Remove="Org.Website.Samples\MultiMapSample.cs" />
-    <Compile Remove="Org.Website.Samples\PortableSerializableSample.cs" />
-    <Compile Remove="Org.Website.Samples\QuerySample.cs" />
-    <Compile Remove="Org.Website.Samples\QueueSample.cs" />
-    <Compile Remove="Org.Website.Samples\ReplicatedMapSample.cs" />
-    <Compile Remove="Org.Website.Samples\RingBufferSample.cs" />
-    <Compile Remove="Org.Website.Samples\SetSample.cs" />
-    <Compile Remove="Transactions\SimpleTransactionExample.cs" />
-    <Compile Remove="Transactions\TransactionBenchmark.cs" />
-    <Compile Remove="Transactions\TransactionRollbackExample.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net.DependencyInjection\Hazelcast.Net.DependencyInjection.csproj" />
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Collections\" />
-    <Folder Include="Transactions\" />
   </ItemGroup>
 
   <ItemGroup>

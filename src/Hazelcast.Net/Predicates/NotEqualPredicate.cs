@@ -24,10 +24,7 @@ namespace Hazelcast.Predicates
         {
         }
 
-        public override int GetId()
-        {
-            return PredicateDataSerializerHook.NotEqualPredicate;
-        }
+        public override int ClassId => PredicateDataSerializerHook.NotEqualPredicate;
 
         public override string ToString()
         {

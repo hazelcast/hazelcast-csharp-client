@@ -36,15 +36,9 @@ namespace Hazelcast.Examples.Models
             output.WriteUtf(Name);
         }
 
-        public int GetFactoryId()
-        {
-            return ExampleDataSerializableFactory.FactoryId;
-        }
+        public int FactoryId => ExampleDataSerializableFactory.FactoryId;
 
-        public int GetId()
-        {
-            return TypeId;
-        }
+        public int ClassId => TypeId;
 
         public override string ToString()
         {

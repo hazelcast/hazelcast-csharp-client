@@ -188,7 +188,7 @@ namespace Hazelcast.DistributedObjects
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
         /// </remarks>
         /// <returns>the head of this queue</returns>
-        Task<T> DequeueAsync(bool timeToWait, TimeSpan timeout = default);
-        Task<T> DequeueAsync(bool timeToWait, CancellationToken cancellationToken);
+        Task<T> DequeueAsync(bool waitForItem, TimeSpan timeout = default);
+        Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken);
     }
 }

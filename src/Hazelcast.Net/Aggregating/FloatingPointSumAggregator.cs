@@ -51,9 +51,6 @@ namespace Hazelcast.Aggregating
         }
 
         /// <inheritdoc />
-        public override int GetId()
-        {
-            return AggregatorDataSerializerHook.FloatingPointSum;
-        }
+        public override int ClassId => AggregatorDataSerializerHook.FloatingPointSum;
     }
 }

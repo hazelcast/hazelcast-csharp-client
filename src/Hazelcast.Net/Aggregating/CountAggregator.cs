@@ -50,9 +50,6 @@ namespace Hazelcast.Aggregating
             output.WriteLong(0); // member side field not used on client
         }
 
-        public override int GetId()
-        {
-            return AggregatorDataSerializerHook.Count;
-        }
+        public override int ClassId => AggregatorDataSerializerHook.Count;
     }
 }

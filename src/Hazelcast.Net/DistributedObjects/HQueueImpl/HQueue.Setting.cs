@@ -154,7 +154,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
             ClientMessage responseMessage;
             try
             {
-                responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+                responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             }
             catch
             {
@@ -185,7 +185,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return QueueAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

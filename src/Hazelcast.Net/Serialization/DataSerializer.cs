@@ -111,8 +111,8 @@ namespace Hazelcast.Serialization
         public void Write(IObjectDataOutput output, IIdentifiedDataSerializable obj)
         {
             output.WriteBoolean(true); // identified flag
-            output.WriteInt(obj.GetFactoryId());
-            output.WriteInt(obj.GetId());
+            output.WriteInt(obj.FactoryId);
+            output.WriteInt(obj.ClassId);
             obj.WriteData(output);
         }
 

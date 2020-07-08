@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
         public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken)
         {
             var requestMessage = SetGetAllCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             var response = SetGetAllCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }
@@ -35,14 +35,14 @@ namespace Hazelcast.DistributedObjects.HSetImpl
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetContainsCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return SetContainsCodec.DecodeResponse(responseMessage).Response;
         }
 
         public override async Task<int> CountAsync(CancellationToken cancellationToken)
         {
             var requestMessage = SetSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return SetSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -50,14 +50,14 @@ namespace Hazelcast.DistributedObjects.HSetImpl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetContainsAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return SetContainsAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         public override async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
         {
             var requestMessage = SetIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return SetIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
     }

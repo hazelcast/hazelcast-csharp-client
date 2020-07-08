@@ -169,14 +169,8 @@ namespace Hazelcast.Predicates
         }
 
 
-        public int GetFactoryId()
-        {
-            return FactoryIds.PredicateFactoryId;
-        }
+        public int FactoryId => FactoryIds.PredicateFactoryId;
 
-        public int GetId()
-        {
-            return PredicateDataSerializerHook.PagingPredicate;
-        }
+        public int ClassId => PredicateDataSerializerHook.PagingPredicate;
     }
 }

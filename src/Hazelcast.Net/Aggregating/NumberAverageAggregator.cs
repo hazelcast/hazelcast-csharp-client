@@ -53,9 +53,6 @@ namespace Hazelcast.Aggregating
         }
 
         /// <inheritdoc />
-        public override int GetId()
-        {
-            return AggregatorDataSerializerHook.NumberAvg;
-        }
+        public override int ClassId => AggregatorDataSerializerHook.NumberAvg;
     }
 }

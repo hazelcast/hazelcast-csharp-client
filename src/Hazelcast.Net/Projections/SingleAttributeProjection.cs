@@ -56,15 +56,9 @@ namespace Hazelcast.Projections
         }
 
         /// <inheritdoc />
-        public int GetFactoryId()
-        {
-            return FactoryIds.ProjectionDsFactoryId;
-        }
+        public int FactoryId => FactoryIds.ProjectionDsFactoryId;
 
         /// <inheritdoc />
-        public int GetId()
-        {
-            return ProjectionDataSerializerHook.SingleAttribute;
-        }
+        public int ClassId => ProjectionDataSerializerHook.SingleAttribute;
     }
 }

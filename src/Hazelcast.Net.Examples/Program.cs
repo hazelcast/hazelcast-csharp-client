@@ -13,14 +13,18 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Hazelcast.Protocol;
 
 namespace Hazelcast.Examples
 {
     public class Program
     {
+        private static List<(string, Exception)> _exceptions = new List<(string, Exception)>();
+
         // NOTE
         //
         // run examples with 'hx' for Framework 4.6.2 and Core 3.x
@@ -75,6 +79,26 @@ namespace Hazelcast.Examples
 
                 await TryRunExampleAsync(type, args);
             }
+
+            if (_exceptions.Count > 0)
+            {
+                var color = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine();
+                Console.WriteLine("The following examples have failed:");
+                foreach (var (name, exception) in _exceptions)
+                {
+                    Console.WriteLine($"-{name} ({exception.GetType()}{ClientExceptionCode(exception)})");
+                }
+                Console.ForegroundColor = color;
+            }
+        }
+
+        private static string ClientExceptionCode(Exception e)
+        {
+            if (!(e is ClientProtocolException cpe)) return null;
+
+            return " - " + cpe.Error;
         }
 
         private static async Task TryRunExampleAsync(Type type, string[] args)
@@ -89,6 +113,8 @@ namespace Hazelcast.Examples
             }
             catch (Exception e)
             {
+                _exceptions.Add((type.Name, e));
+
                 var color = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine("Example has thrown!");

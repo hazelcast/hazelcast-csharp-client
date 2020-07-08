@@ -31,9 +31,31 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
+        public CollectionItemEventHandlers<T> ItemAdded(Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
+        {
+            Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Added, handler.AsAsync()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when an item is added.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
         public CollectionItemEventHandlers<T> ItemAdded(Func<IHCollection<T>, CollectionItemEventArgs<T>, CancellationToken, ValueTask> handler)
         {
             Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Added, handler));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an handler which runs when an item is removed.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public CollectionItemEventHandlers<T> ItemRemoved(Action<IHCollection<T>, CollectionItemEventArgs<T>> handler)
+        {
+            Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Removed, handler.AsAsync()));
             return this;
         }
 

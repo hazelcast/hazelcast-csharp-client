@@ -51,7 +51,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
-            var task = ExecuteAsync(keyData, processorData, cancellationToken);
+            var task = ExecuteAsync(processorData, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
