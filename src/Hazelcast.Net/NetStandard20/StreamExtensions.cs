@@ -16,6 +16,7 @@
 using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 // ReSharper disable once CheckNamespace
 namespace System.IO
@@ -54,7 +55,10 @@ namespace System.IO
                 var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken)).ConfigureAwait(false);
 
                 if (completed != reading)
+                {
+                    reading = reading.ObserveException();
                     throw new TaskCanceledException();
+                }
 
                 var count = await reading.ConfigureAwait(false);
 

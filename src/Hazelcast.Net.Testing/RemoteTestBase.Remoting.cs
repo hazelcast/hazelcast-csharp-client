@@ -28,7 +28,11 @@ namespace Hazelcast.Testing
         /// Creates a remote controller.
         /// </summary>
         /// <returns>A new remote controller.</returns>
-        protected async Task<IRemoteControllerClient> CreateRemoteControllerAsync()
+        protected 
+#if !NETFRAMEWORK
+            async
+#endif
+        Task<IRemoteControllerClient> CreateRemoteControllerAsync()
         {
             try
             {
@@ -36,7 +40,7 @@ namespace Hazelcast.Testing
                 var transport = new Thrift.Transport.TFramedTransport(new Thrift.Transport.TSocket("localhost", 9701));
                 transport.Open();
                 var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
-                return RemoteControllerClient.Create(protocol);
+                return Task.FromResult(RemoteControllerClient.Create(protocol));
 #else
                 var rcHostAddress = NetworkAddress.GetIPAddressByName("localhost");
                 var tSocketTransport = new Thrift.Transport.Client.TSocketTransport(rcHostAddress, 9701);
@@ -51,7 +55,7 @@ namespace Hazelcast.Testing
             }
             catch (Exception e)
             {
-                Logger.LogDebug(e, "Cannot start Remote Controller");
+                Logger?.LogDebug(e, "Cannot start Remote Controller");
                 throw new AssertionException("Cannot start Remote Controller", e);
             }
         }

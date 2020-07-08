@@ -23,35 +23,21 @@ using NUnit.Framework;
 namespace Hazelcast.Tests
 {
     [TestFixture]
-    public class MapTests : RemoteTestBase
+    public class MapTests : SingleMemberRemoteTestBase
     {
-        private Hazelcast.Testing.Remote.Member _member;
-
         [SetUp]
         public void SetUp()
         {
-            /**/
+            /*
             HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
             HConsole.Configure<Networking.SocketConnectionBase>(config => config.SetMaxLevel(0)); // 1: logs bytes
             HConsole.Configure<Clustering.ClientConnection>(config => config.SetMaxLevel(1)); // 1: logs message & frames
             HConsole.Configure<Clustering.Cluster>(config => config.SetMaxLevel(1));
-            /**/
-        }
-
-        [OneTimeSetUp]
-        public async Task OneTimeSetUp()
-        {
-            _member = await RcClient.StartMemberAsync(RcCluster);
-        }
-
-        [OneTimeTearDown]
-        public async Task OneTimeTearDown()
-        {
-            await RcClient.StopMemberAsync(RcCluster, _member);
+            */
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdate()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -74,7 +60,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateWithTimeout()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -111,7 +97,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateAndReturn()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -137,7 +123,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task Add()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -168,7 +154,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateMany()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -201,7 +187,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task ReplaceByKey()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -225,7 +211,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task ReplaceByKeyAndValue()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -249,7 +235,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateWithTimeToLive()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -275,7 +261,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUdateTransient()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -302,7 +288,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task TryAddOrUpdate()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -325,7 +311,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task Clear()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -349,7 +335,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task GetAll()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -395,7 +381,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task Events()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -426,7 +412,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task AsyncEvents()
         {
             await using var client = await CreateOpenClientAsync().CAF();
@@ -458,7 +444,7 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(TimeoutMilliseconds)]
+        [Timeout(TestTimeoutMilliseconds)]
         public async Task ConfiguredEvents()
         {
             var eventHandled = new SemaphoreSlim(0);

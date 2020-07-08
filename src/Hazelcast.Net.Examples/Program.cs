@@ -16,7 +16,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 namespace Hazelcast.Examples
 {
@@ -24,16 +23,16 @@ namespace Hazelcast.Examples
     {
         // NOTE
         //
-        // run examples with 'Hazelcast.Examples.exe' for Framework 4.6.2 and Core 3.x
-        // run examples with 'dotnet Hazelcast.Examples.dll' for Core 2.1 (does not produce platform-specific exes)
+        // run examples with 'hx' for Framework 4.6.2 and Core 3.x
+        // run examples with 'dotnet hx.dll' for Core 2.1 (does not produce platform-specific exes)
 
         public static async Task Main(string[] args)
         {
             if (args.Length < 1)
             {
-                Console.WriteLine(@"Usage: Hazelcast.Examples <example> <args>
+                Console.WriteLine(@"Usage: hx <example> <args>
   executes the static 'Hazelcast.Examples.<example>Example.Run' method.
-  example: Hazelcast.Examples Client.Lifecycle
+  example: hx Client.Lifecycle
   <args> are passed as arguments to the method, and to configuration, so it is for
   instance possible to configure the server with the following arg:
     hazelcast.networking.addresses.0=192.168.0.42");

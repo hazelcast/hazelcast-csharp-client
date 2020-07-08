@@ -34,7 +34,7 @@ namespace Hazelcast.Testing.TestServer
     internal class Server : IAsyncDisposable
     {
         private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
-        private readonly Func<ClientMessageConnection, ClientMessage, ValueTask> _handler;
+        private readonly Func<Server, ClientMessageConnection, ClientMessage, ValueTask> _handler;
         private readonly ILoggerFactory _loggerFactory;
         private readonly NetworkAddress _address;
         private readonly IPEndPoint _endpoint;
@@ -48,7 +48,7 @@ namespace Hazelcast.Testing.TestServer
         /// <param name="address">The socket network address.</param>
         /// <param name="handler">A handler for incoming messages.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Server(NetworkAddress address, Func<ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory loggerFactory)
+        public Server(NetworkAddress address, Func<Server, ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory loggerFactory)
         {
             _address = address;
             _endpoint = address.IPEndPoint;
@@ -175,7 +175,7 @@ namespace Hazelcast.Testing.TestServer
 
                 // handle others
                 default:
-                    await _handler(connection, requestMessage).CAF();
+                    await _handler(this, connection, requestMessage).CAF();
                     break;
             }
         }

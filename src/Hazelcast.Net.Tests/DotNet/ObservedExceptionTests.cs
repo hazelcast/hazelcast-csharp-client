@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -21,143 +20,92 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.DotNet
 {
-    public static class ObserveTaskExtensions
-    {
-        private static void ObserveTaskException(Task Task)
-        {
-            _ = Task.Exception;
-        }
-
-        public static Task ObserveException(this Task task)
-        {
-            return task.ContinueWith(t => { ObserveTaskException(t); }, TaskContinuationOptions.NotOnRanToCompletion);
-            //return task.ContinueWith(t => { ObserveTaskException(t); });
-        }
-
-        //public static Task<T> ObserveException<T>(this Task<T> task)
-        //{
-        //    return task.ContinueWith(t => { }, TaskContinuationOptions.OnlyOnCanceled|TaskContinuationOptions.NotOnFaulted);
-        //}
-    }
-
+    [TestFixture]
     public class ObservedExceptionTests
     {
-        [SetUp]
-        public void Setup()
-        {
-            _log = new StringBuilder();
-        }
-
-        private void Observe()
-        {
-            // why doesn't this fire?
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-            {
-                _log.AppendLine("unobserved exception! " + args.Exception);
-            };
-        }
+        private int _count;
 
         [Test]
-        public async Task Test1()
+        public void UnobservedExceptionThrowsAtAwait()
         {
-            var source = new CancellationTokenSource();
-            _ = DoAsync(source.Token);
-            //task.CAF().GetAwaiter().OnCompleted(OnCompleted);
-
-            await Task.Delay(1000, CancellationToken.None).CAF();
-
-            source.Cancel();
-
-            // observes the exception
-            //await task.CAF();
-
-            //task = task.ContinueWith(x =>
-            //{
-            //    if (x.IsFaulted) Console.WriteLine("Observed: " + x.Exception);
-            //});
-            //await task; // exception is gone, has been observed
-
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            //await Task.Delay(1000, CancellationToken.None).CAF();
-        }
-
-        private StringBuilder _log;
-
-        [Test]
-        public async Task Test2()
-        {
-            Observe();
-
-            _log.AppendLine("run");
-            var task = Throw();
-
-            task.CAF()
-                .GetAwaiter()
-                .OnCompleted(OnCompleted);
-
-            // configure await vs continue with?
-            // this DOES observe the exception and we are happy
-            var observing = task.ObserveException();
-
-            await Task.Delay(4000).CAF();
-
-            // these 3 lines are required in order to observe!
-            task = null;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            await Task.Delay(4000).CAF();
-
-            _log.AppendLine("end");
-            Console.WriteLine(_log.ToString());
-        }
-
-        public async Task Throw()
-        {
-            await Task.Delay(1000).CAF();
-            _log.AppendLine("throw");
-            throw new Exception("bang");
-        }
-
-        public void OnCompleted()
-        {
-            _log.AppendLine("completed");
-        }
-
-        public async Task DoAsync()
-        {
-            await Task.Delay(100).CAF();
-            throw new Exception("bang");
-        }
-
-        public async Task DoAsync(CancellationToken token)
-        {
-            Console.WriteLine("doAsync start");
-            try
+            Assert.ThrowsAsync<Exception>(async () =>
             {
-                await Task.Delay(10 * 1000, token).CAF();
-            }
-            catch
-            {
-                Console.WriteLine("exception!");
-                throw;
-            }
-            Console.WriteLine("doAsync end");
-        }
-
-        public void Wip()
-        {
-            var t = IntAsync().ContinueWith(x => { _ = x.Exception;
-                return x.Result;
+                await ThrowAsync();
             });
         }
 
-        public Task<int> IntAsync()
+        [Test]
+        public async Task ObservedExceptionDoesNotThrowAtAwait()
         {
-            return Task.FromResult(3);
+            await ThrowAsync().ObserveException();
+        }
+
+        [Test]
+        public void UnobservedExceptionIsRaised()
+        {
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+            _count = 0;
+
+            try
+            {
+                RunTask(false);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+            finally
+            {
+                TaskScheduler.UnobservedTaskException -= OnUnobservedTaskException;
+            }
+
+            Assert.That(_count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ObservedExceptionIsNotRaised()
+        {
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+            _count = 0;
+
+            try
+            {
+                RunTask(true);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+            finally
+            {
+                TaskScheduler.UnobservedTaskException -= OnUnobservedTaskException;
+            }
+
+            Assert.That(_count, Is.EqualTo(0));
+        }
+
+        private void RunTask(bool observe)
+        {
+            // run the task - by running in a method we ensure that the task variable
+            // will be really out of scope and finalize-able when the GC runs, even in
+            // DEBUG mode
+
+            var task = ThrowAsync();
+            if (observe) task = task.ObserveException();
+
+            // wait for the task to complete
+            while (!task.IsCompleted) Thread.Sleep(100);
+        }
+
+        private void OnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs args)
+        {
+            Console.WriteLine("Unobserved exception: " + args.Exception.Flatten().InnerException.Message);
+            _count++;
+            args.SetObserved();
+        }
+
+        public async Task ThrowAsync()
+        {
+            await Task.Yield();
+            throw new Exception("bang!");
         }
     }
 }

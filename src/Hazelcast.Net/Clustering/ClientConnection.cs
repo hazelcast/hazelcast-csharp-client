@@ -57,7 +57,9 @@ namespace Hazelcast.Clustering
         private Func<ClientMessage, CancellationToken, ValueTask> _onReceiveEventMessage;
         private Func<ClientConnection, ValueTask> _onShutdown;
 
+#pragma warning disable CA2213 // Disposable fields should be disposed - is owned by _messageConnection, which is disposed
         private ClientSocketConnection _socketConnection;
+#pragma warning restore CA2213 // Disposable fields should be disposed
         private ClientMessageConnection _messageConnection;
         private volatile int _disposed;
 
@@ -496,31 +498,8 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            if (_socketConnection == null)
+            if (_messageConnection == null)
                 return;
-
-            try
-            {
-                await _socketConnection.DisposeAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, $"Caught an exception while disposing {_socketConnection.GetType()}.");
-            }
-
-            try
-            {
-                await _messageConnection.DisposeAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, $"Caught an exception while disposing {_messageConnection.GetType()}.");
-            }
-
-            // shutdown all pending operations
-            // dealing with race conditions in SendAsync
-            foreach (var invocation in _invocations.Values)
-                invocation.TrySetException(new TargetDisconnectedException());
 
             var bgTask = _bgTask;
             if (bgTask != null)
@@ -535,6 +514,21 @@ namespace Hazelcast.Clustering
 
             _bgCancellation?.Dispose();
             _bgTaskCancellation?.Dispose();
+
+            try
+            {
+                // message connection disposes the socket connection
+                await _messageConnection.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"Caught an exception while disposing {_messageConnection.GetType()}.");
+            }
+
+            // shutdown all pending operations
+            // dealing with race conditions in SendAsync
+            foreach (var invocation in _invocations.Values)
+                invocation.TrySetException(new TargetDisconnectedException());
 
             if (_onShutdown == null)
                 return;

@@ -53,7 +53,7 @@ namespace Hazelcast.Tests
         private string GetText(ClientMessage message)
             => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
 
-        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
+        private async ValueTask ReceiveMessage(Server server, ClientMessageConnection connection, ClientMessage message)
         {
             HConsole.WriteLine(this, "Respond");
             var text = Encoding.UTF8.GetString(message.FirstFrame.Bytes);
@@ -106,8 +106,7 @@ namespace Hazelcast.Tests
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
-            Server server = null;
-            server = new Server(address, async (conn, msg) =>
+            await using var server = new Server(address, async (svr, conn, msg) =>
             {
                 async Task ResponseAsync(ClientMessage response)
                 {
@@ -153,13 +152,12 @@ namespace Hazelcast.Tests
                         break;
 
                     default:
-                        HConsole.WriteLine(server, "Respond with error.");
+                        HConsole.WriteLine(svr, "Respond with error.");
                         var response = CreateErrorMessage(ClientProtocolError.RetryableHazelcast);
                         await ResponseAsync(response).CAF();
                         break;
                 }
             }, LoggerFactory);
-            AddDisposable(server);
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
@@ -167,8 +165,7 @@ namespace Hazelcast.Tests
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
-            AddDisposable(client);
+            await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             await client.OpenAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
@@ -192,26 +189,24 @@ namespace Hazelcast.Tests
 
             HConsole.WriteLine(this, "Start server");
             var count = 0;
-            Server server = null;
-            server = new Server(address, async (conn, msg) =>
+            await using var server = new Server(address, async (svr, conn, msg) =>
             {
-                HConsole.WriteLine(server, "Handle request.");
+                HConsole.WriteLine(svr, "Handle request.");
                 ClientMessage response;
                 if (++count > 3)
                 {
-                    HConsole.WriteLine(server, "Respond with success.");
+                    HConsole.WriteLine(svr, "Respond with success.");
                     response = ClientPingServerCodec.EncodeResponse();
                 }
                 else
                 {
-                    HConsole.WriteLine(server, "Respond with error.");
+                    HConsole.WriteLine(svr, "Respond with error.");
                     response = CreateErrorMessage(ClientProtocolError.RetryableHazelcast);
                     response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                 }
                 response.CorrelationId = msg.CorrelationId;
                 await conn.SendAsync(response).CAF();
             }, LoggerFactory);
-            AddDisposable(server);
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
@@ -219,8 +214,7 @@ namespace Hazelcast.Tests
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
-            AddDisposable(client);
+            await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             await client.OpenAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
@@ -245,18 +239,16 @@ namespace Hazelcast.Tests
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
-            Server server = null;
-            server = new Server(address, async (conn, msg) =>
+            await using var server = new Server(address, async (svr, conn, msg) =>
             {
-                HConsole.WriteLine(server, "Handle request (slowww...)");
+                HConsole.WriteLine(svr, "Handle request (slowww...)");
                 await Task.Delay(10_000).CAF();
 
-                HConsole.WriteLine(server, "Respond with success.");
+                HConsole.WriteLine(svr, "Respond with success.");
                 var response = ClientPingServerCodec.EncodeResponse();
                 response.CorrelationId = msg.CorrelationId;
                 await conn.SendAsync(response).CAF();
             }, LoggerFactory);
-            AddDisposable(server);
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
@@ -264,8 +256,7 @@ namespace Hazelcast.Tests
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
-            AddDisposable(client);
+            await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
             await client.OpenAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
@@ -305,8 +296,7 @@ namespace Hazelcast.Tests
             var clientFactory = new HazelcastClientFactory(options);
 
             HConsole.WriteLine(this, "Start client 1");
-            var client1 = (HazelcastClient) clientFactory.CreateClient();
-            AddDisposable(client1);
+            await using var client1 = (HazelcastClient) clientFactory.CreateClient();
             await client1.OpenAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
@@ -316,8 +306,7 @@ namespace Hazelcast.Tests
             HConsole.WriteLine(this, "Got response: " + GetText(response));
 
             HConsole.WriteLine(this, "Start client 2");
-            var client2 = (HazelcastClient) clientFactory.CreateClient();
-            AddDisposable(client2);
+            await using var client2 = (HazelcastClient) clientFactory.CreateClient();
             await client2.OpenAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 2");
@@ -353,8 +342,7 @@ namespace Hazelcast.Tests
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
-            var server = new Server(address, ReceiveMessage, LoggerFactory);
-            AddDisposable(server);
+            await using var server = new Server(address, ReceiveMessage, LoggerFactory);
             await server.StartAsync().CAF();
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
@@ -364,8 +352,7 @@ namespace Hazelcast.Tests
             var clientFactory = new HazelcastClientFactory(options);
 
             HConsole.WriteLine(this, "Start client 1");
-            var client1 = (HazelcastClient)clientFactory.CreateClient();
-            AddDisposable(client1);
+            await using var client1 = (HazelcastClient)clientFactory.CreateClient();
             await client1.OpenAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
@@ -388,6 +375,7 @@ namespace Hazelcast.Tests
 
         [Test]
         [Timeout(10_000)]
+        [Ignore("Requires a real server, obsolete")]
         public async Task Auth()
         {
             // need to start a real server (not the RC thing!)
@@ -432,6 +420,7 @@ namespace Hazelcast.Tests
 
         [Test]
         [Timeout(10_000)]
+        [Ignore("Requires a real server, obsolete")]
         public async Task Cluster()
         {
             // this test expects a server
@@ -480,7 +469,7 @@ namespace Hazelcast.Tests
         [Timeout(20_000)]
         public async Task SocketTimeout1()
         {
-            var server = new Server(NetworkAddress.Parse("127.0.0.1:11000"), (connection, message) => new ValueTask(), LoggerFactory);
+            await using var server = new Server(NetworkAddress.Parse("127.0.0.1:11000"), (svr, connection, message) => new ValueTask(), LoggerFactory);
             await server.StartAsync().CAF();
 
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

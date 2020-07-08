@@ -21,17 +21,13 @@ using NUnit.Framework;
 namespace Hazelcast.Tests
 {
     [TestFixture]
-    public class TransactionTests : HazelcastTestBase
+    public class TransactionTests : SingleMemberRemoteTestBase
     {
         [Test]
         public async Task Test()
         {
-            var options = new HazelcastOptions();
-            var clientFactory = new HazelcastClientFactory(options);
-            await using var client = clientFactory.CreateClient(); // disposed at end of test
-            await client.OpenAsync();
-
-            var list = await client.GetListAsync<string>(CreateUniqueName());
+            await using var client = await CreateOpenClientAsync().CAF();
+            await using var list = await client.GetListAsync<string>(CreateUniqueName());
             await list.AddAsync("item1");
 
             await using (var tx = await client.BeginTransactionAsync())
@@ -54,6 +50,7 @@ namespace Hazelcast.Tests
             NUnit.Framework.Assert.IsTrue(items.Contains("item2"));
 
             await client.DestroyAsync(list).CAF();
+
             // but ... other than that... the test runs ok! ;)
 
             // original code from ClientTxnListTest.cs

@@ -34,7 +34,7 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            using var cancellation = ClusterCancellationLinkedWith(cancellationToken);
             return await SendAsyncInternal(message, null, -1, default, cancellation.Token).CAF();
         }
 
@@ -53,7 +53,7 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            using var cancellation = ClusterCancellationLinkedWith(cancellationToken);
             return await SendAsyncInternal(message, null, -1, memberId, cancellation.Token).CAF();
         }
 
@@ -69,8 +69,26 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
 
-            using var cancellation = _clusterCancellation.LinkedWith(cancellationToken);
+            using var cancellation = ClusterCancellationLinkedWith(cancellationToken);
             return await SendAsyncInternal(message, client, -1, default, cancellation.Token).CAF();
+        }
+
+        private CancellationTokenSource ClusterCancellationLinkedWith(CancellationToken cancellationToken)
+        {
+            // fail fast
+            if (_disposed == 1 || _clusterState != ClusterState.Connected)
+                throw new ClientNotConnectedException();
+
+            // still, there is a race condition - a chance that the _clusterCancellation
+            // is gone by the time we use it = handle the situation here
+            try
+            {
+                return _clusterCancellation.LinkedWith(cancellationToken);
+            }
+            catch
+            {
+                throw new ClientNotConnectedException();
+            }
         }
 
         /// <summary>

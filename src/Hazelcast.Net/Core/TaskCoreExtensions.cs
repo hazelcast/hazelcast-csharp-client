@@ -83,5 +83,21 @@ namespace Hazelcast.Core
         // ReSharper disable once InconsistentNaming
         public static ConfiguredValueTaskAwaitable<T> CAF<T>(this ValueTask<T> task)
             => task.ConfigureAwait(false);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task ObserveException(this Task task)
+            => task.ContinueWith(t =>
+            {
+                _ = t.Exception;
+            }, TaskScheduler.Current);
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<T> ObserveException<T>(this Task<T> task)
+            => task.ContinueWith(t =>
+            {
+                _ = t.Exception;
+                return default (T);
+            }, TaskScheduler.Current);
     }
 }

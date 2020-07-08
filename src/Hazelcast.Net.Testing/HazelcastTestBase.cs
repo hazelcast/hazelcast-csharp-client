@@ -13,11 +13,10 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Hazelcast.Testing
@@ -30,56 +29,61 @@ namespace Hazelcast.Testing
         private static readonly ISequence<int> UniqueNameSequence = new Int32Sequence();
         private static readonly string UniqueNamePrefix = DateTime.Now.ToString("HHmmss_");
 
-        private readonly List<object> _disposables = new List<object>();
+        private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions =
+            new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastTestBase"/> class.
-        /// </summary>
-        protected HazelcastTestBase()
+        [SetUp]
+        public void HazelcastTestBaseSetUp()
         {
-            // ReSharper disable once VirtualMemberCallInConstructor
-            LoggerFactory = CreateLoggerFactory();
+            // creating the client via an async method means we may not have a context - ensure here
+            AsyncContext.Ensure();
 
+            // setup the logger
+            LoggerFactory = CreateLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
+            Logger.LogInformation($"Setup {GetType()}");
+
+            // make sure the queue is empty
+            while (_unobservedExceptions.TryDequeue(out _))
+            { }
+
+            // handle unobserved exceptions
+            TaskScheduler.UnobservedTaskException += UnobservedTaskException;
         }
 
         [TearDown]
-        public async Task HaselcastTestBaseTearDown()
+        public void HazelcastTestBaseTearDown()
         {
-            List<Exception> exceptions = null;
-            foreach (var disposable in _disposables)
+            // GC should finalize everything, thus trigger unobserved exceptions
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // check for unobserved exceptions and report
+            var failed = false;
+            while (_unobservedExceptions.TryDequeue(out var args))
             {
-                try
-                {
-                    switch (disposable)
-                    {
-                        case IDisposable syncDisposable:
-                            syncDisposable.Dispose();
-                            break;
-                        case IAsyncDisposable asyncDisposable:
-                            await asyncDisposable.DisposeAsync().CAF();
-                            break;
-                        default:
-                            throw new NotSupportedException("Object is neither IDisposable nor IAsyncDisposable.");
-                    }
-                }
-                catch (Exception e)
-                {
-                    if (exceptions == null) exceptions = new List<Exception>();
-                    exceptions.Add(e);
-                }
+                var innerException = args.Exception.Flatten().InnerException;
+                Logger.LogWarning(innerException, "Exception.");
+                failed = true;
             }
 
-            _disposables.Clear();
+            // remove handler
+            TaskScheduler.UnobservedTaskException -= UnobservedTaskException;
 
-            if (exceptions != null)
-                throw new AggregateException("Exceptions while disposing disposables.", exceptions.ToArray());
+            // fail if necessary
+            if (failed) Assert.Fail("Unobserved task exceptions.");
+        }
+
+        private void UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            Logger.LogWarning(e.Exception, $"UnobservedTaskException from {sender}.");
+            _unobservedExceptions.Enqueue(e);
         }
 
         /// <summary>
         /// Gets the default test timeout in milliseconds.
         /// </summary>
-        public const int TimeoutMilliseconds = 20_000;
+        public const int TestTimeoutMilliseconds = 20_000;
 
         /// <summary>
         /// Provides assertions.
@@ -89,12 +93,12 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the logger factory.
         /// </summary>
-        protected ILoggerFactory LoggerFactory { get; }
+        protected ILoggerFactory LoggerFactory { get; private set; }
 
         /// <summary>
         /// Gets a logger.
         /// </summary>
-        protected ILogger Logger { get; }
+        protected ILogger Logger { get; private set; }
 
         /// <summary>
         /// Creates a unique name.
@@ -110,34 +114,7 @@ namespace Hazelcast.Testing
         /// Creates a logger factory.
         /// </summary>
         /// <returns>A logger factory.</returns>
-        protected virtual ILoggerFactory CreateLoggerFactory() => new NullLoggerFactory();
-
-        /// <summary>
-        /// Registers an object to be disposed at the end of the test.
-        /// </summary>
-        /// <param name="disposable">A disposable object.</param>
-        protected void AddDisposable(IDisposable disposable)
-            => _disposables.Add(disposable);
-
-        /// <summary>
-        /// Registers an object to be disposed at the end of the test.
-        /// </summary>
-        /// <param name="disposable">A disposable object.</param>
-        protected void AddDisposable(IAsyncDisposable disposable)
-            => _disposables.Add(disposable);
-
-        /// <summary>
-        /// De-registers an object which was to be disposed at the end of the test.
-        /// </summary>
-        /// <param name="disposable">The disposable object.</param>
-        protected void RemoveDisposable(IDisposable disposable)
-            => _disposables.Remove(disposable);
-
-        /// <summary>
-        /// De-registers an object which was to be disposed at the end of the test.
-        /// </summary>
-        /// <param name="disposable">The disposable object.</param>
-        protected void RemoveDisposable(IAsyncDisposable disposable)
-            => _disposables.Remove(disposable);
+        protected virtual ILoggerFactory CreateLoggerFactory() => 
+            Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
     }
 }

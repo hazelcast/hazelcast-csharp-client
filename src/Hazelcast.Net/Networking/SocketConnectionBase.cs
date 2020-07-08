@@ -210,9 +210,9 @@ namespace Hazelcast.Networking
             // kill socket and stream
             try
             {
+                _stream.Close();
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Close();
-                _stream.Close();
             }
             catch { /* ignore */ }
 
@@ -460,12 +460,14 @@ namespace Hazelcast.Networking
             // dispose, ignore exceptions
             try
             {
-                _socket.Dispose();
+                _stream.Close();
+                _stream.Dispose();
             }
             catch { /* ignore */ }
             try
             {
-                _stream.Dispose();
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Dispose();
             }
             catch { /* ignore */ }
             try
