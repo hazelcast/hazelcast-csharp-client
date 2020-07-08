@@ -320,7 +320,6 @@ function ensureMemberPage() {
     Write-Output "  v$v"
     $dir = "$userHome/.nuget/packages/memberpage/$v"
     Write-Output "  -> $dir"
-    return $v
 }
 
 function ensureJar($jar, $repo, $artifact) {
@@ -441,7 +440,7 @@ if ($doBuild -or -$doTests) {
 # ensure we have docfx for documentation
 if ($doDocs) {
     ensureDocFx
-    $memberpageVersion = ensureMemberPage
+    ensureMemberPage
 }
 
 # ensure Java and Maven for tests
@@ -498,37 +497,12 @@ if ($doDocs) {
     if (test-path "$tmpDir/docfx.site") {
         remove-item -recurse -force "$tmpDir/docfx.site"
     }
-    if (test-path "$tmpDir/docfx.site-internals") {
-        remove-item -recurse -force "$tmpDir/docfx-internals.site"
-    }
 
     $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
+    Write-Output $template
 
-    # note: have to take care of metadata caches to avoid conflict - not pretty but works
-    # (and docfx does not seem to allow alternate xdoc locations)
-
-    # build internals reference + doc
-    remove-item -recurse -force "$srcDir/Hazelcast.Net/obj/xdoc"
-    if (test-path "$srcDir/Hazelcast.Net/obj/xdoc.api") {
-        move-item "$srcDir/Hazelcast.Net/obj/xdoc.api" "$srcDir/Hazelcast.Net/obj/xdoc"
-    }
-    &$docfx metadata "$docDir/docfx-internals/docfx.json" --disableDefaultFilter
-    &$docfx build "$docDir/docfx-internals/docfx.json" --template $template
-    move-item "$srcDir/Hazelcast.Net/obj/xdoc" "$srcDir/Hazelcast.Net/obj/xdoc.api"
-
-    # build public api reference + doc
-    remove-item -recurse -force "$srcDir/Hazelcast.Net/obj/xdoc"
-    if (test-path "$srcDir/Hazelcast.Net/obj/xdoc.internals") {
-        move-item "$srcDir/Hazelcast.Net/obj/xdoc.internals" "$srcDir/Hazelcast.Net/obj/xdoc"
-    }
-    &$docfx metadata "$docDir/docfx/docfx.json"
-    &$docfx build "$docDir/docfx/docfx.json" --template $template
-    move-item "$srcDir/Hazelcast.Net/obj/xdoc" "$srcDir/Hazelcast.Net/obj/xdoc.internals"
-
-    # merge
-    remove-item -recurse -force "$tmpDir/docfx.site/internals" # going to override it
-    move-item -force "$tmpDir/docfx-internals.site/internals" "$tmpDir/docfx.site/internals" # override
-    remove-item -recurse -force "$tmpDir/docfx-internals.site" # remove leftovers
+    &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
+    &$docfx build "$docDir/docfx.json" --template $template
 }
 
 function StartRemoteController() {

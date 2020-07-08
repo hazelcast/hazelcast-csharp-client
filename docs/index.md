@@ -22,8 +22,3 @@ contributors.
 ### [API Reference](api/index.md)
 Reference documentation for the public API, generated from source-code-level comments, and completed 
 with DocFX additional content.
-
-### [Internals Reference](internals/index.md)
-Reference documentation for the entire code base, generated from source-code-level comments, and completed 
-with DocFX additional content. This is the reference documentation for the public API, completed with 
-reference documentation for all internal and private members.

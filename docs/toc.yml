@@ -4,6 +4,3 @@
 - name: Api Reference
   href: obj/api/
   homepage: api/index.md
-- name: Internals Reference
-  href: obj/internals/
-  homepage: internals/index.md
