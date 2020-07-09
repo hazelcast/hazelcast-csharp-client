@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 
 namespace Hazelcast.Core
 {
@@ -25,11 +26,12 @@ namespace Hazelcast.Core
     /// a service should be created, via its <see cref="Creator"/> property, and then provides
     /// a unique instance of that service via its <see cref="Service"/> property.</para>
     /// </remarks>
-    public class SingletonServiceFactory<TService>
+    public class SingletonServiceFactory<TService> : IDisposable
         where TService : class
     {
         private Lazy<TService> _lazyService;
         private Func<TService> _creator;
+        private IServiceProvider _serviceProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SingletonServiceFactory{TService}"/> class.
@@ -44,15 +46,19 @@ namespace Hazelcast.Core
         {
             if (other == null) throw new ArgumentNullException(nameof(other));
 
-            Creator = other.Creator;
             if (shallow)
             {
+                _serviceProvider = other._serviceProvider;
                 _creator = other._creator;
-                _lazyService = other._lazyService;
+                _lazyService = other._lazyService; // one single lazy service, shared by clones
+                OwnsService = false; // owned by the original factory, not by clones
             }
             else
             {
-                Creator = other.Creator;
+                // create a new lazy service
+                if (other._serviceProvider != null) ServiceProvider = other._serviceProvider;
+                else if (other._creator != null) Creator = other._creator;
+                OwnsService = other.OwnsService; // can own the service
             }
         }
 
@@ -68,10 +74,42 @@ namespace Hazelcast.Core
             get => _creator;
             set
             {
+                _serviceProvider = null;
                 _creator = value;
+                OwnsService = true;
                 _lazyService = _creator == null ? null : new Lazy<TService>(_creator);
             }
         }
+
+        /// <summary>
+        /// Gets or sets the service provider.
+        /// </summary>
+        /// <remarks>
+        /// <para>Do not set the service provider after the service has been created,
+        /// as that could have unspecified consequences.</para>
+        /// </remarks>
+        public IServiceProvider ServiceProvider
+        {
+            get => _serviceProvider;
+            set
+            {
+                _serviceProvider = value;
+                _creator = null;
+                OwnsService = false;
+                _lazyService = new Lazy<TService>(() => (TService) _serviceProvider.GetService(typeof(TService)) ??
+                                                        throw new InvalidOperationException($"There is no service of type {typeof(TService)}."));
+            }
+        }
+
+        /// <summary>
+        /// Whether the factory owns the service.
+        /// </summary>
+        /// <remarks>
+        /// <para>By default, services created via <see cref="Creator"/> are owned by the factory while
+        /// services created via <see cref="ServiceProvider"/> are not, but this property can be used
+        /// to force a different behavior.</para>
+        /// </remarks>
+        public bool OwnsService { get; set; }
 
         /// <summary>
         /// Gets the singleton instance of the service.
@@ -91,5 +129,31 @@ namespace Hazelcast.Core
         /// </remarks>
         /// <returns>A clone of the service factory.</returns>
         public SingletonServiceFactory<TService> Clone(bool shallow = true) => new SingletonServiceFactory<TService>(this, shallow);
+
+        /// <inheritdoc cref="IDisposable.Dispose"/>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Frees, releases or resets managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> when invoked from <see cref="Dispose"/>; otherwise <c>false</c>.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposing) return;
+
+            var lazyService = Interlocked.Exchange(ref _lazyService, null);
+            if (lazyService == null) return;
+
+            if (!OwnsService || !lazyService.IsValueCreated)
+                return;
+
+            var value = lazyService.Value;
+            if (value is IDisposable disposable)
+                disposable.Dispose();
+        }
     }
 }

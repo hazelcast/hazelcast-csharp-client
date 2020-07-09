@@ -29,16 +29,21 @@ namespace Hazelcast.Examples.DistributedObjects
             // creates the example options
             var options = BuildExampleOptions(args);
 
-            // FIXME: this should not be required since we dispose the client?! or ?!
-            // we need a better mechanism
-            // in a dependency-injection app, the logger factory would be disposed when
-            // the container is disposed - we *want* to dispose the logger factory to flush
-            // the loggers buffers before the app stops - in a non-DI app,
-            // we cannot ask the Hazelcast client, or the client factory, to dispose the
-            // logger factory since it does not *own* the factory
-            // unless we dispose everything returned by a Creator - but how can we tell
-            // it needs to be disposed? shall the creator return an instance + ownership?
-            using var ensureLoggerFactoryIsDisposed = options.Logging.LoggerFactory.Service;
+            // in a dependency-injection-based application, the logger factory would be
+            // provided by the container, and disposed when the container is disposed. we
+            // *want* to dispose the logger factory, in order to flush its buffers - otherwise,
+            // some entries might get lost.
+            //
+            // in a non-DI scenario, we have to dispose it by ourselves. the *client* cannot
+            // dispose it, because the client factory might create several clients... in fact,
+            // anything that is "created" cannot really be "owned" by the client, nor the
+            // factory, only by the creator - which may be the options
+            //
+            // disposing the singleton factory disposes the singleton, as long as the factory
+            // owns it (true by default)
+            //
+            // TODO: consider
+            using var used = options.Logging.LoggerFactory;
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(options).CreateClient();

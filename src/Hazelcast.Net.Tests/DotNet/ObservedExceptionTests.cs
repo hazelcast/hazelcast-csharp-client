@@ -26,6 +26,13 @@ namespace Hazelcast.Tests.DotNet
         private int _count;
 
         [Test]
+        public async Task ObservedNonExceptionIsTransparent()
+        {
+            var i = await Task.Run(() => 42).ObserveException();
+            Assert.That(i, Is.EqualTo(42));
+        }
+
+        [Test]
         public void UnobservedExceptionThrowsAtAwait()
         {
             Assert.ThrowsAsync<Exception>(async () =>
@@ -37,7 +44,10 @@ namespace Hazelcast.Tests.DotNet
         [Test]
         public async Task ObservedExceptionDoesNotThrowAtAwait()
         {
-            await ThrowAsync().ObserveException();
+            var task = ThrowAsync().ObserveException();
+            await task;
+
+            Assert.That(task.IsFaulted, Is.False); // and it's not even faulted
         }
 
         [Test]
@@ -92,12 +102,13 @@ namespace Hazelcast.Tests.DotNet
             if (observe) task = task.ObserveException();
 
             // wait for the task to complete
-            while (!task.IsCompleted) Thread.Sleep(100);
+            //while (!task.IsCompleted) Thread.Sleep(100);
+            ((IAsyncResult)task).AsyncWaitHandle.WaitOne(); // does not await/throw
         }
 
         private void OnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs args)
         {
-            Console.WriteLine("Unobserved exception: " + args.Exception.Flatten().InnerException.Message);
+            Console.WriteLine("Unobserved exception: ");// + args.Exception.Flatten().InnerException.Message);
             _count++;
             args.SetObserved();
         }

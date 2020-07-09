@@ -14,26 +14,36 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Core;
-using Hazelcast.Networking;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+
+#if !NETFRAMEWORK
+using Hazelcast.Networking;
+using Hazelcast.Core;
+#endif
 
 namespace Hazelcast.Testing
 {
     public abstract partial class RemoteTestBase // Remoting
     {
+        private static bool _canStartRemoteController = true;
+
         /// <summary>
         /// Creates a remote controller.
         /// </summary>
         /// <returns>A new remote controller.</returns>
-        protected 
+        protected
 #if !NETFRAMEWORK
             async
 #endif
         Task<IRemoteControllerClient> CreateRemoteControllerAsync()
         {
+            // assume we can start the RC, else mark the test as inconclusive without even trying
+            // so... if starting the RC fails once, we probably have a problem (is it even running?)
+            // and there is no point trying again and again - faster to stop here
+            Assume.That(_canStartRemoteController, Is.True, () => "Cannot start Remote Controller.");
+
             try
             {
 #if NETFRAMEWORK
@@ -55,6 +65,7 @@ namespace Hazelcast.Testing
             }
             catch (Exception e)
             {
+                _canStartRemoteController = false; // fail fast other tests
                 Logger?.LogDebug(e, "Cannot start Remote Controller");
                 throw new AssertionException("Cannot start Remote Controller", e);
             }

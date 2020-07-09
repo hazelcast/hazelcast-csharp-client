@@ -182,21 +182,19 @@ namespace Hazelcast.NearCaching
                 return new ValueTask<NearCacheEntry>(e);
             }
 
-            var (added, task) = _entries.TryAdd(keyData, CreateCacheEntry);
-            if (!added) return false;
-
             try
             {
-                var entry = await task.CAF();
-                if (entry != null) return true;
+                var added = await _entries.TryAdd(keyData, CreateCacheEntry).CAF();
+                return added;
             }
             catch
             {
                 // ignore, remove from the cache
+                Invalidate(keyData);
+                return false;
             }
 
-            _entries.TryRemove(keyData);
-            return false;
+            // TODO: validate that this works as expected
         }
 
         /// <summary>
@@ -235,40 +233,13 @@ namespace Hazelcast.NearCaching
                 return e;
             }
 
-            // insert into cache
-            var (added, task) = _entries.TryAdd(keyData, CreateCacheEntry);
-            if (!added)
-            {
-                // failed to add, was added by another thread?
-                (hasEntry, o) = await TryGetValue(keyData).CAF();
-                if (hasEntry) return o;
+            var ncEntry = await _entries.GetOrAddAsync(keyData, CreateCacheEntry).CAF();
 
-                // otherwise, add the uncached value
-                return Attempt.Fail(await valueFactory(keyData).CAF());
-            }
-
-            // we have inserted a new cache entry in the cache - but, if the factory
-            // fails, it's not really there and will be removed from the cache - so we
-            // need to get the value back and ensure it is ok
-
-            // having doubts as to whether this all does what we want...
-
-            NearCacheEntry entry;
-            try
-            {
-                entry = await task.CAF();
-            }
-            catch
-            {
-                Invalidate(keyData);
-                throw;
-            }
-
-            if (entry.Value != null)
-                return entry.Value;
-
+            if (ncEntry.Value != null) return ncEntry.Value;
             Invalidate(keyData);
             return Attempt.Failed;
+
+            // TODO: validate that this works as expected
         }
 
         /// <summary>

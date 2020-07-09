@@ -76,7 +76,7 @@ namespace Hazelcast.DistributedObjects
 
             var k = new DistributedObjectInfo(serviceName, name);
 
-            async ValueTask<DistributedObjectBase> CreateAsync()
+            async ValueTask<DistributedObjectBase> CreateAsync(DistributedObjectInfo ignored)
             {
                 var x = factory(name, _cluster, _serializationService, _loggerFactory);
                 x.OnDispose = ObjectDisposed; // this is why is has to be DistributedObjectBase
@@ -97,7 +97,7 @@ namespace Hazelcast.DistributedObjects
             // try to get the object - thanks to the concurrent dictionary there will be only 1 task
             // and if several concurrent requests are made, they will all await that same task
 
-            var o = await _objects.GetOrAddAsync(k, _ => CreateAsync()).CAF();
+            var o = await _objects.GetOrAddAsync(k, CreateAsync).CAF();
 
             // race condition: maybe the factory has been disposed and is already disposing
             // objects and will ignore this new object even though it has been added to the
@@ -160,11 +160,10 @@ namespace Hazelcast.DistributedObjects
         /// <param name="cancellationToken">A cancellation token.</param>
         public async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken)
         {
-            // try to get the object - and then, dispose it:  disposing will trigger
-            // the onDisposed handler which will in turn remove the object from _objects
+            // try to get the object - and then, dispose it
 
             var k = new DistributedObjectInfo(serviceName, name);
-            var attempt = await _objects.TryGetValue(k).CAF();
+            var attempt = await _objects.TryGetAndRemove(k).CAF();
             if (attempt)
                 await attempt.Value.DisposeAsync().CAF();
 

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,69 +29,83 @@ namespace Hazelcast.Core
     internal class ConcurrentAsyncDictionary<TKey, TValue> : IAsyncEnumerable<KeyValuePair<TKey, TValue>>
     {
         // must put Lazy in the dictionary to avoid creating the factory multiple times
-
+        //
         // 'GetOrAdd' call on the dictionary is not thread safe and we might end up creating the pipeline more
         // once. To prevent this Lazy<> is used. In the worst case multiple Lazy<> objects are created for multiple
         // threads but only one of the objects succeeds in creating a pipeline.
+        //
+        // -> summary: using a Lazy<> object ensures that the factory task is started once and only once
+        //
+        // Lazy<> has various initialization modes:
+        // - default: means ExecuteAndPublication
+        // - isThreadSafe: true means ExecuteAndPublication, false means None
+        // - LazyThreadSafetyMode:
+        //     - PublicationOnly: can create multiple instances (per thread) but will end up publishing only one
+        //                        i.e. threads race to initialize the value, but then it's fully thead-safe
+        //     - ExecuteAndPublication: only one thread initializes the value, fully thread-safe
+        //     - None: not thread-safe at all
+        //
+        // must put Task and not ValueTask in the dictionary since multiple threads are going to await
+        // on that task, and one should only await ValueTask once.
 
-        private readonly ConcurrentDictionary<TKey, Lazy<ValueTask<TValue>>> _dictionary = new ConcurrentDictionary<TKey, Lazy<ValueTask<TValue>>>();
+        // FIXME
+        // this has issues because we are awaiting multiple times on a ValueTask + casting to Task anyways so ?
+        // what-if we put AsyncLazy<T> in the dictionary instead?
+
+        // usage:
+        // this class is used by the DistributedObjectFactory to cache its distributed objects, and by NearCache
+
+        private readonly ConcurrentDictionary<TKey, Entry> _dictionary = new ConcurrentDictionary<TKey, Entry>();
 
         /// <summary>
         /// Adds a key/value pair if the key does not already exists, or return the existing value if the key exists.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="factory"></param>
-        /// <returns></returns>
-        public ValueTask<TValue> GetOrAddAsync(TKey key, Func<TKey, ValueTask<TValue>> factory)
+        /// <param name="key">The key.</param>
+        /// <param name="factory">A value factory.</param>
+        /// <returns>The value in the dictionary.</returns>
+        public async ValueTask<TValue> GetOrAddAsync(TKey key, Func<TKey, ValueTask<TValue>> factory)
         {
-            var lazy = _dictionary.GetOrAdd(key, k => new Lazy<ValueTask<TValue>>(() => Factory(k, factory)));
-            return lazy.Value; // won't throw - any exception bubbles to the task
+            var entry = _dictionary.GetOrAdd(key, k => new Entry(k));
+            
+            // fast
+            if (entry.HasValue) return entry.Value;
+
+            try
+            {
+                // await - may throw
+                return await entry.GetValue(factory).CAF();
+            }
+            catch
+            {
+                // remove the failed entry from the dictionary
+                ((ICollection<KeyValuePair<TKey, Entry>>)_dictionary).Remove(new KeyValuePair<TKey, Entry>(key, entry));
+                throw;
+            }
         }
 
         /// <summary>
-        /// Attempts to add a value.
+        /// Adds a key/value pair if the key does not already exists.
         /// </summary>
-        /// <param name="key">The key identifying the entry.</param>
+        /// <param name="key">The key.</param>
         /// <param name="factory">A value factory.</param>
-        /// <returns>An attempt at adding a value associated with the specified key.</returns>
-        public Attempt<ValueTask<TValue>> TryAdd(TKey key, Func<TKey, ValueTask<TValue>> factory)
+        /// <returns><c>true</c> if a key/value pair was added; otherwise <c>false</c>.</returns>
+        public async ValueTask<bool> TryAdd(TKey key, Func<TKey, ValueTask<TValue>> factory)
         {
-            var lazy = new Lazy<ValueTask<TValue>>(() => factory(key));
-            if (_dictionary.TryAdd(key, lazy))
-                return lazy.Value;
-            return Attempt.Failed;
-        }
+            var entry = new Entry(key);
+            if (!_dictionary.TryAdd(key, entry)) return false;
 
-        private ValueTask<TValue> Factory(TKey key, Func<TKey, ValueTask<TValue>> factory)
-        {
-            // the task will not be created, and therefore the factory will not run, until lazy.Value is retrieved,
-            // and that can only happen once the dictionary entry has been created, so it is safe to assume here
-            // that the entry exists (and that we can remove it if we need to)
-
-            ValueTask<TValue> task;
             try
             {
-                task = factory(key);
+                // await - may throw
+                await entry.GetValue(factory).CAF();
+                return true;
             }
-            catch (Exception e)
+            catch
             {
-                _dictionary.TryRemove(key, out _); // don't leave faulted entries in the dictionary
-
-                // cannot create a ValueTask that carries an exception
-                return new ValueTask<TValue>(Task.FromException<TValue>(e));
+                // remove the failed entry from the dictionary
+                ((ICollection<KeyValuePair<TKey, Entry>>)_dictionary).Remove(new KeyValuePair<TKey, Entry>(key, entry));
+                throw;
             }
-
-            // only wait to have a proper continuation is by allocating a task
-            task.AsTask().ContinueWith(t =>
-                {
-                    _ = t.Exception; // observe
-                    _dictionary.TryRemove(key, out _); // don't leave faulted entries in the dictionary
-
-                }, default,
-                TaskContinuationOptions.NotOnRanToCompletion | TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Current);
-
-            return task;
         }
 
         /// <summary>
@@ -100,16 +115,9 @@ namespace Hazelcast.Core
         /// <returns>An attempt at getting the value associated with the specified key.</returns>
         public async ValueTask<Attempt<TValue>> TryGetValue(TKey key)
         {
-            if (!_dictionary.TryGetValue(key, out var lazy)) return Attempt.Failed;
+            if (!_dictionary.TryGetValue(key, out var entry)) return Attempt.Failed;
 
-            try
-            {
-                return await lazy.Value.CAF();
-            }
-            catch // bogus entry is taken care of elsewhere
-            {
-                return Attempt.Failed;
-            }
+            return entry.HasValue ? entry.Value : await entry.GetValue().CAF();
         }
 
         /// <summary>
@@ -117,17 +125,17 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
         /// <returns>An attempt at removing the value associated with the specified key.</returns>
-        public async ValueTask<Attempt<TValue>> TryRemoveAndReturn(TKey key)
+        public async ValueTask<Attempt<TValue>> TryGetAndRemove(TKey key)
         {
-            if (!_dictionary.TryRemove(key, out var lazy)) return Attempt.Failed;
+            if (!_dictionary.TryRemove(key, out var entry)) return Attempt.Failed;
 
             try
             {
-                return await lazy.Value.CAF();
+                return entry.HasValue ? entry.Value : await entry.GetValue().CAF();
             }
-            catch // bogus entry is taken care of elsewhere
+            catch
             {
-                return Attempt.Failed;
+                return Attempt.Failed; // ignore bogus entries
             }
         }
 
@@ -138,7 +146,7 @@ namespace Hazelcast.Core
         /// <returns>true if the entry was removed; otherwise false.</returns>
         public bool TryRemove(TKey key)
         {
-            return _dictionary.TryRemove(key, out _); // could it be we never await the task? and produce unobserved whatever?!
+            return _dictionary.TryRemove(key, out _);
         }
 
         /// <summary>
@@ -148,15 +156,18 @@ namespace Hazelcast.Core
         /// <returns>true if the dictionary contains an entry for the specified key; otherwise false.</returns>
         public async ValueTask<bool> ContainsKey(TKey key)
         {
-            if (!_dictionary.TryGetValue(key, out var lazy)) return false;
+            if (!_dictionary.TryGetValue(key, out var entry)) return false;
+
             try
             {
-                await lazy.Value.CAF();
+                // ensure we really have a value, not a yet-unobserved error
+                if (entry.HasValue) return true;
+                await entry.GetValue().CAF();
                 return true;
             }
             catch
             {
-                return false;
+                return false; // ignore bogus entries
             }
         }
 
@@ -179,11 +190,11 @@ namespace Hazelcast.Core
 
         private class AsyncEnumerator : IAsyncEnumerator<KeyValuePair<TKey, TValue>>
         {
-            private readonly IEnumerator<KeyValuePair<TKey, Lazy<ValueTask<TValue>>>> _enumerator;
+            private readonly IEnumerator<KeyValuePair<TKey, Entry>> _enumerator;
             private readonly CancellationToken _cancellationToken;
             private KeyValuePair<TKey, TValue> _current;
 
-            public AsyncEnumerator(IEnumerator<KeyValuePair<TKey, Lazy<ValueTask<TValue>>>> enumerator, CancellationToken cancellationToken)
+            public AsyncEnumerator(IEnumerator<KeyValuePair<TKey, Entry>> enumerator, CancellationToken cancellationToken)
             {
                 _enumerator = enumerator ?? throw new ArgumentNullException(nameof(enumerator));
                 _cancellationToken = cancellationToken;
@@ -200,16 +211,17 @@ namespace Hazelcast.Core
                 while (_enumerator.MoveNext() && !_cancellationToken.IsCancellationRequested)
                 {
                     var key = _enumerator.Current.Key;
-                    var lazyTask = _enumerator.Current.Value;
+                    var entry = _enumerator.Current.Value;
+
                     try
                     {
-                        var value = await lazyTask.Value.CAF();
+                        var value = entry.HasValue ? entry.Value : await entry.GetValue().CAF();
                         _current = new KeyValuePair<TKey, TValue>(key, value);
                         return true;
                     }
-                    catch // bogus entry is taken care of elsewhere
+                    catch
                     {
-                        // skip
+                        // ignore bogus entries
                     }
                 }
 
@@ -223,6 +235,57 @@ namespace Hazelcast.Core
                     _ = _enumerator.Current; // throw if it must throw
                     return _current;
                 }
+            }
+        }
+
+        // internal for tests only
+        internal class Entry
+        {
+            private readonly object _lock = new object();
+            private readonly TKey _key;
+            private TValue _value;
+            private Task<TValue> _creating;
+
+            public Entry(TKey key)
+            {
+                _key = key;
+            }
+
+            public bool HasValue { get; private set; }
+
+            public TValue Value
+            {
+                get
+                {
+                    if (!HasValue) throw new InvalidOperationException("Entry does not have a value.");
+                    return _value;
+                }
+            }
+
+            public async Task<TValue> GetValue(Func<TKey, ValueTask<TValue>> factory)
+            {
+                // there is only one factory, each method is not supposed to try another factory
+
+                lock (_lock)
+                {
+                    if (HasValue) return _value;
+                    _creating ??= factory(_key).AsTask();
+                }
+
+                _value = await _creating.CAF();
+
+                lock (_lock)
+                {
+                    HasValue = true;
+                    _creating = null;
+                }
+
+                return _value;
+            }
+
+            public async Task<TValue> GetValue()
+            {
+                return HasValue ? _value : await _creating.CAF();
             }
         }
     }
