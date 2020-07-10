@@ -41,9 +41,21 @@ namespace Hazelcast.Core
 
         private static readonly SemaphoreAcquisition NotAcquired = new SemaphoreAcquisition(null, 1);
 
+        /// <summary>
+        /// Creates a new <see cref="SemaphoreAcquisition"/> instance.
+        /// </summary>
+        /// <param name="task">A task that acquires the semaphore.</param>
+        /// <param name="semaphore">The underlying semaphore.</param>
+        /// <returns>A new <see cref="SemaphoreAcquisition"/> instance.</returns>
         internal static SemaphoreAcquisition Create(Task task, SemaphoreSlim semaphore)
             => task.IsCompletedSuccessfully() ? new SemaphoreAcquisition(semaphore) : NotAcquired;
 
+        /// <summary>
+        /// Creates a new <see cref="SemaphoreAcquisition"/> instance.
+        /// </summary>
+        /// <param name="task">A task that may acquire the semaphore.</param>
+        /// <param name="semaphore">The underlying semaphore.</param>
+        /// <returns>A new <see cref="SemaphoreAcquisition"/> instance.</returns>
         internal static SemaphoreAcquisition Create(Task<bool> task, SemaphoreSlim semaphore)
             => task.IsCompletedSuccessfully() && task.Result ? new SemaphoreAcquisition(semaphore) : NotAcquired;
 

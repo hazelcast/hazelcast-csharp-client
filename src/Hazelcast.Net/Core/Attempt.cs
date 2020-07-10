@@ -42,7 +42,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Represents a failed attempt.
         /// </summary>
-        public static Attempt Failed { get; } = new Attempt(false);
+        public static Attempt Failed => new Attempt(false); // no such thing as 'struct' singletons!
 
         /// <summary>
         /// Creates a successful attempt with a result.
@@ -67,9 +67,17 @@ namespace Hazelcast.Core
         /// Creates a failed attempt.
         /// </summary>
         /// <typeparam name="TResult">The type of the result.</typeparam>
-        /// <param name="exception">An optional captured exception.</param>
+        /// <param name="exception">A captured exception.</param>
         /// <returns>A failed attempt.</returns>
-        public static Attempt<TResult> Fail<TResult>(Exception? exception = default)
+        public static Attempt<TResult> Fail<TResult>(Exception exception)
             => new Attempt<TResult>(false, exception: exception);
+
+        /// <summary>
+        /// Creates a failed attempt.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <returns>A failed attempt.</returns>
+        public static Attempt<TResult> Fail<TResult>()
+            => Attempt<TResult>.Failed;
     }
 }

@@ -1,0 +1,57 @@
+﻿using System;
+using System.Linq;
+using Hazelcast.Core;
+using NUnit.Framework;
+
+namespace Hazelcast.Tests.Core
+{
+    [TestFixture]
+    public class EnumerableExtensionsTests
+    {
+        [Test]
+        public void Shuffle()
+        {
+            var items = new[] { 1, 2, 3, 4, 5 };
+            var shuffled = items.Shuffle().ToArray();
+
+            Assert.That(shuffled.Length, Is.EqualTo(5));
+
+            var different = false;
+            for (var i = 0; i < 5; i++)
+            {
+                Assert.That(shuffled, Contains.Item(i+1));
+                different |= items[i] != shuffled[i];
+            }
+
+            Assert.That(different, Is.True);
+        }
+
+        [Test]
+        public void Combine()
+        {
+            var items1 = new[] { 1, 2, 3 };
+            var items2 = new[] { "a", "b", "c" };
+            var items3 = new[] { 4, 5, 6 };
+            var items4 = new[] { 'x', 'y', 'z', 't' };
+
+            var items = EnumerableExtensions.Combine(items1, items2, items3, items4).ToArray();
+
+            Assert.That(items.Length, Is.EqualTo(3));
+
+            Assert.That(items[0], Is.EqualTo((1, "a", 4, 'x')));
+            Assert.That(items[1], Is.EqualTo((2, "b", 5, 'y')));
+            Assert.That(items[2], Is.EqualTo((3, "c", 6, 'z')));
+        }
+
+        [Test]
+        public void ArgumentExceptions()
+        {
+            var items = Array.Empty<int>();
+
+            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine(items, items, items, (int[]) null).ToArray());
+            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine(items, items, (int[]) null, items).ToArray());
+            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine(items, (int[]) null, items, items).ToArray());
+            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine((int[]) null, items, items, items).ToArray());
+        }
+    }
+}

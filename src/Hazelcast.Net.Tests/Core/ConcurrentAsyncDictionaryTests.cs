@@ -231,6 +231,7 @@ namespace Hazelcast.Tests.Core
             // beware, *must* be an async method to throw in the task, not when creating it
             async ValueTask<ValueItem> CreateValueItem(string key)
             {
+                await Task.Yield();
                 created++;
                 ev.Wait();
                 throw new Exception("bogus");
@@ -292,6 +293,7 @@ namespace Hazelcast.Tests.Core
             // beware, *must* be an async method to throw in the task, not when creating it
             async ValueTask<ValueItem> CreateValueItem(string key)
             {
+                await Task.Yield();
                 created++;
                 ev.Wait();
                 throw new Exception("bogus");

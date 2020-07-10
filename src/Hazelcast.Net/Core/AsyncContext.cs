@@ -25,7 +25,7 @@ namespace Hazelcast.Core
     /// </summary>
     public sealed class AsyncContext
     {
-        private static readonly ISequence<long> IdSequence = new Int64Sequence();
+        private static ISequence<long> _idSequence = new Int64Sequence();
 
 #if !HZ_CONSOLE
         private static readonly AsyncLocal<AsyncContext> Current = new AsyncLocal<AsyncContext>();
@@ -47,7 +47,7 @@ namespace Hazelcast.Core
         /// </summary>
         private AsyncContext()
         {
-            Id = IdSequence.GetNext();
+            Id = _idSequence.GetNext();
         }
 
         /// <summary>
@@ -64,6 +64,19 @@ namespace Hazelcast.Core
         /// Gets the current context.
         /// </summary>
         public static AsyncContext CurrentContext => Current.Value ??= new AsyncContext();
+
+        /// <summary>
+        /// Whether there is a current context.
+        /// </summary>
+        internal static bool HasCurrent => Current.Value != null;
+
+        /// <summary>
+        /// Resets the context. This method is provided for tests only.
+        /// </summary>
+        internal static void Reset()
+        {
+            _idSequence = new Int64Sequence();
+        }
 
         /// <summary>
         /// Ensures that a context exists.

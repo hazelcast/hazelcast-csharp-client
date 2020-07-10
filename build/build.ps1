@@ -33,7 +33,11 @@ param(
     # Target framework(s).
     [Alias("f")]
     [string]
-    $framework
+    $framework,
+
+    # Tests filter
+    [string]
+    $tests
 )
 
 # clear rogue environment variable
@@ -122,8 +126,9 @@ if (-not [System.String]::IsNullOrWhiteSpace($framework)) {
 }
 
 # determine tests categories
-$testCategory = ""
+$testCategory = $tests
 if(!($enterprise)) {
+    if (-not [System.String]::IsNullOrWhiteSpace($testCategory)) { $testCategory += " && " }
     $testCategory += "cat != enterprise"
 }
 
@@ -654,7 +659,7 @@ function RunDotNetFrameworkTests($f) {
         #$dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools.linux/$v/tools/dotCover.sh"
 
         $dotCoverArgs = @( "cover", `
-            "--Filters=-:Hazelcast.Test", `
+            "--Filters=-:Hazelcast.Net.Tests", `
             "--TargetWorkingDir=.", `
             "--Output=$coveragePath/index.html", `
             "--ReportType=HTML", `

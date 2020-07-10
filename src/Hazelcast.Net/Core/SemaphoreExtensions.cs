@@ -73,16 +73,17 @@ namespace Hazelcast.Core
         /// Tries to acquire a semaphore immediately.
         /// </summary>
         /// <param name="semaphore">The semaphore.</param>
+        /// <param name="waitTimeMilliseconds">How long to wait for the semaphore.</param>
         /// <returns>A <see cref="SemaphoreAcquisition"/> instance that needs to be disposed to release the semaphore.</returns>
         public static
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<SemaphoreAcquisition> TryAcquireAsync(this SemaphoreSlim semaphore)
+        Task<SemaphoreAcquisition> TryAcquireAsync(this SemaphoreSlim semaphore, int waitTimeMilliseconds = 0)
         {
             if (semaphore == null) throw new ArgumentNullException(nameof(semaphore));
             var task = semaphore
-                .WaitAsync(0)
+                .WaitAsync(waitTimeMilliseconds)
                 .ContinueWith(x => SemaphoreAcquisition.Create(x, semaphore),
                     default, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
 

@@ -191,7 +191,8 @@ namespace Hazelcast.Core
             return type;
         }
 
-        private static object CreateInstanceInternal(Type type, IDictionary<string, string> stringArgs, params object[] paramArgs)
+        // internal for tests only
+        internal static object CreateInstanceInternal(Type type, IDictionary<string, string> stringArgs, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
@@ -244,7 +245,8 @@ namespace Hazelcast.Core
             return Activator.CreateInstance(type);
         }
 
-        private static object CreateInstanceInternal(string typeName, IDictionary<string, string> stringArgs, params object[] paramArgs)
+        // internal for tests only
+        internal static object CreateInstanceInternal(string typeName, IDictionary<string, string> stringArgs, params object[] paramArgs)
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
             return CreateInstanceInternal(GetType(typeName), stringArgs, paramArgs);

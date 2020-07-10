@@ -47,7 +47,7 @@ namespace Hazelcast.Core
         /// Represents a failed attempt with no result and no exception.
         /// </summary>
 #pragma warning disable CA1000 // Do not declare static members on generic types - fine here
-        public static Attempt<TResult> Failed { get; } = new Attempt<TResult>(false);
+        public static Attempt<TResult> Failed => new Attempt<TResult>(false); // no such thing as 'struct' singletons!
 #pragma warning restore CA1000 // Do not declare static members on generic types
 
         /// <summary>
@@ -65,6 +65,11 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="other">The other value.</param>
         /// <returns>The value of the result, if successful, else the specified value.</returns>
+        /// <remarks>
+        /// <para>If not successful, the attempt may still carry a value, but this method
+        /// does not return it. To check the value, regardless of success, use the <see cref="Value"/>
+        /// property.</para>
+        /// </remarks>
         public TResult ValueOr(TResult other)
             => Success ? Value : other;
 

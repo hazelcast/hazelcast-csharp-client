@@ -37,8 +37,17 @@ namespace Hazelcast.Core
         internal static void Initialize(ClockOptions options)
         {
             if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1)
-                return;
+                throw new InvalidOperationException("The clock has already been initialized.");
             _offsetMilliseconds = options.OffsetMilliseconds;
+        }
+
+        /// <summary>
+        /// Resets the clock. This method is provided for tests only.
+        /// </summary>
+        internal static void Reset()
+        {
+            _offsetMilliseconds = 0;
+            _initialized = 0;
         }
 
         /// <summary>
@@ -53,6 +62,12 @@ namespace Hazelcast.Core
         /// </summary>
         public static long Never
             => -1L;
+
+        /// <summary>
+        /// Gets the origin date and time.
+        /// </summary>
+        public static DateTime Origin
+            => Jan1St1970;
 
         /// <summary>
         /// Gets the UTC <see cref="DateTime"/> corresponding to an epoch time.

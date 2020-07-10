@@ -26,5 +26,10 @@ namespace Hazelcast.Core
         /// A constants used to specify an infinite lease time.
         /// </summary>
         public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
+
+        /// <summary>
+        /// A constants used to specify a zero lease time (expire immediately).
+        /// </summary>
+        public static readonly TimeSpan Zero = TimeSpan.Zero;
     }
 }
