@@ -15,6 +15,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Core
 {
@@ -32,6 +33,8 @@ namespace Hazelcast.Core
             throw new NotSupportedException();
         }
 
+        // dotCover does not understand that GetEnumerator() throws and does not return
+        [ExcludeFromCodeCoverage]
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

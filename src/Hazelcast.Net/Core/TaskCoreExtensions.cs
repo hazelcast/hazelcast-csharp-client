@@ -89,7 +89,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="task">The task.</param>
         /// <returns>A task with an observed exception.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task ObserveException(this Task task)
             => task.ContinueWith(t =>
             {
@@ -106,7 +106,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="task">The task.</param>
         /// <returns>A task with an observed exception.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<T> ObserveException<T>(this Task<T> task)
             => task.ContinueWith(t =>
             {

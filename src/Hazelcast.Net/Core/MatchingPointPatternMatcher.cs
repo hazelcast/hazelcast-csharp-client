@@ -52,7 +52,8 @@ namespace Hazelcast.Core
             var index = pattern.IndexOf('*', StringComparison.Ordinal);
             if (index == -1)
             {
-                return -1;
+                // exact name always wins over any kind of pattern
+                return pattern == itemName ? int.MaxValue : -1;
             }
             var firstPart = pattern.Substring(0, index);
             if (!itemName.StartsWith(firstPart, StringComparison.Ordinal))

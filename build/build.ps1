@@ -35,7 +35,14 @@ param(
     [string]
     $framework,
 
-    # Tests filter
+    # Configuration.
+    # May need "Debug" for testing and covering things such as HConsole.
+    [Alias("c")]
+    [string]
+    $configuration = "Release",
+
+    # Tests filter.
+    # Can use eg "namespace==Hazelcast.Tests.Core" to only run and cover some tests.
     [string]
     $tests
 )
@@ -91,7 +98,6 @@ if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpa
 # set versions and configure
 $hzVersion = $serverVersion
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
-$configuration = "Release" # or Debug, but should always be Release
 $hzLocalBuild = $false # $true to skip downloading dependencies
 $hzToolsCache = 12 #days
 $hzVsMajor = 16 # force VS major version, default to 16 (VS2019) for now
@@ -340,6 +346,7 @@ if ($doBuild) {
     Write-Output "Build"
     Write-Output "  Platform       : $platform"
     Write-Output "  Targets        : $targets"
+    Write-Output "  Configuration  : $configuration"
     Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
     Write-Output "  Building to    : $outDir"
     Write-Output ""
@@ -589,7 +596,8 @@ function RunDotNetCoreTests($f) {
             "-f", "$f", `
             "-v", "normal", `
             `
-            "--dotCoverFilters=-:Hazelcast.Test", `
+            "--dotCoverFilters=-:Hazelcast.Net.Tests", `
+            "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute", `
             "--dotCoverOutput=$coveragePath/index.html", `
             "--dotCoverReportType=HTML", `
             `
@@ -658,8 +666,10 @@ function RunDotNetFrameworkTests($f) {
         $dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools/$v/tools/dotCover.exe"
         #$dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools.linux/$v/tools/dotCover.sh"
 
+        # note: separate attributes filters with ';'
         $dotCoverArgs = @( "cover", `
             "--Filters=-:Hazelcast.Net.Tests", `
+            "--AttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute", `
             "--TargetWorkingDir=.", `
             "--Output=$coveragePath/index.html", `
             "--ReportType=HTML", `

@@ -50,7 +50,8 @@ namespace Hazelcast.Core
             });
         }
 
-        private static HConsoleConfiguration GetConfig(object source)
+        // internal for tests
+        internal static HConsoleConfiguration GetConfig(object source)
         {
             if (!SourceConfigs.TryGetValue(source, out var config)) config = new HConsoleConfiguration();
 
@@ -112,6 +113,42 @@ namespace Hazelcast.Core
             if (!TypeConfigs.TryGetValue(type, out var info))
                 info = TypeConfigs[type] = new HConsoleConfiguration();
             configure(info);
+#endif
+        }
+
+        /// <summary>
+        /// Clears the configuration for a source object.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        [Conditional("HZ_CONSOLE")]
+        public static void ClearConfiguration(object source)
+        {
+#if HZ_CONSOLE
+            SourceConfigs.Remove(source);
+#endif
+        }
+
+        /// <summary>
+        /// Clears the configuration for a type of objects.
+        /// </summary>
+        /// <typeparam name="TObject">The type of objects.</typeparam>
+        [Conditional("HZ_CONSOLE")]
+        public static void ClearConfiguration<TObject>()
+        {
+#if HZ_CONSOLE
+            TypeConfigs.Remove(typeof(TObject));
+#endif
+        }
+
+        /// <summary>
+        /// Resets the console.
+        /// </summary>
+        [Conditional("HZ_CONSOLE")]
+        public static void Reset()
+        {
+#if HZ_CONSOLE
+            SourceConfigs.Clear();
+            TypeConfigs.Clear();
 #endif
         }
 

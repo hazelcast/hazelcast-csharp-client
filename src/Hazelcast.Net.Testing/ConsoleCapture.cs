@@ -39,6 +39,7 @@ namespace Hazelcast.Testing
         /// <returns>An <see cref="IDisposable"/> object which must be disposed to stop the capture.</returns>
         public IDisposable Output()
         {
+            _memory.SetLength(0);
             return new Capturing(_memory);
         }
 
