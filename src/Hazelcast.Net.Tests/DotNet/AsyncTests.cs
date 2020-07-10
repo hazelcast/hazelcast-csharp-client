@@ -71,19 +71,23 @@ namespace Hazelcast.Tests.DotNet
         {
             var steps = new Steps();
 
+            var ev = new ManualResetEventSlim();
+
             steps.Add("start");
 
             var taskCompletionSource = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             var task = Task.Run(async () =>
             {
                 steps.Add("task.start");
-                await Task.Delay(2000).CAF();
+                ev.Wait();
                 steps.Add("task.complete");
                 taskCompletionSource.SetResult(42); // this is NOT fire-and-forget !!
                 steps.Add("task.end");
             });
 
             steps.Add("wait");
+            await Task.Delay(200).CAF();
+            ev.Set();
             await taskCompletionSource.Task.CAF();
             steps.Add("end");
 
@@ -180,12 +184,12 @@ namespace Hazelcast.Tests.DotNet
         [Timeout(20_000)]
         public async Task DelayCancel()
         {
-            var cancellation = new CancellationTokenSource(1_000);
+            var cancellation = new CancellationTokenSource(100);
             Assert.ThrowsAsync<TaskCanceledException>(async () => await Task.Delay(2_000, cancellation.Token).CAF());
             await Task.Delay(100, CancellationToken.None).CAF();
 
             // TaskCancelledException inherits from OperationCancelledException
-            cancellation = new CancellationTokenSource(1_000);
+            cancellation = new CancellationTokenSource(100);
             try
             {
                 await Task.Delay(2_000, cancellation.Token).CAF();
@@ -200,7 +204,7 @@ namespace Hazelcast.Tests.DotNet
         {
             var semaphore = new SemaphoreSlim(0);
 
-            var cancellation = new CancellationTokenSource(1_000);
+            var cancellation = new CancellationTokenSource(100);
             Assert.ThrowsAsync<OperationCanceledException>(async () => await semaphore.WaitAsync(cancellation.Token).CAF());
             await Task.Delay(100, CancellationToken.None).CAF();
         }
@@ -211,7 +215,7 @@ namespace Hazelcast.Tests.DotNet
         {
             var semaphore = new SemaphoreSlim(0);
 
-            var cancellation = new CancellationTokenSource(1_000);
+            var cancellation = new CancellationTokenSource(100);
 
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);
@@ -231,7 +235,7 @@ namespace Hazelcast.Tests.DotNet
         {
             var semaphore = new SemaphoreSlim(0);
 
-            var cancellation = new CancellationTokenSource(1_000);
+            var cancellation = new CancellationTokenSource(100);
 
             var task1 = Task.Delay(2_000, cancellation.Token);
             var task2 = semaphore.WaitAsync(cancellation.Token);

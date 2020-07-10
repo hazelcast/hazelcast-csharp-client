@@ -247,7 +247,7 @@ namespace Hazelcast.NearCaching
             {
                 foreach (var subPair in pair.Value)
                 {
-                    var (hasCache, cache) = await _caches.TryGetValue(pair.Key).CAF();
+                    var (hasCache, cache) = await _caches.TryGetValueAsync(pair.Key).CAF();
                     if (hasCache)
                     {
                         var nc = cache as NearCache;

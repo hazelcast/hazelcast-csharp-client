@@ -184,7 +184,7 @@ namespace Hazelcast.NearCaching
 
             try
             {
-                var added = await _entries.TryAdd(keyData, CreateCacheEntry).CAF();
+                var added = await _entries.TryAddAsync(keyData, CreateCacheEntry).CAF();
                 return added;
             }
             catch
@@ -221,7 +221,7 @@ namespace Hazelcast.NearCaching
                 await EvictEntries().CAF();
 
             // if the cache is full, directly return the un-cached value
-            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKey(keyData).CAF())
+            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKeyAsync(keyData).CAF())
                 return Attempt.Fail(await valueFactory(keyData).CAF());
 
             async ValueTask<NearCacheEntry> CreateCacheEntry(IData _)
@@ -251,7 +251,7 @@ namespace Hazelcast.NearCaching
         {
             await ExpireEntries().CAF();
 
-            var (hasEntry, entry) = await _entries.TryGetValue(keyData).CAF();
+            var (hasEntry, entry) = await _entries.TryGetValueAsync(keyData).CAF();
             if (!hasEntry || entry.Value == null) return Attempt.Failed;
 
             if (IsStaleRead(entry) || entry.Value == null)

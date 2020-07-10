@@ -240,7 +240,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
         private void SocketShutdown(SocketConnectionBase connection)
         {
-            Die();
+            Terminate();
         }
 
         /// <summary>
@@ -458,7 +458,7 @@ namespace Hazelcast.Clustering
                 if (x.IsFaulted)
                 {
                     _logger.LogWarning("Background task failed, die.");
-                    Die();
+                    Terminate();
                 }
                 _bgCancellation.Dispose();
                 _bgCancellation = null;
@@ -469,17 +469,18 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Dies.
+        /// Terminates.
         /// </summary>
-        public void Die()
+        public void Terminate()
         {
-            Task.Run(async () => await DieAsync().CAF());
+            Task.Run(async () => await TerminateAsync().CAF());
         }
 
         /// <summary>
-        /// Dies.
+        /// Terminates.
         /// </summary>
-        public async ValueTask DieAsync()
+        /// <returns>A task that will complete when the client connection has terminated.</returns>
+        public async ValueTask TerminateAsync()
         {
             try
             {
@@ -488,7 +489,7 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 // that's all we can do really
-                _logger.LogWarning(e, "Caught an exception while dying.");
+                _logger.LogWarning(e, "Caught an exception while terminating.");
             }
         }
 

@@ -231,6 +231,13 @@ namespace Hazelcast.Testing.TestServer
                 HConsole.WriteLine(this, _cancellationTokenSource.IsCancellationRequested
                     ? "Abort connection (server is stopping)"
                     : "Abort connection");
+
+                try
+                {
+                    handler.Shutdown(SocketShutdown.Both);
+                    handler.Dispose();
+                }
+                catch { /* ignore */}
             }
         }
 

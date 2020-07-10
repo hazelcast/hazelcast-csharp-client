@@ -31,10 +31,13 @@
     <ProjectReference Include="..\Hazelcast.Net.JetBrainsAnnotations\Hazelcast.Net.JetBrainsAnnotations.csproj" />
   </ItemGroup>
 
+  <!-- required for building net462+ -->
+  <!--
   <ItemGroup>
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.IdentityModel.Selectors" />
   </ItemGroup>
+  -->
 
   <ItemGroup>
     <Compile Update="Clustering\Cluster.*.cs">

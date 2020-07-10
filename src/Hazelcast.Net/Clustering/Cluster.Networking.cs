@@ -86,7 +86,7 @@ namespace Hazelcast.Clustering
             }
             catch
             {
-                await DieAsync().CAF();
+                await TerminateAsync().CAF();
                 throw;
             }
         }
@@ -97,7 +97,7 @@ namespace Hazelcast.Clustering
             {
                 if (x.IsFaulted)
                 {
-                    await DieAsync().CAF();
+                    await TerminateAsync().CAF();
                 }
             }, cancellationToken, TaskContinuationOptions.None, TaskScheduler.Current);
         }
@@ -419,7 +419,7 @@ namespace Hazelcast.Clustering
 
             if (die)
             {
-                await DieAsync().CAF();
+                await TerminateAsync().CAF();
             }
         }
 

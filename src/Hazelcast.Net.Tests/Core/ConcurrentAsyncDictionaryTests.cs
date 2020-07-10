@@ -57,14 +57,14 @@ namespace Hazelcast.Tests.Core
             Assert.AreEqual(1, entries.Count);
             Assert.AreEqual("a:2", entries[0]);
 
-            var (hasValue, gotValue) = await d.TryGetValue("a");
+            var (hasValue, gotValue) = await d.TryGetValueAsync("a");
             Assert.IsTrue(hasValue);
             Assert.AreEqual(2, gotValue);
 
             Assert.IsTrue(d.TryRemove("a"));
             Assert.IsFalse(d.TryRemove("a"));
 
-            (hasValue, _) = await d.TryGetValue("a");
+            (hasValue, _) = await d.TryGetValueAsync("a");
             Assert.IsFalse(hasValue);
 
             static ValueTask<int> DeadlyFactory(string key)
@@ -81,7 +81,7 @@ namespace Hazelcast.Tests.Core
                 v = await task;
             });
 
-            (hasValue, _) = await d.TryGetValue("a");
+            (hasValue, _) = await d.TryGetValueAsync("a");
             Assert.IsFalse(hasValue);
 
             static async ValueTask<int> AsyncDeadlyFactory(string key)
@@ -99,7 +99,7 @@ namespace Hazelcast.Tests.Core
                 await task;
             });
 
-            (hasValue, _) = await d.TryGetValue("a");
+            (hasValue, _) = await d.TryGetValueAsync("a");
             Assert.IsFalse(hasValue);
             /*
             Assert.IsTrue(d.TryAdd("a", _ => new ValueTask<int>(2)));
@@ -136,7 +136,7 @@ namespace Hazelcast.Tests.Core
 
             for (var i = 0; i < 20; i++)
             {
-                var attempt = await d.TryAdd("key_" + i, CreateValueItem);
+                var attempt = await d.TryAddAsync("key_" + i, CreateValueItem);
                 Assert.That(attempt, Is.True);
                 Assert.That(created, Is.EqualTo(i + 1));
             }
@@ -148,7 +148,7 @@ namespace Hazelcast.Tests.Core
             {
                 if (x++ == 3)
                 {
-                    var attempt = await d.TryAdd("doh_" + x, CreateValueItem);
+                    var attempt = await d.TryAddAsync("doh_" + x, CreateValueItem);
                     Assert.That(attempt, Is.True);
                     Assert.That(created, Is.EqualTo(21));
                 }
@@ -191,7 +191,7 @@ namespace Hazelcast.Tests.Core
                 throw new Exception("bogus");
             }
 
-            var addTask = d.TryAdd("key", CreateValueItem);
+            var addTask = d.TryAddAsync("key", CreateValueItem);
 
             var enumerator = d.GetAsyncEnumerator();
 
@@ -241,7 +241,7 @@ namespace Hazelcast.Tests.Core
             {
                 try
                 {
-                    var added = await d.TryAdd("key", CreateValueItem);
+                    var added = await d.TryAddAsync("key", CreateValueItem);
                     if (added)
                         Assert.Fail("Expected an exception.");
                 }
@@ -256,7 +256,7 @@ namespace Hazelcast.Tests.Core
             {
                 try
                 {
-                    var added = await d.TryAdd("key", CreateValueItem);
+                    var added = await d.TryAddAsync("key", CreateValueItem);
                     if (added)
                         Assert.Fail("Expected an exception.");
                 }
@@ -352,7 +352,7 @@ namespace Hazelcast.Tests.Core
 
             try
             {
-                await d.TryAdd("key", CreateValueItem);
+                await d.TryAddAsync("key", CreateValueItem);
                 Assert.Fail("Expected an exception.");
             }
             catch (Exception e)
@@ -398,15 +398,15 @@ namespace Hazelcast.Tests.Core
                 return new ValueTask<ValueItem>(v);
             }
 
-            var attempt = await d.TryAdd("key", CreateValueItem);
+            var attempt = await d.TryAddAsync("key", CreateValueItem);
             Assert.That(attempt, Is.True);
             Assert.That(created, Is.EqualTo(1));
 
-            var added = await d.TryGetValue("key");
+            var added = await d.TryGetValueAsync("key");
             Assert.That(added.Success, Is.True);
             Assert.That(added.Value, Is.SameAs(value));
 
-            attempt = await d.TryAdd("key", CreateValueItem);
+            attempt = await d.TryAddAsync("key", CreateValueItem);
             Assert.That(attempt, Is.False);
             Assert.That(created, Is.EqualTo(1));
         }
@@ -459,14 +459,14 @@ namespace Hazelcast.Tests.Core
             Assert.That(added, Is.SameAs(value));
             Assert.That(created, Is.EqualTo(1));
 
-            var attempt = await d.TryGetValue("key");
+            var attempt = await d.TryGetValueAsync("key");
             Assert.That(attempt.Success, Is.True);
             Assert.That(attempt.Value, Is.SameAs(value));
 
             Assert.That(d.TryRemove("key"), Is.True);
             Assert.That(d.TryRemove("key"), Is.False);
 
-            attempt = await d.TryGetValue("key");
+            attempt = await d.TryGetValueAsync("key");
             Assert.That(attempt.Success, Is.False);
 
             added = await d.GetOrAddAsync("key", CreateValueItem);
@@ -496,18 +496,18 @@ namespace Hazelcast.Tests.Core
             Assert.That(added, Is.SameAs(value));
             Assert.That(created, Is.EqualTo(1));
 
-            var attempt = await d.TryGetValue("key");
+            var attempt = await d.TryGetValueAsync("key");
             Assert.That(attempt.Success, Is.True);
             Assert.That(attempt.Value, Is.SameAs(value));
 
-            attempt = await d.TryGetAndRemove("key");
+            attempt = await d.TryGetAndRemoveAsync("key");
             Assert.That(attempt.Success, Is.True);
             Assert.That(attempt.Value, Is.SameAs(value));
 
-            attempt = await d.TryGetAndRemove("key");
+            attempt = await d.TryGetAndRemoveAsync("key");
             Assert.That(attempt.Success, Is.False);
 
-            attempt = await d.TryGetValue("key");
+            attempt = await d.TryGetValueAsync("key");
             Assert.That(attempt.Success, Is.False);
 
             added = await d.GetOrAddAsync("key", CreateValueItem);
@@ -531,7 +531,7 @@ namespace Hazelcast.Tests.Core
             }
 
             var task1 = d.GetOrAddAsync("key", CreateValueItem);
-            var task2 = d.TryGetAndRemove("key");
+            var task2 = d.TryGetAndRemoveAsync("key");
 
             await Task.Delay(200);
 
@@ -626,9 +626,9 @@ namespace Hazelcast.Tests.Core
             Assert.That(added, Is.Not.SameAs(value));
             Assert.That(created, Is.EqualTo(2));
 
-            Assert.That(await d.ContainsKey("key1"), Is.True);
-            Assert.That(await d.ContainsKey("key2"), Is.True);
-            Assert.That(await d.ContainsKey("key3"), Is.False);
+            Assert.That(await d.ContainsKeyAsync("key1"), Is.True);
+            Assert.That(await d.ContainsKeyAsync("key2"), Is.True);
+            Assert.That(await d.ContainsKeyAsync("key3"), Is.False);
         }
 
         [Test]
@@ -648,7 +648,7 @@ namespace Hazelcast.Tests.Core
             }
 
             var task1 = d.GetOrAddAsync("key", CreateValueItem);
-            var task2 = d.ContainsKey("key");
+            var task2 = d.ContainsKeyAsync("key");
 
             await Task.Delay(200);
 
@@ -695,7 +695,7 @@ namespace Hazelcast.Tests.Core
             });
 
             ev2.Wait();
-            var task2 = d.ContainsKey("key");
+            var task2 = d.ContainsKeyAsync("key");
 
             await Task.Delay(200);
 

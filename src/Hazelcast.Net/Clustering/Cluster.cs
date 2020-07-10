@@ -207,10 +207,10 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Dies (dispose without exceptions).
+        /// Terminates (dispose without exceptions).
         /// </summary>
-        /// <returns>A task that completes whe, the cluster has died.</returns>
-        private async ValueTask DieAsync()
+        /// <returns>A task that completes when the cluster has terminated.</returns>
+        private async ValueTask TerminateAsync()
         {
             try
             {
@@ -219,7 +219,7 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 // that's all we can do really
-                _logger.LogWarning(e, "Caught an exception while dying.");
+                _logger.LogWarning(e, "Caught an exception while terminating.");
             }
         }
 

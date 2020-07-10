@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,30 +27,6 @@ namespace Hazelcast.Core
     /// <typeparam name="TValue">The type of the values.</typeparam>
     internal class ConcurrentAsyncDictionary<TKey, TValue> : IAsyncEnumerable<KeyValuePair<TKey, TValue>>
     {
-        // must put Lazy in the dictionary to avoid creating the factory multiple times
-        //
-        // 'GetOrAdd' call on the dictionary is not thread safe and we might end up creating the pipeline more
-        // once. To prevent this Lazy<> is used. In the worst case multiple Lazy<> objects are created for multiple
-        // threads but only one of the objects succeeds in creating a pipeline.
-        //
-        // -> summary: using a Lazy<> object ensures that the factory task is started once and only once
-        //
-        // Lazy<> has various initialization modes:
-        // - default: means ExecuteAndPublication
-        // - isThreadSafe: true means ExecuteAndPublication, false means None
-        // - LazyThreadSafetyMode:
-        //     - PublicationOnly: can create multiple instances (per thread) but will end up publishing only one
-        //                        i.e. threads race to initialize the value, but then it's fully thead-safe
-        //     - ExecuteAndPublication: only one thread initializes the value, fully thread-safe
-        //     - None: not thread-safe at all
-        //
-        // must put Task and not ValueTask in the dictionary since multiple threads are going to await
-        // on that task, and one should only await ValueTask once.
-
-        // FIXME
-        // this has issues because we are awaiting multiple times on a ValueTask + casting to Task anyways so ?
-        // what-if we put AsyncLazy<T> in the dictionary instead?
-
         // usage:
         // this class is used by the DistributedObjectFactory to cache its distributed objects, and by NearCache
 
@@ -89,7 +64,7 @@ namespace Hazelcast.Core
         /// <param name="key">The key.</param>
         /// <param name="factory">A value factory.</param>
         /// <returns><c>true</c> if a key/value pair was added; otherwise <c>false</c>.</returns>
-        public async ValueTask<bool> TryAdd(TKey key, Func<TKey, ValueTask<TValue>> factory)
+        public async ValueTask<bool> TryAddAsync(TKey key, Func<TKey, ValueTask<TValue>> factory)
         {
             var entry = new Entry(key);
             if (!_dictionary.TryAdd(key, entry)) return false;
@@ -113,7 +88,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
         /// <returns>An attempt at getting the value associated with the specified key.</returns>
-        public async ValueTask<Attempt<TValue>> TryGetValue(TKey key)
+        public async ValueTask<Attempt<TValue>> TryGetValueAsync(TKey key)
         {
             if (!_dictionary.TryGetValue(key, out var entry)) return Attempt.Failed;
 
@@ -125,7 +100,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
         /// <returns>An attempt at removing the value associated with the specified key.</returns>
-        public async ValueTask<Attempt<TValue>> TryGetAndRemove(TKey key)
+        public async ValueTask<Attempt<TValue>> TryGetAndRemoveAsync(TKey key)
         {
             if (!_dictionary.TryRemove(key, out var entry)) return Attempt.Failed;
 
@@ -154,7 +129,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
         /// <returns>true if the dictionary contains an entry for the specified key; otherwise false.</returns>
-        public async ValueTask<bool> ContainsKey(TKey key)
+        public async ValueTask<bool> ContainsKeyAsync(TKey key)
         {
             if (!_dictionary.TryGetValue(key, out var entry)) return false;
 

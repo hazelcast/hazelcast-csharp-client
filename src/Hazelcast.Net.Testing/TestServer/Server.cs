@@ -14,7 +14,9 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +35,8 @@ namespace Hazelcast.Testing.TestServer
     /// </summary>
     internal class Server : IAsyncDisposable
     {
-        private readonly Dictionary<int, ServerSocketConnection> _connections = new Dictionary<int, ServerSocketConnection>();
+        private readonly object _openLock = new object();
+        private readonly ConcurrentDictionary<int, ServerSocketConnection> _connections = new ConcurrentDictionary<int, ServerSocketConnection>();
         private readonly Func<Server, ClientMessageConnection, ClientMessage, ValueTask> _handler;
         private readonly ILoggerFactory _loggerFactory;
         private readonly NetworkAddress _address;
@@ -41,6 +44,7 @@ namespace Hazelcast.Testing.TestServer
         private readonly Guid _clusterId;
         private readonly Guid _memberId;
         private ServerSocketListener _listener;
+        private bool _open;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Server"/> class.
@@ -71,6 +75,7 @@ namespace Hazelcast.Testing.TestServer
 
             _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
             HConsole.Configure(_listener, config => config.SetIndent(24).SetPrefix("LISTENER"));
+            _open = true;
             await _listener.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Server started");
@@ -80,8 +85,13 @@ namespace Hazelcast.Testing.TestServer
         {
             HConsole.WriteLine(this, "Listener is down");
 
+            lock (_openLock)
+            {
+                _open = false;
+            }
+
             // shutdown all existing connections
-            foreach (var connection in _connections.Values)
+            foreach (var connection in _connections.Values.ToList())
             {
                 try
                 {
@@ -122,12 +132,17 @@ namespace Hazelcast.Testing.TestServer
             // the connection we receive is not wired yet
             // must wire it properly before accepting
 
-            var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-            HConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
-            serverConnection.OnShutdown = SocketShutdown;
-            serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
-            serverConnection.Accept();
-            _connections[serverConnection.Id] = serverConnection;
+            lock (_openLock)
+            {
+                if (!_open) throw new InvalidOperationException("Cannot accept connections (closed).");
+
+                var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
+                HConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
+                serverConnection.OnShutdown = SocketShutdown;
+                serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
+                serverConnection.Accept();
+                _connections[serverConnection.Id] = serverConnection;
+            }
         }
 
         protected async Task SendAsync(ClientMessageConnection connection, ClientMessage eventMessage, long correlationId)
@@ -194,7 +209,7 @@ namespace Hazelcast.Testing.TestServer
         private void SocketShutdown(SocketConnectionBase connection)
         {
             HConsole.WriteLine(this, "Removing connection " + connection.Id);
-            _connections.Remove(connection.Id);
+            _connections.TryRemove(connection.Id, out _);
         }
 
         /// <inheritdoc />

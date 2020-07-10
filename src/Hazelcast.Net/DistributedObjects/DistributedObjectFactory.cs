@@ -163,7 +163,7 @@ namespace Hazelcast.DistributedObjects
             // try to get the object - and then, dispose it
 
             var k = new DistributedObjectInfo(serviceName, name);
-            var attempt = await _objects.TryGetAndRemove(k).CAF();
+            var attempt = await _objects.TryGetAndRemoveAsync(k).CAF();
             if (attempt)
                 await attempt.Value.DisposeAsync().CAF();
 

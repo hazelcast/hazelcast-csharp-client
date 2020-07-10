@@ -226,7 +226,7 @@ namespace Hazelcast.Clustering
                         HConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((MemberLifecycleEventType.Removed, new MemberLifecycleEventArgs(member)));
                         if (_clients.TryGetValue(member.Id, out var client))
-                            await client.DieAsync().CAF(); // TODO: should die in the background, will self-removed once down
+                            await client.TerminateAsync().CAF(); // TODO: should die in the background, will self-removed once down
                         break;
 
                     case 2: // new but not old = added

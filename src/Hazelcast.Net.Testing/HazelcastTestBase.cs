@@ -54,6 +54,9 @@ namespace Hazelcast.Testing
         [TearDown]
         public void HazelcastTestBaseTearDown()
         {
+            // in case it's been used by tests, reset the clock
+            Clock.Reset();
+
             // GC should finalize everything, thus trigger unobserved exceptions
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -114,7 +117,7 @@ namespace Hazelcast.Testing
         /// Creates a logger factory.
         /// </summary>
         /// <returns>A logger factory.</returns>
-        protected virtual ILoggerFactory CreateLoggerFactory() => 
+        protected virtual ILoggerFactory CreateLoggerFactory() =>
             Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
     }
 }
