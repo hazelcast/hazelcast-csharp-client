@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -79,20 +80,8 @@ namespace Hazelcast.Core
             // and this will fault the connection task, so await will throw too,
             // and then everything will be ok
 
-            try
-            {
-                socket.Close();
-                socket.Dispose();
-            }
-            // ReSharper disable once EmptyGeneralCatchClause
-            catch { /* expected */ }
-
-            try
-            {
-                await tcs.Task.CAF(); // TODO is this working?
-            }
-            // ReSharper disable once EmptyGeneralCatchClause
-            catch { /* expected */ }
+            TryCloseAndDispose(socket);
+            await TryAwait(tcs.Task).CAF();
 
             // finally, throw the correct exception
             // favor cancellation over timeout
@@ -100,6 +89,27 @@ namespace Hazelcast.Core
                 throw new OperationCanceledException("The socket connection operation has been canceled.");
 
             throw new TimeoutException("The socket connection operation has timed out.");
+        }
+
+        [ExcludeFromCodeCoverage] // catch statement is a pain to cover properly
+        private static void TryCloseAndDispose(Socket socket)
+        {
+            try
+            {
+                socket.Close();
+                socket.Dispose();
+            }
+            catch { /* may happen, don't care */ }
+        }
+
+        [ExcludeFromCodeCoverage] // catch statement is a pain to cover properly
+        private static async Task TryAwait(Task task)
+        {
+            try
+            {
+                await task.CAF();
+            }
+            catch { /* may happen, don't care */ }
         }
     }
 }

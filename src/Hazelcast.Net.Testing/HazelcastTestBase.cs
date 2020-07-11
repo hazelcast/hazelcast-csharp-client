@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
@@ -24,13 +23,10 @@ namespace Hazelcast.Testing
     /// <summary>
     /// Provides a base class for Hazelcast tests.
     /// </summary>
-    public abstract class HazelcastTestBase
+    public abstract class HazelcastTestBase : ObservingTestBase
     {
         private static readonly ISequence<int> UniqueNameSequence = new Int32Sequence();
         private static readonly string UniqueNamePrefix = DateTime.Now.ToString("HHmmss_");
-
-        private readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions =
-            new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
 
         [SetUp]
         public void HazelcastTestBaseSetUp()
@@ -42,13 +38,6 @@ namespace Hazelcast.Testing
             LoggerFactory = CreateLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
             Logger.LogInformation($"Setup {GetType()}");
-
-            // make sure the queue is empty
-            while (_unobservedExceptions.TryDequeue(out _))
-            { }
-
-            // handle unobserved exceptions
-            TaskScheduler.UnobservedTaskException += UnobservedTaskException;
         }
 
         [TearDown]
@@ -56,31 +45,11 @@ namespace Hazelcast.Testing
         {
             // in case it's been used by tests, reset the clock
             Clock.Reset();
-
-            // GC should finalize everything, thus trigger unobserved exceptions
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            // check for unobserved exceptions and report
-            var failed = false;
-            while (_unobservedExceptions.TryDequeue(out var args))
-            {
-                var innerException = args.Exception.Flatten().InnerException;
-                Logger.LogWarning(innerException, "Exception.");
-                failed = true;
-            }
-
-            // remove handler
-            TaskScheduler.UnobservedTaskException -= UnobservedTaskException;
-
-            // fail if necessary
-            if (failed) Assert.Fail("Unobserved task exceptions.");
         }
 
-        private void UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        protected override void ReportUnobservedException(object sender, UnobservedTaskExceptionEventArgs args)
         {
-            Logger.LogWarning(e.Exception, $"UnobservedTaskException from {sender}.");
-            _unobservedExceptions.Enqueue(e);
+            Logger.LogWarning(args.Exception, $"UnobservedTaskException from {sender}.");
         }
 
         /// <summary>

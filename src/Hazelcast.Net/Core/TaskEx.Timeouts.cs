@@ -72,8 +72,9 @@ namespace Hazelcast.Core
             if (timeoutMilliseconds == 0) timeoutMilliseconds = defaultTimeoutMilliseconds;
 
             // if the obtained timeout is infinite, or if it still zero (in which case
-            // somebody probably made a mistake somewhere), run without a timeout
-            if (timeoutMilliseconds <= 0) return (null, null, default);
+            // somebody probably made a mistake somewhere), run without a timeout - but with
+            // the supplied cancellation token (and nothing needs to be disposed)
+            if (timeoutMilliseconds <= 0) return (null, null, cancellationToken);
 
             // else create a cancellation token source which cancels after the timeout delay,
             // and combine it with the supplied cancellation token so we also respect it
