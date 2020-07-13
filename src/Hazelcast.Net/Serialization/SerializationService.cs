@@ -293,7 +293,7 @@ namespace Hazelcast.Serialization
             {
                 var method = typeof (SerializationService).GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
                     .FirstOrDefault(x => x.Name == nameof(CreateSerializerAdapter) && x.IsGenericMethod);
-                if (method == null) throw new Exception("panic");
+                if (method == null) throw new ServiceFactoryException("Internal error (failed to get CreateSerializerAdapter method).");
                 _createSerializerAdapter = method.GetGenericMethodDefinition();
             }
 
@@ -436,7 +436,7 @@ namespace Hazelcast.Serialization
             if (!_constantTypesMap.TryGetValue(type, out var serializer))
                 return null;
 
-            if (serializer == null) throw new Exception("panic");
+            if (serializer == null) throw new SerializationException($"Failed to find default serializer for type {type}.");
             return serializer;
         }
 

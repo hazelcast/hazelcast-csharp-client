@@ -1,0 +1,5 @@
+{
+  "hazelcast": {
+    "arg42": "value42"
+  }
+}

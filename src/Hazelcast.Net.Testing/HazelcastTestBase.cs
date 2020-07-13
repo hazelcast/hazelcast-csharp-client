@@ -47,9 +47,9 @@ namespace Hazelcast.Testing
             Clock.Reset();
         }
 
-        protected override void ReportUnobservedException(object sender, UnobservedTaskExceptionEventArgs args)
+        protected override void ReportUnobservedException(string message, Exception exception)
         {
-            Logger.LogWarning(args.Exception, $"UnobservedTaskException from {sender}.");
+            Logger.LogWarning(exception, message);
         }
 
         /// <summary>

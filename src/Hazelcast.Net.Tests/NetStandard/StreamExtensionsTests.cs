@@ -17,8 +17,11 @@ namespace Hazelcast.Tests.NetStandard
             var stream = new MemoryStream(Encoding.UTF8.GetBytes("Lorem ipsum dolor sit amet, consectetur adipiscing elit."));
             var memory = new Memory<byte>(new byte[8]);
 
+#if NETFRAMEWORK
+            // for NETSTANDARD ReadAsync is a real method, not an extension
             Assert.ThrowsAsync<ArgumentNullException>(async () => _ = await ((Stream) null).ReadAsync(memory, CancellationToken.None));
             Assert.ThrowsAsync<ArgumentException>(async () => _ = await stream.ReadAsync(default, CancellationToken.None));
+#endif
 
             var count = await stream.ReadAsync(memory, CancellationToken.None);
             Assert.That(count, Is.EqualTo(8));

@@ -63,24 +63,31 @@ namespace Hazelcast.Exceptions
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is StackTraceElement other && Equals(this, other);
+            return obj is StackTraceElement other && EqualsN(this, other);
         }
 
         /// <summary>
         /// Determines whether two objects are equal.
         /// </summary>
-        /// <param name="x1">The first object.</param>
-        /// <param name="x2">The second object.</param>
+        /// <param name="left">The first object.</param>
+        /// <param name="right">The second object.</param>
         /// <returns>A value indicating whether the two objects are equal.</returns>
-        private static bool Equals(StackTraceElement x1, StackTraceElement x2)
+        private static bool Equals(StackTraceElement left, StackTraceElement right)
         {
-            if (ReferenceEquals(x1, x2)) return true;
-            if (x1 is null) return false;
-            return x1.ClassName == x2.ClassName &&
-                   x1.MethodName == x2.MethodName &&
-                   x1.FileName == x2.FileName &&
-                   x1.LineNumber == x2.LineNumber;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+            return EqualsN(left, right);
         }
+
+        private static bool EqualsN(StackTraceElement left, StackTraceElement right)
+            => left.ClassName == right.ClassName &&
+               left.MethodName == right.MethodName &&
+               left.FileName == right.FileName &&
+               left.LineNumber == right.LineNumber;
+
+        public static bool operator ==(StackTraceElement left, StackTraceElement right) => Equals(left, right);
+
+        public static bool operator !=(StackTraceElement left, StackTraceElement right) => !Equals(left, right);
 
         /// <inheritdoc />
         public override int GetHashCode()

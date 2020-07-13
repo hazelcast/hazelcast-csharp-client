@@ -570,6 +570,21 @@ function StopRemoteController() {
 	}
 }
 
+function CollectTestResults($fwk, $file) {
+    $xml = [xml] (gc $file)
+
+    $run = $xml."test-run"
+    #$fwk = ($run."test-suite".settings.setting | where { $_.name -eq "RuntimeFramework" }).value
+    $total = $run.total
+    $passed = $run.passed
+    $failed = $run.failed
+    $skipped = $run.skipped
+    $inconclusive = $run.inconclusive
+
+    $script:testResults = $script:testResults + `
+        "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
+}
+
 function RunDotNetCoreTests($f) {
 
     # run .NET Core unit tests
@@ -634,7 +649,8 @@ function RunDotNetCoreTests($f) {
     }
 
     # NUnit adapter does not support configuring the file name, move
-    move-item -force "$tmpDir/tests/results/Hazelcast.Net.Tests.xml" "$tmpDir/tests/results/tests-$f.xml"
+    move-item -force "$tmpDir/tests/results/Hazelcast.Net.Tests.xml" "$tmpDir/tests/results/results-$f.xml"
+    CollectTestResults $f "$tmpDir/tests/results/results-$f.xml"
 }
 
 function RunDotNetFrameworkTests($f) {
@@ -684,6 +700,8 @@ function RunDotNetFrameworkTests($f) {
         Write-Output "exec: $nunit $nunitArgs"
         &$nunit $nunitArgs
     }
+
+    CollectTestResults $f "$tmpDir/tests/results/results-$f.xml"
 }
 
 if ($doTests -or $doRc) {
@@ -710,6 +728,8 @@ if ($doTests -or $doRc) {
 if ($doTests) {
 
     # run tests
+    $testResults = @()
+
     try {
         StartRemoteController
 
@@ -731,6 +751,12 @@ if ($doTests) {
     finally {
         StopRemoteController
     }
+
+    Write-Output ""
+    Write-Output "Summary:"
+    foreach ($testResult in $testResults) {
+        Write-Output $testResult
+	}
 }
 
 if ($doRc) {

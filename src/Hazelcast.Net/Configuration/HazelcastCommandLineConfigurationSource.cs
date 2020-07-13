@@ -22,10 +22,12 @@ namespace Hazelcast.Configuration
     /// </summary>
     internal class HazelcastCommandLineConfigurationSource : IConfigurationSource
     {
+        /*
         /// <summary>
         /// Gets or sets the switch mappings.
         /// </summary>
         public IDictionary<string, string> SwitchMappings { get; set; }
+        */
 
         /// <summary>
         /// Gets or sets the command line args.
@@ -35,7 +37,7 @@ namespace Hazelcast.Configuration
         /// <inheritdoc />
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            return new HazelcastCommandLineConfigurationProvider(Args, SwitchMappings);
+            return new HazelcastCommandLineConfigurationProvider(Args /*, SwitchMappings*/);
         }
     }
 }

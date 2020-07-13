@@ -39,6 +39,11 @@ namespace Hazelcast.Core
         private static readonly Dictionary<object, HConsoleConfiguration> SourceConfigs = new Dictionary<object, HConsoleConfiguration>();
         private static readonly Dictionary<Type, HConsoleConfiguration> TypeConfigs = new Dictionary<Type, HConsoleConfiguration>();
 
+        private static readonly HConsoleConfiguration DefaultConfig = new HConsoleConfiguration()
+            .SetPrefix(default)
+            .SetMaxLevel(-1)
+            .SetIndent(0);
+
         static HConsole()
         {
             // setup default configuration
@@ -53,7 +58,10 @@ namespace Hazelcast.Core
         // internal for tests
         internal static HConsoleConfiguration GetConfig(object source)
         {
-            if (!SourceConfigs.TryGetValue(source, out var config)) config = new HConsoleConfiguration();
+            if (SourceConfigs.TryGetValue(source, out var config))
+                config = config.Clone();
+            else
+                config = new HConsoleConfiguration();
 
             var type = source.GetType();
             while (type != null && !config.IsComplete)
@@ -62,6 +70,7 @@ namespace Hazelcast.Core
                 type = type.BaseType;
             }
 
+            config = config.Merge(DefaultConfig);
             return config;
         }
 #endif

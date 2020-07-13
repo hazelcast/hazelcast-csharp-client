@@ -223,9 +223,8 @@ namespace Hazelcast.Tests
             var token = new CancellationTokenSource(3_000).Token;
             await client.Cluster.SendAsync(message, token); // default is 120s
 
-            NUnit.Framework.Assert.AreEqual(4, count);
+            Assert.AreEqual(4, count);
 
-            // TODO dispose the client, the server
             await server.StopAsync().CAF();
         }
 

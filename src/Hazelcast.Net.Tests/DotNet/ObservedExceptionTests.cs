@@ -37,14 +37,14 @@ namespace Hazelcast.Tests.DotNet
         {
             Assert.ThrowsAsync<Exception>(async () =>
             {
-                await ThrowAsync();
+                await ThrowAsync(nameof(UnobservedExceptionThrowsAtAwait));
             });
         }
 
         [Test]
         public async Task ObservedExceptionDoesNotThrowAtAwait()
         {
-            var task = ThrowAsync().ObserveException();
+            var task = ThrowAsync(nameof(ObservedExceptionDoesNotThrowAtAwait)).ObserveException();
             await task;
 
             Assert.That(task.IsFaulted, Is.False); // and it's not even faulted
@@ -58,10 +58,14 @@ namespace Hazelcast.Tests.DotNet
 
             try
             {
-                RunTask(false);
+                RunTask(nameof(UnobservedExceptionIsRaised),  false);
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
+
+                // there can be a timing issue on .NET Framework
+                var i = 0;
+                while (_count == 0 && i++ < 20) Thread.Sleep(100);
             }
             finally
             {
@@ -79,7 +83,7 @@ namespace Hazelcast.Tests.DotNet
 
             try
             {
-                RunTask(true);
+                RunTask(nameof(ObservedExceptionIsNotRaised), true);
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -92,13 +96,13 @@ namespace Hazelcast.Tests.DotNet
             Assert.That(_count, Is.EqualTo(0));
         }
 
-        private void RunTask(bool observe)
+        private void RunTask(string context, bool observe)
         {
             // run the task - by running in a method we ensure that the task variable
             // will be really out of scope and finalize-able when the GC runs, even in
             // DEBUG mode
 
-            var task = ThrowAsync();
+            var task = ThrowAsync(context);
             if (observe) task = task.ObserveException();
 
             // wait for the task to complete
@@ -113,10 +117,10 @@ namespace Hazelcast.Tests.DotNet
             args.SetObserved();
         }
 
-        public async Task ThrowAsync()
+        public async Task ThrowAsync(string context)
         {
             await Task.Yield();
-            throw new Exception("bang!");
+            throw new Exception($"ObservedExceptionTests.ThrowAsync ({context})!");
         }
     }
 }

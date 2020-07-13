@@ -1,0 +1,177 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using Hazelcast.Configuration;
+using Microsoft.Extensions.Configuration;
+using NUnit.Framework;
+
+namespace Hazelcast.Tests.Configuration
+{
+    [TestFixture]
+    public class SourcesTests
+    {
+        [Test]
+        public void ArgumentExceptions()
+        {
+            Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcastInMemoryCollection(default));
+            Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcastCommandLine(default));
+            Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcastEnvironmentVariables());
+            Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcastFile(null, "hazelcast.json", null));
+
+            Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcast(default));
+        }
+
+        [Test]
+        public void DetermineEnvironment()
+        {
+            var dotnetEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+            var aspnetEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+            try
+            {
+                Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "");
+                Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "");
+
+                Assert.That(ConfigurationBuilderExtensions.DetermineEnvironment(null), Is.EqualTo("Production"));
+
+                Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "AspNetCore");
+                Assert.That(ConfigurationBuilderExtensions.DetermineEnvironment(null), Is.EqualTo("AspNetCore"));
+
+                Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "DotNet");
+                Assert.That(ConfigurationBuilderExtensions.DetermineEnvironment(null), Is.EqualTo("DotNet"));
+
+                Assert.That(ConfigurationBuilderExtensions.DetermineEnvironment("Code"), Is.EqualTo("Code"));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", dotnetEnvironment);
+                Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", aspnetEnvironment);
+            }
+        }
+
+        private string[] CommandLineArgs { get; } =
+        {
+            "hazelcast.arg1=value1",
+            "hazelcast:arg2=value2",
+            "/hazelcast.arg3", "value3",
+            "/hazelcast:arg4", "value4",
+            "--hazelcast.arg5", "value5",
+            "--hazelcast:arg6", "value6",
+            "",
+            "/hazelcast.arg7=value7",
+            "/hazelcast:arg8=value8",
+            "--hazelcast.arg9=value9",
+            "--hazelcast:arg10=value10",
+        };
+
+        [Test]
+        public void CommandLine()
+        {
+            var configuration = new ConfigurationBuilder()
+                .AddCommandLine(CommandLineArgs)
+                .AddHazelcastCommandLine(CommandLineArgs)
+                .Build();
+
+            for (var i = 1; i <= 8; i++)
+                Assert.That(configuration["hazelcast:arg" + i], Is.EqualTo("value" + i));
+        }
+
+        private KeyValuePair<string, string>[] InMemoryData { get; } =
+        {
+            new KeyValuePair<string, string>("hazelcast.arg11", "value11"),
+            new KeyValuePair<string, string>("hazelcast:arg12", "value12"),
+        };
+
+        [Test]
+        public void InMemory()
+        {
+            var configuration = new ConfigurationBuilder()
+                .AddHazelcastInMemoryCollection(InMemoryData)
+                .Build();
+
+            Assert.That(configuration["hazelcast:arg11"], Is.EqualTo("value11"));
+            Assert.That(configuration["hazelcast:arg12"], Is.EqualTo("value12"));
+        }
+
+        [Test]
+        public void EnvironmentVariables()
+        {
+            Environment.SetEnvironmentVariable("hazelcast.arg21", "value21");
+            Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
+
+            var configuration = new ConfigurationBuilder()
+                .AddEnvironmentVariables()
+                .AddHazelcastEnvironmentVariables()
+                .Build();
+
+            Assert.That(configuration["hazelcast:arg21"], Is.EqualTo("value21"));
+            Assert.That(configuration["hazelcast:arg22"], Is.EqualTo("value22"));
+        }
+
+        [Test]
+        public void JsonFile()
+        {
+            var path = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options"));
+
+            var configuration = new ConfigurationBuilder()
+                .AddHazelcastFile(path, "Test.json", "Testing")
+                .Build();
+
+            Assert.That(configuration["hazelcast:arg31"], Is.EqualTo("value31"));
+            Assert.That(configuration["hazelcast:arg32"], Is.EqualTo("value32"));
+        }
+
+        [Test]
+        public void All1()
+        {
+            var path = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options"));
+
+            Environment.SetEnvironmentVariable("hazelcast.arg21", "value21");
+            Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
+
+            var configuration = new ConfigurationBuilder()
+                .AddDefaults(CommandLineArgs, "Testing")
+                .AddHazelcast(CommandLineArgs, InMemoryData, path, "Test.json", "Testing")
+                .Build();
+
+            for (var i = 1; i <= 8; i++)
+                Assert.That(configuration["hazelcast:arg" + i], Is.EqualTo("value" + i));
+
+            Assert.That(configuration["hazelcast:arg11"], Is.EqualTo("value11"));
+            Assert.That(configuration["hazelcast:arg12"], Is.EqualTo("value12"));
+
+            Assert.That(configuration["hazelcast:arg21"], Is.EqualTo("value21"));
+            Assert.That(configuration["hazelcast:arg22"], Is.EqualTo("value22"));
+
+            Assert.That(configuration["hazelcast:arg31"], Is.EqualTo("value31"));
+            Assert.That(configuration["hazelcast:arg32"], Is.EqualTo("value32"));
+        }
+
+        [Test]
+        public void All2()
+        {
+            var path = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options"));
+
+            Environment.SetEnvironmentVariable("hazelcast.arg21", "value21");
+            Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
+
+            var configuration = new ConfigurationBuilder()
+                .AddDefaults(CommandLineArgs, "Testing")
+                .AddHazelcast(CommandLineArgs, InMemoryData, optionsFilePath: path, environmentName: "Testing")
+                .Build();
+
+            for (var i = 1; i <= 8; i++)
+                Assert.That(configuration["hazelcast:arg" + i], Is.EqualTo("value" + i));
+
+            Assert.That(configuration["hazelcast:arg11"], Is.EqualTo("value11"));
+            Assert.That(configuration["hazelcast:arg12"], Is.EqualTo("value12"));
+
+            Assert.That(configuration["hazelcast:arg21"], Is.EqualTo("value21"));
+            Assert.That(configuration["hazelcast:arg22"], Is.EqualTo("value22"));
+
+            Assert.That(configuration["hazelcast:arg41"], Is.EqualTo("value41"));
+            Assert.That(configuration["hazelcast:arg42"], Is.EqualTo("value42"));
+        }
+    }
+}

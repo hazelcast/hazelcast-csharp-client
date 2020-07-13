@@ -17,7 +17,7 @@ namespace Hazelcast.Tests
         [Test]
         public void HazelcastNetResources()
         {
-            var value = Configuration.Binding.Resources.Error_CannotActivateAbstractOrInterface;
+            var value = Hazelcast.Configuration.Binding.Resources.Error_CannotActivateAbstractOrInterface;
             Assert.IsNotNull(value);
             Assert.Greater(value.Trim().Length, 0);
             Console.WriteLine($"Value: {value}");

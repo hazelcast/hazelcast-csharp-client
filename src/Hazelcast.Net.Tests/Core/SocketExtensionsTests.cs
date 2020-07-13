@@ -65,7 +65,10 @@ namespace Hazelcast.Tests.Core
             var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
             var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            Assert.ThrowsAsync<SocketException>(async () =>
+            // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
+            // which derives from SocketException - use a constraint so NUnit is happy
+
+            Assert.ThrowsAsync(Is.InstanceOf<SocketException>(), async () =>
             {
                 // socket exception, connection refused
                 await socket.ConnectAsync(endpoint, -1);
@@ -78,7 +81,10 @@ namespace Hazelcast.Tests.Core
             var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
             var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            Assert.ThrowsAsync<SocketException>(async () =>
+            // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
+            // which derives from SocketException - use a constraint so NUnit is happy
+
+            Assert.ThrowsAsync(Is.InstanceOf<SocketException>(), async () =>
             {
                 // socket exception, connection refused
                 await socket.ConnectAsync(endpoint, -1, CancellationToken.None);
@@ -91,7 +97,10 @@ namespace Hazelcast.Tests.Core
             var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
             var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            Assert.ThrowsAsync<SocketException>(async () =>
+            // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
+            // which derives from SocketException - use a constraint so NUnit is happy
+
+            Assert.ThrowsAsync(Is.InstanceOf<SocketException>(), async () =>
             {
                 // socket exception, connection refused
                 await socket.ConnectAsync(endpoint, CancellationToken.None);

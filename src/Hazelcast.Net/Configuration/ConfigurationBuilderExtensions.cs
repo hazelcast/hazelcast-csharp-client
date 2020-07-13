@@ -33,7 +33,8 @@ namespace Hazelcast.Configuration
                 : Path.Combine(filePath, fileName);
 
             var extension = Path.GetExtension(fullpath);
-            fullpath = Path.GetFileNameWithoutExtension(fullpath);
+            var directory = Path.GetDirectoryName(fullpath);
+            fullpath = Path.Combine(directory, Path.GetFileNameWithoutExtension(fullpath));
 
             configurationBuilder
                 .AddJsonFile(fullpath + extension, true)

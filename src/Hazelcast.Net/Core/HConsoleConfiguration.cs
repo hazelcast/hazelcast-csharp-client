@@ -29,6 +29,17 @@ namespace Hazelcast.Core
         private bool _hasMaxLevel;
 #endif
 
+#if HZ_CONSOLE
+       public HConsoleConfiguration Clone()
+       {
+           var clone = new HConsoleConfiguration();
+           if (_hasIndent) clone.SetIndent(Indent);
+           if (_hasPrefix) clone.SetPrefix(Prefix);
+           if (_hasMaxLevel) clone.SetMaxLevel(MaxLevel);
+           return clone;
+       }
+#endif
+
         /// <summary>
         /// Sets the indentation level.
         /// </summary>
@@ -134,7 +145,7 @@ namespace Hazelcast.Core
 #if HZ_CONSOLE
             => _hasIndent && _hasPrefix && _hasMaxLevel;
 #else
-                => true;
+            => true;
 #endif
 
 #if HZ_CONSOLE
@@ -160,7 +171,7 @@ namespace Hazelcast.Core
 #if HZ_CONSOLE
             => $"{new string(' ', Indent)}[{Thread.CurrentThread.ManagedThreadId:00}] {Prefix}: ";
 #else
-                => "";
+            => "";
 #endif
 
         /// <summary>
@@ -172,7 +183,7 @@ namespace Hazelcast.Core
 #if HZ_CONSOLE
             => level > MaxLevel;
 #else
-                => true;
+            => true;
 #endif
 
         /// <inheritdoc />
@@ -180,7 +191,7 @@ namespace Hazelcast.Core
 #if HZ_CONSOLE
             => $"{{Config: {(_hasIndent ? Indent.ToString(CultureInfo.InvariantCulture) : "?")}, {(_hasPrefix ? ("\"" + Prefix + "\"") : "?")}, {(_hasMaxLevel ? MaxLevel.ToString(CultureInfo.InvariantCulture) : "?")}}}";
 #else
-                => "";
+            => "";
 #endif
     }
 }

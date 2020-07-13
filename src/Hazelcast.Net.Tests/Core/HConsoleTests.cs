@@ -33,6 +33,8 @@ namespace Hazelcast.Tests.Core
             HConsole.Reset();
         }
 
+#if HZ_CONSOLE
+
         [Test]
         public void ConfigureToString()
         {
@@ -72,7 +74,7 @@ namespace Hazelcast.Tests.Core
 
             Assert.That(config.Prefix, Is.Null);
             Assert.That(config.Indent, Is.EqualTo(0));
-            Assert.That(config.MaxLevel, Is.EqualTo(0));
+            Assert.That(config.MaxLevel, Is.EqualTo(-1));
 
             HConsole.ClearConfiguration<object>();
 
@@ -95,7 +97,7 @@ namespace Hazelcast.Tests.Core
 
             Assert.That(config.Prefix, Is.Null);
             Assert.That(config.Indent, Is.EqualTo(0));
-            Assert.That(config.MaxLevel, Is.EqualTo(0));
+            Assert.That(config.MaxLevel, Is.EqualTo(-1));
         }
 
         [Test]
@@ -132,20 +134,23 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void Lines()
         {
+            var o = new object();
+            HConsole.Configure(o, config => config.SetMaxLevel(0));
+
             const string source = @"aaa
 bbb
 ccc";
 
-            Assert.That(HConsole.Lines(new object(), 1, source), Is.EqualTo(""));
+            Assert.That(HConsole.Lines(o, 1, source), Is.EqualTo(""));
 
-            Assert.That(HConsole.Lines(new object(), 0, source).ToLf(), Is.EqualTo($@"
+            Assert.That(HConsole.Lines(o, 0, source).ToLf(), Is.EqualTo($@"
        aaa
        bbb
        ccc".ToLf()));
 
             HConsole.Configure<object>(config => config.SetPrefix("XX"));
 
-            Assert.That(HConsole.Lines(new object(), 0, source).ToLf(), Is.EqualTo($@"
+            Assert.That(HConsole.Lines(o, 0, source).ToLf(), Is.EqualTo($@"
          aaa
          bbb
          ccc".ToLf()));
@@ -159,6 +164,7 @@ ccc";
             var capture = new ConsoleCapture();
 
             var o = new object();
+            HConsole.Configure(o, config => config.SetMaxLevel(0));
 
             using (capture.Output())
             {
@@ -174,6 +180,7 @@ ccc";
             var capture = new ConsoleCapture();
 
             var o = new object();
+            HConsole.Configure(o, config => config.SetMaxLevel(0));
 
             using (capture.Output())
             {
@@ -199,11 +206,28 @@ ccc";
         }
 
         [Test]
-        public void WritesLevelZeroByDefault()
+        public void WritesNothingByDefault()
         {
             var capture = new ConsoleCapture();
 
             var o = new object();
+
+            using (capture.Output())
+            {
+                HConsole.WriteLine(o, "text0"); // default level is 0
+                HConsole.WriteLine(o, 1, "text1");
+            }
+
+            Assert.That(capture.ReadToEnd().ToLf(), Is.EqualTo("".ToLf()));
+        }
+
+        [Test]
+        public void WritesLevelZeroIfConfigured()
+        {
+            var capture = new ConsoleCapture();
+
+            var o = new object();
+            HConsole.Configure(o, config => config.SetMaxLevel(0));
 
             using (capture.Output())
             {
@@ -255,5 +279,7 @@ ccc";
 
             Assert.That(capture.ReadToEnd(), Is.EqualTo(""));
         }
+
+#endif
     }
 }

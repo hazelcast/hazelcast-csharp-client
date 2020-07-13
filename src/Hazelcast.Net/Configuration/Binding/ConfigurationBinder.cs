@@ -105,6 +105,16 @@ namespace Hazelcast.Configuration.Binding
             => (configuration ?? throw new ArgumentNullException(nameof(configuration))).GetSection(key).HzBind(instance);
 
         /// <summary>
+        /// Attempts to bind the given object instance to the configuration section specified by the key by matching property names against configuration keys recursively.
+        /// </summary>
+        /// <param name="configuration">The configuration instance to bind.</param>
+        /// <param name="key">The key of the configuration section to bind.</param>
+        /// <param name="instance">The object to bind.</param>
+        /// <param name="configureOptions">Configures the binder options.</param>
+        public static void HzBind(this IConfiguration configuration, string key, object instance, Action<BinderOptions> configureOptions)
+            => (configuration ?? throw new ArgumentNullException(nameof(configuration))).GetSection(key).HzBind(instance, configureOptions);
+
+        /// <summary>
         /// Attempts to bind the given object instance to configuration values by matching property names against configuration keys recursively.
         /// </summary>
         /// <param name="configuration">The configuration instance to bind.</param>
