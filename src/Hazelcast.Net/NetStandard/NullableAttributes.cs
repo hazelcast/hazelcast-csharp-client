@@ -34,6 +34,7 @@ namespace System.Diagnostics.CodeAnalysis
 {
     /// <summary>Specifies that null is allowed as an input even if the corresponding type disallows it.</summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -44,6 +45,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Specifies that null is disallowed as an input even if the corresponding type allows it.</summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -54,6 +56,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Specifies that an output may be null even if the corresponding type disallows it.</summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -64,6 +67,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Specifies that an output will not be null even if the corresponding type allows it.</summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -74,6 +78,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter may be null even if the corresponding type disallows it.</summary>
     [AttributeUsage(AttributeTargets.Parameter)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -93,6 +98,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
     [AttributeUsage(AttributeTargets.Parameter)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -112,6 +118,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Specifies that the output will be non-null if the named parameter is non-null.</summary>
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue, AllowMultiple = true)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -131,6 +138,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Applied to a method that will never return under any circumstance.</summary>
     [AttributeUsage(AttributeTargets.Method, Inherited = false)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -141,6 +149,7 @@ namespace System.Diagnostics.CodeAnalysis
 
     /// <summary>Specifies that the method will not return if the associated Boolean parameter is passed the specified value.</summary>
     [AttributeUsage(AttributeTargets.Parameter)]
+    [ExcludeFromCodeCoverage] // not covering MS code
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else

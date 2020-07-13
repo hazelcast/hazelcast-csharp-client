@@ -30,16 +30,18 @@ namespace System.IO
         /// Reads from a stream.
         /// </summary>
         /// <param name="stream">The stream.</param>
-        /// <param name="memory">The memory to read into.</param>
+        /// <param name="memory">The region of memory to write the data into.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The number of bytes that were read.</returns>
         /// <remarks>
         /// <para>Built-in method is introduced in netstandard2.1.</para>
-        /// <para>This can theoretically fail </para>
+        /// <para>This can theoretically fail.</para>
         /// </remarks>
-        public static async Task<int> ReadAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken)
+        public static async ValueTask<int> ReadAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (memory.Length == 0) throw new ArgumentException("Empty memory.", nameof(memory));
+
             byte[] bytes = null;
             try
             {
@@ -52,6 +54,7 @@ namespace System.IO
                 // hence this... workaround
                 //
                 var reading = stream.ReadAsync(bytes, 0, memory.Length, cancellationToken);
+
                 var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken)).ConfigureAwait(false);
 
                 if (completed != reading)

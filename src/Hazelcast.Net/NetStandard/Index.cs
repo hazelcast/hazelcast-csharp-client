@@ -39,6 +39,7 @@ namespace System
     /// int lastElement = someArray[^1]; // lastElement = 5
     /// </code>
     /// </remarks>
+    [ExcludeFromCodeCoverage] // not covering MS code
     internal readonly struct Index : IEquatable<Index>
     {
         private readonly int _value;

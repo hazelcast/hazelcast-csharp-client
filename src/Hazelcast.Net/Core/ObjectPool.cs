@@ -14,11 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Core
 {
     // TODO: refactor this entirely with Serialization
     // this class is *not* thread safe and probably not efficient either
+    [ExcludeFromCodeCoverage] // must refactor first
     internal class ObjectPool<T>
         where T : class
     {

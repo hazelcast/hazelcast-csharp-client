@@ -34,7 +34,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="endianness">The endianness, which can be 'native'.</param>
         /// <returns>The resolved endianness, i.e. either 'big-endian' or 'little-endian'.</returns>
-        private static Endianness ResolveEndianness(Endianness endianness)
+        internal static Endianness ResolveEndianness(Endianness endianness)
         {
             switch (endianness)
             {
@@ -85,7 +85,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUshort(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static ushort ReadUShort(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(ushort);
 
@@ -97,13 +97,13 @@ namespace Hazelcast.Core
             if (slice.IsSingleSegment)
             {
                 var span = slice.FirstSpan();
-                value = span.ReadUshort(endianness);
+                value = span.ReadUShort(endianness);
             }
             else
             {
                 Span<byte> stackSpan = stackalloc byte[length];
                 slice.Fill(stackSpan);
-                value = ((ReadOnlySpan<byte>) stackSpan).ReadUshort(endianness);
+                value = ((ReadOnlySpan<byte>) stackSpan).ReadUShort(endianness);
             }
 
             bytes = bytes.Slice(slice.End);
@@ -135,7 +135,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The span of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUshort(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static ushort ReadUShort(this ReadOnlySpan<byte> bytes, Endianness endianness = Endianness.Unspecified)
         {
             const byte length = sizeof(ushort);
 
@@ -184,7 +184,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(short))
+            if (position < 0  || bytes.Length < position + sizeof(short))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
@@ -207,7 +207,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(int))
+            if (position < 0 || bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
@@ -233,7 +233,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(long))
+            if (position < 0 || bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
@@ -262,7 +262,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(byte))
+            if (position < 0 || bytes.Length < position + sizeof(byte))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             return bytes[position];
@@ -278,7 +278,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(byte))
+            if (position < 0 || bytes.Length < position + sizeof(byte))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             bytes[position] = value;
@@ -291,11 +291,11 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteUshort(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteUShort(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Unspecified)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(ushort))
+            if (position < 0 || bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             var unsigned = value;
@@ -326,7 +326,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(ushort))
+            if (position < 0 ||bytes.Length < position + sizeof(ushort))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             var unsigned = (ushort) value;
@@ -367,7 +367,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(int))
+            if (position < 0 || bytes.Length < position + sizeof(int))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             var unsigned = (uint) value;
@@ -402,7 +402,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(long))
+            if (position < 0 || bytes.Length < position + sizeof(long))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             var unsigned = (ulong) value;
@@ -464,7 +464,7 @@ namespace Hazelcast.Core
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             const byte length = sizeof(char);
 
-            if (bytes.Length < position + length)
+            if (position < 0 ||bytes.Length < position + length)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
@@ -487,7 +487,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + sizeof(char))
+            if (position < 0 || bytes.Length < position + sizeof(char))
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             var unsigned = value;
@@ -522,7 +522,7 @@ namespace Hazelcast.Core
 
             const byte length = sizeof(byte);
 
-            if (bytes.Length < position + length)
+            if (position < 0 || bytes.Length < position + length)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
@@ -552,14 +552,14 @@ namespace Hazelcast.Core
                     if (bytes.Length < position + 3 * length)
                         throw new ArgumentOutOfRangeException(nameof(position));
 
-                    var first2 = (b & 0x0f) << 12;
-                    var second2 = (bytes[position + 1] & 0x3f) << 6;
-                    var third2 = bytes[position + 2] & 0x3f;
+                    var first = (b & 0x0f) << 12;
+                    var second = (bytes[position + 1] & 0x3f) << 6;
+                    var third = bytes[position + 2] & 0x3f;
                     position += 3;
-                    return (char)(first2 | second2 | third2);
+                    return (char)(first | second | third);
                 }
 
-                throw new InvalidOperationException("Malformed byte sequence.");
+                throw new InvalidOperationException("Cannot read surrogate pairs.");
             }
         }
 
@@ -575,6 +575,9 @@ namespace Hazelcast.Core
         public static void WriteUtf8Char(this byte[] bytes, ref int position, char value)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
+            if (position < 0)
+                throw new ArgumentOutOfRangeException(nameof(position));
 
             const int length = sizeof(byte);
 
@@ -602,7 +605,10 @@ namespace Hazelcast.Core
             if (bytes.Length < position + 3 * length)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
-            bytes[position] = (byte) (0xe | value >> 12 & 0x0f);
+            if (value > 0xd7ff)
+                throw new InvalidOperationException("Cannot write surrogate pairs.");
+
+            bytes[position] = (byte) (0xe0 | value >> 12 & 0x0f);
             bytes[position + 1] = (byte) (0x80 | value >> 6 & 0x3f);
             bytes[position + 2] = (byte) (0x80 | value & 0x3f);
             position += 3;
@@ -697,7 +703,7 @@ namespace Hazelcast.Core
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
-            if (bytes.Length < position + SizeOfGuid)
+            if (position < 0 || bytes.Length < position + SizeOfGuid)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             bytes.WriteBool(position, value == Guid.Empty);

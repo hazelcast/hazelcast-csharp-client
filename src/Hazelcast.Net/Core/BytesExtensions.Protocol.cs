@@ -5,6 +5,10 @@ namespace Hazelcast.Core
 {
     public static partial class BytesExtensions // Protocol
     {
+        // use little endian where it makes sense
+        // for some types (byte, bool...) it just does not make sense
+        // for some types (guid...) endianness is just not an option
+
         public static void WriteLongL(this byte[] bytes, int position, long value)
             => bytes.WriteLong(position, value, Endianness.LittleEndian);
 
