@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Hazelcast.Core;
+using Hazelcast.Networking;
+using Hazelcast.Testing.Networking;
 
 namespace Hazelcast.Tests.Core
 {
@@ -23,23 +25,14 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public async Task Success()
+        public async Task ConnectAsyncSuccess()
         {
-            static void AcceptCallback(IAsyncResult result)
-            {
-                var l = (Socket) result.AsyncState;
-                var h = l.EndAccept(result);
-            }
+            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
 
-            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
-            var listener = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            listener.Bind(endpoint);
-            listener.Listen(10);
-            listener.BeginAccept(AcceptCallback, listener);
+            using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
-            var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(endpoint, -1);
-
             // connected!
 
             try
@@ -49,21 +42,16 @@ namespace Hazelcast.Tests.Core
                 socket.Dispose();
             }
             catch { /* doesn't matter */ }
-
-            try
-            {
-                listener.Shutdown(SocketShutdown.Both);
-                listener.Close();
-                listener.Dispose();
-            }
-            catch { /* doesn't matter */ }
         }
 
         [Test]
-        public void Throw1()
+        public void ConnectAsyncConnectionRefused1()
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
-            var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
+
+            using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
+
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
             // which derives from SocketException - use a constraint so NUnit is happy
@@ -76,10 +64,13 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void Throw2()
+        public void ConnectAsyncConnectionRefused2()
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
-            var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
+
+            using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
+
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
             // which derives from SocketException - use a constraint so NUnit is happy
@@ -92,10 +83,12 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void Throw2Default()
+        public void ConnectAsyncConnectionRefused3()
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
-            var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
+
+            using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
             // which derives from SocketException - use a constraint so NUnit is happy
@@ -108,10 +101,10 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void Throw3()
+        public void ConnectAsyncTimeout1()
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
-            var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var endpoint = NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint;
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             Assert.ThrowsAsync<TimeoutException>(async () =>
             {
@@ -121,10 +114,10 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void Throw4()
+        public void ConnectAsyncTimeout2()
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
-            var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            var endpoint = NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint;
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             Assert.ThrowsAsync<TimeoutException>(async () =>
             {
@@ -134,10 +127,13 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void Throw5()
+        public void ConnectAsyncCanceled()
         {
             var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
-            var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
+
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             Assert.ThrowsAsync<OperationCanceledException>(async () =>
             {

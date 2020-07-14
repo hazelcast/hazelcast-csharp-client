@@ -571,18 +571,7 @@ function StopRemoteController() {
 }
 
 function CollectTestResults($fwk, $file) {
-    $xml = [xml] (gc $file)
-
-    $run = $xml."test-run"
-    #$fwk = ($run."test-suite".settings.setting | where { $_.name -eq "RuntimeFramework" }).value
-    $total = $run.total
-    $passed = $run.passed
-    $failed = $run.failed
-    $skipped = $run.skipped
-    $inconclusive = $run.inconclusive
-
-    $script:testResults = $script:testResults + `
-        "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
+    $script:testResults = $script:testResults + $file
 }
 
 function RunDotNetCoreTests($f) {
@@ -755,7 +744,26 @@ if ($doTests) {
     Write-Output ""
     Write-Output "Summary:"
     foreach ($testResult in $testResults) {
-        Write-Output $testResult
+
+        $xml = [xml] (gc $testResult)
+
+        $run = $xml."test-run"
+        #$fwk = ($run."test-suite".settings.setting | where { $_.name -eq "RuntimeFramework" }).value
+        $fwk = [System.IO.Path]::GetFileNameWithoutExtension($testResult).TrimStart("result-")
+        $total = $run.total
+        $passed = $run.passed
+        $failed = $run.failed
+        $skipped = $run.skipped
+        $inconclusive = $run.inconclusive
+
+        Write-Output `
+            "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
+
+        if ($failed -gt 0) {
+            foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
+              Write-Output "    failed: $($testCase.fullname.TrimStart('Hazelcast.Net.'))"
+			}
+		}
 	}
 }
 

@@ -489,7 +489,7 @@ namespace Hazelcast.Tests
             // server is not listening, connecting results in timeout after 1s
             Assert.ThrowsAsync<TimeoutException>(async () =>
             {
-                await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000).CAF();
+                await socket.ConnectAsync(NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint, 500).CAF();
             });
 
             // socket has been properly closed and disposed
@@ -504,46 +504,20 @@ namespace Hazelcast.Tests
         }
 
         [Test]
-        [Timeout(20_000)]
-        public async Task SocketTimeout3()
-        {
-            var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000));
-            serverSocket.Listen(1);
-            serverSocket.BeginAccept(result =>
-            {
-                var listener = (Socket) result.AsyncState;
-                Thread.Sleep(1000);
-                listener.EndAccept(result);
-            }, serverSocket);
-
-            var socket1 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            await socket1.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000).CAF();
-
-            var socket2 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            await socket2.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000).CAF();
-
-            Assert.ThrowsAsync<TimeoutException>(async () =>
-            {
-                var socket3 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await socket3.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000).CAF();
-            });
-        }
-
-        [Test]
         [Timeout(60_000)]
-        public async Task SocketTimeout4()
+        public async Task SocketTimeout3()
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 60_000).CAF();
+                var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
+                await socket.ConnectAsync(endpoint, 60_000).CAF();
                 Assert.Fail("Expected an exception.");
             }
             catch (TimeoutException)
             {
-                Assert.Fail("Did not expect TimeoutException.");
+                Assert.Fail("Did not expect TimeoutException."); // FIXME LINUX
             }
             catch (Exception)
             {
