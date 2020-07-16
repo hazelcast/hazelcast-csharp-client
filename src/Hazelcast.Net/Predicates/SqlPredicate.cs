@@ -56,12 +56,12 @@ namespace Hazelcast.Predicates
             return obj is SqlPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(SqlPredicate obj1, SqlPredicate obj2)
+        private static bool Equals(SqlPredicate left, SqlPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._sql == obj2._sql;
+            return left._sql == right._sql;
         }
 
         public override int GetHashCode()
@@ -74,9 +74,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            var builder = new StringBuilder();
-            builder.Append(_sql);
-            return builder.ToString();
+            return "SQL('" + _sql + "')";
         }
     }
 }

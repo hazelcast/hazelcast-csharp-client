@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -23,6 +24,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Networking
 {
+    // TODO: better test the web service part
+
     internal class CloudDiscovery
     {
         // internal const string CloudUrlBaseProperty = "hazelcast.client.cloud.url";
@@ -35,6 +38,7 @@ namespace Hazelcast.Networking
         private readonly ILogger _logger;
         private readonly Uri _endpointUrl;
         private readonly int _connectionTimeoutMilliseconds;
+        private static string _response;
 
         internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, Uri cloudBaseUrl, ILoggerFactory loggerFactory)
         {
@@ -46,8 +50,18 @@ namespace Hazelcast.Networking
             _logger = loggerFactory?.CreateLogger<CloudDiscovery>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
+        // provided for tests
+        internal static void SetResponse(string response)
+        {
+            _response = response;
+        }
+
+
+        [ExcludeFromCodeCoverage] // not testing the web connection
         public IDictionary<NetworkAddress, NetworkAddress> Scan()
         {
+            if (!string.IsNullOrWhiteSpace(_response)) return ParseResponse(_response);
+
             try
             {
                 // TODO: is this the best way to do an http request?
@@ -72,6 +86,7 @@ namespace Hazelcast.Networking
             return null;
         }
 
+        [ExcludeFromCodeCoverage] // not testing the web connection
         private static string ReadFromResponse(WebResponse webResponse)
         {
             using var responseStream = webResponse.GetResponseStream();
@@ -98,6 +113,7 @@ namespace Hazelcast.Networking
             return privateToPublicAddresses;
         }
 
+        [ExcludeFromCodeCoverage] // not testing the web connection
         private static string ParseErrorResponse(string jsonResult)
         {
             var regexError = new Regex(RegexErrorStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);

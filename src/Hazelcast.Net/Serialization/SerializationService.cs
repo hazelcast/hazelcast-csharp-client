@@ -216,6 +216,7 @@ namespace Hazelcast.Serialization
                     ThrowMissingSerializer(typeId);
 
                 var o = serializer.Read(input);
+                if (o is null) return default;
                 if (o is T ot) return ot;
                 throw new InvalidCastException($"Deserialized object is of type {o.GetType()}, not {typeof (T)}.");
             }
@@ -645,3 +646,4 @@ namespace Hazelcast.Serialization
         }
     }
 }
+

@@ -23,8 +23,6 @@ namespace Hazelcast.Aggregating
     /// </summary>
     public abstract class AggregatorBase<TResult> : IAggregator<TResult>
     {
-        private string _attributePath;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AggregatorBase{TResult}"/> class.
         /// </summary>
@@ -38,15 +36,17 @@ namespace Hazelcast.Aggregating
         protected AggregatorBase(string attributePath)
         {
             if (string.IsNullOrWhiteSpace(attributePath)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(attributePath));
-            _attributePath = attributePath;
+            AttributePath = attributePath;
         }
+
+        public string AttributePath { get; set; }
 
         /// <inheritdoc />
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
 
-            _attributePath = input.ReadUtf();
+            AttributePath = input.ReadUtf();
             ReadAggregatorData(input);
         }
 
@@ -62,7 +62,7 @@ namespace Hazelcast.Aggregating
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
 
-            output.WriteUtf(_attributePath);
+            output.WriteUtf(AttributePath);
             WriteAggregatorData(output);
         }
 

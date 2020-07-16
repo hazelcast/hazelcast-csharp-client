@@ -266,7 +266,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
             {
                 var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()), cancellationToken)
+                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
                     : Cluster.SendAsync(requestMessage, cancellationToken))
                     .CAF();
                 var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
@@ -337,7 +337,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
             {
                 var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()), cancellationToken)
+                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
                     : Cluster.SendAsync(requestMessage, cancellationToken))
                     .CAF();
                 var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
@@ -408,7 +408,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
             {
                 var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
                 var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.GetPartitionKey()), cancellationToken)
+                    ? Cluster.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
                     : Cluster.SendAsync(requestMessage, cancellationToken))
                     .CAF();
                 var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
@@ -540,6 +540,6 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
-            => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.GetTarget() as PagingPredicate;
+            => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.Target as PagingPredicate;
     }
 }

@@ -123,7 +123,7 @@ namespace Hazelcast.Serialization
 
         private void RegisterHook(IDataSerializerHook hook)
         {
-            Register(hook.GetFactoryId(), hook.CreateFactory());
+            Register(hook.FactoryId, hook.CreateFactory());
         }
 
         private void Register(int factoryId, IDataSerializableFactory factory)

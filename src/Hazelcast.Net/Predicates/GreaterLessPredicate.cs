@@ -68,15 +68,15 @@ namespace Hazelcast.Predicates
             return obj is GreaterLessPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(GreaterLessPredicate obj1, GreaterLessPredicate obj2)
+        private static bool Equals(GreaterLessPredicate left, GreaterLessPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._value.Equals(obj2._value) &&
-                   obj1._less == obj2._less &&
-                   obj1._equal == obj2._equal &&
-                   obj1._attributeName == obj2._attributeName;
+            return left._value.Equals(right._value) &&
+                   left._less == right._less &&
+                   left._equal == right._equal &&
+                   left._attributeName == right._attributeName;
         }
 
         public override int GetHashCode()
@@ -95,15 +95,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.Append(_attributeName);
-            sb.Append(_less ? "<" : ">");
-            if (_equal)
-            {
-                sb.Append("=");
-            }
-            sb.Append(_value);
-            return sb.ToString();
+            return "(" + _attributeName + " " + (_less ? "<" : ">") + (_equal ? "=" : "") + " " + _value + ")";
         }
     }
 }

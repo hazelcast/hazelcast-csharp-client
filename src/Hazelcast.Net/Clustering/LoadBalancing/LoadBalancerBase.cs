@@ -34,16 +34,16 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Gets the members.
         /// </summary>
-        protected List<Guid> Members {get; private set; }
+        protected List<Guid> Members { get; private set; }
 
         /// <inheritdoc />
-        public int Count => Members.Count;
+        public virtual int Count => Members?.Count ?? 0;
 
         /// <inheritdoc />
         public abstract Guid GetMember();
 
         /// <inheritdoc />
-        public void NotifyMembers(IEnumerable<Guid> memberIds)
+        public virtual void NotifyMembers(IEnumerable<Guid> memberIds)
         {
             if (memberIds == null) throw new ArgumentNullException(nameof(memberIds));
 

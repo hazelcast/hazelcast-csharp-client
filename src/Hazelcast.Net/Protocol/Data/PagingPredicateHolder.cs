@@ -73,9 +73,9 @@ namespace Hazelcast.Protocol.Data
                 return null;
             }
 
-            var pagingPredicate = (PagingPredicate)partitionPredicate.GetTarget();
+            var pagingPredicate = (PagingPredicate)partitionPredicate.Target;
 
-            var partitionKeyData = serializationService.ToData(partitionPredicate.GetPartitionKey());
+            var partitionKeyData = serializationService.ToData(partitionPredicate.PartitionKey);
 
             return BuildHolder(serializationService, pagingPredicate, partitionKeyData);
         }

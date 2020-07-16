@@ -14,11 +14,11 @@
 
 using System.Linq;
 using System.Threading.Tasks;
-using Hazelcast.Testing;
 using Hazelcast.Core;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests
+namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
     public class TransactionTests : SingleMemberRemoteTestBase

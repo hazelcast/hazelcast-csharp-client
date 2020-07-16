@@ -20,7 +20,7 @@ using Hazelcast.Core;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests
+namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
     public class MapTests : SingleMemberRemoteTestBase

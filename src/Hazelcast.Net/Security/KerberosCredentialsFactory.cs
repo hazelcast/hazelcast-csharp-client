@@ -14,14 +14,6 @@
 
 using System;
 
-#if !NETSTANDARD
-using System.IdentityModel.Selectors;
-using System.IdentityModel.Tokens;
-using System.Net;
-using System.Security;
-using System.Security.Principal;
-#endif
-
 namespace Hazelcast.Security
 {
     /// <summary>
@@ -32,18 +24,12 @@ namespace Hazelcast.Security
         private string _spn;
         private ICredentials _credentials;
 
-#if NETSTANDARD
 // disable 'can be removed as value is never read' message
 #pragma warning disable IDE0052
         private string _username;
         private string _password;
         private string _domain;
 #pragma warning restore IDE0052
-#else
-        private string _username;
-        private string _password;
-        private string _domain;
-#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/> class.
@@ -87,36 +73,7 @@ namespace Hazelcast.Security
             if (_credentials != null)
                 return _credentials;
 
-            // this is the default way to do Kerberos for the .NET Framework, which is
-            // CLS-compliant and safe, but is not supported by .NET Core - however,
-            // .NET Core methods require Win32 P/Invoke and/or a reference to an external
-            // library - so for the time being, we don't support Kerberos with .NET Core.
-            //
-            // (see the project git history for how to do it, though)
-
-#if NETSTANDARD
-            throw new NotSupportedException("Kerberos is not supported on .NET Core.");
-#else
-            var tokenProvider = _username == null
-                ? new KerberosSecurityTokenProvider(_spn, TokenImpersonationLevel.Identification)
-                : new KerberosSecurityTokenProvider(_spn, TokenImpersonationLevel.Identification, new NetworkCredential(_username, _password, _domain));
-
-            var timeout = TimeSpan.FromSeconds(30);
-
-            byte[] tokenBytes;
-            try
-            {
-                if (!(tokenProvider.GetToken(timeout) is KerberosRequestorSecurityToken token))
-                    throw new InvalidOperationException("Token is not KerberosRequestorSecurityToken.");
-                tokenBytes = token.GetRequest();
-            }
-            catch (Exception e)
-            {
-                throw new SecurityException("Failed to get a Kerberos token.", e);
-            }
-
-            return _credentials = new KerberosCredentials(tokenBytes);
-#endif
+            throw new NotImplementedException("Work-in-Progress.");
         }
 
         /// <inheritdoc />

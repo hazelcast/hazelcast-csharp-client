@@ -41,7 +41,7 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ClientConnection : IAsyncDisposable
     {
-        private static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
+        internal static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
         private readonly ConcurrentDictionary<long, Invocation> _invocations
             = new ConcurrentDictionary<long, Invocation>();

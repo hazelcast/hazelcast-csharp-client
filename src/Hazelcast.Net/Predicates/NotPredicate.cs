@@ -55,12 +55,12 @@ namespace Hazelcast.Predicates
             return obj is NotPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(NotPredicate obj1, NotPredicate obj2)
+        private static bool Equals(NotPredicate left, NotPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return Equals(obj1._predicate, obj2._predicate);
+            return Equals(left._predicate, right._predicate);
         }
 
         public override int GetHashCode()

@@ -36,6 +36,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         {
             // get an immutable list of members, and pick one at random
             var members = Members;
+            if ((members?.Count ?? 0) == 0) throw new InvalidOperationException("The load balancer does not have members.");
             return members[RandomProvider.Random.Next(members.Count)];
         }
     }

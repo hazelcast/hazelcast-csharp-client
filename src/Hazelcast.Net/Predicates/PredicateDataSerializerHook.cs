@@ -22,7 +22,7 @@ namespace Hazelcast.Predicates
     /// </summary>
     internal class PredicateDataSerializerHook : IDataSerializerHook
     {
-        private const int FactoryId = FactoryIds.PredicateFactoryId;
+        private const int FactoryIdConst = FactoryIds.PredicateFactoryId;
         public const int SqlPredicate = 0;
         public const int AndPredicate = 1;
         public const int BetweenPredicate = 2;
@@ -67,9 +67,6 @@ namespace Hazelcast.Predicates
         }
 
         /// <inheritdoc />
-        public int GetFactoryId()
-        {
-            return FactoryId;
-        }
+        public int FactoryId => FactoryIdConst;
     }
 }

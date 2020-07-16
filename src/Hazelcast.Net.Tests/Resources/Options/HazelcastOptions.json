@@ -22,7 +22,7 @@
       // a subscriber
       {
         // name of the type of the subscriber
-        "typeName": "Hazelcast.Tests.ConfigurationTests+TestSubscriber, Hazelcast.Net.Tests"
+        "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestSubscriber, Hazelcast.Net.Tests"
       }
     ],
 
@@ -134,7 +134,7 @@
         "interceptor": {
 
           // the name of the type of the interceptor
-          "typeName": "Hazelcast.Tests.ConfigurationTests+TestSocketInterceptor, Hazelcast.Net.Tests"
+          "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestSocketInterceptor, Hazelcast.Net.Tests"
         }
 
       },
@@ -162,7 +162,7 @@
       "credentialsFactory": {
 
         // name of the type of the credentials factory
-        "typeName": "Hazelcast.Tests.ConfigurationTests+TestCredentialsFactory, Hazelcast.Net.Tests",
+        "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestCredentialsFactory, Hazelcast.Net.Tests",
 
         // arguments for the credentials factory constructor
         "args": {
@@ -188,46 +188,46 @@
 
       // endianness
       "endianness": "LittleEndian",
-      
+
       // portable version
       "portableVersion": 1000,
-      
+
       // whether to validate class definitions
       "validateClassDefinitions": false,
 
       // portable factories
       "portableFactories": [
-        
+
         // portable factory
         {
           "id": 1001,
-          "typeName": "Hazelcast.Tests.ConfigurationTests+TestPortableFactory, Hazelcast.Net.Tests"
+          "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestPortableFactory, Hazelcast.Net.Tests"
         }
       ],
 
       // data serializable factories
       "dataSerializableFactories": [
-        
+
         // data serializable factory
         {
           "id": 1002,
-          "typeName": "Hazelcast.Tests.ConfigurationTests+TestDataSerializableFactory, Hazelcast.Net.Tests"
+          "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestDataSerializableFactory, Hazelcast.Net.Tests"
         }
       ],
-      
+
       // default serializer
       "defaultSerializer": {
-        "typeName": "Hazelcast.Tests.ConfigurationTests+TestDefaultSerializer, Hazelcast.Net.Tests",
+        "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestDefaultSerializer, Hazelcast.Net.Tests",
         "overrideClr": true
       },
 
       // serializers
       "serializers": [
-        
+
         // serializer
         {
           "serializedTypeName": "Hazelcast.HazelcastClient, Hazelcast.Net",
-          "typeName": "Hazelcast.Tests.ConfigurationTests+TestSerializer, Hazelcast.Net.Tests"
+          "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestSerializer, Hazelcast.Net.Tests"
         }
       ]
 
@@ -238,10 +238,10 @@
 
       // reconciliation interval
       "reconciliationIntervalSeconds": 1000,
-      
+
       // minimum reconciliation interval
       "minReconciliationIntervalSeconds": 1001,
-      
+
       // maximum tolerated miss count
       "maxToleratedMissCount": 1002,
 
@@ -250,7 +250,7 @@
 
         // default
         "default": {
-          
+
           "evictionPolicy": "lru",
           "inMemoryFormat": "binary",
           "maxIdleSeconds": 1000,

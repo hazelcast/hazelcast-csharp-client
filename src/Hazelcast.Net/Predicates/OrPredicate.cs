@@ -22,6 +22,9 @@ namespace Hazelcast.Predicates
     {
         private IPredicate[] _predicates;
 
+        public OrPredicate()
+        { }
+
         public OrPredicate(params IPredicate[] predicates)
         {
             _predicates = predicates;
@@ -59,12 +62,12 @@ namespace Hazelcast.Predicates
             return obj is OrPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(OrPredicate obj1, OrPredicate obj2)
+        private static bool Equals(OrPredicate left, OrPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._predicates.SequenceEqual(obj2._predicates);
+            return left._predicates.SequenceEqual(right._predicates);
         }
 
         public override int GetHashCode()
@@ -76,7 +79,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return string.Join(" OR ", _predicates.GetEnumerator());
+            return "OR(" + string.Join(", ", _predicates.Select(x => x.ToString())) + ")";
         }
     }
 }

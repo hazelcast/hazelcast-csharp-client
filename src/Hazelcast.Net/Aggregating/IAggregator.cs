@@ -19,10 +19,14 @@ namespace Hazelcast.Aggregating
     /// <summary>
     /// Defines an aggregator that can transform an object into other objects.
     /// </summary>
-    /// <typeparam name="TResult">The aggregated result type.</typeparam>
     /// <remarks>
     /// <para>Aggregators must have a server-side counterpart.</para>
     /// </remarks>
-    public interface IAggregator<TResult> : IIdentifiedDataSerializable
-    { }
+    public interface IAggregator : IIdentifiedDataSerializable
+    {
+        /// <summary>
+        /// Gets the attribute path.
+        /// </summary>
+        string AttributePath { get; }
+    }
 }

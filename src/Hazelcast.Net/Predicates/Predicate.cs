@@ -126,5 +126,10 @@ namespace Hazelcast.Predicates
         {
             return new TruePredicate();
         }
+
+        public static PredicateComparer Comparer(int type = 0, IterationType iterationType = IterationType.Key)
+        {
+            return new PredicateComparer(type, iterationType);
+        }
     }
 }

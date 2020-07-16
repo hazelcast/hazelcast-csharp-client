@@ -63,14 +63,14 @@ namespace Hazelcast.Predicates
             return obj is BetweenPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(BetweenPredicate obj1, BetweenPredicate obj2)
+        private static bool Equals(BetweenPredicate left, BetweenPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._attributeName == obj2._attributeName &&
-                   Equals(obj1._from, obj2._from) &&
-                   Equals(obj1._to, obj2._to);
+            return left._attributeName == right._attributeName &&
+                   Equals(left._from, right._from) &&
+                   Equals(left._to, right._to);
         }
 
         public override int GetHashCode()
@@ -88,7 +88,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return _attributeName + " BETWEEN " + _from + " AND " + _to;
+            return "BETWEEN(" + _attributeName + ", " + _from + ", " + _to + ")";
         }
     }
 }

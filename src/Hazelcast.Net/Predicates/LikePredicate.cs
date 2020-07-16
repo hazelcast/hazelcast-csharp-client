@@ -58,13 +58,13 @@ namespace Hazelcast.Predicates
             return obj is LikePredicate other && Equals(this, other);
         }
 
-        private static bool Equals(LikePredicate obj1, LikePredicate obj2)
+        private static bool Equals(LikePredicate left, LikePredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1.AttributeName == obj2.AttributeName &&
-                   obj1.Expression == obj2.Expression;
+            return left.AttributeName == right.AttributeName &&
+                   left.Expression == right.Expression;
         }
 
         public override int GetHashCode()
@@ -80,7 +80,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return AttributeName + " LIKE '" + Expression + "'";
+            return "LIKE(" + AttributeName + ", '" + Expression + "')";
         }
     }
 }

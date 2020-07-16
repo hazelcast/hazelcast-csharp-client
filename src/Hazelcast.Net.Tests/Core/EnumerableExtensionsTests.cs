@@ -12,18 +12,24 @@ namespace Hazelcast.Tests.Core
         public void Shuffle()
         {
             var items = new[] { 1, 2, 3, 4, 5 };
-            var shuffled = items.Shuffle().ToArray();
 
-            Assert.That(shuffled.Length, Is.EqualTo(5));
+            var j = 0;
+            var difference = false;
 
-            var different = false;
-            for (var i = 0; i < 5; i++)
+            while (!difference && j++ < 5)
             {
-                Assert.That(shuffled, Contains.Item(i+1));
-                different |= items[i] != shuffled[i];
+                var shuffled = items.Shuffle().ToArray();
+
+                Assert.That(shuffled.Length, Is.EqualTo(5));
+
+                for (var i = 0; i < 5; i++)
+                {
+                    Assert.That(shuffled, Contains.Item(i + 1));
+                    difference |= items[i] != shuffled[i];
+                }
             }
 
-            Assert.That(different, Is.True);
+            Assert.That(difference, Is.True);
         }
 
         [Test]

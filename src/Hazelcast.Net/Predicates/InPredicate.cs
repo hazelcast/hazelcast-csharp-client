@@ -69,13 +69,13 @@ namespace Hazelcast.Predicates
             return obj is InPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(InPredicate obj1, InPredicate obj2)
+        private static bool Equals(InPredicate left, InPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._attributeName == obj2._attributeName &&
-                   obj1._values.SequenceEqual(obj2._values);
+            return left._attributeName == right._attributeName &&
+                   left._values.SequenceEqual(right._values);
         }
 
         public override int GetHashCode()
@@ -91,7 +91,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return _attributeName + " IN (" + string.Join(", ", _values) + ")";
+            return "(" + _attributeName + " IN " + string.Join(", ", _values) + ")";
         }
     }
 }

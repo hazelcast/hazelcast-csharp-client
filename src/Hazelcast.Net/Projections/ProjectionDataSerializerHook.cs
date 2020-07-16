@@ -22,7 +22,7 @@ namespace Hazelcast.Projections
     /// </summary>
     internal class ProjectionDataSerializerHook : IDataSerializerHook
     {
-        public const int FactoryId = FactoryIds.ProjectionDsFactoryId;
+        public const int FactoryIdConst = FactoryIds.ProjectionDsFactoryId;
         public const int SingleAttribute = 0;
         public const int MultiAttribute = 1;
 
@@ -38,6 +38,6 @@ namespace Hazelcast.Projections
         }
 
         /// <inheritdoc />
-        public int GetFactoryId() => FactoryId;
+        public int FactoryId => FactoryIdConst;
     }
 }

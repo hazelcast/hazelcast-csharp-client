@@ -55,12 +55,12 @@ namespace Hazelcast.Predicates
             return obj is InstanceofPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(InstanceofPredicate obj1, InstanceofPredicate obj2)
+        private static bool Equals(InstanceofPredicate left, InstanceofPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._className == obj2._className;
+            return left._className == right._className;
         }
 
         public override int GetHashCode()
@@ -72,7 +72,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return " InstanceOf " + _className;
+            return "INSTANCEOF(" + _className + ")";
         }
     }
 }

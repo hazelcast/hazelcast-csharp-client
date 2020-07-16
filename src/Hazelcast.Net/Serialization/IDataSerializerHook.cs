@@ -30,6 +30,6 @@ namespace Hazelcast.Serialization
         /// Gets the identifier of the <see cref="IDataSerializableFactory"/> provided by this hook.
         /// </summary>
         /// <returns>The identifier of the <see cref="IDataSerializableFactory"/> provided by this hook.</returns>
-        int GetFactoryId(); // fixme rename FactoryId
+        int FactoryId { get; }
     }
 }

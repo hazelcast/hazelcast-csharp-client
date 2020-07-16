@@ -59,8 +59,7 @@ namespace Hazelcast.Predicates
         //private static readonly KeyValuePair<int, KeyValuePair<object, object>> NullAnchor = new KeyValuePair<int, KeyValuePair<object, object>>(-1, new KeyValuePair<object, object>(null, null));
 
         internal PagingPredicate()
-        {
-        }
+        { }
 
         /// <summary>
         /// Creates a Paging predicate with provided page size and optional predicate and comparer.
@@ -147,6 +146,8 @@ namespace Hazelcast.Predicates
 
         public void ReadData(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+
             throw new NotSupportedException("Client should not need to use ReadData method.");
         }
 
@@ -167,7 +168,6 @@ namespace Hazelcast.Predicates
                 output.WriteObject(anchorEntry.Value);
             }
         }
-
 
         public int FactoryId => FactoryIds.PredicateFactoryId;
 

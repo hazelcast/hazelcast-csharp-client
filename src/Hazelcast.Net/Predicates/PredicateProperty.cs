@@ -16,16 +16,11 @@ namespace Hazelcast.Predicates
 {
     public class PredicateProperty
     {
-        private readonly string property;
-
         public PredicateProperty(string property)
         {
-            this.property = property;
+            Property = property;
         }
 
-        public string Property
-        {
-            get { return property; }
-        }
+        public string Property { get; }
     }
 }

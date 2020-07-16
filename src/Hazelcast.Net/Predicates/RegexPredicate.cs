@@ -57,13 +57,13 @@ namespace Hazelcast.Predicates
             return obj is RegexPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(RegexPredicate obj1, RegexPredicate obj2)
+        private static bool Equals(RegexPredicate left, RegexPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._attributeName == obj2._attributeName &&
-                   obj1._regex == obj2._regex;
+            return left._attributeName == right._attributeName &&
+                   left._regex == right._regex;
         }
 
         public override int GetHashCode()
@@ -79,7 +79,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return _attributeName + " REGEX '" + _regex + "'";
+            return "REGEX(" + _attributeName + ", '" + _regex + "')";
         }
     }
 }

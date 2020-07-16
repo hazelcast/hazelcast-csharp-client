@@ -27,49 +27,39 @@ namespace Hazelcast.Predicates
     /// </remarks>
     public class PartitionPredicate : IPredicate
     {
-        private IPredicate predicate;
-        private object partitionKey;
-
         public PartitionPredicate()
-        {
-        }
+        { }
 
         public PartitionPredicate(object partitionKey, IPredicate predicate)
         {
-            this.predicate = predicate;
-            this.partitionKey = partitionKey;
+            Target = predicate;
+            PartitionKey = partitionKey;
         }
 
         /// <summary>
         /// Returns the predicate that will run on target partition
         /// </summary>
         /// <returns></returns>
-        public IPredicate GetTarget()
-        {
-            return predicate;
-        }
+        public IPredicate Target { get; private set; }
 
         /// <summary>
         /// Returns the partition key that determines the partition the target Predicate is going to execute on
         /// </summary>
         /// <returns>the partition key</returns>
-        public object GetPartitionKey()
-        {
-            return partitionKey;
-        }
+        public object PartitionKey { get; private set; }
 
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            partitionKey = input.ReadObject<object>();
-            predicate = input.ReadObject<IPredicate>();
+            PartitionKey = input.ReadObject<object>();
+            Target = input.ReadObject<IPredicate>();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteObject(partitionKey);
-            output.WriteObject(predicate);
+            output.WriteObject(PartitionKey);
+            output.WriteObject(Target);
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

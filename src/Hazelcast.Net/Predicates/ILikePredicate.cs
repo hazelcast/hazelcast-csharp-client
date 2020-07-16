@@ -27,7 +27,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return AttributeName + " ILIKE '" + Expression + "'";
+            return "ILIKE(" + AttributeName + ", '" + Expression + "')";
         }
     }
 }

@@ -38,6 +38,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         {
             // get an immutable list of members, and pick "the next one"
             var members = Members;
+            if ((members?.Count ?? 0) == 0) throw new InvalidOperationException("The load balancer does not have members.");
             var index = Interlocked.Increment(ref _index);
             return members[index % members.Count];
         }

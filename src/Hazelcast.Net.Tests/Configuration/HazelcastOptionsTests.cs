@@ -23,7 +23,6 @@ using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.Events;
 using Hazelcast.NearCaching;
 using Hazelcast.Networking;
 using Hazelcast.Security;
@@ -31,10 +30,10 @@ using Hazelcast.Serialization;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests
+namespace Hazelcast.Tests.Configuration
 {
     [TestFixture]
-    public class ConfigurationTests
+    public class HazelcastOptionsTests
     {
         [Test]
         public void EmptyOptionsFile()
@@ -167,6 +166,7 @@ namespace Hazelcast.Tests
             Assert.AreEqual("path", sslOptions.CertificatePath);
             Assert.AreEqual("password", sslOptions.CertificatePassword);
             Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
+            Console.WriteLine(sslOptions.ToString());
 
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);
@@ -182,6 +182,7 @@ namespace Hazelcast.Tests
             var interceptorOptions = options.SocketInterception;
             Assert.IsTrue(interceptorOptions.Enabled);
             Assert.IsInstanceOf<TestSocketInterceptor>(interceptorOptions.Interceptor.Service);
+            Console.WriteLine(interceptorOptions.ToString());
 
             var retryOptions = options.ConnectionRetry;
             Assert.AreEqual(1000, retryOptions.InitialBackoffMilliseconds);

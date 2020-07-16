@@ -22,7 +22,7 @@ namespace Hazelcast.Aggregating
     /// </summary>
     internal class AggregatorDataSerializerHook : IDataSerializerHook
     {
-        public const int FactoryId = FactoryIds.AggregatorDsFactoryId;
+        public const int FactoryIdConst = FactoryIds.AggregatorDsFactoryId;
         public const int BigDecimalAvg = 0;
         public const int BigDecimalSum = 1;
         public const int BigIntAvg = 2;
@@ -64,9 +64,6 @@ namespace Hazelcast.Aggregating
         }
 
         /// <inheritdoc />
-        public int GetFactoryId()
-        {
-            return FactoryId;
-        }
+        public int FactoryId => FactoryIdConst;
     }
 }

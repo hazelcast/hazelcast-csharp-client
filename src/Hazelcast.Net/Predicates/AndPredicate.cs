@@ -63,19 +63,19 @@ namespace Hazelcast.Predicates
             return obj is AndPredicate other && Equals(this, other);
         }
 
-        private static bool Equals(AndPredicate obj1, AndPredicate obj2)
+        private static bool Equals(AndPredicate left, AndPredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
-            return obj1._predicates.SequenceEqual(obj2._predicates);
+            return left._predicates.SequenceEqual(right._predicates);
         }
 
         public override int GetHashCode() => _predicates != null ? _predicates.GetHashCode() : 0;
 
         public override string ToString()
         {
-            return string.Join(" AND ", _predicates.GetEnumerator());
+            return "AND(" + string.Join(", ", _predicates.Select(x => x.ToString())) + ")";
         }
     }
 }

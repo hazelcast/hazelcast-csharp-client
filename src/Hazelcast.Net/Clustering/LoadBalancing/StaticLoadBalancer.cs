@@ -47,7 +47,14 @@ namespace Hazelcast.Clustering.LoadBalancing
         }
 
         /// <inheritdoc />
+        public override int Count => 1;
+
+        /// <inheritdoc />
         public override Guid GetMember()
             => _memberId;
+
+        /// <inheritdoc />
+        public override void NotifyMembers(IEnumerable<Guid> memberIds)
+            => throw new InvalidOperationException("Static load balancer cannot be notified of new members.");
     }
 }

@@ -23,8 +23,6 @@ namespace Hazelcast.Projections
     /// </summary>
     public class SingleAttributeProjection : IProjection
     {
-        private string _attributePath;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SingleAttributeProjection"/> class/.
         /// </summary>
@@ -34,25 +32,28 @@ namespace Hazelcast.Projections
         /// <summary>
         /// Initializes a new instance of the <see cref="SingleAttributeProjection"/> class/.
         /// </summary>
-        /// <param name="attributPath">The attribute path.</param>
+        /// <param name="attributePath">The attribute path.</param>
         public SingleAttributeProjection(string attributePath)
         {
             if (string.IsNullOrWhiteSpace(attributePath)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(attributePath));
-            _attributePath = attributePath;
+            AttributePath = attributePath;
         }
+
+        // for tests only.
+        internal string AttributePath { get; private set; }
 
         /// <inheritdoc />
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            _attributePath = input.ReadUtf();
+            AttributePath = input.ReadUtf();
         }
 
         /// <inheritdoc />
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteUtf(_attributePath);
+            output.WriteUtf(AttributePath);
         }
 
         /// <inheritdoc />

@@ -37,6 +37,8 @@ namespace Hazelcast.Partitioning
         /// <returns>The unique identifier of the member owning the partition, or an empty Guid if the partition has no owner.</returns>
         public Guid GetPartitionOwner(int partitionId)
         {
+            if (partitionId < 0) return default;
+
             // once _partitions has a value, it won't be null again
             // and we can use whatever value it has, and references are atomic
             // ReSharper disable once ConvertIfStatementToReturnStatement
@@ -62,6 +64,8 @@ namespace Hazelcast.Partitioning
         public int GetPartitionId(IHavePartitionHash key)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
+
+            if (Count == 0) return 0;
 
             // we can use whatever value count is, and it is atomic
             var hash = key.PartitionHash;

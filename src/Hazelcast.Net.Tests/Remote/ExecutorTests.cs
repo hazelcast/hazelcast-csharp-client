@@ -19,7 +19,7 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.HExecutorImpl;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests
+namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
     public class ExecutorTests

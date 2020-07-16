@@ -70,10 +70,9 @@ namespace Hazelcast.Networking
             socket.NoDelay = _options.TcpNoDelay;
             socket.ReceiveBufferSize = socket.SendBufferSize = _options.BufferSizeKiB * 1024;
 
-            if (_options.LingerSeconds > 0)
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, new LingerOption(true, _options.LingerSeconds));
-            else
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, null);
+            socket.LingerState = _options.LingerSeconds > 0
+                ? new LingerOption(true, _options.LingerSeconds)
+                : new LingerOption(false, 1);
 
             // connect to server
             HConsole.WriteLine(this, "Connect to server");

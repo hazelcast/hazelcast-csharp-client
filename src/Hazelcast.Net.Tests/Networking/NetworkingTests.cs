@@ -27,7 +27,6 @@ using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Data;
 using Hazelcast.Serialization;
@@ -37,7 +36,7 @@ using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests
+namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
     public class NetworkingTests : HazelcastTestBase
@@ -517,7 +516,7 @@ namespace Hazelcast.Tests
             }
             catch (TimeoutException)
             {
-                Assert.Fail("Did not expect TimeoutException."); // FIXME LINUX
+                Assert.Fail("Did not expect TimeoutException.");
             }
             catch (Exception)
             {

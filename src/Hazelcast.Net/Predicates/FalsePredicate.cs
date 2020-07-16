@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -20,10 +21,12 @@ namespace Hazelcast.Predicates
     {
         public void ReadData(IObjectDataInput input)
         {
+            if (input == null) throw new ArgumentNullException(nameof(input));
         }
 
         public void WriteData(IObjectDataOutput output)
         {
+            if (output == null) throw new ArgumentNullException(nameof(output));
         }
 
         public int FactoryId =>FactoryIds.PredicateFactoryId;
@@ -37,10 +40,10 @@ namespace Hazelcast.Predicates
             return obj is FalsePredicate other && Equals(this, other);
         }
 
-        private static bool Equals(FalsePredicate obj1, FalsePredicate obj2)
+        private static bool Equals(FalsePredicate left, FalsePredicate right)
         {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
 
             return true;
         }
@@ -52,7 +55,7 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return "FalsePredicate{}";
+            return "FALSE";
         }
     }
 }
