@@ -30,6 +30,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{25300DF5
 		build\build.ps1 = build\build.ps1
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Win32", "src\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj", "{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{8516E872-D7ED-4FD8-BBF6-9002B2329E86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8516E872-D7ED-4FD8-BBF6-9002B2329E86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8516E872-D7ED-4FD8-BBF6-9002B2329E86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -10,7 +10,7 @@ namespace Hazelcast.Tests.Security
     public class SecurityTests
     {
         [Test]
-        public void Defaullt()
+        public void Default()
         {
             var factory = new DefaultCredentialsFactory();
             var credentials = factory.NewCredentials();

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.Security;
@@ -82,17 +81,6 @@ namespace Hazelcast.Clustering
         {
             get => default;
             set => CredentialsFactory.Creator = () => ServiceFactory.CreateInstance<ICredentialsFactory>(value.TypeName, value.Args);
-        }
-
-        /// <summary>
-        /// Configures Kerberos as the authentication mechanism.
-        /// </summary>
-        /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
-        /// <returns>The security options.</returns>
-        public AuthenticationOptions ConfigureKerberosCredentials(string spn)
-        {
-            CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);
-            return this;
         }
 
         /// <summary>

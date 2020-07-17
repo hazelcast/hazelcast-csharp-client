@@ -21,14 +21,14 @@ namespace Hazelcast.Security
     /// </summary>
     public sealed class KerberosCredentialsFactory : IResettableCredentialsFactory
     {
-        private string _spn;
+        private readonly string _spn;
         private ICredentials _credentials;
 
 // disable 'can be removed as value is never read' message
 #pragma warning disable IDE0052
-        private string _username;
-        private string _password;
-        private string _domain;
+        private readonly string _username;
+        private readonly string _password;
+        private readonly string _domain;
 #pragma warning restore IDE0052
 
         /// <summary>
@@ -73,7 +73,8 @@ namespace Hazelcast.Security
             if (_credentials != null)
                 return _credentials;
 
-            throw new NotImplementedException("Work-in-Progress.");
+            var token = KerberosTokenProvider.GetToken(_spn, _username, _password, _domain);
+            return new TokenCredentials(token);
         }
 
         /// <inheritdoc />
