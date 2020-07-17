@@ -31,10 +31,10 @@ namespace Hazelcast.Messaging
         public static string ToBetterString(this FrameFlags value)
         {
             var frameFlags = value & FrameFlags.AllFlags;
-            var messagFlags = (ClientMessageFlags) value & ClientMessageFlags.AllFlags;
+            var messageFlags = (ClientMessageFlags) value & ClientMessageFlags.AllFlags;
 
             var s1 = frameFlags > 0 ? frameFlags.ToString() : null;
-            var s2 = messagFlags > 0 ? messagFlags.ToString() : null;
+            var s2 = messageFlags > 0 ? messageFlags.ToString() : null;
 
             return s1 == null && s2 == null
                 ? "Default"
@@ -51,6 +51,6 @@ namespace Hazelcast.Messaging
         /// method returns a better string representation by dealing with both enumerations at once.</para>
         /// </remarks>
         public static string ToBetterString(this ClientMessageFlags value)
-            => ((FrameFlags) value).ToString();
+            => ((FrameFlags) value).ToBetterString();
     }
 }

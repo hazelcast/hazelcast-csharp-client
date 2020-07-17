@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Testing.Networking;
@@ -72,9 +73,9 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task SendReceive()
         {
-            ValueTask ServerHandler(Hazelcast.Testing.TestServer.Server s, ClientMessageConnection c, ClientMessage m)
+            static async ValueTask ServerHandler(Hazelcast.Testing.TestServer.Server s, ClientMessageConnection c, ClientMessage m)
             {
-                return new ValueTask();
+                await c.SendAsync(new ClientMessage(new Frame(new byte[64])));
             }
 
             var now = DateTime.Now;
@@ -84,13 +85,13 @@ namespace Hazelcast.Tests.Networking
             await server.StartAsync();
 
             await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new SocketOptions());
-            socket.OnReceiveMessageBytes = (x, y) => new ValueTask<bool>(true);
+            var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 
-            // ...
             await Task.Delay(100);
-
             await socket.SendAsync(ClientConnection.ClientProtocolInitBytes, ClientConnection.ClientProtocolInitBytes.Length);
+            await m.SendAsync(new ClientMessage(new Frame(new byte[64], (FrameFlags) ClientMessageFlags.Unfragmented)));
+            await Task.Delay(100);
 
             Assert.That(socket.CreateTime, Is.GreaterThan(now));
             Assert.That(socket.LastWriteTime, Is.GreaterThan(socket.CreateTime));

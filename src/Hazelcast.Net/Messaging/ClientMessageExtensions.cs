@@ -54,7 +54,11 @@ namespace Hazelcast.Messaging
                 }
             }
 
+            clone.OperationName = message.OperationName;
+            clone.IsRetryable = message.IsRetryable;
             clone.CorrelationId = correlationId;
+
+            // everything else (flags...) belong to the first frame = cloned
 
             return clone;
         }
