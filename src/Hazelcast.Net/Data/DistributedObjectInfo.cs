@@ -17,7 +17,7 @@ using System.Text;
 
 namespace Hazelcast.Data
 {
-    internal class DistributedObjectInfo
+    internal class DistributedObjectInfo : IEquatable<DistributedObjectInfo>
     {
         public DistributedObjectInfo(string serviceName, string name)
         {
@@ -30,28 +30,27 @@ namespace Hazelcast.Data
         public string ServiceName { get; }
 
         public override bool Equals(object obj)
+            => Equals(obj as DistributedObjectInfo);
+
+        public bool Equals(DistributedObjectInfo other)
         {
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj is null) return false;
-            return obj is DistributedObjectInfo other && Equals(this, other);
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return
+                Name == other.Name &&
+                ServiceName == other.ServiceName;
         }
 
-        private static bool Equals(DistributedObjectInfo obj1, DistributedObjectInfo obj2)
-        {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+        public static bool operator ==(DistributedObjectInfo left, DistributedObjectInfo right)
+            => left is null ? right is null : left.Equals(right);
 
-            return obj1.Name == obj2.Name &&
-                   obj1.ServiceName == obj2.ServiceName;
-        }
+        public static bool operator !=(DistributedObjectInfo left, DistributedObjectInfo right)
+            => !(left == right);
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return ((Name != null ? Name.GetHashCode(StringComparison.Ordinal) : 0) * 397) ^
-                       (ServiceName != null ? ServiceName.GetHashCode(StringComparison.Ordinal) : 0);
-            }
+            return HashCode.Combine(ServiceName, Name);
         }
 
         public override string ToString()

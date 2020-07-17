@@ -22,7 +22,7 @@ namespace Hazelcast.Data
     /// <summary>
     /// Represents a member of a cluster.
     /// </summary>
-    public class MemberInfo
+    public class MemberInfo : IEquatable<MemberInfo>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberInfo"/> class.
@@ -103,19 +103,22 @@ namespace Hazelcast.Data
 
         /// <inheritdoc />
         public override bool Equals(object obj)
+            => Equals(obj as MemberInfo);
+
+        public bool Equals(MemberInfo other)
         {
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj is null) return false;
-            return obj is MemberInfo other && Equals(this, other);
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return
+                Id == other.Id;
         }
 
-        private static bool Equals(MemberInfo obj1, MemberInfo obj2)
-        {
-            if (ReferenceEquals(obj1, obj2)) return true;
-            if (obj1 is null) return false;
+        public static bool operator ==(MemberInfo left, MemberInfo right)
+            => left is null ? right is null : left.Equals(right);
 
-            return obj1.Id == obj2.Id;
-        }
+        public static bool operator !=(MemberInfo left, MemberInfo right)
+            => !(left == right);
 
         /// <inheritdoc />
         public override int GetHashCode() => Id.GetHashCode();

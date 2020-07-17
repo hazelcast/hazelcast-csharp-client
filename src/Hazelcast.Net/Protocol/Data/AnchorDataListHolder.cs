@@ -31,13 +31,16 @@ namespace Hazelcast.Protocol.Data
 
         internal IEnumerable<KeyValuePair<int, KeyValuePair<object, object>>> AsAnchorIterator(ISerializationService serializationService)
         {
-            var dataEntryIterator = AnchorDataList.GetEnumerator();
-            dataEntryIterator.MoveNext();
+            using var dataEntryIterator = AnchorDataList.GetEnumerator();
             foreach (var pageNumber in AnchorPageList)
             {
-                var dataEntry = dataEntryIterator.Current;
-                var key = serializationService.ToObject(dataEntry.Key);
-                var value = serializationService.ToObject(dataEntry.Value);
+                dataEntryIterator.MoveNext();
+
+                var (keyData, valueData) = dataEntryIterator.Current;
+                
+                var key = serializationService.ToObject(keyData);
+                var value = serializationService.ToObject(valueData);
+
                 var entry = new KeyValuePair<object, object>(key, value);
                 yield return new KeyValuePair<int, KeyValuePair<object, object>>(pageNumber, entry);
             }

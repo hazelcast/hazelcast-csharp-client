@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Predicates;
 using Hazelcast.Serialization;
@@ -96,8 +97,12 @@ namespace Hazelcast.Protocol.Data
             var anchorDataListHolder = new AnchorDataListHolder(pageList, anchorDataList);
             var predicateData = serializationService.ToData(pagingPredicate.Predicate);
             var comparatorData = serializationService.ToData(pagingPredicate.Comparer);
+
+            if (!pagingPredicate.IterationType.HasValue)
+                throw new InvalidOperationException("The paging predicate does not specify an iteration type.");
+
             return new PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pagingPredicate.PageSize,
-                pagingPredicate.Page, (byte)pagingPredicate.IterationType, partitionKeyData);
+                pagingPredicate.Page, (byte) pagingPredicate.IterationType, partitionKeyData);
         }
     }
 }

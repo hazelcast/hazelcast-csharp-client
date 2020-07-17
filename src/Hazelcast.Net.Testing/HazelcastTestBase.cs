@@ -58,11 +58,6 @@ namespace Hazelcast.Testing
         public const int TestTimeoutMilliseconds = 20_000;
 
         /// <summary>
-        /// Provides assertions.
-        /// </summary>
-        protected Asserter Assert { get; } = new Asserter();
-
-        /// <summary>
         /// Gets the logger factory.
         /// </summary>
         protected ILoggerFactory LoggerFactory { get; private set; }
