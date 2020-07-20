@@ -49,36 +49,26 @@ namespace Hazelcast.Protocol.Data
 
         public static PagingPredicateHolder Of(IPredicate predicate, ISerializationService serializationService)
         {
+            if (predicate is null) 
+                return null;
+
             if (predicate is PartitionPredicate partitionPredicate)
             {
-                return OfInternal(partitionPredicate, serializationService);
-            }
-            return OfInternal((PagingPredicate)predicate, serializationService);
-        }
+                if (partitionPredicate.Target is PagingPredicate partitionPagingPredicate)
+                {
+                    var partitionKeyData = serializationService.ToData(partitionPredicate.PartitionKey);
+                    return BuildHolder(serializationService, partitionPagingPredicate, partitionKeyData);
+                }
 
-        private static PagingPredicateHolder OfInternal(PagingPredicate pagingPredicate,
-            ISerializationService serializationService)
-        {
-            if (pagingPredicate == null)
+                throw new InvalidOperationException("PartitionPredicate Target is not a PagingPredicate.");
+            }
+
+            if (predicate is PagingPredicate pagingPredicate)
             {
-                return null;
-            }
-            return BuildHolder(serializationService, pagingPredicate, null);
-        }
-
-        private static PagingPredicateHolder OfInternal(PartitionPredicate partitionPredicate,
-            ISerializationService serializationService)
-        {
-            if (partitionPredicate == null)
-            {
-                return null;
+                return BuildHolder(serializationService, pagingPredicate, null);
             }
 
-            var pagingPredicate = (PagingPredicate)partitionPredicate.Target;
-
-            var partitionKeyData = serializationService.ToData(partitionPredicate.PartitionKey);
-
-            return BuildHolder(serializationService, pagingPredicate, partitionKeyData);
+            throw new InvalidOperationException("Predicate is neither a PartitionPredicate nor a PagingPredicate.");
         }
 
         private static PagingPredicateHolder BuildHolder(ISerializationService serializationService,

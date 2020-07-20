@@ -44,6 +44,7 @@ https://raw.githubusercontent.com/Cyan4973/xxHash/5c174cfa4e45a42f94082dc0d4539b
 #if NETSTANDARD2_0
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 // ReSharper disable once CheckNamespace
@@ -52,6 +53,7 @@ namespace System
     // xxHash32 is used for the hash code.
     // https://github.com/Cyan4973/xxHash
 
+    [ExcludeFromCodeCoverage] // not covering MS code
     public struct HashCode
     {
         private static readonly uint s_seed = GenerateGlobalSeed();

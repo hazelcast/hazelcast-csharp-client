@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Predicates;
 using Hazelcast.Protocol.Data;
@@ -69,11 +70,25 @@ namespace Hazelcast.Tests.Protocol
             Assert.That(holder.IterationTypeId, Is.EqualTo(3));
             Assert.That(holder.PartitionKeyData, Is.SameAs(partitionKeyData));
 
-            holder = PagingPredicateHolder.Of(new PagingPredicate(5) { IterationType = IterationType.Key }, serializationService);
+            holder = PagingPredicateHolder.Of(new PagingPredicate(5)
+            {
+                IterationType = IterationType.Key,
+                AnchorList = new List<KeyValuePair<int, KeyValuePair<object, object>>>
+                {
+                    new KeyValuePair<int, KeyValuePair<object, object>>(1, new KeyValuePair<object, object>("key", "value"))
+                }
+            }, serializationService);
             Assert.That(holder.PageSize, Is.EqualTo(5));
 
             holder = PagingPredicateHolder.Of(new PartitionPredicate("key", new PagingPredicate(5) { IterationType = IterationType.Key }), serializationService);
             Assert.That(holder.PageSize, Is.EqualTo(5));
+
+            Assert.That(PagingPredicateHolder.Of(null, serializationService), Is.Null);
+
+            Assert.Throws<InvalidOperationException>(() => _ = PagingPredicateHolder.Of(new PagingPredicate(5), serializationService));
+
+            Assert.Throws<InvalidOperationException>(() => _ = PagingPredicateHolder.Of(new AndPredicate(), serializationService));
+            Assert.Throws<InvalidOperationException>(() => _ = PagingPredicateHolder.Of(new PartitionPredicate(), serializationService));
         }
     }
 }

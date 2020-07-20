@@ -48,11 +48,13 @@ namespace Hazelcast.Messaging
                     ? "EVENT"
                     : (message.MessageType & 1) > 0 ? "RESPONSE" : "REQUEST";
 
+                var s = string.IsNullOrWhiteSpace(message.OperationName) ? "" : " ";
+
                 text.AppendLine($"{prefix} [{message.CorrelationId}]");
-                text.AppendLine($"TYPE 0x{message.MessageType:x} {message.OperationName}");
+                text.AppendLine($"TYPE 0x{message.MessageType:x}{s}{message.OperationName}");
             }
 
-            if (prefix == "MESSAGE")
+            if (prefix == "REQUEST")
             {
                 if (message.FirstFrame.Length >= FrameFields.SizeOf.LengthAndFlags + FrameFields.Offset.PartitionId + FrameFields.SizeOf.PartitionId)
                     text.AppendLine($"PARTID {message.PartitionId}");

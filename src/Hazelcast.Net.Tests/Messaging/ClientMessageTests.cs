@@ -312,7 +312,6 @@ namespace Hazelcast.Tests.Messaging
             Assert.Throws<ArgumentNullException>(() => _ = m.AppendFragment(null, null));
             Assert.Throws<ArgumentNullException>(() => _ = m.AppendFragment(new Frame(), null));
             Assert.Throws<ArgumentException>(() => _ = m.AppendFragment(new Frame(), new Frame()));
-            Assert.Throws<InvalidOperationException>(() => _ = new ClientMessage().AppendFragment(new Frame(), new Frame()));
         }
     }
 }

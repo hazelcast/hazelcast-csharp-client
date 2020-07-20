@@ -74,6 +74,11 @@ namespace Hazelcast.Messaging
             }
         }
 
+        /// <summary>
+        /// Gets or sets a function that runs when sending. Provided for tests only.
+        /// </summary>
+        internal Action OnSending { get; set; }
+
         private async ValueTask<bool> ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference<ReadOnlySequence<byte>> bufferReference)
         {
             HConsole.WriteLine(this, $"Received {bufferReference.Buffer.Length} bytes");
@@ -137,7 +142,8 @@ namespace Hazelcast.Messaging
             return true;
         }
 
-        private async ValueTask HandleFragmentAsync(ClientMessage fragment, CancellationToken cancellationToken)
+        // internal for tests
+        internal async ValueTask HandleFragmentAsync(ClientMessage fragment, CancellationToken cancellationToken)
         {
             if (fragment.Flags.HasAll(ClientMessageFlags.Unfragmented))
             {
@@ -160,7 +166,7 @@ namespace Hazelcast.Messaging
             // handle a fragmented message
             // TODO: can leak unfinished messages?
 
-            var fragmentId = fragment.FirstFrame.ReadFragmentId();
+            var fragmentId = fragment.FragmentId;
 
             if (fragment.Flags.HasAll(ClientMessageFlags.BeginFragment))
             {
@@ -236,6 +242,8 @@ namespace Hazelcast.Messaging
             {
                 HConsole.WriteLine(this, "Send message");
 
+                OnSending?.Invoke();
+
                 var frame = message.FirstFrame;
                 do
                 {
@@ -248,6 +256,7 @@ namespace Hazelcast.Messaging
 
                     // note that we may have sent some frames already, and that could
                     // confuse the server greatly (to never see the end of a message?)
+                    // FIXME discuss with Asim - maybe we should NOT cancel here!
 
                     frame = frame.Next;
                 } while (frame != null);

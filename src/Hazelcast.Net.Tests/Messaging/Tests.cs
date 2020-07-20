@@ -1,5 +1,4 @@
 ﻿using Hazelcast.Messaging;
-using Hazelcast.Tests.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Messaging
@@ -42,11 +41,5 @@ namespace Hazelcast.Tests.Messaging
             Assert.That((FrameFlags.Final | (FrameFlags) ClientMessageFlags.Event).ToBetterString(), Is.EqualTo("Final, Event"));
             Assert.That(((ClientMessageFlags) FrameFlags.Final | ClientMessageFlags.Event).ToBetterString(), Is.EqualTo("Final, Event"));
         }
-    }
-
-    [TestFixture]
-    public class DumpMessagingExtensionsTests
-    {
-
     }
 }

@@ -140,8 +140,6 @@ namespace Hazelcast.Messaging
             if (firstFrame == null) throw new ArgumentNullException(nameof(firstFrame));
             if (lastFrame == null) throw new ArgumentNullException(nameof(lastFrame));
 
-            if (LastFrame == null) throw new InvalidOperationException("Empty message.");
-
             // trust the appended frame chain is safe
             if (!trustable)
             {
@@ -151,8 +149,16 @@ namespace Hazelcast.Messaging
                     throw new ArgumentException("Broken linked list.", nameof(lastFrame));
             }
 
-            LastFrame.Flags &= ~FrameFlags.Final;
-            LastFrame.Next = firstFrame;
+            if (LastFrame == null) // then first is null to - this is an empty message
+            {
+                FirstFrame = firstFrame; // begin with fragment
+            }
+            else
+            {
+                LastFrame.Flags &= ~FrameFlags.Final; // not final anymore
+                LastFrame.Next = firstFrame; // append fragment
+            }
+
             LastFrame = lastFrame;
 
             // trust lastFrame is already final

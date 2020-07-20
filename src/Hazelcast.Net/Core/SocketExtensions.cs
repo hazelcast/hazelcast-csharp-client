@@ -53,8 +53,8 @@ namespace Hazelcast.Core
             // only, we don't return the task, but handle the cancellation
             //return tcs.Task;
 
-            var cancellation = cancellationToken == default 
-                ? new CancellationTokenSource() 
+            var cancellation = cancellationToken == default
+                ? new CancellationTokenSource()
                 : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             try
