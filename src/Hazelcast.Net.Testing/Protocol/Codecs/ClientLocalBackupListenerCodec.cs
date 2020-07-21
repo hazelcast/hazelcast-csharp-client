@@ -25,6 +25,8 @@
 // ReSharper disable CheckNamespace
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -47,9 +49,9 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int BackupEventSourceInvocationCorrelationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int BackupEventInitialFrameSize = BackupEventSourceInvocationCorrelationIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int BackupEventMessageType = 3842; // 0x000F02
+        private const int EventBackupSourceInvocationCorrelationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventBackupInitialFrameSize = EventBackupSourceInvocationCorrelationIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int EventBackupMessageType = 3842; // 0x000F02
 
         public sealed class RequestParameters
         {
@@ -71,7 +73,7 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             return request;
@@ -98,7 +100,7 @@ namespace Hazelcast.Protocol.Codecs
     
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
@@ -108,28 +110,28 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeBackupEvent(long sourceInvocationCorrelationId)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[BackupEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, BackupEventMessageType);
+            var initialFrame = new Frame(new byte[EventBackupInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventBackupMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(BackupEventSourceInvocationCorrelationIdFieldOffset, sourceInvocationCorrelationId);
+            initialFrame.Bytes.WriteLongL(EventBackupSourceInvocationCorrelationIdFieldOffset, sourceInvocationCorrelationId);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             return clientMessage;
         }
     
-        public static void HandleEvent(ClientMessage clientMessage, HandleBackupEvent handleBackupEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleBackupEventAsync handleBackupEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
-            if (messageType == BackupEventMessageType) {
+            if (messageType == EventBackupMessageType) {
                 var initialFrame = iterator.Take();
-                var sourceInvocationCorrelationId =  initialFrame.Bytes.ReadLongL(BackupEventSourceInvocationCorrelationIdFieldOffset);
-                handleBackupEvent(sourceInvocationCorrelationId);
-                return;
+                var sourceInvocationCorrelationId =  initialFrame.Bytes.ReadLongL(EventBackupSourceInvocationCorrelationIdFieldOffset);
+                return handleBackupEventAsync(sourceInvocationCorrelationId);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleBackupEvent(long sourceInvocationCorrelationId);
+        public delegate ValueTask HandleBackupEventAsync(long sourceInvocationCorrelationId);
     }
 }

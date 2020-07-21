@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Threading;
@@ -53,8 +54,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventPartitionLostLostBackupCountFieldOffset = EventPartitionLostPartitionIdFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventPartitionLostSourceFieldOffset = EventPartitionLostLostBackupCountFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventPartitionLostInitialFrameSize = EventPartitionLostSourceFieldOffset + BytesExtensions.SizeOfGuid;
-        // hex: 0x000602
-        private const int EventPartitionLostMessageType = 1538;
+        private const int EventPartitionLostMessageType = 1538; // 0x000602
 
         public static ClientMessage EncodeRequest(bool localOnly)
         {
@@ -82,30 +82,28 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandlePartitionLostEventAsync handlePartitionLostEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandlePartitionLostEventAsync handlePartitionLostEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
             if (messageType == EventPartitionLostMessageType) {
                 var initialFrame = iterator.Take();
                 var partitionId =  initialFrame.Bytes.ReadIntL(EventPartitionLostPartitionIdFieldOffset);
                 var lostBackupCount =  initialFrame.Bytes.ReadIntL(EventPartitionLostLostBackupCountFieldOffset);
                 var source =  initialFrame.Bytes.ReadGuidL(EventPartitionLostSourceFieldOffset);
-                return handlePartitionLostEventAsync(partitionId, lostBackupCount, source, cancellationToken);
+                return handlePartitionLostEventAsync(partitionId, lostBackupCount, source);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
 
-        public delegate ValueTask HandlePartitionLostEventAsync(int partitionId, int lostBackupCount, Guid source, CancellationToken cancellationToken);
+        public delegate ValueTask HandlePartitionLostEventAsync(int partitionId, int lostBackupCount, Guid source);
     }
 }
-
-#pragma warning restore IDE0051 // Remove unused private members

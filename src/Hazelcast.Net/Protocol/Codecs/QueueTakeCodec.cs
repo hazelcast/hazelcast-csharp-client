@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Threading;
@@ -74,7 +75,7 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
             response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
@@ -83,5 +84,3 @@ namespace Hazelcast.Protocol.Codecs
 
     }
 }
-
-#pragma warning restore IDE0051 // Remove unused private members

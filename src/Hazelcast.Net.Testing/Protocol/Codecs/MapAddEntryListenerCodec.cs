@@ -25,6 +25,8 @@
 // ReSharper disable CheckNamespace
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -51,11 +53,11 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EntryEventEventTypeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EntryEventUuidFieldOffset = EntryEventEventTypeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EntryEventNumberOfAffectedEntriesFieldOffset = EntryEventUuidFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EntryEventInitialFrameSize = EntryEventNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EntryEventMessageType = 71938; // 0x011902
+        private const int EventEntryEventTypeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventEntryUuidFieldOffset = EventEntryEventTypeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventEntryNumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventEntryInitialFrameSize = EventEntryNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventEntryMessageType = 71938; // 0x011902
 
         public sealed class RequestParameters
         {
@@ -101,7 +103,7 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
             request.IncludeValue = initialFrame.Bytes.ReadBoolL(RequestIncludeValueFieldOffset);
@@ -132,7 +134,7 @@ namespace Hazelcast.Protocol.Codecs
     
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
@@ -142,12 +144,12 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeEntryEvent(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[EntryEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EntryEventMessageType);
+            var initialFrame = new Frame(new byte[EventEntryInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventEntryMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(EntryEventEventTypeFieldOffset, eventType);
-            initialFrame.Bytes.WriteGuidL(EntryEventUuidFieldOffset, uuid);
-            initialFrame.Bytes.WriteIntL(EntryEventNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
+            initialFrame.Bytes.WriteIntL(EventEntryEventTypeFieldOffset, eventType);
+            initialFrame.Bytes.WriteGuidL(EventEntryUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteIntL(EventEntryNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
@@ -157,25 +159,25 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
     
-        public static void HandleEvent(ClientMessage clientMessage, HandleEntryEvent handleEntryEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleEntryEventAsync handleEntryEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
-            if (messageType == EntryEventMessageType) {
+            if (messageType == EventEntryMessageType) {
                 var initialFrame = iterator.Take();
-                var eventType =  initialFrame.Bytes.ReadIntL(EntryEventEventTypeFieldOffset);
-                var uuid =  initialFrame.Bytes.ReadGuidL(EntryEventUuidFieldOffset);
-                var numberOfAffectedEntries =  initialFrame.Bytes.ReadIntL(EntryEventNumberOfAffectedEntriesFieldOffset);
+                var eventType =  initialFrame.Bytes.ReadIntL(EventEntryEventTypeFieldOffset);
+                var uuid =  initialFrame.Bytes.ReadGuidL(EventEntryUuidFieldOffset);
+                var numberOfAffectedEntries =  initialFrame.Bytes.ReadIntL(EventEntryNumberOfAffectedEntriesFieldOffset);
                 var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var @value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var oldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var mergingValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                handleEntryEvent(key, @value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
-                return;
+                return handleEntryEventAsync(key, @value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleEntryEvent(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries);
+        public delegate ValueTask HandleEntryEventAsync(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries);
     }
 }

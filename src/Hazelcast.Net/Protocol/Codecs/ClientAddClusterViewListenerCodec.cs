@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Threading;
@@ -49,12 +50,10 @@ namespace Hazelcast.Protocol.Codecs
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int EventMembersViewVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventMembersViewInitialFrameSize = EventMembersViewVersionFieldOffset + BytesExtensions.SizeOfInt;
-        // hex: 0x000302
-        private const int EventMembersViewMessageType = 770;
+        private const int EventMembersViewMessageType = 770; // 0x000302
         private const int EventPartitionsViewVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventPartitionsViewInitialFrameSize = EventPartitionsViewVersionFieldOffset + BytesExtensions.SizeOfInt;
-        // hex: 0x000303
-        private const int EventPartitionsViewMessageType = 771;
+        private const int EventPartitionsViewMessageType = 771; // 0x000303
 
         public static ClientMessage EncodeRequest()
         {
@@ -76,36 +75,34 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
             return response;
         }
 
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleMembersViewEventAsync handleMembersViewEventAsync, HandlePartitionsViewEventAsync handlePartitionsViewEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleMembersViewEventAsync handleMembersViewEventAsync, HandlePartitionsViewEventAsync handlePartitionsViewEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
             if (messageType == EventMembersViewMessageType) {
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadIntL(EventMembersViewVersionFieldOffset);
                 var memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
-                return handleMembersViewEventAsync(version, memberInfos, cancellationToken);
+                return handleMembersViewEventAsync(version, memberInfos);
             }
             if (messageType == EventPartitionsViewMessageType) {
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadIntL(EventPartitionsViewVersionFieldOffset);
                 var partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
-                return handlePartitionsViewEventAsync(version, partitions, cancellationToken);
+                return handlePartitionsViewEventAsync(version, partitions);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
 
-        public delegate ValueTask HandleMembersViewEventAsync(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos, CancellationToken cancellationToken);
+        public delegate ValueTask HandleMembersViewEventAsync(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos);
 
-        public delegate ValueTask HandlePartitionsViewEventAsync(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions, CancellationToken cancellationToken);
+        public delegate ValueTask HandlePartitionsViewEventAsync(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions);
     }
 }
-
-#pragma warning restore IDE0051 // Remove unused private members

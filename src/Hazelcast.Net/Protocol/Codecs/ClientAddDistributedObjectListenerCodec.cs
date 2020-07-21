@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Threading;
@@ -52,8 +53,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventDistributedObjectSourceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + BytesExtensions.SizeOfGuid;
-        // hex: 0x000902
-        private const int EventDistributedObjectMessageType = 2306;
+        private const int EventDistributedObjectMessageType = 2306; // 0x000902
 
         public static ClientMessage EncodeRequest(bool localOnly)
         {
@@ -81,31 +81,29 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleDistributedObjectEventAsync handleDistributedObjectEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleDistributedObjectEventAsync handleDistributedObjectEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
             if (messageType == EventDistributedObjectMessageType) {
                 var initialFrame = iterator.Take();
                 var source =  initialFrame.Bytes.ReadGuidL(EventDistributedObjectSourceFieldOffset);
                 var name = StringCodec.Decode(iterator);
                 var serviceName = StringCodec.Decode(iterator);
                 var eventType = StringCodec.Decode(iterator);
-                return handleDistributedObjectEventAsync(name, serviceName, eventType, source, cancellationToken);
+                return handleDistributedObjectEventAsync(name, serviceName, eventType, source);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
 
-        public delegate ValueTask HandleDistributedObjectEventAsync(string name, string serviceName, string eventType, Guid source, CancellationToken cancellationToken);
+        public delegate ValueTask HandleDistributedObjectEventAsync(string name, string serviceName, string eventType, Guid source);
     }
 }
-
-#pragma warning restore IDE0051 // Remove unused private members

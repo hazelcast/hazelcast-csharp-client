@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Threading;
@@ -53,8 +54,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventItemUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventItemEventTypeFieldOffset = EventItemUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventItemInitialFrameSize = EventItemEventTypeFieldOffset + BytesExtensions.SizeOfInt;
-        // hex: 0x050B02
-        private const int EventItemMessageType = 330498;
+        private const int EventItemMessageType = 330498; // 0x050B02
 
         public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
@@ -84,30 +84,28 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleItemEventAsync handleItemEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleItemEventAsync handleItemEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
             if (messageType == EventItemMessageType) {
                 var initialFrame = iterator.Take();
                 var uuid =  initialFrame.Bytes.ReadGuidL(EventItemUuidFieldOffset);
                 var eventType =  initialFrame.Bytes.ReadIntL(EventItemEventTypeFieldOffset);
                 var item = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                return handleItemEventAsync(item, uuid, eventType, cancellationToken);
+                return handleItemEventAsync(item, uuid, eventType);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
 
-        public delegate ValueTask HandleItemEventAsync(IData item, Guid uuid, int eventType, CancellationToken cancellationToken);
+        public delegate ValueTask HandleItemEventAsync(IData item, Guid uuid, int eventType);
     }
 }
-
-#pragma warning restore IDE0051 // Remove unused private members

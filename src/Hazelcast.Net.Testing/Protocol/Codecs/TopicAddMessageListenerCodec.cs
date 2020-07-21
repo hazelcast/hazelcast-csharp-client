@@ -25,6 +25,8 @@
 // ReSharper disable CheckNamespace
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -49,10 +51,10 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int TopicEventPublishTimeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int TopicEventUuidFieldOffset = TopicEventPublishTimeFieldOffset + BytesExtensions.SizeOfLong;
-        private const int TopicEventInitialFrameSize = TopicEventUuidFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int TopicEventMessageType = 262658; // 0x040202
+        private const int EventTopicPublishTimeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventTopicUuidFieldOffset = EventTopicPublishTimeFieldOffset + BytesExtensions.SizeOfLong;
+        private const int EventTopicInitialFrameSize = EventTopicUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventTopicMessageType = 262658; // 0x040202
 
         public sealed class RequestParameters
         {
@@ -86,7 +88,7 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
             request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
@@ -115,7 +117,7 @@ namespace Hazelcast.Protocol.Codecs
     
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
@@ -125,32 +127,32 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeTopicEvent(IData item, long publishTime, Guid uuid)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[TopicEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, TopicEventMessageType);
+            var initialFrame = new Frame(new byte[EventTopicInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventTopicMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(TopicEventPublishTimeFieldOffset, publishTime);
-            initialFrame.Bytes.WriteGuidL(TopicEventUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteLongL(EventTopicPublishTimeFieldOffset, publishTime);
+            initialFrame.Bytes.WriteGuidL(EventTopicUuidFieldOffset, uuid);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             DataCodec.Encode(clientMessage, item);
             return clientMessage;
         }
     
-        public static void HandleEvent(ClientMessage clientMessage, HandleTopicEvent handleTopicEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleTopicEventAsync handleTopicEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
-            if (messageType == TopicEventMessageType) {
+            if (messageType == EventTopicMessageType) {
                 var initialFrame = iterator.Take();
-                var publishTime =  initialFrame.Bytes.ReadLongL(TopicEventPublishTimeFieldOffset);
-                var uuid =  initialFrame.Bytes.ReadGuidL(TopicEventUuidFieldOffset);
+                var publishTime =  initialFrame.Bytes.ReadLongL(EventTopicPublishTimeFieldOffset);
+                var uuid =  initialFrame.Bytes.ReadGuidL(EventTopicUuidFieldOffset);
                 var item = DataCodec.Decode(iterator);
-                handleTopicEvent(item, publishTime, uuid);
-                return;
+                return handleTopicEventAsync(item, publishTime, uuid);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleTopicEvent(IData item, long publishTime, Guid uuid);
+        public delegate ValueTask HandleTopicEventAsync(IData item, long publishTime, Guid uuid);
     }
 }

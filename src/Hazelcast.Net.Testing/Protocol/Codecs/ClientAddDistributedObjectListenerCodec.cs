@@ -25,6 +25,8 @@
 // ReSharper disable CheckNamespace
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -49,9 +51,9 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int DistributedObjectEventSourceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int DistributedObjectEventInitialFrameSize = DistributedObjectEventSourceFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int DistributedObjectEventMessageType = 2306; // 0x000902
+        private const int EventDistributedObjectSourceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventDistributedObjectMessageType = 2306; // 0x000902
 
         public sealed class RequestParameters
         {
@@ -80,7 +82,7 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
             request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
@@ -108,7 +110,7 @@ namespace Hazelcast.Protocol.Codecs
     
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
@@ -118,10 +120,10 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeDistributedObjectEvent(string name, string serviceName, string eventType, Guid source)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[DistributedObjectEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, DistributedObjectEventMessageType);
+            var initialFrame = new Frame(new byte[EventDistributedObjectInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventDistributedObjectMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteGuidL(DistributedObjectEventSourceFieldOffset, source);
+            initialFrame.Bytes.WriteGuidL(EventDistributedObjectSourceFieldOffset, source);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             StringCodec.Encode(clientMessage, name);
@@ -130,22 +132,22 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
     
-        public static void HandleEvent(ClientMessage clientMessage, HandleDistributedObjectEvent handleDistributedObjectEvent, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleDistributedObjectEventAsync handleDistributedObjectEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
-            if (messageType == DistributedObjectEventMessageType) {
+            if (messageType == EventDistributedObjectMessageType) {
                 var initialFrame = iterator.Take();
-                var source =  initialFrame.Bytes.ReadGuidL(DistributedObjectEventSourceFieldOffset);
+                var source =  initialFrame.Bytes.ReadGuidL(EventDistributedObjectSourceFieldOffset);
                 var name = StringCodec.Decode(iterator);
                 var serviceName = StringCodec.Decode(iterator);
                 var eventType = StringCodec.Decode(iterator);
-                handleDistributedObjectEvent(name, serviceName, eventType, source);
-                return;
+                return handleDistributedObjectEventAsync(name, serviceName, eventType, source);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleDistributedObjectEvent(string name, string serviceName, string eventType, Guid source);
+        public delegate ValueTask HandleDistributedObjectEventAsync(string name, string serviceName, string eventType, Guid source);
     }
 }

@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Threading;
@@ -53,8 +54,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventTopicPublishTimeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventTopicUuidFieldOffset = EventTopicPublishTimeFieldOffset + BytesExtensions.SizeOfLong;
         private const int EventTopicInitialFrameSize = EventTopicUuidFieldOffset + BytesExtensions.SizeOfGuid;
-        // hex: 0x040202
-        private const int EventTopicMessageType = 262658;
+        private const int EventTopicMessageType = 262658; // 0x040202
 
         public static ClientMessage EncodeRequest(string name, bool localOnly)
         {
@@ -83,30 +83,28 @@ namespace Hazelcast.Protocol.Codecs
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleTopicEventAsync handleTopicEventAsync, ILoggerFactory loggerFactory, CancellationToken cancellationToken)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleTopicEventAsync handleTopicEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
             if (messageType == EventTopicMessageType) {
                 var initialFrame = iterator.Take();
                 var publishTime =  initialFrame.Bytes.ReadLongL(EventTopicPublishTimeFieldOffset);
                 var uuid =  initialFrame.Bytes.ReadGuidL(EventTopicUuidFieldOffset);
                 var item = DataCodec.Decode(iterator);
-                return handleTopicEventAsync(item, publishTime, uuid, cancellationToken);
+                return handleTopicEventAsync(item, publishTime, uuid);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
 
-        public delegate ValueTask HandleTopicEventAsync(IData item, long publishTime, Guid uuid, CancellationToken cancellationToken);
+        public delegate ValueTask HandleTopicEventAsync(IData item, long publishTime, Guid uuid);
     }
 }
-
-#pragma warning restore IDE0051 // Remove unused private members

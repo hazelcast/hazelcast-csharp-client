@@ -25,6 +25,8 @@
 // ReSharper disable CheckNamespace
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
@@ -46,17 +48,17 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 769; // 0x000301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int MembersViewEventVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int MembersViewEventInitialFrameSize = MembersViewEventVersionFieldOffset + BytesExtensions.SizeOfInt;
-        private const int MembersViewEventMessageType = 770; // 0x000302
-        private const int PartitionsViewEventVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int PartitionsViewEventInitialFrameSize = PartitionsViewEventVersionFieldOffset + BytesExtensions.SizeOfInt;
-        private const int PartitionsViewEventMessageType = 771; // 0x000303
+        private const int EventMembersViewVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventMembersViewInitialFrameSize = EventMembersViewVersionFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventMembersViewMessageType = 770; // 0x000302
+        private const int EventPartitionsViewVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventPartitionsViewInitialFrameSize = EventPartitionsViewVersionFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventPartitionsViewMessageType = 771; // 0x000303
 
         public sealed class RequestParameters
         {
         }
-    
+
         public static ClientMessage EncodeRequest()
         {
             var clientMessage = new ClientMessage
@@ -73,12 +75,12 @@ namespace Hazelcast.Protocol.Codecs
 
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
         }
@@ -91,12 +93,11 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
-            var iterator = clientMessage.GetEnumerator();
+            using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            
             iterator.Take(); // empty initial frame
             return response;
         }
@@ -104,10 +105,10 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodeMembersViewEvent(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[MembersViewEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, MembersViewEventMessageType);
+            var initialFrame = new Frame(new byte[EventMembersViewInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventMembersViewMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(MembersViewEventVersionFieldOffset, version);
+            initialFrame.Bytes.WriteIntL(EventMembersViewVersionFieldOffset, version);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             ListMultiFrameCodec.Encode(clientMessage, memberInfos, MemberInfoCodec.Encode);
@@ -116,39 +117,38 @@ namespace Hazelcast.Protocol.Codecs
         public static ClientMessage EncodePartitionsViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[PartitionsViewEventInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, PartitionsViewEventMessageType);
+            var initialFrame = new Frame(new byte[EventPartitionsViewInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventPartitionsViewMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(PartitionsViewEventVersionFieldOffset, version);
+            initialFrame.Bytes.WriteIntL(EventPartitionsViewVersionFieldOffset, version);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
             EntryListUUIDListIntegerCodec.Encode(clientMessage, partitions);
             return clientMessage;
         }
-    
-        public static void HandleEvent(ClientMessage clientMessage, HandleMembersViewEvent handleMembersViewEvent, HandlePartitionsViewEvent handlePartitionsViewEvent, ILoggerFactory loggerFactory)
+
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleMembersViewEventAsync handleMembersViewEventAsync, HandlePartitionsViewEventAsync handlePartitionsViewEventAsync, ILoggerFactory loggerFactory)
         {
+            using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            var iterator = clientMessage.GetEnumerator();
-            if (messageType == MembersViewEventMessageType) {
+            if (messageType == EventMembersViewMessageType) {
                 var initialFrame = iterator.Take();
-                var version =  initialFrame.Bytes.ReadIntL(MembersViewEventVersionFieldOffset);
+                var version =  initialFrame.Bytes.ReadIntL(EventMembersViewVersionFieldOffset);
                 var memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
-                handleMembersViewEvent(version, memberInfos);
-                return;
+                return handleMembersViewEventAsync(version, memberInfos);
             }
-            if (messageType == PartitionsViewEventMessageType) {
+            if (messageType == EventPartitionsViewMessageType) {
                 var initialFrame = iterator.Take();
-                var version =  initialFrame.Bytes.ReadIntL(PartitionsViewEventVersionFieldOffset);
+                var version =  initialFrame.Bytes.ReadIntL(EventPartitionsViewVersionFieldOffset);
                 var partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
-                handlePartitionsViewEvent(version, partitions);
-                return;
+                return handlePartitionsViewEventAsync(version, partitions);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
+            return default;
         }
 
-        public delegate void HandleMembersViewEvent(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos);
+        public delegate ValueTask HandleMembersViewEventAsync(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos);
 
-        public delegate void HandlePartitionsViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions);
+        public delegate ValueTask HandlePartitionsViewEventAsync(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions);
     }
 }
