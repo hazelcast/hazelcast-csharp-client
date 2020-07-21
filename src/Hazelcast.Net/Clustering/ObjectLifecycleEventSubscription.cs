@@ -38,19 +38,19 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddDistributedObjectListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id),
                 (message, state) => ClientRemoveDistributedObjectListenerCodec.DecodeResponse(message).Response,
-                (message, state, cancellationToken) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory, cancellationToken));
+                (message, state) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory));
         }
 
-        internal Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> Handle { get; set; }
+        internal Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, ValueTask> Handle { get; set; }
 
-        private ValueTask HandleInternal(string name, string serviceName, string eventTypeName, Guid memberId, CancellationToken cancellationToken)
+        private ValueTask HandleInternal(string name, string serviceName, string eventTypeName, Guid memberId)
         {
             if (Handle == null) return default;
 
             return eventTypeName switch
             {
-                "CREATED" => Handle(DistributedObjectLifecycleEventType.Created, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
-                "DESTROYED" => Handle(DistributedObjectLifecycleEventType.Destroyed, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId), cancellationToken),
+                "CREATED" => Handle(DistributedObjectLifecycleEventType.Created, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId)),
+                "DESTROYED" => Handle(DistributedObjectLifecycleEventType.Destroyed, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId)),
                 _ => throw new NotSupportedException($"Event type \"{eventTypeName}\" is not supported.")
             };
         }

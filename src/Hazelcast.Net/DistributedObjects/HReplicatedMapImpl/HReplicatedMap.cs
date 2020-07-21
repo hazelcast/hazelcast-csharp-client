@@ -255,11 +255,11 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             public int Mode { get; }
         }
 
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
             var sstate = ToSafeState<MapSubscriptionState>(state);
 
-            async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, CancellationToken token)
+            async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
                 var eventType = (MapEventTypes)eventTypeData;
                 if (eventType == MapEventTypes.Nothing) return;
@@ -277,8 +277,8 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
                     {
                         var task = handler switch
                         {
-                            IMapEntryEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, token),
-                            IMapEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, token),
+                            IMapEntryEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries),
+                            IMapEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries),
                             _ => throw new NotSupportedException()
                         };
                         await task.CAF();
@@ -288,10 +288,10 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
 
             return sstate.Mode switch
             {
-                0 => ReplicatedMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
-                1 => ReplicatedMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
-                2 => ReplicatedMapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
-                3 => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
+                0 => ReplicatedMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
+                1 => ReplicatedMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
+                2 => ReplicatedMapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
+                3 => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
                 _ => throw new NotSupportedException()
             };
         }

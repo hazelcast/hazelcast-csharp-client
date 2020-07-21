@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Events;
 
@@ -21,7 +20,7 @@ namespace Hazelcast
 {
     internal class ConnectionLifecycleEventHandler : HazelcastClientEventHandlerBase<ConnectionLifecycleEventArgs>
     {
-        public ConnectionLifecycleEventHandler(ConnectionLifecycleEventType eventType, Func<IHazelcastClient, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public ConnectionLifecycleEventHandler(ConnectionLifecycleEventType eventType, Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
             : base(handler)
         {
             EventType = eventType;

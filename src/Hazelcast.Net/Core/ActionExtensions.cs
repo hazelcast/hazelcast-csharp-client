@@ -29,8 +29,8 @@ namespace Hazelcast.Core
         /// <typeparam name="TArg1">The type of the first argument.</typeparam>
         /// <param name="action">The action.</param>
         /// <returns>An asynchronous action wrapping the specified synchronous action.</returns>
-        public static Func<TArg1, CancellationToken, ValueTask> AsAsync<TArg1>(this Action<TArg1> action)
-            => (arg1, _) =>
+        public static Func<TArg1, ValueTask> AsAsync<TArg1>(this Action<TArg1> action)
+            => arg1 =>
             {
                 action(arg1);
                 return default;
@@ -43,8 +43,8 @@ namespace Hazelcast.Core
         /// <typeparam name="TArg2">The type of the second argument.</typeparam>
         /// <param name="action">The action.</param>
         /// <returns>An asynchronous action wrapping the specified synchronous action.</returns>
-        public static Func<TArg1, TArg2, CancellationToken, ValueTask> AsAsync<TArg1, TArg2>(this Action<TArg1, TArg2> action)
-            => (arg1, arg2, _) =>
+        public static Func<TArg1, TArg2, ValueTask> AsAsync<TArg1, TArg2>(this Action<TArg1, TArg2> action)
+            => (arg1, arg2) =>
             {
                 action(arg1, arg2);
                 return default;

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -28,9 +27,9 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="TArgs">The actual type of the arguments.</typeparam>
     internal abstract class MapEventHandlerBase<TKey, TValue, TSender, TArgs> : IMapEventHandler<TKey, TValue, TSender>
     {
-        private readonly Func<TSender, TArgs, CancellationToken, ValueTask> _handler;
+        private readonly Func<TSender, TArgs, ValueTask> _handler;
 
-        protected MapEventHandlerBase(MapEventTypes eventType, Func<TSender, TArgs, CancellationToken, ValueTask> handler)
+        protected MapEventHandlerBase(MapEventTypes eventType, Func<TSender, TArgs, ValueTask> handler)
         {
             EventType = eventType;
             _handler = handler;
@@ -38,8 +37,8 @@ namespace Hazelcast.DistributedObjects
 
         public MapEventTypes EventType { get; }
 
-        public ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries, CancellationToken cancellationToken)
-            => _handler(sender, CreateEventArgs(member, numberOfAffectedEntries), cancellationToken);
+        public ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries)
+            => _handler(sender, CreateEventArgs(member, numberOfAffectedEntries));
 
         protected abstract TArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries);
     }

@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.Core
 
             var asynchronous = synchronous.AsAsync();
 
-            await asynchronous(42, default);
+            await asynchronous(42);
 
             Assert.That(c, Is.EqualTo(42));
         }
@@ -46,7 +46,7 @@ namespace Hazelcast.Tests.Core
 
             var asynchronous = synchronous.AsAsync();
 
-            await asynchronous(42, 12, default);
+            await asynchronous(42, 12);
 
             Assert.That(c1, Is.EqualTo(42));
             Assert.That(c2, Is.EqualTo(12));

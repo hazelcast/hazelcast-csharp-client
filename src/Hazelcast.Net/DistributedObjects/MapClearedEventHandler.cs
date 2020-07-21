@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -21,7 +20,7 @@ namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapClearedEventHandler<TKey, TValue, TSender> : MapEventHandlerBase<TKey, TValue, TSender, MapClearedEventArgs>
     {
-        public MapClearedEventHandler(Func<TSender, MapClearedEventArgs, CancellationToken, ValueTask> handler)
+        public MapClearedEventHandler(Func<TSender, MapClearedEventArgs, ValueTask> handler)
             : base(MapEventTypes.AllCleared, handler)
         { }
 

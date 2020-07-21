@@ -38,12 +38,12 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddPartitionLostListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemovePartitionLostListenerCodec.EncodeRequest(id),
                 (message, state) => ClientRemovePartitionLostListenerCodec.DecodeResponse(message).Response,
-                (message, state, cancellationToken) => ClientAddPartitionLostListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory, cancellationToken));
+                (message, state) => ClientAddPartitionLostListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory));
         }
 
-        internal Func<PartitionLostEventArgs, CancellationToken, ValueTask> Handle { get; set; }
+        internal Func<PartitionLostEventArgs, ValueTask> Handle { get; set; }
 
-        private ValueTask HandleInternal(int partitionId, int lostBackupCount, Guid memberId, CancellationToken cancellationToken)
+        private ValueTask HandleInternal(int partitionId, int lostBackupCount, Guid memberId)
         {
             if (Handle == null) return default;
 
@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
 
             var member = Cluster.GetMember(memberId);
 
-            return Handle(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member), cancellationToken);
+            return Handle(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member));
         }
     }
 }

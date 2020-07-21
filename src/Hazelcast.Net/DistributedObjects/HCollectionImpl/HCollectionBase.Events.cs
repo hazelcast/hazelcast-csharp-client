@@ -60,11 +60,11 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
             return subscription.Id;
         }
 
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
             var sstate = ToSafeState<SubscriptionState<CollectionItemEventHandlers<T>>>(state);
 
-            async ValueTask HandleItemEventAsync(IData itemData, Guid memberId, int eventTypeData, CancellationToken token)
+            async ValueTask HandleItemEventAsync(IData itemData, Guid memberId, int eventTypeData)
             {
                 var eventType = (CollectionItemEventTypes) eventTypeData;
                 if (eventType == CollectionItemEventTypes.Nothing) return;
@@ -77,12 +77,12 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
                 {
                     if (handler.EventType.HasAll(eventType))
                     {
-                        await handler.HandleAsync(this, member, item, token).CAF();
+                        await handler.HandleAsync(this, member, item).CAF();
                     }
                 }
             }
 
-            return ListAddListenerCodec.HandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory, cancellationToken);
+            return ListAddListenerCodec.HandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory);
         }
 
         protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);

@@ -117,7 +117,7 @@ namespace Hazelcast.Clustering
 
             _addressProvider = new AddressProvider(options.Networking, loggerFactory);
             _heartbeat = new Heartbeat(this, options.Heartbeat, loggerFactory);
-            _heartbeat.Start(_clusterCancellation.Token); // FIXME CANCELLATION AND STUFF
+            _heartbeat.Start(_clusterCancellation.Token);
 
             Name = string.IsNullOrWhiteSpace(options.ClusterName) ? "dev" : options.ClusterName;
             ClientName = string.IsNullOrWhiteSpace(options.ClientName)

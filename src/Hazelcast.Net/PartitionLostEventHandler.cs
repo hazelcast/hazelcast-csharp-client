@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Events;
 
@@ -21,7 +20,7 @@ namespace Hazelcast
 {
     internal class PartitionLostEventHandler : HazelcastClientEventHandlerBase<PartitionLostEventArgs>
     {
-        public PartitionLostEventHandler(Func<IHazelcastClient, PartitionLostEventArgs, CancellationToken, ValueTask> handler)
+        public PartitionLostEventHandler(Func<IHazelcastClient, PartitionLostEventArgs, ValueTask> handler)
         : base(handler)
         { }
     }

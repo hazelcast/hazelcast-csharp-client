@@ -98,15 +98,13 @@ namespace Hazelcast
         /// </summary>
         /// <param name="eventType">The type of the events.</param>
         /// <param name="args">The event arguments.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public ValueTask OnObjectLifecycleEvent(DistributedObjectLifecycleEventType eventType, DistributedObjectLifecycleEventArgs args, CancellationToken cancellationToken)
+        public ValueTask OnObjectLifecycleEvent(DistributedObjectLifecycleEventType eventType, DistributedObjectLifecycleEventArgs args)
         {
-            return ForEachHandler<DistributedObjectLifecycleEventHandler, DistributedObjectLifecycleEventArgs>((handler, sender, a, token) =>
+            return ForEachHandler<DistributedObjectLifecycleEventHandler, DistributedObjectLifecycleEventArgs>((handler, sender, a) =>
                     handler.EventType == eventType
-                        ? handler.HandleAsync(sender, a, token)
+                        ? handler.HandleAsync(sender, a)
                         : default,
-                args,
-                cancellationToken);
+                args);
         }
 
         /// <summary>
@@ -114,80 +112,69 @@ namespace Hazelcast
         /// </summary>
         /// <param name="eventType">The event type.</param>
         /// <param name="args">The event arguments.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public ValueTask OnMemberLifecycleEvent(MemberLifecycleEventType eventType, MemberLifecycleEventArgs args, CancellationToken cancellationToken)
+        public ValueTask OnMemberLifecycleEvent(MemberLifecycleEventType eventType, MemberLifecycleEventArgs args)
         {
-            return ForEachHandler<MemberLifecycleEventHandler, MemberLifecycleEventArgs>((handler, sender, a, token) =>
+            return ForEachHandler<MemberLifecycleEventHandler, MemberLifecycleEventArgs>((handler, sender, a) =>
                 handler.EventType == eventType
-                    ? handler.HandleAsync(sender, a, token)
+                    ? handler.HandleAsync(sender, a)
                     : default,
-                args,
-                cancellationToken);
+                args);
         }
 
         /// <summary>
         /// Triggers a client lifecycle event.
         /// </summary>
         /// <param name="state">The new state.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public ValueTask OnClientLifecycleEvent(ClientLifecycleState state, CancellationToken cancellationToken)
+        public ValueTask OnClientLifecycleEvent(ClientLifecycleState state)
         {
-            return ForEachHandler<ClientLifecycleEventHandler, ClientLifecycleEventArgs>((handler, sender, args, token) =>
-                handler.HandleAsync(sender, args, token),
-                new ClientLifecycleEventArgs(state),
-                cancellationToken);
+            return ForEachHandler<ClientLifecycleEventHandler, ClientLifecycleEventArgs>((handler, sender, args) =>
+                handler.HandleAsync(sender, args),
+                new ClientLifecycleEventArgs(state));
         }
 
         /// <summary>
         /// Triggers a partitions updated event.
         /// </summary>
-        public ValueTask OnPartitionsUpdated(CancellationToken cancellationToken)
+        public ValueTask OnPartitionsUpdated()
         {
-            return ForEachHandler<PartitionsUpdatedEventHandler, EventArgs>((handler, sender, args, token) =>
-                handler.HandleAsync(sender, args, token),
-                EventArgs.Empty,
-                cancellationToken);
+            return ForEachHandler<PartitionsUpdatedEventHandler, EventArgs>((handler, sender, args) =>
+                handler.HandleAsync(sender, args),
+                EventArgs.Empty);
         }
 
         /// <summary>
         /// Triggers a partition list event.
         /// </summary>
         /// <param name="args">The event arguments.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public ValueTask OnPartitionLost(PartitionLostEventArgs args, CancellationToken cancellationToken)
+        public ValueTask OnPartitionLost(PartitionLostEventArgs args)
         {
-            return ForEachHandler<PartitionLostEventHandler, PartitionLostEventArgs>((handler, sender, a, token) =>
-                handler.HandleAsync(sender, a, token),
-                args,
-                cancellationToken);
+            return ForEachHandler<PartitionLostEventHandler, PartitionLostEventArgs>((handler, sender, a) =>
+                handler.HandleAsync(sender, a),
+                args);
         }
 
         /// <summary>
         /// Triggers a connection added event.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public ValueTask OnConnectionAdded(/*Client client,*/ CancellationToken cancellationToken)
+        public ValueTask OnConnectionAdded(/*Client client*/)
         {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) =>
+            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args) =>
                 handler.EventType == ConnectionLifecycleEventType.Added
-                    ? handler.HandleAsync(sender, args, token)
+                    ? handler.HandleAsync(sender, args)
                     : default,
-                new ConnectionLifecycleEventArgs(/*client*/),
-                cancellationToken);
+                new ConnectionLifecycleEventArgs(/*client*/));
         }
 
         /// <summary>
         /// Triggers a connection removed event.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public ValueTask OnConnectionRemoved(/*Client client,*/ CancellationToken cancellationToken)
+        public ValueTask OnConnectionRemoved(/*Client client*/)
         {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args, token) =>
+            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args) =>
                     handler.EventType == ConnectionLifecycleEventType.Removed
-                        ? handler.HandleAsync(sender, args, token)
+                        ? handler.HandleAsync(sender, args)
                         : default,
-                new ConnectionLifecycleEventArgs(/*client*/),
-                cancellationToken);
+                new ConnectionLifecycleEventArgs(/*client*/));
         }
 
         /// <summary>
@@ -197,8 +184,7 @@ namespace Hazelcast
         /// <typeparam name="TArgs">The type of the event data.</typeparam>
         /// <param name="action">The trigger action.</param>
         /// <param name="args">Event data.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private async ValueTask ForEachHandler<THandler, TArgs>(Func<THandler, IHazelcastClient, TArgs, CancellationToken, ValueTask> action, TArgs args, CancellationToken cancellationToken)
+        private async ValueTask ForEachHandler<THandler, TArgs>(Func<THandler, IHazelcastClient, TArgs, ValueTask> action, TArgs args)
         {
             // TODO: consider running on background threads + limiting concurrency
 
@@ -207,7 +193,7 @@ namespace Hazelcast
             {
                 try
                 {
-                    await action(handler, this, args, cancellationToken).CAF();
+                    await action(handler, this, args).CAF();
                 }
                 catch (Exception e)
                 {

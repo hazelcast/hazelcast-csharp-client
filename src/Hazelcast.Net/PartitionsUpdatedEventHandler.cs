@@ -13,15 +13,13 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Events;
 
 namespace Hazelcast
 {
     internal class PartitionsUpdatedEventHandler : HazelcastClientEventHandlerBase<EventArgs>
     {
-        public PartitionsUpdatedEventHandler(Func<IHazelcastClient, EventArgs, CancellationToken, ValueTask> handler)
+        public PartitionsUpdatedEventHandler(Func<IHazelcastClient, EventArgs, ValueTask> handler)
             : base(handler)
         { }
     }

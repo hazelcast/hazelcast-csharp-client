@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiMapEventHandlers<TKey, TValue> Cleared(Func<IHMultiMap<TKey, TValue>, MapClearedEventArgs, CancellationToken, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> Cleared(Func<IHMultiMap<TKey, TValue>, MapClearedEventArgs, ValueTask> handler)
         {
             Add(new MapClearedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiMapEventHandlers<TKey, TValue> EntryUpdated(Func<IHMultiMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryUpdated(Func<IHMultiMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
@@ -86,7 +86,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiMapEventHandlers<TKey, TValue> EntryRemoved(Func<IHMultiMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryRemoved(Func<IHMultiMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
@@ -108,7 +108,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiMapEventHandlers<TKey, TValue> EntryAdded(Func<IHMultiMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryAdded(Func<IHMultiMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryAddedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
@@ -130,7 +130,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiMapEventHandlers<TKey, TValue> EntryMerged(Func<IHMultiMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryMerged(Func<IHMultiMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryMergedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;

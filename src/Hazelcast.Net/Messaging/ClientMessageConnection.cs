@@ -37,7 +37,7 @@ namespace Hazelcast.Messaging
         private readonly SemaphoreSlim _writer;
         private readonly ILogger _logger;
 
-        private Func<ClientMessageConnection, ClientMessage, CancellationToken, ValueTask> _onReceiveMessage;
+        private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
         private int _bytesLength = -1;
         private Frame _currentFrame;
         private bool _finalFrame;
@@ -63,7 +63,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets or sets the function that handles messages.
         /// </summary>
-        public Func<ClientMessageConnection, ClientMessage, CancellationToken, ValueTask> OnReceiveMessage
+        public Func<ClientMessageConnection, ClientMessage, ValueTask> OnReceiveMessage
         {
             get => _onReceiveMessage;
             set
@@ -137,13 +137,13 @@ namespace Hazelcast.Messaging
             var message = _currentMessage;
             _currentMessage = null;
             HConsole.WriteLine(this, "Handle fragment");
-            await HandleFragmentAsync(message, default).CAF(); // FIXME CANCELLATION
+            await HandleFragmentAsync(message).CAF();
 
             return true;
         }
 
         // internal for tests
-        internal async ValueTask HandleFragmentAsync(ClientMessage fragment, CancellationToken cancellationToken)
+        internal async ValueTask HandleFragmentAsync(ClientMessage fragment)
         {
             if (fragment.Flags.HasAll(ClientMessageFlags.Unfragmented))
             {
@@ -151,7 +151,7 @@ namespace Hazelcast.Messaging
 
                 try
                 {
-                    await _onReceiveMessage(this, fragment, cancellationToken).CAF();
+                    await _onReceiveMessage(this, fragment).CAF();
                 }
                 catch (Exception e)
                 {
@@ -198,7 +198,7 @@ namespace Hazelcast.Messaging
 
                 try
                 {
-                    await _onReceiveMessage(this, message, cancellationToken).CAF();
+                    await _onReceiveMessage(this, message).CAF();
                 }
                 catch (Exception e)
                 {
@@ -234,6 +234,8 @@ namespace Hazelcast.Messaging
 
             if (message == null) throw new ArgumentNullException(nameof(message));
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             // send message, serialize sending via semaphore
             // throws OperationCanceledException if canceled (and semaphore is not acquired)
             if (_writer != null) await _writer.WaitAsync(cancellationToken).CAF();
@@ -242,21 +244,25 @@ namespace Hazelcast.Messaging
             {
                 HConsole.WriteLine(this, "Send message");
 
+                // last chance - after this line, we will send the full message
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // for tests purposes - do *not* rely on this
                 OnSending?.Invoke();
 
                 var frame = message.FirstFrame;
                 do
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        throw new OperationCanceledException();
-
                     HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
-                    if (!await SendFrameAsync(frame, cancellationToken).CAF())
+
+                    // passing a 'default' cancellation token here, we do *not* propagate
+                    // cancellation any further - we want to send the full message, no matter what
+                    if (!await SendFrameAsync(frame, default).CAF())
                         return false;
 
                     // note that we may have sent some frames already, and that could
                     // confuse the server greatly (to never see the end of a message?)
-                    // FIXME discuss with Asim - maybe we should NOT cancel here!
+                    // FIXME so quite probably returning false should kill the connection somehow?
 
                     frame = frame.Next;
                 } while (frame != null);

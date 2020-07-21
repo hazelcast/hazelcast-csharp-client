@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -25,7 +24,7 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="T">The topic object type.</typeparam>
     internal class TopicMessageEventHandler<T> : ITopicEventHandler<T>
     {
-        private readonly Func<IHTopic<T>, TopicMessageEventArgs<T>, CancellationToken, ValueTask> _handler;
+        private readonly Func<IHTopic<T>, TopicMessageEventArgs<T>, ValueTask> _handler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicMessageEventHandler{T}"/> class.
@@ -33,7 +32,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handler">An action to execute</param>
         public TopicMessageEventHandler(Action<IHTopic<T>, TopicMessageEventArgs<T>> handler)
         {
-            _handler = (sender, args, cancellationToken) =>
+            _handler = (sender, args) =>
             {
                 handler(sender, args);
                 return default;
@@ -44,7 +43,7 @@ namespace Hazelcast.DistributedObjects
         /// Initializes a new instance of the <see cref="TopicMessageEventHandler{T}"/> class.
         /// </summary>
         /// <param name="handler">An action to execute</param>
-        public TopicMessageEventHandler(Func<IHTopic<T>, TopicMessageEventArgs<T>, CancellationToken, ValueTask> handler)
+        public TopicMessageEventHandler(Func<IHTopic<T>, TopicMessageEventArgs<T>, ValueTask> handler)
         {
             _handler = handler;
         }
@@ -53,8 +52,8 @@ namespace Hazelcast.DistributedObjects
         public TopicEventTypes EventType => TopicEventTypes.Message;
 
         /// <inheritdoc />
-        public ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload, CancellationToken cancellationToken)
-            => _handler(sender, CreateEventArgs(member, publishTime, payload), cancellationToken);
+        public ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload)
+            => _handler(sender, CreateEventArgs(member, publishTime, payload));
 
         /// <summary>
         /// Creates event arguments.

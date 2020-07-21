@@ -13,21 +13,20 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast
 {
     internal abstract class HazelcastClientEventHandlerBase<TArgs> : IHazelcastClientEventHandler
     {
-        private readonly Func<IHazelcastClient, TArgs, CancellationToken, ValueTask> _handler;
+        private readonly Func<IHazelcastClient, TArgs, ValueTask> _handler;
 
-        protected HazelcastClientEventHandlerBase(Func<IHazelcastClient, TArgs, CancellationToken, ValueTask> handler)
+        protected HazelcastClientEventHandlerBase(Func<IHazelcastClient, TArgs, ValueTask> handler)
         {
             _handler = handler;
         }
 
-        public ValueTask HandleAsync(IHazelcastClient hazelcastClient, TArgs args, CancellationToken cancellationToken)
-            => _handler(hazelcastClient, args, cancellationToken);
+        public ValueTask HandleAsync(IHazelcastClient hazelcastClient, TArgs args)
+            => _handler(hazelcastClient, args);
     }
 }

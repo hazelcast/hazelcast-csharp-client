@@ -649,5 +649,42 @@ namespace Hazelcast.Tests.DotNet
             throw new Exception("bang");
             //await Throw();
         }
+
+        [Test]
+        public async Task CreateTask()
+        {
+            var e = new ManualResetEventSlim();
+            var state = new SomeState();
+            var task = DoSomethingAsync(state, e);
+            Assert.That(state.Count, Is.EqualTo(1));
+            Assert.That(task.IsCompletedSuccessfully, Is.False);
+            e.Set();
+            await task;
+            Assert.That(state.Count, Is.EqualTo(2));
+            Assert.That(task.IsCompletedSuccessfully, Is.True);
+        }
+
+        public class SomeState
+        {
+            public int Count { get; set; }
+        }
+
+        public async Task DoSomethingAsync(SomeState state, ManualResetEventSlim e)
+        {
+            state.Count += 1;
+            
+            // code before this line executes synchronously when DoSomethingAsync is invoked,
+            // and before the Task instance is returned - so it is pausing the caller.
+
+            await Task.Yield();
+
+            // code after this line executes after the Task instance is returned, and runs
+            // concurrently with the caller.
+
+            e.Wait();
+            state.Count += 1;
+
+            // when we reach the last line of the method, 'await' returns to the caller.
+        }
     }
 }

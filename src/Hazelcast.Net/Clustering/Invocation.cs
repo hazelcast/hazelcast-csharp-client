@@ -101,7 +101,7 @@ namespace Hazelcast.Clustering
             if (targetMemberId == default) throw new ArgumentException("Must be a non-default Guid.", nameof(targetMemberId));
             TargetMemberId = targetMemberId;
         }
-        
+
         /// <summary>
         /// Gets the request message.
         /// </summary>
@@ -209,6 +209,8 @@ namespace Hazelcast.Clustering
         public async ValueTask<bool> CanRetryAsync(Func<long> correlationIdProvider)
         {
             if (correlationIdProvider == null) throw new ArgumentNullException(nameof(correlationIdProvider));
+
+            if (_cancellationToken.IsCancellationRequested) return false;
 
             AttemptsCount += 1;
 

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Events;
 
@@ -29,7 +28,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="eventType">The type of the event.</param>
         /// <param name="handler">An action to execute</param>
-        public DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType eventType, Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType eventType, Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, ValueTask> handler)
             : base(handler)
         {
             EventType = eventType;

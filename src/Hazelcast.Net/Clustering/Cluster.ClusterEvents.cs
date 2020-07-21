@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 namespace Hazelcast.Clustering
 {
@@ -29,7 +27,7 @@ namespace Hazelcast.Clustering
         {
             return new ObjectLifecycleEventSubscription(this, _loggerFactory, IsSmartRouting)
             {
-                Handle = (eventType, args, cancellationToken) => _onObjectLifeCycleEvent(eventType, args, cancellationToken)
+                Handle = (eventType, args) => _onObjectLifeCycleEvent(eventType, args)
             };
         }
 
@@ -41,7 +39,7 @@ namespace Hazelcast.Clustering
         {
             return new PartitionLostEventSubscription(this, _loggerFactory, IsSmartRouting)
             {
-                Handle = (args, cancellationToken) => _onPartitionLost(args, cancellationToken)
+                Handle = args => _onPartitionLost(args)
             };
         }
 

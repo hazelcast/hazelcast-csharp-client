@@ -54,7 +54,7 @@ namespace Hazelcast.Clustering
         private readonly ILogger _logger;
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
-        private Func<ClientMessage, CancellationToken, ValueTask> _onReceiveEventMessage;
+        private Func<ClientMessage, ValueTask> _onReceiveEventMessage;
         private Func<ClientConnection, ValueTask> _onShutdown;
 
 #pragma warning disable CA2213 // Disposable fields should be disposed - is owned by _messageConnection, which is disposed
@@ -144,7 +144,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when the client receives a message.
         /// </summary>
-        public Func<ClientMessage, CancellationToken, ValueTask> OnReceiveEventMessage
+        public Func<ClientMessage, ValueTask> OnReceiveEventMessage
         {
             get => _onReceiveEventMessage;
             set
@@ -248,15 +248,14 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <param name="message">The message.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the message has been handled.</returns>
-        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message, CancellationToken cancellationToken)
+        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
             if (message.IsEvent)
             {
                 HConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
                                          HConsole.Lines(this, 1, message.Dump()));
-                await ReceiveEvent(message, cancellationToken).CAF(); // should not throw
+                await ReceiveEvent(message).CAF(); // should not throw
                 return;
             }
 
@@ -297,12 +296,12 @@ namespace Hazelcast.Clustering
                 ReceiveResponse(invocation, message); // should not throw
         }
 
-        private async ValueTask ReceiveEvent(ClientMessage message, CancellationToken cancellationToken)
+        private async ValueTask ReceiveEvent(ClientMessage message)
         {
             try
             {
                 HConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
-                await _onReceiveEventMessage(message, cancellationToken).CAF();
+                await _onReceiveEventMessage(message).CAF();
             }
             catch (Exception e)
             {

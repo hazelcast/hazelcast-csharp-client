@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Events;
@@ -45,7 +44,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers PartitionLost(Func<IHazelcastClient, PartitionLostEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers PartitionLost(Func<IHazelcastClient, PartitionLostEventArgs, ValueTask> handler)
         {
             Add(new PartitionLostEventHandler(handler));
             return this;
@@ -67,7 +66,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers PartitionsUpdated(Func<IHazelcastClient, EventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers PartitionsUpdated(Func<IHazelcastClient, EventArgs, ValueTask> handler)
         {
             Add(new PartitionsUpdatedEventHandler(handler));
             return this;
@@ -89,7 +88,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers MemberAdded(Func<IHazelcastClient, MemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers MemberAdded(Func<IHazelcastClient, MemberLifecycleEventArgs, ValueTask> handler)
         {
             Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Added, handler));
             return this;
@@ -111,7 +110,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers MemberRemoved(Func<IHazelcastClient, MemberLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers MemberRemoved(Func<IHazelcastClient, MemberLifecycleEventArgs, ValueTask> handler)
         {
             Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Removed, handler));
             return this;
@@ -133,7 +132,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ObjectCreated(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ObjectCreated(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, ValueTask> handler)
         {
             Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Created, handler));
             return this;
@@ -155,7 +154,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ObjectDestroyed(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ObjectDestroyed(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, ValueTask> handler)
         {
             Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Destroyed, handler));
             return this;
@@ -177,7 +176,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ConnectionAdded(Func<IHazelcastClient, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ConnectionAdded(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler));
             return this;
@@ -199,7 +198,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler));
             return this;
@@ -224,7 +223,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ClientStateChanged(Func<IHazelcastClient, ClientLifecycleEventArgs, CancellationToken, ValueTask> handler)
+        public HazelcastClientEventHandlers ClientStateChanged(Func<IHazelcastClient, ClientLifecycleEventArgs, ValueTask> handler)
         {
             Add(new ClientLifecycleEventHandler(handler));
             return this;

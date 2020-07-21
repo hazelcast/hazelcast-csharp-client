@@ -56,6 +56,9 @@ namespace Hazelcast.Tests.Remote
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
 
+            value = await TaskEx.WithTimeout((x, token) => x.GetAsync("key", token), map, TimeSpan.FromSeconds(30)).CAF();
+            Assert.AreEqual(43, value);
+
             await client.DestroyAsync(map);
         }
 
@@ -420,7 +423,7 @@ namespace Hazelcast.Tests.Remote
 
             var eventsCount = 0;
             var id = await map.SubscribeAsync(on => on
-                .EntryAdded(async (sender, args, cancellationToken) =>
+                .EntryAdded(async (sender, args) =>
                 {
                     await Task.Yield();
                     HConsole.WriteLine(this, $"! added: {args.Key} {args.Value}");

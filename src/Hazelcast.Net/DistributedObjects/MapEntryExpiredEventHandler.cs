@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -21,7 +20,7 @@ namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEntryExpiredEventHandler<TKey, TValue, TSender> : MapEntryEventHandlerBase<TKey, TValue, TSender, MapEntryExpiredEventArgs<TKey, TValue>>
     {
-        public MapEntryExpiredEventHandler(Func<TSender, MapEntryExpiredEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEntryExpiredEventHandler(Func<TSender, MapEntryExpiredEventArgs<TKey, TValue>, ValueTask> handler)
             : base(MapEventTypes.Expired, handler)
         { }
 

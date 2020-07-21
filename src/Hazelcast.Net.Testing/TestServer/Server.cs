@@ -152,7 +152,7 @@ namespace Hazelcast.Testing.TestServer
             await connection.SendAsync(eventMessage).CAF();
         }
 
-        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage, CancellationToken cancellationToken)
+        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
         {
             var correlationId = requestMessage.CorrelationId;
 

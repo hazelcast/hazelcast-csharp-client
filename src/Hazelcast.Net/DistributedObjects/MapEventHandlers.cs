@@ -40,7 +40,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> Cleared(Func<IHMap<TKey, TValue>, MapClearedEventArgs, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> Cleared(Func<IHMap<TKey, TValue>, MapClearedEventArgs, ValueTask> handler)
         {
             Add(new MapClearedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> Evicted(Func<IHMap<TKey, TValue>, MapEvictedEventArgs, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> Evicted(Func<IHMap<TKey, TValue>, MapEvictedEventArgs, ValueTask> handler)
         {
             Add(new MapEvictedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -84,7 +84,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryUpdated(Func<IHMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryUpdated(Func<IHMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -106,7 +106,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryRemoved(Func<IHMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryRemoved(Func<IHMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -128,7 +128,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryAdded(Func<IHMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryAdded(Func<IHMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryAddedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -150,7 +150,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryEvicted(Func<IHMap<TKey, TValue>, MapEntryEvictedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryEvicted(Func<IHMap<TKey, TValue>, MapEntryEvictedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryEvictedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -172,7 +172,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryExpired(Func<IHMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryExpired(Func<IHMap<TKey, TValue>, MapEntryExpiredEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryExpiredEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -194,7 +194,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryInvalidated(Func<IHMap<TKey, TValue>, MapEntryInvalidatedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryInvalidated(Func<IHMap<TKey, TValue>, MapEntryInvalidatedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryInvalidatedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -216,7 +216,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryLoaded(Func<IHMap<TKey, TValue>, MapEntryLoadedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryLoaded(Func<IHMap<TKey, TValue>, MapEntryLoadedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryLoadedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
@@ -238,7 +238,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MapEventHandlers<TKey, TValue> EntryMerged(Func<IHMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, CancellationToken, ValueTask> handler)
+        public MapEventHandlers<TKey, TValue> EntryMerged(Func<IHMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
         {
             Add(new MapEntryMergedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;

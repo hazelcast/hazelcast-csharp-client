@@ -92,11 +92,11 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             public int Mode { get; }
         }
 
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
             var sstate = ToSafeState<MapSubscriptionState>(state);
 
-            async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, CancellationToken token)
+            async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
                 var eventType = (MapEventTypes)eventTypeData;
                 if (eventType == MapEventTypes.Nothing) return;
@@ -114,8 +114,8 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
                     {
                         var task = handler switch
                         {
-                            IMapEntryEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, token),
-                            IMapEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, token),
+                            IMapEntryEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries),
+                            IMapEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries),
                             _ => throw new NotSupportedException()
                         };
                         await task.CAF();
@@ -125,8 +125,8 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
 
             return sstate.Mode switch
             {
-                0 => MultiMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
-                1 => MultiMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory, cancellationToken),
+                0 => MultiMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
+                1 => MultiMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
                 _ => throw new NotSupportedException()
             };
         }

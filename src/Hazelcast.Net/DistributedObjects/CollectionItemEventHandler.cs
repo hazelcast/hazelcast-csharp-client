@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -25,14 +24,14 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="T">The topic object type.</typeparam>
     internal class CollectionItemEventHandler<T> : ICollectionItemEventHandler<T>
     {
-        private readonly Func<IHCollection<T>, CollectionItemEventArgs<T>, CancellationToken, ValueTask> _handler;
+        private readonly Func<IHCollection<T>, CollectionItemEventArgs<T>, ValueTask> _handler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CollectionItemEventHandler{T}"/> class.
         /// </summary>
         /// <param name="eventType">The event type to handle.</param>
         /// <param name="handler">An action to execute</param>
-        public CollectionItemEventHandler(CollectionItemEventTypes eventType, Func<IHCollection<T>, CollectionItemEventArgs<T>, CancellationToken, ValueTask> handler)
+        public CollectionItemEventHandler(CollectionItemEventTypes eventType, Func<IHCollection<T>, CollectionItemEventArgs<T>, ValueTask> handler)
         {
             EventType = eventType;
             _handler = handler;
@@ -42,8 +41,8 @@ namespace Hazelcast.DistributedObjects
         public CollectionItemEventTypes EventType { get; }
 
         /// <inheritdoc />
-        public ValueTask HandleAsync(IHCollection<T> sender, MemberInfo member, Lazy<T> item, CancellationToken cancellationToken)
-            => _handler(sender, CreateEventArgs(member, item), cancellationToken);
+        public ValueTask HandleAsync(IHCollection<T> sender, MemberInfo member, Lazy<T> item)
+            => _handler(sender, CreateEventArgs(member, item));
 
         /// <summary>
         /// Creates event arguments.

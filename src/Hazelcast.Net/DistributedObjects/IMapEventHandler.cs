@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -32,7 +31,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="sender">The sender (map) that triggered the event.</param>
         /// <param name="member">The member.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries, CancellationToken cancellationToken);
+        ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries);
     }
 }

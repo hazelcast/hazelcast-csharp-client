@@ -121,11 +121,11 @@ namespace Hazelcast.Clustering
             HConsole.WriteLine(this, "subscribe");
 
             // handles the event
-            ValueTask HandleEventAsync(ClientMessage message, object state, CancellationToken token)
+            ValueTask HandleEventAsync(ClientMessage message, object _)
                 => ClientAddClusterViewListenerCodec.HandleEventAsync(message,
                     HandleMemberViewEvent,
-                    (version, partitions, tk) => HandlePartitionViewEvent(client.Id, version, partitions, tk),
-                    _loggerFactory, token);
+                    (version, partitions) => HandlePartitionViewEvent(client.Id, version, partitions),
+                    _loggerFactory);
 
             try
             {
@@ -163,7 +163,7 @@ namespace Hazelcast.Clustering
         /// <param name="clientId">The unique identifier of the client.</param>
         /// <param name="version">The version.</param>
         /// <param name="partitions">The partitions.</param>
-        private async ValueTask HandlePartitionViewEvent(Guid clientId, int version, IEnumerable<KeyValuePair<Guid, IList<int>>> partitions, CancellationToken cancellationToken)
+        private async ValueTask HandlePartitionViewEvent(Guid clientId, int version, IEnumerable<KeyValuePair<Guid, IList<int>>> partitions)
         {
             Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
 
@@ -173,7 +173,7 @@ namespace Hazelcast.Clustering
 
             // raise event
             // On... does not throw
-            await OnPartitionsUpdated(cancellationToken);
+            await OnPartitionsUpdated();
         }
 
         /// <summary>
@@ -181,8 +181,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="version">The version.</param>
         /// <param name="members">The members.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private async ValueTask HandleMemberViewEvent(int version, ICollection<MemberInfo> members, CancellationToken cancellationToken)
+        private async ValueTask HandleMemberViewEvent(int version, ICollection<MemberInfo> members)
         {
             // get a new table
             var table = new MemberTable(version, members);
@@ -244,7 +243,7 @@ namespace Hazelcast.Clustering
 
             // raise events (On... does not throw)
             foreach (var (eventType, args) in eventArgs)
-                await OnMemberLifecycleEvent(eventType, args, cancellationToken).CAF();
+                await OnMemberLifecycleEvent(eventType, args).CAF();
         }
 
         /// <summary>

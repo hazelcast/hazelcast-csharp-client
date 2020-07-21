@@ -231,9 +231,9 @@ namespace Hazelcast.Clustering
             {
                 try
                 {
-                    var client = GetInvocationClient(invocation);
-                    if (client == null) throw new ClientNotConnectedException();
-                    return await client.SendAsync(invocation, cancellationToken).CAF();
+                    var connection = GetInvocationClientConnection(invocation);
+                    if (connection == null) throw new ClientNotConnectedException();
+                    return await connection.SendAsync(invocation, cancellationToken).CAF();
                 }
                 catch (Exception exception)
                 {
@@ -261,7 +261,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <returns>A client for the invocation.</returns>
-        private ClientConnection GetInvocationClient(Invocation invocation)
+        private ClientConnection GetInvocationClientConnection(Invocation invocation)
         {
             // try the target client
             var client = invocation.TargetClient;

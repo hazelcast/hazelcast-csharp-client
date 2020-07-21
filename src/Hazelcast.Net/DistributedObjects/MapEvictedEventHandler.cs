@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 
@@ -21,7 +20,7 @@ namespace Hazelcast.DistributedObjects
 {
     internal sealed class MapEvictedEventHandler<TKey, TValue, TSender> : MapEventHandlerBase<TKey, TValue, TSender, MapEvictedEventArgs>
     {
-        public MapEvictedEventHandler(Func<TSender, MapEvictedEventArgs, CancellationToken, ValueTask> handler)
+        public MapEvictedEventHandler(Func<TSender, MapEvictedEventArgs, ValueTask> handler)
             : base(MapEventTypes.AllEvicted, handler)
         { }
 

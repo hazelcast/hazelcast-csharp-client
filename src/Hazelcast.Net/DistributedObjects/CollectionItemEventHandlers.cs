@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public CollectionItemEventHandlers<T> ItemAdded(Func<IHCollection<T>, CollectionItemEventArgs<T>, CancellationToken, ValueTask> handler)
+        public CollectionItemEventHandlers<T> ItemAdded(Func<IHCollection<T>, CollectionItemEventArgs<T>, ValueTask> handler)
         {
             Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Added, handler));
             return this;
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public CollectionItemEventHandlers<T> ItemRemoved(Func<IHCollection<T>, CollectionItemEventArgs<T>, CancellationToken, ValueTask> handler)
+        public CollectionItemEventHandlers<T> ItemRemoved(Func<IHCollection<T>, CollectionItemEventArgs<T>, ValueTask> handler)
         {
             Add(new CollectionItemEventHandler<T>(CollectionItemEventTypes.Removed, handler));
             return this;

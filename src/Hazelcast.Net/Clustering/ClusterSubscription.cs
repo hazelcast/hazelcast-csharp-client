@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
         private readonly Func<ClientMessage, object, Guid> _subscribeResponseReader;
         private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
         private readonly Func<ClientMessage, object, bool> _unsubscribeResponseReader;
-        private readonly Func<ClientMessage, object, CancellationToken, ValueTask> _eventHandler;
+        private readonly Func<ClientMessage, object, ValueTask> _eventHandler;
 
         private volatile bool _active = true; // always start as active
 
@@ -50,7 +50,7 @@ namespace Hazelcast.Clustering
             Func<ClientMessage, object, Guid> subscribeResponseReader,
             Func<Guid, object, ClientMessage> unsubscribeRequestFactory,
             Func<ClientMessage, object, bool> unsubscribeResponseReader,
-            Func<ClientMessage, object, CancellationToken, ValueTask> eventHandler,
+            Func<ClientMessage, object, ValueTask> eventHandler,
             object state = null)
             : this(Guid.NewGuid(), subscribeRequest, subscribeResponseReader, unsubscribeRequestFactory, unsubscribeResponseReader, eventHandler, state)
         { }
@@ -69,7 +69,7 @@ namespace Hazelcast.Clustering
             Func<ClientMessage, object, Guid> subscribeResponseReader,
             Func<Guid, object, ClientMessage> unsubscribeRequestFactory,
             Func<ClientMessage, object, bool> unsubscribeResponseReader,
-            Func<ClientMessage, object, CancellationToken, ValueTask> eventHandler,
+            Func<ClientMessage, object, ValueTask> eventHandler,
             object state = null)
         {
             Id = id;
@@ -90,7 +90,7 @@ namespace Hazelcast.Clustering
         /// because it is bound to a client and just dies when the client dies. It will not have any
         /// associated client subscriptions.</para>
         /// </remarks>
-        internal ClusterSubscription(Func<ClientMessage, object, CancellationToken, ValueTask> eventHandler)
+        internal ClusterSubscription(Func<ClientMessage, object, ValueTask> eventHandler)
         {
             _eventHandler = eventHandler;
         }
@@ -167,10 +167,10 @@ namespace Hazelcast.Clustering
         /// Handles an event message.
         /// </summary>
         /// <param name="eventMessage">The event message.</param>
-        public async ValueTask HandleAsync(ClientMessage eventMessage, CancellationToken cancellationToken)
+        public async ValueTask HandleAsync(ClientMessage eventMessage)
         {
             if (!_active) return;
-            await _eventHandler(eventMessage, State, cancellationToken).CAF();
+            await _eventHandler(eventMessage, State).CAF();
         }
 
         /// <summary>

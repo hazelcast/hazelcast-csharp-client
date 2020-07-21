@@ -127,11 +127,11 @@ namespace Hazelcast.DistributedObjects.HMapImpl
             public int Mode { get; }
         }
 
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state, CancellationToken cancellationToken)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
             var sstate = ToSafeState<MapSubscriptionState>(state);
 
-            async ValueTask HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, CancellationToken token)
+            async ValueTask HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
                 var eventType = (MapEventTypes) eventTypeData;
                 if (eventType == MapEventTypes.Nothing) return;
@@ -149,8 +149,8 @@ namespace Hazelcast.DistributedObjects.HMapImpl
                     {
                         var task = handler switch
                         {
-                            IMapEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, token),
-                            IMapEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, token),
+                            IMapEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries),
+                            IMapEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries),
                             _ => throw new NotSupportedException()
                         };
                         await task.CAF();
@@ -160,10 +160,10 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 
             return sstate.Mode switch
             {
-                0 => MapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
-                1 => MapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
-                2 => MapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
-                3 => MapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory, cancellationToken),
+                0 => MapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory),
+                1 => MapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory),
+                2 => MapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory),
+                3 => MapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, LoggerFactory),
                 _ => throw new NotSupportedException()
             };
         }

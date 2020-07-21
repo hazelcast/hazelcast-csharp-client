@@ -116,7 +116,7 @@ namespace Hazelcast.NearCaching
                 (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                 (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
                 (message, state) => MapRemoveEntryListenerCodec.DecodeResponse(message).Response,
-                (message, state, cancellationToken) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync, LoggerFactory, cancellationToken),
+                (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync, LoggerFactory),
                 new EventState { Name = Name });
 
             await Cluster.InstallSubscriptionAsync(subscription, CancellationToken.None).CAF();
@@ -138,8 +138,7 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceuuids"></param>
         /// <param name="partitionuuids"></param>
         /// <param name="sequences"></param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask HandleIMapBatchInvalidationEventAsync(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences, CancellationToken cancellationToken)
+        private ValueTask HandleIMapBatchInvalidationEventAsync(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
         {
             // TODO: consider making RepairingHandler async
             RepairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
@@ -153,8 +152,7 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceUuid"></param>
         /// <param name="partitionUuid"></param>
         /// <param name="sequence"></param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private ValueTask HandleIMapInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence, CancellationToken cancellationToken)
+        private ValueTask HandleIMapInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
             // TODO: consider making RepairingHandler async
             RepairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);

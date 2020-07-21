@@ -35,7 +35,7 @@ namespace Hazelcast.Tests.Messaging
 
             c.OnReceiveMessage = OnReceiveMessageNotImplemented;
             Assert.That(c.OnReceiveMessage, Is.Not.Null);
-            Assert.ThrowsAsync<NotImplementedException>(async () => await c.OnReceiveMessage(default, default, default));
+            Assert.ThrowsAsync<NotImplementedException>(async () => await c.OnReceiveMessage(default, default));
 
             c = new ClientMessageConnection(s, new NullLoggerFactory());
 
@@ -46,7 +46,7 @@ namespace Hazelcast.Tests.Messaging
             Assert.Throws<InvalidOperationException>(() => c.OnReceiveMessage = OnReceiveMessageNotImplemented);
         }
 
-        private static ValueTask OnReceiveMessageNotImplemented(ClientMessageConnection conn, ClientMessage msg, CancellationToken token)
+        private static ValueTask OnReceiveMessageNotImplemented(ClientMessageConnection conn, ClientMessage msg)
             => throw new NotImplementedException();
 
         [Test]
@@ -58,7 +58,7 @@ namespace Hazelcast.Tests.Messaging
 
             ClientMessage recvd = null;
 
-            ValueTask OnReceiveMessage(ClientMessageConnection conn, ClientMessage msg, CancellationToken token)
+            ValueTask OnReceiveMessage(ClientMessageConnection conn, ClientMessage msg)
             {
                 recvd = msg;
                 return default;
@@ -78,52 +78,52 @@ namespace Hazelcast.Tests.Messaging
             // un-fragmented message
             c.OnReceiveMessage = OnReceiveMessage;
             var fragment = NewFragment(ClientMessageFlags.Unfragmented);
-            await c.HandleFragmentAsync(fragment, default);
+            await c.HandleFragmentAsync(fragment);
             Assert.That(recvd, Is.SameAs(fragment));
 
             // exception
             recvd = null;
             c.OnReceiveMessage = OnReceiveMessageNotImplemented;
-            await c.HandleFragmentAsync(fragment, default);
+            await c.HandleFragmentAsync(fragment);
             Assert.That(recvd, Is.Null);
 
             // ...
             c.OnReceiveMessage = OnReceiveMessage;
             fragment = NewFragment(ClientMessageFlags.BeginFragment, 1);
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // begin
+            await c.HandleFragmentAsync(fragment); // begin
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.BeginFragment, 1 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // ignore duplicate begin
+            await c.HandleFragmentAsync(fragment); // ignore duplicate begin
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.Default, 1 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // accumulate
+            await c.HandleFragmentAsync(fragment); // accumulate
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.EndFragment, 2 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // ignore non-matching end
+            await c.HandleFragmentAsync(fragment); // ignore non-matching end
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.EndFragment, 1 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // end
+            await c.HandleFragmentAsync(fragment); // end
             Assert.That(recvd, Is.Not.Null);
 
             Assert.That(recvd.Count(), Is.EqualTo(6));
 
             fragment = NewFragment(ClientMessageFlags.BeginFragment, 4);
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // begin
+            await c.HandleFragmentAsync(fragment); // begin
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.Default, 4);
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // accumulate
+            await c.HandleFragmentAsync(fragment); // accumulate
             Assert.That(recvd, Is.Null);
             c.OnReceiveMessage = OnReceiveMessageNotImplemented;
             fragment = NewFragment(ClientMessageFlags.EndFragment, 4);
             recvd = null;
-            await c.HandleFragmentAsync(fragment, default); // end
+            await c.HandleFragmentAsync(fragment); // end
             Assert.That(recvd, Is.Null);
         }
 
