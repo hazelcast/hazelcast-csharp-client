@@ -21,5 +21,18 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
 
-// FIXME: should we be CLSCompliant when MS is not anymore?
+// We propose to accept that the code is not CLS Compliant anymore (remove
+// the CLSCompliant attribute), i.e. to stop actively indicating that the
+// code complies with the Common Language Specification (CLS) and can be
+// considered language-independent. There are great debates in the .NET
+// community about whether this is important or not, but the main argument
+// is that Microsoft has dropped explicit compliance from most of its
+// Microsoft.Extensions.* library, and .NET Core.
+//
+// This does not mean that the Hazelcast library is not language-independent.
+// Only, we don't indicate that we are, because in order to do so we would
+// need to drop all dependencies on common Microsoft libraries. However,
+// we should aim at being language-independent.
+//
+// TODO: write for instance VB+F# examples just to be sure
 //[assembly: CLSCompliant(true)]
