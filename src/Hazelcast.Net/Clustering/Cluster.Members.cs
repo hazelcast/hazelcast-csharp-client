@@ -36,11 +36,11 @@ namespace Hazelcast.Clustering
         private bool ClearClusterEventsClientWithLock(ClientConnection client)
         {
             // if the specified client is *not* the cluster events client, ignore
-            if (_clusterEventsClient != client)
+            if (_clusterEventsClientConnection != client)
                 return false;
 
             // otherwise, clear the cluster event client
-            _clusterEventsClient = null;
+            _clusterEventsClientConnection = null;
             _correlatedSubscriptions.TryRemove(_clusterEventsCorrelationId, out _);
             _clusterEventsCorrelationId = 0;
             return true;
@@ -65,18 +65,18 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Sets a client to handle cluster events.
         /// </summary>
-        /// <param name="client">An optional candidate client.</param>
+        /// <param name="clientConnection">An optional candidate client connection.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when a new client has been assigned to handle cluster events.</returns>
-        private async Task SetClusterEventsClientAsync(ClientConnection client, CancellationToken cancellationToken)
+        private async Task SetClusterEventsClientAsync(ClientConnection clientConnection, CancellationToken cancellationToken)
         {
             // this will only exit once a client is assigned, or the task is
             // cancelled, when the cluster goes down (and never up again)
             while (!cancellationToken.IsCancellationRequested)
             {
-                client ??= GetRandomClient(false);
+                clientConnection ??= GetRandomClientConnection(false);
 
-                if (client == null)
+                if (clientConnection == null)
                 {
                     // no clients => wait for clients
                     await Task.Delay(_options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();
@@ -86,17 +86,17 @@ namespace Hazelcast.Clustering
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end
                 var correlationId = _correlationIdSequence.GetNext();
-                if (!await SubscribeToClusterEventsAsync(client, correlationId, cancellationToken).CAF()) // does not throw
+                if (!await SubscribeToClusterEventsAsync(clientConnection, correlationId, cancellationToken).CAF()) // does not throw
                 {
                     // failed => try another client
-                    client = null;
+                    clientConnection = null;
                     continue;
                 }
 
                 // success!
                 using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
                 {
-                    _clusterEventsClient = client;
+                    _clusterEventsClientConnection = clientConnection;
                     _clusterEventsCorrelationId = correlationId;
 
                     // avoid race conditions, this task is going to end, and if the
@@ -224,7 +224,7 @@ namespace Hazelcast.Clustering
                     case 1: // old but not new = removed
                         HConsole.WriteLine(this, $"Removed member {member.Id}");
                         eventArgs.Add((MemberLifecycleEventType.Removed, new MemberLifecycleEventArgs(member)));
-                        if (_clients.TryGetValue(member.Id, out var client))
+                        if (_clientConnections.TryGetValue(member.Id, out var client))
                             await client.TerminateAsync().CAF(); // TODO: should die in the background, will self-removed once down
                         break;
 

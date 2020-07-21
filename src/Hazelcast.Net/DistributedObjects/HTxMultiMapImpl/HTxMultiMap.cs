@@ -27,8 +27,8 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
 {
     internal class HTxMultiMap<TKey, TValue> : TransactionalDistributedObjectBase, IHTxMultiMap<TKey, TValue>
     {
-        public HTxMultiMap(string name, Cluster cluster, ClientConnection transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HMultiMap.ServiceName, name, cluster, transactionClient, transactionId, serializationService, loggerFactory)
+        public HTxMultiMap(string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HMultiMap.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         public Task<IReadOnlyList<TValue>> GetAsync(TKey key, TimeSpan timeout = default)
@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             var response = TransactionalMultiMapGetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalMultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -61,7 +61,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalMultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -72,7 +72,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
         {
             var keyData = ToData(key);
             var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             var response = TransactionalMultiMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
@@ -83,7 +83,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
         public async Task<int> CountAsync(CancellationToken cancellationToken)
         {
             var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalMultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -94,7 +94,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalMultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
         }
     }

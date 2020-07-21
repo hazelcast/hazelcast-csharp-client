@@ -21,17 +21,17 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Clustering
 {
-    internal partial class Cluster // Clients
+    internal partial class Cluster // Client Connections
     {
         /// <summary>
-        /// Gets a random client.
+        /// Gets a random client connection.
         /// </summary>
-        /// <param name="throwIfNoClient">Whether to throw if no client can be obtained immediately.</param>
-        /// <returns>A random client.</returns>
+        /// <param name="throwIfNoClient">Whether to throw if no client connection can be obtained immediately.</param>
+        /// <returns>A random client connection.</returns>
         /// <remarks>
-        /// <para>Throws if not client can be obtained immediately.</para>
+        /// <para>Throws if not client connection can be obtained immediately.</para>
         /// </remarks>
-        internal ClientConnection GetRandomClient(bool throwIfNoClient = true)
+        internal ClientConnection GetRandomClientConnection(bool throwIfNoClient = true)
         {
             // In "smart mode" the clients connect to each member of the cluster. Since each
             // data partition uses the well known and consistent hashing algorithm, each client
@@ -49,39 +49,39 @@ namespace Hazelcast.Clustering
                 for (var i = 0; i < maxTries; i++)
                 {
                     var memberId = _loadBalancer.GetMember();
-                    if (_clients.TryGetValue(memberId, out var lbclient))
+                    if (_clientConnections.TryGetValue(memberId, out var lbclient))
                         return lbclient;
                 }
 
-                var client = _clients.Values.FirstOrDefault();
-                if (client == null && throwIfNoClient)
+                var clientConnection = _clientConnections.Values.FirstOrDefault();
+                if (clientConnection == null && throwIfNoClient)
                     throw new HazelcastException("Could not get a client.");
 
-                return client;
+                return clientConnection;
             }
 
             // there should be only one
-            var singleClient = _clients.Values.FirstOrDefault();
-            if (singleClient == null && throwIfNoClient)
+            var singleClientConnection = _clientConnections.Values.FirstOrDefault();
+            if (singleClientConnection == null && throwIfNoClient)
                 throw new HazelcastException("Could not get a client.");
-            return singleClient;
+            return singleClientConnection;
         }
 
         /// <summary>
-        /// Gets a random client.
+        /// Gets a random client connection.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A random client.</returns>
+        /// <returns>A random client connection.</returns>
         /// <remarks>
-        /// <para>Tries to get a client for as long as <paramref name="cancellationToken"/> is not canceled.</para>
+        /// <para>Tries to get a client connection for as long as <paramref name="cancellationToken"/> is not canceled.</para>
         /// </remarks>
-        internal async ValueTask<ClientConnection> GetRandomClient(CancellationToken cancellationToken)
+        internal async ValueTask<ClientConnection> GetRandomClientConnection(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 // this is just basically retrieving a random client
-                var client = GetRandomClient(false);
-                if (client != null) return client;
+                var clientConnection = GetRandomClientConnection(false);
+                if (clientConnection != null) return clientConnection;
 
                 // no clients => wait for clients
                 await Task.Delay(_options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();
@@ -93,10 +93,10 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Gets a snapshot of the current clients.
+        /// Gets a snapshot of the current client connections.
         /// </summary>
-        /// <returns>A snapshot of the current clients.</returns>
-        internal IList<ClientConnection> SnapshotClients()
-            => _clients.Values.ToList();
+        /// <returns>A snapshot of the current client connections.</returns>
+        internal IList<ClientConnection> SnapshotClientConnections()
+            => _clientConnections.Values.ToList();
     }
 }

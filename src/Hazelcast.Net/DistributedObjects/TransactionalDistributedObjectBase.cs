@@ -30,23 +30,23 @@ namespace Hazelcast.DistributedObjects
         /// <param name="serviceName">the name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
-        /// <param name="transactionClient">The client supporting the transaction.</param>
+        /// <param name="transactionClientConnection">The client connection supporting the transaction.</param>
         /// <param name="transactionId">The unique identifier of the transaction.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        protected TransactionalDistributedObjectBase(string serviceName, string name, Cluster cluster, ClientConnection transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        protected TransactionalDistributedObjectBase(string serviceName, string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(serviceName, name, cluster, serializationService, loggerFactory)
         {
             TransactionId = transactionId;
-            TransactionClient = transactionClient;
+            TransactionClientConnection = transactionClientConnection;
         }
 
         /// <inheritdoc />
         public Guid TransactionId { get; }
 
         /// <summary>
-        /// Gets the client supporting the transaction.
+        /// Gets the client connection supporting the transaction.
         /// </summary>
-        public ClientConnection TransactionClient { get; }
+        public ClientConnection TransactionClientConnection { get; }
     }
 }

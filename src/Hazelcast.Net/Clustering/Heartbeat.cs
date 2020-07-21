@@ -105,7 +105,7 @@ namespace Hazelcast.Clustering
 
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            var clients = _cluster.SnapshotClients();
+            var clients = _cluster.SnapshotClientConnections();
             var now = DateTime.UtcNow;
 
             _logger.LogDebug("Run heartbeat");

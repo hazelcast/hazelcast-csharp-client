@@ -36,11 +36,11 @@ namespace Hazelcast.Clustering
 
         // member id -> client
         // the master clients list
-        private readonly ConcurrentDictionary<Guid, ClientConnection> _clients = new ConcurrentDictionary<Guid, ClientConnection>();
+        private readonly ConcurrentDictionary<Guid, ClientConnection> _clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
 
         // address -> client
         // used for fast querying of _memberClients by network address
-        private readonly ConcurrentDictionary<NetworkAddress, ClientConnection> _addressClients = new ConcurrentDictionary<NetworkAddress, ClientConnection>();
+        private readonly ConcurrentDictionary<NetworkAddress, ClientConnection> _addressClientConnections = new ConcurrentDictionary<NetworkAddress, ClientConnection>();
 
         // subscription id -> subscription
         // the master subscriptions list
@@ -79,7 +79,7 @@ namespace Hazelcast.Clustering
         private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
         private Task _clusterMembersTask; // the task that connects clients for all members of the cluster
 
-        private ClientConnection _clusterEventsClient; // the client which handles 'cluster events'
+        private ClientConnection _clusterEventsClientConnection; // the client which handles 'cluster events'
         private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
 
         private MemberTable _memberTable;
@@ -263,11 +263,11 @@ namespace Hazelcast.Clustering
             }
 
             // terminate all clients
-            foreach (var (_, client) in _clients)
+            foreach (var (_, clientConnection) in _clientConnections)
             {
                 try
                 {
-                    await client.DisposeAsync().CAF();
+                    await clientConnection.DisposeAsync().CAF();
                 }
                 catch (Exception e)
                 {
@@ -277,9 +277,9 @@ namespace Hazelcast.Clustering
 
             _clusterCancellation.Dispose();
             _clusterLock.Dispose();
-            var clusterEventsClient = _clusterEventsClient;
-            if (clusterEventsClient != null)
-                await clusterEventsClient.DisposeAsync().CAF();
+            var clusterEventsClientConnection = _clusterEventsClientConnection;
+            if (clusterEventsClientConnection != null)
+                await clusterEventsClientConnection.DisposeAsync().CAF();
             _firstMembersView?.Dispose();
         }
     }

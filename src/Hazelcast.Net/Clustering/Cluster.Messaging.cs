@@ -264,26 +264,26 @@ namespace Hazelcast.Clustering
         private ClientConnection GetInvocationClientConnection(Invocation invocation)
         {
             // try the target client
-            var client = invocation.TargetClient;
+            var client = invocation.TargetClientConnection;
             if (client != null) return client;
 
             // try the partition
             if (invocation.TargetPartitionId >= 0)
             {
                 var memberId = Partitioner.GetPartitionOwner(invocation.TargetPartitionId);
-                if (_clients.TryGetValue(memberId, out client))
+                if (_clientConnections.TryGetValue(memberId, out client))
                     return client;
             }
 
             // try the member
             if (invocation.TargetMemberId != default)
             {
-                if (_clients.TryGetValue(invocation.TargetMemberId, out client))
+                if (_clientConnections.TryGetValue(invocation.TargetMemberId, out client))
                     return client;
             }
 
             // fail over to random client
-            return GetRandomClient(false);
+            return GetRandomClientConnection(false);
         }
     }
 }

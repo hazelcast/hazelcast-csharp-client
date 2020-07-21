@@ -25,8 +25,8 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
 {
     internal class HTxQueue<TItem> : TransactionalDistributedObjectBase, IHTxQueue<TItem>
     {
-        public HTxQueue(string name, Cluster cluster, ClientConnection transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HQueue.ServiceName, name, cluster, transactionClient, transactionId, serializationService, loggerFactory)
+        public HTxQueue(string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HQueue.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         public Task<bool> TryEnqueueAsync(TItem item)
@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
             var itemData = ToSafeData(item);
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
@@ -91,7 +91,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
         public async Task<int> CountAsync(CancellationToken cancellationToken)
         {
             var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -101,7 +101,7 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
         public async Task<TItem> DequeueAsync(CancellationToken cancellationToken)
         {
             var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             var response = TransactionalQueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }

@@ -25,8 +25,8 @@ namespace Hazelcast.DistributedObjects.HTxSetImpl
 {
     internal class HTxSet<TItem> : TransactionalDistributedObjectBase, IHTxSet<TItem>
     {
-        public HTxSet(string name, Cluster cluster, ClientConnection transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HSet.ServiceName, name, cluster, transactionClient, transactionId, serializationService, loggerFactory)
+        public HTxSet(string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HSet.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         public Task<bool> AddAsync(TItem item, TimeSpan timeout = default)
@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects.HTxSetImpl
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalSetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects.HTxSetImpl
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalSetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -57,7 +57,7 @@ namespace Hazelcast.DistributedObjects.HTxSetImpl
         public async Task<int> CountAsync(CancellationToken cancellationToken)
         {
             var requestMessage = TransactionalSetSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalSetSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

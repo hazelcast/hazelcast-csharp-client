@@ -201,12 +201,12 @@ namespace Hazelcast.Clustering
         private async Task<Attempt<ClientConnection>> TryConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // ReSharper disable once InconsistentlySynchronizedField
-            if (_addressClients.TryGetValue(address, out var client))
+            if (_addressClientConnections.TryGetValue(address, out var clientConnection))
             {
                 // if we already have a client for that address, return the client
                 // if it is active, or fail if it is not - cannot open yet another
                 // client to that same address
-                if (client.Active) return client;
+                if (clientConnection.Active) return clientConnection;
                 return Attempt.Failed;
             }
 
@@ -227,20 +227,20 @@ namespace Hazelcast.Clustering
             try
             {
                 // ReSharper disable once InconsistentlySynchronizedField
-                if (_addressClients.TryGetValue(address, out client))
+                if (_addressClientConnections.TryGetValue(address, out clientConnection))
                 {
                     // if we already have a client for that address, return the client
                     // if it is active, or fail if it is not - cannot open yet another
                     // client to that same address
-                    if (client.Active) return client;
+                    if (clientConnection.Active) return clientConnection;
                     return Attempt.Failed;
                 }
 
                 // else actually connect - this may throw
 #pragma warning disable CA2000 // Dispose objects before losing scope - will be disposed, eventually
-                client = await ConnectWithLockAsync(address, cancellationToken).CAF();
+                clientConnection = await ConnectWithLockAsync(address, cancellationToken).CAF();
 #pragma warning restore CA2000
-                return client;
+                return clientConnection;
             }
             catch (Exception e)
             {
@@ -260,22 +260,22 @@ namespace Hazelcast.Clustering
             address = _addressProvider.Map(address);
 
             // create the client
-            var client = new ClientConnection(address, _options.Messaging, _options.Networking.Socket, _correlationIdSequence, _loggerFactory)
+            var clientConnection = new ClientConnection(address, _options.Messaging, _options.Networking.Socket, _correlationIdSequence, _loggerFactory)
             {
                 OnReceiveEventMessage = OnEventMessage,
                 OnShutdown = HandleClientShutdown
             };
 
             // connect to the server (may throw)
-            await client.ConnectAsync(cancellationToken).CAF();
+            await clientConnection.ConnectAsync(cancellationToken).CAF();
             cancellationToken.ThrowIfCancellationRequested();
 
             // authenticate (may throw)
             var info = await _authenticator
-                .AuthenticateAsync(client, Name, ClientId, ClientName, _options.Labels, _serializationService, cancellationToken)
+                .AuthenticateAsync(clientConnection, Name, ClientId, ClientName, _options.Labels, _serializationService, cancellationToken)
                 .CAF();
             if (info == null) throw new HazelcastException("Failed to authenticate");
-            client.NotifyAuthenticated(info);
+            clientConnection.NotifyAuthenticated(info);
 
             _logger.LogInformation("Authenticated client \"{ClientName}\" ({ClientId})" +
                                    " with cluster \"{ClusterName}\" member {MemberId}" +
@@ -283,7 +283,7 @@ namespace Hazelcast.Clustering
                                    " at {RemoteAddress} via {LocalAddress}.",
                 ClientName, ClientId.ToString("N").Substring(0, 7),
                 Name, info.MemberId.ToString("N").Substring(0, 7),
-                info.ServerVersion, info.MemberAddress, client.LocalEndPoint);
+                info.ServerVersion, info.MemberAddress, clientConnection.LocalEndPoint);
 
             // notify partitioner (may throw)
             Partitioner.NotifyPartitionsCount(info.PartitionCount);
@@ -291,19 +291,19 @@ namespace Hazelcast.Clustering
             // register & prepare the client
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
-                var firstClient = _clients.Count == 0;
+                var firstClient = _clientConnections.Count == 0;
 
                 // if client is not active anymore, we can't continue - there is no
                 // race condition here because the client shutdown handler also lock
                 // on _clusterStateLock
-                if (!client.Active)
+                if (!clientConnection.Active)
                     throw new HazelcastException("Client is not active.");
 
-                if (_clients.ContainsKey(info.MemberId))
+                if (_clientConnections.ContainsKey(info.MemberId))
                     throw new HazelcastException("Duplicate client.");
 
-                _clients[info.MemberId] = client;
-                _addressClients[address] = client;
+                _clientConnections[info.MemberId] = clientConnection;
+                _addressClientConnections[address] = clientConnection;
 
                 _clusterState = ClusterState.Connected;
 
@@ -334,13 +334,13 @@ namespace Hazelcast.Clustering
 
                 // if we don't have a cluster client yet, start a
                 // single, cluster-wide task ensuring there is a cluster events client
-                if (_clusterEventsClient == null)
-                    StartSetClusterEventsClientWithLock(client, _clusterCancellation.Token);
+                if (_clusterEventsClientConnection == null)
+                    StartSetClusterEventsClientWithLock(clientConnection, _clusterCancellation.Token);
 
                 // per-client task subscribing the client to events
                 // this is entirely fire-and-forget, it anything goes wrong it will shut the client down
                 var subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
-                client.StartBackgroundTask(token => InstallSubscriptionsOnNewClient(client, subscriptions, token), _clusterCancellation.Token);
+                clientConnection.StartBackgroundTask(token => InstallSubscriptionsOnNewClient(clientConnection, subscriptions, token), _clusterCancellation.Token);
 
                 await OnConnectionAdded(/*client*/).CAF(); // does not throw
 
@@ -348,7 +348,7 @@ namespace Hazelcast.Clustering
                     await OnClientLifecycleEvent(ClientLifecycleState.Connected).CAF(); // does not throw
             }
 
-            return client;
+            return clientConnection;
         }
 
         private async ValueTask HandleClientShutdown(ClientConnection client)
@@ -359,10 +359,10 @@ namespace Hazelcast.Clustering
 
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
-                _addressClients.TryRemove(client.Address, out _);
-                _clients.TryRemove(client.MemberId, out _);
+                _addressClientConnections.TryRemove(client.Address, out _);
+                _clientConnections.TryRemove(client.MemberId, out _);
 
-                var lastClient = _clients.Count == 0;
+                var lastClient = _clientConnections.Count == 0;
 
                 if (lastClient)
                     await OnClientLifecycleEvent(ClientLifecycleState.Disconnected).CAF(); // does not throw

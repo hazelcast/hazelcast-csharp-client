@@ -38,7 +38,7 @@ namespace Hazelcast.Transactions
 
         private long _threadId; // the "threadId", i.e. async context, which owns the transaction
         private long _startTime; // the start time of the transaction
-        private ClientConnection _client; // the client supporting the transaction
+        private ClientConnection _clientConnection; // the client supporting the transaction
 
         // FIXME transactions need some TLC
         // how is two-phases commit supposed to work? is it all server-side (and then, why
@@ -110,7 +110,7 @@ namespace Hazelcast.Transactions
             if (InTransaction)
                 throw new InvalidOperationException("Nested transactions are not supported.");
 
-            _client = await _cluster.GetRandomClient(cancellationToken).CAF();
+            _clientConnection = await _cluster.GetRandomClientConnection(cancellationToken).CAF();
             InTransaction = true;
             _threadId = ContextId;
             _startTime = Clock.Milliseconds;
@@ -119,7 +119,7 @@ namespace Hazelcast.Transactions
             {
                 var timeoutMilliseconds = _options.Timeout.TimeoutMilliseconds(0, int.MaxValue);
                 var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMilliseconds, _options.Durability, (int) _options.Type, ContextId);
-                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _client, cancellationToken).CAF();
+                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection, cancellationToken).CAF();
                 TransactionId = TransactionCreateCodec.DecodeResponse(responseMessage).Response;
                 State = TransactionState.Active;
             }
@@ -154,7 +154,7 @@ namespace Hazelcast.Transactions
             try
             {
                 var requestMessage = TransactionCommitCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _client, cancellationToken).CAF();
+                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection, cancellationToken).CAF();
                 _ = TransactionCommitCodec.DecodeResponse(responseMessage);
                 State = TransactionState.Committed;
             }
@@ -191,7 +191,7 @@ namespace Hazelcast.Transactions
             try
             {
                 var requestMessage = TransactionRollbackCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _client, cancellationToken).CAF();
+                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection, cancellationToken).CAF();
                 _ = TransactionRollbackCodec.DecodeResponse(responseMessage);
                 State = TransactionState.RolledBack;
             }
@@ -249,7 +249,7 @@ namespace Hazelcast.Transactions
         public Task<IHTxList<TItem>> GetListAsync<TItem>(string name, CancellationToken cancellationToken)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxList<TItem>, HTxList<TItem>>(HList.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxList<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                (n, cluster, serializationService, loggerFactory) => new HTxList<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
 
@@ -269,7 +269,7 @@ namespace Hazelcast.Transactions
         public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, CancellationToken cancellationToken)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxSet<TItem>, HTxSet<TItem>>(HSet.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxSet<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                (n, cluster, serializationService, loggerFactory) => new HTxSet<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
 
@@ -285,7 +285,7 @@ namespace Hazelcast.Transactions
         public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, CancellationToken cancellationToken)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxQueue<TItem>, HTxQueue<TItem>>(HQueue.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxQueue<TItem>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                (n, cluster, serializationService, loggerFactory) => new HTxQueue<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
 
@@ -301,7 +301,7 @@ namespace Hazelcast.Transactions
         public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(HMultiMap.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxMultiMap<TKey, TValue>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                (n, cluster, serializationService, loggerFactory) => new HTxMultiMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
 
@@ -317,7 +317,7 @@ namespace Hazelcast.Transactions
         public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(HMap.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxMap<TKey, TValue>(name, cluster, _client, TransactionId, serializationService, loggerFactory),
+                (n, cluster, serializationService, loggerFactory) => new HTxMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
     }

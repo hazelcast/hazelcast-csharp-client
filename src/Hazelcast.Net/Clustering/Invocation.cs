@@ -56,16 +56,16 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
         /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="targetClient">An optional client, that the invocation is bound to.</param>
+        /// <param name="targetClientConnection">An optional client connection, that the invocation is bound to.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>When an invocation is bound to a client, it will only be sent to that client,
         /// and it cannot and will not be retried if the client dies.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, ClientConnection targetClient, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, ClientConnection targetClientConnection, CancellationToken cancellationToken)
             : this(requestMessage, messagingOptions, cancellationToken)
         {
-            TargetClient = targetClient ?? throw new ArgumentNullException(nameof(targetClient));
+            TargetClientConnection = targetClientConnection ?? throw new ArgumentNullException(nameof(targetClientConnection));
         }
 
         /// <summary>
@@ -108,9 +108,9 @@ namespace Hazelcast.Clustering
         public ClientMessage RequestMessage { get; }
 
         /// <summary>
-        /// Gets the target client, if any, otherwise <c>null</c>.
+        /// Gets the target client connection, if any, otherwise <c>null</c>.
         /// </summary>
-        public ClientConnection TargetClient { get; }
+        public ClientConnection TargetClientConnection { get; }
 
         /// <summary>
         /// Gets the unique identifier of the target partition, if any, otherwise <c>-1</c>.
@@ -183,7 +183,7 @@ namespace Hazelcast.Clustering
             switch (exception)
             {
                 case IOException _:
-                    return TargetClient == null; // not bound to a client
+                    return TargetClientConnection == null; // not bound to a client
 
                 case SocketException _:
                 case ClientProtocolException cpe when cpe.Retryable:
@@ -193,7 +193,7 @@ namespace Hazelcast.Clustering
                 // because we need to perform more checks on the client and message
                 case ClientProtocolException cpe when cpe.Error == ClientProtocolError.TargetDisconnected:
                 case TargetDisconnectedException _:
-                    return TargetClient == null && // not bound to a client
+                    return TargetClientConnection == null && // not bound to a client
                            (RequestMessage.IsRetryable || retryOnTargetDisconnected);
 
                 default:

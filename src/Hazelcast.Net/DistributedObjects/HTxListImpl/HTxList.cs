@@ -34,12 +34,12 @@ namespace Hazelcast.DistributedObjects.HTxListImpl
         /// </summary>
         /// <param name="name">The unique name of the list.</param>
         /// <param name="cluster">The cluster.</param>
-        /// <param name="transactionClient">The client supporting the transaction.</param>
+        /// <param name="transactionClientConnection">The client supporting the transaction.</param>
         /// <param name="transactionId">The unique identifier of the transaction.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        public HTxList(string name, Cluster cluster, ClientConnection transactionClient, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HList.ServiceName, name, cluster, transactionClient, transactionId, serializationService, loggerFactory)
+        public HTxList(string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HList.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         /// <inheritoc />
@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects.HTxListImpl
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalListAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -56,7 +56,7 @@ namespace Hazelcast.DistributedObjects.HTxListImpl
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalListRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.HTxListImpl
         public async Task<int> CountAsync(CancellationToken cancellationToken)
         {
             var requestMessage = TransactionalListSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClient, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalListSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

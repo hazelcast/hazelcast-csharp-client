@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering
             List<ClientConnection> clients;
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
-                clients = _clients.Values.Where(x => x.Active).ToList();
+                clients = _clientConnections.Values.Where(x => x.Active).ToList();
 
                 if (!_subscriptions.TryAdd(subscription.Id, subscription))
                     throw new InvalidOperationException("A subscription with the same identifier already exists.");
