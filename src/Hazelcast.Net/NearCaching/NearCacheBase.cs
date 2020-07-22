@@ -173,7 +173,7 @@ namespace Hazelcast.NearCaching
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
                 return false;
 
-            ValueTask<NearCacheEntry> CreateCacheEntry(IData _)
+            ValueTask<NearCacheEntry> CreateCacheEntry(IData _, CancellationToken __)
             {
                 // trust that the caller send the proper internal cache value
                 // and we don't have to ToEntryValue(value) again
@@ -184,7 +184,7 @@ namespace Hazelcast.NearCaching
 
             try
             {
-                var added = await _entries.TryAddAsync(keyData, CreateCacheEntry).CAF();
+                var added = await _entries.TryAddAsync(keyData, CreateCacheEntry, default).CAF();
                 return added;
             }
             catch
@@ -224,7 +224,7 @@ namespace Hazelcast.NearCaching
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKeyAsync(keyData).CAF())
                 return Attempt.Fail(await valueFactory(keyData).CAF());
 
-            async ValueTask<NearCacheEntry> CreateCacheEntry(IData _)
+            async ValueTask<NearCacheEntry> CreateCacheEntry(IData _, CancellationToken __)
             {
                 var valueData = await valueFactory(keyData).CAF();
                 var cachedValue = ToEntryValue(valueData);
@@ -233,7 +233,7 @@ namespace Hazelcast.NearCaching
                 return e;
             }
 
-            var ncEntry = await _entries.GetOrAddAsync(keyData, CreateCacheEntry).CAF();
+            var ncEntry = await _entries.GetOrAddAsync(keyData, CreateCacheEntry, default).CAF();
 
             if (ncEntry.Value != null) return ncEntry.Value;
             Invalidate(keyData);

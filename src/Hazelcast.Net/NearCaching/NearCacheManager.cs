@@ -71,12 +71,12 @@ namespace Hazelcast.NearCaching
 
         public async ValueTask<NearCacheBase> GetOrCreateNearCacheAsync(string mapName, NearCacheNamedOptions options, CancellationToken cancellationToken)
         {
-            return await _caches.GetOrAddAsync(mapName, async name =>
+            return await _caches.GetOrAddAsync(mapName, async (name, token) =>
             {
                 var nearCache = new NearCache(name, _cluster, _serializationService, _loggerFactory, options, GetMaxToleratedMissCount());
-                await InitializeNearCache(nearCache, cancellationToken).CAF();
+                await InitializeNearCache(nearCache, token).CAF();
                 return nearCache;
-            }).CAF();
+            }, cancellationToken).CAF();
         }
 
         private int GetMaxToleratedMissCount()
@@ -176,7 +176,7 @@ namespace Hazelcast.NearCaching
                     throw new NotSupportedException($"Cache type {baseNearCache.GetType()} is not supported here.");
 
                 var repairingHandler = nearCache.RepairingHandler;
-                if (repairingHandler == null) return; // through that should never happen
+                if (repairingHandler == null) return; // though that should never happen
 
                 var names = new List<string> { nearCache.Name };
                 await FetchMetadataAsync(names, response =>

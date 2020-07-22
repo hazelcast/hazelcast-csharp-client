@@ -74,7 +74,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
         Task OpenAsync(TimeSpan timeout = default)
         {
@@ -90,7 +90,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
         Task OpenAsync(CancellationToken cancellationToken)
         {

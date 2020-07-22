@@ -37,26 +37,14 @@ namespace Hazelcast.Transactions
         /// <summary>
         /// Commits the transaction.
         /// </summary>
-        /// <param name="timeout">A timeout.</param>
-        Task CommitAsync(TimeSpan timeout = default);
-
-        /// <summary>
-        /// Commits the transaction.
-        /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
-        Task CommitAsync(CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Rolls the transaction back.
-        /// </summary>
-        /// <param name="timeout">A timeout.</param>
-        Task RollbackAsync(TimeSpan timeout = default);
+        Task CommitAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Rolls the transaction back.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
-        Task RollbackAsync(CancellationToken cancellationToken);
+        Task RollbackAsync(CancellationToken cancellationToken = default);
 
         // Objects
 
@@ -65,27 +53,9 @@ namespace Hazelcast.Transactions
         /// </summary>
         /// <typeparam name="TItem">The type of the items.</typeparam>
         /// <param name="name">The unique name of the list.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional list that was retrieved or created.</returns>
-        Task<IHTxList<TItem>> GetListAsync<TItem>(string name, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="name">The unique name of the list.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional list that was retrieved or created.</returns>
-        Task<IHTxList<TItem>> GetListAsync<TItem>(string name, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="source">The original, non-transactional list.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional list that was retrieved or created.</returns>
-        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, TimeSpan timeout = default);
+        Task<IHTxList<TItem>> GetListAsync<TItem>(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
@@ -94,16 +64,7 @@ namespace Hazelcast.Transactions
         /// <param name="source">The original, non-transactional list.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional list that was retrieved or created.</returns>
-        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="name">The unique name of the set.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional set that was retrieved or created.</returns>
-        Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, TimeSpan timeout = default);
+        Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
@@ -112,16 +73,7 @@ namespace Hazelcast.Transactions
         /// <param name="name">The unique name of the set.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional set that was retrieved or created.</returns>
-        Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="source">The original, non-transactional set.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional set that was retrieved or created.</returns>
-        Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, TimeSpan timeout = default);
+        Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
@@ -130,16 +82,7 @@ namespace Hazelcast.Transactions
         /// <param name="source">The original, non-transactional set.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional set that was retrieved or created.</returns>
-        Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="name">The unique name of the queue.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional queue that was retrieved or created.</returns>
-        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, TimeSpan timeout = default);
+        Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
@@ -148,16 +91,7 @@ namespace Hazelcast.Transactions
         /// <param name="name">The unique name of the v.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional queue that was retrieved or created.</returns>
-        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="source">The original, non-transactional queue.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional queue that was retrieved or created.</returns>
-        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, TimeSpan timeout = default);
+        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
@@ -166,17 +100,7 @@ namespace Hazelcast.Transactions
         /// <param name="source">The original, non-transactional queue.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional queue that was retrieved or created.</returns>
-        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxMultiMap{TKey, TValue}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the keys.</typeparam>
-        /// <typeparam name="TValue">The type of the values.</typeparam>
-        /// <param name="name">The unique name of the map.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, TimeSpan timeout = default);
+        Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxMultiMap{TKey, TValue}"/> transactional distributed object.
@@ -186,17 +110,7 @@ namespace Hazelcast.Transactions
         /// <param name="name">The unique name of the v.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxMultiMap{TKey, TValue}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the keys.</typeparam>
-        /// <typeparam name="TValue">The type of the values.</typeparam>
-        /// <param name="source">The original, non-transactional map.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, TimeSpan timeout = default);
+        Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxMultiMap{TKey, TValue}"/> transactional distributed object.
@@ -206,17 +120,7 @@ namespace Hazelcast.Transactions
         /// <param name="source">The original, non-transactional map.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxMap{TKey, TValue}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the keys.</typeparam>
-        /// <typeparam name="TValue">The type of the values.</typeparam>
-        /// <param name="name">The unique name of the map.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default);
+        Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxMap{TKey, TValue}"/> transactional distributed object.
@@ -226,17 +130,7 @@ namespace Hazelcast.Transactions
         /// <param name="name">The unique name of the v.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxMap{TKey, TValue}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the keys.</typeparam>
-        /// <typeparam name="TValue">The type of the values.</typeparam>
-        /// <param name="source">The original, non-transactional map.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, TimeSpan timeout = default);
+        Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a <see cref="IHTxMap{TKey, TValue}"/> transactional distributed object.
@@ -246,6 +140,6 @@ namespace Hazelcast.Transactions
         /// <param name="source">The original, non-transactional map.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, CancellationToken cancellationToken);
+        Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, CancellationToken cancellationToken = default);
     }
 }

@@ -33,7 +33,6 @@ namespace Hazelcast.Transactions
     {
         private readonly Cluster _cluster;
         private readonly TransactionOptions _options;
-        private readonly int _defaultOperationTimeoutMilliseconds;
         private readonly DistributedObjectFactory _distributedObjectFactory;
 
         private long _threadId; // the "threadId", i.e. async context, which owns the transaction
@@ -50,14 +49,12 @@ namespace Hazelcast.Transactions
         /// </summary>
         /// <param name="cluster">The cluster.</param>
         /// <param name="options">Transaction options.</param>
-        /// <param name="defaultOperationTimeoutMilliseconds">The default operation timeout.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        public TransactionContext(Cluster cluster, TransactionOptions options, int defaultOperationTimeoutMilliseconds, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public TransactionContext(Cluster cluster, TransactionOptions options, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _defaultOperationTimeoutMilliseconds = defaultOperationTimeoutMilliseconds;
 
             if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
@@ -135,11 +132,7 @@ namespace Hazelcast.Transactions
         }
 
         /// <inheritdoc />
-        public Task CommitAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CommitAsync, timeout, _defaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task CommitAsync(CancellationToken cancellationToken)
+        public async Task CommitAsync(CancellationToken cancellationToken = default)
         {
             if (State != TransactionState.Active)
                 throw new InvalidOperationException("There is no active transaction to commit.");
@@ -170,11 +163,7 @@ namespace Hazelcast.Transactions
         }
 
         /// <inheritdoc />
-        public Task RollbackAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(RollbackAsync, timeout, _defaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task RollbackAsync(CancellationToken cancellationToken)
+        public async Task RollbackAsync(CancellationToken cancellationToken = default)
         {
             if (State == TransactionState.RollingBack)
             {
@@ -234,14 +223,6 @@ namespace Hazelcast.Transactions
         // Objects
 
         /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetListAsync<TItem>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(string name, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetListAsync<TItem>, name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
         public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, CancellationToken cancellationToken)
             => GetListAsync<TItem>(source.Name, cancellationToken);
 
@@ -252,14 +233,6 @@ namespace Hazelcast.Transactions
                 (n, cluster, serializationService, loggerFactory) => new HTxList<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
-
-        /// <inheritdoc />
-        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetSetAsync<TItem>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetSetAsync<TItem>, name, timeout, _defaultOperationTimeoutMilliseconds);
 
         /// <inheritdoc />
         public Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, CancellationToken cancellationToken)
@@ -273,12 +246,6 @@ namespace Hazelcast.Transactions
                 cancellationToken);
         }
 
-        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetQueueAsync<TItem>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetQueueAsync<TItem>, name, timeout, _defaultOperationTimeoutMilliseconds);
-
         public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, CancellationToken cancellationToken)
             => GetQueueAsync<TItem>(source.Name, cancellationToken);
 
@@ -289,12 +256,6 @@ namespace Hazelcast.Transactions
                 cancellationToken);
         }
 
-        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetMultiMapAsync<TKey, TValue>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetMultiMapAsync<TKey, TValue>, name, timeout, _defaultOperationTimeoutMilliseconds);
-
         public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, CancellationToken cancellationToken)
             => GetMultiMapAsync<TKey, TValue>(source.Name, cancellationToken);
 
@@ -304,12 +265,6 @@ namespace Hazelcast.Transactions
                 (n, cluster, serializationService, loggerFactory) => new HTxMultiMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
                 cancellationToken);
         }
-
-        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetMapAsync<TKey, TValue>, source.Name, timeout, _defaultOperationTimeoutMilliseconds);
-
-        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetMapAsync<TKey, TValue>, name, timeout, _defaultOperationTimeoutMilliseconds);
 
         public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, CancellationToken cancellationToken)
             => GetMapAsync<TKey, TValue>(source.Name, cancellationToken);

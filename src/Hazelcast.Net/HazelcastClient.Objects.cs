@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -36,38 +35,16 @@ namespace Hazelcast
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
 
         /// <inheritdoc />
-        public ValueTask DestroyAsync(IDistributedObject o, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(DestroyAsync, o, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken)
         {
             await _distributedObjectFactory.DestroyAsync(o.ServiceName, o.Name, cancellationToken).CAF();
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
+        public async Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
-            var task = TaskEx.WithTimeout(GetMapAsync<TKey, TValue>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
+            // FIXME canecllation?!
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
-        {
             // lookup a cache configuration for the specified map
             var nearCacheOptions = _options.NearCache.GetConfig(name);
             var nearCache = nearCacheOptions == null
@@ -79,35 +56,13 @@ namespace Hazelcast
                     ? new HMap<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
                     : new HMapWithCache<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(HMap.ServiceName, name, true, CreateMap, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            return await _distributedObjectFactory.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(HMap.ServiceName, name, true, CreateMap, cancellationToken).CAF();
         }
 
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
-        {
-        var task = TaskEx.WithTimeout(GetReplicatedMapAsync<TKey, TValue>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
         Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
@@ -126,23 +81,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetMultiMapAsync<TKey, TValue>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
         Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
         {
@@ -159,23 +98,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IHTopic<T>> GetTopicAsync<T>(string name, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetTopicAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
         Task<IHTopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken)
         {
@@ -194,25 +117,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-            Task<IHList<T>> GetListAsync<T>(string name, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetListAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken)
+        Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHList<T>, HList<T>>(HList.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
@@ -229,25 +136,9 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-            Task<IHSet<T>> GetSetAsync<T>(string name, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetSetAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<IHSet<T>> GetSetAsync<T>(string name, CancellationToken cancellationToken)
+        Task<IHSet<T>> GetSetAsync<T>(string name, CancellationToken cancellationToken)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHSet<T>, HSet<T>>(HSet.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
@@ -264,23 +155,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IHQueue<T>> GetQueueAsync<T>(string name, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetQueueAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
         Task<IHQueue<T>> GetQueueAsync<T>(string name, CancellationToken cancellationToken)
         {
@@ -299,30 +174,14 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetRingBufferAsync<T>, name, timeout, _options.Messaging.DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name, CancellationToken cancellationToken)
         {
+            const int maxBatchSize = 1000; // TODO: should become an option
             var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(HRingBuffer.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
-                    // TODO: maxBatchSize was a constant, should become an option
-                    => new HRingBuffer<T>(n, cluster, 1000, serializationService, loggerFactory),
+                    => new HRingBuffer<T>(n, cluster, maxBatchSize, serializationService, loggerFactory),
                 cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

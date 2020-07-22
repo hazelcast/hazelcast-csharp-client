@@ -37,18 +37,19 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="factory">A value factory.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value in the dictionary.</returns>
-        public async ValueTask<TValue> GetOrAddAsync(TKey key, Func<TKey, ValueTask<TValue>> factory)
+        public async ValueTask<TValue> GetOrAddAsync(TKey key, Func<TKey, CancellationToken, ValueTask<TValue>> factory, CancellationToken cancellationToken = default)
         {
             var entry = _dictionary.GetOrAdd(key, k => new Entry(k));
-            
+
             // fast
             if (entry.HasValue) return entry.Value;
 
             try
             {
                 // await - may throw
-                return await entry.GetValue(factory).CAF();
+                return await entry.GetValue(factory, cancellationToken).CAF();
             }
             catch
             {
@@ -63,8 +64,9 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="factory">A value factory.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns><c>true</c> if a key/value pair was added; otherwise <c>false</c>.</returns>
-        public async ValueTask<bool> TryAddAsync(TKey key, Func<TKey, ValueTask<TValue>> factory)
+        public async ValueTask<bool> TryAddAsync(TKey key, Func<TKey, CancellationToken, ValueTask<TValue>> factory, CancellationToken cancellationToken = default)
         {
             var entry = new Entry(key);
             if (!_dictionary.TryAdd(key, entry)) return false;
@@ -72,7 +74,7 @@ namespace Hazelcast.Core
             try
             {
                 // await - may throw
-                await entry.GetValue(factory).CAF();
+                await entry.GetValue(factory, cancellationToken).CAF();
                 return true;
             }
             catch
@@ -237,14 +239,14 @@ namespace Hazelcast.Core
                 }
             }
 
-            public async Task<TValue> GetValue(Func<TKey, ValueTask<TValue>> factory)
+            public async Task<TValue> GetValue(Func<TKey, CancellationToken, ValueTask<TValue>> factory, CancellationToken cancellationToken = default)
             {
                 // there is only one factory, each method is not supposed to try another factory
 
                 lock (_lock)
                 {
                     if (HasValue) return _value;
-                    _creating ??= factory(_key).AsTask();
+                    _creating ??= factory(_key, cancellationToken).AsTask();
                 }
 
                 _value = await _creating.CAF();

@@ -66,9 +66,10 @@ namespace Hazelcast.DistributedObjects
         /// <param name="factory">The object factory.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The distributed object.</returns>
-        public async Task<T> GetOrCreateAsync<T, TImpl>(string serviceName, string name, bool remote,
-                                                 Func<string, Cluster, ISerializationService, ILoggerFactory, TImpl> factory,
-                                                 CancellationToken cancellationToken)
+        public async Task<T> GetOrCreateAsync<T, TImpl>(
+            string serviceName, string name, bool remote,
+            Func<string, Cluster, ISerializationService, ILoggerFactory, TImpl> factory,
+            CancellationToken cancellationToken)
             where TImpl : DistributedObjectBase, T
         {
             if (_disposed == 1) throw new ObjectDisposedException("DistributedObjectFactory");
@@ -76,7 +77,7 @@ namespace Hazelcast.DistributedObjects
 
             var k = new DistributedObjectInfo(serviceName, name);
 
-            async ValueTask<DistributedObjectBase> CreateAsync(DistributedObjectInfo ignored)
+            async ValueTask<DistributedObjectBase> CreateAsync(DistributedObjectInfo info, CancellationToken token)
             {
                 var x = factory(name, _cluster, _serializationService, _loggerFactory);
                 x.OnDispose = ObjectDisposed; // this is why is has to be DistributedObjectBase
@@ -85,19 +86,18 @@ namespace Hazelcast.DistributedObjects
                 if (remote)
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
-                    HConsole.WriteLine(this, "Send initialize request");
-                    _ = await _cluster.SendAsync(requestMessage, cancellationToken).CAF();
-                    HConsole.WriteLine(this, "Received initialize response");
+                    _ = await _cluster.SendAsync(requestMessage, token).CAF();
                 }
 
                 x.OnInitialized();
+                _logger.LogDebug("Initialized '{ServiceName}/{Name}' distributed object.", info.ServiceName, info.Name);
                 return x;
             }
 
             // try to get the object - thanks to the concurrent dictionary there will be only 1 task
             // and if several concurrent requests are made, they will all await that same task
 
-            var o = await _objects.GetOrAddAsync(k, CreateAsync).CAF();
+            var o = await _objects.GetOrAddAsync(k, CreateAsync, cancellationToken).CAF();
 
             // race condition: maybe the factory has been disposed and is already disposing
             // objects and will ignore this new object even though it has been added to the
@@ -129,6 +129,10 @@ namespace Hazelcast.DistributedObjects
 
             await foreach (var (key, _) in _objects)
             {
+                // if the cluster goes down, we want to stop everything
+                // but each invocation is non-cancellable
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
@@ -136,7 +140,7 @@ namespace Hazelcast.DistributedObjects
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, $"Failed to create a distributed object '{key.ServiceName}/{key.Name}' on new cluster.");
+                    _logger.LogError(e, $"Failed to create distributed object '{key.ServiceName}/{key.Name}' on new cluster.");
                 }
             }
         }
@@ -162,11 +166,12 @@ namespace Hazelcast.DistributedObjects
         {
             // try to get the object - and then, dispose it
 
-            var k = new DistributedObjectInfo(serviceName, name);
-            var attempt = await _objects.TryGetAndRemoveAsync(k).CAF();
+            var info = new DistributedObjectInfo(serviceName, name);
+            var attempt = await _objects.TryGetAndRemoveAsync(info).CAF();
             if (attempt)
-                await attempt.Value.DisposeAsync().CAF();
+                await TryDispose(info, attempt.Value).CAF();
 
+            // regardless of whether the object was know locally, destroy on server
             var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
             var responseMessage = await _cluster.SendAsync(clientMessage, cancellationToken).CAF();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
@@ -181,16 +186,21 @@ namespace Hazelcast.DistributedObjects
             // there is a potential race-cond here, if an item is added to _objects after
             // we enumerate (capture) values, but it is taken care of in GetOrCreateAsync
 
-            await foreach (var (_, value) in _objects)
+            await foreach (var (info, value) in _objects)
             {
-                try
-                {
-                    await value.DisposeAsync().CAF();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogWarning(e, "Caught an exception while disposing a distributed object.");
-                }
+                await TryDispose(info, value).CAF();
+            }
+        }
+
+        private async ValueTask TryDispose(DistributedObjectInfo info, IAsyncDisposable o)
+        {
+            try
+            {
+                await o.DisposeAsync().CAF();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"Failed to dispose distributed object '{info.ServiceName}/{info.Name}'.");
             }
         }
     }

@@ -12,37 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.DistributedObjects;
 using Hazelcast.Transactions;
 
 namespace Hazelcast
 {
     internal partial class HazelcastClient // Transactions
     {
-        private int DefaultOperationTimeoutMilliseconds => _options.Messaging.DefaultOperationTimeoutMilliseconds;
-
-        /// <inheritdoc />
-        public Task<ITransactionContext> BeginTransactionAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(BeginTransactionAsync, new TransactionOptions(), timeout, DefaultOperationTimeoutMilliseconds);
-
         /// <inheritdoc />
         public Task<ITransactionContext> BeginTransactionAsync(CancellationToken cancellationToken)
             => BeginTransactionAsync(new TransactionOptions(), cancellationToken);
-
-        /// <inheritdoc />
-        public Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(BeginTransactionAsync, options, timeout, DefaultOperationTimeoutMilliseconds);
 
         /// <inheritdoc />
         public async Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken)
         {
             options ??= new TransactionOptions();
 
-            var transactionContext = new TransactionContext(Cluster, options, DefaultOperationTimeoutMilliseconds, SerializationService, _loggerFactory);
+            var transactionContext = new TransactionContext(Cluster, options, SerializationService, _loggerFactory);
             await transactionContext.BeginAsync(cancellationToken).CAF();
             return transactionContext;
         }

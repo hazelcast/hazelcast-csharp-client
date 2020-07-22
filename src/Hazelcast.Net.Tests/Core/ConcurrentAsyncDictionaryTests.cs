@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Core
             var d = new ConcurrentAsyncDictionary<string, int>();
             var i = 0;
 
-            ValueTask<int> Factory(string key)
+            ValueTask<int> Factory(string key, CancellationToken _)
             {
                 i++;
                 return new ValueTask<int>(2);
@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.Core
             (hasValue, _) = await d.TryGetValueAsync("a");
             Assert.IsFalse(hasValue);
 
-            static ValueTask<int> DeadlyFactory(string key)
+            static ValueTask<int> DeadlyFactory(string key, CancellationToken _)
             {
                 throw new InvalidOperationException("bang");
             }
@@ -84,7 +84,7 @@ namespace Hazelcast.Tests.Core
             (hasValue, _) = await d.TryGetValueAsync("a");
             Assert.IsFalse(hasValue);
 
-            static async ValueTask<int> AsyncDeadlyFactory(string key)
+            static async ValueTask<int> AsyncDeadlyFactory(string key, CancellationToken _)
             {
                 await Task.Yield();
                 throw new InvalidOperationException("bang");
@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Core
 
             var created = 0;
 
-            ValueTask<ValueItem> CreateValueItem(string key)
+            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
                 var v = new ValueItem();
@@ -184,7 +184,7 @@ namespace Hazelcast.Tests.Core
 
             var ev = new ManualResetEventSlim();
 
-            async ValueTask<ValueItem> CreateValueItem(string key)
+            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev.Wait();
@@ -229,7 +229,7 @@ namespace Hazelcast.Tests.Core
             var exception = 0;
 
             // beware, *must* be an async method to throw in the task, not when creating it
-            async ValueTask<ValueItem> CreateValueItem(string key)
+            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 created++;
@@ -291,7 +291,7 @@ namespace Hazelcast.Tests.Core
             var exception = 0;
 
             // beware, *must* be an async method to throw in the task, not when creating it
-            async ValueTask<ValueItem> CreateValueItem(string key)
+            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 created++;
@@ -345,7 +345,7 @@ namespace Hazelcast.Tests.Core
         {
             var d = new ConcurrentAsyncDictionary<string, ValueItem>();
 
-            static ValueTask<ValueItem> CreateValueItem(string key)
+            static ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 throw new Exception("bogus");
             }
@@ -366,7 +366,7 @@ namespace Hazelcast.Tests.Core
         {
             var d = new ConcurrentAsyncDictionary<string, ValueItem>();
 
-            static ValueTask<ValueItem> CreateValueItem(string key)
+            static ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 throw new Exception("bogus");
             }
@@ -390,7 +390,7 @@ namespace Hazelcast.Tests.Core
             var created = 0;
             ValueItem value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key)
+            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
                 var v = new ValueItem();
@@ -419,7 +419,7 @@ namespace Hazelcast.Tests.Core
             var created = 0;
             ValueItem value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key)
+            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
                 var v = new ValueItem();
@@ -446,7 +446,7 @@ namespace Hazelcast.Tests.Core
             var created = 0;
             ValueItem value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key)
+            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
                 var v = new ValueItem();
@@ -483,7 +483,7 @@ namespace Hazelcast.Tests.Core
             var created = 0;
             ValueItem value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key)
+            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
                 var v = new ValueItem();
@@ -523,7 +523,7 @@ namespace Hazelcast.Tests.Core
 
             var ev = new ManualResetEventSlim();
 
-            async ValueTask<ValueItem> CreateValueItem(string key)
+            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev.Wait();
@@ -561,7 +561,7 @@ namespace Hazelcast.Tests.Core
             var created = 0;
             ValueItem value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key)
+            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
                 var v = new ValueItem();
@@ -608,7 +608,7 @@ namespace Hazelcast.Tests.Core
             var created = 0;
             ValueItem value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key)
+            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
                 var v = new ValueItem();
@@ -640,7 +640,7 @@ namespace Hazelcast.Tests.Core
 
             // beware, makes sure it's an async method that waits and throws when the
             // task runs, not when creating it!
-            async ValueTask<ValueItem> CreateValueItem(string key)
+            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev.Wait();
@@ -673,7 +673,7 @@ namespace Hazelcast.Tests.Core
 
             // beware, makes sure it's an async method that waits and throws when the
             // task runs, not when creating it!
-            async ValueTask<ValueItem> CreateValueItem(string key)
+            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev2.Set();
@@ -721,10 +721,10 @@ namespace Hazelcast.Tests.Core
                 var i = entry.Value;
             });
 
-            var v1 = await entry.GetValue(x => new ValueTask<int>(x));
+            var v1 = await entry.GetValue((x, _) => new ValueTask<int>(x));
 
             // will use a bit of code that is usually not used except in some race conditions
-            var v2 = await entry.GetValue(x => new ValueTask<int>(x));
+            var v2 = await entry.GetValue((x, _) => new ValueTask<int>(x));
 
             Assert.That(v1, Is.EqualTo(v2));
         }
