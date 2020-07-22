@@ -70,6 +70,7 @@ foreach ($t in $targets) {
             Write-Output "  cover: when running tests, covers tests"
             Write-Output "  nuget: builds the NuGet package"
             Write-Output "  rc: runs the remote controller for tests"
+            Write-Output "  ds: serves the documentation"
             exit 0
 		}
         "clean" { $doClean = $true }
@@ -80,6 +81,7 @@ foreach ($t in $targets) {
         "cover" { $doCover = $true }
         "nuget" { $doNuget = $true }
         "rc" { $doRc = $true }
+        "ds" { $doDocsServe = $true }
         default {
             throw "Unknown target '$($t.Trim())' - use 'help' to list targets."
         }
@@ -379,6 +381,12 @@ if ($doRc) {
     Write-Output ""
 }
 
+if ($doDocsServe) {
+    Write-Output "Documentation Server"
+    Write-Output "  Path           : $tmpdir\docfx.site"
+    Write-Output ""
+}
+
 # cleanup, prepare
 if ($doClean) {
     # remove all the bins and objs recursively
@@ -438,7 +446,7 @@ if ($doBuild -or -$doTests) {
 }
 
 # ensure we have docfx for documentation
-if ($doDocs) {
+if ($doDocs -or $doDocsServe) {
     ensureDocFx
     ensureMemberPage
 }
@@ -752,6 +760,17 @@ if ($doRc) {
     finally {
         StopRemoteController
     }
+}
+
+if ($doDocsServe) {
+    if (-not (test-path "$tmpDir\docfx.site")) {
+        throw "Missing documentation directory."
+    }
+
+    Write-Output ""
+    Write-Output "Documentation server is running..."
+    Write-Output "Press ENTER to stop"
+    &$docfx serve "$tmpDir\docfx.site"
 }
 
 Write-Output ""
