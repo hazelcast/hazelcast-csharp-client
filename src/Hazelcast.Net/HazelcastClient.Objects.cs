@@ -17,14 +17,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.HListImpl;
-using Hazelcast.DistributedObjects.HMapImpl;
-using Hazelcast.DistributedObjects.HMultiMapImpl;
-using Hazelcast.DistributedObjects.HQueueImpl;
-using Hazelcast.DistributedObjects.HReplicatedMapImpl;
-using Hazelcast.DistributedObjects.HRingBufferImpl;
-using Hazelcast.DistributedObjects.HSetImpl;
-using Hazelcast.DistributedObjects.HTopicImpl;
+using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
