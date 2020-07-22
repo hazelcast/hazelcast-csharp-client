@@ -49,7 +49,7 @@ namespace Hazelcast.Protocol.Data
 
         public static PagingPredicateHolder Of(IPredicate predicate, ISerializationService serializationService)
         {
-            if (predicate is null) 
+            if (predicate is null)
                 return null;
 
             if (predicate is PartitionPredicate partitionPredicate)

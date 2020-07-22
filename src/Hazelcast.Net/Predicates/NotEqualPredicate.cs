@@ -19,7 +19,7 @@ namespace Hazelcast.Predicates
         public NotEqualPredicate()
         { }
 
-        public NotEqualPredicate(string attributeName, object value) 
+        public NotEqualPredicate(string attributeName, object value)
             : base(attributeName, value)
         { }
 

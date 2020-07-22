@@ -28,7 +28,7 @@ namespace Hazelcast.Examples.WebSite
 
             // Get the Distributed Set from Cluster.
             await using var set = await client.GetSetAsync<string>("my-distributed-set");
-            
+
             // Add items to the set with duplicates
             await set.AddAsync("item1");
             await set.AddAsync("item1");

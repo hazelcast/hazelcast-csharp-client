@@ -77,7 +77,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool LocalOnly { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
         {
             var clientMessage = new ClientMessage
@@ -105,7 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -124,7 +124,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             using var iterator = clientMessage.GetEnumerator();
@@ -162,7 +162,7 @@ namespace Hazelcast.Protocol.Codecs
             ListLongCodec.Encode(clientMessage, sequences);
             return clientMessage;
         }
-    
+
         public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleIMapInvalidationEventAsync handleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync handleIMapBatchInvalidationEventAsync, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
@@ -176,7 +176,7 @@ namespace Hazelcast.Protocol.Codecs
                 return handleIMapInvalidationEventAsync(key, sourceUuid, partitionUuid, sequence);
             }
             if (messageType == EventIMapBatchInvalidationMessageType) {
-                
+
                 iterator.Take(); // empty initial frame
                 var keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
                 var sourceUuids = ListUUIDCodec.Decode(iterator);

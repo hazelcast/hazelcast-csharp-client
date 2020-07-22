@@ -137,7 +137,7 @@ namespace Hazelcast.Testing.Remote
       {
         Dispose(true);
       }
-      
+
 
       protected virtual void Dispose(bool disposing)
       {
@@ -160,9 +160,9 @@ namespace Hazelcast.Testing.Remote
 #endregion
 
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_ping(AsyncCallback callback, object state)
       {
         return send_ping(callback, state);
@@ -227,9 +227,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "ping failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_clean(AsyncCallback callback, object state)
       {
         return send_clean(callback, state);
@@ -294,9 +294,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "clean failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_exit(AsyncCallback callback, object state)
       {
         return send_exit(callback, state);
@@ -361,9 +361,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "exit failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_createCluster(AsyncCallback callback, object state, string hzVersion, string xmlconfig)
       {
         return send_createCluster(callback, state, hzVersion, xmlconfig);
@@ -435,9 +435,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "createCluster failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_startMember(AsyncCallback callback, object state, string clusterId)
       {
         return send_startMember(callback, state, clusterId);
@@ -507,9 +507,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "startMember failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_shutdownMember(AsyncCallback callback, object state, string clusterId, string memberId)
       {
         return send_shutdownMember(callback, state, clusterId, memberId);
@@ -578,9 +578,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "shutdownMember failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_terminateMember(AsyncCallback callback, object state, string clusterId, string memberId)
       {
         return send_terminateMember(callback, state, clusterId, memberId);
@@ -649,9 +649,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "terminateMember failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_suspendMember(AsyncCallback callback, object state, string clusterId, string memberId)
       {
         return send_suspendMember(callback, state, clusterId, memberId);
@@ -720,9 +720,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "suspendMember failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_resumeMember(AsyncCallback callback, object state, string clusterId, string memberId)
       {
         return send_resumeMember(callback, state, clusterId, memberId);
@@ -791,9 +791,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "resumeMember failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_shutdownCluster(AsyncCallback callback, object state, string clusterId)
       {
         return send_shutdownCluster(callback, state, clusterId);
@@ -860,9 +860,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "shutdownCluster failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_terminateCluster(AsyncCallback callback, object state, string clusterId)
       {
         return send_terminateCluster(callback, state, clusterId);
@@ -929,9 +929,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "terminateCluster failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_splitMemberFromCluster(AsyncCallback callback, object state, string memberId)
       {
         return send_splitMemberFromCluster(callback, state, memberId);
@@ -998,9 +998,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "splitMemberFromCluster failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_mergeMemberToCluster(AsyncCallback callback, object state, string clusterId, string memberId)
       {
         return send_mergeMemberToCluster(callback, state, clusterId, memberId);
@@ -1069,9 +1069,9 @@ namespace Hazelcast.Testing.Remote
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "mergeMemberToCluster failed: unknown result");
       }
 
-      
+
 #if SILVERLIGHT
-      
+
       public IAsyncResult Begin_executeOnController(AsyncCallback callback, object state, string clusterId, string script, Lang lang)
       {
         return send_executeOnController(callback, state, clusterId, script, lang);
@@ -1202,7 +1202,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.ping();
-          oprot.WriteMessageBegin(new TMessage("ping", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("ping", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1230,7 +1230,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.clean();
-          oprot.WriteMessageBegin(new TMessage("clean", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("clean", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1258,7 +1258,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.exit();
-          oprot.WriteMessageBegin(new TMessage("exit", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("exit", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1293,7 +1293,7 @@ namespace Hazelcast.Testing.Remote
           {
             result.ServerException = serverException;
           }
-          oprot.WriteMessageBegin(new TMessage("createCluster", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("createCluster", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1328,7 +1328,7 @@ namespace Hazelcast.Testing.Remote
           {
             result.ServerException = serverException;
           }
-          oprot.WriteMessageBegin(new TMessage("startMember", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("startMember", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1356,7 +1356,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.shutdownMember(args.ClusterId, args.MemberId);
-          oprot.WriteMessageBegin(new TMessage("shutdownMember", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("shutdownMember", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1384,7 +1384,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.terminateMember(args.ClusterId, args.MemberId);
-          oprot.WriteMessageBegin(new TMessage("terminateMember", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("terminateMember", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1412,7 +1412,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.suspendMember(args.ClusterId, args.MemberId);
-          oprot.WriteMessageBegin(new TMessage("suspendMember", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("suspendMember", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1440,7 +1440,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.resumeMember(args.ClusterId, args.MemberId);
-          oprot.WriteMessageBegin(new TMessage("resumeMember", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("resumeMember", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1468,7 +1468,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.shutdownCluster(args.ClusterId);
-          oprot.WriteMessageBegin(new TMessage("shutdownCluster", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("shutdownCluster", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1496,7 +1496,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.terminateCluster(args.ClusterId);
-          oprot.WriteMessageBegin(new TMessage("terminateCluster", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("terminateCluster", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1524,7 +1524,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.splitMemberFromCluster(args.MemberId);
-          oprot.WriteMessageBegin(new TMessage("splitMemberFromCluster", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("splitMemberFromCluster", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1552,7 +1552,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.mergeMemberToCluster(args.ClusterId, args.MemberId);
-          oprot.WriteMessageBegin(new TMessage("mergeMemberToCluster", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("mergeMemberToCluster", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1580,7 +1580,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           result.Success = iface_.executeOnController(args.ClusterId, args.Script, args.Lang);
-          oprot.WriteMessageBegin(new TMessage("executeOnController", TMessageType.Reply, seqid)); 
+          oprot.WriteMessageBegin(new TMessage("executeOnController", TMessageType.Reply, seqid));
           result.Write(oprot);
         }
         catch (TTransportException)
@@ -1621,12 +1621,12 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
             {
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -1706,7 +1706,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -1714,11 +1714,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -1792,12 +1792,12 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
             {
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -1877,7 +1877,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -1885,11 +1885,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -1963,12 +1963,12 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
             {
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2048,7 +2048,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2056,11 +2056,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2172,7 +2172,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2180,18 +2180,18 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   HzVersion = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 2:
                 if (field.Type == TType.String) {
                   Xmlconfig = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2316,7 +2316,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2325,7 +2325,7 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct) {
                   Success = new Cluster();
                   Success.Read(iprot);
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
@@ -2333,11 +2333,11 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct) {
                   ServerException = new ServerException();
                   ServerException.Read(iprot);
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2451,7 +2451,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2459,11 +2459,11 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2574,7 +2574,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2583,7 +2583,7 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct) {
                   Success = new Member();
                   Success.Read(iprot);
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
@@ -2591,11 +2591,11 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct) {
                   ServerException = new ServerException();
                   ServerException.Read(iprot);
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2724,7 +2724,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2732,18 +2732,18 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 2:
                 if (field.Type == TType.String) {
                   MemberId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2853,7 +2853,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2861,11 +2861,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -2977,7 +2977,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -2985,18 +2985,18 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 2:
                 if (field.Type == TType.String) {
                   MemberId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3106,7 +3106,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3114,11 +3114,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3230,7 +3230,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3238,18 +3238,18 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 2:
                 if (field.Type == TType.String) {
                   MemberId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3359,7 +3359,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3367,11 +3367,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3483,7 +3483,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3491,18 +3491,18 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 2:
                 if (field.Type == TType.String) {
                   MemberId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3612,7 +3612,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3620,11 +3620,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3721,7 +3721,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3729,11 +3729,11 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3829,7 +3829,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3837,11 +3837,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -3938,7 +3938,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -3946,11 +3946,11 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -4046,7 +4046,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -4054,11 +4054,11 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool) {
                   Success = iprot.ReadBool();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -4155,7 +4155,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -4163,11 +4163,11 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   MemberId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -4263,7 +4263,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -4272,11 +4272,11 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct) {
                   Success = new Cluster();
                   Success.Read(iprot);
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -4390,7 +4390,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -4398,18 +4398,18 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 2:
                 if (field.Type == TType.String) {
                   MemberId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -4519,7 +4519,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -4528,11 +4528,11 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct) {
                   Success = new Cluster();
                   Success.Read(iprot);
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -4625,7 +4625,7 @@ namespace Hazelcast.Testing.Remote
       }
 
       /// <summary>
-      /// 
+      ///
       /// <seealso cref="Lang"/>
       /// </summary>
       public Lang Lang
@@ -4665,7 +4665,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -4673,25 +4673,25 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String) {
                   ClusterId = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 2:
                 if (field.Type == TType.String) {
                   Script = iprot.ReadString();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
               case 3:
                 if (field.Type == TType.I32) {
                   Lang = (Lang)iprot.ReadI32();
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }
@@ -4815,7 +4815,7 @@ namespace Hazelcast.Testing.Remote
           while (true)
           {
             field = iprot.ReadFieldBegin();
-            if (field.Type == TType.Stop) { 
+            if (field.Type == TType.Stop) {
               break;
             }
             switch (field.ID)
@@ -4824,11 +4824,11 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct) {
                   Success = new Response();
                   Success.Read(iprot);
-                } else { 
+                } else {
                   TProtocolUtil.Skip(iprot, field.Type);
                 }
                 break;
-              default: 
+              default:
                 TProtocolUtil.Skip(iprot, field.Type);
                 break;
             }

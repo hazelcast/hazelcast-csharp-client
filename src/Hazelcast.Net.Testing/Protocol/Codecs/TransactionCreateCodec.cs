@@ -83,7 +83,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long ThreadId { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(long timeout, int durability, int transactionType, long threadId)
         {
             var clientMessage = new ClientMessage
@@ -113,7 +113,7 @@ namespace Hazelcast.Protocol.Codecs
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -132,7 +132,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             using var iterator = clientMessage.GetEnumerator();
@@ -142,6 +142,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
 }

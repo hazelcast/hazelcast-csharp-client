@@ -96,7 +96,7 @@ namespace Hazelcast.Testing.Remote
         while (true)
         {
           field = iprot.ReadFieldBegin();
-          if (field.Type == TType.Stop) { 
+          if (field.Type == TType.Stop) {
             break;
           }
           switch (field.ID)
@@ -104,25 +104,25 @@ namespace Hazelcast.Testing.Remote
             case 1:
               if (field.Type == TType.String) {
                 Uuid = iprot.ReadString();
-              } else { 
+              } else {
                 TProtocolUtil.Skip(iprot, field.Type);
               }
               break;
             case 2:
               if (field.Type == TType.String) {
                 Host = iprot.ReadString();
-              } else { 
+              } else {
                 TProtocolUtil.Skip(iprot, field.Type);
               }
               break;
             case 3:
               if (field.Type == TType.I32) {
                 Port = iprot.ReadI32();
-              } else { 
+              } else {
                 TProtocolUtil.Skip(iprot, field.Type);
               }
               break;
-            default: 
+            default:
               TProtocolUtil.Skip(iprot, field.Type);
               break;
           }

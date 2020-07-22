@@ -107,7 +107,7 @@ namespace Hazelcast.Protocol.Codecs
                 return handleIMapInvalidationEventAsync(key, sourceUuid, partitionUuid, sequence);
             }
             if (messageType == EventIMapBatchInvalidationMessageType) {
-                
+
                 iterator.Take(); // empty initial frame
                 var keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
                 var sourceUuids = ListUUIDCodec.Decode(iterator);

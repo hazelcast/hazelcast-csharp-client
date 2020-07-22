@@ -37,7 +37,7 @@ namespace Hazelcast.Protocol.Data
                 dataEntryIterator.MoveNext();
 
                 var (keyData, valueData) = dataEntryIterator.Current;
-                
+
                 var key = serializationService.ToObject(keyData);
                 var value = serializationService.ToObject(valueData);
 

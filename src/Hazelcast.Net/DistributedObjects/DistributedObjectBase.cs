@@ -20,7 +20,6 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 

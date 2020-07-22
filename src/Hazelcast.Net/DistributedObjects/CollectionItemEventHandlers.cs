@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Data;

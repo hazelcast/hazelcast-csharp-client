@@ -16,10 +16,9 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Messaging;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 
 namespace Hazelcast.Clustering
 {

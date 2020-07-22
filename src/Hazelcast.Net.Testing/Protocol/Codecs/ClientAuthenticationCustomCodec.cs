@@ -100,7 +100,7 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IList<string> Labels { get; set; }
         }
-    
+
         public static ClientMessage EncodeRequest(string clusterName, byte[] credentials, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection<string> labels)
         {
             var clientMessage = new ClientMessage
@@ -138,7 +138,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Labels = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
             return request;
         }
-        
+
         public sealed class ResponseParameters
         {
 
@@ -200,7 +200,7 @@ namespace Hazelcast.Protocol.Codecs
             StringCodec.Encode(clientMessage, serverHazelcastVersion);
             return clientMessage;
         }
-    
+
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
             using var iterator = clientMessage.GetEnumerator();
@@ -217,6 +217,6 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
-    
+
     }
 }

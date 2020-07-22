@@ -672,7 +672,7 @@ namespace Hazelcast.Tests.DotNet
         public async Task DoSomethingAsync(SomeState state, ManualResetEventSlim e)
         {
             state.Count += 1;
-            
+
             // code before this line executes synchronously when DoSomethingAsync is invoked,
             // and before the Task instance is returned - so it is pausing the caller.
 

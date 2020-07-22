@@ -15,8 +15,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;

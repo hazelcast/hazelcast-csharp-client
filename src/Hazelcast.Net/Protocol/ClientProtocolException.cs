@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Data;

@@ -25,10 +25,10 @@ namespace Hazelcast.Tests.Core
     public class DumpCoreExtensionsTests
     {
         private const string Source = "HELLO THIS IS A TEST HOPEFULLY IT WORKS";
-        private const string Expected = @"48 45 4c 4c 4f 20 54 48 
-49 53 20 49 53 20 41 20 
-54 45 53 54 20 48 4f 50 
-45 46 55 4c 4c 59 20 49 
+        private const string Expected = @"48 45 4c 4c 4f 20 54 48
+49 53 20 49 53 20 41 20
+54 45 53 54 20 48 4f 50
+45 46 55 4c 4c 59 20 49
 54 20 57 4f 52 4b 53 ";
 
         [Test]

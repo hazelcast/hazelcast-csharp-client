@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates

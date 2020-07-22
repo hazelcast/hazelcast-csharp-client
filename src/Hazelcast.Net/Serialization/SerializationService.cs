@@ -646,4 +646,3 @@ namespace Hazelcast.Serialization
         }
     }
 }
-

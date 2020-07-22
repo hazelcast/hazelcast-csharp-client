@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.WebSite
 {
     // ReSharper disable once UnusedMember.Global
-    public class ReplicatedMapExample : ExampleBase 
+    public class ReplicatedMapExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
