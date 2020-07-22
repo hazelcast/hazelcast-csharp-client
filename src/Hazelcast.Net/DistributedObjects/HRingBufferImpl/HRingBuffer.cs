@@ -51,19 +51,11 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<long> AddAsync(TItem item, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> AddAsync(TItem item, CancellationToken cancellationToken)
+        public async Task<long> AddAsync(TItem item, CancellationToken cancellationToken = default)
             => await AddAsync(item, OverflowPolicy.Overwrite, cancellationToken).CAF();
 
         /// <inheritdoc />
-        public Task<long> AddAsync(TItem item, OverflowPolicy overflowPolicy, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> AddAsync(TItem item, OverflowPolicy overflowPolicy, CancellationToken cancellationToken)
+        public async Task<long> AddAsync(TItem item, OverflowPolicy overflowPolicy, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = RingbufferAddCodec.EncodeRequest(Name, (int) overflowPolicy, itemData);
@@ -72,12 +64,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy, TimeSpan timeout = default)
-            where TAdding : TItem
-            => TaskEx.WithTimeout(AddAsync, items, overflowPolicy, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy, CancellationToken cancellationToken)
+        public async Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy, CancellationToken cancellationToken = default)
             where TAdding : TItem
         {
             if (items.Count == 0) throw new ArgumentException("Cannot add zero items.", nameof(items));
@@ -89,11 +76,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<long> GetCapacityAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetCapacityAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> GetCapacityAsync(CancellationToken cancellationToken)
+        public async Task<long> GetCapacityAsync(CancellationToken cancellationToken = default)
         {
             if (_capacity != -1) return _capacity;
 
@@ -103,11 +86,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<long> GetHeadSequenceAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetHeadSequenceAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> GetHeadSequenceAsync(CancellationToken cancellationToken)
+        public async Task<long> GetHeadSequenceAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = RingbufferHeadSequenceCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -115,11 +94,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyList<TItem>> GetAsync(long startSequence, int minCount, int maxCount, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetAsync, startSequence, minCount, maxCount, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<TItem>> GetAsync(long startSequence, int minCount, int maxCount, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TItem>> GetAsync(long startSequence, int minCount, int maxCount, CancellationToken cancellationToken = default)
         {
             if (startSequence < 0) throw new ArgumentOutOfRangeException(nameof(startSequence));
             if (minCount < 0) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be equal to, or greater than, zero.");
@@ -136,11 +111,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public ValueTask<TItem> GetAsync(long sequence, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetAsync, sequence, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async ValueTask<TItem> GetAsync(long sequence, CancellationToken cancellationToken)
+        public async ValueTask<TItem> GetAsync(long sequence, CancellationToken cancellationToken = default)
         {
             if (sequence < 0) throw new ArgumentOutOfRangeException(nameof(sequence));
 
@@ -151,11 +122,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<long> GetRemainingCapacityAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetRemainingCapacityAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> GetRemainingCapacityAsync(CancellationToken cancellationToken)
+        public async Task<long> GetRemainingCapacityAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = RingbufferRemainingCapacityCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -163,11 +130,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<long> CountAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> CountAsync(CancellationToken cancellationToken)
+        public async Task<long> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = RingbufferSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -175,11 +138,7 @@ namespace Hazelcast.DistributedObjects.HRingBufferImpl
         }
 
         /// <inheritdoc />
-        public Task<long> GetTailSequenceAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetTailSequenceAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        /// <inheritdoc />
-        public async Task<long> GetTailSequenceAsync(CancellationToken cancellationToken)
+        public async Task<long> GetTailSequenceAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = RingbufferTailSequenceCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();

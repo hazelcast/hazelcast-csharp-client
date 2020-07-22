@@ -23,100 +23,19 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
     internal partial class HCollectionBase<T> // Getting
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IReadOnlyList<T>> GetAllAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetAllAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
+        public abstract Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
 
         /// <inheritdoc />
-        public abstract Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken);
+        public abstract Task<bool> ContainsAsync(T item, CancellationToken cancellationToken = default);
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> ContainsAsync(T item, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ContainsAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
+        public abstract Task<int> CountAsync(CancellationToken cancellationToken = default);
 
         /// <inheritdoc />
-        public abstract Task<bool> ContainsAsync(T item, CancellationToken cancellationToken);
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<int> CountAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public abstract Task<int> CountAsync(CancellationToken cancellationToken);
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
-            where TItem : T
-        {
-            var task = TaskEx.WithTimeout(ContainsAllAsync, items, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public abstract Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public abstract Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
             where TItem : T;
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> IsEmptyAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(IsEmptyAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public abstract Task<bool> IsEmptyAsync(CancellationToken cancellationToken);
+        public abstract Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default);
     }
 }

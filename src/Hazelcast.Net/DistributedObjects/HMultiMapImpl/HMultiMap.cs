@@ -37,19 +37,13 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MultiMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, includeValues, (TKey) default, false, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(includeValues, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, includeValues, key, true, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(includeValues, key, true, handle, cancellationToken);
 
-        private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MultiMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (handle == null) throw new ArgumentNullException(nameof(handle));
@@ -154,10 +148,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
         }
 
-        public Task<bool> TryAddAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(TryAddAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        public async Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = MultiMapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId);
@@ -165,10 +156,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<IReadOnlyList<TValue>> GetAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapGetCodec.EncodeRequest(Name, keyData, ContextId);
@@ -177,10 +165,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetAllAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MultiMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -188,10 +173,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return new ReadOnlyLazyDictionaryOfList<TKey, TValue>(SerializationService) { response };
         }
 
-        public Task<IReadOnlyList<TKey>> GetKeysAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetKeysAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MultiMapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -199,10 +181,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public Task<IReadOnlyList<TValue>> GetValuesAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetValuesAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MultiMapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -210,10 +189,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public Task<bool> ContainsEntryAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ContainsEntryAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> ContainsEntryAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        public async Task<bool> ContainsEntryAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = MultiMapContainsEntryCodec.EncodeRequest(Name, keyData, valueData, ContextId);
@@ -221,10 +197,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapContainsEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> ContainsKeyAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ContainsKeyAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToData(key);
             var requestMessage = MultiMapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
@@ -232,10 +205,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> ContainsValueAsync(TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ContainsValueAsync, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken)
+        public async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken = default)
         {
             var valueData = ToData(value);
             var requestMessage = MultiMapContainsValueCodec.EncodeRequest(Name, valueData);
@@ -243,20 +213,14 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<int> CountAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<int> CountAsync(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MultiMapSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             return MultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<int> CountValuesAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CountValuesAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<int> CountValuesAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<int> CountValuesAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToData(key);
             var requestMessage = MultiMapValueCountCodec.EncodeRequest(Name, keyData, ContextId);
@@ -264,10 +228,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(RemoveAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        public async Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
@@ -276,10 +237,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(RemoveAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToData(key);
 
@@ -289,40 +247,25 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public Task ClearAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ClearAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task ClearAsync(CancellationToken cancellationToken)
+        public async Task ClearAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MultiMapClearCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             _ = MultiMapClearCodec.DecodeResponse(responseMessage);
         }
 
-        public Task LockAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(LockForAsync, key, LeaseTime.InfiniteTimeSpan, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task LockAsync(TKey key, CancellationToken cancellationToken)
+        public Task LockAsync(TKey key, CancellationToken cancellationToken = default)
             => LockForAsync(key, LeaseTime.InfiniteTimeSpan, cancellationToken);
 
-        public Task<bool> TryLockAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(TryLockAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken)
+        public Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(TryWaitLockForAsync, key, timeToWait, LeaseTime.InfiniteTimeSpan, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
+        public Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken = default)
             => TryWaitLockForAsync(key, timeToWait, LeaseTime.InfiniteTimeSpan, cancellationToken);
 
-        public Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(TryWaitLockForAsync, key, timeToWait, leaseTime, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken)
+        public async Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
@@ -332,10 +275,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapTryLockCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task LockForAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(LockForAsync, key, leaseTime, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken)
+        public async Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
@@ -344,10 +284,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             _ = MultiMapLockCodec.DecodeResponse(responseMessage);
         }
 
-        public Task<bool> IsLockedAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(IsLockedAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapIsLockedCodec.EncodeRequest(Name, keyData);
@@ -355,10 +292,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             return MultiMapIsLockedCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task UnlockAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(UnlockAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task UnlockAsync(TKey key, CancellationToken cancellationToken)
+        public async Task UnlockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapUnlockCodec.EncodeRequest(Name, keyData, ContextId, _lockReferenceIdSequence.GetNext());
@@ -366,10 +300,7 @@ namespace Hazelcast.DistributedObjects.HMultiMapImpl
             _ = MultiMapUnlockCodec.DecodeResponse(responseMessage);
         }
 
-        public Task ForceUnlockAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ForceUnlockAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken)
+        public async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapForceUnlockCodec.EncodeRequest(Name, keyData, _lockReferenceIdSequence.GetNext());

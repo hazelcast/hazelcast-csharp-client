@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
     internal partial class HList<T> // Remove
     {
         /// <inheritdoc />
-        public override async Task<bool> RemoveAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> RemoveAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListRemoveCodec.EncodeRequest(Name, itemData);
@@ -33,23 +33,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<T> RemoveAtAsync(int index, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(RemoveAtAsync, index, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<T> RemoveAtAsync(int index, CancellationToken cancellationToken)
+        public async Task<T> RemoveAtAsync(int index, CancellationToken cancellationToken = default)
         {
             var requestMessage = ListRemoveWithIndexCodec.EncodeRequest(Name, index);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -58,7 +42,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
@@ -67,7 +51,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
@@ -76,7 +60,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task ClearAsync(CancellationToken cancellationToken)
+        public override async Task ClearAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ListClearCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();

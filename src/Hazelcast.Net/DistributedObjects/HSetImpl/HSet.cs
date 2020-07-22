@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
     internal partial class HSet<T> : HCollectionBase<T>, IHSet<T>
     {
         public HSet(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(DistributedObjects.HSet.ServiceName, name, cluster, serializationService, loggerFactory)
+            : base(HSet.ServiceName, name, cluster, serializationService, loggerFactory)
         { }
     }
 }

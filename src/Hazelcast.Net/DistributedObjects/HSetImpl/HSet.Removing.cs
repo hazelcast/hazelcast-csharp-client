@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
 {
     internal partial class HSet<T> // Removing
     {
-        public override async Task<bool> RemoveAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> RemoveAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetRemoveCodec.EncodeRequest(Name, itemData);
@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
             return SetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
             return SetCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
             return SetCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task ClearAsync(CancellationToken cancellationToken)
+        public override async Task ClearAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = SetClearCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();

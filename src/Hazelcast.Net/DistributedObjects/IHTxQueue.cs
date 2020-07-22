@@ -21,26 +21,18 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of Queue</summary>
     public interface IHTxQueue<TItem> : ITransactionalObject
     {
-        Task<bool> TryEnqueueAsync(TItem item);
-        Task<bool> TryEnqueueAsync(TItem item, CancellationToken cancellationToken);
-        Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait);
-        Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait, CancellationToken cancellationToken);
+        Task<bool> TryEnqueueAsync(TItem item, CancellationToken cancellationToken = default);
+        Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait, CancellationToken cancellationToken = default);
 
-        Task<TItem> PeekAsync(TimeSpan timeout = default);
-        Task<TItem> PeekAsync(CancellationToken cancellationToken);
+        Task<TItem> PeekAsync(CancellationToken cancellationToken = default);
 
-        Task<TItem> TryPeekAsync(TimeSpan timeToWait, TimeSpan timeout = default);
-        Task<TItem> TryPeekAsync(TimeSpan timeToWait, CancellationToken cancellationToken);
+        Task<TItem> TryPeekAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default);
 
-        Task<TItem> TryDequeueAsync();
-        Task<TItem> TryDequeueAsync(CancellationToken cancellationToken);
-        Task<TItem> TryDequeueAsync(TimeSpan timeToWait);
-        Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken);
+        Task<TItem> TryDequeueAsync(CancellationToken cancellationToken = default);
+        Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default);
 
-        Task<int> CountAsync(TimeSpan timeout = default);
-        Task<int> CountAsync(CancellationToken cancellationToken);
+        Task<int> CountAsync(CancellationToken cancellationToken = default);
 
-        Task<TItem> DequeueAsync(TimeSpan timeout = default);
-        Task<TItem> DequeueAsync(CancellationToken cancellationToken);
+        Task<TItem> DequeueAsync(CancellationToken cancellationToken = default);
     }
 }

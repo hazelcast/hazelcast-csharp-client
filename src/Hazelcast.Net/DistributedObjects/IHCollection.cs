@@ -25,28 +25,21 @@ namespace Hazelcast.DistributedObjects
     {
         // these mimics ICollection<T>
 
-        Task<int> CountAsync(TimeSpan timeout = default);
-        Task<int> CountAsync(CancellationToken cancellationToken);
+        Task<int> CountAsync(CancellationToken cancellationToken = default);
 
-        Task<bool> AddAsync(T item, TimeSpan timeout = default);
-        Task<bool> AddAsync(T item, CancellationToken cancellationToken);
+        Task<bool> AddAsync(T item, CancellationToken cancellationToken = default);
 
-        Task ClearAsync(TimeSpan timeout = default);
-        Task ClearAsync(CancellationToken cancellationToken);
+        Task ClearAsync(CancellationToken cancellationToken = default);
 
-        Task<bool> ContainsAsync(T item, TimeSpan timeout = default);
-        Task<bool> ContainsAsync(T item, CancellationToken cancellationToken);
+        Task<bool> ContainsAsync(T item, CancellationToken cancellationToken = default);
 
-        Task<bool> RemoveAsync(T item, TimeSpan timeout = default);
-        Task<bool> RemoveAsync(T item, CancellationToken cancellationToken);
+        Task<bool> RemoveAsync(T item, CancellationToken cancellationToken = default);
 
-        Task CopyToAsync(T[] array, int arrayIndex, TimeSpan timeout = default);
-        Task CopyToAsync(T[] array, int arrayIndex, CancellationToken cancellationToken);
+        Task CopyToAsync(T[] array, int arrayIndex, CancellationToken cancellationToken = default);
 
         // rest is a mix of influences
 
-        Task<IReadOnlyList<T>> GetAllAsync(TimeSpan timeout = default);
-        Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken);
+        Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Adds all.
@@ -54,8 +47,7 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">element collection</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
-        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
+        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
 
         /// <summary>
         /// Determines whether this collection contains all of the elements in the specified collection.
@@ -63,15 +55,13 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">The collection</param>
         /// <returns><c>true</c> if this collection contains all of the elements in the specified collection; otherwise, <c>false</c>.</returns>
-        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
-        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
+        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
 
         /// <summary>
         /// Determines whether this instance is empty.
         /// </summary>
         /// <returns><c>true</c> if this instance is empty; otherwise, <c>false</c>.</returns>
-        Task<bool> IsEmptyAsync(TimeSpan timeout = default);
-        Task<bool> IsEmptyAsync(CancellationToken cancellationToken);
+        Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes all of the elements in the specified collection from this collection.
@@ -79,8 +69,7 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">element collection to be removed</param>
         /// <returns><c>true</c> if all removed, <c>false</c> otherwise.</returns>
-        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
-        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
+        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
 
         /// <summary>
         /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
@@ -92,15 +81,13 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">The c.</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
-        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
+        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
 
         /// <summary>
         /// Returns an array containing all of the elements in this collection.
         /// </summary>
         /// <returns>an array containing all of the elements in this collection.</returns>
-        Task<T[]> ToArrayAsync(TimeSpan timeout = default);
-        Task<T[]> ToArrayAsync(CancellationToken cancellationToken);
+        Task<T[]> ToArrayAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Returns an array containing all of the elements in this collection
@@ -111,10 +98,8 @@ namespace Hazelcast.DistributedObjects
         /// stored, if it is big enough; otherwise, a new array of the same
         /// runtime type is allocated for this purpose</param>
         /// <returns>an array containing all of the elements in this collection</returns>
-        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, TimeSpan timeout = default) where TItem : T;
-        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, CancellationToken cancellationToken) where TItem : T;
+        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, CancellationToken cancellationToken = default) where TItem : T;
 
-        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, TimeSpan timeout = default);
-        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken = default);
     }
 }

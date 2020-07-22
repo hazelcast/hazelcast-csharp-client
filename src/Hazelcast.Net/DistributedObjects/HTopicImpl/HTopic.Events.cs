@@ -26,23 +26,7 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
     internal partial class HTopic<T> // Events
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(SubscribeAsync, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, CancellationToken cancellationToken)
+        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, CancellationToken cancellationToken = default)
         {
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 

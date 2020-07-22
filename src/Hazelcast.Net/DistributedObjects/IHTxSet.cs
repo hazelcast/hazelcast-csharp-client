@@ -28,18 +28,15 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Add new item to transactional set</summary>
         /// <param name="e">item</param>
         /// <returns>true if item is added successfully</returns>
-        Task<bool> AddAsync(TItem item, TimeSpan timeout = default);
-        Task<bool> AddAsync(TItem item, CancellationToken cancellationToken);
+        Task<bool> AddAsync(TItem item, CancellationToken cancellationToken = default);
 
         /// <summary>Add item from transactional set</summary>
         /// <param name="e">item</param>
         /// <returns>true if item is remove successfully</returns>
-        Task<bool> RemoveAsync(TItem item, TimeSpan timeout = default);
-        Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken);
+        Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken = default);
 
         /// <summary>Returns the size of the set</summary>
         /// <returns>size</returns>
-        Task<int> CountAsync(TimeSpan timeout = default);
-        Task<int> CountAsync(CancellationToken cancellationToken);
+        Task<int> CountAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
     internal partial class HList<T> // Getting
     {
         /// <inheritdoc />
-        public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken)
+        public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ListGetAllCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -34,23 +34,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<T> GetAsync(int index, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetAsync, index, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<T> GetAsync(int index, CancellationToken cancellationToken)
+        public async Task<T> GetAsync(int index, CancellationToken cancellationToken = default)
         {
             var requestMessage = ListGetCodec.EncodeRequest(Name, index);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -59,23 +43,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetRangeAsync, fromIndex, toIndex, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, CancellationToken cancellationToken = default)
         {
             var requestMessage = ListSubCodec.EncodeRequest(Name, fromIndex, toIndex);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -84,23 +52,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<int> IndexOfAsync(T item, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(IndexOfAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<int> IndexOfAsync(T item, CancellationToken cancellationToken)
+        public async Task<int> IndexOfAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListIndexOfCodec.EncodeRequest(Name, itemData);
@@ -109,23 +61,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<int> LastIndexOfAsync(T item, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(LastIndexOfAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<int> LastIndexOfAsync(T item, CancellationToken cancellationToken)
+        public async Task<int> LastIndexOfAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListLastIndexOfCodec.EncodeRequest(Name, itemData);
@@ -134,7 +70,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> ContainsAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> ContainsAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListContainsCodec.EncodeRequest(Name, itemData);
@@ -143,7 +79,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListContainsAllCodec.EncodeRequest(Name, itemsData);
@@ -152,7 +88,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
+        public override async Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ListIsEmptyCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -160,7 +96,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<int> CountAsync(CancellationToken cancellationToken)
+        public override async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ListSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();

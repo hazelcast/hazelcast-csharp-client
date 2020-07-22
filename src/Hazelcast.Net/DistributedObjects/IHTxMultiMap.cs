@@ -22,22 +22,16 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of MultiMap</summary>
     public interface IHTxMultiMap<TKey, TValue> : ITransactionalObject
     {
-        Task<IReadOnlyList<TValue>> GetAsync(TKey key, TimeSpan timeout = default);
-        Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken);
+        Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default);
 
-        Task<bool> TryAddAsync(TKey key, TValue value, TimeSpan timeout = default);
-        Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken);
+        Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
 
-        Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default);
-        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken);
+        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
 
-        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, TimeSpan timeout = default);
-        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken);
+        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken = default);
 
-        Task<int> CountAsync(TimeSpan timeout = default);
-        Task<int> CountAsync(CancellationToken cancellationToken);
+        Task<int> CountAsync(CancellationToken cancellationToken = default);
 
-        Task<int> ValueCountAsync(TKey key, TimeSpan timeout = default);
-        Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken);
+        Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken = default);
     }
 }

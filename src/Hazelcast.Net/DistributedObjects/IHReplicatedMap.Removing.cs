@@ -32,8 +32,7 @@ namespace Hazelcast.DistributedObjects
         ///     previous value associated with <c>key</c> or <c>null</c>
         ///     if there was no mapping for <c>key</c> .
         /// </returns>
-        Task<TValue> RemoveAsync(TKey key, TimeSpan timeout = default);
-        Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken);
+        Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// The clear operation wipes data out of the replicated maps.
@@ -42,7 +41,6 @@ namespace Hazelcast.DistributedObjects
         /// If some node fails on executing the operation, it is retried for at most
         /// 5 times (on the failing nodes only).
         ///</remarks>
-        Task ClearAsync(TimeSpan timeout = default);
-        Task ClearAsync(CancellationToken cancellationToken);
+        Task ClearAsync(CancellationToken cancellationToken = default);
     }
 }

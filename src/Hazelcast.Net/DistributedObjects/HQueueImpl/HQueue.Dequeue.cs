@@ -24,44 +24,12 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
     internal partial class HQueue<T> // Dequeue
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<T> PeekAsync(TimeSpan timeout = default) // peek but throw - was Element
-        {
-            var task = TaskEx.WithTimeout(PeekAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<T> PeekAsync(CancellationToken cancellationToken) // peek but throw - was Element
+        public async Task<T> PeekAsync(CancellationToken cancellationToken = default) // peek but throw - was Element
             => await TryPeekAsync(cancellationToken).CAF() ??
                throw new InvalidOperationException("The queue is empty.");
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<T> TryPeekAsync(TimeSpan timeout = default) // peek, or null
-        {
-            var task = TaskEx.WithTimeout(TryPeekAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<T> TryPeekAsync(CancellationToken cancellationToken) // peek, or null
+        public async Task<T> TryPeekAsync(CancellationToken cancellationToken = default) // peek, or null
         {
             var requestMessage = QueuePeekCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -74,23 +42,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<T> TryDequeueAsync() // was poll = take immediately with zero timeout = infinite? default?
-        {
-            var task = TryDequeueAsync(TimeToWait.Zero, CancellationToken.None);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<T> TryDequeueAsync(CancellationToken cancellationToken) // was poll = take immediately with zero timeout = infinite? default?
+        Task<T> TryDequeueAsync(CancellationToken cancellationToken = default) // was poll = take immediately with zero timeout = infinite? default?
         {
             var task = TryDequeueAsync(TimeToWait.Zero, cancellationToken);
 
@@ -101,25 +53,8 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
 #endif
         }
 
-
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<T> TryDequeueAsync(TimeSpan timeToWait) // was poll, take with timeout
-        {
-            var task = TryDequeueAsync(timeToWait, CancellationToken.None);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<T> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken) // was poll, take with timeout
+        public async Task<T> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default) // was poll, take with timeout
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMilliseconds);
@@ -129,23 +64,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<T> DequeueAsync(bool waitForItem, TimeSpan timeout = default) // was take, wail until an element is avail
-        {
-            var task = TaskEx.WithTimeout(DequeueAsync, waitForItem, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken) // was take, wail until an element is avail
+        public async Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken = default) // was take, wail until an element is avail
         {
             if (!waitForItem)
                 return await TryDequeueAsync(TimeToWait.Zero, cancellationToken).CAF() ??
@@ -162,24 +81,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         // bit silly, deserializing immediately instead of returning a lazy thing?
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<int> DrainToAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
-            where TItem : T
-        {
-            var task = TaskEx.WithTimeout(DrainToAsync, items, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
             where TItem : T
         {
             var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
@@ -191,24 +93,7 @@ namespace Hazelcast.DistributedObjects.HQueueImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, TimeSpan timeout = default)
-            where TItem : T
-        {
-            var task = TaskEx.WithTimeout(DrainToAsync, items, count, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, CancellationToken cancellationToken)
+        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, CancellationToken cancellationToken = default)
             where TItem : T
         {
             var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, count);

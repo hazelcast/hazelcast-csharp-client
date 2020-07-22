@@ -29,16 +29,10 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
             : base(HQueue.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public Task<bool> TryEnqueueAsync(TItem item)
-            => TryEnqueueAsync(item, TimeToWait.Zero, default);
-
-        public Task<bool> TryEnqueueAsync(TItem item, CancellationToken cancellationToken)
+        public Task<bool> TryEnqueueAsync(TItem item, CancellationToken cancellationToken = default)
             => TryEnqueueAsync(item, TimeToWait.Zero, cancellationToken);
 
-        public Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait)
-            => TryEnqueueAsync(item, timeToWait, default);
-
-        public async Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait, CancellationToken cancellationToken)
+        public async Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
@@ -47,18 +41,11 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
             return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<TItem> PeekAsync(TimeSpan timeout = default)
-            => await TaskEx.WithTimeout(TryPeekAsync, TimeToWait.Zero, timeout, DefaultOperationTimeoutMilliseconds).CAF() ??
-               throw new InvalidOperationException("The queue is empty.");
-
-        public async Task<TItem> PeekAsync(CancellationToken cancellationToken)
+        public async Task<TItem> PeekAsync(CancellationToken cancellationToken = default)
             => await TryPeekAsync(TimeToWait.Zero, cancellationToken).CAF() ??
                throw new InvalidOperationException("The queue is empty.");
 
-        public Task<TItem> TryPeekAsync(TimeSpan timeToWait, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(TryPeekAsync, timeToWait, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<TItem> TryPeekAsync(TimeSpan timeToWait, CancellationToken cancellationToken)
+        public async Task<TItem> TryPeekAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
@@ -67,16 +54,10 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
             return ToObject<TItem>(response);
         }
 
-        public Task<TItem> TryDequeueAsync()
-            => TryDequeueAsync(TimeToWait.Zero, default);
-
-        public Task<TItem> TryDequeueAsync(CancellationToken cancellationToken)
+        public Task<TItem> TryDequeueAsync(CancellationToken cancellationToken = default)
             => TryDequeueAsync(TimeToWait.Zero, cancellationToken);
 
-        public Task<TItem> TryDequeueAsync(TimeSpan timeToWait)
-            => TryDequeueAsync(timeToWait, default);
-
-        public async Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken)
+        public async Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
@@ -85,20 +66,14 @@ namespace Hazelcast.DistributedObjects.HTxQueueImpl
             return ToObject<TItem>(response);
         }
 
-        public Task<int> CountAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<int> CountAsync(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<TItem> DequeueAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(DequeueAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<TItem> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<TItem> DequeueAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();

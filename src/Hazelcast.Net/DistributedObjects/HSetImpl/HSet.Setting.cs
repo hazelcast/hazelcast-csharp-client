@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
 {
     internal partial class HSet<T> // Setting
     {
-        public override async Task<bool> AddAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> AddAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetAddCodec.EncodeRequest(Name, itemData);
@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
             return SetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetAddAllCodec.EncodeRequest(Name, itemsData);

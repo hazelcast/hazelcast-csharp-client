@@ -29,10 +29,7 @@ namespace Hazelcast.DistributedObjects.HTxSetImpl
             : base(HSet.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public Task<bool> AddAsync(TItem item, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> AddAsync(TItem item, CancellationToken cancellationToken)
+        public async Task<bool> AddAsync(TItem item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
@@ -40,10 +37,7 @@ namespace Hazelcast.DistributedObjects.HTxSetImpl
             return TransactionalSetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> RemoveAsync(TItem item, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(RemoveAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken)
+        public async Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
@@ -51,10 +45,7 @@ namespace Hazelcast.DistributedObjects.HTxSetImpl
             return TransactionalSetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<int> CountAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<int> CountAsync(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = TransactionalSetSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();

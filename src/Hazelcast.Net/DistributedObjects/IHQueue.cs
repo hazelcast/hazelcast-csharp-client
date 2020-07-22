@@ -37,8 +37,7 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">the collection to transfer elements into</param>
         /// <returns>the number of elements transferred</returns>
-        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
-        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
+        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
 
         /// <summary>
         /// Removes at most the given number of available elements from
@@ -55,8 +54,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="c">the collection to transfer elements into</param>
         /// <param name="maxElements">the maximum number of elements to transfer</param>
         /// <returns>the number of elements transferred</returns>
-        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, TimeSpan timeout = default) where TItem : T;
-        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, CancellationToken cancellationToken) where TItem : T;
+        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, CancellationToken cancellationToken = default) where TItem : T;
 
         /// <summary>
         /// Retrieves, but does not remove, the head of this queue.  This method
@@ -64,8 +62,7 @@ namespace Hazelcast.DistributedObjects
         /// if this queue is empty.
         /// </summary>
         /// <returns>the head of this queue</returns>
-        Task<T> PeekAsync(TimeSpan timeout = default);
-        Task<T> PeekAsync(CancellationToken cancellationToken);
+        Task<T> PeekAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Inserts the specified element into this queue if it is possible to do
@@ -86,8 +83,7 @@ namespace Hazelcast.DistributedObjects
         /// </returns>
         // there is no timeout overload because it's replaced by timeToWait
         //Task<bool> TryEnqueueAsync(T item, TimeSpan timeout = default);
-        Task<bool> TryEnqueueAsync(T item);
-        Task<bool> TryEnqueueAsync(T item, CancellationToken cancellationToken);
+        Task<bool> TryEnqueueAsync(T item, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Inserts the specified element into this queue, waiting up to the
@@ -113,11 +109,9 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="System.Exception">if interrupted while waiting</exception>
         // there is no timeout overload because it's replaced by timeToWait
         //Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, TimeSpan timeout = default);
-        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait);
-        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken);
+        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken = default);
 
-        Task<T> TryPeekAsync(TimeSpan timeout = default);
-        Task<T> TryPeekAsync(CancellationToken cancellationToken);
+        Task<T> TryPeekAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Retrieves and removes the head of this queue,
@@ -130,8 +124,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>the head of this queue, or <c>null</c> if this queue is empty</returns>
         // there is no timeout overload because it's replaced by timeToWait
         //Task<T> TryDequeueAsync(TimeSpan timeout = default);
-        Task<T> TryDequeueAsync();
-        Task<T> TryDequeueAsync(CancellationToken cancellationToken);
+        Task<T> TryDequeueAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting up to the
@@ -155,15 +148,13 @@ namespace Hazelcast.DistributedObjects
         /// </returns>
         // there is no timeout overload because it's replaced by timeToWait
         //Task<T> TryDequeueAsync(TimeSpan timeToWait, TimeSpan timeout = default);
-        Task<T> TryDequeueAsync(TimeSpan timeToWait);
-        Task<T> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken);
+        Task<T> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Inserts the specified element into this queue, waiting if necessary for space to become available.
         /// </summary>
         /// <param name="item">the element to Add</param>
-        Task EnqueueAsync(T item, TimeSpan timeout = default);
-        Task EnqueueAsync(T item, CancellationToken cancellationToken);
+        Task EnqueueAsync(T item, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Returns the number of additional elements that this queue can ideally
@@ -178,8 +169,7 @@ namespace Hazelcast.DistributedObjects
         ///</p>
         ///</summary>
         ///<returns>the remaining capacity </returns>
-        Task<int> GetRemainingCapacityAsync(TimeSpan timeout = default);
-        Task<int> GetRemainingCapacityAsync(CancellationToken cancellationToken);
+        Task<int> GetRemainingCapacityAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
@@ -188,7 +178,6 @@ namespace Hazelcast.DistributedObjects
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
         /// </remarks>
         /// <returns>the head of this queue</returns>
-        Task<T> DequeueAsync(bool waitForItem, TimeSpan timeout = default);
-        Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken);
+        Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken = default);
     }
 }

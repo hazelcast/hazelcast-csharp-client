@@ -23,83 +23,17 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
     internal partial class HCollectionBase<T> // Removing
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> RemoveAsync(T item, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(RemoveAsync, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
+        public abstract Task<bool> RemoveAsync(T item, CancellationToken cancellationToken = default);
 
         /// <inheritdoc />
-        public abstract Task<bool> RemoveAsync(T item, CancellationToken cancellationToken);
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
-            where TItem : T
-        {
-            var task = TaskEx.WithTimeout(RemoveAllAsync, items, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public abstract Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public abstract Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
             where TItem : T;
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, TimeSpan timeout = default)
-            where TItem : T
-        {
-            var task = TaskEx.WithTimeout(RetainAllAsync, items, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public abstract Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public abstract Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
             where TItem : T;
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task ClearAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ClearAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public abstract Task ClearAsync(CancellationToken cancellationToken);
+        public abstract Task ClearAsync(CancellationToken cancellationToken = default);
     }
 }

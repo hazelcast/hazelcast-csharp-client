@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
 {
     internal partial class HSet<T> // Getting
     {
-        public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken)
+        public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = SetGetAllCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }
 
-        public override async Task<bool> ContainsAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> ContainsAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetContainsCodec.EncodeRequest(Name, itemData);
@@ -39,14 +39,14 @@ namespace Hazelcast.DistributedObjects.HSetImpl
             return SetContainsCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<int> CountAsync(CancellationToken cancellationToken)
+        public override async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = SetSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
             return SetSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetContainsAllCodec.EncodeRequest(Name, itemsData);
@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects.HSetImpl
             return SetContainsAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
+        public override async Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = SetIsEmptyCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();

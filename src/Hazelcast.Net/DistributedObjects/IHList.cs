@@ -32,8 +32,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="index">index at which the specified element is to be inserted</param>
         /// <param name="item">element to be inserted</param>
-        Task InsertAsync(int index, T item, TimeSpan timeout = default);
-        Task InsertAsync(int index, T item, CancellationToken cancellationToken);
+        Task InsertAsync(int index, T item, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Inserts all of the elements in the specified collection into this
@@ -50,16 +49,14 @@ namespace Hazelcast.DistributedObjects
         /// <param name="c">collection containing elements to be added to this list</param>
         /// <typeparam name="TItem"></typeparam>
         /// <returns><tt>true</tt> if this list changed as a result of the call</returns>
-        Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, TimeSpan timeout = default) where TItem : T;
-        Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, CancellationToken cancellationToken) where TItem : T;
+        Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
 
         /// <summary>
         /// Returns the element in the specified position in this list
         /// </summary>
         /// <param name="index">index of the element to return</param>
         /// <returns>the element at the specified position in the list</returns>
-        Task<T> GetAsync(int index, TimeSpan timeout = default);
-        Task<T> GetAsync(int index, CancellationToken cancellationToken);
+        Task<T> GetAsync(int index, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Returns the index of the last occurrence of the specified element
@@ -71,11 +68,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="o">element to search for</param>
         /// <returns>the index of the last occurrence of the specified element in
         ///  this list, or -1 if this list does not contain the element</returns>
-        Task<int> LastIndexOfAsync(T item, TimeSpan timeout = default);
-        Task<int> LastIndexOfAsync(T item, CancellationToken cancellationToken);
+        Task<int> LastIndexOfAsync(T item, CancellationToken cancellationToken = default);
 
-        Task<int> IndexOfAsync(T item, TimeSpan timeout = default);
-        Task<int> IndexOfAsync(T item, CancellationToken cancellationToken);
+        Task<int> IndexOfAsync(T item, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes the first occurrence of the specified element from this list,
@@ -89,8 +84,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="index">element to be removed from this list, if present</param>
         /// <returns><tt>true</tt> if this list contained the specified element</returns>
-        Task<T> RemoveAtAsync(int index, TimeSpan timeout = default);
-        Task<T> RemoveAtAsync(int index, CancellationToken cancellationToken);
+        Task<T> RemoveAtAsync(int index, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Replaces the element at the specified position in this list with the
@@ -99,8 +93,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="index">index index of the element to replace</param>
         /// <param name="item">element to be stored at the specified position</param>
         /// <returns></returns>
-        Task<T> SetAsync(int index, T item, TimeSpan timeout = default);
-        Task<T> SetAsync(int index, T item, CancellationToken cancellationToken);
+        Task<T> SetAsync(int index, T item, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Returns a view of the portion of this list between the specified
@@ -111,7 +104,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="fromIndex">low endpoint (inclusive) of the subList</param>
         /// <param name="toIndex">high endpoint (exclusive) of the subList</param>
         /// <returns>a view of the specified range within this list</returns>
-        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, TimeSpan timeout = default);
-        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, CancellationToken cancellationToken);
+        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex, CancellationToken cancellationToken = default);
     }
 }

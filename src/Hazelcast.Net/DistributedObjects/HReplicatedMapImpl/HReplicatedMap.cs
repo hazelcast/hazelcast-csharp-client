@@ -38,16 +38,10 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             _partitionId = partitionId;
         }
 
-        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrUpdateAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
             => AddOrUpdateTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
-        public Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrUpdateTtlAsync, key, value, timeToLive, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
+        public async Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
@@ -57,10 +51,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return ToObject<TValue>(response);
         }
 
-        public Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(AddOrUpdateAsync, entries, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
+        public async Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken = default)
         {
             var entriesData = new List<KeyValuePair<IData, IData>>(entries.Count);
             foreach (var (key, value) in entries)
@@ -74,10 +65,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
         }
 
-        public Task<TValue> RemoveAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(RemoveAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
@@ -86,20 +74,14 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return ToObject<TValue>(response);
         }
 
-        public Task ClearAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ClearAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task ClearAsync(CancellationToken cancellationToken)
+        public async Task ClearAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ReplicatedMapClearCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
             _ = ReplicatedMapClearCodec.DecodeResponse(responseMessage);
         }
 
-        public Task<TValue> GetAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
@@ -108,10 +90,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return ToObject<TValue>(response);
         }
 
-        public Task<IReadOnlyList<TKey>> GetKeysAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetKeysAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
@@ -119,10 +98,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public Task<IReadOnlyList<TValue>> GetValuesAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetValuesAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
@@ -130,10 +106,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetAllAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
@@ -141,30 +114,21 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
         }
 
-        public Task<int> CountAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<int> CountAsync(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
             return ReplicatedMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> IsEmptyAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(IsEmptyAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
+        public async Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = ReplicatedMapIsEmptyCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
             return ReplicatedMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> ContainsKeyAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ContainsKeyAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapContainsKeyCodec.EncodeRequest(Name, keyData);
@@ -172,10 +136,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return ReplicatedMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> ContainsValueAsync(TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ContainsValueAsync, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken)
+        public async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken = default)
         {
             var valueData = ToSafeData(value);
             var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
@@ -183,7 +144,7 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
-        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -220,28 +181,16 @@ namespace Hazelcast.DistributedObjects.HReplicatedMapImpl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(default, false, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, key, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(default, false, key, true, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, predicate, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(predicate, true, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, key, predicate, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(predicate, true, key, true, handle, cancellationToken);
 
         private class MapSubscriptionState : SubscriptionState<ReplicatedMapEventHandlers<TKey, TValue>>

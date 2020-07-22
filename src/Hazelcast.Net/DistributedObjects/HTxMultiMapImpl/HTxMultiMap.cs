@@ -31,10 +31,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
             : base(HMultiMap.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public Task<IReadOnlyList<TValue>> GetAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(GetAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
@@ -43,10 +40,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public Task<bool> TryAddAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(TryAddAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        public async Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
@@ -54,10 +48,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
             return TransactionalMultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(RemoveAsync, key, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        public async Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
@@ -65,10 +56,7 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
             return TransactionalMultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(RemoveAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToData(key);
             var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
@@ -77,20 +65,14 @@ namespace Hazelcast.DistributedObjects.HTxMultiMapImpl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public Task<int> CountAsync(TimeSpan timeout = default)
-            => TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<int> CountAsync(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
             return TransactionalMultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public Task<int> ValueCountAsync(TKey key, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(ValueCountAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public async Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);

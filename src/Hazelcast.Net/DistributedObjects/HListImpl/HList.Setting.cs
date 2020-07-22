@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,23 +23,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
     internal partial class HList<T> // Setting
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<T> SetAsync(int index, T item, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(SetAsync, index, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<T> SetAsync(int index, T item, CancellationToken cancellationToken)
+        public async Task<T> SetAsync(int index, T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListSetCodec.EncodeRequest(Name, index, itemData);
@@ -50,23 +33,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task InsertAsync(int index, T item, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(InsertAsync, index, item, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task InsertAsync(int index, T item, CancellationToken cancellationToken)
+        public async Task InsertAsync(int index, T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListAddWithIndexCodec.EncodeRequest(Name, index, itemData);
@@ -75,7 +42,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> AddAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> AddAsync(T item, CancellationToken cancellationToken = default)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListAddCodec.EncodeRequest(Name, itemData);
@@ -84,7 +51,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListAddAllCodec.EncodeRequest(Name, itemsData);
@@ -93,24 +60,7 @@ namespace Hazelcast.DistributedObjects.HListImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, TimeSpan timeout = default)
-            where TItem : T
-        {
-            var task = TaskEx.WithTimeout(InsertRangeAsync, index, items, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, CancellationToken cancellationToken)
+        public async Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, CancellationToken cancellationToken = default)
             where TItem : T
         {
             var itemsData = ToSafeData(items);

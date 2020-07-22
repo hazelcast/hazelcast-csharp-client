@@ -37,10 +37,7 @@ namespace Hazelcast.DistributedObjects
     public interface IHTopic<T> : IDistributedObject
     {
         /// <summary>Subscribes to this topic.</summary>
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, TimeSpan timeout = default);
-
-        /// <summary>Subscribes to this topic.</summary>
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, CancellationToken cancellationToken);
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, CancellationToken cancellationToken = default);
 
         /// <summary>Stops receiving messages for the given message listener.</summary>
         /// <remarks>
@@ -48,15 +45,7 @@ namespace Hazelcast.DistributedObjects
         ///     this method does nothing.
         /// </remarks>
         /// <param name="subscriptionId">Id of listener registration.</param>
-        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default);
-
-        /// <summary>Stops receiving messages for the given message listener.</summary>
-        /// <remarks>
-        ///     Stops receiving messages for the given message listener. If the given listener already removed,
-        ///     this method does nothing.
-        /// </remarks>
-        /// <param name="subscriptionId">Id of listener registration.</param>
-        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken);
+        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
 
         //        /// <summary>Returns the name of this ITopic instance</summary>
         //        /// <returns>name of this instance</returns>
@@ -64,12 +53,7 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>
-        /// <param name="timeout">A timeout.</param>
-        Task PublishAsync(T message, TimeSpan timeout = default);
-
-        /// <summary>Publishes the message to all subscribers of this topic</summary>
-        /// <param name="message"></param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        Task PublishAsync(T message, CancellationToken cancellationToken);
+        Task PublishAsync(T message, CancellationToken cancellationToken = default);
     }
 }

@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.HTxListImpl
         { }
 
         /// <inheritoc />
-        public async Task<bool> AddAsync(TItem item, CancellationToken cancellationToken)
+        public async Task<bool> AddAsync(TItem item, CancellationToken cancellationToken = default)
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects.HTxListImpl
         }
 
         /// <inheritoc />
-        public async Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken)
+        public async Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken = default)
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
@@ -61,7 +61,7 @@ namespace Hazelcast.DistributedObjects.HTxListImpl
         }
 
         /// <inheritoc />
-        public async Task<int> CountAsync(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = TransactionalListSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();

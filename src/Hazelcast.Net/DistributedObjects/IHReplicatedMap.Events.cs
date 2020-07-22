@@ -25,26 +25,9 @@ namespace Hazelcast.DistributedObjects
         /// Subscribes to events.
         /// </summary>
         /// <param name="handle">An event handlers collection builder.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="key">A key to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Subscribes to events.
@@ -53,16 +36,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Subscribes to events.
@@ -71,17 +45,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
-        /// <param name="key">A key to filter events.</param>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default);
+        Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Subscribes to events.
@@ -91,20 +55,13 @@ namespace Hazelcast.DistributedObjects
         /// <param name="handle">An event handlers collection builder.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Unsubscribe from events.
-        /// </summary>
-        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <param name="timeout">A timeout.</param>
-        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default); // FIXME return a bool?! clarify everywhere
+        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken); // FIXME return a bool?! clarify everywhere
+        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default); // FIXME return a bool?! clarify everywhere
     }
 }

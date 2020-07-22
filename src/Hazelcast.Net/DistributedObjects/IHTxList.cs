@@ -25,15 +25,15 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Add new item to transactional list</summary>
         /// <param name="item">item</param>
         /// <returns>true if item is added successfully</returns>
-        Task<bool> AddAsync(TItem item, CancellationToken cancellationToken);
+        Task<bool> AddAsync(TItem item, CancellationToken cancellationToken = default);
 
         /// <summary>Add item from transactional list</summary>
         /// <param name="item">item</param>
         /// <returns>true if item is remove successfully</returns>
-        Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken);
+        Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken = default);
 
         /// <summary>Returns the size of the list</summary>
         /// <returns>size</returns>
-        Task<int> CountAsync(CancellationToken cancellationToken);
+        Task<int> CountAsync(CancellationToken cancellationToken = default);
     }
 }

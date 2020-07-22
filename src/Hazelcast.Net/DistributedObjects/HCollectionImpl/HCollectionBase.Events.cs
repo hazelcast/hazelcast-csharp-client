@@ -27,23 +27,7 @@ namespace Hazelcast.DistributedObjects.HCollectionImpl
     internal partial class HCollectionBase<T> // Events
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(SubscribeAsync, includeValue, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken)
+        public async Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken = default)
         {
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 

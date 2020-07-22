@@ -47,23 +47,7 @@ namespace Hazelcast.DistributedObjects.HTopicImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task PublishAsync(T message, TimeSpan timeout)
-        {
-            var task = TaskEx.WithTimeout(PublishAsync, message, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task PublishAsync(T message, CancellationToken cancellationToken)
+        Task PublishAsync(T message, CancellationToken cancellationToken = default)
         {
             _keyData ??= ToData(Name);
 
