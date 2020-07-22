@@ -24,7 +24,7 @@ namespace Hazelcast.Examples.WebSite
         {
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(BuildExampleOptions(args)).CreateClient();
-            await client.OpenAsync();
+            await client.ConnectAsync();
 
             // Get the Distributed Set from Cluster.
             await using var set = await client.GetSetAsync<string>("my-distributed-set");

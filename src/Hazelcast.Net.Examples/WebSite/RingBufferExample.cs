@@ -24,7 +24,7 @@ namespace Hazelcast.Examples.WebSite
         {
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(BuildExampleOptions(args)).CreateClient();
-            await client.OpenAsync();
+            await client.ConnectAsync();
 
             await using var rb = await client.GetRingBufferAsync<long>("rb");
 

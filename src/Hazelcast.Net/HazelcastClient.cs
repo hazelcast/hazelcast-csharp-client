@@ -76,9 +76,9 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task OpenAsync(TimeSpan timeout = default)
+        Task ConnectAsync(TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(OpenAsync, timeout, _options.Networking.ConnectionTimeoutMilliseconds);
+            var task = TaskEx.WithTimeout(ConnectAsync, timeout, _options.Networking.ConnectionTimeoutMilliseconds);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -92,7 +92,7 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task OpenAsync(CancellationToken cancellationToken)
+        Task ConnectAsync(CancellationToken cancellationToken)
         {
             var task = Cluster.ConnectAsync(cancellationToken);
 

@@ -165,7 +165,7 @@ namespace Hazelcast.Tests.Networking
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
             await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
-            await client.OpenAsync().CAF();
+            await client.ConnectAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
@@ -214,7 +214,7 @@ namespace Hazelcast.Tests.Networking
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
             await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
-            await client.OpenAsync().CAF();
+            await client.ConnectAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
@@ -255,7 +255,7 @@ namespace Hazelcast.Tests.Networking
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
             await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
-            await client.OpenAsync().CAF();
+            await client.ConnectAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
@@ -295,7 +295,7 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Start client 1");
             await using var client1 = (HazelcastClient) clientFactory.CreateClient();
-            await client1.OpenAsync().CAF();
+            await client1.ConnectAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
@@ -305,7 +305,7 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Start client 2");
             await using var client2 = (HazelcastClient) clientFactory.CreateClient();
-            await client2.OpenAsync().CAF();
+            await client2.ConnectAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 2");
             message = CreateMessage("a");
@@ -351,7 +351,7 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Start client 1");
             await using var client1 = (HazelcastClient)clientFactory.CreateClient();
-            await client1.OpenAsync().CAF();
+            await client1.ConnectAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");

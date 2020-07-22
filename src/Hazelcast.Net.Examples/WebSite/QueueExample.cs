@@ -24,7 +24,7 @@ namespace Hazelcast.Examples.WebSite
         {
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(BuildExampleOptions(args)).CreateClient();
-            await client.OpenAsync();
+            await client.ConnectAsync();
 
             // Get a Blocking Queue called "my-distributed-queue"
             var queue = await client.GetQueueAsync<string>("my-distributed-queue");

@@ -27,7 +27,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(options).CreateClient();
-            await client.OpenAsync();
+            await client.ConnectAsync();
 
             // get the distributed queue from the cluster
             await using var queue = await client.GetQueueAsync<string>("queue-example");

@@ -43,7 +43,7 @@ namespace Hazelcast.Examples.Client
 
             // create an Hazelcast client and connect to a server running on localhost
             var hz = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
-            await hz.OpenAsync();
+            await hz.ConnectAsync();
 
             // get a map
             var map = await hz.GetMapAsync<string, string>("myMap");

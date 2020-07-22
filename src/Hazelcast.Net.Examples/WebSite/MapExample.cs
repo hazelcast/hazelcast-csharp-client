@@ -23,7 +23,7 @@ namespace Hazelcast.Examples.WebSite
         {
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(BuildExampleOptions(args)).CreateClient();
-            await client.OpenAsync();
+            await client.ConnectAsync();
 
             // get distributed map from cluster
             await using var map = await client.GetMapAsync<string, string>("my-distributed-map");

@@ -29,7 +29,7 @@ namespace Hazelcast.Examples.Transactions
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(options).CreateClient();
-            await client.OpenAsync();
+            await client.ConnectAsync();
 
             var map1 = await client.GetMapAsync<int, string>("test1");
             var map2 = await client.GetMapAsync<int, string>("test2");

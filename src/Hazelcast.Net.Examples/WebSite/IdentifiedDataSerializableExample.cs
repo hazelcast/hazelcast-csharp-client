@@ -61,7 +61,7 @@ namespace Hazelcast.Examples.WebSite
             var options = BuildExampleOptions(args);
             options.Serialization.AddDataSerializableFactory(SampleDataSerializableFactory.FactoryId, new SampleDataSerializableFactory());
             await using var client = new HazelcastClientFactory(options).CreateClient();
-            await client.OpenAsync();
+            await client.ConnectAsync();
         }
     }
 }

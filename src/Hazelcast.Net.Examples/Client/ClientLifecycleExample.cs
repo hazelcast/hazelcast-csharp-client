@@ -28,7 +28,7 @@ namespace Hazelcast.Examples.Client
             // create an Hazelcast client and connect to a server running on localhost
             var hzf = new HazelcastClientFactory(HazelcastOptions.Build(args));
             var hz1 = hzf.CreateClient();
-            await hz1.OpenAsync();
+            await hz1.ConnectAsync();
 
             var connected = new SemaphoreSlim(0);
 
@@ -45,7 +45,7 @@ namespace Hazelcast.Examples.Client
 
             // create another Hazelcast client and connect to a server running on localhost
             var hz2 = hzf.CreateClient(Configure);
-            await hz2.OpenAsync();
+            await hz2.ConnectAsync();
 
             // wait for the event
             await connected.WaitAsync();

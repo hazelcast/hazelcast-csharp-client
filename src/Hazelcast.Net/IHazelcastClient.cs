@@ -33,14 +33,14 @@ namespace Hazelcast
         /// <remarks>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>
-        Task OpenAsync(TimeSpan timeout = default);
+        Task ConnectAsync(TimeSpan timeout = default);
 
         /// <summary>
         /// Connects the client to the remote cluster.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is connected.</returns>
-        Task OpenAsync(CancellationToken cancellationToken);
+        Task ConnectAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Begins a new transaction.
