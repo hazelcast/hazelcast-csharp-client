@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void ConnectAsyncCanceled()
+        public async Task ConnectAsyncCanceled()
         {
             var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 5701);
 
@@ -135,10 +135,31 @@ namespace Hazelcast.Tests.Core
 
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            var i = 0;
+            const int count = 5;
+            while (i++ < count)
             {
-                await socket.ConnectAsync(endpoint, -1, new CancellationToken(true));
-            });
+                try
+                {
+                    await socket.ConnectAsync(endpoint, -1, new CancellationToken(true));
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+
+                socket.Disconnect(true);
+                await Task.Delay(100);
+            }
+
+            // fail
+            if (i == count)
+                Assert.Throws<OperationCanceledException>(() => { });
+
+            //Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            //{
+            //    await socket.ConnectAsync(endpoint, -1, new CancellationToken(true));
+            //});
         }
     }
 }

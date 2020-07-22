@@ -14,7 +14,7 @@
 
 ## Hazelcast.NET Build Script
 
-param(
+param (
 
     # Targets.
     # (make sure it remains in the first position)
@@ -43,8 +43,21 @@ param(
 
     # Tests filter.
     # Can use eg "namespace==Hazelcast.Tests.Core" to only run and cover some tests.
+    # NUnit selection: https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html
+    #  test|name|class|namespace|method|cat ==|!=|=~|!~ 'value'|/value/|"value"
+    #  "class == /Hazelcast.Tests.Networking.NetworkAddressTests/"
+    #  "test == /Hazelcast.Tests.Networking.NetworkAddressTests/Parse"
+    # DotCover filter: https://www.jetbrains.com/help/dotcover/Running_Coverage_Analysis_from_the_Command_LIne.html#filters
+    #  +:<select>=<value> -:<select>=<value> separated with ';'
+    #  eg -:module=AdditionalTests;-:type=MainTests.Unit*;-:type=MainTests.IntegrationTests;function=TestFeature1;
+    #  <select> can be: +:module=*;class=*;function=*;  -:myassembly  * is supported
+    [Alias("tf")]
     [string]
-    $tests
+    $testFilter,
+    
+    [Alias("cf")]
+    [string]
+    $coverageFilter
 )
 
 # clear rogue environment variable
@@ -59,29 +72,33 @@ if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
 
 # validate targets and define actions ($doXxx)
 foreach ($t in $targets) {
-    switch ($t.Trim()) {
+    switch ($t.Trim().ToLower()) {
         "help" {
             Write-Output "build.ps1 <targets>+ [-enterprise] [-serverVersion <version>] [-framework <version>]"
             Write-Output "<targets> is a csv list of:"
-            Write-Output "  clean: cleans the solution"
-            Write-Output "  build: builds the solution"
-            Write-Output "  docs:  builds the documentation"
-            Write-Output "  tests: runs the tests"
-            Write-Output "  cover: when running tests, covers tests"
-            Write-Output "  nuget: builds the NuGet package"
-            Write-Output "  rc: runs the remote controller for tests"
-            Write-Output "  ds: serves the documentation"
+            Write-Output "  clean            : cleans the solution"
+            Write-Output "  build            : builds the solution"
+            Write-Output "  docs             :  builds the documentation"
+            Write-Output "  tests            : runs the tests"
+            Write-Output "  cover            : when running tests, covers tests"
+            Write-Output "  nuget            : builds the NuGet package"
+            Write-Output "  rc               : runs the remote controller for tests"
+            Write-Output "  docServe (ds)    : serves the documentation"
+            Write-Output "  failedTests (ft) : details failed tests"
             exit 0
 		}
-        "clean" { $doClean = $true }
-        "build" { $doBuild = $true }
-        "docs" { $doDocs = $true }
-        "docsIfWindows" { $doDocs = $isWindows }
-        "tests" { $doTests = $true }
-        "cover" { $doCover = $true }
-        "nuget" { $doNuget = $true }
-        "rc" { $doRc = $true }
-        "ds" { $doDocsServe = $true }
+        "clean"          { $doClean = $true }
+        "build"          { $doBuild = $true }
+        "docs"           { $doDocs = $true }
+        "docsIfWindows"  { $doDocs = $isWindows }
+        "tests"          { $doTests = $true }
+        "cover"          { $doCover = $true }
+        "nuget"          { $doNuget = $true }
+        "rc"             { $doRc = $true }
+        "docserve"       { $doDocsServe = $true }
+        "ds"             { $doDocsServe = $true }
+        "failedtests"    { $doFailedTests = $true }
+        "ft"             { $doFailedTests = $true }
         default {
             throw "Unknown target '$($t.Trim())' - use 'help' to list targets."
         }
@@ -134,11 +151,13 @@ if (-not [System.String]::IsNullOrWhiteSpace($framework)) {
 }
 
 # determine tests categories
-$testCategory = $tests
 if(!($enterprise)) {
-    if (-not [System.String]::IsNullOrWhiteSpace($testCategory)) { $testCategory += " && " }
-    $testCategory += "cat != enterprise"
+    if (-not [System.String]::IsNullOrWhiteSpace($testFilter)) { $testFilter += " && " }
+    $testFilter += "cat != enterprise"
 }
+
+if (-not [System.String]::IsNullOrWhiteSpace($coverageFilter)) { $coverageFilter += ";" }
+$coverageFilter += "-:Hazelcast.Net.Tests"
 
 # prepare directories
 $scriptRoot = "$PSScriptRoot" # expected to be ./build/
@@ -155,7 +174,7 @@ if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 # finds latest version of a NuGet package in the ~/.nuget cache
 function findLatestVersion($path) {
     if ([System.IO.Directory]::Exists($path)) {
-        $v = ls $path | `
+        $v = gci $path | `
             foreach-object { [Version]::Parse($_.Name) } | `
                 sort -descending | `
                 select -first 1
@@ -163,7 +182,7 @@ function findLatestVersion($path) {
     else {
         $l = [System.IO.Path]::GetDirectoryname($path).Length
         $l = $path.Length - $l
-        $v = ls "$path.*" | `
+        $v = gci "$path.*" | `
                 foreach-object { [Version]::Parse($_.Name.SubString($l)) } | `
                     sort -descending | `
                     select -first 1
@@ -274,7 +293,7 @@ function ensureMsBuild() {
         }
     }
 
-    dir 'C:/Program Files (x86)/Microsoft Visual Studio/*/BuildTools/MSBuild/*/Bin/MSBuild.exe' | ForEach-Object {
+    gci 'C:/Program Files (x86)/Microsoft Visual Studio/*/BuildTools/MSBuild/*/Bin/MSBuild.exe' | ForEach-Object {
         $msBuildVersion = &$_ -nologo -version
         $msBuildVersion = [System.Version]::Parse($msBuildVersion)
         $msBuildExe = $_.FullName.Replace('\', '/')
@@ -357,13 +376,14 @@ if ($doTests) {
     Write-Output "Tests"
     Write-Output "  Server version : $serverVersion"
     Write-Output "  Enterprise     : $enterprise"
-    Write-Output "  Exclude param  : $testCategory"
+    Write-Output "  Filter         : $testFilter"
     Write-Output "  Results        : $tmpDir/tests/results"
     Write-Output ""
 }
 
 if ($doCover) {
     Write-Output "Test Coverage"
+    Write-Output "  Filter         : $coverageFilter"
     Write-Output "  Reports        : $tmpDir/tests/cover"
     Write-Output ""
 }
@@ -387,10 +407,16 @@ if ($doDocsServe) {
     Write-Output ""
 }
 
+if ($doFailedTests) {
+    Write-Output "Failed Tests"
+    Write-Output "  Path           : $tmpdir\tests\results"
+    Write-Output ""
+}
+
 # cleanup, prepare
 if ($doClean) {
     # remove all the bins and objs recursively
-    Get-ChildItem $slnRoot -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
+    gci $slnRoot -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
 
     # clears directories
     if (test-path $outDir) { remove-item $outDir -force -recurse }
@@ -582,7 +608,7 @@ function RunDotNetCoreTests($f) {
             "-f", "$f", `
             "-v", "normal", `
             `
-            "--dotCoverFilters=-:Hazelcast.Net.Tests", `
+            "--dotCoverFilters=$coverageFilter", `
             "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute", `
             "--dotCoverOutput=$coveragePath/index.html", `
             "--dotCoverReportType=HTML", `
@@ -592,7 +618,7 @@ function RunDotNetCoreTests($f) {
             "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
             "NUnit.TestOutputXml=`".`"", `
             "NUnit.Labels=Before", `
-            "NUnit.Where=`"$testCategory`"" )
+            "NUnit.Where=`"$testFilter`"" )
 
 
         Write-Output "exec: dotnet dotcover $dotCoverArgs"
@@ -613,7 +639,7 @@ function RunDotNetCoreTests($f) {
             "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
             "NUnit.TestOutputXml=`".`"", `
             "NUnit.Labels=Before", `
-            "NUnit.Where=`"$testCategory`"" )
+            "NUnit.Where=`"$testFilter`"" )
 
         Write-Output "exec: dotnet $dotnetArgs"
         dotnet $dotnetArgs
@@ -638,7 +664,7 @@ function RunDotNetFrameworkTests($f) {
     $nunit = "$userHome/.nuget/packages/nunit.consolerunner/$v/tools/nunit3-console.exe"
     $nunitArgs=@("`"${testDLL}`"", "--labels=Before", "--result=`"$tmpDir/tests/results/results-$f.xml`"", "--framework=$nuf")
 
-    if ($testCategory.Length -gt 0) {
+    if ($testFilter.Length -gt 0) {
         $nunitArgs += @("--where=`"${testCategory}`"")
     }
 
@@ -655,7 +681,7 @@ function RunDotNetFrameworkTests($f) {
 
         # note: separate attributes filters with ';'
         $dotCoverArgs = @( "cover", `
-            "--Filters=-:Hazelcast.Net.Tests", `
+            "--Filters=$coverageFilter", `
             "--AttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute", `
             "--TargetWorkingDir=.", `
             "--Output=$coveragePath/index.html", `
@@ -742,11 +768,17 @@ if ($doTests) {
             "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
 
         if ($failed -gt 0) {
+            Write-Output ""
             foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
-              Write-Output "    failed: $($testCase.fullname.TrimStart('Hazelcast.Net.'))"
-			}
-		}
-	}
+                Write-Output "$($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
+                if ($doFailedTests) {
+                    Write-Output $testCase.failure.message.innerText
+                    Write-Output $testCase.failure."stack-trace".innerText
+                    Write-Output ""
+                }                
+            }
+        }
+    }
 }
 
 if ($doRc) {

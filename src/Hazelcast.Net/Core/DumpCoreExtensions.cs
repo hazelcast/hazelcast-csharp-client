@@ -45,7 +45,8 @@ namespace Hazelcast.Core
             {
                 for (var j = 0; j < 8 && i < length; j++, i++)
                 {
-                    text.AppendFormat(CultureInfo.InvariantCulture, "{0:x2} ", bytes[i]);
+                    if (j > 0) text.Append(" ");
+                    text.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", bytes[i]);
                 }
 
                 if (i < length)

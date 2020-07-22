@@ -137,13 +137,13 @@ namespace Hazelcast.Messaging
             var message = _currentMessage;
             _currentMessage = null;
             HConsole.WriteLine(this, "Handle fragment");
-            await HandleFragmentAsync(message).CAF();
+            await ReceiveFragmentAsync(message).CAF();
 
             return true;
         }
 
         // internal for tests
-        internal async ValueTask HandleFragmentAsync(ClientMessage fragment)
+        internal async ValueTask ReceiveFragmentAsync(ClientMessage fragment)
         {
             if (fragment.Flags.HasAll(ClientMessageFlags.Unfragmented))
             {
@@ -244,25 +244,30 @@ namespace Hazelcast.Messaging
             {
                 HConsole.WriteLine(this, "Send message");
 
-                // last chance - after this line, we will send the full message
-                cancellationToken.ThrowIfCancellationRequested();
-
                 // for tests purposes - do *not* rely on this
                 OnSending?.Invoke();
+
+                // last chance - after this line, we will send the full message
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var frame = message.FirstFrame;
                 do
                 {
                     HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
 
-                    // passing a 'default' cancellation token here, we do *not* propagate
-                    // cancellation any further - we want to send the full message, no matter what
-                    if (!await SendFrameAsync(frame, default).CAF())
+                    // notes:
+                    // - SendFrameAsync does *not* throw but return true/false
+                    // - passing CancellationToken here, we do *not* propagate cancellation
+                    //   any further, we want to send the full message, all frames, all bytes,
+                    //   no matter what
+
+                    if (!await SendFrameAsync(frame, CancellationToken.None).CAF())
                         return false;
 
-                    // note that we may have sent some frames already, and that could
-                    // confuse the server greatly (to never see the end of a message?)
-                    // FIXME so quite probably returning false should kill the connection somehow?
+                    // now if we have sent some frames, and then stop because we cannot send
+                    // frames anymore... we have to assume that the server will recover, but
+                    // quite probably the connection is dead or dying - we do nothing about
+                    // it here, because the situation will be managed further up
 
                     frame = frame.Next;
                 } while (frame != null);
@@ -279,16 +284,17 @@ namespace Hazelcast.Messaging
         {
             const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
 
+            // note: SocketConnectionBase.SendAsync does *not* throw but returns true/false
+            // so this method also does not throw but returns true/false
+
             var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
             frame.WriteLengthAndFlags(header);
-
-            if (!await _connection.SendAsync(header, sizeofHeader, cancellationToken).CAF())
-                return false;
-
+            var sentHeader = await _connection.SendAsync(header, sizeofHeader, cancellationToken).CAF();
             ArrayPool<byte>.Shared.Return(header);
-
-            return frame.Length <= sizeofHeader ||
-                   await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF();
+            
+            return sentHeader && 
+                   (frame.Length <= sizeofHeader ||
+                    await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF());
         }
 
         /// <inheritdoc />

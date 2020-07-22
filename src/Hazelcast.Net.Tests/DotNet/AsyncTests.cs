@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,6 +77,7 @@ namespace Hazelcast.Tests.DotNet
             var taskCompletionSource = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             var task = Task.Run(async () =>
             {
+                await Task.Yield();
                 steps.Add("task.start");
                 ev.Wait();
                 steps.Add("task.complete");
@@ -685,6 +685,29 @@ namespace Hazelcast.Tests.DotNet
             state.Count += 1;
 
             // when we reach the last line of the method, 'await' returns to the caller.
+        }
+
+        [Test]
+        public async Task ResultOrCancel1()
+        {
+            var cancellation = new CancellationTokenSource();
+            var completion = new TaskCompletionSource<int>();
+            cancellation.Token.Register(() => completion.TrySetCanceled());
+            completion.TrySetResult(42);
+            cancellation.Cancel();
+            var v = await completion.Task;
+            Assert.That(v, Is.EqualTo(42));
+        }
+
+        [Test]
+        public void ResultOrCancel2()
+        {
+            var cancellation = new CancellationTokenSource();
+            var completion = new TaskCompletionSource<int>();
+            cancellation.Token.Register(() => completion.TrySetCanceled());
+            cancellation.Cancel();
+            completion.TrySetResult(42);
+            Assert.ThrowsAsync<TaskCanceledException>(async () => _ = await completion.Task);
         }
     }
 }

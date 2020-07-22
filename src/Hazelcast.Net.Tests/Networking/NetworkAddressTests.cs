@@ -17,7 +17,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using Hazelcast.Networking;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
@@ -89,23 +91,62 @@ namespace Hazelcast.Tests.Networking
 
             Assert.That(NetworkAddress.TryParse("712.548", out IEnumerable<NetworkAddress> _), Is.False);
 
+            static void AssertAddresses(IEnumerable<NetworkAddress> xx, string n, bool v6)
+            {
+                var xa = xx.ToArray();
+                foreach (var x in xa)
+                    Console.WriteLine("  " + x);
+                Assert.That(xa.Length, Is.GreaterThanOrEqualTo(3));
+                for (var i = 0; i < 3; i++)
+                {
+                    if (n == "*")
+                        Assert.That(xa[i].ToString().EndsWith(":570" + (i + 1)));
+                    else
+                        Assert.That(xa[i].ToString(), Is.EqualTo(n + ":570" + (i + 1)));
+                    Assert.That(xa[i].IsIpV6, Is.EqualTo(v6));
+                }
+            }
+
             Assert.That(NetworkAddress.TryParse("127.0.0.1", out IEnumerable<NetworkAddress> addresses), Is.True);
-            Assert.That(addresses.Count(), Is.EqualTo(3));
+            Console.WriteLine("127.0.0.1");
+            AssertAddresses(addresses, "127.0.0.1", false);
+
+            Assert.That(NetworkAddress.TryParse("localhost", out addresses), Is.True);
+            Console.WriteLine("localhost");
+            AssertAddresses(addresses, "127.0.0.1", false);
+
+            // on Windows, this gets 127.0.0.1 but on Linux it gets what the host name
+            // maps to in /etc/hosts and by default on some systems (eg Debian) it can
+            // be 127.0.1.1 instead of 127.0.0.1
+            //
+            Assert.That(NetworkAddress.TryParse(Dns.GetHostName(), out addresses), Is.True);
+            Console.Write(Dns.GetHostName());
+            var n = Dns.GetHostAddresses(Dns.GetHostName()).First(x => x.AddressFamily == AddressFamily.InterNetwork).ToString();
+            Console.WriteLine(" -> " + n);
+            AssertAddresses(addresses, n, false);
 
             Assert.That(NetworkAddress.TryParse("::1", out addresses), Is.True);
-            var array = addresses.ToArray();
-            Assert.That(array.Length, Is.EqualTo(3));
-            Assert.That(array[0].ToString(), Is.EqualTo("[::1]:5701"));
-            Assert.That(array[0].IsIpV6, Is.True);
-            Assert.That(array[1].ToString(), Is.EqualTo("[::1]:5702"));
-            Assert.That(array[1].IsIpV6, Is.True);
-            Assert.That(array[2].ToString(), Is.EqualTo("[::1]:5703"));
-            Assert.That(array[2].IsIpV6, Is.True);
+            Console.WriteLine("::1");
+            AssertAddresses(addresses, "[::1]", true);
+
+            // on Windows, this gets the various fe80 local addresses (but not the random one
+            // that we specified) - on Linux this gets nothing and it may eventually be an issue?
+            // there are various issues corresponding to this situation,
+            // see https://github.com/dotnet/runtime/issues/27534
+            // and fixes seem to be in the 5.0 milestone = n/a yet.
 
             Assert.That(NetworkAddress.TryParse("fe80::bd0f:a8bc:6480:238b", out addresses), Is.True);
-            Assert.That(addresses.Count(), Is.GreaterThanOrEqualTo(3)); // depends on local NICs
-            Assert.That(addresses.First().IsIpV6, Is.True);
-            foreach (var a in addresses) Console.WriteLine(a);
+            Console.WriteLine("fe80::bd0f:a8bc:6480:238b");
+            if (OS.IsWindows)
+            {
+                // test the first 3, we might get more depending on NICs
+                AssertAddresses(addresses, "*", true);
+            }
+            else
+            {
+                foreach (var a in addresses)
+                    Console.WriteLine("  " + a);
+            }
         }
 
         [Test]

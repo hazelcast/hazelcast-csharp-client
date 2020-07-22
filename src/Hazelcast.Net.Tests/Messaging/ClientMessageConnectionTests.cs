@@ -78,52 +78,52 @@ namespace Hazelcast.Tests.Messaging
             // un-fragmented message
             c.OnReceiveMessage = OnReceiveMessage;
             var fragment = NewFragment(ClientMessageFlags.Unfragmented);
-            await c.HandleFragmentAsync(fragment);
+            await c.ReceiveFragmentAsync(fragment);
             Assert.That(recvd, Is.SameAs(fragment));
 
             // exception
             recvd = null;
             c.OnReceiveMessage = OnReceiveMessageNotImplemented;
-            await c.HandleFragmentAsync(fragment);
+            await c.ReceiveFragmentAsync(fragment);
             Assert.That(recvd, Is.Null);
 
             // ...
             c.OnReceiveMessage = OnReceiveMessage;
             fragment = NewFragment(ClientMessageFlags.BeginFragment, 1);
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // begin
+            await c.ReceiveFragmentAsync(fragment); // begin
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.BeginFragment, 1 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // ignore duplicate begin
+            await c.ReceiveFragmentAsync(fragment); // ignore duplicate begin
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.Default, 1 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // accumulate
+            await c.ReceiveFragmentAsync(fragment); // accumulate
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.EndFragment, 2 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // ignore non-matching end
+            await c.ReceiveFragmentAsync(fragment); // ignore non-matching end
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.EndFragment, 1 );
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // end
+            await c.ReceiveFragmentAsync(fragment); // end
             Assert.That(recvd, Is.Not.Null);
 
             Assert.That(recvd.Count(), Is.EqualTo(6));
 
             fragment = NewFragment(ClientMessageFlags.BeginFragment, 4);
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // begin
+            await c.ReceiveFragmentAsync(fragment); // begin
             Assert.That(recvd, Is.Null);
             fragment = NewFragment(ClientMessageFlags.Default, 4);
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // accumulate
+            await c.ReceiveFragmentAsync(fragment); // accumulate
             Assert.That(recvd, Is.Null);
             c.OnReceiveMessage = OnReceiveMessageNotImplemented;
             fragment = NewFragment(ClientMessageFlags.EndFragment, 4);
             recvd = null;
-            await c.HandleFragmentAsync(fragment); // end
+            await c.ReceiveFragmentAsync(fragment); // end
             Assert.That(recvd, Is.Null);
         }
 

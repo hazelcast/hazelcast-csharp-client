@@ -690,7 +690,7 @@ namespace Hazelcast.Tests.Core
 
         private static ValueTask<int> ThrowValueResult()
         {
-            return new ValueTask<int>(Task.FromException<int>(new NotSupportedException("bang")));Task.FromException<int>(new NotSupportedException("bang"));
+            return new ValueTask<int>(Task.FromException<int>(new NotSupportedException("bang")));
         }
 
         private static Task CancelTask()

@@ -227,6 +227,10 @@ namespace Hazelcast.Clustering
         /// <returns>The response message.</returns>
         private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
         {
+            // yield now, so the caller gets a task that can bubble up to user's code
+            // immediately without waiting for more synchronous operations to take place
+            await Task.Yield();
+
             while (true)
             {
                 try
@@ -243,7 +247,7 @@ namespace Hazelcast.Clustering
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
-                    if (invocation.ShouldRetry(exception, _options.Networking.RetryOnTargetDisconnected) &&
+                    if (invocation.IsRetryable(exception, _options.Networking.RetryOnTargetDisconnected) &&
                         await invocation.CanRetryAsync(() => _correlationIdSequence.GetNext()).CAF())
                     {
                         HConsole.WriteLine(this, "Retrying...");

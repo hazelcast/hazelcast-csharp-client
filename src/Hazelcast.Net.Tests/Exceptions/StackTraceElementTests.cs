@@ -45,6 +45,10 @@ namespace Hazelcast.Tests.Exceptions
         {
             var e = new StackTraceElement("className", "methodName", "fileName", 42);
 
+            #pragma warning disable CS1718 // Comparison made to same variable
+            // ReSharper disable EqualExpressionComparison
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+
             Assert.That(e.Equals(null), Is.False);
             Assert.That(e.Equals(e), Is.True);
             Assert.That(e.Equals(new StackTraceElement("className", "methodName", "fileName", 42)), Is.True);
@@ -55,6 +59,10 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e != new StackTraceElement("classNamX", "methodName", "fileName", 42), Is.True);
 
             Assert.That(e.GetHashCode(), Is.Not.Zero);
+
+            // ReSharper restore EqualExpressionComparison
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            #pragma warning restore CS1718 // Comparison made to same variable
         }
     }
 }

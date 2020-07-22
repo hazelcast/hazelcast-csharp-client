@@ -87,7 +87,6 @@ namespace Hazelcast.Networking
             var ipAddress = IPEndPoint.Address;
             if (ipAddress == null) throw new ArgumentException("Address cannot be null.", nameof(endpoint));
 
-            //SetHostName(ipAddress);
             HostName = ipAddress.ToString();
         }
 
@@ -106,13 +105,7 @@ namespace Hazelcast.Networking
             if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
 
             IPEndPoint = new IPEndPoint(ipAddress, port);
-
-            HostName = hostName;
-            if (string.IsNullOrWhiteSpace(hostName))
-                //SetHostName(ipAddress);
-                HostName = ipAddress.ToString();
-            else
-                HostName = hostName;
+            HostName = string.IsNullOrWhiteSpace(hostName) ? ipAddress.ToString() : hostName;
         }
 
         /// <summary>
@@ -186,6 +179,11 @@ namespace Hazelcast.Networking
         /// Whether the address is an IP v6 address.
         /// </summary>
         public bool IsIpV6 => IPAddress.AddressFamily == AddressFamily.InterNetworkV6;
+
+        /// <summary>
+        /// Whether the address is an IP v6 address which is global (non-local), or scoped.
+        /// </summary>
+        public bool IsIpV6GlobalOrScoped => (!IPAddress.IsIPv6SiteLocal && !IPAddress.IsIPv6LinkLocal) || IPAddress.ScopeId > 0;
 
         /// <summary>
         /// Gets an IP address by name, via DNS.
@@ -350,15 +348,7 @@ namespace Hazelcast.Networking
 
             if (address.IsIpV4)
             {
-                var list4 = new List<NetworkAddress>();
-                var port4 = address.Port > 0 ? address.Port : DefaultPort;
-                var range = address.Port > 0 ? 1 : PortRange;
-                for (var i = 0; i < range; port4++, i++)
-                {
-                    list4.Add(new NetworkAddress(address, port4));
-                }
-
-                addresses = list4;
+                addresses = ExpandPorts(address);
                 return true;
             }
 
@@ -366,44 +356,49 @@ namespace Hazelcast.Networking
             //if (!address.IsIpV6)
             //    throw new NotSupportedException($"Address family {address.IPAddress.AddressFamily} is not supported.");
 
-            var list6 = new List<NetworkAddress>();
-            foreach (var ipAddress in ExplodeV6Local(address.IPAddress))
+            // see https://4sysops.com/archives/ipv6-tutorial-part-6-site-local-addresses-and-link-local-addresses/
+            // loopback - is ::1 exclusively
+            // site-local - equivalent to private IP addresses in v4 = fe:c0:...
+            // link-local - hosts on the link
+            // global - globally route-able addresses
+
+            // global or has a scope = qualified, can return
+            if (address.IsIpV6GlobalOrScoped)
             {
-                var port6 = address.Port > 0 ? address.Port : DefaultPort;
-                var range = address.Port > 0 ? 1 : PortRange;
-                for (var i = 0; i < range; port6++, i++)
-                {
-                    list6.Add(new NetworkAddress(address.HostName, ipAddress, port6));
-                }
+                addresses = ExpandPorts(address);
+                return true;
             }
 
-            addresses = list6;
+            // address is site-local or link-local, and has no scopeId
+            // get localhost addresses
+            addresses = GetV6LocalAddresses().SelectMany(x => ExpandPorts(address, x));
             return true;
+        }
+
+        private static IEnumerable<NetworkAddress> ExpandPorts(NetworkAddress address, IPAddress ipAddress = null)
+        {
+            if (address.Port > 0)
+            {
+                // qualified with a port = can only be this address
+                yield return address;
+            }
+            else
+            {
+                // not qualified with a port = can be a port range
+                for (var port = DefaultPort; port < DefaultPort + PortRange; port++)
+                    yield return ipAddress == null
+                        ? new NetworkAddress(address, port)
+                        : new NetworkAddress(address.HostName, ipAddress, port);
+            }
         }
 
         /// <summary>
         /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
         /// </summary>
-        /// <param name="ipAddress">The non-scoped IP v6 local address.</param>
         /// <returns>All scoped IP addresses corresponding to the specified address.</returns>
-        /// <remarks>
-        /// <para>If <paramref name="ipAddress"/> is not local, or scoped, return it unchanged.</para>
-        /// </remarks>
-        private static IEnumerable<IPAddress> ExplodeV6Local(IPAddress ipAddress)
+        // internal for tests
+        internal static IEnumerable<IPAddress> GetV6LocalAddresses()
         {
-            // see https://4sysops.com/archives/ipv6-tutorial-part-6-site-local-addresses-and-link-local-addresses/
-            // site-local - equivalent to private IP addresses in v4 = fe:c0:...
-            // link-local - hosts on the link
-            // global - globally route-able addresses
-
-            // if the address is global or has a scope return the address only
-
-            if ((!ipAddress.IsIPv6SiteLocal && !ipAddress.IsIPv6LinkLocal) || ipAddress.ScopeId > 0)
-            {
-                yield return ipAddress;
-                yield break;
-            }
-
             // if the address is IP v6 local without a scope,
             // resolve -> the local address, with all avail scopes?
 

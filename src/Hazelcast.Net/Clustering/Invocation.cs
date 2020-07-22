@@ -148,24 +148,27 @@ namespace Hazelcast.Clustering
         public long StartTime { get; }
 
         /// <summary>
-        /// Transition the task to <see cref="TaskStatus.RanToCompletion"/>.
+        /// Attempts to transition the task to the <see cref="TaskStatus.RanToCompletion"/> state.
         /// </summary>
         /// <param name="result">The response message.</param>
-        public void SetResult(ClientMessage result)
-            => CompletionSource.SetResult(result);
+        /// <returns><c>true</c> if the operation was successful; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>This operation will return false if the task has already been completed,
+        /// faulted or canceled. This method also returns false if the task has been disposed.</para>
+        /// </remarks>
+        public bool TrySetResult(ClientMessage result)
+            => CompletionSource.TrySetResult(result);
 
         /// <summary>
-        /// Transitions the task to <see cref="TaskStatus.Faulted"/>.
+        /// Attempts to transition the task to the <see cref="TaskStatus.Faulted"/> state.
         /// </summary>
         /// <param name="exception">The exception.</param>
-        public void SetException(Exception exception)
-            => CompletionSource.SetException(exception);
-
-        /// <summary>
-        /// Attempts to transition the task to <see cref="TaskStatus.Faulted"/>.
-        /// </summary>
-        /// <param name="exception">The exception.</param>
-        public void TrySetException(Exception exception)
+        /// <returns><c>true</c> if the operation was successful; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>This operation will return false if the task has already been completed,
+        /// faulted or canceled. This method also returns false if the task has been disposed.</para>
+        /// </remarks>
+        public bool TrySetException(Exception exception)
             => CompletionSource.TrySetException(exception);
 
         /// <summary>
@@ -178,7 +181,7 @@ namespace Hazelcast.Clustering
         /// <para>If it is determined that the invocation should be retried, it does not necessarily
         /// mean that it can be retried, and that will be determined by <see cref="CanRetryAsync"/>.</para>
         /// </remarks>
-        public bool ShouldRetry(Exception exception, bool retryOnTargetDisconnected)
+        public bool IsRetryable(Exception exception, bool retryOnTargetDisconnected)
         {
             switch (exception)
             {

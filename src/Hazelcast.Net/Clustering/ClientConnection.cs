@@ -333,7 +333,7 @@ namespace Hazelcast.Clustering
             try
             {
                 HConsole.WriteLine(this, $"Fail invocation [{message.CorrelationId}].");
-                invocation.SetException(exception);
+                invocation.TrySetException(exception);
             }
             catch (Exception e)
             {
@@ -348,7 +348,7 @@ namespace Hazelcast.Clustering
             try
             {
                 HConsole.WriteLine(this, $"Complete invocation [{message.CorrelationId}].");
-                invocation.SetResult(message);
+                invocation.TrySetResult(message);
             }
             catch (Exception e)
             {
@@ -357,7 +357,7 @@ namespace Hazelcast.Clustering
 
                 try
                 {
-                    invocation.SetException(e);
+                    invocation.TrySetException(e);
                 }
                 catch { /* nothing much we can do */ }
             }
@@ -401,7 +401,16 @@ namespace Hazelcast.Clustering
                                      HConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
 
             // actually send the message
-            var success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
+            bool success;
+            try
+            {
+                success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
+            }
+            catch
+            {
+                RemoveInvocation(invocation);
+                throw;
+            }
 
             if (!Active)
             {
