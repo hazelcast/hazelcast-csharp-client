@@ -46,7 +46,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // add values
             for (var i = 0; i < 1000; i++)
-                await map.AddOrUpdateAsync("key" + i, "value" + i);
+                await map.SetAsync("key" + i, "value" + i);
 
             // get values, first pass
             var sw = new Stopwatch();

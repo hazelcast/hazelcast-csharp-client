@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Predicates;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 
@@ -66,7 +67,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<TValue> RemoveAndReturnAsync(TKey key, CancellationToken cancellationToken = default)
+        Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var task = RemoveAsync(ToSafeData(key), cancellationToken);
 
@@ -132,7 +133,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-         Task RemoveAsync(TKey key, CancellationToken cancellationToken = default)
+        Task RemoveAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var task = DeleteAsync(ToSafeData(key), cancellationToken);
 
@@ -141,6 +142,20 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #else
             await task.CAF();
 #endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+            Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken = default)
+        {
+            var predicateData = ToSafeData(predicate);
+
+            var requestMessage = MapRemoveAllCodec.EncodeRequest(Name, predicateData);
+            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            _ = MapRemoveAllCodec.DecodeResponse(responseMessage);
         }
 
         /// <summary>

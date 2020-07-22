@@ -22,33 +22,33 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHMap<TKey, TValue> // Setting
     {
         /// <summary>
-        /// Adds or updates an entry and returns the previous value, if any.
+        /// Sets (adds or updates) an entry and gets the updated value, if any.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
-        Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<TValue> GetAndSetAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds or updates an entry.
+        /// Sets (adds or updates) an entry.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>Nothing.</returns>
+        /// <returns>A that that will complete when the entry has been set.</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
-        Task AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task SetAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds or updates an entry with a time-to-live and returns the previous value.
+        /// Sets (adds or updates) an entry with a time-to-live and gets the updated value, if any.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -58,13 +58,13 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
-        Task<TValue> AndOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
+        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds or updates an entry with a time-to-live.
+        /// Sets (adds or updates) an entry with a time-to-live.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -74,23 +74,24 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
-        Task AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
+        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds or updates entries.
+        /// Sets (adds or updates) entries.
         /// </summary>
         /// <param name="entries">Entries.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>Nothing.</returns>
+        /// <returns>A that that will complete when the entries have been set.</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether entries have been set on the servers on not. On the other hand, either all
+        /// entries have been set, or none. The operation cannot be cancelled while only some entries
+        /// have been set.</para>
         /// </remarks>
-        /// TODO: is this transactional?
-        Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken = default);
+        Task SetAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Replaces an existing entry.
@@ -98,12 +99,15 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key.</param>
         /// <param name="newValue">The new value.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>true if the entry was replaced; otherwise false.</returns>
+        /// <returns>The updated value, or <c>default(TValue)</c> is no entry is updated.</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If an existing entry with the specified key is found, then its value is
+        /// updated with the new value, and the updated value is returned. Otherwise, nothing
+        /// happens, and <c>default(TValue)</c> is returned.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
-        Task<TValue> ReplaceAndReturnAsync(TKey key, TValue newValue, CancellationToken cancellationToken = default);
+        Task<TValue> ReplaceAsync(TKey key, TValue newValue, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Replaces an existing entry.
@@ -112,60 +116,66 @@ namespace Hazelcast.DistributedObjects
         /// <param name="expectedValue">The expected value.</param>
         /// <param name="newValue">The new value.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>true if the entry was replaced; otherwise false.</returns>
+        /// <returns><c>true</c> if the entry was replaced; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If an existing entry with the specified key and expected value is found, then its
+        /// value is updated with the new value. Otherwise, nothing happens.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
         Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Tries to set an entry within a server-side timeout.
+        /// Tries to set (add or update) an entry within a server-side timeout.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <param name="serverTimeout">A timeout.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>true if the entry was set; otherwise false.</returns>
+        /// <returns><c>true</c> if the entry was set; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>This method returns false when no lock on the key could be
-        /// acquired within the timeout.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>This method returns <c>false</c> when no lock on the key could be
+        /// acquired within the specified server-side timeout.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
-        Task<bool> TryAddOrUpdateAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken = default);
+        Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds an entry, if no entry with the key exists.
+        /// Adds an entry if no entry with the key already exists.
+        /// Returns the new value, or the existing value if the entry already exists.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">The value.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The existing value, if any; otherwise the default value.</returns>
+        /// <returns>The value for the key. This will be either the existing value for the key if the entry
+        /// already exists, or the new value if the no entry with the key already existed.</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
-        Task<TValue> AddAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<TValue> GetOrAddAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds an entry with a time-to-live, if no entry with the key exists.
+        /// Adds an entry with a time-to-live if no entry with the key already exists.
+        /// Returns the new value, or the existing value if the entry already exists.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">The value.</param>
         /// <param name="timeToLive">A time to live.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The existing value, if any; otherwise the default value.</returns>
+        /// <returns>The value for the key. This will be either the existing value for the key if the entry
+        /// already exists, or the new value if the no entry with the key already existed.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
+        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
+        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
-        Task<TValue> AddTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
+        Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Adds a transient entry.
+        /// Sets (adds or updates) a transient entry.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">The value.</param>
@@ -180,6 +190,6 @@ namespace Hazelcast.DistributedObjects
         /// and on whether value have been modified on the servers on not.</para>
         /// TODO: is it really removed? or just evicted?
         /// </remarks>
-        Task AddOrUpdateTransientAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
+        Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
     }
 }

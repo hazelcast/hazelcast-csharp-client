@@ -41,7 +41,7 @@ namespace Hazelcast.Examples.DistributedObjects
             // create and add an employee
             Console.WriteLine("Adding employee 'the employee'.");
             var employee = new Employee { Id = 1, Name = "the employee" };
-            await map.AddOrUpdateAsync(employee.Id, employee);
+            await map.SetAsync(employee.Id, employee);
 
             // retrieve employee
             var e = await map.GetAsync(employee.Id);

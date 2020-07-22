@@ -29,9 +29,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
+        Task<TValue> GetAndSetAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
-            var task = AndOrUpdateAndReturnTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
+            var task = GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -45,9 +45,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
+        Task SetAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
-            var task = AddOrUpdateTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
+            var task = SetAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -61,7 +61,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<TValue> AndOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
+        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = AddOrUpdateWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
@@ -99,7 +99,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
+        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = AddOrUpdateTtlAsync(keyData, valueData, timeToLive, cancellationToken);
@@ -146,7 +146,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken = default)
+        Task SetAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken = default)
         {
             // TODO: is this transactional? can some entries be created and others be missing?
 
@@ -219,7 +219,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public async Task<TValue> ReplaceAndReturnAsync(TKey key, TValue newValue, CancellationToken cancellationToken = default)
+        public async Task<TValue> ReplaceAsync(TKey key, TValue newValue, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 
@@ -267,7 +267,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<bool> TryAddOrUpdateAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken = default)
+        Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = TryAddOrUpdateAsync(keyData, valueData, serverTimeout, cancellationToken);
@@ -306,9 +306,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<TValue> AddAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
+        Task<TValue> GetOrAddAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
         {
-            var task = AddTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
+            var task = GetOrAddAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -322,7 +322,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<TValue> AddTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
+        Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = AddAsync(keyData, valueData, timeToLive, cancellationToken);
@@ -361,7 +361,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task AddOrUpdateTransientAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
+        Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = AddOrUpdateTransientAsync(keyData, valueData, timeToLive, cancellationToken);

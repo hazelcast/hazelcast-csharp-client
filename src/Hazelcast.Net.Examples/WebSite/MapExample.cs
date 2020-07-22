@@ -29,11 +29,11 @@ namespace Hazelcast.Examples.WebSite
             await using var map = await client.GetMapAsync<string, string>("my-distributed-map");
 
             // set/get
-            await map.AddOrUpdateAsync("key", "value");
+            await map.SetAsync("key", "value");
             await map.GetAsync("key");
 
             // concurrent methods, optimistic updating
-            await map.AddAsync("somekey", "somevalue");
+            await map.GetOrAddAsync("somekey", "somevalue");
             await map.ReplaceAsync("key", "value", "newvalue");
 
             // destroy the map

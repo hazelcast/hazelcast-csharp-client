@@ -66,7 +66,7 @@ namespace Hazelcast.Examples.WebSite
             await using var map = await client.GetMapAsync<string, string>("my-distributed-map");
             // Put the integer value of 0 into the Distributed Map
             // uh - that processor on the server can only work with strings?
-            await map.AddAsync("key", "value");
+            await map.GetOrAddAsync("key", "value");
             // Run the IncEntryProcessor class on the Hazelcast Cluster Member holding the key called "key"
             await map.ExecuteAsync(new IncEntryProcessor("duh"), "key");
             // Show that the IncEntryProcessor updated the value.
