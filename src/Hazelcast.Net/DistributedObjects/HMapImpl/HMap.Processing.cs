@@ -30,25 +30,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ExecuteAsync, processor, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
+        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ExecuteAsync(processorData, keyData, cancellationToken);
@@ -79,23 +63,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ExecuteAsync, processor, keys, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken)
+        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken = default)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
 
@@ -119,24 +87,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ExecuteAsync, processor, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-
-        }
-
-        /// <inheritdoc />
-        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken)
+        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken = default)
         {
             var processorData = ToSafeData(processor);
 
@@ -152,24 +103,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ExecuteAsync, processor, predicate, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-
-        }
-
-        /// <inheritdoc />
-        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken)
+        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken = default)
         {
             var (processorData, predicateData) = ToSafeData(processor, predicate);
 
@@ -187,25 +121,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ApplyAsync, processor, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
+        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ApplyAsync(processorData, keyData, cancellationToken);

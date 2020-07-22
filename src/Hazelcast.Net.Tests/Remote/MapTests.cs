@@ -76,7 +76,7 @@ namespace Hazelcast.Tests.Remote
             await map.AddOrUpdateAsync("key", 42).CAF();
 
             // add-or-replace with a 3 seconds timeout and a potential TimeoutException
-            await map.AddOrUpdateAsync("key", 43, TimeSpan.FromSeconds(3)).CAF();
+            await TaskEx.WithTimeout((m, k, v, t) => m.AddOrUpdateAsync(k, v, t), map, "key", 43, TimeSpan.FromSeconds(3)).CAF();
 
             // this is what happens under the scene but we cannot ask ppl to do this really
             // => no

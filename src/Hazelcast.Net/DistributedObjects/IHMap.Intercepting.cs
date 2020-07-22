@@ -28,30 +28,15 @@ namespace Hazelcast.DistributedObjects
         /// Adds an interceptor.
         /// </summary>
         /// <param name="interceptor">The interceptor.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The interceptor unique identifier.</returns>
-        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Adds an interceptor.
-        /// </summary>
-        /// <param name="interceptor">The interceptor.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The interceptor unique identifier.</returns>
-        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Removes an interceptor.
-        /// </summary>
-        /// <param name="id">The identifier of the interceptor.</param>
-        /// <param name="timeout">A timeout.</param>
-        Task RemoveInterceptorAsync(string id, TimeSpan timeout = default);
+        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes an interceptor.
         /// </summary>
         /// <param name="id">The identifier of the interceptor.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken);
+        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken = default);
     }
 }

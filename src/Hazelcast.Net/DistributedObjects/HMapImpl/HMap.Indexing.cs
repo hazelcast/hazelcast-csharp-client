@@ -28,26 +28,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task AddIndexAsync(IndexConfig indexConfig, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(AddIndexAsync, indexConfig, timeout, DefaultOperationTimeoutMilliseconds);
-
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken)
+        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken = default)
         {
             if (indexConfig == null) throw new ArgumentNullException(nameof(indexConfig));
 

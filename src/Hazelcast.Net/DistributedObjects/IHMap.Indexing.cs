@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
@@ -25,7 +24,6 @@ namespace Hazelcast.DistributedObjects
     {
         // TODO what is this?
 
-        Task AddIndexAsync(IndexConfig indexConfig, TimeSpan timeout = default);
-        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken);
+        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken = default);
     }
 }

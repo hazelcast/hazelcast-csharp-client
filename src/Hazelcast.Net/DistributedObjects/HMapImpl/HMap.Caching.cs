@@ -24,18 +24,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
     internal partial class HMap<TKey, TValue> // Caching
     {
         /// <inheritdoc />
-        public async Task<bool> EvictAsync(TKey key, TimeSpan timeout = default)
-        {
-            var keyData = ToSafeData(key);
-
-            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await TaskEx.WithTimeout(Cluster.SendToKeyPartitionOwnerAsync, requestMessage, keyData, timeout, DefaultOperationTimeoutMilliseconds).CAF();
-            var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
-            return response;
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> EvictAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<bool> EvictAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
 
@@ -46,26 +35,14 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public async Task EvictAllAsync(TimeSpan timeout = default)
-        {
-            await TaskEx.WithTimeout(EvictAllAsync, timeout, DefaultOperationTimeoutMilliseconds).CAF();
-        }
-
-        /// <inheritdoc />
-        public async Task EvictAllAsync(CancellationToken cancellationToken)
+        public async Task EvictAllAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
             await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
         }
 
         /// <inheritdoc />
-        public async Task FlushAsync(TimeSpan timeout = default)
-        {
-            await TaskEx.WithTimeout(FlushAsync, timeout, DefaultOperationTimeoutMilliseconds).CAF();
-       }
-
-        /// <inheritdoc />
-        public async Task FlushAsync(CancellationToken cancellationToken)
+        public async Task FlushAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MapFlushCodec.EncodeRequest(Name);
             await Cluster.SendAsync(requestMessage, cancellationToken).CAF();

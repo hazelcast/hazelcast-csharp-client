@@ -26,23 +26,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(AddInterceptorAsync, interceptor, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken)
+        public async Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken = default)
         {
             var interceptorData = ToSafeData(interceptor);
 
@@ -57,23 +41,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task RemoveInterceptorAsync(string id, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(RemoveInterceptorAsync, id, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken)
+        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(id));
 

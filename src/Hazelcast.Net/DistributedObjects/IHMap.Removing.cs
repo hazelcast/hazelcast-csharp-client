@@ -25,20 +25,6 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="timeToWait">The time to wait for a lock on the key.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns><c>true</c> if the entry was deleted; otherwise <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>This method returns <c>false</c> when no lock on the key could be
-        /// acquired within the timeout.</para>
-        /// TODO or when there was no value with that key?
-        /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Tries to remove an entry from this map.
-        /// </summary>
-        /// <param name="key">A key.</param>
-        /// <param name="timeToWait">The time to wait for a lock on the key.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
@@ -46,19 +32,7 @@ namespace Hazelcast.DistributedObjects
         /// acquired within the timeout.</para>
         /// TODO or when there was no value with that key?
         /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Removes an entry from this map and returns the removed value, if any.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The value, if any, or <c>default(TValue)</c>.</returns>
-        /// <remarks>
-        /// <para>This method serializes the return value. For performance reasons, prefer
-        /// <see cref="RemoveAsync(TKey,System.TimeSpan)"/> when the returned value is not used.</para>
-        /// </remarks>
-        Task<TValue> RemoveAndReturnAsync(TKey key, TimeSpan timeout = default);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes an entry from this map and returns the removed value, if any.
@@ -70,20 +44,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>This method serializes the return value. For performance reasons, prefer
         /// <see cref="RemoveAsync(TKey,System.Threading.CancellationToken)"/> when the returned value is not used.</para>
         /// </remarks>
-        Task<TValue> RemoveAndReturnAsync(TKey key, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Removes an entry from this map.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <param name="value">The value.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The value, if any, or default(TValue).</returns>
-        /// <remarks>
-        /// <para>This method removes an entry if the key and the value both match the
-        /// specified key and value.</para>
-        /// </remarks>
-        Task<bool> RemoveAsync(TKey key, TValue value, TimeSpan timeout = default);
+        Task<TValue> RemoveAndReturnAsync(TKey key, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes an entry from this map.
@@ -96,18 +57,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>This method removes an entry if the key and the value both match the
         /// specified key and value.</para>
         /// </remarks>
-        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Removes an entry from this map.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <remarks>
-        /// <para>For performance reasons, this method does not return the value. Prefer
-        /// <see cref="RemoveAndReturnAsync"/> if the value is required.</para>
-        /// </remarks>
-        Task RemoveAsync(TKey key, TimeSpan timeout = default);
+        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes an entry from this map.
@@ -118,18 +68,12 @@ namespace Hazelcast.DistributedObjects
         /// <para>For performance reasons, this method does not return the value. Prefer
         /// <see cref="RemoveAndReturnAsync(TKey,System.Threading.CancellationToken)"/> if the value is required.</para>
         /// </remarks>
-        Task RemoveAsync(TKey key, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Removes all entries from this map.
-        /// </summary>
-        /// <param name="timeout">A timeout.</param>
-        Task ClearAsync(TimeSpan timeout = default);
+        Task RemoveAsync(TKey key, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Removes all entries from this map.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
-        Task ClearAsync(CancellationToken cancellationToken);
+        Task ClearAsync(CancellationToken cancellationToken = default);
     }
 }

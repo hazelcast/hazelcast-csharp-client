@@ -27,25 +27,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task LockAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(LockAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task LockAsync(TKey key, CancellationToken cancellationToken)
+        Task LockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var task = LockForAsync(key, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
@@ -59,25 +43,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task LockForAsync(TKey key, TimeSpan leaseTime, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(LockForAsync,key, leaseTime, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken)
+        Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken = default)
         {
             var task = WaitLockForAsync(key, leaseTime, Timeout.InfiniteTimeSpan, cancellationToken);
 
@@ -91,25 +59,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task<bool> TryLockAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(TryLockAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken)
+        Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, Timeout.InfiniteTimeSpan, cancellationToken);
 
@@ -123,25 +75,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(WaitLockAsync, key, timeToWait, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
+        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken = default)
         {
             var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, timeToWait, cancellationToken);
 
@@ -153,19 +89,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public async Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, TimeSpan timeout = default)
-        {
-           var task = TaskEx.WithTimeout(WaitLockForAsync, key, timeToWait, leaseTime, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken)
+        public async Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
 
@@ -180,19 +104,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public async Task<bool> IsLockedAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(IsLockedAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
 
@@ -203,19 +115,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public async Task UnlockAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(UnlockAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task UnlockAsync(TKey key, CancellationToken cancellationToken)
+        public async Task UnlockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
 
@@ -232,19 +132,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public async Task ForceUnlockAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ForceUnlockAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken)
+        public async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
 

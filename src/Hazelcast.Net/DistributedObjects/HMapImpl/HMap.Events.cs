@@ -68,52 +68,28 @@ namespace Hazelcast.DistributedObjects.HMapImpl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, true, default(IPredicate), false, default(TKey), false, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(true, default, false, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, includeValues, default(IPredicate), false, default(TKey), false, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(includeValues, default, false, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, true, default(IPredicate), false, key, true, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(true, default, false, key, true, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, includeValues, default(IPredicate), false, key, true, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(includeValues, default, false, key, true, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, true, predicate, true, default(TKey), false, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(true, predicate, true, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, includeValues, predicate, true, default(TKey), false, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(includeValues, predicate, true, default, false, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, true, predicate, true, key, true, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(true, predicate, true, key, true, handle, cancellationToken);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, TimeSpan timeout = default)
-            => TaskEx.WithTimeout(SubscribeAsync, includeValues, predicate, true, key, true, handle, timeout, DefaultOperationTimeoutMilliseconds);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
             => SubscribeAsync(includeValues, predicate, true, key, true, handle, cancellationToken);
 
         private class MapSubscriptionState : SubscriptionState<MapEventHandlers<TKey, TValue>>

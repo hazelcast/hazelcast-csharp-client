@@ -38,23 +38,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         // second case, ToObject<TValue> casts the object value to TValue.
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<TValue> GetAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken = default)
             => ToObject<TValue>(await GetAsync(ToSafeData(key), cancellationToken).CAF());
 
         /// <summary>
@@ -74,25 +58,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetAsync, keys, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys, CancellationToken cancellationToken)
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys, CancellationToken cancellationToken = default)
         {
             var ownerKeys = new Dictionary<Guid, Dictionary<int, List<IData>>>();
 
@@ -159,24 +127,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IMapEntry<TKey, TValue>> GetEntryAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetEntryAsync, key, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-
-        /// <inheritdoc />
-        public async Task<IMapEntry<TKey, TValue>> GetEntryAsync(TKey key, CancellationToken cancellationToken)
+        public async Task<IMapEntry<TKey, TValue>> GetEntryAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var keyData = ToSafeData(key);
 
@@ -204,23 +155,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -229,25 +164,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate, TimeSpan timeout = default)
-        {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-
-            var task = TaskEx.WithTimeout(GetAsync, predicate, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate, CancellationToken cancellationToken)
+        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate, CancellationToken cancellationToken = default)
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -275,23 +192,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IReadOnlyList<TKey>> GetKeysAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetKeysAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -300,25 +201,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate, TimeSpan timeout = default)
-        {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-
-            var task = TaskEx.WithTimeout(GetKeysAsync, predicate, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken = default)
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -346,23 +229,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IReadOnlyList<TValue>> GetValuesAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetValuesAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -371,25 +238,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate, TimeSpan timeout = default)
-        {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-
-            var task = TaskEx.WithTimeout(GetValuesAsync, predicate, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken = default)
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -417,23 +266,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<int> CountAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(CountAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<int> CountAsync(CancellationToken cancellationToken)
+        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MapSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -442,23 +275,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<bool> IsEmptyAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(IsEmptyAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
+        public async Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default)
         {
             var requestMessage = MapIsEmptyCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
@@ -469,25 +286,9 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
-            async
+        async
 #endif
-            Task<bool> ContainsKeyAsync(TKey key, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ContainsKeyAsync, ToSafeData(key), timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
+            Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken = default)
         {
             var task = ContainsKeyAsync(ToSafeData(key), cancellationToken);
 
@@ -513,23 +314,7 @@ namespace Hazelcast.DistributedObjects.HMapImpl
         }
 
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> ContainsValueAsync(TValue value, TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(ContainsValueAsync, value, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken)
+        public async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken = default)
         {
             var valueData = ToSafeData(value);
 

@@ -28,39 +28,13 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="processor">An entry processor.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The result of the process.</returns>
-        /// <remarks>
-        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
-        /// and have a counterpart on the server.</para>
-        /// </remarks>
-        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default);
-
-        /// <summary>
-        /// Processes an entry.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <param name="processor">An entry processor.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The result of the process.</returns>
         /// <remarks>
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Processes entries.
-        /// </summary>
-        /// <param name="keys">The keys.</param>
-        /// <param name="processor">An entry processor.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The result of the processing of each entry.</returns>
-        /// <remarks>
-        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
-        /// and have a counterpart on the server.</para>
-        /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, TimeSpan timeout = default);
+        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Processes entries.
@@ -73,19 +47,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Process all entries.
-        /// </summary>
-        /// <param name="processor">An entry processor.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The result of the processing of all entries.</returns>
-        /// <remarks>
-        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
-        /// and have a counterpart on the server.</para>
-        /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, TimeSpan timeout = default);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Process all entries.
@@ -97,20 +59,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Process entries.
-        /// </summary>
-        /// <param name="processor">An entry processor.</param>
-        /// <param name="predicate">A predicate to select entries.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>The result of the processing of selected entries.</returns>
-        /// <remarks>
-        /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
-        /// and have a counterpart on the server.</para>
-        /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, TimeSpan timeout = default);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Process entries.
@@ -123,16 +72,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// TODO: kill that one, it seems to be ExecuteOnKeyAsync? what is this? updating the value?
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="processor"></param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns></returns>
-        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, TimeSpan timeout = default);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// TODO: kill that one, it seems to be ExecuteOnKeyAsync? what is this? updating the value?
@@ -141,6 +81,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="processor"></param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns></returns>
-        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken);
+        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default);
     }
 }
