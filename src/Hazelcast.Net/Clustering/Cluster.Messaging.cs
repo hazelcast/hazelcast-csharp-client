@@ -30,7 +30,7 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message to send.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -49,7 +49,7 @@ namespace Hazelcast.Clustering
         /// <para>If <paramref name="memberId"/> is the default value, sends the message to a random member. If it
         /// is an unknown member, sends the message to a random number too.</para>
         /// </remarks>
-        public async Task<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -64,7 +64,7 @@ namespace Hazelcast.Clustering
         /// <param name="client">The target.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, ClientConnection client, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, ClientConnection client, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
@@ -99,7 +99,7 @@ namespace Hazelcast.Clustering
         /// <param name="correlationId">A correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
-        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, ClientConnection client, long correlationId, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendToClientAsync(ClientMessage message, ClientConnection client, long correlationId, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (client == null) throw new ArgumentNullException(nameof(client));
@@ -119,7 +119,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken)
+        Task<ClientMessage> SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (key == null) throw new ArgumentNullException(nameof(key));
@@ -148,7 +148,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken)
+        Task<ClientMessage> SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
@@ -176,7 +176,7 @@ namespace Hazelcast.Clustering
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection targetClient, int targetPartitionId, Guid targetMemberId, CancellationToken cancellationToken)
+        Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection targetClient, int targetPartitionId, Guid targetMemberId, CancellationToken cancellationToken = default)
         {
             var task = SendAsyncInternal(message, targetClient, targetPartitionId, targetMemberId, _correlationIdSequence.GetNext(), cancellationToken);
 
@@ -197,7 +197,7 @@ namespace Hazelcast.Clustering
         /// <param name="correlationId">A correlation identifier.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection targetClient, int targetPartitionId, Guid targetMemberId, long correlationId, CancellationToken cancellationToken)
+        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, ClientConnection targetClient, int targetPartitionId, Guid targetMemberId, long correlationId, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -225,7 +225,7 @@ namespace Hazelcast.Clustering
         /// <param name="invocation">The invocation.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken = default)
         {
             // yield now, so the caller gets a task that can bubble up to user's code
             // immediately without waiting for more synchronous operations to take place

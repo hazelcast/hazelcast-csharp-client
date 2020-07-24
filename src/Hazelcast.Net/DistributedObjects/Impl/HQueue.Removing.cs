@@ -23,37 +23,37 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HQueue<T> // Removing
     {
         // <inheritdoc />
-        public override async Task<bool> RemoveAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = QueueRemoveCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />
-        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />
-        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />
-        public override async Task ClearAsync(CancellationToken cancellationToken)
+        public override async Task ClearAsync()
         {
             var requestMessage = QueueClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             _ = QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

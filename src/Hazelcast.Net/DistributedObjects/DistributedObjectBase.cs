@@ -264,34 +264,13 @@ namespace Hazelcast.DistributedObjects
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <param name="timeout">A timeout.</param>
         public
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task UnsubscribeAsync(Guid subscriptionId, TimeSpan timeout = default)
+        Task UnsubscribeAsync(Guid subscriptionId)
         {
-            var task = TaskEx.WithTimeout(UnsubscribeAsync, subscriptionId, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <summary>
-        /// Unsubscribe from events.
-        /// </summary>
-        /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken)
-        {
-            var task = Cluster.RemoveSubscriptionAsync(subscriptionId, cancellationToken);
+            var task = Cluster.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

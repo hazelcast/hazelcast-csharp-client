@@ -25,7 +25,6 @@ namespace Hazelcast.DistributedObjects
         /// Locks an entry.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// TODO: document this properly (also: not distributed lock?)
         /// <para>If the lock is not available, then "the current thread becomes disabled for thread scheduling
@@ -34,14 +33,13 @@ namespace Hazelcast.DistributedObjects
         /// <para>Locks are re-entrant, but counted: if a key is locked N times, then it should be unlocked
         /// N times before another thread can lock it.</para>
         /// </remarks>
-        Task LockAsync(TKey key, CancellationToken cancellationToken = default);
+        Task LockAsync(TKey key);
 
         /// <summary>
         /// Locks an entry for a specified lease time,
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="leaseTime">A time span.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// TODO: document this properly (also: not distributed lock?)
         /// <para>If the lock is not available, then "the current thread becomes disabled for thread scheduling
@@ -51,31 +49,29 @@ namespace Hazelcast.DistributedObjects
         /// N times before another thread can lock it.</para>
         /// <para>The lock is released after the time span.</para>
         /// </remarks>
-        Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken = default);
+        Task LockForAsync(TKey key, TimeSpan leaseTime);
 
         /// <summary>
         /// Tries to lock an entry immediately.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the lock was acquired; otherwise false.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked, returns false immediately.</para>
         /// </remarks>
-        Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<bool> TryLockAsync(TKey key);
 
         /// <summary>
         /// Tries to lock an entry with a server-side timeout.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="timeToWait">How long to wait for the lock.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the lock was acquired; otherwise false.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns false.</para>
         /// <para>If <paramref name="timeToWait"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
         /// </remarks>
-        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken = default);
+        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait);
 
         /// <summary>
         /// Tries to lock an entry for a specified lease time, with a server-side timeout.
@@ -83,7 +79,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key.</param>
         /// <param name="timeToWait">How long to wait for the lock.</param>
         /// <param name="leaseTime">A lease time.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the lock was acquired; otherwise false.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns false.
@@ -92,34 +87,31 @@ namespace Hazelcast.DistributedObjects
         /// If <paramref name="leaseTime"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the lock is never
         /// released.</para>
         /// </remarks>
-        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken = default);
+        Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime);
 
         /// <summary>
         /// Determines whether an entry is locked.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the entry is locked; otherwise false.</returns>
-        Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<bool> IsLockedAsync(TKey key);
 
         /// <summary>
         /// Unlocks an entry.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the entry has been unlocked.</returns>
-        Task UnlockAsync(TKey key, CancellationToken cancellationToken = default);
+        Task UnlockAsync(TKey key);
 
         /// <summary>
         /// Unlocks an entry.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>Unlocks the entry identified by the key, regardless of the lock owner.</para>
         /// <para>This always succeed, never blocks, and returns immediately.</para>
         /// TODO: but, async?
         /// </remarks>
-        Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken = default);
+        Task ForceUnlockAsync(TKey key);
     }
 }

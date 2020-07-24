@@ -22,19 +22,19 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HSet<T> // Setting
     {
-        public override async Task<bool> AddAsync(T item, CancellationToken cancellationToken = default)
+        public override async Task<bool> AddAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetAddCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

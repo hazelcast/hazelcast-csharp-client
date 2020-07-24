@@ -14,7 +14,6 @@
 
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -30,12 +29,12 @@ namespace Hazelcast.DistributedObjects.Impl
         { }
 
         // usage? just define it on the read-only list?
-        public async Task CopyToAsync(T[] array, int index, CancellationToken cancellationToken = default)
+        public async Task CopyToAsync(T[] array, int index)
         {
             if (index < 0 || index >= array.Length)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
-            var items = await GetAllAsync(cancellationToken).CAF();
+            var items = await GetAllAsync().CAF();
 
             if (array.Length - index < items.Count)
                 throw new ArgumentException("The number of elements in the source array is greater than the available number of elements from index to the end of the destination array.");
@@ -45,16 +44,16 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         // usage? going to allocate for no reason
-        public async Task<T[]> ToArrayAsync(CancellationToken cancellationToken = default)
+        public async Task<T[]> ToArrayAsync()
         {
-            return (await GetAllAsync(cancellationToken).CAF()).ToArray();
+            return (await GetAllAsync().CAF()).ToArray();
         }
 
         // usage? going to allocate for no reason
-        public async Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, CancellationToken cancellationToken = default)
+        public async Task<TItem[]> ToArrayAsync<TItem>(TItem[] array)
             where TItem : T
         {
-            var items = await GetAllAsync(cancellationToken).CAF();
+            var items = await GetAllAsync().CAF();
 
             if (array == null || array.Length < items.Count)
                 return items.Cast<TItem>().ToArray();

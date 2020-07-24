@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HCollectionBase<T> // Events
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken = default)
+        public async Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle)
         {
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 
@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 ReadSubscribeResponse, CreateUnsubscribeRequest, ReadUnsubscribeResponse, HandleEventAsync,
                 new SubscriptionState<CollectionItemEventHandlers<T>>(Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
+            await Cluster.InstallSubscriptionAsync(subscription).CAF();
 
             return subscription.Id;
         }

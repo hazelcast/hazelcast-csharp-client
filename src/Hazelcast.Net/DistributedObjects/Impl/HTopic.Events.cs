@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HTopic<T> // Events
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle, CancellationToken cancellationToken = default)
+        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle)
         {
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 
@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 HandleEventAsync,
                 new SubscriptionState<TopicEventHandlers<T>>(Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
+            await Cluster.InstallSubscriptionAsync(subscription).CAF();
 
             return subscription.Id;
         }

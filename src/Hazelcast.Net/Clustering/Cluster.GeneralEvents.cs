@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
         /// <param name="subscription">The subscription.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the subscription has been installed.</returns>
-        public async Task InstallSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken)
+        public async Task InstallSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken = default)
         {
             if (subscription == null) throw new ArgumentNullException(nameof(subscription));
 
@@ -93,10 +93,10 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken)
+        private ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken = default)
             => RemoveSubscriptionAsync(subscription, false, cancellationToken);
 
-        private async ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, bool throwOnError, CancellationToken cancellationToken)
+        private async ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, bool throwOnError, CancellationToken cancellationToken = default)
         {
             subscription.Deactivate();
 
@@ -287,7 +287,7 @@ namespace Hazelcast.Clustering
         /// <para>This may throw in something goes wrong. In this case, the subscription
         /// is de-activated but remains in the lists, so that it is possible to try again.</para>
         /// </remarks>
-        public async ValueTask RemoveSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken)
+        public async ValueTask RemoveSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
         {
             // ignore unknown subscriptions
             // don't remove it now - will remove it only if all goes well
@@ -313,7 +313,7 @@ namespace Hazelcast.Clustering
         /// properly remove the subscription, no events for that subscription will be triggered anymore
         /// because the client will ignore these events when the server sends them.</para>
         /// </remarks>
-        private async ValueTask<bool> RemoveSubscriptionAsync(ClientSubscription clientSubscription, CancellationToken cancellationToken)
+        private async ValueTask<bool> RemoveSubscriptionAsync(ClientSubscription clientSubscription, CancellationToken cancellationToken = default)
         {
             // whatever happens, remove the event handler
             // if the client hasn't properly unsubscribed, it may receive more event messages,

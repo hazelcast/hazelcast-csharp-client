@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -25,15 +24,15 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Add new item to transactional list</summary>
         /// <param name="item">item</param>
         /// <returns>true if item is added successfully</returns>
-        Task<bool> AddAsync(TItem item, CancellationToken cancellationToken = default);
+        Task<bool> AddAsync(TItem item);
 
         /// <summary>Add item from transactional list</summary>
         /// <param name="item">item</param>
         /// <returns>true if item is remove successfully</returns>
-        Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken = default);
+        Task<bool> RemoveAsync(TItem item);
 
         /// <summary>Returns the size of the list</summary>
         /// <returns>size</returns>
-        Task<int> CountAsync(CancellationToken cancellationToken = default);
+        Task<int> CountAsync();
     }
 }

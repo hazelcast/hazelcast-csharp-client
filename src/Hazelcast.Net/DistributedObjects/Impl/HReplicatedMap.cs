@@ -38,20 +38,20 @@ namespace Hazelcast.DistributedObjects.Impl
             _partitionId = partitionId;
         }
 
-        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
-            => AddOrUpdateTtlAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
+        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value)
+            => AddOrUpdateTtlAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public async Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default)
+        public async Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
             var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, ttl);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
 
-        public async Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken = default)
+        public async Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries)
         {
             var entriesData = new List<KeyValuePair<IData, IData>>(entries.Count);
             foreach (var (key, value) in entries)
@@ -61,90 +61,90 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             var requestMessage = ReplicatedMapPutAllCodec.EncodeRequest(Name, entriesData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken = default)
+        public async Task<TValue> RemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
 
-        public async Task ClearAsync(CancellationToken cancellationToken = default)
+        public async Task ClearAsync()
         {
             var requestMessage = ReplicatedMapClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             _ = ReplicatedMapClearCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken = default)
+        public async Task<TValue> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapGetCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
 
-        public async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<TKey>> GetKeysAsync()
         {
             var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<TValue>> GetValuesAsync()
         {
             var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync()
         {
             var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             var response = ReplicatedMapEntrySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
         }
 
-        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        public async Task<int> CountAsync()
         {
             var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             return ReplicatedMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default)
+        public async Task<bool> IsEmptyAsync()
         {
             var requestMessage = ReplicatedMapIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             return ReplicatedMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken = default)
+        public async Task<bool> ContainsKeyAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapContainsKeyCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             return ReplicatedMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken = default)
+        public async Task<bool> ContainsValueAsync(TValue value)
         {
             var valueData = ToSafeData(value);
             var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
-        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
+        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -176,22 +176,22 @@ namespace Hazelcast.DistributedObjects.Impl
                 HandleEventAsync,
                 new MapSubscriptionState(mode, Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
+            await Cluster.InstallSubscriptionAsync(subscription).CAF();
 
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(default, false, default, false, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(default, false, default, false, handle);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(default, false, key, true, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(default, false, key, true, handle);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(predicate, true, default, false, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(predicate, true, default, false, handle);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(predicate, true, key, true, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedMapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(predicate, true, key, true, handle);
 
         private class MapSubscriptionState : SubscriptionState<ReplicatedMapEventHandlers<TKey, TValue>>
         {

@@ -26,7 +26,6 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="timeToWait">The time to wait for a lock on the key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
         /// <para>This method returns false when no lock on the key could be
@@ -35,51 +34,47 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
         /// i.e. on whether an entry is removed on the servers or not.</para>
         /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken = default);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait);
 
         /// <summary>
         /// Removes an entry and returns the removed value, if any.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The removed value if any, else <c>default(TValue)</c>.</returns>
         /// <remarks>
         /// <para>This method serializes the return value. For performance reasons, prefer
         /// <see cref="RemoveAsync(TKey, CancellationToken)"/> when the returned value is not used.</para>
         /// </remarks>
-        Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<TValue> GetAndRemoveAsync(TKey key);
 
         /// <summary>
         /// Removes an entry.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns><c>true</c> if an entry with the specified key and value was removed; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>This method removes an entry if the key and the value both match the
         /// specified key and value.</para>
         /// </remarks>
-        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<bool> RemoveAsync(TKey key, TValue value);
 
         /// <summary>
         /// Removes an entry.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the removed value. Prefer
         /// <see cref="GetAndRemoveAsync"/> if the value is required.</para>
         /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
         /// i.e. on whether an entry is removed on the servers or not.</para>
         /// </remarks>
-        Task RemoveAsync(TKey key, CancellationToken cancellationToken = default);
+        Task RemoveAsync(TKey key);
 
         /// <summary>
         /// Removes entries.
         /// </summary>
         /// <param name="predicate">A predicate used to select entries to be removed.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when entries have been removed.</returns>
         /// <remarks>
         /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
@@ -87,18 +82,17 @@ namespace Hazelcast.DistributedObjects
         /// specified entries have been removed, or not. The operation cannot be cancelled while only
         /// some entries have been removed.</para>
         /// </remarks>
-        Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken = default);
+        Task RemoveAsync(IPredicate predicate);
 
         /// <summary>
         /// Removes all entries.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
         /// i.e. on whether entries were removed on the servers or not. On the other hand, either the
         /// map has been cleared, or not. The operation cannot be cancelled while only some entries
         /// have been removed.</para>
         /// </remarks>
-        Task ClearAsync(CancellationToken cancellationToken = default);
+        Task ClearAsync();
     }
 }

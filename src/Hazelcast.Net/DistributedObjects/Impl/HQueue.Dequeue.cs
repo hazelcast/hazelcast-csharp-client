@@ -24,15 +24,15 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HQueue<T> // Dequeue
     {
         /// <inheritdoc />
-        public async Task<T> PeekAsync(CancellationToken cancellationToken = default) // peek but throw - was Element
-            => await TryPeekAsync(cancellationToken).CAF() ??
+        public async Task<T> PeekAsync() // peek but throw - was Element
+            => await TryPeekAsync().CAF() ??
                throw new InvalidOperationException("The queue is empty.");
 
         /// <inheritdoc />
-        public async Task<T> TryPeekAsync(CancellationToken cancellationToken = default) // peek, or null
+        public async Task<T> TryPeekAsync() // peek, or null
         {
             var requestMessage = QueuePeekCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -42,9 +42,9 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<T> TryDequeueAsync(CancellationToken cancellationToken = default) // was poll = take immediately with zero timeout = infinite? default?
+        Task<T> TryDequeueAsync() // was poll = take immediately with zero timeout = infinite? default?
         {
-            var task = TryDequeueAsync(TimeToWait.Zero, cancellationToken);
+            var task = TryDequeueAsync(TimeToWait.Zero);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -54,24 +54,24 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<T> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default) // was poll, take with timeout
+        public async Task<T> TryDequeueAsync(TimeSpan timeToWait) // was poll, take with timeout
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
 
         /// <inheritdoc />
-        public async Task<T> DequeueAsync(bool waitForItem, CancellationToken cancellationToken = default) // was take, wail until an element is avail
+        public async Task<T> DequeueAsync(bool waitForItem) // was take, wail until an element is avail
         {
             if (!waitForItem)
-                return await TryDequeueAsync(TimeToWait.Zero, cancellationToken).CAF() ??
+                return await TryDequeueAsync(TimeToWait.Zero).CAF() ??
                        throw new InvalidOperationException("The queue is empty.");
 
             var requestMessage = QueueTakeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -81,11 +81,11 @@ namespace Hazelcast.DistributedObjects.Impl
         // bit silly, deserializing immediately instead of returning a lazy thing?
 
         /// <inheritdoc />
-        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items)
             where TItem : T
         {
             var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueueDrainToCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add((TItem)ToObject<T>(itemData));
@@ -93,11 +93,11 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count, CancellationToken cancellationToken = default)
+        public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int count)
             where TItem : T
         {
             var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, count);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add((TItem)ToObject<T>(itemData));

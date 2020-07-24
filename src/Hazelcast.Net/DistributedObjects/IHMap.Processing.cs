@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Predicates;
 
@@ -27,59 +26,54 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="processor">An entry processor.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The result of the process.</returns>
         /// <remarks>
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default);
+        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key);
 
         /// <summary>
         /// Processes entries.
         /// </summary>
         /// <param name="keys">The keys.</param>
         /// <param name="processor">An entry processor.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The result of the processing of each entry.</returns>
         /// <remarks>
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken = default);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys);
 
         /// <summary>
         /// Process all entries.
         /// </summary>
         /// <param name="processor">An entry processor.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The result of the processing of all entries.</returns>
         /// <remarks>
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken = default);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor);
 
         /// <summary>
         /// Process entries.
         /// </summary>
         /// <param name="processor">An entry processor.</param>
         /// <param name="predicate">A predicate to select entries.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The result of the processing of selected entries.</returns>
         /// <remarks>
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken = default);
+        Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate);
 
         /// <summary>
         /// TODO: kill that one, it seems to be ExecuteOnKeyAsync? what is this? updating the value?
         /// </summary>
         /// <param name="key"></param>
         /// <param name="processor"></param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns></returns>
-        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default);
+        Task<object> ApplyAsync(IEntryProcessor processor, TKey key);
     }
 }

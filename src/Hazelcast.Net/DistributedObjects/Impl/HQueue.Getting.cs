@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,69 +24,53 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HQueue<T> // Getting
     {
         // <inheritdoc />
-        public override async Task<int> CountAsync(CancellationToken cancellationToken)
+        public override async Task<int> CountAsync()
         {
             var requestMessage = QueueSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />
-        public override async Task<bool> ContainsAsync(T item, CancellationToken cancellationToken)
+        public override async Task<bool> ContainsAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = QueueContainsCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueContainsCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />
-        public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken)
+        public override async Task<IReadOnlyList<T>> GetAllAsync()
         {
             var requestMessage = QueueIteratorCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             var response = QueueIteratorCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }
 
         // <inheritdoc />
-        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueContainsAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueContainsAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />
-        public override async Task<bool> IsEmptyAsync(CancellationToken cancellationToken)
+        public override async Task<bool> IsEmptyAsync()
         {
             var requestMessage = QueueIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<int> GetRemainingCapacityAsync(TimeSpan timeout = default)
-        {
-            var task = TaskEx.WithTimeout(GetRemainingCapacityAsync, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        // <inheritdoc />
-        public async Task<int> GetRemainingCapacityAsync(CancellationToken cancellationToken)
+        public async Task<int> GetRemainingCapacityAsync()
         {
             var requestMessage = QueueRemainingCapacityCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return QueueRemainingCapacityCodec.DecodeResponse(responseMessage).Response;
         }
     }

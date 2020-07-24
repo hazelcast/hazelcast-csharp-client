@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects.Impl
@@ -21,19 +20,19 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HCollectionBase<T> // Getting
     {
         /// <inheritdoc />
-        public abstract Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
+        public abstract Task<IReadOnlyList<T>> GetAllAsync();
 
         /// <inheritdoc />
-        public abstract Task<bool> ContainsAsync(T item, CancellationToken cancellationToken = default);
+        public abstract Task<bool> ContainsAsync(T item);
 
         /// <inheritdoc />
-        public abstract Task<int> CountAsync(CancellationToken cancellationToken = default);
+        public abstract Task<int> CountAsync();
 
         /// <inheritdoc />
-        public abstract Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public abstract Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items)
             where TItem : T;
 
         /// <inheritdoc />
-        public abstract Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default);
+        public abstract Task<bool> IsEmptyAsync();
     }
 }

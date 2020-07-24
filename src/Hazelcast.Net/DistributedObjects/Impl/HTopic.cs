@@ -46,13 +46,13 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task PublishAsync(T message, CancellationToken cancellationToken = default)
+        Task PublishAsync(T message)
         {
             _keyData ??= ToData(Name);
 
             var messageData = ToSafeData(message);
             var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
-            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, _keyData, cancellationToken);
+            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, _keyData);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

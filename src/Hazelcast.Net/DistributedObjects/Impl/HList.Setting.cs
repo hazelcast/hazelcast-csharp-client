@@ -23,49 +23,49 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HList<T> // Setting
     {
         /// <inheritdoc />
-        public async Task<T> SetAsync(int index, T item, CancellationToken cancellationToken = default)
+        public async Task<T> SetAsync(int index, T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListSetCodec.EncodeRequest(Name, index, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = ListSetCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
 
         /// <inheritdoc />
-        public async Task InsertAsync(int index, T item, CancellationToken cancellationToken = default)
+        public async Task InsertAsync(int index, T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListAddWithIndexCodec.EncodeRequest(Name, index, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             _ = ListSetCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public override async Task<bool> AddAsync(T item, CancellationToken cancellationToken = default)
+        public override async Task<bool> AddAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListAddCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListAddCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListAddAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public async Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public async Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items)
             where TItem : T
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListAddAllWithIndexCodec.EncodeRequest(Name, index, itemsData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListAddAllWithIndexCodec.DecodeResponse(responseMessage).Response;
         }
 

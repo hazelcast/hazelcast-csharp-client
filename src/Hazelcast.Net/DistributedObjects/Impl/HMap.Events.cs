@@ -68,29 +68,29 @@ namespace Hazelcast.DistributedObjects.Impl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(true, default, false, default, false, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(true, default, false, default, false, handle, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(includeValues, default, false, default, false, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(bool includeValues, Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(includeValues, default, false, default, false, handle, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(true, default, false, key, true, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(TKey key, Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(true, default, false, key, true, handle, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(includeValues, default, false, key, true, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(includeValues, default, false, key, true, handle, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(true, predicate, true, default, false, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(true, predicate, true, default, false, handle, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(includeValues, predicate, true, default, false, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(includeValues, predicate, true, default, false, handle, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(true, predicate, true, key, true, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(true, predicate, true, key, true, handle, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken = default)
-            => SubscribeAsync(includeValues, predicate, true, key, true, handle, cancellationToken);
+        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<MapEventHandlers<TKey, TValue>> handle)
+            => SubscribeAsync(includeValues, predicate, true, key, true, handle, CancellationToken.None);
 
         private class MapSubscriptionState : SubscriptionState<MapEventHandlers<TKey, TValue>>
         {

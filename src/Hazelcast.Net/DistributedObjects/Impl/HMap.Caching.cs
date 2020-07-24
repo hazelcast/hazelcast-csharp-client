@@ -23,7 +23,10 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> // Caching
     {
         /// <inheritdoc />
-        public async Task<bool> EvictAsync(TKey key, CancellationToken cancellationToken = default)
+        public Task<bool> EvictAsync(TKey key)
+            => EvictAsync(key, CancellationToken.None);
+
+        private async Task<bool> EvictAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
@@ -34,14 +37,20 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task EvictAllAsync(CancellationToken cancellationToken = default)
+        public Task EvictAllAsync()
+            => EvictAllAsync(CancellationToken.None);
+
+        private async Task EvictAllAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
             await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
         }
 
         /// <inheritdoc />
-        public async Task FlushAsync(CancellationToken cancellationToken = default)
+        public Task FlushAsync()
+            => FlushAsync(CancellationToken.None);
+
+        private async Task FlushAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapFlushCodec.EncodeRequest(Name);
             await Cluster.SendAsync(requestMessage, cancellationToken).CAF();

@@ -56,7 +56,8 @@ namespace Hazelcast.Tests.Remote
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
 
-            value = await TaskEx.WithTimeout((x, token) => x.GetAsync("key", token), map, TimeSpan.FromSeconds(30)).CAF();
+            // FIXME redo WithTimeout without token
+            value = await TaskEx.WithTimeout((x, token) => x.GetAsync("key"), map, TimeSpan.FromSeconds(30)).CAF();
             Assert.AreEqual(43, value);
 
             await client.DestroyAsync(map);
@@ -76,7 +77,8 @@ namespace Hazelcast.Tests.Remote
             await map.SetAsync("key", 42).CAF();
 
             // add-or-replace with a 3 seconds timeout and a potential TimeoutException
-            await TaskEx.WithTimeout((m, k, v, t) => m.SetAsync(k, v, t), map, "key", 43, TimeSpan.FromSeconds(3)).CAF();
+            // FIXME redo WithTimeout without token
+            await TaskEx.WithTimeout((m, k, v, t) => m.SetAsync(k, v), map, "key", 43, TimeSpan.FromSeconds(3)).CAF();
 
             // this is what happens under the scene but we cannot ask ppl to do this really
             // => no

@@ -29,54 +29,54 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(HQueue.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public Task<bool> TryEnqueueAsync(TItem item, CancellationToken cancellationToken = default)
-            => TryEnqueueAsync(item, TimeToWait.Zero, cancellationToken);
+        public Task<bool> TryEnqueueAsync(TItem item)
+            => TryEnqueueAsync(item, TimeToWait.Zero);
 
-        public async Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait, CancellationToken cancellationToken = default)
+        public async Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait)
         {
             var itemData = ToSafeData(item);
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<TItem> PeekAsync(CancellationToken cancellationToken = default)
-            => await TryPeekAsync(TimeToWait.Zero, cancellationToken).CAF() ??
+        public async Task<TItem> PeekAsync()
+            => await TryPeekAsync(TimeToWait.Zero).CAF() ??
                throw new InvalidOperationException("The queue is empty.");
 
-        public async Task<TItem> TryPeekAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default)
+        public async Task<TItem> TryPeekAsync(TimeSpan timeToWait)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
 
-        public Task<TItem> TryDequeueAsync(CancellationToken cancellationToken = default)
-            => TryDequeueAsync(TimeToWait.Zero, cancellationToken);
+        public Task<TItem> TryDequeueAsync()
+            => TryDequeueAsync(TimeToWait.Zero);
 
-        public async Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default)
+        public async Task<TItem> TryDequeueAsync(TimeSpan timeToWait)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
 
-        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<TItem> DequeueAsync(CancellationToken cancellationToken = default)
+        public async Task<TItem> DequeueAsync()
         {
             var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }

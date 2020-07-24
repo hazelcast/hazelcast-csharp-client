@@ -56,7 +56,7 @@ namespace Hazelcast.DistributedObjects
         ///     <c>key</c>
         ///     .
         /// </returns>
-        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<TValue> AddOrUpdateAsync(TKey key, TValue value);
 
         /// <summary>
         /// Associates a given value to the specified key and replicates it to the
@@ -73,12 +73,12 @@ namespace Hazelcast.DistributedObjects
         /// <param name="ttl">ttl to be associated with the specified key-value pair.</param>
         /// <param name="timeunit"><see cref="TimeUnit" /> to be used for the ttl value.</param>
         /// <returns>old value of the entry</returns>
-        Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
+        Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         ///     Copies all of the mappings from the specified map to this map
         /// </summary>
         /// <param name="m">mappings to be stored in this map</param>
-        Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken = default);
+        Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries);
     }
 }

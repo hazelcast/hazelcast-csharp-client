@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregating;
 using Hazelcast.Predicates;
@@ -30,13 +29,12 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="aggregator">The aggregator.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The result of the aggregation.</returns>
         /// <remarks>
         /// <para>The <paramref name="aggregator"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, CancellationToken cancellationToken);
+        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator);
 
         /// <summary>
         /// Aggregates values.
@@ -44,26 +42,24 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="aggregator">The aggregator.</param>
         /// <param name="predicate">An optional predicate to filter the entries with.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The result of the aggregation.</returns>
         /// <remarks>
         /// <para>The <paramref name="aggregator"/> and <paramref name="predicate"/> must be
         /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
         /// </remarks>
-        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate, CancellationToken cancellationToken);
+        Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate);
 
         /// <summary>
         /// Projects values.
         /// </summary>
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="projection">The projection.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The projected values.</returns>
         /// <remarks>
         /// <para>The <paramref name="projection"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, CancellationToken cancellationToken);
+        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection);
 
         /// <summary>
         /// Projects values.
@@ -71,12 +67,11 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="projection">The projection.</param>
         /// <param name="predicate">An optional predicate to filter the entries with.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The projected values.</returns>
         /// <remarks>
         /// <para>The <paramref name="projection"/> and <paramref name="predicate"/> must be
         /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, CancellationToken cancellationToken);
+        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate);
     }
 }

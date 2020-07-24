@@ -29,26 +29,26 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(HSet.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public async Task<bool> AddAsync(TItem item, CancellationToken cancellationToken = default)
+        public async Task<bool> AddAsync(TItem item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalSetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken = default)
+        public async Task<bool> RemoveAsync(TItem item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalSetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalSetSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalSetSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

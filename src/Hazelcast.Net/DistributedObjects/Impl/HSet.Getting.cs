@@ -23,41 +23,41 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HSet<T> // Getting
     {
-        public override async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
+        public override async Task<IReadOnlyList<T>> GetAllAsync()
         {
             var requestMessage = SetGetAllCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = SetGetAllCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }
 
-        public override async Task<bool> ContainsAsync(T item, CancellationToken cancellationToken = default)
+        public override async Task<bool> ContainsAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetContainsCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetContainsCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> CountAsync()
         {
             var requestMessage = SetSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetContainsAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetContainsAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default)
+        public override async Task<bool> IsEmptyAsync()
         {
             var requestMessage = SetIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
     }

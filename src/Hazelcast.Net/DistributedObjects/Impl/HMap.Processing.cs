@@ -28,11 +28,14 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> // Processing
     {
         /// <inheritdoc />
-        public
+        public Task<object> ExecuteAsync(IEntryProcessor processor, TKey key)
+            => ExecuteAsync(processor, key, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default)
+        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ExecuteAsync(processorData, keyData, cancellationToken);
@@ -63,7 +66,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken = default)
+        public Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys)
+            => ExecuteAsync(processor, keys, CancellationToken.None);
+
+        private async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
 
@@ -87,7 +93,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken = default)
+        public Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor)
+            => ExecuteAsync(processor, CancellationToken.None);
+
+        private async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken)
         {
             var processorData = ToSafeData(processor);
 
@@ -103,7 +112,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken = default)
+        public Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate)
+            => ExecuteAsync(processor, predicate, CancellationToken.None);
+
+        private async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken)
         {
             var (processorData, predicateData) = ToSafeData(processor, predicate);
 
@@ -119,11 +131,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task<object> ApplyAsync(IEntryProcessor processor, TKey key)
+            => ApplyAsync(processor, key, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken = default)
+        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ApplyAsync(processorData, keyData, cancellationToken);

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -21,16 +20,16 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of MultiMap</summary>
     public interface IHTxMultiMap<TKey, TValue> : ITransactionalObject
     {
-        Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TValue>> GetAsync(TKey key);
 
-        Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<bool> TryAddAsync(TKey key, TValue value);
 
-        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<bool> RemoveAsync(TKey key, TValue value);
 
-        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key);
 
-        Task<int> CountAsync(CancellationToken cancellationToken = default);
+        Task<int> CountAsync();
 
-        Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<int> ValueCountAsync(TKey key);
     }
 }

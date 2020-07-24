@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -31,7 +30,7 @@ namespace Hazelcast.DistributedObjects
         ///     previous value associated with <c>key</c> or <c>null</c>
         ///     if there was no mapping for <c>key</c> .
         /// </returns>
-        Task<TValue> RemoveAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<TValue> RemoveAsync(TKey key);
 
         /// <summary>
         /// The clear operation wipes data out of the replicated maps.
@@ -40,6 +39,6 @@ namespace Hazelcast.DistributedObjects
         /// If some node fails on executing the operation, it is retried for at most
         /// 5 times (on the failing nodes only).
         ///</remarks>
-        Task ClearAsync(CancellationToken cancellationToken = default);
+        Task ClearAsync();
     }
 }

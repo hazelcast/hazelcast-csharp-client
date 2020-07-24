@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -51,97 +50,97 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<long> AddAsync(TItem item, CancellationToken cancellationToken = default)
-            => await AddAsync(item, OverflowPolicy.Overwrite, cancellationToken).CAF();
+        public async Task<long> AddAsync(TItem item)
+            => await AddAsync(item, OverflowPolicy.Overwrite).CAF();
 
         /// <inheritdoc />
-        public async Task<long> AddAsync(TItem item, OverflowPolicy overflowPolicy, CancellationToken cancellationToken = default)
+        public async Task<long> AddAsync(TItem item, OverflowPolicy overflowPolicy)
         {
             var itemData = ToSafeData(item);
             var requestMessage = RingbufferAddCodec.EncodeRequest(Name, (int) overflowPolicy, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return RingbufferAddCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public async Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy, CancellationToken cancellationToken = default)
+        public async Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy)
             where TAdding : TItem
         {
             if (items.Count == 0) throw new ArgumentException("Cannot add zero items.", nameof(items));
             var itemsData = ToSafeData(items);
 
             var requestMessage = RingbufferAddAllCodec.EncodeRequest(Name, itemsData, (int) overflowPolicy);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return RingbufferAddAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public async Task<long> GetCapacityAsync(CancellationToken cancellationToken = default)
+        public async Task<long> GetCapacityAsync()
         {
             if (_capacity != -1) return _capacity;
 
             var requestMessage = RingbufferCapacityCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return _capacity = RingbufferCapacityCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public async Task<long> GetHeadSequenceAsync(CancellationToken cancellationToken = default)
+        public async Task<long> GetHeadSequenceAsync()
         {
             var requestMessage = RingbufferHeadSequenceCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return RingbufferHeadSequenceCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<TItem>> GetAsync(long startSequence, int minCount, int maxCount, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<TItem>> GetAsync(long startSequence, int minCount, int maxCount)
         {
             if (startSequence < 0) throw new ArgumentOutOfRangeException(nameof(startSequence));
             if (minCount < 0) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be equal to, or greater than, zero.");
             if (maxCount < minCount) throw new ArgumentOutOfRangeException(nameof(maxCount), "The value of maxCount must be greater than, or equal to, the value of minCount.");
 
-            var capacity = await GetCapacityAsync(cancellationToken).CAF();
+            var capacity = await GetCapacityAsync().CAF();
             if (minCount > capacity) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be smaller than, or equal to, the capacity.");
             if (maxCount > _maxBatchSize) throw new ArgumentOutOfRangeException(nameof(maxCount), "The value of maxCount must be lower than, or equal to, the max batch size.");
 
             var requestMessage = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = RingbufferReadManyCodec.DecodeResponse(responseMessage).Items;
             return new ReadOnlyLazyList<TItem>(response, SerializationService);
         }
 
         /// <inheritdoc />
-        public async ValueTask<TItem> GetAsync(long sequence, CancellationToken cancellationToken = default)
+        public async ValueTask<TItem> GetAsync(long sequence)
         {
             if (sequence < 0) throw new ArgumentOutOfRangeException(nameof(sequence));
 
             var requestMessage = RingbufferReadOneCodec.EncodeRequest(Name, sequence);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = RingbufferReadOneCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
 
         /// <inheritdoc />
-        public async Task<long> GetRemainingCapacityAsync(CancellationToken cancellationToken = default)
+        public async Task<long> GetRemainingCapacityAsync()
         {
             var requestMessage = RingbufferRemainingCapacityCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return RingbufferRemainingCapacityCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public async Task<long> CountAsync(CancellationToken cancellationToken = default)
+        public async Task<long> CountAsync()
         {
             var requestMessage = RingbufferSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return RingbufferSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritdoc />
-        public async Task<long> GetTailSequenceAsync(CancellationToken cancellationToken = default)
+        public async Task<long> GetTailSequenceAsync()
         {
             var requestMessage = RingbufferTailSequenceCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return RingbufferTailSequenceCodec.DecodeResponse(responseMessage).Response;
         }
     }

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Data;
 using Hazelcast.Predicates;
@@ -23,112 +22,97 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHMap<TKey, TValue> // Getting
     {
         /// <summary>
-        /// Gets the value for a key, or null if the map does not contain an entry with this key.
+        /// Gets the value for a key, or <c>null</c> if the map does not contain an entry with this key.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
-        Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken = default);
+        /// <returns>The value for the specified key, or <c>null</c> if the map does not contain an entry with this key.</returns>
+        Task<TValue> GetAsync(TKey key);
 
         /// <summary>
         /// Gets all entries for keys.
         /// </summary>
         /// <param name="keys">The keys.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The values for the specified keys.</returns>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys, CancellationToken cancellationToken = default);
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys);
 
         /// <summary>
-        /// Gets an entry for a key, or null if the map does not contain an entry with this key.
+        /// Gets an entry for a key, or <c>null</c> if the map does not contain an entry with this key.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>An entry for the specified key, or null if the map does not contain an entry with this key.</returns>
-        Task<IMapEntry<TKey, TValue>> GetEntryAsync(TKey key, CancellationToken cancellationToken = default);
+        /// <returns>An entry for the specified key, or <c>null</c> if the map does not contain an entry with this key.</returns>
+        Task<IMapEntry<TKey, TValue>> GetEntryAsync(TKey key);
 
         /// <summary>
         /// Queries entries.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>All entries.</returns>
-        /// <remarks>
-        /// <para>The result it *not* backed by the map, so changes to the map are not
-        /// reflected, and vice-versa.</para>
-        /// </remarks>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync();
 
         /// <summary>
         /// Queries entries.
         /// </summary>
         /// <param name="predicate">A predicate to filter the entries with.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>Entries matching the <paramref name="predicate"/>.</returns>
         /// <remarks>
-        /// <para>The result it *not* backed by the map, so changes to the map are not
-        /// reflected, and vice-versa.</para>
         /// <para>The <paramref name="predicate"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate, CancellationToken cancellationToken = default);
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate);
 
         /// <summary>
         /// Gets keys.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>All keys.</returns>
-        Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TKey>> GetKeysAsync();
 
         /// <summary>
         /// Gets keys.
         /// </summary>
         /// <param name="predicate">An predicate to filter the entries with.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>All keys.</returns>
-        Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate);
 
         /// <summary>
-        /// Gets all values for entries matching a predicate.
+        /// Gets all values.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>All values.</returns>
-        Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TValue>> GetValuesAsync();
 
         /// <summary>
-        /// Gets all values for entries matching a predicate.
+        /// Gets values for entries matching a predicate.
         /// </summary>
         /// <param name="predicate">An optional predicate to filter the entries.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>All values.</returns>
-        Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken = default);
+        /// <remarks>
+        /// <para>The <paramref name="predicate"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate);
 
         /// <summary>
-        /// Gets the number of entries in the map.
+        /// Gets the number of entries.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The total number of entries in the map.</returns>
-        Task<int> CountAsync(CancellationToken cancellationToken = default);
+        Task<int> CountAsync();
 
         /// <summary>
         /// Determines whether this map is empty.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>true if the map does not contain entries; otherwise false.</returns>
-        Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default);
+        /// <returns><c>true</c> if the map does not contain entries; otherwise <c>false</c>.</returns>
+        Task<bool> IsEmptyAsync();
 
         /// <summary>
         /// Determines whether this map contains an entry for a key.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>True if the map contains an entry for the specified key; otherwise false.</returns>
-        Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken = default);
+        /// <returns><c>true</c> if the map contains an entry for the specified key; otherwise <c>false</c>.</returns>
+        Task<bool> ContainsKeyAsync(TKey key);
 
         /// <summary>
         /// Determines whether this map contains at least one entry with a value.
         /// </summary>
         /// <param name="value">The value.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>True if the map contains at least an entry with the specified value; otherwise false.</returns>
-        Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken = default);
+        /// <returns><c>true</c> if the map contains at least an entry with the specified value; otherwise <c>false</c>.</returns>
+        Task<bool> ContainsValueAsync(TValue value);
     }
 }

@@ -26,11 +26,14 @@ namespace Hazelcast.DistributedObjects.Impl
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
-        public
+        public Task AddIndexAsync(IndexConfig indexConfig)
+            => AddIndexAsync(indexConfig, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken = default)
+        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken)
         {
             if (indexConfig == null) throw new ArgumentNullException(nameof(indexConfig));
 

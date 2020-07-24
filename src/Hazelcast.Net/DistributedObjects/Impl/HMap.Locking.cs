@@ -25,11 +25,14 @@ namespace Hazelcast.DistributedObjects.Impl
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
-        public
+        public Task LockAsync(TKey key)
+            => LockAsync(key, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task LockAsync(TKey key, CancellationToken cancellationToken = default)
+        Task LockAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = LockForAsync(key, TimeToLive.InfiniteTimeSpan, cancellationToken);
 
@@ -41,11 +44,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task LockForAsync(TKey key, TimeSpan leaseTime)
+            => LockForAsync(key, leaseTime, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken = default)
+        Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken)
         {
             var task = WaitLockForAsync(key, leaseTime, Timeout.InfiniteTimeSpan, cancellationToken);
 
@@ -57,11 +63,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task<bool> TryLockAsync(TKey key)
+            => TryLockAsync(key, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken = default)
+        Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, Timeout.InfiniteTimeSpan, cancellationToken);
 
@@ -73,11 +82,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait)
+            => WaitLockAsync(key, timeToWait, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken = default)
+        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, timeToWait, cancellationToken);
 
@@ -89,7 +101,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken = default)
+        public Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
+            => WaitLockForAsync(key, timeToWait, leaseTime, CancellationToken.None);
+
+        private async Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
@@ -104,7 +119,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken = default)
+        public Task<bool> IsLockedAsync(TKey key)
+            => IsLockedAsync(key, CancellationToken.None);
+
+        private async Task<bool> IsLockedAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
@@ -115,7 +133,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task UnlockAsync(TKey key, CancellationToken cancellationToken = default)
+        public Task UnlockAsync(TKey key)
+            => UnlockAsync(key, CancellationToken.None);
+
+        private async Task UnlockAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
@@ -132,7 +153,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken = default)
+        public Task ForceUnlockAsync(TKey key)
+            => ForceUnlockAsync(key, CancellationToken.None);
+
+        private async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 

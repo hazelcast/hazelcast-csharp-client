@@ -43,28 +43,28 @@ namespace Hazelcast.DistributedObjects.Impl
         { }
 
         /// <inheritoc />
-        public async Task<bool> AddAsync(TItem item, CancellationToken cancellationToken = default)
+        public async Task<bool> AddAsync(TItem item)
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalListAddCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritoc />
-        public async Task<bool> RemoveAsync(TItem item, CancellationToken cancellationToken = default)
+        public async Task<bool> RemoveAsync(TItem item)
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalListRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// <inheritoc />
-        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalListSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalListSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

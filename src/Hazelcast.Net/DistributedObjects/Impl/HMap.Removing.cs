@@ -25,11 +25,14 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> // Removing
     {
         /// <inheritdoc />
-        public
+        public Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait)
+            => TryRemoveAsync(key, timeToWait, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-            Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken = default)
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var task = TryRemoveAsync(ToSafeData(key), timeToWait, cancellationToken);
 
@@ -45,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// </summary>
         /// <param name="keyData">A key.</param>
         /// <param name="timeToWait">A timeout.</param>
-        /// <param name="cancellationToken">A canecllation token.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
         /// <para>This method returns false when no lock on the key could be
@@ -63,11 +66,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task<TValue> GetAndRemoveAsync(TKey key)
+            => GetAndRemoveAsync(key, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken = default)
+        Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = RemoveAsync(ToSafeData(key), cancellationToken);
 
@@ -93,11 +99,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task<bool> RemoveAsync(TKey key, TValue value)
+            => RemoveAsync(key, value, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
+        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = RemoveAsync(keyData, valueData, cancellationToken);
@@ -129,11 +138,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task RemoveAsync(TKey key)
+            => RemoveAsync(key, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task RemoveAsync(TKey key, CancellationToken cancellationToken = default)
+        Task RemoveAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = DeleteAsync(ToSafeData(key), cancellationToken);
 
@@ -145,11 +157,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task RemoveAsync(IPredicate predicate)
+            => RemoveAsync(predicate, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-            Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken = default)
+        Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             var predicateData = ToSafeData(predicate);
 
@@ -184,11 +199,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public virtual
+        public Task ClearAsync()
+            => ClearAsync(CancellationToken.None);
+
+        protected virtual
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task ClearAsync(CancellationToken cancellationToken = default)
+        Task ClearAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapClearCodec.EncodeRequest(Name);
             var task = Cluster.SendAsync(requestMessage, cancellationToken);

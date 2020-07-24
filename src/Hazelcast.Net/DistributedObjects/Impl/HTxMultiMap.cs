@@ -31,52 +31,52 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(HMultiMap.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMultiMapGetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<bool> TryAddAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
+        public async Task<bool> TryAddAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default)
+        public async Task<bool> RemoveAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key)
         {
             var keyData = ToData(key);
             var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMultiMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+        public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<int> ValueCountAsync(TKey key, CancellationToken cancellationToken = default)
+        public async Task<int> ValueCountAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
         }
     }

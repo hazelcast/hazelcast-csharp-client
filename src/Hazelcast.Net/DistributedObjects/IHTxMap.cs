@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects
         /// <see cref="IHMap{TKey,TValue}.ContainsKey(object)"/>
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.ContainsKey(object)"/>
-        Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<bool> ContainsKeyAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of
@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be deleted will be removed from only the current transaction context until the transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Delete(object)"/>
-        Task RemoveAsync(TKey key, CancellationToken cancellationToken = default);
+        Task RemoveAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects
         /// .
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Get(object)"/>
-        Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<TValue> GetAsync(TKey key);
 
         /// <summary>Locks the key and then gets and returns the value to which the specified key is mapped.</summary>
         /// <remarks>
@@ -58,7 +58,7 @@ namespace Hazelcast.DistributedObjects
         /// Lock will be released at the end of the transaction (either commit or rollback).
         /// </remarks>
         /// <seealso cref="IHMap{TKey,TValue}.Get(object)"/>
-        Task<TValue> GetForUpdateAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<TValue> GetForUpdateAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of
@@ -66,7 +66,7 @@ namespace Hazelcast.DistributedObjects
         /// .
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.IsEmpty()"/>
-        Task<bool> IsEmpty(CancellationToken cancellationToken = default);
+        Task<bool> IsEmpty();
 
         /// <summary>
         /// Transactional implementation of
@@ -74,7 +74,7 @@ namespace Hazelcast.DistributedObjects
         /// .
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.KeySet()"/>
-        Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TKey>> GetKeysAsync();
 
         /// <summary>
         /// Transactional implementation of
@@ -82,7 +82,7 @@ namespace Hazelcast.DistributedObjects
         /// .
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.KeySet(IPredicate)"/>
-        Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate);
 
         /// <summary>
         /// Transactional implementation of
@@ -92,7 +92,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be put will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Put(K, V)"/>
-        Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of
@@ -102,7 +102,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be put will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Put(K, V, long, TimeUnit)"/>
-        Task<TValue> AddOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken = default);
+        Task<TValue> AddOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Transactional implementation of
@@ -112,7 +112,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be put will be accessible only in the current transaction context until the transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.PutIfAbsent(K, V)"/>
-        Task<TValue> AddAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<TValue> AddAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of
@@ -122,7 +122,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be removed will be removed from only the current transaction context until the transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Remove(object)"/>
-        Task<TValue> RemoveAndReturnAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<TValue> RemoveAndReturnAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of
@@ -132,7 +132,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be removed will be removed from only the current transaction context until the transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Remove(object, object)"/>
-        Task<bool> RemoveAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<bool> RemoveAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of
@@ -142,7 +142,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be replaced will be accessible only in the current transaction context until the transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Replace(K, V)"/>
-        Task<TValue> ReplaceAndReturnAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task<TValue> ReplaceAndReturnAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of
@@ -152,7 +152,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be replaced will be accessible only in the current transaction context until the transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Replace(K, V, V)"/>
-        Task<bool> ReplaceAsync(TKey key, TValue oldValue, TValue newValue, CancellationToken cancellationToken = default);
+        Task<bool> ReplaceAsync(TKey key, TValue oldValue, TValue newValue);
 
         /// <summary>
         /// Transactional implementation of
@@ -162,7 +162,7 @@ namespace Hazelcast.DistributedObjects
         /// The object to be set will be accessible only in the current transaction context till transaction is committed.
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Set(K, V)"/>
-        Task AddOrUpdateAsync(TKey key, TValue value, CancellationToken cancellationToken = default);
+        Task AddOrUpdateAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of
@@ -170,7 +170,7 @@ namespace Hazelcast.DistributedObjects
         /// .
         /// </summary>
         /// <seealso cref="System.Drawing.Size"/>
-        Task<int> CountAsync(CancellationToken cancellationToken = default);
+        Task<int> CountAsync();
 
         /// <summary>
         /// Transactional implementation of
@@ -178,7 +178,7 @@ namespace Hazelcast.DistributedObjects
         /// .
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Values()"/>
-        Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TValue>> GetValuesAsync();
 
         /// <summary>
         /// Transactional implementation of
@@ -186,6 +186,6 @@ namespace Hazelcast.DistributedObjects
         /// .
         /// </summary>
         /// <seealso cref="IHMap{TKey,TValue}.Values(IPredicate)"/>
-        Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate);
     }
 }

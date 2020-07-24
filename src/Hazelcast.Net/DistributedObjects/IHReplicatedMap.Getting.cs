@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -48,7 +47,7 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         /// <param name="key">key</param>
         /// <returns>value</returns>
-        Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<TValue> GetAsync(TKey key);
 
         /// <summary>Returns a set clone of the keys contained in this map.</summary>
         /// <remarks>
@@ -57,7 +56,7 @@ namespace Hazelcast.DistributedObjects
         ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
         /// </remarks>
         /// <returns>a <see cref="ISet{E}" /> clone of the keys contained in this map</returns>
-        Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TKey>> GetKeysAsync();
 
         /// <summary>Returns a collection clone of the values contained in this map.</summary>
         /// <remarks>
@@ -66,7 +65,7 @@ namespace Hazelcast.DistributedObjects
         ///     so changes to the map are <b>NOT</b> reflected in the collection, and vice-versa.
         /// </remarks>
         /// <returns>a collection clone of the values contained in this map</returns>
-        Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TValue>> GetValuesAsync();
 
         /// <summary>
         /// Returns a <see cref="ISet{E}" /> clone of the mappings contained in this map.
@@ -79,16 +78,16 @@ namespace Hazelcast.DistributedObjects
         ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
         /// </remarks>
         /// <returns>a set clone of the keys mappings in this map</returns>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync();
 
         /// <summary>Returns the number of entries in this map.</summary>
         /// <remarks>Returns the number of entries in this map.</remarks>
         /// <returns>the number of entries in this map</returns>
-        Task<int> CountAsync(CancellationToken cancellationToken = default);
+        Task<int> CountAsync();
 
         /// <summary>Returns <c>true</c> if this map contains no entries.</summary>
         /// <returns><c>true</c> if this map contains no entries</returns>
-        Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default);
+        Task<bool> IsEmptyAsync();
 
         /// <summary>
         ///     Determines whether this map contains an entry for the specified key.
@@ -108,13 +107,13 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         /// <param name="key">The key.</param>
         /// <returns><c>true</c> if the specified key contains key; otherwise, <c>false</c>.</returns>
-        Task<bool> ContainsKeyAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<bool> ContainsKeyAsync(TKey key);
 
         /// <summary>
         ///     Determines whether this map contains one or more keys to the specified value
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>Returns <c>true</c> if this map contains one or more keys to the specified value</returns>
-        Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken = default);
+        Task<bool> ContainsValueAsync(TValue value);
     }
 }

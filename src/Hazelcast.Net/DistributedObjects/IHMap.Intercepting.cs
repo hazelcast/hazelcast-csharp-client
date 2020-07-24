@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -27,15 +26,14 @@ namespace Hazelcast.DistributedObjects
         /// Adds an interceptor.
         /// </summary>
         /// <param name="interceptor">The interceptor.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The interceptor unique identifier.</returns>
-        Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken = default);
+        Task<string> AddInterceptorAsync(IMapInterceptor interceptor);
 
         /// <summary>
         /// Removes an interceptor.
         /// </summary>
         /// <param name="id">The identifier of the interceptor.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken = default);
+        /// <returns>A task that will complete when the interceptor has been removed.</returns>
+        Task RemoveInterceptorAsync(string id);
     }
 }

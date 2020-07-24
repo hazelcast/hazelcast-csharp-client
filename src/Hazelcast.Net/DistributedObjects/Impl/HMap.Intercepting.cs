@@ -26,7 +26,10 @@ namespace Hazelcast.DistributedObjects.Impl
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
-        public async Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken = default)
+        public Task<string> AddInterceptorAsync(IMapInterceptor interceptor)
+            => AddInterceptorAsync(interceptor, CancellationToken.None);
+
+        private async Task<string> AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken)
         {
             var interceptorData = ToSafeData(interceptor);
 
@@ -37,7 +40,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public
+        public Task RemoveInterceptorAsync(string id)
+            => RemoveInterceptorAsync(id, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif

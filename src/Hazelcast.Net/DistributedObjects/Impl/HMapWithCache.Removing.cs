@@ -84,7 +84,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public override async Task ClearAsync(CancellationToken cancellationToken)
+        protected override async Task ClearAsync(CancellationToken cancellationToken)
         {
             await base.ClearAsync(cancellationToken)
                 .ContinueWith(_ => _cache.InvalidateAll(), default, default, TaskScheduler.Current)

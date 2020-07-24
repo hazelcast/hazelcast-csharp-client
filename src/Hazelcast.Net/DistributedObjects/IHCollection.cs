@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -25,21 +24,21 @@ namespace Hazelcast.DistributedObjects
     {
         // these mimics ICollection<T>
 
-        Task<int> CountAsync(CancellationToken cancellationToken = default);
+        Task<int> CountAsync();
 
-        Task<bool> AddAsync(T item, CancellationToken cancellationToken = default);
+        Task<bool> AddAsync(T item);
 
-        Task ClearAsync(CancellationToken cancellationToken = default);
+        Task ClearAsync();
 
-        Task<bool> ContainsAsync(T item, CancellationToken cancellationToken = default);
+        Task<bool> ContainsAsync(T item);
 
-        Task<bool> RemoveAsync(T item, CancellationToken cancellationToken = default);
+        Task<bool> RemoveAsync(T item);
 
-        Task CopyToAsync(T[] array, int arrayIndex, CancellationToken cancellationToken = default);
+        Task CopyToAsync(T[] array, int arrayIndex);
 
         // rest is a mix of influences
 
-        Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<T>> GetAllAsync();
 
         /// <summary>
         /// Adds all.
@@ -47,7 +46,7 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">element collection</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
+        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
         /// <summary>
         /// Determines whether this collection contains all of the elements in the specified collection.
@@ -55,13 +54,13 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">The collection</param>
         /// <returns><c>true</c> if this collection contains all of the elements in the specified collection; otherwise, <c>false</c>.</returns>
-        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
+        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
         /// <summary>
         /// Determines whether this instance is empty.
         /// </summary>
         /// <returns><c>true</c> if this instance is empty; otherwise, <c>false</c>.</returns>
-        Task<bool> IsEmptyAsync(CancellationToken cancellationToken = default);
+        Task<bool> IsEmptyAsync();
 
         /// <summary>
         /// Removes all of the elements in the specified collection from this collection.
@@ -69,7 +68,7 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">element collection to be removed</param>
         /// <returns><c>true</c> if all removed, <c>false</c> otherwise.</returns>
-        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
+        Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
         /// <summary>
         /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
@@ -81,13 +80,13 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="c">The c.</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default) where TItem : T;
+        Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
         /// <summary>
         /// Returns an array containing all of the elements in this collection.
         /// </summary>
         /// <returns>an array containing all of the elements in this collection.</returns>
-        Task<T[]> ToArrayAsync(CancellationToken cancellationToken = default);
+        Task<T[]> ToArrayAsync();
 
         /// <summary>
         /// Returns an array containing all of the elements in this collection
@@ -98,8 +97,8 @@ namespace Hazelcast.DistributedObjects
         /// stored, if it is big enough; otherwise, a new array of the same
         /// runtime type is allocated for this purpose</param>
         /// <returns>an array containing all of the elements in this collection</returns>
-        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array, CancellationToken cancellationToken = default) where TItem : T;
+        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array) where TItem : T;
 
-        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle, CancellationToken cancellationToken = default);
+        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle);
     }
 }

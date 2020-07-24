@@ -31,9 +31,9 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<bool> AddAsync(T item, CancellationToken cancellationToken)
+        Task<bool> AddAsync(T item)
         {
-            var task = EnqueueAsync(item, TimeToWait.Zero, false, cancellationToken);
+            var task = EnqueueAsync(item, TimeToWait.Zero, false, CancellationToken.None);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -59,23 +59,6 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         // <inheritdoc />
-        // was: Offer with no timeout - tries to enqueue immediately, does not wait & does not throw
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> TryEnqueueAsync(T item, CancellationToken cancellationToken)
-        {
-            var task = EnqueueAsync(item, TimeToWait.Zero, false, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        // <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
             async
@@ -92,48 +75,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         // <inheritdoc />
-        // was: Offer with timeout - tries to enqueue within timeToWait, does not throw
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken)
-        {
-            var task = EnqueueAsync(item, timeToWait, false, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        // <inheritdoc />
         // was: Put - enqueue, wait indefinitely, may throw
         public
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task EnqueueAsync(T item, TimeSpan timeout = default)
+        Task EnqueueAsync(T item)
         {
-            var task = TaskEx.WithTimeout(EnqueueAsync, item, TimeToWait.InfiniteTimeSpan, true, timeout, DefaultOperationTimeoutMilliseconds);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        // <inheritdoc />
-        // was: Put - enqueue, wait indefinitely, may throw
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task EnqueueAsync(T item, CancellationToken cancellationToken)
-        {
-            var task = EnqueueAsync(item, TimeToWait.InfiniteTimeSpan, true, cancellationToken);
+            var task = EnqueueAsync(item, TimeToWait.InfiniteTimeSpan, true, CancellationToken.None);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -181,11 +130,11 @@ namespace Hazelcast.DistributedObjects.Impl
         // <inheritdoc />
         // need to have it because HCollection but feels weird
         // maybe we need to have something above HCollection?
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken)
+        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return QueueAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

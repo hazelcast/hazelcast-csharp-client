@@ -34,11 +34,11 @@ namespace Hazelcast.Tests.Remote
             {
                 var txList = await tx.GetListAsync(list);
 
-                NUnit.Framework.Assert.IsTrue(await txList.AddAsync("item2", default));
-                NUnit.Framework.Assert.AreEqual(2, await txList.CountAsync(default));
+                NUnit.Framework.Assert.IsTrue(await txList.AddAsync("item2"));
+                NUnit.Framework.Assert.AreEqual(2, await txList.CountAsync());
                 NUnit.Framework.Assert.AreEqual(1, await list.CountAsync());
-                NUnit.Framework.Assert.IsFalse(await txList.RemoveAsync("item3", default));
-                NUnit.Framework.Assert.IsTrue(await txList.RemoveAsync("item1", default));
+                NUnit.Framework.Assert.IsFalse(await txList.RemoveAsync("item3"));
+                NUnit.Framework.Assert.IsTrue(await txList.RemoveAsync("item1"));
 
                 // TODO: consider working same as System.Transaction
                 await tx.CommitAsync();

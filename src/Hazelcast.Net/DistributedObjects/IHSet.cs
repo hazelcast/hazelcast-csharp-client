@@ -26,6 +26,5 @@ namespace Hazelcast.DistributedObjects
     ///     </b>
     /// </remarks>
     public interface IHSet<T> : /*ISet<E>,*/ IHCollection<T>
-    {
-    }
+    { }
 }

@@ -29,7 +29,10 @@ namespace Hazelcast.DistributedObjects.Impl
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
-        public async Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, CancellationToken cancellationToken = default)
+        public Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator)
+            => AggregateAsync(aggregator, CancellationToken.None);
+
+        private async Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, CancellationToken cancellationToken)
         {
             var aggregatorData = ToSafeData(aggregator);
 
@@ -40,7 +43,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate, CancellationToken cancellationToken = default)
+        public Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate)
+            => AggregateAsync(aggregator, predicate, CancellationToken.None);
+
+        private async Task<TResult> AggregateAsync<TResult>(IAggregator<TResult> aggregator, IPredicate predicate, CancellationToken cancellationToken)
         {
             var (aggregatorData, predicateData) = ToSafeData(aggregator, predicate);
 
@@ -51,7 +57,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection)
+            => ProjectAsync<TResult>(projection, CancellationToken.None);
+
+        private async Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, CancellationToken cancellationToken)
         {
             var projectionData = ToSafeData(projection);
 
@@ -62,7 +71,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate)
+            => ProjectAsync<TResult>(projection, predicate, CancellationToken.None);
+
+        private async Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, CancellationToken cancellationToken)
         {
             var (projectionData, predicateData) = ToSafeData(projection, predicate);
 

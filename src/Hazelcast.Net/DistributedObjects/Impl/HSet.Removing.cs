@@ -22,34 +22,34 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HSet<T> // Removing
     {
-        public override async Task<bool> RemoveAsync(T item, CancellationToken cancellationToken = default)
+        public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetRemoveCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return SetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return SetCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items, CancellationToken cancellationToken = default)
+        public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             return SetCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task ClearAsync(CancellationToken cancellationToken = default)
+        public override async Task ClearAsync()
         {
             var requestMessage = SetClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
             _ = SetClearCodec.DecodeResponse(responseMessage);
         }
     }

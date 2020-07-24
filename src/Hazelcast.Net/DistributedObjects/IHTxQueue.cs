@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -21,18 +20,18 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of Queue</summary>
     public interface IHTxQueue<TItem> : ITransactionalObject
     {
-        Task<bool> TryEnqueueAsync(TItem item, CancellationToken cancellationToken = default);
-        Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait, CancellationToken cancellationToken = default);
+        Task<bool> TryEnqueueAsync(TItem item);
+        Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait);
 
-        Task<TItem> PeekAsync(CancellationToken cancellationToken = default);
+        Task<TItem> PeekAsync();
 
-        Task<TItem> TryPeekAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default);
+        Task<TItem> TryPeekAsync(TimeSpan timeToWait);
 
-        Task<TItem> TryDequeueAsync(CancellationToken cancellationToken = default);
-        Task<TItem> TryDequeueAsync(TimeSpan timeToWait, CancellationToken cancellationToken = default);
+        Task<TItem> TryDequeueAsync();
+        Task<TItem> TryDequeueAsync(TimeSpan timeToWait);
 
-        Task<int> CountAsync(CancellationToken cancellationToken = default);
+        Task<int> CountAsync();
 
-        Task<TItem> DequeueAsync(CancellationToken cancellationToken = default);
+        Task<TItem> DequeueAsync();
     }
 }
