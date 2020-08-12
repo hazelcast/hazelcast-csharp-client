@@ -577,14 +577,14 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ResolveEndianness()
         {
-            Assert.That(BytesExtensions.ResolveEndianness(Endianness.LittleEndian), Is.EqualTo(Endianness.LittleEndian));
-            Assert.That(BytesExtensions.ResolveEndianness(Endianness.BigEndian), Is.EqualTo(Endianness.BigEndian));
-            Assert.That(BytesExtensions.ResolveEndianness(Endianness.Unspecified), Is.EqualTo(Endianness.BigEndian));
+            Assert.That(Endianness.LittleEndian.Resolve(), Is.EqualTo(Endianness.LittleEndian));
+            Assert.That(Endianness.BigEndian.Resolve(), Is.EqualTo(Endianness.BigEndian));
+            Assert.That(Endianness.Unspecified.Resolve(), Is.EqualTo(Endianness.BigEndian));
 
-            Assert.Throws<NotSupportedException>(() => _ = BytesExtensions.ResolveEndianness((Endianness) 666));
+            Assert.Throws<NotSupportedException>(() => _ = ((Endianness) 666).Resolve());
 
-            Assert.That(BytesExtensions.ResolveEndianness(Endianness.Native), Is.EqualTo(BytesExtensions.NativeEndianness));
-            Assert.That(BytesExtensions.NativeEndianness, Is.EqualTo(BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian));
+            Assert.That(Endianness.Native.Resolve(), Is.EqualTo(EndiannessExtensions.NativeEndianness));
+            Assert.That(EndiannessExtensions.NativeEndianness, Is.EqualTo(BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian));
         }
 
         private static void AssertBytes(byte[] bytes, params byte[] values)

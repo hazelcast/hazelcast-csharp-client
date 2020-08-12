@@ -35,15 +35,15 @@ namespace Hazelcast.Predicates
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            _attributeName = input.ReadUtf();
-            _regex = input.ReadUtf();
+            _attributeName = input.ReadString();
+            _regex = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteUtf(_attributeName);
-            output.WriteUtf(_regex);
+            output.Write(_attributeName);
+            output.Write(_regex);
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

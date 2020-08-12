@@ -30,7 +30,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
         public void Write(IObjectDataOutput output, CollectionType obj)
         {
             var size = obj.Count;
-            output.WriteInt(size);
+            output.Write(size);
             if (size > 0)
             {
                 foreach (var o in obj)

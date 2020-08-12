@@ -41,13 +41,5 @@ namespace Hazelcast.Serialization
         /// Gets the default endianness.
         /// </summary>
         protected Endianness DefaultEndianness { get; }
-
-        /// <summary>
-        /// Gets the specified endianness, or the default endianness.
-        /// </summary>
-        /// <param name="endianness">The endianness.</param>
-        /// <returns>The specified endianness, or the default endianness.</returns>
-        protected Endianness ValueOrDefault(Endianness endianness)
-            => endianness == Endianness.Unspecified ? DefaultEndianness : endianness;
     }
 }

@@ -17,81 +17,170 @@ using Hazelcast.Core;
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Defines a destination of data that can be written to to serialize an object.
+    /// Defines a destination of data that can be written to, to serialize an object.
     /// </summary>
     public interface IDataOutput
     {
         /// <summary>
-        /// Writes a <see cref="bool"/> (bool) value.
+        /// Writes a <see cref="byte"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
-        void WriteBoolean(bool value);
+        void Write(byte value);
 
         /// <summary>
-        /// Writes a <see cref="char"/> (char) value.
+        /// Writes an array of <see cref="byte"/> items.
         /// </summary>
-        /// <param name="value">The value.</param>
-        void WriteChar(int value);
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(byte[] values, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Writes a <see cref="double"/> (double) value.
+        /// Writes a <see cref="short"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="endianness">The optional endianness.</param>
-        void WriteDouble(double value, Endianness endianness = Endianness.Unspecified);
+        void Write(short value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Writes a <see cref="float"/> (float) value.
+        /// Writes an array of <see cref="short"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(short[] values, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes an <see cref="int"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="endianness">The optional endianness.</param>
-        void WriteFloat(float value, Endianness endianness = Endianness.Unspecified);
+        void Write(int value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Writes an <see cref="int"/> (int) value.
+        /// Writes an array of <see cref="int"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(int[] values, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes an <see cref="long"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="endianness">The optional endianness.</param>
-        void WriteInt(int value, Endianness endianness = Endianness.Unspecified); // fixme name
+        void Write(long value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Writes an <see cref="long"/> (long) value.
+        /// Writes an array of <see cref="long"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(long[] values, Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Writes a <see cref="bool"/> value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        void Write(bool value);
+
+        /// <summary>
+        /// Writes an array of <see cref="bool"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(bool[] values, Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Writes a <see cref="char"/> value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void Write(char value, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes an array of <see cref="char"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(char[] values, Endianness endianness = Endianness.Unspecified);
+
+
+
+
+        /// <summary>
+        /// Writes a <see cref="float"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="endianness">The optional endianness.</param>
-        void WriteLong(long value, Endianness endianness = Endianness.Unspecified); // fixme name
+        void Write(float value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Writes a <see cref="short"/> (short) value.
+        /// Writes an array of <see cref="float"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(float[] values, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes a <see cref="double"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="endianness">The optional endianness.</param>
-        void WriteShort(int value, Endianness endianness = Endianness.Unspecified); // fixme name
+        void Write(double value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Writes a <see cref="string"/> (string) value.
+        /// Writes an array of <see cref="double"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(double[] values, Endianness endianness = Endianness.Unspecified);
+
+
+        /// <summary>
+        /// Writes a UTF8 <see cref="string"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
-        void WriteUtf(string value); // fixme name
+        /// <param name="endianness">The endianness.</param>
+        void Write(string value, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes a <see cref="string"/> value as chars.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteAsChars(string value, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes a <see cref="string"/> value as bytes, assuming each char is 1-byte.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteAsBytes(string value);
+
+        /// <summary>
+        /// Writes an array of UTF8 <see cref="string"/> items.
+        /// </summary>
+        /// <param name="values">The array.</param>
+        /// <param name="endianness">The endianness.</param>
+        void WriteArray(string[] values, Endianness endianness = Endianness.Unspecified);
 
 
 
+        /// <summary>
+        /// Writes bytes.
+        /// </summary>
+        /// <param name="bytes">The bytes to write.</param>
+        void WriteBytes(byte[] bytes);
 
-        void Write(byte[] b);
-
-        /// <exception cref="System.IO.IOException"></exception>
-        void Write(byte[] b, int off, int len);
-
-
-        /// <exception cref="System.IO.IOException"></exception>
-        void WriteByte(int v);
-
-        /// <exception cref="System.IO.IOException"></exception>
-        void WriteBytes(string s);
-
-
-        /// <exception cref="System.IO.IOException"></exception>
-        void WriteChars(string s);
-
+        /// <summary>
+        /// Writes bytes.
+        /// </summary>
+        /// <param name="bytes">The source bytes to write.</param>
+        /// <param name="offset">The source offset.</param>
+        /// <param name="count">The number of bytes to write.</param>
+        void WriteBytes(byte[] bytes, int offset, int count);
     }
 }

@@ -15,70 +15,10 @@
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Defines a more complete destination of data that can be written to to serialize an object.
+    /// Extends <see cref="IDataOutput"/> with support for <see cref="IData"/> and objects.
     /// </summary>
     public interface IObjectDataOutput : IDataOutput
     {
-        /// <summary>
-        /// Gets a byte array representation of the object.
-        /// </summary>
-        /// <returns>An array of byte representing the object.</returns>
-        byte[] ToByteArray();
-
-        /// <summary>
-        /// Writes an array of <see cref="bool"/> (bool).
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteBooleanArray(bool[] values);
-
-        /// <summary>
-        /// Writes an array of <see cref="byte"/> (byte).
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteByteArray(byte[] values);
-
-        /// <summary>
-        /// Writes an array of <see cref="char"/> (char).
-        /// </summary>
-        /// <param name="values"></param>
-        void WriteCharArray(char[] values);
-
-        /// <summary>
-        /// Writes an array of <see cref="double"/> double.
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteDoubleArray(double[] values);
-
-        /// <summary>
-        /// Writes an array of <see cref="float"/> (float).
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteFloatArray(float[] values); // fixme name
-
-        /// <summary>
-        /// Writes an array of <see cref="int"/> (int).
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteIntArray(int[] values); // fixme name
-
-        /// <summary>
-        /// Writes an array of <see cref="long"/> (long).
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteLongArray(long[] values); // fixme name
-
-        /// <summary>
-        /// Writes an array of <see cref="short"/> (short).
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteShortArray(short[] values); // fixme name
-
-        /// <summary>
-        /// Writes an array of <see cref="string"/> (string).
-        /// </summary>
-        /// <param name="values">The array.</param>
-        void WriteUtfArray(string[] values); // fixme name
-
         /// <summary>
         /// Writes an <see cref="IData"/> instance.
         /// </summary>
@@ -90,5 +30,11 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="value">The object.</param>
         void WriteObject(object value);
+
+        /// <summary>
+        /// Gets a byte array representation of the object.
+        /// </summary>
+        /// <returns>An array of byte representing the object.</returns>
+        byte[] ToByteArray();
     }
 }

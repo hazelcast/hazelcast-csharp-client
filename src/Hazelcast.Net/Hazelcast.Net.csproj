@@ -40,6 +40,9 @@
   -->
 
   <ItemGroup>
+    <Compile Update="Core\BytesExtensions.*.cs">
+        <DependentUpon>BytesExtensions.cs</DependentUpon>
+    </Compile>
     <Compile Update="Clustering\Cluster.*.cs">
         <DependentUpon>Cluster.cs</DependentUpon>
     </Compile>

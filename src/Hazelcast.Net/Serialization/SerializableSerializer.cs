@@ -37,7 +37,7 @@ namespace Hazelcast.Serialization
             var formatter = new BinaryFormatter();
             using var stream = new MemoryStream();
             formatter.Serialize(stream, obj);
-            output.WriteByteArray(stream.GetBuffer());
+            output.WriteArray(stream.GetBuffer());
         }
     }
 }

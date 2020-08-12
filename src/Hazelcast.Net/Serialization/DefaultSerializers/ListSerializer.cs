@@ -39,7 +39,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
         public override void Write(IObjectDataOutput output, List<T> obj)
         {
             var size = obj == null ? ArraySerializer.NullArrayLength : obj.Count;
-            output.WriteInt(size);
+            output.Write(size);
             foreach (var o in obj)
             {
                 output.WriteObject(o);

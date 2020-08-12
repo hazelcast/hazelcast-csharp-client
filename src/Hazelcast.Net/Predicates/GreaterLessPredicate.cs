@@ -40,20 +40,20 @@ namespace Hazelcast.Predicates
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
 
-            _attributeName = input.ReadUtf();
+            _attributeName = input.ReadString();
             _value = input.ReadObject<object>();
-            _equal = input.ReadBoolean();
-            _less = input.ReadBoolean();
+            _equal = input.ReadBool();
+            _less = input.ReadBool();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
 
-            output.WriteUtf(_attributeName);
+            output.Write(_attributeName);
             output.WriteObject(_value);
-            output.WriteBoolean(_equal);
-            output.WriteBoolean(_less);
+            output.Write(_equal);
+            output.Write(_less);
         }
 
         public int FactoryId =>FactoryIds.PredicateFactoryId;

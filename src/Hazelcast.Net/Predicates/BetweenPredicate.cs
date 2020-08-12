@@ -38,7 +38,7 @@ namespace Hazelcast.Predicates
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
 
-            _attributeName = input.ReadUtf();
+            _attributeName = input.ReadString();
             _to = input.ReadObject<object>();
             _from = input.ReadObject<object>();
         }
@@ -47,7 +47,7 @@ namespace Hazelcast.Predicates
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
 
-            output.WriteUtf(_attributeName);
+            output.Write(_attributeName);
             output.WriteObject(_to);
             output.WriteObject(_from);
         }

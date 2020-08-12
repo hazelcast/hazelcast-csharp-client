@@ -18,67 +18,127 @@ using Hazelcast.Core;
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Defines a more complete source of data that can be read to deserialize an object from a buffer.
+    /// Extends <see cref="IObjectDataInput"/> with support for a buffer.
     /// </summary>
-    /// <remarks>
-    /// <para>The basic <see cref="IDataInput"/> supports primitive types, and <see cref="IObjectDataOutput"/>
-    /// adds support for arrays of primitive types. This class adds support for reading from a buffer,
-    /// at specified positions.</para>
-    /// FIXME: why support for endianness here?
-    /// TODO: rename + do the same to output
-    /// </remarks>
     public interface IBufferObjectDataInput : IObjectDataInput, IDisposable
     {
-        #region Reads
+        // TODO: sbyte?
 
-        bool ReadBoolean(int position);
-
+        /// <summary>
+        /// Reads a <see cref="byte"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
         byte ReadByte(int position);
 
-        char ReadChar(int position);
-
-        // FIXME could the Endianness = native collide with parent ReadDouble?
-
-        double ReadDouble(Endianness endianness = Endianness.Unspecified);
-
-        double ReadDouble(int position, Endianness endianness = Endianness.Unspecified);
-
-        float ReadFloat(Endianness endianness = Endianness.Unspecified);
-
-        float ReadFloat(int position, Endianness endianness = Endianness.Unspecified);
-
-        int ReadInt(Endianness endianness = Endianness.Unspecified);
-
-        int ReadInt(int position, Endianness endianness = Endianness.Unspecified);
-
-        long ReadLong(Endianness endianness = Endianness.Unspecified);
-
-        long ReadLong(int position, Endianness endianness = Endianness.Unspecified);
-
-        short ReadShort(Endianness endianness = Endianness.Unspecified);
-
+        /// <summary>
+        /// Reads a <see cref="short"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
         short ReadShort(int position, Endianness endianness = Endianness.Unspecified);
 
-        #endregion
+        // TODO: ushort?
 
-        #region Special Reads
+        /// <summary>
+        /// Reads an <see cref="int"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
+        int ReadInt(int position, Endianness endianness = Endianness.Unspecified);
 
-        int Read(int position);
+        // TODO: uint?
 
-        #endregion
+        /// <summary>
+        /// Reads a <see cref="long"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
+        long ReadLong(int position, Endianness endianness = Endianness.Unspecified);
 
-        #region Buffer Management
+        // TODO: ulong?
 
+
+
+        /// <summary>
+        /// Reads a <see cref="bool"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
+        bool ReadBool(int position);
+
+
+
+        /// <summary>
+        /// Reads a <see cref="char"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
+        char ReadChar(int position, Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Reads a <see cref="float"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
+        float ReadFloat(int position, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Reads a <see cref="double"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        /// <remarks>
+        /// <para>This method does not alter the current position of the buffer.</para>
+        /// </remarks>
+        double ReadDouble(int position, Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Clears the buffer after use (releases inner bytes).
+        /// </summary>
         void Clear();
 
-        void Init(byte[] data, int offset);
+        /// <summary>
+        /// Initializes the buffer for re-use.
+        /// </summary>
+        /// <param name="data">The buffer data.</param>
+        /// <param name="offset">The buffer data offset.</param>
+        void Initialize(byte[] data, int offset);
 
-        int Position();
-
-        void Position(int newPos);
-
-        void Reset();
-
-        #endregion
+        /// <summary>
+        /// Gets or sets the position in the buffer.
+        /// </summary>
+        int Position { get; set; }
     }
 }

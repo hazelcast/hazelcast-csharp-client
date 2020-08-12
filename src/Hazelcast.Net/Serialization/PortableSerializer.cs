@@ -46,8 +46,8 @@ namespace Hazelcast.Serialization
             {
                 throw new ArgumentException("Portable class id cannot be zero!");
             }
-            output.WriteInt(p.GetFactoryId());
-            output.WriteInt(p.GetClassId());
+            output.Write(p.GetFactoryId());
+            output.Write(p.GetClassId());
             WriteInternal((IBufferObjectDataOutput) output, p);
         }
 
@@ -93,7 +93,7 @@ namespace Hazelcast.Serialization
         internal void WriteInternal(IBufferObjectDataOutput output, IPortable p)
         {
             var cd = _context.LookupOrRegisterClassDefinition(p);
-            output.WriteInt(cd.GetVersion());
+            output.Write(cd.GetVersion());
             var writer = new DefaultPortableWriter(this, output, cd);
             p.WritePortable(writer);
             writer.End();
@@ -126,9 +126,9 @@ namespace Hazelcast.Serialization
             var cd = _context.LookupClassDefinition(factoryId, classId, effectiveVersion);
             if (cd == null)
             {
-                var begin = input.Position();
+                var begin = input.Position;
                 cd = _context.ReadClassDefinition(input, factoryId, classId, effectiveVersion);
-                input.Position(begin);
+                input.Position = begin;
             }
             DefaultPortableReader reader;
             if (portableVersion == effectiveVersion)

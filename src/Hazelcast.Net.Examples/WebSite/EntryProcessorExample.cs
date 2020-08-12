@@ -34,12 +34,12 @@ namespace Hazelcast.Examples.WebSite
 
         public void ReadData(IObjectDataInput input)
         {
-            _value = input.ReadUtf();
+            _value = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUtf(_value);
+            output.Write(_value);
         }
 
         public int FactoryId => FactoryIdConst;

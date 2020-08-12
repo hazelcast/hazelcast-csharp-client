@@ -37,7 +37,7 @@ namespace Hazelcast.Predicates
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
 
-            _attributeName = input.ReadUtf();
+            _attributeName = input.ReadString();
             var size = input.ReadInt();
             _values = new object[size];
             for (var i = 0; i < size; i++)
@@ -50,8 +50,8 @@ namespace Hazelcast.Predicates
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
 
-            output.WriteUtf(_attributeName);
-            output.WriteInt(_values.Length);
+            output.Write(_attributeName);
+            output.Write(_values.Length);
             foreach (var value in _values)
             {
                 output.WriteObject(value);

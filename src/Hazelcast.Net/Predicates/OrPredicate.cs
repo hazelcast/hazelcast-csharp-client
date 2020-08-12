@@ -44,7 +44,7 @@ namespace Hazelcast.Predicates
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteInt(_predicates.Length);
+            output.Write(_predicates.Length);
             foreach (var predicate in _predicates)
             {
                 output.WriteObject(predicate);

@@ -135,16 +135,16 @@ namespace Hazelcast.Serialization
             @in.ReadInt();
             // field count
             var fieldCount = @in.ReadInt();
-            var offset = @in.Position();
+            var offset = @in.Position;
             for (var i = 0; i < fieldCount; i++)
             {
                 var pos = @in.ReadInt(offset + i* BytesExtensions.SizeOfInt);
-                @in.Position(pos);
+                @in.Position = pos;
                 var len = @in.ReadShort();
                 var chars = new char[len];
                 for (var k = 0; k < len; k++)
                 {
-                    chars[k] = (char) @in.ReadUnsignedByte();
+                    chars[k] = (char) @in.ReadByte();
                 }
                 var type = (FieldType) (@in.ReadByte());
                 var name = new string(chars);
@@ -154,7 +154,7 @@ namespace Hazelcast.Serialization
                 if (type == FieldType.Portable)
                 {
                     // is null
-                    if (@in.ReadBoolean())
+                    if (@in.ReadBool())
                     {
                         register = false;
                     }
@@ -176,7 +176,7 @@ namespace Hazelcast.Serialization
                         if (k1 > 0)
                         {
                             var p = @in.ReadInt();
-                            @in.Position(p);
+                            @in.Position = p;
                             fieldVersion = @in.ReadInt();
                             ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
                         }

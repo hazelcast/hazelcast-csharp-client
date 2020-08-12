@@ -43,7 +43,7 @@ namespace Hazelcast.Serialization
         public IBufferObjectDataInput TakeInputBuffer(IData data)
         {
             var input = _inputPool.Take();
-            input.Init(data.ToByteArray(), HeapData.DataOffset);
+            input.Initialize(data.ToByteArray(), HeapData.DataOffset);
             return input;
         }
 

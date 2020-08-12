@@ -24,13 +24,13 @@ namespace Hazelcast.Serialization.ConstantSerializers
         /// <exception cref="System.IO.IOException"></exception>
         public override string[] Read(IObjectDataInput input)
         {
-            return input.ReadUtfArray();
+            return input.ReadStringArray();
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public override void Write(IObjectDataOutput output, string[] obj)
         {
-            output.WriteUtfArray(obj);
+            output.WriteArray(obj);
         }
     }
 }

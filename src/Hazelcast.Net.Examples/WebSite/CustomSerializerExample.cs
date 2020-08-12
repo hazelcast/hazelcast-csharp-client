@@ -38,15 +38,15 @@ namespace Hazelcast.Examples.WebSite
         public void Write(IObjectDataOutput output, CustomSerializableType t)
         {
             var array = Encoding.UTF8.GetBytes(t.Value);
-            output.WriteInt(array.Length);
-            output.Write(array);
+            output.Write(array.Length);
+            output.WriteBytes(array);
         }
 
         public CustomSerializableType Read(IObjectDataInput input)
         {
             var len = input.ReadInt();
             var array = new byte[len];
-            input.ReadFully(array);
+            input.ReadBytes(array);
             return new CustomSerializableType {Value = Encoding.UTF8.GetString(array)};
         }
     }

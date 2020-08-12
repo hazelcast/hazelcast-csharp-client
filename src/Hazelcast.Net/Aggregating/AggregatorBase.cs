@@ -46,7 +46,7 @@ namespace Hazelcast.Aggregating
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
 
-            AttributePath = input.ReadUtf();
+            AttributePath = input.ReadString();
             ReadAggregatorData(input);
         }
 
@@ -62,7 +62,7 @@ namespace Hazelcast.Aggregating
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
 
-            output.WriteUtf(AttributePath);
+            output.Write(AttributePath);
             WriteAggregatorData(output);
         }
 

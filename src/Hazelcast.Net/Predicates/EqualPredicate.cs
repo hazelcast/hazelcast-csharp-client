@@ -35,14 +35,14 @@ namespace Hazelcast.Predicates
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            AttributeName = input.ReadUtf();
+            AttributeName = input.ReadString();
             Value = input.ReadObject<object>();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteUtf(AttributeName);
+            output.Write(AttributeName);
             output.WriteObject(Value);
         }
 

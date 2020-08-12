@@ -34,14 +34,14 @@ namespace Hazelcast.Predicates
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
 
-            _className = input.ReadUtf();
+            _className = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
 
-            output.WriteUtf(_className);
+            output.Write(_className);
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

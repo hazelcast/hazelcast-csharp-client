@@ -146,7 +146,7 @@ namespace Hazelcast.Clustering
                 return;
             }
 
-            // FIXME: consider running event handler on background thread, limiting concurrency, setting a cancellation token
+            // TODO: consider running event handler on background thread, limiting concurrency, setting a cancellation token
 
             // exceptions are handled by caller (see Client.ReceiveEvent)
             await subscription.HandleAsync(message).CAF();

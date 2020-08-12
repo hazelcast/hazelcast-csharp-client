@@ -12,110 +12,191 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Defines a source of data that can be read to deserialize an object.
+    /// Defines a source of data that can be read from, to deserialize an object.
     /// </summary>
     public interface IDataInput
     {
-        #region Reads
+        // TODO: sbyte?
 
         /// <summary>
-        /// Reads a <see cref="bool"/> (bool) value.
-        /// </summary>
-        /// <returns>The value.</returns>
-        bool ReadBoolean();
-
-        /// <summary>
-        /// Reads a <see cref="byte"/> (byte) value.
+        /// Reads a <see cref="byte"/> value.
         /// </summary>
         /// <returns>The value.</returns>
         byte ReadByte();
 
         /// <summary>
-        /// Reads a <see cref="char"/> (char) value.
+        /// Reads an array of <see cref="byte"/> items.
         /// </summary>
-        /// <returns>The value.</returns>
-        char ReadChar();
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The array.</returns>
+        byte[] ReadByteArray(Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Reads a <see cref="double"/> (double) value.
+        /// Reads a <see cref="short"/> value.
         /// </summary>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        double ReadDouble();
+        short ReadShort(Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Reads a <see cref="float"/> (float) value.
+        /// Reads an array of <see cref="short"/> items.
         /// </summary>
-        /// <returns>The value.</returns>
-        float ReadFloat(); // fixme name
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The array.</returns>
+        short[] ReadShortArray(Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Reads an <see cref="int"/> (int) value.
+        /// Reads an <see cref="ushort"/> value.
         /// </summary>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        int ReadInt();
+        ushort ReadUnsignedShort(Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Reads an <see cref="long"/> (long) value.
+        /// Reads an array of <see cref="ushort"/> items.
         /// </summary>
-        /// <returns>The value.</returns>
-        long ReadLong(); // fixme name
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The array.</returns>
+        ushort[] ReadUnsignedShortArray(Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Reads an <see cref="short"/> (short) value.
+        /// Reads an <see cref="int"/> value.
         /// </summary>
+        /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        short ReadShort();
+        int ReadInt(Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
-        /// Reads an <see cref="Unsi"/> () value.
+        /// Reads an array of <see cref="int"/> items.
         /// </summary>
+        /// <param name="endianness">The endianness.</param>
         /// <returns></returns>
-        int ReadUnsignedByte(); // fixme name, return type?
+        int[] ReadIntArray(Endianness endianness = Endianness.Unspecified);
+
+        // TODO: uint?
 
         /// <summary>
-        /// Reads an <see cref="ushort"/> (ushort) value.
+        /// Reads a <see cref="long"/> value.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        long ReadLong(Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Reads an array of <see cref="long"/> items.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns></returns>
+        long[] ReadLongArray(Endianness endianness = Endianness.Unspecified);
+
+        // TODO: ulong?
+
+
+
+        /// <summary>
+        /// Reads a <see cref="bool"/> value.
         /// </summary>
         /// <returns>The value.</returns>
-        int ReadUnsignedShort(); // fixme name, return type?
+        bool ReadBool();
 
         /// <summary>
-        /// Reads a <see cref="string"/> (string) value.
+        /// Reads an array of <see cref="bool"/> items.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The array.</returns>
+        bool[] ReadBoolArray(Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Reads a <see cref="char"/> value.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        char ReadChar(Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Reads an array of <see cref="char"/> items.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The array.</returns>
+        char[] ReadCharArray(Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Reads a <see cref="float"/> value.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        float ReadFloat(Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Reads an array of <see cref="float"/> items.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The array.</returns>
+        float[] ReadFloatArray(Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Reads a <see cref="double"/> value.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The value.</returns>
+        double ReadDouble(Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Reads an array of <see cref="double"/> items.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <returns>The array.</returns>
+        double[] ReadDoubleArray(Endianness endianness = Endianness.Unspecified);
+
+        // TODO: decimal?
+
+
+
+        /// <summary>
+        /// Reads an UTF8 <see cref="string"/> value.
         /// </summary>
         /// <returns>The value.</returns>
-        string ReadUtf(); // fixme name
-
-        #endregion
-
-        #region Special Reads
+        string ReadString();
 
         /// <summary>
-        /// Reads the whole object.
+        /// Reads an array of UTF8 <see cref="string"/> items.
         /// </summary>
-        /// <param name="bytes"></param>
-        void ReadFully(byte[] bytes); // fixme what is this doing?
+        /// <returns>The array.</returns>
+        string[] ReadStringArray(Endianness endianness = Endianness.Unspecified);
+
+
 
         /// <summary>
-        /// Reads the whole object.
+        /// Reads bytes.
         /// </summary>
-        /// <param name="bytes"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        void ReadFully(byte[] bytes, int offset, int length); // fixme what is this doing?
+        /// <param name="bytes">The destination array of bytes.</param>
+        void ReadBytes(byte[] bytes);
 
-        #endregion
-
-        #region Buffer Management
+        /// <summary>
+        /// Reads bytes.
+        /// </summary>
+        /// <param name="bytes">The destination array of bytes.</param>
+        /// <param name="offset">The destination offset.</param>
+        /// <param name="count">The number of bytes to read.</param>
+        void ReadBytes(byte[] bytes, int offset, int count);
 
         /// <summary>
         /// Skips bytes.
         /// </summary>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        int SkipBytes(int count); // fixme what? return?
-
-        #endregion
+        /// <param name="count">The number of bytes to skip.</param>
+        /// <returns>The number of skipped bytes.</returns>
+        /// <remarks>
+        /// <para>The number of skipped bytes can be lower than <paramref name="count"/> it the end of the buffer is reached.</para>
+        /// </remarks>
+        int Skip(int count);
     }
 }

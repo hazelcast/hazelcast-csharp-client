@@ -17,33 +17,97 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    // TODO: document and format (see input)
+    /// <summary>
+    /// Extends <see cref="IObjectDataOutput"/> with support for a buffer.
+    /// </summary>
     public interface IBufferObjectDataOutput : IObjectDataOutput, IDisposable
     {
+        /// <summary>
+        /// Writes a <see cref="byte"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        void Write(int position, byte value);
+
+        /// <summary>
+        /// Writes a <see cref="short"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void Write(int position, short value, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes a <see cref="int"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void Write(int position, int value, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes a <see cref="long"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void Write(int position, long value, Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Writes a <see cref="bool"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        void Write(int position, bool value);
+
+
+
+        /// <summary>
+        /// Writes a <see cref="char"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void Write(int position, char value, Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Writes a <see cref="float"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void Write(int position, float value, Endianness endianness = Endianness.Unspecified);
+
+        /// <summary>
+        /// Writes a <see cref="double"/> value at a given position.
+        /// </summary>
+        /// <param name="position">The position.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="endianness">The endianness.</param>
+        void Write(int position, double value, Endianness endianness = Endianness.Unspecified);
+
+
+
+        /// <summary>
+        /// Writes zero bytes.
+        /// </summary>
+        /// <param name="count"></param>
+        void WriteZeroBytes(int count);
+
+
+
+        /// <summary>
+        /// Clears the buffer.
+        /// </summary>
         void Clear();
 
-        int Position();
-
-        void Position(int newPos);
-
-        void Write(int position, int b);
-
-        void WriteBoolean(int position, bool v);
-
-        void WriteByte(int position, int v);
-
-        void WriteChar(int position, int v);
-
-        void WriteDouble(int position, double v, Endianness endianness = Endianness.Unspecified);
-
-        void WriteFloat(int position, float v, Endianness endianness = Endianness.Unspecified);
-
-        void WriteInt(int position, int v, Endianness endianness = Endianness.Unspecified);
-
-        void WriteLong(int position, long v, Endianness endianness = Endianness.Unspecified);
-
-        void WriteShort(int position, int v, Endianness endianness = Endianness.Unspecified);
-
-        void WriteZeroBytes(int count);
+        /// <summary>
+        /// Gets the position in the buffer.
+        /// </summary>
+        int Position { get; }
     }
 }

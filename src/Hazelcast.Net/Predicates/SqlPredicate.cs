@@ -35,13 +35,13 @@ namespace Hazelcast.Predicates
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteUtf(_sql);
+            output.Write(_sql);
         }
 
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            _sql = input.ReadUtf();
+            _sql = input.ReadString();
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

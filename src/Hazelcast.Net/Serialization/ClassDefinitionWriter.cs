@@ -61,7 +61,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void WriteChar(string fieldName, int value)
+        public void WriteChar(string fieldName, char value)
         {
             _builder.AddCharField(fieldName);
         }

@@ -13,752 +13,505 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.IO;
-using System.Text;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Serialization
 {
-    internal class ByteArrayObjectDataInput : ByteArrayObjectDataInputOuputBase, IInputStream, IBufferObjectDataInput
+    /// <summary>
+    /// Implements <see cref="IBufferObjectDataInput"/> on top of a byte array.
+    /// </summary>
+    internal class ByteArrayObjectDataInput : ByteArrayObjectDataInputOuputBase, IBufferObjectDataInput
     {
+        private byte[] _data;
+        private int _length;
+        private int _position;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ByteArrayObjectDataInput"/> class.
+        /// </summary>
+        /// <param name="data">The buffer data.</param>
+        /// <param name="service">The serialization service.</param>
+        /// <param name="endianness">The default endianness.</param>
         internal ByteArrayObjectDataInput(byte[] data, ISerializationService service, Endianness endianness)
             : this(data, 0, service, endianness)
         { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ByteArrayObjectDataInput"/> class.
+        /// </summary>
+        /// <param name="data">The buffer data.</param>
+        /// <param name="offset">The buffer data offset.</param>
+        /// <param name="service">The serialization service.</param>
+        /// <param name="endianness">The default endianness.</param>
         internal ByteArrayObjectDataInput(byte[] data, int offset, ISerializationService service, Endianness endianness)
             : base(service, endianness)
         {
-            Data = data;
-            Size = data?.Length ?? 0;
-            Pos = offset;
-        }
-
-        internal char[] CharBuffer { get; set; }
-
-        internal byte[] Data { get; set; }
-
-        internal int MarkPos { get; set; }
-
-        internal int Pos { get; set; }
-
-        internal int Size { get; set; }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual int Read(int position)
-        {
-            return (position < Size) ? (Data[position] & unchecked(0xff)) : -1;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual bool ReadBoolean()
-        {
-            var ch = Read();
-            if (ch < 0)
-            {
-                throw new EndOfStreamException();
-            }
-            return (ch != 0);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual bool ReadBoolean(int position)
-        {
-            var ch = Read(position);
-            if (ch < 0)
-            {
-                throw new EndOfStreamException();
-            }
-            return (ch != 0);
+            _data = data;
+            _length = data?.Length ?? 0;
+            if (offset < 0 || offset >= _length)
+                throw new ArgumentOutOfRangeException(nameof(offset));
+            _position = offset;
         }
 
         /// <summary>
-        ///     See the general contract of the <code>readByte</code> method of
-        ///     <code>DataInput</code>.
+        /// Gets or sets the current position.
         /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readByte</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next byte of this input stream as a signed 8-bit
-        ///     <code>byte</code>.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream has reached the end.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual byte ReadByte()
+        public int Position
         {
-            var ch = Read();
-            if (ch < 0)
+            get => _position;
+            set
             {
-                throw new EndOfStreamException();
+                if (value < 0 || value > _length)
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                _position = value;
             }
-            return unchecked((byte) (ch));
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual byte ReadByte(int position)
-        {
-            var ch = Read(position);
-            if (ch < 0)
-            {
-                throw new EndOfStreamException();
-            }
-            return unchecked((byte) (ch));
         }
 
         /// <summary>
-        ///     See the general contract of the <code>readChar</code> method of
-        ///     <code>DataInput</code>.
+        /// Validates that a number of bytes can be read at a given position.
         /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readChar</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>the next two bytes of this input stream as a Unicode character.</returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading two
-        ///     bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual char ReadChar()
+        /// <param name="position">The position.</param>
+        /// <param name="count">The number of bytes.</param>
+        internal void Validate(int position, int count)
         {
-            var c = ReadChar(Pos);
-            Pos += BytesExtensions.SizeOfChar;
-            return c;
+            if (position < 0)
+                throw new ArgumentOutOfRangeException(nameof(position));
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count));
+
+            if (_length - position < count)
+                throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual char ReadChar(int position)
+        /// <inheritdoc />
+        public byte ReadByte()
         {
-            CheckAvailable(position, BytesExtensions.SizeOfChar);
-            return Data.ReadChar(position, DefaultEndianness);
+            var value = ReadByte(_position);
+            _position += BytesExtensions.SizeOfByte;
+            return value;
         }
 
-        /// <summary>
-        ///     See the general contract of the <code>readDouble</code> method of
-        ///     <code>DataInput</code>.
-        /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readDouble</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next eight bytes of this input stream, interpreted as a
-        ///     <code>double</code>.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading eight
-        ///     bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual double ReadDouble()
+        /// <inheritdoc />
+        public byte[] ReadByteArray(Endianness endianness = Endianness.Unspecified)
         {
-            return BitConverter.Int64BitsToDouble(ReadLong());
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<byte>();
+
+            var values = new byte[length];
+            ReadBytes(values);
+            return values;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual double ReadDouble(int position)
+        /// <inheritdoc />
+        public byte ReadByte(int position)
         {
-            return BitConverter.Int64BitsToDouble(ReadLong(position));
+            Validate(position, BytesExtensions.SizeOfByte);
+            return _data.ReadByte(position);
         }
 
+        /// <inheritdoc />
+        public short ReadShort(Endianness endianness = Endianness.Unspecified)
+        {
+            var value = ReadShort(_position, endianness);
+            _position += BytesExtensions.SizeOfShort;
+            return value;
+        }
+
+        /// <inheritdoc />
+        public short ReadShort(int position, Endianness endianness = Endianness.Unspecified)
+        {
+            Validate(position, BytesExtensions.SizeOfShort);
+            return _data.ReadShort(position, endianness.Resolve(DefaultEndianness));
+        }
+
+        /// <inheritdoc />
+        public short[] ReadShortArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<short>();
+
+            Validate(_position, length * BytesExtensions.SizeOfShort);
+
+            var values = new short[length];
+            for (var i = 0; i < length; i++)
+            {
+                values[i] = _data.ReadShort(_position, endianness);
+                _position += BytesExtensions.SizeOfShort;
+            }
+            return values;
+        }
+
+        /// <inheritdoc />
+        public ushort ReadUnsignedShort(Endianness endianness = Endianness.Unspecified)
+        {
+            return (ushort) ReadShort(endianness);
+        }
+
+        /// <inheritdoc />
+        public ushort[] ReadUnsignedShortArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<ushort>();
+
+            Validate(_position, length * BytesExtensions.SizeOfUnsignedShort);
+
+            var values = new ushort[length];
+            for (var i = 0; i < length; i++)
+            {
+                values[i] = _data.ReadUShort(_position, endianness);
+                _position += BytesExtensions.SizeOfUnsignedShort;
+            }
+            return values;
+        }
+
+        /// <inheritdoc />
+        public int ReadInt(Endianness endianness = Endianness.Unspecified)
+        {
+            var value = ReadInt(_position, endianness);
+            _position += BytesExtensions.SizeOfInt;
+            return value;
+        }
+
+        /// <inheritdoc />
+        public int ReadInt(int position, Endianness endianness = Endianness.Unspecified)
+        {
+            Validate(position, BytesExtensions.SizeOfInt);
+            return _data.ReadInt(position, endianness.Resolve(DefaultEndianness));
+        }
+
+        /// <inheritdoc />
+        public int[] ReadIntArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<int>();
+
+            Validate(_position, length * BytesExtensions.SizeOfInt);
+
+            var values = new int[length];
+            for (var i = 0; i < length; i++)
+            {
+                values[i] = _data.ReadInt(_position, endianness);
+                _position += BytesExtensions.SizeOfInt;
+            }
+            return values;
+        }
+
+        /// <inheritdoc />
+        public long ReadLong(Endianness endianness = Endianness.Unspecified)
+        {
+            var value = ReadLong(_position, endianness);
+            _position += BytesExtensions.SizeOfLong;
+            return value;
+        }
+
+        /// <inheritdoc />
+        public long ReadLong(int position, Endianness endianness = Endianness.Unspecified)
+        {
+            Validate(position, BytesExtensions.SizeOfLong);
+            return _data.ReadLong(position, endianness.Resolve(DefaultEndianness));
+        }
+
+        /// <inheritdoc />
+        public long[] ReadLongArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<long>();
+
+            Validate(_position, length * BytesExtensions.SizeOfLong);
+
+            var values = new long[length];
+            for (var i = 0; i < length; i++)
+            {
+                values[i] = _data.ReadLong(_position, endianness);
+                _position += BytesExtensions.SizeOfLong;
+            }
+            return values;
+        }
+
+
+
+        /// <inheritdoc />
+        public bool ReadBool()
+        {
+            var value = ReadBool(_position);
+            _position += BytesExtensions.SizeOfBool;
+            return value;
+        }
+
+        /// <inheritdoc />
+        public bool ReadBool(int position)
+        {
+            Validate(position, BytesExtensions.SizeOfBool);
+            return _data.ReadBool(position);
+        }
+
+        /// <inheritdoc />
+        public bool[] ReadBoolArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<bool>();
+
+            Validate(_position, length * BytesExtensions.SizeOfBool);
+
+            var values = new bool[length];
+            for (var i = 0; i < length; i++)
+            {
+                values[i] = _data.ReadBool(_position);
+                _position += BytesExtensions.SizeOfBool;
+            }
+            return values;
+        }
+
+
+
+        /// <inheritdoc />
+        public char ReadChar(Endianness endianness = Endianness.Unspecified)
+        {
+            var value = ReadChar(_position, endianness);
+            _position += BytesExtensions.SizeOfChar;
+            return value;
+        }
+
+        /// <inheritdoc />
+        public char ReadChar(int position, Endianness endianness = Endianness.Unspecified)
+        {
+            Validate(position, BytesExtensions.SizeOfChar);
+            return _data.ReadChar(position, endianness.Resolve(DefaultEndianness));
+        }
+
+        /// <inheritdoc />
+        public char[] ReadCharArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<char>();
+
+            Validate(_position, length * BytesExtensions.SizeOfChar);
+
+            var values = new char[length];
+            for (var i = 0; i < length; i++)
+            {
+                values[i] = _data.ReadChar(_position, endianness);
+                _position += BytesExtensions.SizeOfChar;
+
+            }
+            return values;
+        }
+
+
+
+        /// <inheritdoc />
+        public float ReadFloat(Endianness endianness = Endianness.Unspecified)
+        {
+            var value = ReadFloat(_position);
+            _position += BytesExtensions.SizeOfFloat;
+            return value;
+        }
+
+        /// <inheritdoc />
+        public float ReadFloat(int position, Endianness endianness = Endianness.Unspecified)
+        {
+            Validate(position, BytesExtensions.SizeOfFloat);
+            return _data.ReadFloat(position, endianness.Resolve(DefaultEndianness));
+        }
+
+        /// <inheritdoc />
+        public float[] ReadFloatArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<float>();
+
+            Validate(_position, length * BytesExtensions.SizeOfFloat);
+
+            var values = new float[length];
+            for (var i = 0; i < length; i++)
+            {
+                //values[i] = ReadFloat(endianness);
+                values[i] = _data.ReadFloat(_position, endianness);
+                _position += BytesExtensions.SizeOfFloat;
+            }
+            return values;
+        }
+
+        /// <inheritdoc />
         public double ReadDouble(Endianness endianness = Endianness.Unspecified)
         {
-            return BitConverter.Int64BitsToDouble(ReadLong(endianness));
+            var value = ReadDouble(_position, endianness);
+            _position += BytesExtensions.SizeOfDouble;
+            return value;
+            //return BitConverter.Int64BitsToDouble(ReadLong(endianness));
         }
 
+        /// <inheritdoc />
         public double ReadDouble(int position, Endianness endianness = Endianness.Unspecified)
         {
             return BitConverter.Int64BitsToDouble(ReadLong(position, endianness));
         }
 
-        /// <summary>
-        ///     See the general contract of the <code>readFloat</code> method of
-        ///     <code>DataInput</code>.
-        /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readFloat</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next four bytes of this input stream, interpreted as a
-        ///     <code>float</code>.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading four
-        ///     bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual float ReadFloat()
+        /// <inheritdoc />
+        public double[] ReadDoubleArray(Endianness endianness = Endianness.Unspecified)
         {
-            return BitConverter.ToSingle(BitConverter.GetBytes(ReadInt()), 0);
-        }
+            endianness = endianness.Resolve(DefaultEndianness);
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual float ReadFloat(int position)
-        {
-            return BitConverter.ToSingle(BitConverter.GetBytes(ReadInt(position)), 0);
-        }
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<double>();
 
-        public float ReadFloat(Endianness endianness = Endianness.Unspecified)
-        {
-            return BitConverter.ToSingle(BitConverter.GetBytes(ReadInt(endianness)), 0);
-        }
+            Validate(_position, length * BytesExtensions.SizeOfDouble);
 
-        public float ReadFloat(int position, Endianness endianness = Endianness.Unspecified)
-        {
-            return BitConverter.ToSingle(BitConverter.GetBytes(ReadInt(position, endianness)), 0);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadFully(byte[] b)
-        {
-            if (Read(b, 0, b.Length) == -1)
+            var values = new double[length];
+            for (var i = 0; i < length; i++)
             {
-                throw new EndOfStreamException("End of stream reached");
-            }
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void ReadFully(byte[] b, int off, int len)
-        {
-            if (Read(b, off, len) == -1)
-            {
-                throw new EndOfStreamException("End of stream reached");
-            }
-        }
-
-        /// <summary>
-        ///     See the general contract of the <code>readInt</code> method of
-        ///     <code>DataInput</code>.
-        /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readInt</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next four bytes of this input stream, interpreted as an
-        ///     <code>int</code>.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading four
-        ///     bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual int ReadInt()
-        {
-            var i = ReadInt(Pos);
-            Pos += BytesExtensions.SizeOfInt;
-            return i;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual int ReadInt(int position)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfInt);
-            return Data.ReadInt(position, DefaultEndianness);
-        }
-
-        public int ReadInt(Endianness endianness)
-        {
-            var i = ReadInt(Pos, endianness);
-            Pos += BytesExtensions.SizeOfInt;
-            return i;
-        }
-
-        public int ReadInt(int position, Endianness endianness)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfInt);
-            return Data.ReadInt(position, ValueOrDefault(endianness));
-        }
-
-        /// <summary>
-        ///     See the general contract of the <code>readLong</code> method of
-        ///     <code>DataInput</code>.
-        /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readLong</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next eight bytes of this input stream, interpreted as a
-        ///     <code>long</code>.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading eight
-        ///     bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual long ReadLong()
-        {
-            var l = ReadLong(Pos);
-            Pos += BytesExtensions.SizeOfLong;
-            return l;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual long ReadLong(int position)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfLong);
-            return Data.ReadLong(position, DefaultEndianness);
-        }
-
-        public long ReadLong(Endianness endianness)
-        {
-            var l = ReadLong(Pos, endianness);
-            Pos += BytesExtensions.SizeOfLong;
-            return l;
-        }
-
-        public long ReadLong(int position, Endianness endianness)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfLong);
-            var l = Data.ReadLong(position, ValueOrDefault(endianness));
-            Pos += BytesExtensions.SizeOfLong;
-            return l;
-        }
-
-        /// <summary>
-        ///     See the general contract of the <code>readShort</code> method of
-        ///     <code>DataInput</code>.
-        /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readShort</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next two bytes of this input stream, interpreted as a signed
-        ///     16-bit number.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading two
-        ///     bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual short ReadShort()
-        {
-            var s = ReadShort(Pos);
-            Pos += BytesExtensions.SizeOfShort;
-            return s;
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual short ReadShort(int position)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfShort);
-            return Data.ReadShort(position, DefaultEndianness);
-        }
-
-        public short ReadShort(Endianness endianness)
-        {
-            var s = ReadShort(Pos, endianness);
-            Pos += BytesExtensions.SizeOfShort;
-            return s;
-        }
-
-        public short ReadShort(int position, Endianness endianness)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfShort);
-            return Data.ReadShort(position, ValueOrDefault(endianness));
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual byte[] ReadByteArray()
-        {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
-
-            if (len <= 0) return Array.Empty<byte>();
-
-            var b = new byte[len];
-            ReadFully(b);
-            return b;
-        }
-
-        public virtual bool[] ReadBooleanArray()
-        {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
-
-            if (len <= 0) return Array.Empty<bool>();
-
-            var values = new bool[len];
-            for (var i = 0; i < len; i++)
-            {
-                values[i] = ReadBoolean();
+                values[i] = _data.ReadDouble(_position, endianness);
+                _position += BytesExtensions.SizeOfDouble;
             }
             return values;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual char[] ReadCharArray()
+
+
+
+        /// <inheritdoc />
+        public string ReadString()
         {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
+            var length = ReadInt();
+            if (length == ArraySerializer.NullArrayLength) return null;
 
-            if (len <= 0) return Array.Empty<char>();
-
-            var values = new char[len];
-            for (var i = 0; i < len; i++)
+            var buffer = ArrayPool<char>.Shared.Rent(length);
+            try
             {
-                values[i] = ReadChar();
+                for (var i = 0; i < length; i++)
+                    buffer[i] = _data.ReadUtf8Char(ref _position);
+            }
+            finally
+            {
+                ArrayPool<char>.Shared.Return(buffer);
+            }
+
+            return new string(buffer, 0, length);
+        }
+
+        /// <inheritdoc />
+        public string[] ReadStringArray(Endianness endianness = Endianness.Unspecified)
+        {
+            endianness = endianness.Resolve(DefaultEndianness);
+
+            var length = ReadInt(endianness);
+            if (length == ArraySerializer.NullArrayLength) return null;
+            if (length <= 0) return Array.Empty<string>();
+
+            var values = new string[length];
+            for (var i = 0; i < length; i++)
+            {
+                values[i] = ReadString();
             }
             return values;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual int[] ReadIntArray()
+
+
+        /// <inheritdoc />
+        public void ReadBytes(byte[] bytes)
         {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
-
-            if (len <= 0) return Array.Empty<int>();
-
-            var values = new int[len];
-            for (var i = 0; i < len; i++)
-            {
-                values[i] = ReadInt();
-            }
-            return values;
+            ReadBytes(bytes, 0, bytes.Length);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual long[] ReadLongArray()
+        /// <inheritdoc />
+        public void ReadBytes(byte[] bytes, int offset, int count)
         {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            if (offset < 0 || offset >= bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (count < 0 || offset + count > bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
 
-            if (len <= 0) return Array.Empty<long>();
+            if (count == 0) return;
+            if (_position >= _length) throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
 
-            var values = new long[len];
-            for (var i = 0; i < len; i++)
-            {
-                values[i] = ReadLong();
-            }
-            return values;
+            // TODO: so we can reduce the count ??? without returning how many bytes were read???
+            count = Math.Min(count, _length - _position);
+
+            Buffer.BlockCopy(_data, _position, bytes, offset, count);
+            _position += count;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual double[] ReadDoubleArray()
+        /// <inheritdoc />
+        public int Skip(int count)
         {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
+            if (count <= 0) return 0;
 
-            if (len <= 0) return Array.Empty<double>();
-
-            var values = new double[len];
-            for (var i = 0; i < len; i++)
-            {
-                values[i] = ReadDouble();
-            }
-            return values;
+            count = Math.Min(count, _length - _position);
+            _position += count;
+            return count;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual float[] ReadFloatArray()
+
+
+        /// <inheritdoc />
+        public IData ReadData()
         {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
-
-            if (len <= 0) return Array.Empty<float>();
-
-            var values = new float[len];
-            for (var i = 0; i < len; i++)
-            {
-                values[i] = ReadFloat();
-            }
-            return values;
+            var bytes = ReadByteArray();
+            return bytes == null ? null : new HeapData(bytes);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual short[] ReadShortArray()
-        {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
-
-            if (len <= 0) return Array.Empty<short>();
-
-            var values = new short[len];
-            for (var i = 0; i < len; i++)
-            {
-                values[i] = ReadShort();
-            }
-            return values;
-        }
-
-        public virtual string[] ReadUtfArray()
-        {
-            var len = ReadInt();
-            if (len == ArraySerializer.NullArrayLength) return null;
-
-            if (len <= 0) return Array.Empty<string>();
-
-            var values = new string[len];
-            for (var i = 0; i < len; i++)
-            {
-                values[i] = ReadUtf();
-            }
-            return values;
-        }
-
+        /// <inheritdoc />
         public T ReadObject<T>()
         {
             return SerializationService.ReadObject<T>(this);
         }
 
+
+
         /// <summary>
-        ///     See the general contract of the <code>readUnsignedByte</code> method of
-        ///     <code>DataInput</code>.
+        /// Initializes the buffer.
         /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readUnsignedByte</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next byte of this input stream, interpreted as an unsigned
-        ///     8-bit number.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream has reached the end.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual int ReadUnsignedByte()
+        /// <param name="data">The buffer data.</param>
+        /// <param name="offset">The buffer data offset.</param>
+        public void Initialize(byte[] data, int offset)
         {
-            return ReadByte() & 0xFF;
+            _data = data;
+            _position = offset;
+            _length = data?.Length ?? 0;
         }
 
         /// <summary>
-        ///     See the general contract of the <code>readUnsignedShort</code> method of
-        ///     <code>DataInput</code>.
+        /// Clears the buffer (releases the inner data).
         /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readUnsignedShort</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>
-        ///     the next two bytes of this input stream, interpreted as an
-        ///     unsigned 16-bit integer.
-        /// </returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading two
-        ///     bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        public virtual int ReadUnsignedShort()
+        public void Clear()
         {
-            return ReadShort() & 0xffff;
+            _data = null;
+            _position = 0;
+            _length = 0;
         }
 
-        /// <summary>
-        ///     See the general contract of the <code>readUTF</code> method of
-        ///     <code>DataInput</code>.
-        /// </summary>
-        /// <remarks>
-        ///     See the general contract of the <code>readUTF</code> method of
-        ///     <code>DataInput</code>.
-        ///     <p />
-        ///     Bytes for this operation are read from the contained input stream.
-        /// </remarks>
-        /// <returns>a Unicode string.</returns>
-        /// <exception cref="System.IO.EndOfStreamException">
-        ///     if this input stream reaches the end before reading all
-        ///     the bytes.
-        /// </exception>
-        /// <exception cref="System.IO.IOException">if an I/O error occurs.</exception>
-        /// <exception cref="System.IO.InvalidDataException">
-        ///     if the bytes do not represent a valid modified UTF-8
-        ///     encoding of a string.
-        /// </exception>
-        public virtual string ReadUtf()
-        {
-            var charCount = ReadInt();
-            if (charCount == ArraySerializer.NullArrayLength)
-                return null;
 
-            if (CharBuffer == null || charCount > CharBuffer.Length)
-                CharBuffer = new char[charCount];
 
-            var pos = Pos;
-            for (var i = 0; i < charCount; i++)
-                CharBuffer[i] = Data.ReadUtf8Char(ref pos);
-
-            Pos = pos;
-            return new string(CharBuffer, 0, charCount);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public IData ReadData()
-        {
-            var bytes = ReadByteArray();
-            var data = bytes != null ? new HeapData(bytes) : null;
-            return data;
-        }
-
-        public virtual int SkipBytes(int n)
-        {
-            if (n <= 0)
-            {
-                return 0;
-            }
-            var skip = n;
-            var pos = Position();
-            if (pos + skip > Size)
-            {
-                skip = Size - pos;
-            }
-            Position(pos + skip);
-            return skip;
-        }
-
-        /// <summary>Returns this buffer's position.</summary>
-        /// <remarks>Returns this buffer's position.</remarks>
-        public virtual int Position()
-        {
-            return Pos;
-        }
-
-        public virtual void Position(int newPos)
-        {
-            if ((newPos > Size) || (newPos < 0))
-            {
-                throw new ArgumentOutOfRangeException(nameof(newPos));
-            }
-            Pos = newPos;
-            if (MarkPos > Pos)
-            {
-                MarkPos = -1;
-            }
-        }
-
+        /// <inheritdoc />
         public void Dispose()
         {
-            Close();
-        }
-
-        public virtual void Init(byte[] data, int offset)
-        {
-            Data = data;
-            Size = data?.Length ?? 0;
-            Pos = offset;
-        }
-
-        public virtual void Clear()
-        {
-            Data = null;
-            Pos = 0;
-            Size = 0;
-            MarkPos = 0;
-            if (CharBuffer != null && CharBuffer.Length > BufferObjectDataInputConstants.UtfBufferSize*8)
-            {
-                CharBuffer = new char[BufferObjectDataInputConstants.UtfBufferSize*8];
-            }
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual int Read()
-        {
-            return (Pos < Size) ? (Data[Pos++] & unchecked(0xff)) : -1;
-        }
-
-        public virtual int Read(byte[] b)
-        {
-            return Read(b, 0, b.Length);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public int Read(byte[] b, int off, int len)
-        {
-            if (b == null) throw new ArgumentNullException(nameof(b));
-            if (off < 0 || off > b.Length) throw new ArgumentOutOfRangeException(nameof(off));
-            if (len < 0 || off + len > b.Length || off + len < 0) throw new ArgumentOutOfRangeException(nameof(len));
-
-            if (len <= 0) return 0;
-            if (Pos >= Size) return -1;
-
-            if (Pos + len > Size) len = Size - Pos;
-
-            Buffer.BlockCopy(Data, Pos, b, off, len);
-            Pos += len;
-            return len;
-        }
-
-        public long Skip(long n)
-        {
-            if (n <= 0 || n >= int.MaxValue)
-            {
-                return 0L;
-            }
-            return SkipBytes((int) n);
-        }
-
-        public int Available()
-        {
-            return Size - Pos;
-        }
-
-        public bool MarkSupported()
-        {
-            return true;
-        }
-
-        public void Mark(int readlimit)
-        {
-            MarkPos = Pos;
-        }
-
-        public void Reset()
-        {
-            Pos = MarkPos;
-        }
-
-        public void Close()
-        {
-            Data = null;
-            CharBuffer = null;
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            sb.Append("ByteArrayObjectDataInput");
-            sb.Append("{size=").Append(Size);
-            sb.Append(", pos=").Append(Pos);
-            sb.Append(", mark=").Append(MarkPos);
-            sb.Append('}');
-            return sb.ToString();
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        internal void CheckAvailable(int pos, int k)
-        {
-            if (pos < 0)
-            {
-                throw new ArgumentException("Negative pos! -> " + pos);
-            }
-            if ((Size - pos) < k)
-            {
-                throw new EndOfStreamException("Cannot read " + k + " bytes!");
-            }
+            Clear();
         }
     }
 }

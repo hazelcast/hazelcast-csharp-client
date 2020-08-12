@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.WebSite
             var formatter = new BinaryFormatter();
             var stream = new MemoryStream();
             formatter.Serialize(stream, obj);
-            output.WriteByteArray(stream.GetBuffer());
+            output.WriteArray(stream.GetBuffer());
         }
     }
 

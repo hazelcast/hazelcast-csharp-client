@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Diagnostics;
+
 namespace Hazelcast.Core
 {
     /// <summary>
@@ -19,6 +22,11 @@ namespace Hazelcast.Core
     /// </summary>
     public static class EndiannessExtensions
     {
+        /// <summary>
+        /// Gets the native endianness of the computer architecture where the code is executing.
+        /// </summary>
+        public static Endianness NativeEndianness => BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian;
+
         /// <summary>
         /// Determines whether this endianness is 'big-endian'.
         /// </summary>
@@ -32,5 +40,21 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         /// <returns>true if this endianness is 'little-endian'; otherwise false.</returns>
         public static bool IsLittleEndian(this Endianness endianness) => endianness == Endianness.LittleEndian;
+
+        /// <summary>
+        /// Resolves an endianness.
+        /// </summary>
+        /// <param name="endianness">The endianness.</param>
+        /// <param name="defaultValue">An optional default value.</param>
+        /// <returns>The <paramref name="endianness"/> if it is specified, else the <paramref name="defaultValue"/>.</returns>
+        public static Endianness Resolve(this Endianness endianness, Endianness defaultValue = Endianness.BigEndian)
+            => endianness switch
+               {
+                   Endianness.Unspecified => defaultValue,
+                   Endianness.Native => NativeEndianness,
+                   Endianness.LittleEndian => endianness,
+                   Endianness.BigEndian => endianness,
+                   _ => throw new NotSupportedException()
+               };
     }
 }

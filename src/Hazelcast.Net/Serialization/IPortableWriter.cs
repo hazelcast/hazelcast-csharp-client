@@ -68,7 +68,7 @@ namespace Hazelcast.Serialization
         /// <param name="fieldName">name of the field</param>
         /// <param name="value">int value to be written</param>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
-        void WriteChar(string fieldName, int value);
+        void WriteChar(string fieldName, char value);
 
         /// <summary>Writes a primitive char-array.</summary>
         /// <remarks>Writes a primitive char-array.</remarks>

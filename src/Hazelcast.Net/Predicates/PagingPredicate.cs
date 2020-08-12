@@ -156,13 +156,13 @@ namespace Hazelcast.Predicates
 
             output.WriteObject(Predicate);
             output.WriteObject(Comparer);
-            output.WriteInt(Page);
-            output.WriteInt(PageSize);
-            output.WriteUtf(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
-            output.WriteInt(AnchorList.Count);
+            output.Write(Page);
+            output.Write(PageSize);
+            output.Write(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
+            output.Write(AnchorList.Count);
             foreach (var (key, anchorEntry) in AnchorList)
             {
-                output.WriteInt(key);
+                output.Write(key);
                 output.WriteObject(anchorEntry.Key);
                 output.WriteObject(anchorEntry.Value);
             }

@@ -136,8 +136,8 @@ namespace Hazelcast.Serialization
             {
                 var serializer = SerializerFor(o);
                 var partitionHash = CalculatePartitionHash(o, strategy);
-                output.WriteInt(partitionHash, Endianness.BigEndian);
-                output.WriteInt(serializer.GetTypeId(), Endianness.BigEndian);
+                output.Write(partitionHash, Endianness.BigEndian);
+                output.Write(serializer.GetTypeId(), Endianness.BigEndian);
                 serializer.Write(output, o);
                 return new HeapData(output.ToByteArray());
             }
@@ -195,7 +195,7 @@ namespace Hazelcast.Serialization
             try
             {
                 var serializer = SerializerFor(o);
-                output.WriteInt(serializer.GetTypeId());
+                output.Write(serializer.GetTypeId());
                 serializer.Write(output, o);
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
