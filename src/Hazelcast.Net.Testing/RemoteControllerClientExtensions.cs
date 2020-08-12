@@ -96,7 +96,7 @@ namespace Hazelcast.Testing
                     .PartitionsUpdated((sender, args) =>
                     {
                         partitions.Release();
-                    }), CancellationToken.None)
+                    }))
                 .CAF();
 
             var member = await rc.StartMemberAsync(cluster).CAF();
@@ -107,7 +107,7 @@ namespace Hazelcast.Testing
             _ = map.GetAsync(new object());
 
             await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
-            await clientInternal.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
+            await clientInternal.UnsubscribeAsync(subscriptionId).CAF();
 
             var partitioner = clientInternal.Cluster.Partitioner;
             var partitionsCount = partitioner.Count;
@@ -149,12 +149,12 @@ namespace Hazelcast.Testing
                     .MemberRemoved((sender, args) =>
                     {
                         removed.Release();
-                    }), CancellationToken.None)
+                    }))
                 .CAF();
 
             await rc.StopMemberAsync(cluster, member).CAF();
             await removed.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
-            await clientInternal.UnsubscribeAsync(subscriptionId, CancellationToken.None).CAF();
+            await clientInternal.UnsubscribeAsync(subscriptionId).CAF();
         }
 
         /// <summary>

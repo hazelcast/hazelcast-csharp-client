@@ -61,17 +61,15 @@ namespace Hazelcast
         /// Subscribes to events.
         /// </summary>
         /// <param name="handle">An event handlers collection builder.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle, CancellationToken cancellationToken = default);
+        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle);
 
         /// <summary>
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>Whether the un-registration was successful.</returns> // FIXME boolean or not?!
-        Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+        /// <returns>Whether the un-registration was successful on the server.</returns>
+        ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
 
         /// <summary>
         /// Destroys a distributed object.
@@ -82,7 +80,7 @@ namespace Hazelcast
         /// <remarks>
         /// <para>Destroying a distributed objects completely deletes the object on the cluster.</para>
         /// </remarks>
-        ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken = default);
+        ValueTask DestroyAsync(IDistributedObject o);
 
         /// <summary>
         /// Gets an <see cref="IHMap{TKey,TValue}"/> distributed object.

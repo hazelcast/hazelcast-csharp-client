@@ -28,9 +28,9 @@ namespace Hazelcast
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
 
         /// <inheritdoc />
-        public async ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken)
+        public async ValueTask DestroyAsync(IDistributedObject o)
         {
-            await _distributedObjectFactory.DestroyAsync(o.ServiceName, o.Name, cancellationToken).CAF();
+            await _distributedObjectFactory.DestroyAsync(o.ServiceName, o.Name, CancellationToken.None).CAF();
         }
 
         /// <inheritdoc />

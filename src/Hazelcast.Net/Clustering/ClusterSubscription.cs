@@ -156,6 +156,13 @@ namespace Hazelcast.Clustering
             => _clientSubscriptions.TryRemove(client, out clientSubscription);
 
         /// <summary>
+        /// Removes a client subscription.
+        /// </summary>
+        /// <param name="clientSubscription">The client subscription.</param>
+        public void Remove(ClientSubscription clientSubscription)
+            => _clientSubscriptions.TryRemove(clientSubscription.Client, out _);
+
+        /// <summary>
         /// Creates an unsubscribe request message.
         /// </summary>
         /// <param name="serverSubscriptionId">The unique identifier assigned to the subscription by the server.</param>

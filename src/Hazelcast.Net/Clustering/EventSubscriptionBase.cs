@@ -20,8 +20,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
-    internal abstract class EventSubscriptionBase
+    internal abstract class EventSubscriptionBase : IAsyncDisposable
     {
+        private readonly SemaphoreSlim _busy = new SemaphoreSlim(1);
+        private int _disposed;
         private int _subscriptionsCount;
         private Guid _subscriptionId;
 
@@ -37,31 +39,60 @@ namespace Hazelcast.Clustering
 
         protected abstract ClusterSubscription CreateSubscription();
 
-        public async Task AddSubscription(CancellationToken cancellationToken)
+        public async Task AddSubscription()
         {
-            // add a subscription, increment returns the incremented value
-            // so it's 1 for the first subscription - which requires an actual
-            // cluster subscription
-            if (Interlocked.Increment(ref _subscriptionsCount) > 1)
-                return;
+            if (_disposed == 1) throw new ObjectDisposedException(nameof(EventSubscriptionBase));
 
-            var subscription = CreateSubscription();
+            // accepted race condition, _busy can be disposed here and will throw an ObjectDisposedException
 
-            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
+            using (await _busy.AcquireAsync().CAF())
+            {
+                _subscriptionsCount++;
+                if (_subscriptionsCount > 1) return;
 
-            _subscriptionId = subscription.Id;
+                var subscription = CreateSubscription();
+                await Cluster.InstallSubscriptionAsync(subscription).CAF();
+                _subscriptionId = subscription.Id;
+            }
         }
 
-        public async Task RemoveSubscription(CancellationToken cancellationToken)
+        public async ValueTask<bool> RemoveSubscription()
         {
-            // remove a subscription, decrement returns the decremented value
-            // so it's 0 if we don't have subscriptions anymore and can
-            // unsubscribe the cluster
-            if (Interlocked.Decrement(ref _subscriptionsCount) > 0)
+            if (_disposed == 1) throw new ObjectDisposedException(nameof(EventSubscriptionBase));
+
+            // accepted race condition, _busy can be disposed here and will throw an ObjectDisposedException
+
+            using (await _busy.AcquireAsync().CAF())
+            {
+                if (_subscriptionsCount == 0) return true; // TODO: should we throw?
+                if (_subscriptionsCount > 1) return true;
+
+                var removed = await Cluster.RemoveSubscriptionAsync(_subscriptionId).CAF();
+                if (removed) _subscriptionsCount--;
+                return removed;
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            await Cluster.RemoveSubscriptionAsync(_subscriptionId, cancellationToken).CAF();
-            _subscriptionId = default;
+            using (await _busy.AcquireAsync().CAF())
+            {
+                if (_subscriptionsCount == 0) return;
+
+                // remove, ignore result
+                await Cluster.RemoveSubscriptionAsync(_subscriptionId).CAF();
+            }
+
+            _busy.Dispose();
+
+            // this should not be a warning
+            // https://github.com/dotnet/roslyn-analyzers/issues/3909
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+            GC.SuppressFinalize(this);
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
         }
     }
 }

@@ -57,6 +57,16 @@ namespace Hazelcast.DistributedObjects
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        Task UnsubscribeAsync(Guid subscriptionId); // FIXME return a bool?! clarify everywhere
+        /// <returns>Whether the operation was successful.</returns>
+        /// <remarks>
+        /// <para>Once this method has been invoked, and whatever its result, the subscription is
+        /// de-activated, which means that no events will trigger anymore, even if the client
+        /// receives event messages from the servers.</para>
+        /// <para>If this method returns <c>false</c>, then one or more client connection has not
+        /// been able to get its server to remove the subscription. Even though no events will
+        /// trigger anymore, the server may keep sending (ignored) event messages. It is therefore
+        /// recommended to retry unsubscribing until it is successful.</para>
+        /// </remarks>
+        ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
     }
 }

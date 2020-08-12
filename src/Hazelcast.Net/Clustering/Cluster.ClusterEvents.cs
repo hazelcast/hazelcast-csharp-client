@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Clustering
@@ -46,29 +45,25 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Adds an object lifecycle event subscription.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public Task AddObjectLifecycleEventSubscription(CancellationToken cancellationToken)
-            => _objectLifecycleEventSubscription.AddSubscription(cancellationToken);
+        public Task AddObjectLifecycleEventSubscription()
+            => _objectLifecycleEventSubscription.AddSubscription();
 
         /// <summary>
         /// Adds a partition lost event subscription.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public Task AddPartitionLostEventSubscription(CancellationToken cancellationToken)
-            => _partitionLostEventSubscription.AddSubscription(cancellationToken);
+        public Task AddPartitionLostEventSubscription()
+            => _partitionLostEventSubscription.AddSubscription();
 
         /// <summary>
         /// Removes an object lifecycle event subscription.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public Task RemoveObjectLifecycleEventSubscription(CancellationToken cancellationToken)
-            => _objectLifecycleEventSubscription.RemoveSubscription(cancellationToken);
+        public ValueTask<bool> RemoveObjectLifecycleEventSubscription()
+            => _objectLifecycleEventSubscription.RemoveSubscription();
 
         /// <summary>
         /// Removes a partition lost event subscription.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public Task RemovePartitionLostEventSubscription(CancellationToken cancellationToken)
-            => _partitionLostEventSubscription.RemoveSubscription(cancellationToken);
+        public ValueTask<bool> RemovePartitionLostEventSubscription()
+            => _partitionLostEventSubscription.RemoveSubscription();
     }
 }

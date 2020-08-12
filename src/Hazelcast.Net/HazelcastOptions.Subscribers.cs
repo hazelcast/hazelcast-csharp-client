@@ -40,7 +40,7 @@ namespace Hazelcast
         public HazelcastOptions AddSubscriber(Action<HazelcastClientEventHandlers> on)
         {
             Subscribers.Add(new HazelcastClientEventSubscriber((hazelcastClient, cancellationToken)
-                => hazelcastClient.SubscribeAsync(on, cancellationToken)));
+                => hazelcastClient.SubscribeAsync(on)));
             return this;
         }
 

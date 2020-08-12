@@ -262,6 +262,10 @@ namespace Hazelcast.Clustering
                 // expected
             }
 
+            // events
+            await _objectLifecycleEventSubscription.DisposeAsync();
+            await _partitionLostEventSubscription.DisposeAsync();
+
             // terminate all clients
             foreach (var (_, clientConnection) in _clientConnections)
             {

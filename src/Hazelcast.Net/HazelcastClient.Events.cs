@@ -32,7 +32,7 @@ namespace Hazelcast
             = new ConcurrentDictionary<Guid, HazelcastClientEventHandlers>();
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle, CancellationToken cancellationToken)
+        public async Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle)
         {
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 
@@ -44,11 +44,11 @@ namespace Hazelcast
                 switch (handler)
                 {
                     case DistributedObjectLifecycleEventHandler _:
-                        await Cluster.AddObjectLifecycleEventSubscription(cancellationToken).CAF();
+                        await Cluster.AddObjectLifecycleEventSubscription().CAF();
                         break;
 
                     case PartitionLostEventHandler _:
-                        await Cluster.AddPartitionLostEventSubscription(cancellationToken).CAF();
+                        await Cluster.AddPartitionLostEventSubscription().CAF();
                         break;
 
                     default:
@@ -62,27 +62,34 @@ namespace Hazelcast
         }
 
         /// <inheritdoc />
-        public async Task UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken)
+        public async ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
         {
-            if (!_handlers.TryRemove(subscriptionId, out var clusterHandlers))
-                return;
+            if (!_handlers.TryGetValue(subscriptionId, out var clusterHandlers))
+                return true;
 
+            var allRemoved = true;
+            var removedHandlers = new List<IHazelcastClientEventHandler>();
             foreach (var handler in clusterHandlers)
             {
-                switch (handler)
+                var removed = handler switch
                 {
-                    case DistributedObjectLifecycleEventHandler _:
-                        await Cluster.RemoveObjectLifecycleEventSubscription(cancellationToken).CAF();
-                        break;
+                    DistributedObjectLifecycleEventHandler _ => await Cluster.RemoveObjectLifecycleEventSubscription().CAF(),
+                    PartitionLostEventHandler _ => await Cluster.RemovePartitionLostEventSubscription().CAF(),
+                    _ => throw new NotSupportedException()
+                };
 
-                    case PartitionLostEventHandler _:
-                        await Cluster.RemovePartitionLostEventSubscription(cancellationToken).CAF();
-                        break;
+                allRemoved &= removed;
 
-                    default:
-                        throw new NotSupportedException();
-                }
+                if (removed) removedHandlers.Add(handler);
             }
+
+            foreach (var handler in removedHandlers)
+                clusterHandlers.Remove(handler);
+
+            if (allRemoved)
+                _handlers.TryRemove(subscriptionId, out _);
+
+            return allRemoved;
         }
 
         /// <summary>

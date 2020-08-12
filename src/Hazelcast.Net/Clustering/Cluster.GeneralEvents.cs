@@ -98,12 +98,15 @@ namespace Hazelcast.Clustering
 
         private async ValueTask<bool> RemoveSubscriptionAsync(ClusterSubscription subscription, bool throwOnError, CancellationToken cancellationToken = default)
         {
+            // de-activate the subscription: events received from members will *not* be processed anymore,
+            // even if we receive more event messages from the servers
             subscription.Deactivate();
 
             List<Exception> exceptions = null;
             var allRemoved = true;
 
             // un-subscribe each client
+            var removedClientSubscriptions = new List<ClientSubscription>();
             foreach (var clientSubscription in subscription)
             {
                 // if one client fails, keep the exception but continue with other clients
@@ -113,6 +116,7 @@ namespace Hazelcast.Clustering
                     // - remove the correlated subscription
                     // - tries to properly unsubscribe from the server
                     allRemoved &= await RemoveSubscriptionAsync(clientSubscription, cancellationToken).CAF();
+                    removedClientSubscriptions.Add(clientSubscription);
                 }
                 catch (Exception e)
                 {
@@ -122,13 +126,17 @@ namespace Hazelcast.Clustering
                 }
             }
 
-            // remove the subscription
-            // so whatever happens, nothing remains of the original subscription
-            // (but the client may be "dirty" ie the server may still think it needs
-            // to send events, which will be ignored)
+            // remove those that have effectively been removed
+            foreach (var clientSubscription in removedClientSubscriptions)
+                subscription.Remove(clientSubscription);
+
+            // if all went well, remove the subscription, otherwise keep it around
+            // so one can try again to unsubscribe - not that the subscription is
+            // de-activated, so it will not trigger events anymore.
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
-                _subscriptions.TryRemove(subscription.Id, out _);
+                if (allRemoved) 
+                    _subscriptions.TryRemove(subscription.Id, out _);
             }
 
             if (!throwOnError) return allRemoved;
@@ -282,12 +290,12 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when subscription has been removed.</returns>
+        /// <returns>Whether the subscription was removed.</returns>
         /// <remarks>
         /// <para>This may throw in something goes wrong. In this case, the subscription
         /// is de-activated but remains in the lists, so that it is possible to try again.</para>
         /// </remarks>
-        public async ValueTask RemoveSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
+        public async ValueTask<bool> RemoveSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
         {
             // ignore unknown subscriptions
             // don't remove it now - will remove it only if all goes well
@@ -295,18 +303,18 @@ namespace Hazelcast.Clustering
             using (await _clusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 if (!_subscriptions.TryGetValue(subscriptionId, out subscription))
-                    return;
+                    return true;
             }
 
-            await RemoveSubscriptionAsync(subscription, true, cancellationToken).CAF();
+            return await RemoveSubscriptionAsync(subscription, false, cancellationToken).CAF();
         }
 
         /// <summary>
-        /// Removes a subscription on one client.
+        /// Removes a subscription on one client connection.
         /// </summary>
         /// <param name="clientSubscription">The subscription.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>Whether the operation was successful.</returns>
+        /// <returns>Whether the subscription was removed.</returns>
         /// <remarks>
         /// <para>This methods always remove the event handlers associated with the subscription, regardless
         /// of the response from the server. Even when the server returns false, meaning it failed to

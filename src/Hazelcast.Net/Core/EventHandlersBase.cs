@@ -25,6 +25,11 @@ namespace Hazelcast.Core
     {
         private readonly List<TEventHandler> _handlers = new List<TEventHandler>();
 
+        // note: adding and removing handlers is not thread-safe
+        // - adding happens when subscribing, which is not multi-threaded
+        // - removing happens when unsubscribing, and a subscription should be unsubscribed
+        //   only once, and once at a time, so it should not require thread-safety
+
         /// <summary>
         /// Adds a handler.
         /// </summary>
@@ -39,5 +44,12 @@ namespace Hazelcast.Core
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
+
+        /// <summary>
+        /// Removes a handler.
+        /// </summary>
+        /// <param name="handler">The handler to remove.</param>
+        public void Remove(TEventHandler handler)
+            => _handlers.Remove(handler);
     }
 }
