@@ -1526,3 +1526,7 @@ a.navbar-brand{
     border-radius: 0;
     border-color: #e3e3e3;
 }
+
+blockquote {
+    font-size: inherit;
+}
