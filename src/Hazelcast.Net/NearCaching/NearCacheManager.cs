@@ -60,14 +60,14 @@ namespace Hazelcast.NearCaching
             _reconciliationIntervalMillis = GetReconciliationIntervalSeconds() * 1000;
         }
 
-        public async ValueTask<NearCacheBase> GetOrCreateNearCacheAsync(string mapName, CancellationToken cancellationToken)
+        public async ValueTask<NearCacheBase> GetOrCreateNearCacheAsync(string mapName, CancellationToken cancellationToken = default)
         {
             var nearCacheConfig = _options.GetConfig(mapName);
             if (nearCacheConfig == null) return null;
             return await GetOrCreateNearCacheAsync(mapName, nearCacheConfig, cancellationToken).CAF();
         }
 
-        public async ValueTask<NearCacheBase> GetOrCreateNearCacheAsync(string mapName, NearCacheNamedOptions options, CancellationToken cancellationToken)
+        public async ValueTask<NearCacheBase> GetOrCreateNearCacheAsync(string mapName, NearCacheNamedOptions options, CancellationToken cancellationToken = default)
         {
             return await _caches.GetOrAddAsync(mapName, async (name, token) =>
             {

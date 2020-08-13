@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Transactions;
@@ -22,16 +21,16 @@ namespace Hazelcast
     internal partial class HazelcastClient // Transactions
     {
         /// <inheritdoc />
-        public Task<ITransactionContext> BeginTransactionAsync(CancellationToken cancellationToken)
-            => BeginTransactionAsync(new TransactionOptions(), cancellationToken);
+        public Task<ITransactionContext> BeginTransactionAsync()
+            => BeginTransactionAsync(new TransactionOptions());
 
         /// <inheritdoc />
-        public async Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken)
+        public async Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options)
         {
             options ??= new TransactionOptions();
 
             var transactionContext = new TransactionContext(Cluster, options, SerializationService, _loggerFactory);
-            await transactionContext.BeginAsync(cancellationToken).CAF();
+            await transactionContext.BeginAsync().CAF();
             return transactionContext;
         }
     }

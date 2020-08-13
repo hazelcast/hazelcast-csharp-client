@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -92,10 +91,9 @@ namespace Hazelcast.Transactions
         }
 
         /// <summary>
-        /// Begins a the transaction.
+        /// Begins the transaction.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public async Task BeginAsync(CancellationToken cancellationToken)
+        public async Task BeginAsync()
         {
             if (State != TransactionState.None)
                 throw new InvalidOperationException("The transaction context is already involved in a transaction.");
@@ -103,7 +101,7 @@ namespace Hazelcast.Transactions
             if (InTransaction)
                 throw new InvalidOperationException("Nested transactions are not supported.");
 
-            _clientConnection = await _cluster.GetRandomClientConnection(cancellationToken).CAF();
+            _clientConnection = await _cluster.WaitRandomClientConnection().CAF();
             InTransaction = true;
             _threadId = ContextId;
             _startTime = Clock.Milliseconds;
@@ -112,7 +110,7 @@ namespace Hazelcast.Transactions
             {
                 var timeoutMilliseconds = _options.Timeout.TimeoutMilliseconds(0, int.MaxValue);
                 var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMilliseconds, _options.Durability, (int) _options.Type, ContextId);
-                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection, cancellationToken).CAF();
+                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection).CAF();
                 TransactionId = TransactionCreateCodec.DecodeResponse(responseMessage).Response;
                 State = TransactionState.Active;
             }
@@ -128,7 +126,7 @@ namespace Hazelcast.Transactions
         }
 
         /// <inheritdoc />
-        public async Task CommitAsync(CancellationToken cancellationToken = default)
+        public async Task CommitAsync()
         {
             if (State != TransactionState.Active)
                 throw new InvalidOperationException("There is no active transaction to commit.");
@@ -143,7 +141,7 @@ namespace Hazelcast.Transactions
             try
             {
                 var requestMessage = TransactionCommitCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection, cancellationToken).CAF();
+                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection).CAF();
                 _ = TransactionCommitCodec.DecodeResponse(responseMessage);
                 State = TransactionState.Committed;
             }
@@ -159,7 +157,7 @@ namespace Hazelcast.Transactions
         }
 
         /// <inheritdoc />
-        public async Task RollbackAsync(CancellationToken cancellationToken = default)
+        public async Task RollbackAsync()
         {
             if (State == TransactionState.RollingBack)
             {
@@ -176,7 +174,7 @@ namespace Hazelcast.Transactions
             try
             {
                 var requestMessage = TransactionRollbackCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection, cancellationToken).CAF();
+                var responseMessage = await _cluster.SendToClientAsync(requestMessage, _clientConnection).CAF();
                 _ = TransactionRollbackCodec.DecodeResponse(responseMessage);
                 State = TransactionState.RolledBack;
             }
@@ -219,57 +217,57 @@ namespace Hazelcast.Transactions
         // Objects
 
         /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source, CancellationToken cancellationToken)
-            => GetListAsync<TItem>(source.Name, cancellationToken);
+        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source)
+            => GetListAsync<TItem>(source.Name);
 
         /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(string name, CancellationToken cancellationToken)
+        public Task<IHTxList<TItem>> GetListAsync<TItem>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxList<TItem>, HTxList<TItem>>(HList.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxList<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
-                cancellationToken);
+                (n, cluster, serializationService, loggerFactory)
+                    => new HTxList<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
 
         /// <inheritdoc />
-        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source, CancellationToken cancellationToken)
-            => GetSetAsync<TItem>(source.Name, cancellationToken);
+        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source)
+            => GetSetAsync<TItem>(source.Name);
 
         /// <inheritdoc />
-        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name, CancellationToken cancellationToken)
+        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxSet<TItem>, HTxSet<TItem>>(HSet.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxSet<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
-                cancellationToken);
+                (n, cluster, serializationService, loggerFactory)
+                    => new HTxSet<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source, CancellationToken cancellationToken)
-            => GetQueueAsync<TItem>(source.Name, cancellationToken);
+        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source)
+            => GetQueueAsync<TItem>(source.Name);
 
-        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name, CancellationToken cancellationToken)
+        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxQueue<TItem>, HTxQueue<TItem>>(HQueue.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxQueue<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
-                cancellationToken);
+                (n, cluster, serializationService, loggerFactory)
+                    => new HTxQueue<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source, CancellationToken cancellationToken)
-            => GetMultiMapAsync<TKey, TValue>(source.Name, cancellationToken);
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source)
+            => GetMultiMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(HMultiMap.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxMultiMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
-                cancellationToken);
+                (n, cluster, serializationService, loggerFactory)
+                    => new HTxMultiMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source, CancellationToken cancellationToken)
-            => GetMapAsync<TKey, TValue>(source.Name, cancellationToken);
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source)
+            => GetMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken)
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(HMap.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory) => new HTxMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory),
-                cancellationToken);
+                (n, cluster, serializationService, loggerFactory)
+                    => new HTxMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
     }
 }

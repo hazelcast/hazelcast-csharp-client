@@ -45,17 +45,15 @@ namespace Hazelcast
         /// <summary>
         /// Begins a new transaction.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new transaction context.</returns>
-        Task<ITransactionContext> BeginTransactionAsync(CancellationToken cancellationToken = default);
+        Task<ITransactionContext> BeginTransactionAsync();
 
         /// <summary>
         /// Begins a new transaction.
         /// </summary>
         /// <param name="options">Transaction options.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new transaction context.</returns>
-        Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options, CancellationToken cancellationToken = default);
+        Task<ITransactionContext> BeginTransactionAsync(TransactionOptions options);
 
         /// <summary>
         /// Subscribes to events.
@@ -75,7 +73,6 @@ namespace Hazelcast
         /// Destroys a distributed object.
         /// </summary>
         /// <param name="o">The object to destroy.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the object has been destroyed.</returns>
         /// <remarks>
         /// <para>Destroying a distributed objects completely deletes the object on the cluster.</para>
@@ -88,13 +85,12 @@ namespace Hazelcast
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The map that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken = default);
+        Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHReplicatedMap{TKey,TValue}"/> distributed object.
@@ -102,13 +98,12 @@ namespace Hazelcast
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The map that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken = default);
+        Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHMultiMap{TKey,TValue}"/> distributed object.
@@ -116,77 +111,71 @@ namespace Hazelcast
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the map.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The map that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name, CancellationToken cancellationToken = default);
+        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHTopic{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the topic messages.</typeparam>
         /// <param name="name">The unique name of the topic.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The topic that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHTopic<T>> GetTopicAsync<T>(string name, CancellationToken cancellationToken = default);
+        Task<IHTopic<T>> GetTopicAsync<T>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHList{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the list items.</typeparam>
         /// <param name="name">The unique name of the list.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The list that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHList<T>> GetListAsync<T>(string name, CancellationToken cancellationToken = default);
+        Task<IHList<T>> GetListAsync<T>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHSet{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the set items.</typeparam>
         /// <param name="name">The unique name of the set.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The set that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHSet<T>> GetSetAsync<T>(string name, CancellationToken cancellationToken = default);
+        Task<IHSet<T>> GetSetAsync<T>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHQueue{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the queue items.</typeparam>
         /// <param name="name">The unique name of the queue.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The queue that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHQueue<T>> GetQueueAsync<T>(string name, CancellationToken cancellationToken = default);
+        Task<IHQueue<T>> GetQueueAsync<T>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHRingBuffer{T}"/> distributed object.
         /// </summary>
         /// <typeparam name="T">The type of the ring buffer items.</typeparam>
         /// <param name="name">The unique name of the ring buffer.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The ring buffer that was retrieved or created.</returns>
         /// <remarks>
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name, CancellationToken cancellationToken = default);
+        Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name);
     }
 }

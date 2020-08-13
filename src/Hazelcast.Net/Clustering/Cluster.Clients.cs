@@ -68,20 +68,24 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Gets a random client connection.
+        /// Waits for a random client connection to be available and return it.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A random client connection.</returns>
         /// <remarks>
         /// <para>Tries to get a client connection for as long as <paramref name="cancellationToken"/> is not canceled.</para>
         /// </remarks>
-        internal async ValueTask<ClientConnection> GetRandomClientConnection(CancellationToken cancellationToken)
+        internal async ValueTask<ClientConnection> WaitRandomClientConnection(CancellationToken cancellationToken = default)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 // this is just basically retrieving a random client
                 var clientConnection = GetRandomClientConnection(false);
                 if (clientConnection != null) return clientConnection;
+
+                // no need to try again if the client died
+                if (_disposed == 1)
+                    throw new ClientNotConnectedException();
 
                 // no clients => wait for clients
                 await Task.Delay(_options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();

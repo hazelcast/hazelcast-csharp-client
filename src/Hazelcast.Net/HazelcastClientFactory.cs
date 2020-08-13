@@ -34,6 +34,18 @@ namespace Hazelcast
         private readonly HazelcastOptions _options;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>Options are produced by the parameter-less <see cref="HazelcastOptions"/> static build method,
+        /// and will therefore come from appsettings[.env].json, hazelcast[.env].json, and environment
+        /// variables.</para>
+        /// </remarks>
+        public HazelcastClientFactory()
+            : this (HazelcastOptions.Build())
+        { }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
         /// </summary>
         /// <param name="options">Options to use by default for all clients.</param>

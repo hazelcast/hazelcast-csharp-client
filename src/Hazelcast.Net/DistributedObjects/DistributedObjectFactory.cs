@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects
         public async Task<T> GetOrCreateAsync<T, TImpl>(
             string serviceName, string name, bool remote,
             Func<string, Cluster, ISerializationService, ILoggerFactory, TImpl> factory,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
             where TImpl : DistributedObjectBase, T
         {
             if (_disposed == 1) throw new ObjectDisposedException("DistributedObjectFactory");
@@ -162,7 +162,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="serviceName">The service name.</param>
         /// <param name="name">The unique object name.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        public async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken)
+        public async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken = default)
         {
             // try to get the object - and then, dispose it
 
