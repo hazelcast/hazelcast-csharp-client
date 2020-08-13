@@ -20,7 +20,7 @@ param (
     # (make sure it remains in the first position)
     [Alias("t")]
     [string[]]
-    $targets = @("clean", "build", "docsIfWindows", "tests"),
+    $targets = @("clean", "build", "docsIf", "tests"),
 
     # Whether to test enterprise features.
     [switch]
@@ -28,7 +28,7 @@ param (
 
     # The Hazelcast server version.
     [string]
-    $serverVersion = "4.0",
+    $server = "4.0",
 
     # Target framework(s).
     [Alias("f")]
@@ -74,17 +74,28 @@ if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
 foreach ($t in $targets) {
     switch ($t.Trim().ToLower()) {
         "help" {
-            Write-Output "build.ps1 <targets>+ [-enterprise] [-serverVersion <version>] [-framework <version>]"
+            Write-Output "build.ps1 [<targets>] [-enterprise] [-server <version>] [-framework <version>]"
             Write-Output "<targets> is a csv list of:"
             Write-Output "  clean            : cleans the solution"
             Write-Output "  build            : builds the solution"
-            Write-Output "  docs             :  builds the documentation"
+            Write-Output "  docs             : builds the documentation"
+            Write-Output "  docsIf           : builds the documentation if supported by platform"
             Write-Output "  tests            : runs the tests"
-            Write-Output "  cover            : when running tests, covers tests"
-            Write-Output "  nuget            : builds the NuGet package"
+            Write-Output "  cover            : when running tests, also perform code coverage analysis"
+            Write-Output "  nuget            : builds the NuGet package(s)"
             Write-Output "  rc               : runs the remote controller for tests"
             Write-Output "  docServe (ds)    : serves the documentation"
             Write-Output "  failedTests (ft) : details failed tests"
+            Write-Output ""
+            Write-Output "When no target is specified, the script does 'clean,build,docsIf,tests'. Note that"
+            Write-Output "building the documentation is not supported on non-Windows platforms as DocFX is not"
+            Write-Output "supported on .NET Core yet."
+            Write-Output ""
+            Write-Output "Server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or"
+            Write-Output "4.1-SNAPSHOT. Server JARs are automatically downloaded for tests."
+            Write-Output "Framework <version> must match a valid .NET target framework moniker, e.g. net462"
+            Write-Output "or netcoreapp3.1. Check the project files (.csproj) for supported versions."
+            Write-Output ""
             exit 0
 		}
         "clean"          { $doClean = $true }
@@ -115,7 +126,7 @@ if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpa
 }
 
 # set versions and configure
-$hzVersion = $serverVersion
+$hzVersion = $server
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
 $hzLocalBuild = $false # $true to skip downloading dependencies
 $hzToolsCache = 12 #days
@@ -128,7 +139,7 @@ $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot/"
 $mvnOssReleaseRepo = "http://repo1.maven.apache.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release/"
 
-if ($serverVersion.Contains("SNAPSHOT")) {
+if ($server.Contains("SNAPSHOT")) {
     $mvnOssRepo = $mvnOssSnapshotRepo
     $mvnEntRepo = $mvnEntSnapshotRepo
 } else {
@@ -374,7 +385,7 @@ if ($doBuild) {
 
 if ($doTests) {
     Write-Output "Tests"
-    Write-Output "  Server version : $serverVersion"
+    Write-Output "  Server version : $server"
     Write-Output "  Enterprise     : $enterprise"
     Write-Output "  Filter         : $testFilter"
     Write-Output "  Results        : $tmpDir/tests/results"
@@ -396,7 +407,7 @@ if ($doNuget) {
 
 if ($doRc) {
     Write-Output "Remote Controller"
-    Write-Output "  Server version : $serverVersion"
+    Write-Output "  Server version : $server"
     Write-Output "  Enterprise     : $enterprise"
     Write-Output ""
 }
