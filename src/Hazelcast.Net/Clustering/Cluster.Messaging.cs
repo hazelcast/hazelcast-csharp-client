@@ -211,10 +211,10 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            var invocation = targetClient != null ? new Invocation(message, _options.Messaging, targetClient, cancellationToken) :
-                             targetPartitionId >= 0 ? new Invocation(message, _options.Messaging, targetPartitionId, cancellationToken) :
-                             targetMemberId != default ? new Invocation(message, _options.Messaging, targetMemberId, cancellationToken) :
-                             new Invocation(message, _options.Messaging, cancellationToken);
+            using var invocation = targetClient != null ? new Invocation(message, _options.Messaging, targetClient, cancellationToken) :
+                                   targetPartitionId >= 0 ? new Invocation(message, _options.Messaging, targetPartitionId, cancellationToken) :
+                                   targetMemberId != default ? new Invocation(message, _options.Messaging, targetMemberId, cancellationToken) :
+                                   new Invocation(message, _options.Messaging, cancellationToken);
 
             return await SendAsyncInternal(invocation, cancellationToken).CAF();
         }
@@ -239,6 +239,10 @@ namespace Hazelcast.Clustering
                     if (connection == null) throw new ClientNotConnectedException();
                     return await connection.SendAsync(invocation, cancellationToken).CAF();
                 }
+                catch (TaskCanceledException)
+                {
+                    throw;
+                }
                 catch (Exception exception)
                 {
                     // if the cluster is not connected anymore, die
@@ -247,6 +251,7 @@ namespace Hazelcast.Clustering
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
+                    // and may throw if canceled while waiting - and then the exception is rethrown
                     if (invocation.IsRetryable(exception, _options.Networking.RetryOnTargetDisconnected) &&
                         await invocation.CanRetryAsync(() => _correlationIdSequence.GetNext()).CAF())
                     {

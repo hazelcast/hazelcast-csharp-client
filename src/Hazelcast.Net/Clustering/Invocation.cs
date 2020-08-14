@@ -28,10 +28,14 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents an ongoing server invocation.
     /// </summary>
-    internal class Invocation
+    internal class Invocation : IDisposable
     {
         private readonly MessagingOptions _messagingOptions;
         private readonly CancellationToken _cancellationToken;
+
+        private TaskCompletionSource<ClientMessage> _completionSource;
+        private CancellationTokenRegistration _registration;
+        private int _attemptsCount; // number of times this invocation has been attempted
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Invocation"/> class.
@@ -44,10 +48,10 @@ namespace Hazelcast.Clustering
             RequestMessage = requestMessage ?? throw new ArgumentNullException(nameof(requestMessage));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             CorrelationId = requestMessage.CorrelationId;
-            CompletionSource = new TaskCompletionSource<ClientMessage>();
             _cancellationToken = cancellationToken;
-            _cancellationToken.Register(() => CompletionSource.TrySetCanceled()); // fixme de-register!
-            AttemptsCount = 1;
+            InitializeNewCompletionSource();
+            _registration = _cancellationToken.Register(TrySetCanceled); // must dispose to de-register!
+            _attemptsCount = 1;
             StartTime = Clock.Milliseconds;
         }
 
@@ -128,24 +132,19 @@ namespace Hazelcast.Clustering
         public long CorrelationId { get; private set; }
 
         /// <summary>
-        /// Gets the number of time this invocation has been attempted.
-        /// </summary>
-        public int AttemptsCount { get; private set; }
-
-        /// <summary>
-        /// Gets the completion source.
-        /// </summary>
-        public TaskCompletionSource<ClientMessage> CompletionSource { get; private set; }
-
-        /// <summary>
         /// Gets the completion task.
         /// </summary>
-        public Task<ClientMessage> Task => CompletionSource.Task;
+        public Task<ClientMessage> Task => _completionSource.Task;
 
         /// <summary>
         /// Gets the start time.
         /// </summary>
         public long StartTime { get; }
+
+        private void TrySetCanceled()
+        {
+            _completionSource.TrySetCanceled();
+        }
 
         /// <summary>
         /// Attempts to transition the task to the <see cref="TaskStatus.RanToCompletion"/> state.
@@ -157,7 +156,9 @@ namespace Hazelcast.Clustering
         /// faulted or canceled. This method also returns false if the task has been disposed.</para>
         /// </remarks>
         public bool TrySetResult(ClientMessage result)
-            => CompletionSource.TrySetResult(result);
+        {
+            return _completionSource.TrySetResult(result);
+        }
 
         /// <summary>
         /// Attempts to transition the task to the <see cref="TaskStatus.Faulted"/> state.
@@ -169,7 +170,9 @@ namespace Hazelcast.Clustering
         /// faulted or canceled. This method also returns false if the task has been disposed.</para>
         /// </remarks>
         public bool TrySetException(Exception exception)
-            => CompletionSource.TrySetException(exception);
+        {
+            return _completionSource.TrySetException(exception);
+        }
 
         /// <summary>
         /// Determines whether an invocation should be retried after an exception was thrown.
@@ -215,23 +218,40 @@ namespace Hazelcast.Clustering
 
             if (_cancellationToken.IsCancellationRequested) return false;
 
-            AttemptsCount += 1;
+            _attemptsCount += 1;
 
-            CompletionSource = new TaskCompletionSource<ClientMessage>();
+            // we are going to return true, either immediately or after a delay, prepare
             RequestMessage.CorrelationId = CorrelationId = correlationIdProvider();
 
             // fast retry (no delay)
-            if (AttemptsCount <= _messagingOptions.MaxFastInvocationCount)
+            if (_attemptsCount <= _messagingOptions.MaxFastInvocationCount)
+            {
+                InitializeNewCompletionSource();
                 return true;
+            }
 
             // otherwise, slow retry (delay)
 
             // implement some rudimentary increasing delay based on the number of attempts
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this?
-            var delayMilliseconds = Math.Min(1 << (AttemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
+            var delayMilliseconds = Math.Min(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
             await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CAF(); // throws if cancelled
+
+            InitializeNewCompletionSource();
             return true;
+        }
+
+        private void InitializeNewCompletionSource()
+        {
+            _completionSource = new TaskCompletionSource<ClientMessage>();
+            if (_cancellationToken.IsCancellationRequested) TrySetCanceled();
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _registration.Dispose(); // de-register!
         }
     }
 }

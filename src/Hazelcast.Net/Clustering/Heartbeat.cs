@@ -140,10 +140,7 @@ namespace Hazelcast.Clustering
                 _logger.LogDebug("Ping client {ClientId}", client.Id);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
-#pragma warning disable CA2000 // Dispose objects before losing scope - transferred to TimeoutAfter
-                var cancellation = new CancellationTokenSource();
-#pragma warning restore CA2000 
-                cancellationToken.Register(() => cancellation.Cancel()); // fixme de-register?!
+                var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
                 try
                 {
@@ -164,6 +161,12 @@ namespace Hazelcast.Clustering
                 {
                     // unexpected
                     _logger.LogWarning(e, "Heartbeat has thrown an exception.");
+                }
+                finally
+                {
+                    // if .SendToClientAsync() throws before awaiting, .TimeoutAfter() is never invoked
+                    // and therefore cannot dispose the cancellation = better take care of it
+                    cancellation.Dispose();
                 }
             }
         }
