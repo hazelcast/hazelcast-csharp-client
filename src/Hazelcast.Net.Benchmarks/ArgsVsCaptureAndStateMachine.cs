@@ -54,23 +54,27 @@ namespace Hazelcast.Benchmarks
         [Benchmark]
         public async Task Capture() => await RunCapture(1, 1);
 
-        private readonly TimeSpan _timeout = Timeout.InfiniteTimeSpan;
-
         // runs with arguments + async/await state machine
         public async Task<int> RunArgsAsyncAwait(int i, int j)
-            => await TaskEx.WithTimeout(F, i, j, _timeout);
+            => await Run(F, i, j);
 
         // runs with arguments + no async/await state machine
         public Task<int> RunArgs(int i, int j)
-            => TaskEx.WithTimeout(F, i, j, _timeout);
+            => Run(F, i, j);
 
         // runs with a capture + async/await state machine
         public async Task<int> RunCaptureAsyncAwait(int i, int j)
-            => await TaskEx.WithTimeout((token) => F(i, j, token), _timeout);
+            => await Run((token) => F(i, j, token));
 
         // runs with a capture + no async/await state machine
         public Task<int> RunCapture(int i, int j)
-            => TaskEx.WithTimeout((token) => F(i, j, token), _timeout);
+            => Run((token) => F(i, j, token));
+
+        private Task<int> Run(Func<CancellationToken, Task<int>> f)
+            => f(default);
+
+        private Task<int> Run(Func<int, int, CancellationToken, Task<int>> f, int x, int y)
+            => f(x, y, default);
 
         // just a dummy async method
         public async Task<int> F(int i, int j, CancellationToken cancellationToken)

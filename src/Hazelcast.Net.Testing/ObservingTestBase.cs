@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -70,6 +72,37 @@ namespace Hazelcast.Testing
 
             // fail if necessary
             if (failed) Assert.Fail("Unobserved task exceptions.");
+        }
+
+        /// <summary>
+        /// Gets the unobserved exceptions.
+        /// </summary>
+        /// <returns>Unobserved exceptions so far.</returns>
+        /// <remarks>
+        /// <para>The exceptions are not removed from the queue and still cause the test to fail.</para>
+        /// </remarks>
+        protected IReadOnlyList<UnobservedTaskExceptionEventArgs> GetUnobservedExceptions()
+        {
+            // GC should finalize everything, thus trigger unobserved exceptions
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // capture the queue
+            return _unobservedExceptions.ToList();
+        }
+
+        /// <summary>
+        /// Clears the unobserved exceptions.
+        /// </summary>
+        protected void ClearUnobservedExceptions()
+        {
+            // GC should finalize everything, thus trigger unobserved exceptions
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // empty the queue
+            while (_unobservedExceptions.TryDequeue(out _))
+            { }
         }
 
         private void UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs args)

@@ -78,7 +78,13 @@ namespace Hazelcast
 #endif
         Task ConnectAsync(TimeSpan timeout = default)
         {
-            var task = TaskEx.WithTimeout(ConnectAsync, timeout, _options.Networking.ConnectionTimeoutMilliseconds);
+#pragma warning disable CA2000 // Dispose objects before losing scope - transferred to TimeoutAfter
+            var cancellation = new CancellationTokenSource();
+#pragma warning restore CA2000
+
+            var task = Cluster
+                .ConnectAsync(cancellation.Token)
+                .TimeoutAfter(timeout.TimeoutMilliseconds(_options.Networking.ConnectionTimeoutMilliseconds), cancellation);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

@@ -46,7 +46,7 @@ namespace Hazelcast.Clustering
             CorrelationId = requestMessage.CorrelationId;
             CompletionSource = new TaskCompletionSource<ClientMessage>();
             _cancellationToken = cancellationToken;
-            _cancellationToken.Register(() => CompletionSource.TrySetCanceled());
+            _cancellationToken.Register(() => CompletionSource.TrySetCanceled()); // fixme de-register!
             AttemptsCount = 1;
             StartTime = Clock.Milliseconds;
         }

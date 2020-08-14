@@ -17,6 +17,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -139,18 +140,23 @@ namespace Hazelcast.Clustering
                 _logger.LogDebug("Ping client {ClientId}", client.Id);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
+#pragma warning disable CA2000 // Dispose objects before losing scope - transferred to TimeoutAfter
+                var cancellation = new CancellationTokenSource();
+#pragma warning restore CA2000 
+                cancellationToken.Register(() => cancellation.Cancel()); // fixme de-register?!
 
                 try
                 {
                     // cannot wait forever on a ping
-                    var responseMessage = await TaskEx.WithTimeout((cls, msg, clt, token) => cls.SendToClientAsync(msg, clt, token),
-                        _cluster, requestMessage, client,
-                        TimeSpan.Zero, _options.PingTimeoutMilliseconds, cancellationToken).CAF();
+                    var responseMessage = await _cluster
+                        .SendToClientAsync(requestMessage, client, cancellation.Token)
+                        .TimeoutAfter(_options.PingTimeoutMilliseconds, cancellation, true)
+                        .CAF();
 
                     // just to be sure everything is ok
                     _ = ClientPingCodec.DecodeResponse(responseMessage);
                 }
-                catch (TimeoutException)
+                catch (TaskTimeoutException)
                 {
                     await KillClient(client).CAF();
                 }

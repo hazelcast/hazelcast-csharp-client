@@ -56,8 +56,7 @@ namespace Hazelcast.Tests.Remote
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
 
-            // FIXME redo WithTimeout without token
-            value = await TaskEx.WithTimeout((x, token) => x.GetAsync("key"), map, TimeSpan.FromSeconds(30)).CAF();
+            value = await map.GetAsync("key").TimeoutAfter(TimeSpan.FromSeconds(30), observeException: true).CAF();
             Assert.AreEqual(43, value);
 
             await client.DestroyAsync(map);
@@ -76,21 +75,11 @@ namespace Hazelcast.Tests.Remote
 
             await map.SetAsync("key", 42).CAF();
 
-            // add-or-replace with a 3 seconds timeout and a potential TimeoutException
-            // FIXME redo WithTimeout without token
-            await TaskEx.WithTimeout((m, k, v, t) => m.SetAsync(k, v), map, "key", 43, TimeSpan.FromSeconds(3)).CAF();
-
-            // this is what happens under the scene but we cannot ask ppl to do this really
-            // => no
-            //await TaskEx.WithTimeout((m, timeoutToken) => m.AddOrReplaceAsync("key", 43, timeoutToken), map, TimeSpan.FromSeconds(3)).CAF();
-
-            // that would be a nice syntax but there we cannot inject a cancellation token in AddOrReplaceAsync
-            // => no
-            //await map.AddOrReplaceAsync("key", 43).WithTimeout(TimeSpan.FromSeconds(3)).CAF();
-
-            // for this to work, WithTimeout would need to return something that implements IHMap + forces a timeout to every method that is invoked
-            // => no
-            //await map.WithTimeout(TimeSpan.FromSeconds(3)).AddOrReplaceAsync("key", 43).CAF();
+            // add-or-replace with a 3 seconds timeout and a potential TaskTimeoutException
+            // in case of a TaskTimeoutException - map.SetAsync() will keep running in the
+            // background, its exception will be observed, but the end result (whether the
+            // value was actually set or not) is unspecified.
+            await map.SetAsync("key", 43).TimeoutAfter(TimeSpan.FromSeconds(12), observeException: true).CAF();
 
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);

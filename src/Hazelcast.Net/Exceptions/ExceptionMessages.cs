@@ -98,5 +98,15 @@ namespace Hazelcast.Exceptions
         /// Default message for the target disconnected exception.
         /// </summary>
         public const string TargetDisconnectedException = "Target disconnected.";
+
+        /// <summary>
+        /// Default message for the timeout exception.
+        /// </summary>
+        public const string Timeout = "Operation timeout out.";
+
+        /// <summary>
+        /// Default message for the timeout exception with details in an inner exception.
+        /// </summary>
+        public const string TimeoutWithInner = "Operation timed out (see inner exception).";
     }
 }

@@ -541,21 +541,6 @@ namespace Hazelcast.Tests.DotNet
             }
         }
 
-        [Test]
-        public async Task StackTrace2()
-        {
-            try
-            {
-                // can find WrapS1 and WrapThrow2 in the stack trace
-                // but of course no trace of WithTimeout = ?
-                await TaskEx.WithTimeout(token => WrapS1(() => WrapThrow2<int>(token)), TimeSpan.FromSeconds(1), 1);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
-
         public async Task<T> WrapS1<T>(Func<Task<T>> function)
             => await function();
 
