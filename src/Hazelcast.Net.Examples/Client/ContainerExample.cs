@@ -122,7 +122,7 @@ namespace Hazelcast.Examples.Client
                 // dispose the client, etc.
                 await _client.StartAsync();
 
-                await using var map = await _client.GetMapAsync<string, int>("test-map");
+                await using var map = await _client.GetDictionaryAsync<string, int>("test-map");
 
                 await map.SetAsync("key", 42);
                 var value = await map.GetAsync("key");

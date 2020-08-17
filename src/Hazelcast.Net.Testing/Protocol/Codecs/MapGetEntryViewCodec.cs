@@ -106,7 +106,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public Hazelcast.Data.MapEntry<IData, IData> Response { get; set; }
+            public Hazelcast.Data.HDictionaryEntry<IData, IData> Response { get; set; }
 
             /// <summary>
             /// Last set max idle in millis.
@@ -114,7 +114,7 @@ namespace Hazelcast.Protocol.Codecs
             public long MaxIdle { get; set; }
         }
 
-        public static ClientMessage EncodeResponse(Hazelcast.Data.MapEntry<IData, IData> response, long maxIdle)
+        public static ClientMessage EncodeResponse(Hazelcast.Data.HDictionaryEntry<IData, IData> response, long maxIdle)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);

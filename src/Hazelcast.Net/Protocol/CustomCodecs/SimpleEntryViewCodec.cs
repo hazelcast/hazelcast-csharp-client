@@ -50,7 +50,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int MaxIdleFieldOffset = TtlFieldOffset + BytesExtensions.SizeOfLong;
         private const int InitialFrameSize = MaxIdleFieldOffset + BytesExtensions.SizeOfLong;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.MapEntry<IData, IData> simpleEntryView)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.HDictionaryEntry<IData, IData> simpleEntryView)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -73,7 +73,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.MapEntry<IData, IData> Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Data.HDictionaryEntry<IData, IData> Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

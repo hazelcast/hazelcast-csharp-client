@@ -250,24 +250,24 @@ namespace Hazelcast.Transactions
                     => new HTxQueue<TItem>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source)
+        public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiDictionary<TKey, TValue> source)
             => GetMultiMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
+        public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(HMultiMap.ServiceName, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiDictionary<TKey, TValue>, HTxMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
-                    => new HTxMultiMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
+                    => new HTxMultiDictionary<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(IHMap<TKey, TValue> source)
+        public Task<IHTxDictionary<TKey, TValue>> GetMapAsync<TKey, TValue>(IHDictionary<TKey, TValue> source)
             => GetMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
+        public Task<IHTxDictionary<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(HMap.ServiceName, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxDictionary<TKey, TValue>, HTxDictionary<TKey, TValue>>(HDictionary.ServiceName, name, true,
                 (n, cluster, serializationService, loggerFactory)
-                    => new HTxMap<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
+                    => new HTxDictionary<TKey, TValue>(name, cluster, _clientConnection, TransactionId, serializationService, loggerFactory));
         }
     }
 }

@@ -76,7 +76,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Entry view of the specified key.
             ///</summary>
-            public Hazelcast.Data.MapEntry<IData, IData> Response { get; set; }
+            public Hazelcast.Data.HDictionaryEntry<IData, IData> Response { get; set; }
 
             /// <summary>
             /// Last set max idle in millis.

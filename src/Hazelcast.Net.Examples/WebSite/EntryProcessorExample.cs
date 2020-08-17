@@ -63,7 +63,7 @@ namespace Hazelcast.Examples.WebSite
             await client.StartAsync();
 
             // Get the Distributed Map from Cluster.
-            await using var map = await client.GetMapAsync<string, string>("my-distributed-map");
+            await using var map = await client.GetDictionaryAsync<string, string>("my-distributed-map");
             // Put the integer value of 0 into the Distributed Map
             // uh - that processor on the server can only work with strings?
             await map.GetOrAddAsync("key", "value");

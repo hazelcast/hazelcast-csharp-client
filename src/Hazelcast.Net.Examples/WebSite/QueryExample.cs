@@ -89,7 +89,7 @@ namespace Hazelcast.Examples.WebSite
             await client.StartAsync();
 
             // Get a Distributed Map called "users"
-            await using var users = await client.GetMapAsync<string, User>("users");
+            await using var users = await client.GetDictionaryAsync<string, User>("users");
             // Add some users to the Distributed Map
             await GenerateUsers(users);
             // Create a Predicate from a String (a SQL like Where clause)
@@ -109,7 +109,7 @@ namespace Hazelcast.Examples.WebSite
             foreach (var result in result2) Console.WriteLine(result);
         }
 
-        private static async Task GenerateUsers(IHMap<string, User> users)
+        private static async Task GenerateUsers(IHDictionary<string, User> users)
         {
             await users.GetOrAddAsync("Rod", new User("Rod", 19, true));
             await users.GetOrAddAsync("Jane", new User("Jane", 20, true));

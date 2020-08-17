@@ -118,7 +118,7 @@ namespace Hazelcast.Examples.Client
             {
                 // 'await using' ensure that both the client and the map will be disposed before the method returns
                 await using var c = client;
-                await using var map = await client.GetMapAsync<string, int>("test-map");
+                await using var map = await client.GetDictionaryAsync<string, int>("test-map");
 
                 // loop while not canceled
                 while (!cancellationToken.IsCancellationRequested)

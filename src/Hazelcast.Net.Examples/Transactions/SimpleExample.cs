@@ -48,7 +48,7 @@ namespace Hazelcast.Examples.Transactions
             }
 
             // verify that value is available outside the transaction
-            var map = await client.GetMapAsync<string, string>("txn-map");
+            var map = await client.GetDictionaryAsync<string, string>("txn-map");
             Console.WriteLine();
             Console.WriteLine("After transaction:");
             Console.WriteLine("map[\"key\"]: " + await map.GetAsync("key"));

@@ -31,8 +31,8 @@ namespace Hazelcast.Examples.Transactions
             await using var client = new HazelcastClientFactory(options).CreateClient();
             await client.StartAsync();
 
-            var map1 = await client.GetMapAsync<int, string>("test1");
-            var map2 = await client.GetMapAsync<int, string>("test2");
+            var map1 = await client.GetDictionaryAsync<int, string>("test1");
+            var map2 = await client.GetDictionaryAsync<int, string>("test2");
             await map1.ClearAsync();
             await map2.ClearAsync();
 

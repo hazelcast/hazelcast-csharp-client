@@ -34,7 +34,7 @@ namespace Hazelcast
         }
 
         /// <inheritdoc />
-        public async Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
+        public async Task<IHDictionary<TKey, TValue>> GetDictionaryAsync<TKey, TValue>(string name)
         {
             // lookup a cache configuration for the specified map
             var nearCacheOptions = _options.NearCache.GetConfig(name);
@@ -42,12 +42,12 @@ namespace Hazelcast
                 ? null
                 : await _nearCacheManager.GetOrCreateNearCacheAsync(name, nearCacheOptions).CAF();
 
-            HMap<TKey, TValue> CreateMap(string n, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            HDictionary<TKey, TValue> CreateMap(string n, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
                 => nearCacheOptions == null
-                    ? new HMap<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
-                    : new HMapWithCache<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
+                    ? new HDictionary<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
+                    : new HDictionaryWithCache<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
-            return await _distributedObjectFactory.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(HMap.ServiceName, name, true, CreateMap).CAF();
+            return await _distributedObjectFactory.GetOrCreateAsync<IHDictionary<TKey, TValue>, HDictionary<TKey, TValue>>(HDictionary.ServiceName, name, true, CreateMap).CAF();
         }
 
         /// <inheritdoc />
@@ -55,13 +55,13 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name)
+        Task<IHReplicatedDictionary<TKey, TValue>> GetReplicatedDictionaryAsync<TKey, TValue>(string name)
         {
             var partitionId = Cluster.Partitioner.GetRandomPartitionId();
 
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedMap<TKey, TValue>, HReplicatedMap<TKey, TValue>>(HReplicatedMap.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedDictionary<TKey, TValue>, HReplicatedDictionary<TKey, TValue>>(HReplicatedDictionary.ServiceName, name, true,
                 (n, c, sr, lf)
-                    => new HReplicatedMap<TKey,TValue>(n, c, sr, partitionId, lf));
+                    => new HReplicatedDictionary<TKey,TValue>(n, c, sr, partitionId, lf));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -75,11 +75,11 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
+        Task<IHMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiMap<TKey, TValue>, HMultiMap<TKey, TValue>>(HMultiMap.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiDictionary<TKey, TValue>, HMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
                 (n, c, sr, lf)
-                    => new HMultiMap<TKey, TValue>(n, c, sr, _lockReferenceIdSequence, lf));
+                    => new HMultiDictionary<TKey, TValue>(n, c, sr, _lockReferenceIdSequence, lf));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
