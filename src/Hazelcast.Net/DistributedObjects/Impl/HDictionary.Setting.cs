@@ -234,7 +234,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<TValue> ReplaceAsync(TKey key, TValue newValue)
+        public Task<TValue> TryUpdateAsync(TKey key, TValue newValue)
             => ReplaceAsync(key, newValue, CancellationToken.None);
 
         private async Task<TValue> ReplaceAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
@@ -248,8 +248,8 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue)
-            => ReplaceAsync(key, expectedValue, newValue, CancellationToken.None);
+        public Task<bool> TryUpdateAsync(TKey key, TValue comparisonValue, TValue newValue)
+            => ReplaceAsync(key, comparisonValue, newValue, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC

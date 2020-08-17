@@ -351,10 +351,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> ContainsValueAsync(TValue value)
-            => ContainsValueAsync(value, CancellationToken.None);
+        public Task<bool> ContainsAsync(TValue value)
+            => ContainsAsync(value, CancellationToken.None);
 
-        private async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken)
+        private async Task<bool> ContainsAsync(TValue value, CancellationToken cancellationToken)
         {
             var valueData = ToSafeData(value);
 

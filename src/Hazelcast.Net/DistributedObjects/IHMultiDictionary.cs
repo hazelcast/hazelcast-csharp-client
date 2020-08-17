@@ -98,7 +98,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Returns whether the multimap contains an entry with the value.</summary>
         /// <param name="value">the value whose existence is checked.</param>
         /// <returns>true if the multimap contains an entry with the value, false otherwise.</returns>
-        Task<bool> ContainsValueAsync(TValue value);
+        Task<bool> ContainsAsync(TValue value);
 
         /// <summary>Returns the number of key-value pairs in the multimap.</summary>
         /// <returns>the number of key-value pairs in the multimap.</returns>

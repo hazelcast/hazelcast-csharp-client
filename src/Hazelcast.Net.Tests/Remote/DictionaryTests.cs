@@ -192,10 +192,10 @@ namespace Hazelcast.Tests.Remote
 
             await map.SetAsync("key1", 42).CAF();
 
-            var result1 = await map.ReplaceAsync("key1", 43).CAF();
+            var result1 = await map.TryUpdateAsync("key1", 43).CAF();
             Assert.AreEqual(42, result1);
 
-            var result2 = await map.ReplaceAsync("key2", 43).CAF();
+            var result2 = await map.TryUpdateAsync("key2", 43).CAF();
             Assert.AreEqual(0, result2);
 
             var count = await map.CountAsync().CAF();
@@ -216,10 +216,10 @@ namespace Hazelcast.Tests.Remote
 
             await map.SetAsync("key1", 42).CAF();
 
-            var result1 = await map.ReplaceAsync("key1", 43, 44).CAF();
+            var result1 = await map.TryUpdateAsync("key1", 43, 44).CAF();
             Assert.IsFalse(result1);
 
-            var result2 = await map.ReplaceAsync("key1", 42, 44).CAF();
+            var result2 = await map.TryUpdateAsync("key1", 42, 44).CAF();
             Assert.IsTrue(result2);
 
             var count = await map.CountAsync().CAF();

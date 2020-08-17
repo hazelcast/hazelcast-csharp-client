@@ -114,6 +114,6 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>Returns <c>true</c> if this map contains one or more keys to the specified value</returns>
-        Task<bool> ContainsValueAsync(TValue value);
+        Task<bool> ContainsAsync(TValue value);
     }
 }

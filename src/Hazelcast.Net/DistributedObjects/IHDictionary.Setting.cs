@@ -28,8 +28,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">A value.</param>
         /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
         Task<TValue> GetAndSetAsync(TKey key, TValue value);
 
@@ -40,8 +38,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">A value.</param>
         /// <returns>A that that will complete when the entry has been set.</returns>
         /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
         Task SetAsync(TKey key, TValue value);
 
@@ -55,8 +51,6 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
         Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
@@ -70,8 +64,6 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is set on the servers or not.</para>
         /// </remarks>
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
@@ -80,16 +72,10 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="entries">Entries.</param>
         /// <returns>A that that will complete when the entries have been set.</returns>
-        /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether entries have been set on the servers on not. On the other hand, either all
-        /// entries have been set, or none. The operation cannot be cancelled while only some entries
-        /// have been set.</para>
-        /// </remarks>
         Task SetAsync(IDictionary<TKey, TValue> entries);
 
         /// <summary>
-        /// Replaces an existing entry.
+        /// Updates an entry if it exists.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="newValue">The new value.</param>
@@ -98,25 +84,21 @@ namespace Hazelcast.DistributedObjects
         /// <para>If an existing entry with the specified key is found, then its value is
         /// updated with the new value, and the updated value is returned. Otherwise, nothing
         /// happens, and <c>default(TValue)</c> is returned.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
-        Task<TValue> ReplaceAsync(TKey key, TValue newValue);
+        Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
 
         /// <summary>
-        /// Replaces an existing entry.
+        /// Updates an entry if it exists, and its value is equal to <paramref name="comparisonValue"/>.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="expectedValue">The expected value.</param>
+        /// <param name="comparisonValue">The value that is compared with the value of the entry.</param>
         /// <param name="newValue">The new value.</param>
-        /// <returns><c>true</c> if the entry was replaced; otherwise <c>false</c>.</returns>
+        /// <returns><c>true</c> if the entry was updated; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If an existing entry with the specified key and expected value is found, then its
         /// value is updated with the new value. Otherwise, nothing happens.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
-        Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue);
+        Task<bool> TryUpdateAsync(TKey key, TValue comparisonValue, TValue newValue);
 
         /// <summary>
         /// Tries to set (add or update) an entry within a server-side timeout.
@@ -128,8 +110,6 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>This method returns <c>false</c> when no lock on the key could be
         /// acquired within the specified server-side timeout.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
         Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout);
 
@@ -141,10 +121,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">The value.</param>
         /// <returns>The value for the key. This will be either the existing value for the key if the entry
         /// already exists, or the new value if the no entry with the key already existed.</returns>
-        /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is added on the servers or not.</para>
-        /// </remarks>
         Task<TValue> GetOrAddAsync(TKey key, TValue value);
 
         /// <summary>
@@ -159,8 +135,6 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether the entry is added on the servers or not.</para>
         /// </remarks>
         Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive);
 
@@ -175,8 +149,6 @@ namespace Hazelcast.DistributedObjects
         /// Flushing the store is required to make sure that the entry is actually persisted.</para>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what was actually performed,
-        /// and on whether value have been modified on the servers on not.</para>
         /// TODO: is it really removed? or just evicted?
         /// </remarks>
         Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive);

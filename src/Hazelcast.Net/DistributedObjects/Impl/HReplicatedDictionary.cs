@@ -135,7 +135,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ReplicatedMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> ContainsValueAsync(TValue value)
+        public async Task<bool> ContainsAsync(TValue value)
         {
             var valueData = ToSafeData(value);
             var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);

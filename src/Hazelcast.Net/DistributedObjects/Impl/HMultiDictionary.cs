@@ -204,7 +204,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return MultiMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> ContainsValueAsync(TValue value)
+        public async Task<bool> ContainsAsync(TValue value)
         {
             var valueData = ToData(value);
             var requestMessage = MultiMapContainsValueCodec.EncodeRequest(Name, valueData);

@@ -113,6 +113,6 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns><c>true</c> if the map contains at least an entry with the specified value; otherwise <c>false</c>.</returns>
-        Task<bool> ContainsValueAsync(TValue value);
+        Task<bool> ContainsAsync(TValue value);
     }
 }

@@ -44,7 +44,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             Console.WriteLine("Entries: " + string.Join(", ", await map.GetAsync())); // FIXME should be GetAllAsync? GetEntriesAsync?
             Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
-            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
+            Console.WriteLine("ContainsValue: " + await map.ContainsAsync("value"));
 
             // destroy the map
             await client.DestroyAsync(map);
