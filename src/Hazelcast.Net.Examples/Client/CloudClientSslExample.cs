@@ -22,20 +22,18 @@ namespace Hazelcast.Examples.Client
     {
         public static async Task Run()
         {
-            static void Configure(HazelcastOptions configuration)
-            {
-                var cloud = configuration.Networking.Cloud;
-                cloud.Enabled = true;
-                cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
-
-                var ssl = configuration.Networking.Ssl;
-                ssl.Enabled = true;
-                //ssl.ValidateCertificateChain = false;
-                ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH"; // downloaded from CLoud console
-            }
-
             // create an Hazelcast client and connect to a Cloud server
-            await using var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
+            var options = HazelcastOptions.Build();
+            var cloud = options.Networking.Cloud;
+            cloud.Enabled = true;
+            cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
+
+            var ssl = options.Networking.Ssl;
+            ssl.Enabled = true;
+            //ssl.ValidateCertificateChain = false;
+            ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH"; // downloaded from CLoud console
+
+            await using var client = HazelcastClientFactory.CreateClient(options);
             await client.StartAsync();
 
             // use a map

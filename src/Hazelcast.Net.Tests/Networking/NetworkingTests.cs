@@ -164,7 +164,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
+            await using var client = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
             await client.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
+            await using var client = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
             await client.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
@@ -254,7 +254,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            await using var client = (HazelcastClient) new HazelcastClientFactory(options).CreateClient();
+            await using var client = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
             await client.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Send message");
@@ -291,10 +291,9 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            var clientFactory = new HazelcastClientFactory(options);
 
             HConsole.WriteLine(this, "Start client 1");
-            await using var client1 = (HazelcastClient) clientFactory.CreateClient();
+            await using var client1 = (HazelcastClient)HazelcastClientFactory.CreateClient(options);
             await client1.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
@@ -304,7 +303,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Got response: " + GetText(response));
 
             HConsole.WriteLine(this, "Start client 2");
-            await using var client2 = (HazelcastClient) clientFactory.CreateClient();
+            await using var client2 = (HazelcastClient)HazelcastClientFactory.CreateClient(options);
             await client2.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 2");
@@ -347,10 +346,9 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11000");
             });
-            var clientFactory = new HazelcastClientFactory(options);
 
             HConsole.WriteLine(this, "Start client 1");
-            await using var client1 = (HazelcastClient)clientFactory.CreateClient();
+            await using var client1 = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
             await client1.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Send message 1 to client 1");

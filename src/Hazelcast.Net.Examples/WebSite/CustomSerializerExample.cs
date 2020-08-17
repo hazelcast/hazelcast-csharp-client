@@ -63,7 +63,7 @@ namespace Hazelcast.Examples.WebSite
                 SerializedType = typeof(CustomSerializableType),
                 Creator = () => new CustomSerializer()
             });
-            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await using var client = HazelcastClientFactory.CreateClient(options);
             await client.StartAsync();
 
             //CustomSerializer will serialize/deserialize CustomSerializable objects

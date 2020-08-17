@@ -85,7 +85,7 @@ namespace Hazelcast.Examples.WebSite
             // create an Hazelcast client and connect to a server running on localhost
             var options = BuildExampleOptions(args);
             options.Serialization.AddPortableFactory(PortableFactory.FactoryId, new PortableFactory());
-            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await using var client = HazelcastClientFactory.CreateClient(options);
             await client.StartAsync();
 
             // Get a Distributed Map called "users"

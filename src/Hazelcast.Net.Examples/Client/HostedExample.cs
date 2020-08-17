@@ -84,15 +84,13 @@ namespace Hazelcast.Examples.Client
         // worker (background) service
         public class Worker : IHostedService
         {
-            private readonly HazelcastClientFactory _factory;
             private readonly ILogger<Worker> _logger;
 
             private Task _running;
             private CancellationTokenSource _cancel;
 
-            public Worker(HazelcastClientFactory factory, ILogger<Worker> logger, IOptions<HazelcastOptions> options)
+            public Worker(ILogger<Worker> logger, IOptions<HazelcastOptions> options)
             {
-                _factory = factory;
                 _logger = logger;
 
                 // just to show how to get and log options
@@ -104,7 +102,7 @@ namespace Hazelcast.Examples.Client
                 _logger.LogInformation("Starting...");
 
                 // open a client
-                var client = _factory.CreateClient();
+                var client = HazelcastClientFactory.CreateClient();
                 await client.StartAsync(cancellationToken);
 
                 // start the running task

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using Hazelcast.Aggregating;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -22,6 +23,7 @@ using Hazelcast.Projections;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Serialization.DefaultSerializers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast
@@ -29,66 +31,33 @@ namespace Hazelcast
     /// <summary>
     /// Creates <see cref="IHazelcastClient"/> instances.
     /// </summary>
-    public sealed class HazelcastClientFactory
+    public static class HazelcastClientFactory
     {
-        private readonly HazelcastOptions _options;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>Options are produced by the parameter-less <see cref="HazelcastOptions"/> static build method,
-        /// and will therefore come from appsettings[.env].json, hazelcast[.env].json, and environment
-        /// variables.</para>
-        /// </remarks>
-        public HazelcastClientFactory()
-            : this (HazelcastOptions.Build())
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastClientFactory"/> class.
-        /// </summary>
-        /// <param name="options">Options to use by default for all clients.</param>
-        public HazelcastClientFactory(HazelcastOptions options)
-        {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-
-            // this ensures that the clock is correctly configured before anything else
-            // happens - remember the clock is static - so we are doing it here - and
-            // the clock will actually initialize once
-            // TODO: make the clock non-static (low priority)
-            Clock.Initialize(options.Core.Clock);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance with the factory options.
+        /// Creates an <see cref="IHazelcastClient"/> instance with the automatic options.
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        public IHazelcastClient CreateClient()
-            => CreateClient(_options);
+        /// <remarks>
+        /// <para>Options are built via <see cref="HazelcastOptions.Build(string[], IEnumerable{KeyValuePair{string, string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/> method.</para>
+        /// </remarks>
+        public static IHazelcastClient CreateClient()
+            => CreateClient(HazelcastOptions.Build());
 
         /// <summary>
-        /// Creates an <see cref="IHazelcastClient"/> instance with options derived from the factory options.
+        /// Creates an <see cref="IHazelcastClient"/> instance with configured options.
         /// </summary>
         /// <param name="configure">A <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
-        /// <para>The factory options are cloned and passed to the <paramref name="configure"/>
-        /// method, where they can be refined and adjusted, before being used to create
-        /// the client.</para>
+        /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], IEnumerable{KeyValuePair{string, string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
+        /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
         /// </remarks>
-        public IHazelcastClient CreateClient(Action<HazelcastOptions> configure)
-            => CreateClient(GetClientOptions(configure));
+        public static IHazelcastClient CreateClient(Action<HazelcastOptions> configure)
+            => CreateClient(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))));
 
-        /// <summary>
-        /// Builds the configuration.
-        /// </summary>
-        /// <param name="configure">A configuration builder.</param>
-        /// <returns>The configuration.</returns>
-        private HazelcastOptions GetClientOptions(Action<HazelcastOptions> configure)
+        private static HazelcastOptions GetOptions(Action<HazelcastOptions> configure)
         {
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            var options = _options.Clone(); // ensure we don't modify the original options
+            var options = HazelcastOptions.Build();
             configure(options);
             return options;
         }
@@ -98,14 +67,15 @@ namespace Hazelcast
         /// </summary>
         /// <param name="options">Options.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        /// <remarks>
-        /// <para>When options are supplied, the factory options are completely ignored.</para>
-        /// </remarks>
-#pragma warning disable CA1822 // Mark members as static - no
-        public IHazelcastClient CreateClient(HazelcastOptions options)
-#pragma warning restore CA1822
+        public static IHazelcastClient CreateClient(HazelcastOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // this ensures that the clock is correctly configured before anything else
+            // happens - remember the clock is static - so we are doing it here - and
+            // the clock will actually initialize once
+            // TODO: make the clock non-static (low priority), move this somewhere else
+            Clock.Initialize(options.Core.Clock);
 
             var loggerFactory = options.Logging.LoggerFactory.Service ?? new NullLoggerFactory();
 
@@ -123,6 +93,7 @@ namespace Hazelcast
                 .AddDefinitions(new ConstantSerializerDefinitions()) // constant serializers
                 .AddDefinitions(new DefaultSerializerDefinitions()) // default serializers
                 ;
+
             var serializationService = serializationServiceBuilder.Build();
 
             var cluster = new Cluster(options, serializationService, loggerFactory);

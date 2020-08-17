@@ -50,9 +50,6 @@ namespace Hazelcast.DependencyInjection
                 return options;
             });
 
-            // wire the client factory
-            services.AddSingleton<HazelcastClientFactory>();
-
             // wire creators
             services.Configure<HazelcastOptions>(options =>
             {

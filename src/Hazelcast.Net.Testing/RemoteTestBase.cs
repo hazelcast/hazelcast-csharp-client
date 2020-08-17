@@ -50,18 +50,18 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the timeout for creating and opening a client.
         /// </summary>
-        protected virtual TimeSpan CreateOpenClientTimeout { get; } = TimeSpan.FromSeconds(60);
+        protected virtual TimeSpan CreateAndStartClientTimeout { get; } = TimeSpan.FromSeconds(60);
 
         /// <summary>
         /// Creates a client.
         /// </summary>
         /// <returns>A client.</returns>
-        protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync()
+        protected virtual async ValueTask<IHazelcastClient> CreateAndStartClientAsync()
         {
             Logger.LogInformation("Create new client");
 
-            var client = new HazelcastClientFactory(CreateHazelcastOptions()).CreateClient();
-            await client.StartAsync(CreateOpenClientTimeout).CAF();
+            var client = HazelcastClientFactory.CreateClient(CreateHazelcastOptions());
+            await client.StartAsync(CreateAndStartClientTimeout).CAF();
             return client;
         }
 
@@ -69,12 +69,14 @@ namespace Hazelcast.Testing
         /// Creates a client.
         /// </summary>
         /// <returns>A client.</returns>
-        protected virtual async ValueTask<IHazelcastClient> CreateOpenClientAsync(Action<HazelcastOptions> configure)
+        protected virtual async ValueTask<IHazelcastClient> CreateAndStartClientAsync(Action<HazelcastOptions> configure)
         {
             Logger.LogInformation("Create new client");
 
-            var client = new HazelcastClientFactory(CreateHazelcastOptions()).CreateClient(configure);
-            await client.StartAsync(CreateOpenClientTimeout).CAF();
+            var options = CreateHazelcastOptions();
+            configure(options);
+            var client = HazelcastClientFactory.CreateClient(options);
+            await client.StartAsync(CreateAndStartClientTimeout).CAF();
             return client;
         }
 

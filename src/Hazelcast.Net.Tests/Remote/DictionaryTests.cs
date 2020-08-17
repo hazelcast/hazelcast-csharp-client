@@ -40,7 +40,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdate()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
@@ -66,7 +66,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateWithTimeout()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateAndReturn()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
@@ -120,7 +120,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task Add()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // TryAdd adds a new value if no value exists already,
@@ -151,7 +151,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateMany()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds new values, or replaces existing values
@@ -184,7 +184,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task ReplaceByKey()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // Replace replaces an existing value, and returns the existing value,
@@ -208,7 +208,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task ReplaceByKeyAndValue()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // Replace replaces an existing value, and returns the existing value,
@@ -232,7 +232,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUpdateWithTimeToLive()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddOrReplace adds a new value, or replaces an existing value,
@@ -258,7 +258,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task AddOrUdateTransient()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // AddTransient adds a new value, or replaces an existing value,
@@ -285,7 +285,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task TryAddOrUpdate()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             // TryAddOrReplace is like AddOrReplace but with a timeout
@@ -308,7 +308,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task Clear()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var entries = new Dictionary<string, int>();
@@ -332,7 +332,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task GetAll()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var entries = new Dictionary<string, int>();
@@ -378,7 +378,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task Events()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var eventsCount = 0;
@@ -409,7 +409,7 @@ namespace Hazelcast.Tests.Remote
         [Timeout(TestTimeoutMilliseconds)]
         public async Task AsyncEvents()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             var eventsCount = 0;
@@ -452,7 +452,7 @@ namespace Hazelcast.Tests.Remote
                 }));
             }
 
-            await using var client = await CreateOpenClientAsync(ConfigureClient).CAF();
+            await using var client = await CreateAndStartClientAsync(ConfigureClient).CAF();
             await using var map = await client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
 
             await eventHandled.WaitAsync();

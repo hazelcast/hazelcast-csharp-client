@@ -26,7 +26,7 @@ namespace Hazelcast.Examples.DistributedObjects
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await using var client = HazelcastClientFactory.CreateClient(options);
             await client.StartAsync();
 
             // get distributed topic from cluster

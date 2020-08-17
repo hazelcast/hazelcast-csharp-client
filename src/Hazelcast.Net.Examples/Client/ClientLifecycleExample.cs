@@ -15,7 +15,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 using Hazelcast.Events;
 
 namespace Hazelcast.Examples.Client
@@ -26,25 +25,32 @@ namespace Hazelcast.Examples.Client
         public static async Task Run(params string[] args)
         {
             // create an Hazelcast client and connect to a server running on localhost
-            var hzf = new HazelcastClientFactory(HazelcastOptions.Build(args));
-            var hz1 = hzf.CreateClient();
+            var options = HazelcastOptions.Build(args);
+            var hz1 = HazelcastClientFactory.CreateClient(options);
             await hz1.StartAsync();
 
             var connected = new SemaphoreSlim(0);
 
-            void Configure(HazelcastOptions options)
+            void Configure(HazelcastOptions configureOptions)
             {
-                options.AddSubscriber(on => on
-                    .ClientStateChanged((c, args) =>
+                configureOptions.AddSubscriber(on => on
+                    .ClientStateChanged((c, eventArgs) =>
                     {
-                        Console.WriteLine($"State: {args.State}");
-                        if (args.State == ClientLifecycleState.Connected)
+                        Console.WriteLine($"State: {eventArgs.State}");
+                        if (eventArgs.State == ClientLifecycleState.Connected)
                             connected.Release();
                     }));
             }
 
             // create another Hazelcast client and connect to a server running on localhost
-            var hz2 = hzf.CreateClient(Configure);
+            options.AddSubscriber(on => on
+                .ClientStateChanged((c, eventArgs) =>
+                {
+                    Console.WriteLine($"State: {eventArgs.State}");
+                    if (eventArgs.State == ClientLifecycleState.Connected)
+                        connected.Release();
+                }));
+            var hz2 = HazelcastClientFactory.CreateClient(options);
             await hz2.StartAsync();
 
             // wait for the event

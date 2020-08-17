@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task Test()
         {
-            await using var client = await CreateOpenClientAsync().CAF();
+            await using var client = await CreateAndStartClientAsync().CAF();
             await using var list = await client.GetListAsync<string>(CreateUniqueName());
             await list.AddAsync("item1");
 

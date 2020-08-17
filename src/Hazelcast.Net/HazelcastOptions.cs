@@ -74,6 +74,6 @@ namespace Hazelcast
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal HazelcastOptions Clone() => new HazelcastOptions(this);
+        public HazelcastOptions Clone() => new HazelcastOptions(this);
     }
 }

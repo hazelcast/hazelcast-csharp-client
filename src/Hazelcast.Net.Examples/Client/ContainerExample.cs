@@ -19,6 +19,7 @@ using Hazelcast.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Hazelcast.Examples.Client
 {
@@ -78,7 +79,7 @@ namespace Hazelcast.Examples.Client
             services.AddLogging(builder => builder.AddConfiguration(configuration.GetSection("logging")).AddConsole());
 
             // add Hazelcast client to the container
-            services.AddTransient(provider => provider.GetService<HazelcastClientFactory>().CreateClient());
+            services.AddTransient(provider => HazelcastClientFactory.CreateClient(provider.GetRequiredService<IOptions<HazelcastOptions>>().Value));
 
             // configure hazelcast (can do it multiple times..)
             services.Configure<HazelcastOptions>(options =>

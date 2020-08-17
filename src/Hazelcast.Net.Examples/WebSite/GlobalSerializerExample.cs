@@ -57,7 +57,7 @@ namespace Hazelcast.Examples.WebSite
             {
                 Creator = () => new GlobalSerializer()
             };
-            await using var client = new HazelcastClientFactory(options).CreateClient();
+            await using var client = HazelcastClientFactory.CreateClient(options);
             await client.StartAsync();
 
             //GlobalSerializer will serialize/deserialize all non-builtin types
