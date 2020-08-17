@@ -381,7 +381,9 @@ namespace Hazelcast.Tests.Core
 
             Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteGuid(2, Guid.Empty));
             Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteGuid(-1, Guid.Empty));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteGuid(23, Guid.Empty));
+
+            bytes.WriteGuid(23, Guid.Empty);
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteGuid(23, Guid.NewGuid()));
 
             var guid = Guid.NewGuid();
             var values = guid.ToByteArray();
@@ -417,6 +419,10 @@ namespace Hazelcast.Tests.Core
 
             Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadGuid(2));
             Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadGuid(-1));
+
+            Assert.That(bytes.ReadGuid(2), Is.EqualTo(Guid.Empty));
+
+            bytes = new byte[] { 0, 0, 0 };
             Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadGuid(2));
 
             var guid = Guid.NewGuid();

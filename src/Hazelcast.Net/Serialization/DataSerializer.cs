@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
@@ -71,7 +72,7 @@ namespace Hazelcast.Serialization
                 if (!identified)
                 {
                     throw new SerializationException("Non-identified DataSerializable is not supported by .NET client. " +
-                                                              "Please use IdentifiedDataSerializable instead.");
+                                                              "Please use IIdentifiedDataSerializable instead.");
                 }
                 factoryId = input.ReadInt();
                 IDataSerializableFactory dsf;
@@ -85,8 +86,7 @@ namespace Hazelcast.Serialization
                 var ds = dsf.Create(id);
                 if (ds == null)
                 {
-                    throw new SerializationException(dsf + " is not be able to create an instance for id: " +
-                                                                id + " on factoryId: " + factoryId);
+                    throw new SerializationException($"{dsf} (factoryId: {factoryId}) failed to create an instance for id: {id}.");
                 }
                 ds.ReadData(input);
                 return ds;
@@ -101,9 +101,8 @@ namespace Hazelcast.Serialization
                 {
                     throw;
                 }
-                throw new SerializationException(
-                    "Problem while reading DataSerializable, namespace: " + factoryId + ", id: " + id +
-                     "', exception: " + e.Message, e);
+
+                throw new SerializationException($"Failed to read DataSerializable with factoryId: {factoryId}, id: {id} ({e.GetType()}: {e.Message}).");
             }
         }
 

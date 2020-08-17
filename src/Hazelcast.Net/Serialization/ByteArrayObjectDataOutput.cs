@@ -209,6 +209,7 @@ namespace Hazelcast.Serialization
         public void Write(double value, Endianness endianness = Endianness.Unspecified)
         {
             Write(_position, value, endianness);
+            _position += BytesExtensions.SizeOfDouble;
         }
 
         /// <inheritdoc />
@@ -258,6 +259,7 @@ namespace Hazelcast.Serialization
         public void Write(bool value)
         {
             Write(_position, value);
+            _position += BytesExtensions.SizeOfBool;
         }
 
         /// <inheritdoc />

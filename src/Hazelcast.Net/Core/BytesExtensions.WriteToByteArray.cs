@@ -200,19 +200,23 @@ namespace Hazelcast.Core
             if (position < 0 || bytes.Length < position + SizeOfFloat)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
-            var unsigned = (ushort) value;
+            var unsigned = (uint) value;
 
             unchecked
             {
                 if (endianness.Resolve().IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 8);
-                    bytes[position + 1] = (byte) unsigned;
+                    bytes[position]     = (byte) (unsigned >> 24);
+                    bytes[position + 1] = (byte) (unsigned >> 16);
+                    bytes[position + 2] = (byte) (unsigned >> 8);
+                    bytes[position + 3] = (byte) unsigned;
                 }
                 else
                 {
                     bytes[position]     = (byte) unsigned;
                     bytes[position + 1] = (byte) (unsigned >> 8);
+                    bytes[position + 2] = (byte) (unsigned >> 16);
+                    bytes[position + 3] = (byte) (unsigned >> 24);
                 }
             }
 
@@ -232,16 +236,20 @@ namespace Hazelcast.Core
             if (position < 0 || bytes.Length < position + SizeOfDouble)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
-            var unsigned = (uint)value;
+            var unsigned = (ulong)value;
 
             unchecked
             {
                 if (endianness.Resolve().IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 24);
-                    bytes[position + 1] = (byte) (unsigned >> 16);
-                    bytes[position + 2] = (byte) (unsigned >> 8);
-                    bytes[position + 3] = (byte) unsigned;
+                    bytes[position]     = (byte) (unsigned >> 56);
+                    bytes[position + 1] = (byte) (unsigned >> 48);
+                    bytes[position + 2] = (byte) (unsigned >> 40);
+                    bytes[position + 3] = (byte) (unsigned >> 32);
+                    bytes[position + 4] = (byte) (unsigned >> 24);
+                    bytes[position + 5] = (byte) (unsigned >> 16);
+                    bytes[position + 6] = (byte) (unsigned >> 8);
+                    bytes[position + 7] = (byte) unsigned;
                 }
                 else
                 {
@@ -249,6 +257,10 @@ namespace Hazelcast.Core
                     bytes[position + 1] = (byte) (unsigned >> 8);
                     bytes[position + 2] = (byte) (unsigned >> 16);
                     bytes[position + 3] = (byte) (unsigned >> 24);
+                    bytes[position + 4] = (byte) (unsigned >> 32);
+                    bytes[position + 5] = (byte) (unsigned >> 40);
+                    bytes[position + 6] = (byte) (unsigned >> 48);
+                    bytes[position + 7] = (byte) (unsigned >> 56);
                 }
             }
         }

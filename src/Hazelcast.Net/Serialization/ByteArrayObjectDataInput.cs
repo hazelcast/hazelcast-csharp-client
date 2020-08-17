@@ -51,7 +51,9 @@ namespace Hazelcast.Serialization
         {
             _data = data;
             _length = data?.Length ?? 0;
-            if (offset < 0 || offset >= _length)
+
+            // testing offset > _length because when data == null, offset == 0 ... weird
+            if (offset < 0 || offset > _length)
                 throw new ArgumentOutOfRangeException(nameof(offset));
             _position = offset;
         }
@@ -85,6 +87,9 @@ namespace Hazelcast.Serialization
             if (_length - position < count)
                 throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
         }
+
+        // internal for tests
+        internal byte[] Data => _data;
 
         /// <inheritdoc />
         public byte ReadByte()

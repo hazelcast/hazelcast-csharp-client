@@ -88,7 +88,7 @@ namespace Hazelcast.Tests.Core
             await Task.CompletedTask.TimeoutAfter(TimeSpan.FromSeconds(60));
 
             // timeout before end of task = timeout exception
-            Assert.ThrowsAsync<TimeoutException>(async () =>
+            Assert.ThrowsAsync<TaskTimeoutException>(async () =>
             {
                 await Delay(default).TimeoutAfter(TimeSpan.FromMilliseconds(1));
             });
@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Core
             {
                 await Run(cancellation.Token).TimeoutAfter(TimeSpan.FromMilliseconds(1));
             }
-            catch (TimeoutException)
+            catch (TaskTimeoutException)
             {
                 // when TimeoutAfter throws an exception, the original task keeps
                 // running... if it supports cancellation, it may be a good idea
