@@ -87,7 +87,7 @@ namespace Hazelcast.Examples.Client
                 // would be managed elsewhere - and the class would expect to
                 // receive a connected client - and, that 'elsewhere' would also
                 // dispose the client, etc.
-                await _client.ConnectAsync();
+                await _client.StartAsync();
 
                 await using var map = await _client.GetMapAsync<string, int>("test-map");
 

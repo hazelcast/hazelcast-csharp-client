@@ -24,7 +24,7 @@ namespace Hazelcast.Examples.WebSite
         {
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(BuildExampleOptions(args)).CreateClient();
-            await client.ConnectAsync();
+            await client.StartAsync();
 
             // Get the Distributed MultiMap from Cluster.
             await using var multiMap = await client.GetMultiMapAsync<string, string>("my-distributed-multimap");

@@ -35,7 +35,7 @@ namespace Hazelcast.Examples.Client
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(options).CreateClient();
-            await client.ConnectAsync();
+            await client.StartAsync();
 
             // use a map
             await using var map = await client.GetMapAsync<string, string>("ssl-example");

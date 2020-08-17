@@ -27,7 +27,7 @@ namespace Hazelcast
     public interface IHazelcastClient : IAsyncDisposable
     {
         /// <summary>
-        /// Connects the client to the remote cluster.
+        /// Starts the client by connecting to the remote cluster.
         /// </summary>
         /// <param name="timeout">A timeout.</param>
         /// <returns>A task that will complete when the client is connected.</returns>
@@ -35,14 +35,14 @@ namespace Hazelcast
         /// <remarks>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>
-        Task ConnectAsync(TimeSpan timeout = default);
+        Task StartAsync(TimeSpan timeout = default);
 
         /// <summary>
-        /// Connects the client to the remote cluster.
+        /// Starts the client by connecting to the remote cluster.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is connected.</returns>
-        Task ConnectAsync(CancellationToken cancellationToken);
+        Task StartAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Begins a new transaction.

@@ -105,7 +105,7 @@ namespace Hazelcast.Examples.Client
 
                 // open a client
                 var client = _factory.CreateClient();
-                await client.ConnectAsync(cancellationToken);
+                await client.StartAsync(cancellationToken);
 
                 // start the running task
                 _cancel = new CancellationTokenSource();

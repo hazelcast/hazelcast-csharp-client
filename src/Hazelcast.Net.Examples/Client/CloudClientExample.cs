@@ -31,7 +31,7 @@ namespace Hazelcast.Examples.Client
 
             // create an Hazelcast client and connect to a Cloud server
             await using var client = new HazelcastClientFactory(HazelcastOptions.Build()).CreateClient(Configure);
-            await client.ConnectAsync();
+            await client.StartAsync();
 
             // use a map
             await using var map = await client.GetMapAsync<string, string>("ssl-example");

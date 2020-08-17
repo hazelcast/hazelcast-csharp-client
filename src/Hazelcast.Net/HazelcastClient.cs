@@ -76,7 +76,7 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task ConnectAsync(TimeSpan timeout = default)
+        Task StartAsync(TimeSpan timeout = default)
         {
 #pragma warning disable CA2000 // Dispose objects before losing scope - transferred to TimeoutAfter
             var cancellation = new CancellationTokenSource();
@@ -98,7 +98,7 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task ConnectAsync(CancellationToken cancellationToken)
+        Task StartAsync(CancellationToken cancellationToken)
         {
             var task = Cluster.ConnectAsync(cancellationToken);
 

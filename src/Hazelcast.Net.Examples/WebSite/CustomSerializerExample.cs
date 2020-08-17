@@ -64,7 +64,7 @@ namespace Hazelcast.Examples.WebSite
                 Creator = () => new CustomSerializer()
             });
             await using var client = new HazelcastClientFactory(options).CreateClient();
-            await client.ConnectAsync();
+            await client.StartAsync();
 
             //CustomSerializer will serialize/deserialize CustomSerializable objects
         }

@@ -27,7 +27,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = new HazelcastClientFactory(options).CreateClient();
-            await client.ConnectAsync();
+            await client.StartAsync();
 
             // get the distributed ring buffer from the cluster
             await using var ringBuffer = await client.GetRingBufferAsync<string>("ringbuffer-example");
