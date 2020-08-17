@@ -38,7 +38,7 @@ namespace Hazelcast.Examples.DistributedObjects
             for (var i = 0; i < 100; i++)
             {
                 var key = "key " + i;
-                var task = map.SetAsync(key, " value " + i).ContinueWith(t => { Console.WriteLine("Added " + key); });
+                var task = map.AddOrUpdateAsync(key, " value " + i).ContinueWith(t => { Console.WriteLine("Added " + key); });
                 tasks.Add(task);
             }
 

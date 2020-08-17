@@ -38,7 +38,7 @@ namespace Hazelcast.Examples.Transactions
                 try
                 {
                     var transactionMap = await transactionContext.GetMapAsync<string, string>("txn-map");
-                    await transactionMap.AddAsync("key", "value");
+                    await transactionMap.GetOrAddAsync("key", "value");
                     await transactionContext.CommitAsync();
                 }
                 catch
@@ -61,7 +61,7 @@ namespace Hazelcast.Examples.Transactions
                 try
                 {
                     var transactionMap = await transactionContext.GetMapAsync<string, string>("txn-map");
-                    await transactionMap.ReplaceAsync("key", "value", "other");
+                    await transactionMap.TryUpdateAsync("key", "value", "other");
                     Console.WriteLine();
                     Console.WriteLine("In transaction:");
                     Console.WriteLine("txMap[\"key\"]: " + await transactionMap.GetAsync("key"));
@@ -85,7 +85,7 @@ namespace Hazelcast.Examples.Transactions
             {
                 // perform operations with the transaction
                 var transactionMap = await transactionContext.GetMapAsync<string, string>("txn-map");
-                await transactionMap.ReplaceAsync("key", "value", "other");
+                await transactionMap.TryUpdateAsync("key", "value", "other");
                 Console.WriteLine();
                 Console.WriteLine("In transaction:");
                 Console.WriteLine("txMap[\"key\"]: " + await transactionMap.GetAsync("key"));

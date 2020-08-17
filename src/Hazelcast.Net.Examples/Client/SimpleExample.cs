@@ -90,7 +90,7 @@ namespace Hazelcast.Examples.Client
 
                 await using var map = await _client.GetDictionaryAsync<string, int>("test-map");
 
-                await map.SetAsync("key", 42);
+                await map.AddOrUpdateAsync("key", 42);
                 var value = await map.GetAsync("key");
                 if (value != 42) throw new Exception("Error!");
 

@@ -124,7 +124,7 @@ namespace Hazelcast.Examples.Client
                     // pretend to do some work
                     var i = await map.GetAsync("foo");
                     i += 1;
-                    await map.SetAsync("foo", i);
+                    await map.AddOrUpdateAsync("foo", i);
                     Console.WriteLine(i);
 
                     try

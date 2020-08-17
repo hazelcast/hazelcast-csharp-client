@@ -29,10 +29,10 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<TValue> AddOrUpdateWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+        Task<TValue> AddOrUpdateAsync(IData keyData, IData valueData, TimeSpan timeToLive, bool returnValue, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            var task = base.AddOrUpdateWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.AddOrUpdateAsync(keyData, valueData, timeToLive, returnValue, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -96,10 +96,10 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<TValue> AddAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+            Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Invalidate(keyData);
-            var task = base.AddAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.GetOrAdd(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

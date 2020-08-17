@@ -33,8 +33,8 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var map = await client.GetDictionaryAsync<string, string>("simple-example");
 
             // add values
-            await map.SetAsync("key", "value");
-            await map.SetAsync("key2", "value2");
+            await map.AddOrUpdateAsync("key", "value");
+            await map.AddOrUpdateAsync("key2", "value2");
 
             // get values, count, etc...
             Console.WriteLine("Key: " + await map.GetAsync("key"));

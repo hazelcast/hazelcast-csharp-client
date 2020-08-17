@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects
         /// Gets keys.
         /// </summary>
         /// <param name="predicate">An predicate to filter the entries with.</param>
-        /// <returns>All keys.</returns>
+        /// <returns>All keys matching the predicate.</returns>
         Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate);
 
         /// <summary>

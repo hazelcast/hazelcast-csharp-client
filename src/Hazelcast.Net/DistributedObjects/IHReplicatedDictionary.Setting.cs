@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -70,15 +69,14 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         /// <param name="key">key with which the specified value is to be associated.</param>
         /// <param name="value">value to be associated with the specified key.</param>
-        /// <param name="ttl">ttl to be associated with the specified key-value pair.</param>
-        /// <param name="timeunit"><see cref="TimeUnit" /> to be used for the ttl value.</param>
+        /// <param name="timeToLive">ttl to be associated with the specified key-value pair.</param>
         /// <returns>old value of the entry</returns>
-        Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         ///     Copies all of the mappings from the specified map to this map
         /// </summary>
-        /// <param name="m">mappings to be stored in this map</param>
+        /// <param name="entries">mappings to be stored in this map</param>
         Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries);
     }
 }

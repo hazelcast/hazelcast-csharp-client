@@ -27,164 +27,123 @@ namespace Hazelcast.DistributedObjects
     public interface IHTxDictionary<TKey, TValue> : ITransactionalObject
     {
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.ContainsKey(object)"/>
+        /// Transactional implementation of<see cref="IHDictionary{TKey,TValue}.ContainsKeyAsync(TKey)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.ContainsKey(object)"/>
         Task<bool> ContainsKeyAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Delete(object)"/>
-        /// .
-        /// <p/>
-        /// The object to be deleted will be removed from only the current transaction context until the transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.RemoveAsync(TKey)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Delete(object)"/>
         Task RemoveAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Get(object)"/>
-        /// .
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAsync(TKey)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Get(object)"/>
         Task<TValue> GetAsync(TKey key);
 
         /// <summary>Locks the key and then gets and returns the value to which the specified key is mapped.</summary>
         /// <remarks>
-        /// Locks the key and then gets and returns the value to which the specified key is mapped.
-        /// Lock will be released at the end of the transaction (either commit or rollback).
+        /// <para>The lock will be released at the end of the transaction (either commit or rollback).</para>
         /// </remarks>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Get(object)"/>
         Task<TValue> GetForUpdateAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.IsEmpty()"/>
-        /// .
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.IsEmptyAsync()"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.IsEmpty()"/>
-        Task<bool> IsEmpty();
+        /// <returns><c>true</c> if the map does not contain entries; otherwise <c>false</c>.</returns>
+        Task<bool> IsEmptyAsync();
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.KeySet()"/>
-        /// .
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetKeysAsync()"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.KeySet()"/>
+        /// <returns>All keys.</returns>
         Task<IReadOnlyList<TKey>> GetKeysAsync();
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.KeySet(IPredicate)"/>
-        /// .
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetKeysAsync(IPredicate)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.KeySet(IPredicate)"/>
+        /// <param name="predicate">An predicate to filter the entries with.</param>
+        /// <returns>All keys matching the predicate.</returns>
         Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Put(K, V)"/>
-        /// .
-        /// <p/>
-        /// The object to be put will be accessible only in the current transaction context till transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.AddOrUpdateAsync(TKey, TValue, bool)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Put(K, V)"/>
-        Task<TValue> AddOrUpdateAndReturnAsync(TKey key, TValue value);
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="returnValue">Whether to return the updated value, if any.</param>
+        /// <remarks>
+        /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, bool returnValue = false);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Put(K, V, long, TimeUnit)"/>
-        /// .
-        /// <p/>
-        /// The object to be put will be accessible only in the current transaction context till transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.AddOrUpdateAsync(TKey, TValue, TimeSpan, bool)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Put(K, V, long, TimeUnit)"/>
-        Task<TValue> AddOrUpdateAndReturnTtlAsync(TKey key, TValue value, TimeSpan timeToLive);
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <param name="returnValue">Whether to return the updated value, if any.</param>
+        /// <remarks>
+        /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive, bool returnValue = false);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.PutIfAbsent(K, V)"/>
-        /// .
-        /// <p/>
-        /// The object to be put will be accessible only in the current transaction context until the transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetOrAddAsync(TKey, TValue)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.PutIfAbsent(K, V)"/>
-        Task<TValue> AddAsync(TKey key, TValue value);
+        /// <remarks>
+        /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<TValue> GetOrAddAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Remove(object)"/>
-        /// .
-        /// <p/>
-        /// The object to be removed will be removed from only the current transaction context until the transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAndRemoveAsync(TKey)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Remove(object)"/>
-        Task<TValue> RemoveAndReturnAsync(TKey key);
+        /// <remarks>
+        /// <para>The removed entry wil be removed only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<TValue> GetAndRemoveAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Remove(object, object)"/>
-        /// .
-        /// <p/>
-        /// The object to be removed will be removed from only the current transaction context until the transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.RemoveAsync(TKey, TValue)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Remove(object, object)"/>
+        /// <remarks>
+        /// <para>The removed entry wil be removed only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
         Task<bool> RemoveAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Replace(K, V)"/>
-        /// .
-        /// <p/>
-        /// The object to be replaced will be accessible only in the current transaction context until the transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.TryUpdateAsync(TKey, TValue)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Replace(K, V)"/>
-        Task<TValue> ReplaceAndReturnAsync(TKey key, TValue value);
+        /// <param name="key">A key.</param>
+        /// <param name="newValue">The new value.</param>
+        /// <remarks>
+        /// <para>The updated entry wil be visible only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Replace(K, V, V)"/>
-        /// .
-        /// <p/>
-        /// The object to be replaced will be accessible only in the current transaction context until the transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.TryUpdateAsync(TKey, TValue, TValue)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Replace(K, V, V)"/>
-        Task<bool> ReplaceAsync(TKey key, TValue oldValue, TValue newValue);
+        /// <remarks>
+        /// <para>The updated entry wil be visible only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<bool> TryUpdateAsync(TKey key, TValue oldValue, TValue newValue);
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Set(K, V)"/>
-        /// .
-        /// <p/>
-        /// The object to be set will be accessible only in the current transaction context till transaction is committed.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.CountAsync()"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Set(K, V)"/>
-        Task AddOrUpdateAsync(TKey key, TValue value);
-
-        /// <summary>
-        /// Transactional implementation of
-        /// <see cref="System.Drawing.Size"/>
-        /// .
-        /// </summary>
-        /// <seealso cref="System.Drawing.Size"/>
         Task<int> CountAsync();
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Values()"/>
-        /// .
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetValuesAsync()"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Values()"/>
         Task<IReadOnlyList<TValue>> GetValuesAsync();
 
         /// <summary>
-        /// Transactional implementation of
-        /// <see cref="IHDictionary{TKey,TValue}.Values(IPredicate)"/>
-        /// .
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetValuesAsync(IPredicate)"/>.
         /// </summary>
-        /// <seealso cref="IHDictionary{TKey,TValue}.Values(IPredicate)"/>
         Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate);
     }
 }

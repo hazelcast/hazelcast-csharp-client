@@ -58,8 +58,8 @@ namespace Hazelcast.Examples.DistributedObjects
                 }));
 
             // trigger events
-            await map.SetAsync("key", "value"); // add
-            await map.SetAsync("key", "valueNew"); //update
+            await map.AddOrUpdateAsync("key", "value"); // add
+            await map.AddOrUpdateAsync("key", "valueNew"); //update
             await map.GetAndRemoveAsync("key");
 
             // wait for events

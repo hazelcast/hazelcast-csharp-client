@@ -43,9 +43,9 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var mapCustomers = await client.GetDictionaryAsync<string, Person>("persons");
 
             // add values
-            await mapCustomers.SetAsync("1", new Person("Joe", "Smith"));
-            await mapCustomers.SetAsync("2", new Person("Ali", "Selam"));
-            await mapCustomers.SetAsync("3", new Person("Avi", "Noyan"));
+            await mapCustomers.AddOrUpdateAsync("1", new Person("Joe", "Smith"));
+            await mapCustomers.AddOrUpdateAsync("2", new Person("Ali", "Selam"));
+            await mapCustomers.AddOrUpdateAsync("3", new Person("Avi", "Noyan"));
 
             // get values
             var persons = await mapCustomers.GetValuesAsync();

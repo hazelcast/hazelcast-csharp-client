@@ -38,9 +38,9 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         public Task<TValue> AddOrUpdateAsync(TKey key, TValue value)
-            => AddOrUpdateTtlAsync(key, value, TimeToLive.InfiniteTimeSpan);
+            => AddOrUpdateAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public async Task<TValue> AddOrUpdateTtlAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite

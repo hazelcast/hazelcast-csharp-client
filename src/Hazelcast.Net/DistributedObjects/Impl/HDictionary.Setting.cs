@@ -25,143 +25,44 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionary<TKey, TValue> // Setting
     {
         /// <inheritdoc />
-        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
-            => GetAndSetAsync(key, value, CancellationToken.None);
-
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<TValue> GetAndSetAsync(TKey key, TValue value, CancellationToken cancellationToken)
-        {
-            var task = GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
+        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, bool returnValue = false)
+            => AddOrUpdateAsync(key, value, TimeToLive.InfiniteTimeSpan, returnValue);
 
         /// <inheritdoc />
-        public Task SetAsync(TKey key, TValue value)
-            => SetAsync(key, value, CancellationToken.None);
-
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task SetAsync(TKey key, TValue value, CancellationToken cancellationToken)
-        {
-            var task = SetAsync(key, value, TimeToLive.InfiniteTimeSpan, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <inheritdoc />
-        public Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
-            => GetAndSetAsync(key, value, timeToLive, CancellationToken.None);
-
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
+        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive, bool returnValue = false)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var task = AddOrUpdateWithValueAsync(keyData, valueData, timeToLive, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            return AddOrUpdateAsync(keyData, valueData, timeToLive, returnValue, CancellationToken.None);
         }
 
-        /// <summary>
-        /// Adds or replaces an entry with a time-to-live and returns the previous value.
-        /// </summary>
-        /// <param name="keyData">A key.</param>
-        /// <param name="valueData">A value.</param>
-        /// <param name="timeToLive">A time to live.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The value previously associated with the key in the map, if any; otherwise default(<typeparamref name="TValue"/>).</returns>
-        /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
-        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// </remarks>
-        protected virtual async Task<TValue> AddOrUpdateWithValueAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
-        {
-            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
-            var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
-            var response = MapPutCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
-        }
-
-        /// <inheritdoc />
-        public Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
-            => SetAsync(key, value, timeToLive, CancellationToken.None);
-
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
-        {
-            var (keyData, valueData) = ToSafeData(key, value);
-            var task = AddOrUpdateTtlAsync(keyData, valueData, timeToLive, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
-        }
-
-        /// <summary>
-        /// Adds or replaces an entry with a time-to-live.
-        /// </summary>
-        /// <param name="keyData">A key.</param>
-        /// <param name="valueData">A value.</param>
-        /// <param name="timeToLive">A time to live.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>Nothing.</returns>
-        /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
-        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// </remarks>
-        protected virtual
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task AddOrUpdateTtlAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken = default)
+        protected virtual async Task<TValue> AddOrUpdateAsync(IData keyData, IData valueData, TimeSpan timeToLive, bool returnValue, CancellationToken cancellationToken)
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 
-            var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
-            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
+            if (returnValue)
+            {
+                var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+                var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+                var response = MapPutCodec.DecodeResponse(responseMessage).Response;
+                return ToObject<TValue>(response);
+            }
+            else
+            {
+                var requestMessage = MapSetCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+                await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+                return default;
+            }
         }
 
         /// <inheritdoc />
-        public Task SetAsync(IDictionary<TKey, TValue> entries)
-            => SetAsync(entries, CancellationToken.None);
+        public Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries)
+            => AddOrUpdateAsync(entries, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task SetAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
+        Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
         {
             // TODO: is this transactional? can some entries be created and others be missing?
 
@@ -235,9 +136,9 @@ namespace Hazelcast.DistributedObjects.Impl
 
         /// <inheritdoc />
         public Task<TValue> TryUpdateAsync(TKey key, TValue newValue)
-            => ReplaceAsync(key, newValue, CancellationToken.None);
+            => TryUpdateAsync(key, newValue, CancellationToken.None);
 
-        private async Task<TValue> ReplaceAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
+        private async Task<TValue> TryUpdateAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 
@@ -249,16 +150,16 @@ namespace Hazelcast.DistributedObjects.Impl
 
         /// <inheritdoc />
         public Task<bool> TryUpdateAsync(TKey key, TValue comparisonValue, TValue newValue)
-            => ReplaceAsync(key, comparisonValue, newValue, CancellationToken.None);
+            => TryUpdateAsync(key, comparisonValue, newValue, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<bool> ReplaceAsync(TKey key, TValue expectedValue, TValue newValue, CancellationToken cancellationToken)
+        Task<bool> TryUpdateAsync(TKey key, TValue expectedValue, TValue newValue, CancellationToken cancellationToken)
         {
             var (keyData, expectedData, newData) = ToSafeData(key, expectedValue, newValue);
-            var task = ReplaceAsync(keyData, expectedData, newData, cancellationToken);
+            var task = TryUpdateAsync(keyData, expectedData, newData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -275,7 +176,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="newData">The new value.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>true if the entry was replaced; otherwise false.</returns>
-        protected async Task<bool> ReplaceAsync(IData keyData, IData expectedData, IData newData, CancellationToken cancellationToken)
+        protected async Task<bool> TryUpdateAsync(IData keyData, IData expectedData, IData newData, CancellationToken cancellationToken)
         {
             var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ContextId);
             var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
@@ -284,14 +185,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout)
-            => TrySetAsync(key, value, serverTimeout, CancellationToken.None);
+        public Task<bool> TryAddOrUpdateAsync(TKey key, TValue value, TimeSpan serverTimeout)
+            => TryAddOrUpdateAsync(key, value, serverTimeout, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        Task<bool> TryAddOrUpdateAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var task = TryAddOrUpdateAsync(keyData, valueData, serverTimeout, cancellationToken);
@@ -355,7 +256,7 @@ namespace Hazelcast.DistributedObjects.Impl
         Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var task = AddAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = GetOrAdd(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -376,7 +277,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// </remarks>
-        protected virtual async Task<TValue> AddAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+        protected virtual async Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
 

@@ -53,7 +53,7 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var map = await client.GetDictionaryAsync<string, string>("map-lock-example");
 
             // add value
-            await map.SetAsync("key", "value");
+            await map.AddOrUpdateAsync("key", "value");
 
             // locking in the current context
             await map.LockAsync("key");
@@ -67,7 +67,7 @@ namespace Hazelcast.Examples.DistributedObjects
             //
             var task = TaskEx.WithNewContext(async () =>
             {
-                await map.SetAsync("key", "value1");
+                await map.AddOrUpdateAsync("key", "value1");
                 Console.WriteLine("Put new value");
             });
 
@@ -76,7 +76,7 @@ namespace Hazelcast.Examples.DistributedObjects
                 var value = await map.GetAsync("key");
                 // pretend to do something with the value..
                 await Task.Delay(5000);
-                await map.SetAsync("key", "value2");
+                await map.AddOrUpdateAsync("key", "value2");
             }
             finally
             {

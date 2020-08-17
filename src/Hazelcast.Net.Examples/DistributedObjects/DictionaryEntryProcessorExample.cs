@@ -41,7 +41,7 @@ namespace Hazelcast.Examples.DistributedObjects
             // add values
             Console.WriteLine("Populate map");
             for (var i = 0; i < 10; i++)
-                await map.SetAsync(i, "value" + i);
+                await map.AddOrUpdateAsync(i, "value" + i);
 
             // verify
             Console.WriteLine("Count: " + await map.CountAsync());

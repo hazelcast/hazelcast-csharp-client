@@ -47,8 +47,8 @@ namespace Hazelcast.Tests.Remote
             // and does not return anything
             // NOTE: no way to know whether it added or replaced?
 
-            await map.SetAsync("key", 42).CAF();
-            await map.SetAsync("key", 43).CAF();
+            await map.AddOrUpdateAsync("key", 42).CAF();
+            await map.AddOrUpdateAsync("key", 43).CAF();
 
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);
@@ -73,13 +73,13 @@ namespace Hazelcast.Tests.Remote
             // and does not return anything
             // NOTE: no way to know whether it added or replaced?
 
-            await map.SetAsync("key", 42).CAF();
+            await map.AddOrUpdateAsync("key", 42).CAF();
 
             // add-or-replace with a 3 seconds timeout and a potential TaskTimeoutException
             // in case of a TaskTimeoutException - map.SetAsync() will keep running in the
             // background, its exception will be observed, but the end result (whether the
             // value was actually set or not) is unspecified.
-            await map.SetAsync("key", 43).TimeoutAfter(TimeSpan.FromSeconds(12), observeException: true).CAF();
+            await map.AddOrUpdateAsync("key", 43).TimeoutAfter(TimeSpan.FromSeconds(12), observeException: true).CAF();
 
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);
@@ -101,10 +101,10 @@ namespace Hazelcast.Tests.Remote
             // and returns the existing value, or the default value
             // NOTE: no way to know if the default value existed (eg zero)?
 
-            var result1 = await map.GetAndSetAsync("key", 42).CAF();
+            var result1 = await map.AddOrUpdateAsync("key", 42, true).CAF();
             Assert.AreEqual(0, result1);
 
-            var result2 = await map.GetAndSetAsync("key", 43).CAF();
+            var result2 = await map.AddOrUpdateAsync("key", 43, true).CAF();
             Assert.AreEqual(42, result2);
 
             var value = await map.GetAsync("key").CAF();
@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Remote
             // and returns the existing value, or the default value
             // NOTE: no way to know if the default value existed (eg zero)?
 
-            await map.GetAndSetAsync("key1", 42).CAF();
+            await map.AddOrUpdateAsync("key1", 42, true).CAF();
 
             var result1 = await map.GetOrAddAsync("key1", 43).CAF();
             Assert.AreEqual(42, result1);
@@ -157,12 +157,12 @@ namespace Hazelcast.Tests.Remote
             // AddOrReplace adds new values, or replaces existing values
             // NOTE: no way to know what happened
 
-            await map.GetAndSetAsync("key1", 42).CAF();
+            await map.AddOrUpdateAsync("key1", 42, true).CAF();
 
             var value1 = await map.GetAsync("key1").CAF();
             Assert.AreEqual(42, value1);
 
-            await map.SetAsync(new Dictionary<string, int>
+            await map.AddOrUpdateAsync(new Dictionary<string, int>
             {
                 ["key1"] = 43,
                 ["key2"] = 44
@@ -190,7 +190,7 @@ namespace Hazelcast.Tests.Remote
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
 
-            await map.SetAsync("key1", 42).CAF();
+            await map.AddOrUpdateAsync("key1", 42).CAF();
 
             var result1 = await map.TryUpdateAsync("key1", 43).CAF();
             Assert.AreEqual(42, result1);
@@ -214,7 +214,7 @@ namespace Hazelcast.Tests.Remote
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
 
-            await map.SetAsync("key1", 42).CAF();
+            await map.AddOrUpdateAsync("key1", 42).CAF();
 
             var result1 = await map.TryUpdateAsync("key1", 43, 44).CAF();
             Assert.IsFalse(result1);
@@ -239,7 +239,7 @@ namespace Hazelcast.Tests.Remote
             // and does not return anything
             // NOTE: no way to know whether it added or replaced?
 
-            await map.SetAsync("key", 42, TimeSpan.FromSeconds(1)).CAF();
+            await map.AddOrUpdateAsync("key", 42, TimeSpan.FromSeconds(1)).CAF();
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(42, value);
 
@@ -290,11 +290,11 @@ namespace Hazelcast.Tests.Remote
 
             // TryAddOrReplace is like AddOrReplace but with a timeout
 
-            await map.TrySetAsync("key", 42, TimeSpan.FromSeconds(1)).CAF();
+            await map.TryAddOrUpdateAsync("key", 42, TimeSpan.FromSeconds(1)).CAF();
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(42, value);
 
-            await map.TrySetAsync("key", 43, TimeSpan.FromSeconds(1)).CAF();
+            await map.TryAddOrUpdateAsync("key", 43, TimeSpan.FromSeconds(1)).CAF();
             value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);
 
@@ -315,7 +315,7 @@ namespace Hazelcast.Tests.Remote
             for (var i = 0; i < 100; i++)
                 entries["key" + i] = i;
 
-            await map.SetAsync(entries).CAF();
+            await map.AddOrUpdateAsync(entries).CAF();
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(100, count);
@@ -339,7 +339,7 @@ namespace Hazelcast.Tests.Remote
             for (var i = 0; i < 100; i++)
                 entries["key" + i] = i;
 
-            await map.SetAsync(entries).CAF();
+            await map.AddOrUpdateAsync(entries).CAF();
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(100, count);
@@ -389,15 +389,15 @@ namespace Hazelcast.Tests.Remote
                     Interlocked.Increment(ref eventsCount);
                 }));
 
-            await map.GetAndSetAsync("a", 1).CAF();
-            await map.GetAndSetAsync("b", 2).CAF();
+            await map.AddOrUpdateAsync("a", 1, true).CAF();
+            await map.AddOrUpdateAsync("b", 2, true).CAF();
 
             while (eventsCount < 2)
                 await Task.Delay(500).CAF();
 
             await map.UnsubscribeAsync(id).CAF();
 
-            await map.GetAndSetAsync("c", 3).CAF();
+            await map.AddOrUpdateAsync("c", 3, true).CAF();
             await Task.Delay(500).CAF();
 
             Assert.AreEqual(2, eventsCount);
@@ -421,15 +421,15 @@ namespace Hazelcast.Tests.Remote
                     Interlocked.Increment(ref eventsCount);
                 }));
 
-            await map.GetAndSetAsync("a", 1).CAF();
-            await map.GetAndSetAsync("b", 2).CAF();
+            await map.AddOrUpdateAsync("a", 1, true).CAF();
+            await map.AddOrUpdateAsync("b", 2, true).CAF();
 
             while (eventsCount < 2)
                 await Task.Delay(500).CAF();
 
             await map.UnsubscribeAsync(id).CAF();
 
-            await map.GetAndSetAsync("c", 3).CAF();
+            await map.AddOrUpdateAsync("c", 3, true).CAF();
             await Task.Delay(500).CAF();
 
             Assert.AreEqual(2, eventsCount);
