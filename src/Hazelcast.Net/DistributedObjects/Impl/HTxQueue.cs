@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -25,8 +24,8 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HTxQueue<TItem> : TransactionalDistributedObjectBase, IHTxQueue<TItem>
     {
-        public HTxQueue(string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HQueue.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+        public HTxQueue(string name, DistributedObjectFactory factory, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HQueue.ServiceName, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         public Task<bool> TryEnqueueAsync(TItem item)

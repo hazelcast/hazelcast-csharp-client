@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -41,5 +42,14 @@ namespace Hazelcast.DistributedObjects
         /// value is not null but has no meaning.</para>
         /// </remarks>
         string PartitionKey { get; }
+
+        /// <summary>
+        /// Destroys this distributed object.
+        /// </summary>
+        /// <returns>A task that will complete when the object has been destroyed.</returns>
+        /// <remarks>
+        /// <para>Destroying a distributed object completely deletes the object on the cluster.</para>
+        /// </remarks>
+        ValueTask DestroyAsync();
     }
 }

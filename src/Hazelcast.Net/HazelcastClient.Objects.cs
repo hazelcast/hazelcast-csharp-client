@@ -30,7 +30,13 @@ namespace Hazelcast
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)
         {
-            await _distributedObjectFactory.DestroyAsync(o.ServiceName, o.Name, CancellationToken.None).CAF();
+            await _distributedObjectFactory.DestroyAsync(o.ServiceName, o.Name).CAF();
+        }
+
+        /// <inheritdoc />
+        public async ValueTask DestroyAsync(string serviceName, string name)
+        {
+            await _distributedObjectFactory.DestroyAsync(serviceName, name).CAF();
         }
 
         /// <inheritdoc />
@@ -42,10 +48,10 @@ namespace Hazelcast
                 ? null
                 : await _nearCacheManager.GetOrCreateNearCacheAsync(name, nearCacheOptions).CAF();
 
-            HDictionary<TKey, TValue> CreateMap(string n, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            HDictionary<TKey, TValue> CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
                 => nearCacheOptions == null
-                    ? new HDictionary<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
-                    : new HDictionaryWithCache<TKey, TValue>(n, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
+                    ? new HDictionary<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
+                    : new HDictionaryWithCache<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
             return await _distributedObjectFactory.GetOrCreateAsync<IHDictionary<TKey, TValue>, HDictionary<TKey, TValue>>(HDictionary.ServiceName, name, true, CreateMap).CAF();
         }
@@ -60,8 +66,8 @@ namespace Hazelcast
             var partitionId = Cluster.Partitioner.GetRandomPartitionId();
 
             var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedDictionary<TKey, TValue>, HReplicatedDictionary<TKey, TValue>>(HReplicatedDictionary.ServiceName, name, true,
-                (n, c, sr, lf)
-                    => new HReplicatedDictionary<TKey,TValue>(n, c, sr, partitionId, lf));
+                (n, f, c, sr, lf)
+                    => new HReplicatedDictionary<TKey,TValue>(n, f, c, sr, partitionId, lf));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -78,8 +84,8 @@ namespace Hazelcast
         Task<IHMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiDictionary<TKey, TValue>, HMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
-                (n, c, sr, lf)
-                    => new HMultiDictionary<TKey, TValue>(n, c, sr, _lockReferenceIdSequence, lf));
+                (n, f, c, sr, lf)
+                    => new HMultiDictionary<TKey, TValue>(n, f, c, sr, _lockReferenceIdSequence, lf));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -96,8 +102,8 @@ namespace Hazelcast
         Task<IHTopic<T>> GetTopicAsync<T>(string name)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(HTopic.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory)
-                    => new HTopic<T>(n, cluster, serializationService, loggerFactory));
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new HTopic<T>(n, factory, cluster, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -114,8 +120,8 @@ namespace Hazelcast
         Task<IHList<T>> GetListAsync<T>(string name)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHList<T>, HList<T>>(HList.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory)
-                    => new HList<T>(n, cluster, serializationService, loggerFactory));
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new HList<T>(n, factory, cluster, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -132,8 +138,8 @@ namespace Hazelcast
         Task<IHSet<T>> GetSetAsync<T>(string name)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHSet<T>, HSet<T>>(HSet.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory)
-                    => new HSet<T>(n, cluster, serializationService, loggerFactory));
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new HSet<T>(n, factory, cluster, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -150,8 +156,8 @@ namespace Hazelcast
         Task<IHQueue<T>> GetQueueAsync<T>(string name)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHQueue<T>, HQueue<T>>(HQueue.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory)
-                    => new HQueue<T>(n, cluster, serializationService, loggerFactory));
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new HQueue<T>(n, factory, cluster, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -169,8 +175,8 @@ namespace Hazelcast
         {
             const int maxBatchSize = 1000; // TODO: should become an option
             var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(HRingBuffer.ServiceName, name, true,
-                (n, cluster, serializationService, loggerFactory)
-                    => new HRingBuffer<T>(n, cluster, maxBatchSize, serializationService, loggerFactory));
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new HRingBuffer<T>(n, factory, cluster, maxBatchSize, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

@@ -70,8 +70,8 @@ namespace Hazelcast.DistributedObjects.Impl
     internal class Executor : DistributedObjectBase, IExecutor
     {
         // uh refactor this ctor
-        public Executor(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(serviceName, name, cluster, serializationService, loggerFactory)
+        public Executor(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
         { }
 
         public Task ExecuteOnAllAsync(IExecutable executable, CancellationToken cancellationToken)

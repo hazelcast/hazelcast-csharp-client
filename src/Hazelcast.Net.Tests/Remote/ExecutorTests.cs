@@ -36,7 +36,7 @@ namespace Hazelcast.Tests.Remote
         [Ignore("Not implemented.")]
         public async Task Test()
         {
-            var executor = new Executor(null, null, null, null, null);
+            var executor = new Executor(null, null, null, null, null, null);
             var result = await executor.ExecuteAsync(new HelloExecutable(), CancellationToken.None);
             Assert.AreEqual("hello", result);
         }

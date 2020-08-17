@@ -32,6 +32,7 @@ namespace Hazelcast.DistributedObjects
     {
         private static readonly IPartitioningStrategy PartitioningStrategy = new StringPartitioningStrategy();
 
+        private readonly DistributedObjectFactory _factory;
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<DistributedObjectBase> _onDispose;
         private string _partitionKey;
@@ -47,7 +48,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        protected DistributedObjectBase(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        protected DistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
         {
             if (string.IsNullOrWhiteSpace(serviceName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(serviceName));
             ServiceName = serviceName;
@@ -55,6 +56,7 @@ namespace Hazelcast.DistributedObjects
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
             Name = name;
 
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
@@ -117,6 +119,10 @@ namespace Hazelcast.DistributedObjects
         /// Gets the logger factory.
         /// </summary>
         protected ILoggerFactory LoggerFactory { get; }
+
+        /// <inheritdoc />
+        public async ValueTask DestroyAsync()
+            => await _factory.DestroyAsync(ServiceName, Name);
 
         /// <summary>
         /// Serializes an object to <see cref="IData"/>.

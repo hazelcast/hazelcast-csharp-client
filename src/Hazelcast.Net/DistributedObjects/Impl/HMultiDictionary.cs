@@ -30,8 +30,8 @@ namespace Hazelcast.DistributedObjects.Impl
     {
         private readonly ISequence<long> _lockReferenceIdSequence;
 
-        public HMultiDictionary(string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory loggerFactory)
-            : base(HMultiDictionary.ServiceName, name, cluster, serializationService, loggerFactory)
+        public HMultiDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory loggerFactory)
+            : base(HMultiDictionary.ServiceName, name, factory, cluster, serializationService, loggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }

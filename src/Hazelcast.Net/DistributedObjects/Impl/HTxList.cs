@@ -33,13 +33,14 @@ namespace Hazelcast.DistributedObjects.Impl
         /// Initializes a new instance of the <see cref="HTxList{TItem}"/> class.
         /// </summary>
         /// <param name="name">The unique name of the list.</param>
+        /// <param name="factory">The factory that owns this object.</param>
         /// <param name="cluster">The cluster.</param>
         /// <param name="transactionClientConnection">The client supporting the transaction.</param>
         /// <param name="transactionId">The unique identifier of the transaction.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        public HTxList(string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HList.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+        public HTxList(string name, DistributedObjectFactory factory, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HList.ServiceName, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         /// <inheritoc />

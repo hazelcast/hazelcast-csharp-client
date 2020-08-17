@@ -24,8 +24,8 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal abstract partial class HCollectionBase<T> : DistributedObjectBase, IHCollection<T>
     {
-        protected HCollectionBase(string serviceName, string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(serviceName, name, cluster, serializationService, loggerFactory)
+        protected HCollectionBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
         { }
 
         // usage? just define it on the read-only list?

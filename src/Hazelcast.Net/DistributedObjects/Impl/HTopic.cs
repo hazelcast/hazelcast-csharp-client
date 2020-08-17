@@ -34,11 +34,12 @@ namespace Hazelcast.DistributedObjects.Impl
         /// Initializes a new instance of the <see cref="Topic{T}"/> class.
         /// </summary>
         /// <param name="name">The unique name of the object.</param>
+        /// <param name="factory">The factory that owns this object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HTopic(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HTopic.ServiceName, name, cluster, serializationService, loggerFactory)
+        public HTopic(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HTopic.ServiceName, name, factory, cluster, serializationService, loggerFactory)
         { }
 
         /// <inheritdoc />

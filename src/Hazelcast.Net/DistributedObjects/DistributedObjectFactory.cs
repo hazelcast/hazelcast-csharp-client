@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The distributed object.</returns>
         public async Task<T> GetOrCreateAsync<T, TImpl>(
             string serviceName, string name, bool remote,
-            Func<string, Cluster, ISerializationService, ILoggerFactory, TImpl> factory,
+            Func<string, DistributedObjectFactory, Cluster, ISerializationService, ILoggerFactory, TImpl> factory,
             CancellationToken cancellationToken = default)
             where TImpl : DistributedObjectBase, T
         {
@@ -79,7 +79,7 @@ namespace Hazelcast.DistributedObjects
 
             async ValueTask<DistributedObjectBase> CreateAsync(DistributedObjectInfo info, CancellationToken token)
             {
-                var x = factory(name, _cluster, _serializationService, _loggerFactory);
+                var x = factory(name, this, _cluster, _serializationService, _loggerFactory);
                 x.OnDispose = ObjectDisposed; // this is why is has to be DistributedObjectBase
 
                 // initialize the object
@@ -171,7 +171,7 @@ namespace Hazelcast.DistributedObjects
             if (attempt)
                 await TryDispose(info, attempt.Value).CAF();
 
-            // regardless of whether the object was know locally, destroy on server
+            // regardless of whether the object was known locally, destroy on server
             var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
             var responseMessage = await _cluster.SendAsync(clientMessage, cancellationToken).CAF();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);

@@ -39,12 +39,13 @@ namespace Hazelcast.DistributedObjects.Impl
         /// Initializes a new instance of the <see cref="HRingBuffer{TItem}"/> class.
         /// </summary>
         /// <param name="name">The unique name of the ring buffer.</param>
+        /// <param name="factory">The factory owning this object.</param>
         /// <param name="cluster">The cluster.</param>
         /// <param name="maxBatchSize">The maximum read batch size.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HRingBuffer(string name, Cluster cluster, int maxBatchSize, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HRingBuffer.ServiceName, name, cluster, serializationService, loggerFactory)
+        public HRingBuffer(string name, DistributedObjectFactory factory, Cluster cluster, int maxBatchSize, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HRingBuffer.ServiceName, name, factory, cluster, serializationService, loggerFactory)
         {
             _maxBatchSize = maxBatchSize;
         }

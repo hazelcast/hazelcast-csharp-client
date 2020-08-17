@@ -24,8 +24,8 @@ namespace Hazelcast.DistributedObjects.Impl
     /// <typeparam name="T">The type of the set items.</typeparam>
     internal partial class HSet<T> : HCollectionBase<T>, IHSet<T>
     {
-        public HSet(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HSet.ServiceName, name, cluster, serializationService, loggerFactory)
+        public HSet(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HSet.ServiceName, name, factory, cluster, serializationService, loggerFactory)
         { }
     }
 }

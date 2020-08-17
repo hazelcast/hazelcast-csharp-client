@@ -32,12 +32,13 @@ namespace Hazelcast.DistributedObjects.Impl
         /// Initializes a new instance of the <see cref="HDictionary{TKey,TValue}"/> class.
         /// </summary>
         /// <param name="name">The unique name of the object.</param>
+        /// <param name="factory">The factory owning this object.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="logggerFactory">A logger factory.</param>
-        public HDictionary(string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
-            : base(HDictionary.ServiceName, name, cluster, serializationService, logggerFactory)
+        public HDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
+            : base(HDictionary.ServiceName, name, factory, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }

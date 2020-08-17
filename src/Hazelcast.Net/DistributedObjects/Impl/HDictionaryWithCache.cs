@@ -39,8 +39,8 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HDictionaryWithCache(string name, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCacheBase cache, ILoggerFactory loggerFactory)
-            : base(name, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
+        public HDictionaryWithCache(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCacheBase cache, ILoggerFactory loggerFactory)
+            : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
         {
             _cache = cache;
         }

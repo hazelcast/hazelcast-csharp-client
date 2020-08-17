@@ -26,8 +26,8 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HTxMultiDictionary<TKey, TValue> : TransactionalDistributedObjectBase, IHTxMultiDictionary<TKey, TValue>
     {
-        public HTxMultiDictionary(string name, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HMultiDictionary.ServiceName, name, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+        public HTxMultiDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(HMultiDictionary.ServiceName, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         public async Task<IReadOnlyList<TValue>> GetAsync(TKey key)
