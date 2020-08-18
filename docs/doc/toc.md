@@ -4,7 +4,7 @@
 # [Hazelcast Client](hazelcastClient.md)
 # [Configuration](configuration.md)
 # [Distributed Objects](distributedObjects.md)
-## [HMap](hmap.md)
+## [HDictionary](hdictionary.md)
 ## [HList](hlist.md)
 # [Events](events.md)
 # [Examples](examples.md)
