@@ -288,7 +288,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public Task AddOrUpdateTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
             => SetTransientAsync(key, value, timeToLive, CancellationToken.None);
 
         private
