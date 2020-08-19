@@ -122,7 +122,7 @@ namespace Hazelcast.DistributedObjects
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync()
-            => await _factory.DestroyAsync(ServiceName, Name);
+            => await _factory.DestroyAsync(ServiceName, Name).CAF();
 
         /// <summary>
         /// Serializes an object to <see cref="IData"/>.
@@ -286,7 +286,7 @@ namespace Hazelcast.DistributedObjects
 #endif
         ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
         {
-            var task = Cluster.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
+            var task = Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

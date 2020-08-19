@@ -22,12 +22,14 @@ namespace Hazelcast.Clustering
 {
     internal class PartitionLostEventSubscription : EventSubscriptionBase
     {
+        private readonly ClusterMembers _clusterMembers;
         private readonly bool _isSmart;
 
-        public PartitionLostEventSubscription(Cluster cluster, ILoggerFactory loggerFactory, bool isSmart)
-            : base(cluster, loggerFactory)
+        public PartitionLostEventSubscription(ClusterState clusterState, ClusterEvents clusterEvents, ClusterMembers clusterMembers)
+            : base(clusterState, clusterEvents)
         {
-            _isSmart = isSmart;
+            _clusterMembers = clusterMembers;
+            _isSmart = clusterState.Options.Networking.SmartRouting;
         }
 
         protected override ClusterSubscription CreateSubscription()
@@ -49,7 +51,7 @@ namespace Hazelcast.Clustering
             // TODO: document + avoid hard-coded constants
             const int maxLostBackupCount = 6;
 
-            var member = Cluster.GetMember(memberId);
+            var member = _clusterMembers.GetMember(memberId);
 
             return Handle(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member));
         }

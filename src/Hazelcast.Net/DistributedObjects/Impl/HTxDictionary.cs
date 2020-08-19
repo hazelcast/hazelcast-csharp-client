@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HTxDictionary<TKey, TValue> : TransactionalDistributedObjectBase, IHTxDictionary<TKey, TValue>
     {
-        public HTxDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxDictionary(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HDictionary.ServiceName, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapContainsKeyCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapDeleteCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             _ = TransactionalMapDeleteCodec.DecodeResponse(responseMessage);
         }
 
@@ -51,7 +51,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapGetCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapGetForUpdateCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapGetForUpdateCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -68,14 +68,14 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<bool> IsEmptyAsync()
         {
             var requestMessage = TransactionalMapIsEmptyCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<IReadOnlyList<TKey>> GetKeysAsync()
         {
             var requestMessage = TransactionalMapKeySetCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapKeySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
@@ -84,7 +84,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var predicateData = ToSafeData(predicate);
             var requestMessage = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
@@ -100,14 +100,14 @@ namespace Hazelcast.DistributedObjects.Impl
             if (returnValue)
             {
                 var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMilliseconds);
-                var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+                var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
                 var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
                 return ToObject<TValue>(response);
             }
             else
             {
                 var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-                var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+                var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
                 _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
                 return default;
             }
@@ -118,7 +118,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (keyData, valueData) = ToSafeData(key, value);
 
             var requestMessage = TransactionalMapPutIfAbsentCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -127,7 +127,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -137,7 +137,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMapRemoveIfSameCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -146,7 +146,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (keyData, valueData) = ToSafeData(key, newValue);
 
             var requestMessage = TransactionalMapReplaceCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapReplaceCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -156,21 +156,21 @@ namespace Hazelcast.DistributedObjects.Impl
             var (keyData, oldValueData, newValueData) = ToSafeData(key, oldValue, newValue);
 
             var requestMessage = TransactionalMapReplaceIfSameCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, oldValueData, newValueData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<IReadOnlyList<TValue>> GetValuesAsync()
         {
             var requestMessage = TransactionalMapValuesCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapValuesCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
@@ -179,7 +179,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var predicateData = ToSafeData(predicate);
             var requestMessage = TransactionalMapValuesWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }

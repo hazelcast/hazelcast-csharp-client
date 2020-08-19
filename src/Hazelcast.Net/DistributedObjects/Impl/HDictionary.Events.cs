@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 HandleEventAsync,
                 new MapSubscriptionState(mode, Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
 
             return subscription.Id;
         }
@@ -112,7 +112,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var eventType = (HDictionaryEventTypes) eventTypeData;
                 if (eventType == HDictionaryEventTypes.Nothing) return;
 
-                var member = Cluster.GetMember(memberId);
+                var member = Cluster.Members.GetMember(memberId);
                 var key = LazyArg<TKey>(keyData);
                 var value = LazyArg<TValue>(valueData);
                 var oldValue = LazyArg<TValue>(oldValueData);

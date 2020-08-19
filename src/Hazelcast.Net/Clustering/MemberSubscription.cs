@@ -17,23 +17,23 @@ using System;
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Represents a client subscription to a server event.
+    /// Represents a member-level subscription to a cluster event.
     /// </summary>
-    internal class ClientSubscription
+    internal class MemberSubscription
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientSubscription"/> class.
+        /// Initializes a new instance of the <see cref="MemberSubscription"/> class.
         /// </summary>
         /// <param name="clusterSubscription">The cluster subscription.</param>
         /// <param name="serverSubscriptionId">The unique identifier assigned by the server to the client subscription.</param>
         /// <param name="correlationId">The correlation identifier.</param>
-        /// <param name="client">The subscribed client.</param>
-        public ClientSubscription(ClusterSubscription clusterSubscription, Guid serverSubscriptionId, long correlationId, ClientConnection client)
+        /// <param name="connection">The connection to the member.</param>
+        public MemberSubscription(ClusterSubscription clusterSubscription, Guid serverSubscriptionId, long correlationId, MemberConnection connection)
         {
             ClusterSubscription = clusterSubscription;
             ServerSubscriptionId = serverSubscriptionId;
             CorrelationId = correlationId;
-            Client = client;
+            Connection = connection;
         }
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace Hazelcast.Clustering
         public long CorrelationId { get; }
 
         /// <summary>
-        /// Gets the client.
+        /// Gets the connection to the member.
         /// </summary>
-        public ClientConnection Client { get; }
+        public MemberConnection Connection { get; }
     }
 }

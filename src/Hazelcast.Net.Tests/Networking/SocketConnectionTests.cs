@@ -89,7 +89,7 @@ namespace Hazelcast.Tests.Networking
             await socket.ConnectAsync(default);
 
             await Task.Delay(100);
-            await socket.SendAsync(ClientConnection.ClientProtocolInitBytes, ClientConnection.ClientProtocolInitBytes.Length);
+            await socket.SendAsync(MemberConnection.ClientProtocolInitBytes, MemberConnection.ClientProtocolInitBytes.Length);
             await m.SendAsync(new ClientMessage(new Frame(new byte[64], (FrameFlags) ClientMessageFlags.Unfragmented)));
             await Task.Delay(100);
 

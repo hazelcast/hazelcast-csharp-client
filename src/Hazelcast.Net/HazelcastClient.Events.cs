@@ -44,11 +44,11 @@ namespace Hazelcast
                 switch (handler)
                 {
                     case DistributedObjectLifecycleEventHandler _:
-                        await Cluster.AddObjectLifecycleEventSubscription().CAF();
+                        await Cluster.ClusterEvents.AddObjectLifecycleSubscription().CAF();
                         break;
 
                     case PartitionLostEventHandler _:
-                        await Cluster.AddPartitionLostEventSubscription().CAF();
+                        await Cluster.ClusterEvents.AddPartitionLostSubscription().CAF();
                         break;
 
                     default:
@@ -73,8 +73,8 @@ namespace Hazelcast
             {
                 var removed = handler switch
                 {
-                    DistributedObjectLifecycleEventHandler _ => await Cluster.RemoveObjectLifecycleEventSubscription().CAF(),
-                    PartitionLostEventHandler _ => await Cluster.RemovePartitionLostEventSubscription().CAF(),
+                    DistributedObjectLifecycleEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CAF(),
+                    PartitionLostEventHandler _ => await Cluster.ClusterEvents.RemovePartitionLostSubscription().CAF(),
                     _ => throw new NotSupportedException()
                 };
 

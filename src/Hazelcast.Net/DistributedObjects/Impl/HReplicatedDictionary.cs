@@ -45,7 +45,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
             var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, ttl);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             var requestMessage = ReplicatedMapPutAllCodec.EncodeRequest(Name, entriesData);
-            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
             _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
         }
 
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -76,7 +76,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task ClearAsync()
         {
             var requestMessage = ReplicatedMapClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
             _ = ReplicatedMapClearCodec.DecodeResponse(responseMessage);
         }
 
@@ -84,7 +84,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapGetCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -92,7 +92,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<IReadOnlyList<TKey>> GetKeysAsync()
         {
             var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
@@ -100,7 +100,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<IReadOnlyList<TValue>> GetValuesAsync()
         {
             var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
@@ -108,7 +108,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync()
         {
             var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             var response = ReplicatedMapEntrySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
         }
@@ -116,14 +116,14 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<int> CountAsync()
         {
             var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             return ReplicatedMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<bool> IsEmptyAsync()
         {
             var requestMessage = ReplicatedMapIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             return ReplicatedMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -131,7 +131,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapContainsKeyCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             return ReplicatedMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -139,7 +139,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var valueData = ToSafeData(value);
             var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
-            var responseMessage = await Cluster.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -175,7 +175,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 HandleEventAsync,
                 new MapSubscriptionState(mode, Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
 
             return subscription.Id;
         }
@@ -212,7 +212,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var eventType = (HDictionaryEventTypes)eventTypeData;
                 if (eventType == HDictionaryEventTypes.Nothing) return;
 
-                var member = Cluster.GetMember(memberId);
+                var member = Cluster.Members.GetMember(memberId);
                 var key = LazyArg<TKey>(keyData);
                 var value = LazyArg<TValue>(valueData);
                 var oldValue = LazyArg<TValue>(oldValueData);

@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HTxSet<TItem> : TransactionalDistributedObjectBase, IHTxSet<TItem>
     {
-        public HTxSet(string name, DistributedObjectFactory factory, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxSet(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HSet.ServiceName, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalSetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -40,14 +40,14 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = TransactionalSetRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalSetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalSetSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalSetSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

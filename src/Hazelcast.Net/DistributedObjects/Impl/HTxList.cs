@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="transactionId">The unique identifier of the transaction.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        public HTxList(string name, DistributedObjectFactory factory, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxList(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HList.ServiceName, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalListAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -57,7 +57,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToData(item);
             var requestMessage = TransactionalListRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalListRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -65,7 +65,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalListSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalListSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

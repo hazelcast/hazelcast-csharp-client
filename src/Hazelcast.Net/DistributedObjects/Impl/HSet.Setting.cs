@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetAddCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -34,7 +34,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

@@ -27,13 +27,13 @@ namespace Hazelcast.Clustering
         private int _subscriptionsCount;
         private Guid _subscriptionId;
 
-        protected EventSubscriptionBase(Cluster cluster, ILoggerFactory loggerFactory)
+        protected EventSubscriptionBase(ClusterState clusterState, ClusterEvents clusterEvents)
         {
-            Cluster = cluster;
-            LoggerFactory = loggerFactory;
+            LoggerFactory = clusterState.LoggerFactory;
+            ClusterEvents = clusterEvents;
         }
 
-        protected Cluster Cluster { get; }
+        protected ClusterEvents ClusterEvents { get; }
 
         protected ILoggerFactory LoggerFactory { get; }
 
@@ -51,7 +51,7 @@ namespace Hazelcast.Clustering
                 if (_subscriptionsCount > 1) return;
 
                 var subscription = CreateSubscription();
-                await Cluster.InstallSubscriptionAsync(subscription).CAF();
+                await ClusterEvents.InstallSubscriptionAsync(subscription).CAF();
                 _subscriptionId = subscription.Id;
             }
         }
@@ -67,7 +67,7 @@ namespace Hazelcast.Clustering
                 if (_subscriptionsCount == 0) return true; // TODO: should we throw?
                 if (_subscriptionsCount > 1) return true;
 
-                var removed = await Cluster.RemoveSubscriptionAsync(_subscriptionId).CAF();
+                var removed = await ClusterEvents.RemoveSubscriptionAsync(_subscriptionId).CAF();
                 if (removed) _subscriptionsCount--;
                 return removed;
             }
@@ -83,7 +83,7 @@ namespace Hazelcast.Clustering
                 if (_subscriptionsCount == 0) return;
 
                 // remove, ignore result
-                await Cluster.RemoveSubscriptionAsync(_subscriptionId).CAF();
+                await ClusterEvents.RemoveSubscriptionAsync(_subscriptionId).CAF();
             }
 
             _busy.Dispose();

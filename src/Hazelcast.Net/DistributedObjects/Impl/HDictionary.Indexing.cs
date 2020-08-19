@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.Impl
             if (indexConfig == null) throw new ArgumentNullException(nameof(indexConfig));
 
             var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexConfig.ValidateAndNormalize(Name));
-            var task = Cluster.SendAsync(requestMessage, cancellationToken);
+            var task = Cluster.Messaging.SendAsync(requestMessage, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

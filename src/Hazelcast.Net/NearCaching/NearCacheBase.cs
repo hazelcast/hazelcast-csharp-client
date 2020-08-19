@@ -131,7 +131,7 @@ namespace Hazelcast.NearCaching
         public virtual async ValueTask DestroyAsync()
         {
             if (SubscriptionId != default)
-                await Cluster.RemoveSubscriptionAsync(SubscriptionId, CancellationToken.None).CAF();
+                await Cluster.Events.RemoveSubscriptionAsync(SubscriptionId, CancellationToken.None).CAF();
 
             _entries.Clear();
         }

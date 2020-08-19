@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
@@ -27,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = QueueRemoveCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
             return QueueRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -36,7 +35,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
             return QueueCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -45,7 +44,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
             return QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -53,7 +52,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task ClearAsync()
         {
             var requestMessage = QueueClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
             _ = QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<T> TryPeekAsync() // peek, or null
         {
             var requestMessage = QueuePeekCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -58,7 +58,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -71,7 +71,7 @@ namespace Hazelcast.DistributedObjects.Impl
                        throw new InvalidOperationException("The queue is empty.");
 
             var requestMessage = QueueTakeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -85,7 +85,7 @@ namespace Hazelcast.DistributedObjects.Impl
             where TItem : T
         {
             var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueueDrainToCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add((TItem)ToObject<T>(itemData));
@@ -97,7 +97,7 @@ namespace Hazelcast.DistributedObjects.Impl
             where TItem : T
         {
             var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, count);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add((TItem)ToObject<T>(itemData));

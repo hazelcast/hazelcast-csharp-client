@@ -90,33 +90,14 @@ namespace Hazelcast
                 .AddHook<PredicateDataSerializerHook>() // shouldn't they be configurable?
                 .AddHook<AggregatorDataSerializerHook>()
                 .AddHook<ProjectionDataSerializerHook>()
-                .AddDefinitions(new ConstantSerializerDefinitions()) // constant serializers
-                .AddDefinitions(new DefaultSerializerDefinitions()) // default serializers
+                .AddDefinitions(new ConstantSerializerDefinitions())
+                .AddDefinitions(new DefaultSerializerDefinitions())
                 ;
 
             var serializationService = serializationServiceBuilder.Build();
 
             var cluster = new Cluster(options, serializationService, loggerFactory);
             var client = new HazelcastClient(options, cluster, serializationService, loggerFactory);
-
-            // wire events
-            // this way, the cluster does not need to know about the hazelcast client
-            cluster.OnObjectLifecycleEvent = client.OnObjectLifecycleEvent;
-            cluster.OnMemberLifecycleEvent = client.OnMemberLifecycleEvent;
-            cluster.OnClientLifecycleEvent = client.OnClientLifecycleEvent;
-            cluster.OnPartitionsUpdated = client.OnPartitionsUpdated;
-            cluster.OnPartitionLost = client.OnPartitionLost;
-            cluster.OnConnectionAdded = client.OnConnectionAdded;
-            cluster.OnConnectionRemoved = client.OnConnectionRemoved;
-            cluster.OnConnectionRemoved = client.OnConnectionRemoved;
-
-            // TODO: this belongs to the client actually
-            cluster.OnFirstClientConnected = async cancellationToken =>
-            {
-                foreach (var subscriber in options.Subscribers)
-                    await subscriber.SubscribeAsync(client, cancellationToken).CAF();
-            };
-
             return client;
         }
     }

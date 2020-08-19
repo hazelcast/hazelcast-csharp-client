@@ -25,10 +25,10 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents a cluster subscription to a server event.
     /// </summary>
-    internal class ClusterSubscription : IEnumerable<ClientSubscription>
+    internal class ClusterSubscription : IEnumerable<MemberSubscription>
     {
         private readonly object _activeLock = new object();
-        private readonly ConcurrentDictionary<ClientConnection, ClientSubscription> _clientSubscriptions = new ConcurrentDictionary<ClientConnection, ClientSubscription>();
+        private readonly ConcurrentDictionary<MemberConnection, MemberSubscription> _clientSubscriptions = new ConcurrentDictionary<MemberConnection, MemberSubscription>();
         private readonly Func<ClientMessage, object, Guid> _subscribeResponseReader;
         private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
         private readonly Func<ClientMessage, object, bool> _unsubscribeResponseReader;
@@ -131,7 +131,7 @@ namespace Hazelcast.Clustering
         /// <param name="message">The subscription response message.</param>
         /// <param name="client">The client.</param>
         /// <returns>Whether the client subscription was added, and its server identifier.</returns>
-        public (bool, Guid) TryAddClientSubscription(ClientMessage message, ClientConnection client)
+        public (bool, Guid) TryAddClientSubscription(ClientMessage message, MemberConnection client)
         {
             var serverSubscriptionId = _subscribeResponseReader(message, State);
 
@@ -140,7 +140,7 @@ namespace Hazelcast.Clustering
             {
                 active = _active;
                 if (active)
-                    _clientSubscriptions[client] = new ClientSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
+                    _clientSubscriptions[client] = new MemberSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
             }
 
             return (active, serverSubscriptionId);
@@ -150,17 +150,17 @@ namespace Hazelcast.Clustering
         /// Removes a client subscription.
         /// </summary>
         /// <param name="client">The client.</param>
-        /// <param name="clientSubscription">The client subscription.</param>
+        /// <param name="memberSubscription">The client subscription.</param>
         /// <returns>Whether a client subscription was removed.</returns>
-        public bool TryRemove(ClientConnection client, out ClientSubscription clientSubscription)
-            => _clientSubscriptions.TryRemove(client, out clientSubscription);
+        public bool TryRemove(MemberConnection client, out MemberSubscription memberSubscription)
+            => _clientSubscriptions.TryRemove(client, out memberSubscription);
 
         /// <summary>
         /// Removes a client subscription.
         /// </summary>
-        /// <param name="clientSubscription">The client subscription.</param>
-        public void Remove(ClientSubscription clientSubscription)
-            => _clientSubscriptions.TryRemove(clientSubscription.Client, out _);
+        /// <param name="memberSubscription">The client subscription.</param>
+        public void Remove(MemberSubscription memberSubscription)
+            => _clientSubscriptions.TryRemove(memberSubscription.Connection, out _);
 
         /// <summary>
         /// Creates an unsubscribe request message.
@@ -188,7 +188,7 @@ namespace Hazelcast.Clustering
             => _unsubscribeResponseReader(message, State);
 
         /// <inheritdoc />
-        public IEnumerator<ClientSubscription> GetEnumerator()
+        public IEnumerator<MemberSubscription> GetEnumerator()
             => _clientSubscriptions.Values.GetEnumerator();
 
         /// <inheritdoc />

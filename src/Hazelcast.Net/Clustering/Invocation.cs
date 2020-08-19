@@ -66,7 +66,7 @@ namespace Hazelcast.Clustering
         /// <para>When an invocation is bound to a client, it will only be sent to that client,
         /// and it cannot and will not be retried if the client dies.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, ClientConnection targetClientConnection, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, MemberConnection targetClientConnection, CancellationToken cancellationToken)
             : this(requestMessage, messagingOptions, cancellationToken)
         {
             TargetClientConnection = targetClientConnection ?? throw new ArgumentNullException(nameof(targetClientConnection));
@@ -114,7 +114,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the target client connection, if any, otherwise <c>null</c>.
         /// </summary>
-        public ClientConnection TargetClientConnection { get; }
+        public MemberConnection TargetClientConnection { get; }
 
         /// <summary>
         /// Gets the unique identifier of the target partition, if any, otherwise <c>-1</c>.

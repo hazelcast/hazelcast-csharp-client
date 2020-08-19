@@ -118,7 +118,7 @@ namespace Hazelcast.NearCaching
                 (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync, LoggerFactory),
                 new EventState { Name = Name });
 
-            await Cluster.InstallSubscriptionAsync(subscription, CancellationToken.None).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription, CancellationToken.None).CAF();
             return subscription.Id;
         }
 

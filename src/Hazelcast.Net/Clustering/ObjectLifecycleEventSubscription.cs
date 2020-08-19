@@ -24,10 +24,10 @@ namespace Hazelcast.Clustering
     {
         private readonly bool _isSmart;
 
-        public ObjectLifecycleEventSubscription(Cluster cluster, ILoggerFactory loggerFactory, bool isSmart)
-            : base(cluster, loggerFactory)
+        public ObjectLifecycleEventSubscription(ClusterState clusterState, ClusterEvents clusterEvents)
+            : base(clusterState, clusterEvents)
         {
-            _isSmart = isSmart;
+            _isSmart = clusterState.Options.Networking.SmartRouting;
         }
 
         protected override ClusterSubscription CreateSubscription()

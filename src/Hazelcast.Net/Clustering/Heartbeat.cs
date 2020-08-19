@@ -106,20 +106,19 @@ namespace Hazelcast.Clustering
 
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            var clients = _cluster.SnapshotClientConnections();
+            var connections = _cluster.Members.SnapshotConnections(true);
             var now = DateTime.UtcNow;
 
             _logger.LogDebug("Run heartbeat");
 
-            var tasks = clients
-                .Where(x => x.Active)
+            var tasks = connections
                 .Select(x => RunAsync(x, now, cancellationToken))
                 .ToList();
 
             await Task.WhenAll(tasks).CAF();
         }
 
-        private async Task RunAsync(ClientConnection client, DateTime now, CancellationToken cancellationToken)
+        private async Task RunAsync(MemberConnection connection, DateTime now, CancellationToken cancellationToken)
         {
             // must ensure that timeout > interval ?!
 
@@ -127,17 +126,17 @@ namespace Hazelcast.Clustering
             // which is greater than the interval, so we *should* have
             // read from the last ping, if nothing else, so no read means
             // that the client is kinda dead - kill it for real
-            if (now - client.LastReadTime > _timeout)
+            if (now - connection.LastReadTime > _timeout)
             {
-                await KillClient(client).CAF();
+                await TerminateConnection(connection).CAF();
                 return;
             }
 
             // make sure we write to the client at least every interval
             // this should trigger a read when we receive the response
-            if (now - client.LastWriteTime > _period)
+            if (now - connection.LastWriteTime > _period)
             {
-                _logger.LogDebug("Ping client {ClientId}", client.Id);
+                _logger.LogDebug("Ping client {ClientId}", connection.Id);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
                 var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -145,8 +144,8 @@ namespace Hazelcast.Clustering
                 try
                 {
                     // cannot wait forever on a ping
-                    var responseMessage = await _cluster
-                        .SendToClientAsync(requestMessage, client, cancellation.Token)
+                    var responseMessage = await _cluster.Messaging
+                        .SendToMemberAsync(requestMessage, connection, cancellation.Token)
                         .TimeoutAfter(_options.PingTimeoutMilliseconds, cancellation, true)
                         .CAF();
 
@@ -155,7 +154,7 @@ namespace Hazelcast.Clustering
                 }
                 catch (TaskTimeoutException)
                 {
-                    await KillClient(client).CAF();
+                    await TerminateConnection(connection).CAF();
                 }
                 catch (Exception e)
                 {
@@ -171,14 +170,12 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async Task KillClient(ClientConnection client)
+        private async Task TerminateConnection(MemberConnection connection)
         {
-            // dead already?
-            if (!client.Active) return;
+            if (!connection.Active) return;
 
-            // kill
-            _logger.LogWarning("Heartbeat timeout for client {ClientId}, stopping.", client.Id);
-            await client.TerminateAsync().CAF(); // does not throw
+            _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}, terminating.", connection.Id);
+            await connection.TerminateAsync().CAF(); // does not throw
 
             // TODO: original code has reasons for closing connections
             //connection.Close(reason, new TargetDisconnectedException($"Heartbeat timed out to connection {connection}"));

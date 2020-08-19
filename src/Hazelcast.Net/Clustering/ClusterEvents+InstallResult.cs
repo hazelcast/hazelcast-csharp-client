@@ -14,7 +14,7 @@
 
 namespace Hazelcast.Clustering
 {
-    internal partial class Cluster // InstallResult
+    internal partial class ClusterEvents // InstallResult
     {
         /// <summary>
         /// Defines the possible results of the installation of a subscription.

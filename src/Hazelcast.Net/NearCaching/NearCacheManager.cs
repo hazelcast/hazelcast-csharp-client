@@ -114,7 +114,7 @@ namespace Hazelcast.NearCaching
         /// <param name="cancellationToken">A cancellation token.</param>
         private async ValueTask FetchMetadataAsync(ICollection<string> names, Func<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters, ValueTask> process, CancellationToken cancellationToken)
         {
-            var dataMembers = _cluster.LiteMembers;
+            var dataMembers = _cluster.Members.LiteMembers;
             foreach (var member in dataMembers)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -122,7 +122,7 @@ namespace Hazelcast.NearCaching
                 try
                 {
                     var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
-                    var responseMessage = await _cluster.SendToMemberAsync(requestMessage, member.Id, cancellationToken).CAF();
+                    var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id, cancellationToken).CAF();
                     var response = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
 
                     await process(response).CAF();

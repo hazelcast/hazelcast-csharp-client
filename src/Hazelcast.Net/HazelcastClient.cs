@@ -53,9 +53,27 @@ namespace Hazelcast
             _logger = loggerFactory.CreateLogger<IHazelcastClient>();
 
             _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
-            Cluster.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
+            Cluster.Connections.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
 
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
+
+            // wire events
+            // this way, the cluster does not need to know about the hazelcast client,
+            // and we don't have circular dependencies everywhere - cleaner
+            cluster.ClusterEvents.OnObjectLifecycleEvent = OnObjectLifecycleEvent;
+            cluster.ClusterEvents.OnPartitionLost = OnPartitionLost;
+            cluster.ClusterEvents.OnMemberLifecycleEvent = OnMemberLifecycleEvent;
+            cluster.ClusterEvents.OnClientLifecycleEvent = OnClientLifecycleEvent;
+            cluster.ClusterEvents.OnPartitionsUpdated = OnPartitionsUpdated;
+            cluster.ClusterEvents.OnConnectionAdded = OnConnectionAdded;
+            cluster.ClusterEvents.OnConnectionRemoved = OnConnectionRemoved;
+            cluster.ClusterEvents.OnConnectionRemoved = OnConnectionRemoved;
+
+            cluster.Connections.OnFirstConnection = async cancellationToken =>
+            {
+                foreach (var subscriber in options.Subscribers)
+                    await subscriber.SubscribeAsync(this, cancellationToken).CAF();
+            };
 
             // every async operations using this client will need a proper async context
             AsyncContext.Ensure();
@@ -82,7 +100,7 @@ namespace Hazelcast
             var cancellation = new CancellationTokenSource();
 #pragma warning restore CA2000
 
-            var task = Cluster
+            var task = Cluster.Connections
                 .ConnectAsync(cancellation.Token)
                 .TimeoutAfter(timeout.TimeoutMilliseconds(_options.Networking.ConnectionTimeoutMilliseconds), cancellation);
 
@@ -100,7 +118,7 @@ namespace Hazelcast
 #endif
         Task StartAsync(CancellationToken cancellationToken)
         {
-            var task = Cluster.ConnectAsync(cancellationToken);
+            var task = Cluster.Connections.ConnectAsync(cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

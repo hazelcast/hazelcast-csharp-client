@@ -145,7 +145,7 @@ namespace Hazelcast.Tests.Messaging
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 
-            await socket.SendAsync(ClientConnection.ClientProtocolInitBytes, ClientConnection.ClientProtocolInitBytes.Length);
+            await socket.SendAsync(MemberConnection.ClientProtocolInitBytes, MemberConnection.ClientProtocolInitBytes.Length);
 
             // testing & code coverage - OnSending should *not* be used outside of tests
             var cancellation = new CancellationTokenSource();

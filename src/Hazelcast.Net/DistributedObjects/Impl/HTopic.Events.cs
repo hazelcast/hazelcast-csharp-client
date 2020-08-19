@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 HandleEventAsync,
                 new SubscriptionState<TopicEventHandlers<T>>(Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
 
             return subscription.Id;
         }
@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             async ValueTask HandleEventAsync(IData itemData, long publishTime, Guid memberId)
             {
-                var member = Cluster.GetMember(memberId);
+                var member = Cluster.Members.GetMember(memberId);
 
                 // that one is not lazy...
                 var item = ToObject<T>(itemData);

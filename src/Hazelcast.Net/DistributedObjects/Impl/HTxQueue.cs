@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HTxQueue<TItem> : TransactionalDistributedObjectBase, IHTxQueue<TItem>
     {
-        public HTxQueue(string name, DistributedObjectFactory factory, Cluster cluster, ClientConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxQueue(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HQueue.ServiceName, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var itemData = ToSafeData(item);
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }
@@ -68,14 +68,14 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<int> CountAsync()
         {
             var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<TItem> DequeueAsync()
         {
             var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.SendToClientAsync(requestMessage, TransactionClientConnection).CAF();
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
         }

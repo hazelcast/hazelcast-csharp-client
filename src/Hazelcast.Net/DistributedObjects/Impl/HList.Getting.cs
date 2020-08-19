@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<IReadOnlyList<T>> GetAllAsync()
         {
             var requestMessage = ListGetAllCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = ListGetAllCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }
@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<T> GetAsync(int index)
         {
             var requestMessage = ListGetCodec.EncodeRequest(Name, index);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = ListGetCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -45,7 +45,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex)
         {
             var requestMessage = ListSubCodec.EncodeRequest(Name, fromIndex, toIndex);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             var response = ListSubCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }
@@ -55,7 +55,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListIndexOfCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListIndexOfCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListLastIndexOfCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListLastIndexOfCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -73,7 +73,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListContainsCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListContainsCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -82,7 +82,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListContainsAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListContainsAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -90,7 +90,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<bool> IsEmptyAsync()
         {
             var requestMessage = ListIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -98,7 +98,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task<int> CountAsync()
         {
             var requestMessage = ListSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return ListSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }

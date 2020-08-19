@@ -67,7 +67,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
                     var requestMessage = MapPutAllCodec.EncodeRequest(Name, list);
                     requestMessage.PartitionId = partitionId;
-                    var ownerTask = Cluster.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
+                    var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
                         .ContinueWith(_ => InvalidateEntries(list), default, default, TaskScheduler.Current);
                     tasks.Add(ownerTask);
                 }

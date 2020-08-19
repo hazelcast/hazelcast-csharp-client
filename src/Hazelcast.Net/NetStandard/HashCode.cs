@@ -56,6 +56,9 @@ https://raw.githubusercontent.com/Cyan4973/xxHash/5c174cfa4e45a42f94082dc0d4539b
 
 */
 
+#nullable enable
+#pragma warning disable CA1815 // Override equals and operator equals on value types
+
 #if NETSTANDARD2_0
 
 using System.Collections.Generic;
@@ -296,7 +299,7 @@ namespace System
         /// Any value outside the range [0..31] is treated as congruent mod 32.</param>
         /// <returns>The rotated value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [CLSCompliant(false)]
+        //[CLSCompliant(false)]
         public static uint RotateLeft(uint value, int offset)
             => (value << offset) | (value >> (32 - offset));
 
@@ -309,7 +312,7 @@ namespace System
         /// Any value outside the range [0..63] is treated as congruent mod 64.</param>
         /// <returns>The rotated value.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [CLSCompliant(false)]
+        //[CLSCompliant(false)]
         public static ulong RotateLeft(ulong value, int offset)
             => (value << offset) | (value >> (64 - offset));
 

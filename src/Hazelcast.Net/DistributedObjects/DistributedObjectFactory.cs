@@ -73,7 +73,7 @@ namespace Hazelcast.DistributedObjects
             where TImpl : DistributedObjectBase, T
         {
             if (_disposed == 1) throw new ObjectDisposedException("DistributedObjectFactory");
-            await _cluster.ThrowIfDisconnected().CAF();
+            await _cluster.ThrowIfNotConnected().CAF();
 
             var k = new DistributedObjectInfo(serviceName, name);
 
@@ -86,7 +86,7 @@ namespace Hazelcast.DistributedObjects
                 if (remote)
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
-                    _ = await _cluster.SendAsync(requestMessage, token).CAF();
+                    _ = await _cluster.Messaging.SendAsync(requestMessage, token).CAF();
                 }
 
                 x.OnInitialized();
@@ -125,7 +125,7 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         public async ValueTask CreateAllAsync(CancellationToken cancellationToken)
         {
-            await _cluster.ThrowIfDisconnected().CAF();
+            await _cluster.ThrowIfNotConnected().CAF();
 
             await foreach (var (key, _) in _objects)
             {
@@ -136,7 +136,7 @@ namespace Hazelcast.DistributedObjects
                 try
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
-                    await _cluster.SendAsync(requestMessage, cancellationToken).CAF();
+                    await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
                 }
                 catch (Exception e)
                 {
@@ -173,7 +173,7 @@ namespace Hazelcast.DistributedObjects
 
             // regardless of whether the object was known locally, destroy on server
             var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
-            var responseMessage = await _cluster.SendAsync(clientMessage, cancellationToken).CAF();
+            var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CAF();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }
 

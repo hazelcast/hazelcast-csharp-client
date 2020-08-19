@@ -53,7 +53,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var messageData = ToSafeData(message);
             var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
-            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, _keyData);
+            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, _keyData);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

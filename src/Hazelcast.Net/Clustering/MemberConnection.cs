@@ -37,9 +37,9 @@ namespace Hazelcast.Clustering
     // long timeout, invocations *will* be collected eventually and we do not leak.
 
     /// <summary>
-    /// Represents a client connection to a cluster member.
+    /// Represents a connection to a cluster member.
     /// </summary>
-    internal class ClientConnection : IAsyncDisposable
+    internal class MemberConnection : IAsyncDisposable
     {
         internal static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
@@ -55,7 +55,7 @@ namespace Hazelcast.Clustering
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Func<ClientMessage, ValueTask> _onReceiveEventMessage;
-        private Func<ClientConnection, ValueTask> _onShutdown;
+        private Func<MemberConnection, ValueTask> _onShutdown;
 
 #pragma warning disable CA2213 // Disposable fields should be disposed - is owned by _messageConnection, which is disposed
         private ClientSocketConnection _socketConnection;
@@ -68,19 +68,19 @@ namespace Hazelcast.Clustering
         private Task _bgTask;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientConnection"/> class.
+        /// Initializes a new instance of the <see cref="MemberConnection"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="socketOptions">Socket options.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public ClientConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
             : this(address, messagingOptions, socketOptions, new Int32Sequence(), correlationIdSequence, loggerFactory)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientConnection"/> class.
+        /// Initializes a new instance of the <see cref="MemberConnection"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
         /// <param name="messagingOptions">Messaging options.</param>
@@ -93,7 +93,7 @@ namespace Hazelcast.Clustering
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public ClientConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
@@ -101,7 +101,7 @@ namespace Hazelcast.Clustering
             _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            _logger = loggerFactory.CreateLogger<ClientConnection>();
+            _logger = loggerFactory.CreateLogger<MemberConnection>();
 
             HConsole.Configure(this, config => config.SetIndent(4).SetPrefix("CLIENT"));
         }
@@ -158,7 +158,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when the client shuts down.
         /// </summary>
-        public Func<ClientConnection, ValueTask> OnShutdown
+        public Func<MemberConnection, ValueTask> OnShutdown
         {
             get => _onShutdown;
             set

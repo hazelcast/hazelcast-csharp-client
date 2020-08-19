@@ -113,7 +113,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var timeToWaitMs = timeToWait.CodecMilliseconds(0);
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -127,7 +127,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var keyData = ToSafeData(key);
 
             var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapIsLockedCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -143,7 +143,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var refId = _lockReferenceIdSequence.GetNext();
 
             var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ContextId, refId);
-            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -163,7 +163,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var refId = _lockReferenceIdSequence.GetNext();
 
             var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
-            var task = Cluster.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

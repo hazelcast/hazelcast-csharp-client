@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 ReadSubscribeResponse, CreateUnsubscribeRequest, ReadUnsubscribeResponse, HandleEventAsync,
                 new SubscriptionState<CollectionItemEventHandlers<T>>(Name, handlers));
 
-            await Cluster.InstallSubscriptionAsync(subscription).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
 
             return subscription.Id;
         }
@@ -53,7 +53,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var eventType = (CollectionItemEventTypes) eventTypeData;
                 if (eventType == CollectionItemEventTypes.Nothing) return;
 
-                var member = Cluster.GetMember(memberId);
+                var member = Cluster.Members.GetMember(memberId);
                 var item = LazyArg<T>(itemData);
 
                 // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
