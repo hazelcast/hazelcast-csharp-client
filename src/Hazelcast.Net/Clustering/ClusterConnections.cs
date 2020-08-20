@@ -99,7 +99,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when connected.</returns>
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
+            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken, false);
             cancellationToken = cancellation.Token;
 
             _clusterState.MarkPropertiesReadOnly();
@@ -350,6 +350,7 @@ namespace Hazelcast.Clustering
 
                 _addressConnections[address] = connection;
 
+                // cluster becomes connected and can send messages
                 _clusterState.ConnectionState = ClusterConnectionState.Connected;
 
                 var otherCluster = _clusterServerSideId != default && _clusterServerSideId != info.ClusterId;

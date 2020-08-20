@@ -59,7 +59,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets the connection state.
         /// </summary>
-        public ClusterConnectionState ConnectionState { get; set; } = ClusterConnectionState.Disconnected;
+        public ClusterConnectionState ConnectionState { get; set; } = ClusterConnectionState.NotConnected;
 
         /// <summary>
         /// Gets the cluster general <see cref="CancellationToken"/>.
@@ -109,8 +109,6 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ClusterInstrumentation Instrumentation { get; } = new ClusterInstrumentation();
 
-        public bool IsConnected { get; } // (_disposed == 1 || _clusterState != ClusterState.Connected)
-
         /// <summary>
         /// Gets the correlation identifier sequence.
         /// </summary>
@@ -152,7 +150,7 @@ namespace Hazelcast.Clustering
         /// <param name="innerException">An optional inner exception.</param>
         public void ThrowIfNotConnected(Exception innerException = null)
         {
-            if (!IsConnected) throw new ClientNotConnectedException(innerException);
+            if (ConnectionState != ClusterConnectionState.Connected) throw new ClientNotConnectedException(innerException);
         }
 
         /// <summary>
@@ -160,15 +158,24 @@ namespace Hazelcast.Clustering
         /// cancellation with the supplied <paramref name="cancellationToken"/>.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
+        /// <param name="throwIfNotConnected">Whether to throw immediately if the cluster is not connected.</param>
         /// <returns>A new <see cref="CancellationTokenSource"/>obtained by linking the cluster general
         /// cancellation with the supplied <paramref name="cancellationToken"/>.</returns>
-        public CancellationTokenSource GetLinkedCancellation(CancellationToken cancellationToken)
+        /// <remarks>
+        /// <para>The called must ensure that the returned <see cref="CancellationTokenSource"/> is
+        /// eventually disposed.</para>
+        /// </remarks>
+        public CancellationTokenSource GetLinkedCancellation(CancellationToken cancellationToken, bool throwIfNotConnected = true)
         {
             // fail fast
-            ThrowIfNotConnected();
+            if (throwIfNotConnected) ThrowIfNotConnected();
 
+            // note: that is a bad idea - what we return will be disposed, and we certainly do not
+            // want the main _clusterCancellation to be disposed! plus, LinkedWith invoked with
+            // a default CancellationToken will lead to practically doing nothing anyways
+            // 
             // succeed fast
-            if (cancellationToken == default) return _clusterCancellation;
+            //if (cancellationToken == default) return _clusterCancellation;
 
             // still, there is a race condition - a chance that the _clusterCancellation
             // is gone by the time we use it = handle the situation here

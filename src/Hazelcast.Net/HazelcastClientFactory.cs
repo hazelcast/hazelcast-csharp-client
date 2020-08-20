@@ -74,12 +74,12 @@ namespace Hazelcast
             // this ensures that the clock is correctly configured before anything else
             // happens - remember the clock is static - so we are doing it here - and
             // the clock will actually initialize once
-            // TODO: make the clock non-static (low priority), move this somewhere else
+            // TODO: make the clock non-static and pass it to the client + where it's needed
             Clock.Initialize(options.Core.Clock);
 
             var loggerFactory = options.Logging.LoggerFactory.Service ?? new NullLoggerFactory();
 
-            // TODO: refactor serialization service entirely (medium)
+            // TODO: refactor serialization service entirely
             // there should not be a 'builder'
             // it's all configuration or service
             var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);

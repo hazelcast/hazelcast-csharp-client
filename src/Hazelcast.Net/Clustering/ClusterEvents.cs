@@ -459,6 +459,7 @@ namespace Hazelcast.Clustering
                 if (!await SubscribeToClusterEventsAsync(connection, correlationId, cancellationToken).CAF()) // does not throw
                 {
                     // failed => try another client
+                    // FIXME throttle!
                     connection = null;
                     continue;
                 }
@@ -594,8 +595,8 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The new connection.</param>
         public void NotifyConnectionEstablished(MemberConnection connection)
         {
-            // if we don't have a cluster client yet, start a
-            // single, cluster-wide task ensuring there is a cluster events client
+            // if we don't have a connection for cluster events yet, start a
+            // single, cluster-wide task ensuring there is one
             if (_clusterEventsConnection == null)
                 StartSetClusterEventsConnectionWithLock(connection, _clusterState.CancellationToken);
 

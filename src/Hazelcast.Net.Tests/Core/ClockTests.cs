@@ -69,8 +69,10 @@ namespace Hazelcast.Tests.Core
             Clock.Reset();
 
             Clock.Initialize(options);
+            Clock.Initialize(options); // ok to re-initialize with same options
 
-            Assert.Throws<InvalidOperationException>(() => Clock.Initialize(options));
+            options.OffsetMilliseconds = 2000;
+            Assert.Throws<InvalidOperationException>(() => Clock.Initialize(options)); // not ok with different options
 
             Assert.That(Clock.ToEpoch(origin), Is.EqualTo(1000));
             Assert.That(Clock.ToDateTime(1000), Is.EqualTo(origin));

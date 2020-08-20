@@ -37,7 +37,12 @@ namespace Hazelcast.Core
         internal static void Initialize(ClockOptions options)
         {
             if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1)
-                throw new InvalidOperationException("The clock has already been initialized.");
+            {
+                //throw new InvalidOperationException("The clock has already been initialized.");
+                if (options.OffsetMilliseconds != _offsetMilliseconds)
+                    throw new InvalidOperationException("The clock has already been initialized with a different offset.");
+                return;
+            }
             _offsetMilliseconds = options.OffsetMilliseconds;
         }
 
