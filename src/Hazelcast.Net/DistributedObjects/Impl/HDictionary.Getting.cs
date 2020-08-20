@@ -192,7 +192,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var requestMessage = MapEntriesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
                 var response = MapEntriesWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.AnchorList = response.AnchorDataList.AsAnchorIterator(SerializationService).ToList();
+                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
                 return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response.Response };
             }
 
@@ -235,7 +235,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var requestMessage = MapKeySetWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
                 var response = MapKeySetWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.AnchorList = response.AnchorDataList.AsAnchorIterator(SerializationService).ToList();
+                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
                 return new ReadOnlyLazyList<TKey>(response.Response, SerializationService);
             }
 
@@ -278,7 +278,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 var requestMessage = MapValuesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
                 var response = MapValuesWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.AnchorList = response.AnchorDataList.AsAnchorIterator(SerializationService).ToList();
+                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
                 return new ReadOnlyLazyList<TValue>(response.Response, SerializationService);
             }
 

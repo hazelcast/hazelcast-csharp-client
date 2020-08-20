@@ -16,6 +16,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -81,7 +82,7 @@ namespace Hazelcast.Predicates
             }
             Predicate = predicate;
             Comparer = comparer;
-            AnchorList = new List<KeyValuePair<int, KeyValuePair<object, object>>>();
+            _anchorList = new List<KeyValuePair<int, KeyValuePair<object, object>>>();
         }
 
         /// <summary>
@@ -103,7 +104,17 @@ namespace Hazelcast.Predicates
         /// </remarks>
         public IComparer<KeyValuePair<object, object>> Comparer { get; }
 
-        internal IList<KeyValuePair<int, KeyValuePair<object, object>>> AnchorList { get; set; }
+        private List<KeyValuePair<int, KeyValuePair<object, object>>> _anchorList;
+
+        internal IList<KeyValuePair<int, KeyValuePair<object, object>>> AnchorList => _anchorList;
+
+        // don't make the AnchorList property publicly settable + reuse the list
+        internal void UpdateAnchors(IEnumerable<KeyValuePair<int, KeyValuePair<object, object>>> anchors)
+        {
+            _anchorList ??= new List<KeyValuePair<int, KeyValuePair<object, object>>>();
+            _anchorList.Clear();
+            _anchorList.AddRange(anchors);
+        }
 
         /// <summary>
         /// Current page index

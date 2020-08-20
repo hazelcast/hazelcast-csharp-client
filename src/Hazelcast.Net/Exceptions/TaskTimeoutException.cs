@@ -15,7 +15,6 @@
 using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 namespace Hazelcast.Exceptions
 {

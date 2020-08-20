@@ -42,16 +42,11 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void InjectionOptions()
         {
-            var d = new Dictionary<string, string>
-            {
-                { "key.a", "value.a" },
-                { "key.b", "value.b" },
-            };
-
-            var options = new InjectionOptions { TypeName = "typeName", Args = d };
+            var options = new InjectionOptions { TypeName = "typeName" };
+            options.Args["key.a"] = "value.a";
+            options.Args["key.b"] = "value.b";
 
             Assert.That(options.TypeName, Is.EqualTo("typeName"));
-            Assert.That(options.Args, Is.SameAs(d));
 
             var toString = options.ToString();
             Console.WriteLine(toString);

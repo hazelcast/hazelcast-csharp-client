@@ -30,7 +30,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets or sets the arguments.
         /// </summary>
-        public Dictionary<string, string> Args { get; set; }
+        public Dictionary<string, string> Args { get; } = new Dictionary<string, string>();
 
         /// <inheritdoc />
         public override string ToString()

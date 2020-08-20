@@ -39,7 +39,6 @@ namespace System.Runtime.CompilerServices
         /// <summary>
         /// Slices the specified array using the specified range.
         /// </summary>
-        [SuppressMessage("NDepend", "ND1400:AvoidNamespacesMutuallyDependent", Justification = "Imported code.")]
         [ExcludeFromCodeCoverage] // not covering MS code
         public static T[] GetSubArray<T>(T[] array, Range range)
         {

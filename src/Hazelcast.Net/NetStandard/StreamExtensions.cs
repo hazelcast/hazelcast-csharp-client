@@ -18,10 +18,10 @@
 // See the LICENSE file in the project root for more information.
 
 #if NET462 || NETSTANDARD2_0
+using System;
 using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 // ReSharper disable once CheckNamespace
 namespace System.IO
