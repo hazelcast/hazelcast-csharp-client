@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;

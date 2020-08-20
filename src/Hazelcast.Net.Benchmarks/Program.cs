@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using System.IO;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;

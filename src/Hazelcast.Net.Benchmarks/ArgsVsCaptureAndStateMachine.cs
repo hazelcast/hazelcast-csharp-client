@@ -16,7 +16,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using Hazelcast.Core;
 
 namespace Hazelcast.Benchmarks
 {

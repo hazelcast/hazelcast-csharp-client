@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 // A SetUpFixture outside of any namespace provides SetUp and TearDown for the entire assembly.
 
 /*

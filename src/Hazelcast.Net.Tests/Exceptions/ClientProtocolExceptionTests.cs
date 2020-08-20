@@ -16,9 +16,9 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Exceptions;
-using Hazelcast.Testing;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Data;
+using Hazelcast.Testing;
 using Hazelcast.Tests.Testing;
 using NUnit.Framework;
 

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
+
 // This code file is heavily inspired from the Kerberos.NET library,
 // which is Copyright (c) 2017 Steve Syfuhs and released under the MIT
 // license at

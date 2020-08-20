@@ -1,13 +1,25 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using Hazelcast.Configuration.Binding;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
+using ConfigurationBinder = Hazelcast.Configuration.Binding.ConfigurationBinder;
 
 namespace Hazelcast.Tests.Configuration
 {
@@ -15,8 +27,6 @@ namespace Hazelcast.Tests.Configuration
     // just to make sure our own binder does not break anything
 
     // we need this here so our extension methods take over the default MS ones
-    using Hazelcast.Configuration.Binding;
-
     [TestFixture]
     public class ConfigurationBinderTests
     {
@@ -126,9 +136,9 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            var options = config.Get<ConfigurationInterfaceOptions>();
+            var options = ConfigurationBinder.Get<ConfigurationInterfaceOptions>(config);
 
-            var childOptions = options.Section.Get<DerivedOptions>();
+            var childOptions = ConfigurationBinder.Get<DerivedOptions>(options.Section);
 
             Assert.True(childOptions.Boolean);
             Assert.AreEqual(-2, childOptions.Integer);
@@ -179,11 +189,11 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            var options = config.Get<ConfigurationInterfaceOptions>();
+            var options = ConfigurationBinder.Get<ConfigurationInterfaceOptions>(config);
 
-            var childOptions = options.Section.Get<DerivedOptionsWithIConfigurationSection>();
+            var childOptions = ConfigurationBinder.Get<DerivedOptionsWithIConfigurationSection>(options.Section);
 
-            var childDerivedOptions = childOptions.DerivedSection.Get<DerivedOptions>();
+            var childDerivedOptions = ConfigurationBinder.Get<DerivedOptions>(childOptions.DerivedSection);
 
             Assert.True(childOptions.Boolean);
             Assert.AreEqual(-2, childOptions.Integer);
@@ -210,8 +220,8 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            Assert.Null(config.GetValue<bool?>("empty"));
-            Assert.Null(config.GetValue<int?>("empty"));
+            Assert.Null(ConfigurationBinder.GetValue<bool?>(config, "empty"));
+            Assert.Null(ConfigurationBinder.GetValue<int?>(config, "empty"));
         }
 
         [Test]
@@ -227,9 +237,9 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            Assert.True(config.GetValue<bool?>("Boolean"));
-            Assert.AreEqual(-2, config.GetValue<int?>("Integer"));
-            Assert.AreEqual(11, config.GetValue<int?>("Nested:Integer"));
+            Assert.True(ConfigurationBinder.GetValue<bool?>(config, "Boolean"));
+            Assert.AreEqual(-2, ConfigurationBinder.GetValue<int?>(config, "Integer"));
+            Assert.AreEqual(11, ConfigurationBinder.GetValue<int?>(config, "Nested:Integer"));
         }
 
         [Test]
@@ -263,14 +273,14 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            Assert.False(config.GetValue<bool>("Boolean"));
-            Assert.AreEqual(0, config.GetValue<int>("Integer"));
-            Assert.AreEqual(0, config.GetValue<int>("Nested:Integer"));
-            Assert.Null(config.GetValue<ComplexOptions>("Object"));
-            Assert.False(config.GetSection("Boolean").Get<bool>());
-            Assert.AreEqual(0, config.GetSection("Integer").Get<int>());
-            Assert.AreEqual(0, config.GetSection("Nested:Integer").Get<int>());
-            Assert.Null(config.GetSection("Object").Get<ComplexOptions>());
+            Assert.False(ConfigurationBinder.GetValue<bool>(config, "Boolean"));
+            Assert.AreEqual(0, ConfigurationBinder.GetValue<int>(config, "Integer"));
+            Assert.AreEqual(0, ConfigurationBinder.GetValue<int>(config, "Nested:Integer"));
+            Assert.Null(ConfigurationBinder.GetValue<ComplexOptions>(config, "Object"));
+            Assert.False(ConfigurationBinder.Get<bool>(config.GetSection("Boolean")));
+            Assert.AreEqual(0, ConfigurationBinder.Get<int>(config.GetSection("Integer")));
+            Assert.AreEqual(0, ConfigurationBinder.Get<int>(config.GetSection("Nested:Integer")));
+            Assert.Null(ConfigurationBinder.Get<ComplexOptions>(config.GetSection("Object")));
         }
 
         [Test]
@@ -283,15 +293,15 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            Assert.False(config.GetValue<bool>("Boolean"));
-            Assert.AreEqual(0, config.GetValue<int>("Integer"));
-            Assert.AreEqual(0, config.GetValue<int>("Nested:Integer"));
-            Assert.Null(config.GetValue<ComplexOptions>("Object"));
-            Assert.True(config.GetValue("Boolean", true));
-            Assert.AreEqual(3, config.GetValue("Integer", 3));
-            Assert.AreEqual(1, config.GetValue("Nested:Integer", 1));
+            Assert.False(ConfigurationBinder.GetValue<bool>(config, "Boolean"));
+            Assert.AreEqual(0, ConfigurationBinder.GetValue<int>(config, "Integer"));
+            Assert.AreEqual(0, ConfigurationBinder.GetValue<int>(config, "Nested:Integer"));
+            Assert.Null(ConfigurationBinder.GetValue<ComplexOptions>(config, "Object"));
+            Assert.True(ConfigurationBinder.GetValue(config, "Boolean", true));
+            Assert.AreEqual(3, ConfigurationBinder.GetValue(config, "Integer", 3));
+            Assert.AreEqual(1, ConfigurationBinder.GetValue(config, "Nested:Integer", 1));
             var foo = new ComplexOptions();
-            Assert.AreSame(config.GetValue("Object", foo), foo);
+            Assert.AreSame(ConfigurationBinder.GetValue(config, "Object", foo), foo);
         }
 
         [Test]
@@ -305,7 +315,7 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            var uri = config.GetValue<Uri>("AnUri");
+            var uri = ConfigurationBinder.GetValue<Uri>(config, "AnUri");
 
             Assert.AreEqual("http://www.bing.com", uri.OriginalString);
         }
@@ -349,8 +359,8 @@ namespace Hazelcast.Tests.Configuration
             // act
             config.HzBind(options);
             var optionsValue = options.GetType().GetProperty("Value").GetValue(options);
-            var getValueValue = config.GetValue(type, "Value");
-            var getValue = config.GetSection("Value").Get(type);
+            var getValueValue = ConfigurationBinder.GetValue(config, type, "Value");
+            var getValue = ConfigurationBinder.Get(config.GetSection("Value"), type);
 
             // assert
             Assert.AreEqual(expectedValue, optionsValue);
@@ -398,10 +408,10 @@ namespace Hazelcast.Tests.Configuration
                 () => config.HzBind(options));
 
             var getValueException = Assert.Throws<InvalidOperationException>(
-                () => config.GetValue(type, "Value"));
+                () => ConfigurationBinder.GetValue(config, type, "Value"));
 
             var getException = Assert.Throws<InvalidOperationException>(
-                () => config.GetSection("Value").Get(type));
+                () => ConfigurationBinder.Get(config.GetSection("Value"), type));
 
             // assert
             Assert.NotNull(exception.InnerException);
@@ -584,7 +594,7 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            var options = config.GetSection("obj").Get<ComplexOptions>();
+            var options = ConfigurationBinder.Get<ComplexOptions>(config.GetSection("obj"));
             Assert.NotNull(options);
             Assert.True(options.Boolean);
             Assert.AreEqual(-2, options.Integer);
@@ -610,7 +620,7 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            var options = config.Get<ComplexOptions>();
+            var options = ConfigurationBinder.Get<ComplexOptions>(config);
             Assert.Null(options.GetType().GetTypeInfo().GetDeclaredProperty(property).GetValue(options));
         }
 
@@ -632,7 +642,7 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            var options = config.Get<ComplexOptions>(o => o.BindNonPublicProperties = true);
+            var options = ConfigurationBinder.Get<ComplexOptions>(config, o => o.BindNonPublicProperties = true);
             Assert.AreEqual("stuff", options.GetType().GetTypeInfo().GetDeclaredProperty(property).GetValue(options));
         }
 
@@ -650,7 +660,7 @@ namespace Hazelcast.Tests.Configuration
             configurationBuilder.AddInMemoryCollection(dic);
             var config = configurationBuilder.Build();
 
-            var options = config.Get<ComplexOptions>(o => o.BindNonPublicProperties = true);
+            var options = ConfigurationBinder.Get<ComplexOptions>(config, o => o.BindNonPublicProperties = true);
             Assert.Null(options.GetType().GetTypeInfo().GetDeclaredProperty(property).GetValue(options));
         }
 
