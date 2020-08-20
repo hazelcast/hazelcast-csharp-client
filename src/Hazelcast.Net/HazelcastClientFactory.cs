@@ -38,7 +38,7 @@ namespace Hazelcast
         /// </summary>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
-        /// <para>Options are built via <see cref="HazelcastOptions.Build(string[], IEnumerable{KeyValuePair{string, string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/> method.</para>
+        /// <para>Options are built via <see cref="HazelcastOptions.Build(string[], System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{string,string}}, string, string, string, System.Action{Microsoft.Extensions.Configuration.IConfiguration,Hazelcast.HazelcastOptions}(Microsoft.Extensions.Configuration.IConfiguration,Hazelcast.HazelcastOptions))"/> method.</para>
         /// </remarks>
         public static IHazelcastClient CreateClient()
             => CreateClient(HazelcastOptions.Build());

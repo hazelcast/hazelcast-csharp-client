@@ -17,9 +17,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Core;
+using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using Partitioner = Hazelcast.Partitioning.Partitioner;
 
 namespace Hazelcast.Clustering
 {

@@ -173,7 +173,7 @@ namespace Hazelcast.Clustering
             // note: that is a bad idea - what we return will be disposed, and we certainly do not
             // want the main _clusterCancellation to be disposed! plus, LinkedWith invoked with
             // a default CancellationToken will lead to practically doing nothing anyways
-            // 
+            //
             // succeed fast
             //if (cancellationToken == default) return _clusterCancellation;
 

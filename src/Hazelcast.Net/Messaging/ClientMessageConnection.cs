@@ -291,8 +291,8 @@ namespace Hazelcast.Messaging
             frame.WriteLengthAndFlags(header);
             var sentHeader = await _connection.SendAsync(header, sizeofHeader, cancellationToken).CAF();
             ArrayPool<byte>.Shared.Return(header);
-            
-            return sentHeader && 
+
+            return sentHeader &&
                    (frame.Length <= sizeofHeader ||
                     await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF());
         }
