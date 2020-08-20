@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -59,7 +61,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long Get();
+        Task<long> GetAsync();
 
         /// <summary>
         /// Adds the given value to the current value.
@@ -69,7 +71,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long GetAndAdd(long delta);
+        Task<long> GetAndAddAsync(long delta);
 
         /// <summary>
         /// Adds the given value to the current value
@@ -79,7 +81,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long AddAndGet(long delta);
+        Task<long> AddAndGetAsync(long delta);
 
         /// <summary>
         /// Subtracts the given value from the current value.
@@ -89,7 +91,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long GetAndSubtract(long delta);
+        Task<long> GetAndSubtractAsync(long delta);
 
         /// <summary>
         /// Subtracts the given value from the current value.
@@ -99,7 +101,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long SubtractAndGet(long delta);
+        Task<long> SubtractAndGetAsync(long delta);
 
         /// <summary>
         /// Decrements by one the current value.
@@ -108,7 +110,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long DecrementAndGet();
+        Task<long> DecrementAndGetAsync();
 
         /// <summary>
         /// Increments by one the current value.
@@ -117,7 +119,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long IncrementAndGet();
+        Task<long> IncrementAndGetAsync();
 
         /// <summary>
         /// Decrements by one the current value.
@@ -126,7 +128,7 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long GetAndDecrement();
+        Task<long> GetAndDecrementAsync();
 
         /// <summary>
         /// Increments by one the current value.
@@ -135,13 +137,13 @@ namespace Hazelcast.DistributedObjects
         /// <exception cref="NoDataMemberInClusterException">if the cluster does not contain any data members</exception>
         /// <exception cref="NotSupportedException">if the cluster version is less than 3.10</exception>
         /// <exception cref="ConsistencyLostException">if the session guarantees have been lost</exception>
-        long GetAndIncrement();
+        Task<long> GetAndIncrementAsync();
 
         /// <summary>
         /// Resets the observed state by this PN counter.
         /// This method may be used after a method invocation has thrown a <see cref="ConsistencyLostException"/>
         /// to reset the proxy and to be able to start a new session.
         /// </summary>
-        void Reset();
+        Task ResetAsync();
     }
 }

@@ -31,17 +31,6 @@ namespace Hazelcast.Examples.Client
 
             var connected = new SemaphoreSlim(0);
 
-            void Configure(HazelcastOptions configureOptions)
-            {
-                configureOptions.AddSubscriber(on => on
-                    .ClientStateChanged((c, eventArgs) =>
-                    {
-                        Console.WriteLine($"State: {eventArgs.State}");
-                        if (eventArgs.State == ClientLifecycleState.Connected)
-                            connected.Release();
-                    }));
-            }
-
             // create another Hazelcast client and connect to a server running on localhost
             options.AddSubscriber(on => on
                 .ClientStateChanged((c, eventArgs) =>

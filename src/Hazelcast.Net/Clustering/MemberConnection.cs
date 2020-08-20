@@ -276,7 +276,9 @@ namespace Hazelcast.Clustering
 
             // find the corresponding invocation
             // and remove invocation
+#pragma warning disable CA2000 // Dispose objects before losing scope - invocations are disposed by ClusterMessaging
             if (!TryRemoveInvocation(message.CorrelationId, out var invocation))
+#pragma warning restore CA2000
             {
                 // orphan messages are ignored (but logged)
                 _logger.LogWarning($"Received message for unknown invocation [{message.CorrelationId}].");

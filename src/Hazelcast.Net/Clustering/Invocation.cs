@@ -33,8 +33,17 @@ namespace Hazelcast.Clustering
         private readonly MessagingOptions _messagingOptions;
         private readonly CancellationToken _cancellationToken;
 
-        private TaskCompletionSource<ClientMessage> _completionSource;
+        // do NOT make that field readonly - we don't want to call Dispose()
+        // on a copy of the readonly variable - if may be that it would work
+        // as expected with the current implementation of CancellationTokenRegistration
+        // but how can we be sure it will never change?
+        //
+        // reference: https://stackoverflow.com/questions/9927434/impure-method-is-called-for-readonly-field
+#pragma warning disable IDE0044 // Add readonly modifier
         private CancellationTokenRegistration _registration;
+#pragma warning restore IDE0044 // Add readonly modifier
+
+        private TaskCompletionSource<ClientMessage> _completionSource;
         private int _attemptsCount; // number of times this invocation has been attempted
 
         /// <summary>

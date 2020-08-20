@@ -49,6 +49,12 @@ namespace Hazelcast.Testing
         {
             // uses the overloaded TActual.Equals() methods
 
+            // all these are intentional in this tests
+            // ReSharper disable EqualExpressionComparison
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable NegativeEqualityExpression
+#pragma warning disable CS1718 // Comparison made to same variable
+
             if (!actual.Equals(actual)) return EquatableResult.Fail(this, actual, "'x.Equals(x)' should not be false");
             if (actual.Equals(null)) return EquatableResult.Fail(this, actual, "'x.Equals(null)' should not be true");
             if (!actual.Equals(_equal)) return EquatableResult.Fail(this, actual, "'x.Equals(equal)' should not be false");

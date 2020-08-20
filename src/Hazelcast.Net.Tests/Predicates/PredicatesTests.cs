@@ -4,6 +4,7 @@ using System.Reflection;
 using Hazelcast.Core;
 using Hazelcast.Predicates;
 using Hazelcast.Serialization;
+using Hazelcast.Testing.Predicates;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -90,7 +91,7 @@ namespace Hazelcast.Tests.Predicates
         public void PagingPredicateTest()
         {
             AssertPredicate(new PagingPredicate(3, Predicate.True()), PredicateDataSerializerHook.PagingPredicate);
-            AssertPredicate(new PagingPredicate(3, Predicate.True(), Predicate.Comparer()), PredicateDataSerializerHook.PagingPredicate);
+            AssertPredicate(new PagingPredicate(3, Predicate.True(), new PredicateComparer()), PredicateDataSerializerHook.PagingPredicate);
 
             var paging = new PagingPredicate(3, Predicate.True());
             paging.AnchorList.Add(new KeyValuePair<int, KeyValuePair<object, object>>(0, new KeyValuePair<object, object>("a", "b")));

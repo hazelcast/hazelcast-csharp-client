@@ -18,6 +18,9 @@ using Hazelcast.Messaging;
 
 namespace Hazelcast.Clustering
 {
+    // this is in-progress, the idea being that the cluster should provide some
+    // basic instrumentation regarding abnormal situations, etc.
+
     public class ClusterInstrumentation
     {
         private int _missedEventsCount;
@@ -26,6 +29,10 @@ namespace Hazelcast.Clustering
         public int MissedEventsCount => _missedEventsCount;
 
         public int ExceptionsInEventHandlersCount => _exceptionsInEventHandlersCount;
+
+// work-in-progress, not using all parameters for now
+#pragma warning disable CA1801 // Review unused parameters
+#pragma warning disable IDE0060 // Remove unused parameter
 
         internal void CountMissedEvent(ClientMessage message)
             => Interlocked.Increment(ref _missedEventsCount);

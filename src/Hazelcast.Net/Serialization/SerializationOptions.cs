@@ -19,6 +19,10 @@ using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 
+// suppress warning about IPortableFactory not being disposed
+// TODO: should HazelcastOptions be IDisposable so in the end we dispose these factories?
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
 namespace Hazelcast.Serialization
 {
     /// <summary>
@@ -112,9 +116,11 @@ namespace Hazelcast.Serialization
         [BinderIgnore]
         public ICollection<FactoryOptions<IPortableFactory>> PortableFactories { get; }
 
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
         [BinderIgnore(false)]
         [BinderName("portableFactories")]
         private CollectionBinder<IdentifiedInjectionOptions> PortableFactoriesBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
 
         /// <summary>
         /// Adds an <see cref="IPortableFactory"/>.
@@ -159,9 +165,11 @@ namespace Hazelcast.Serialization
         [BinderIgnore]
         public ICollection<FactoryOptions<IDataSerializableFactory>> DataSerializableFactories { get; }
 
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
         [BinderIgnore(false)]
         [BinderName("dataSerializableFactories")]
         private CollectionBinder<IdentifiedInjectionOptions> DataSerializableFactoriesBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
 
         /// <summary>
         /// Adds an <see cref="IDataSerializableFactory"/>.
@@ -206,6 +214,7 @@ namespace Hazelcast.Serialization
         [BinderIgnore]
         public SerializerOptions DefaultSerializer { get; set; }
 
+#pragma warning disable IDE0051 // Remove unused private members - used by binding
         [BinderIgnore(false)]
         [BinderName("defaultSerializer")]
         private DefaultSerializerInjectionOptions DefaultSerializerBinder
@@ -220,13 +229,16 @@ namespace Hazelcast.Serialization
                 };
             }
         }
+#pragma warning restore IDE0051 // Remove unused private members
 
         [BinderIgnore]
         public ICollection<SerializerOptions> Serializers { get; }
 
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
         [BinderIgnore(false)]
         [BinderName("serializers")]
         private CollectionBinder<SerializerInjectionOptions> SerializersBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
 
         #endregion
 
