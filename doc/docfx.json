@@ -8,7 +8,7 @@
           "exclude": [ "**/obj/**", "**/bin/**" ]
         }
       ],
-      "dest": "obj/api",
+      "dest": "obj/dev/api",
       "disableGitFeatures": true,
       "disableDefaultFilter": false,
       "properties": { "TargetFramework":  "netstandard2.0" }
@@ -17,12 +17,12 @@
   "build": {
     "content": [
       {
-        "src": "obj/api",
-        "dest": "api",
+        "src": "obj/dev/api",
+        "dest": "dev/api",
         "files": [ "**/*.yml" ]
       },
       {
-        "files": [ "doc/**/*.md", "*.md", "toc.yml", "api/index.md" ]
+        "files": [ "*.md", "toc.yml", "dev/api/index.md", "dev/toc.yml", "dev/doc/**.md" ]
       }
     ],
     "resource": [ { "files": [ "images/**" ] } ],

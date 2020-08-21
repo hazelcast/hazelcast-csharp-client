@@ -1,3 +1,3 @@
 # Distributed Objects
 
-tbc
+(to be completed)

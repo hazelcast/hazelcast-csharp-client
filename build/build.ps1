@@ -54,7 +54,7 @@ param (
     [Alias("tf")]
     [string]
     $testFilter,
-    
+
     [Alias("cf")]
     [string]
     $coverageFilter
@@ -84,7 +84,7 @@ foreach ($t in $targets) {
             Write-Output "  cover            : when running tests, also perform code coverage analysis"
             Write-Output "  nuget            : builds the NuGet package(s)"
             Write-Output "  rc               : runs the remote controller for tests"
-            Write-Output "  docServe (ds)    : serves the documentation"
+            Write-Output "  docsServe (ds)   : serves the documentation"
             Write-Output "  failedTests (ft) : details failed tests"
             Write-Output ""
             Write-Output "When no target is specified, the script does 'clean,build,docsIf,tests'. Note that"
@@ -106,7 +106,7 @@ foreach ($t in $targets) {
         "cover"          { $doCover = $true }
         "nuget"          { $doNuget = $true }
         "rc"             { $doRc = $true }
-        "docserve"       { $doDocsServe = $true }
+        "docsServe"      { $doDocsServe = $true }
         "ds"             { $doDocsServe = $true }
         "failedtests"    { $doFailedTests = $true }
         "ft"             { $doFailedTests = $true }
@@ -177,7 +177,7 @@ $slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot/..")
 $srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
 $tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
 $outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
-$docDir = [System.IO.Path]::GetFullPath("$slnRoot/docs")
+$docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
 $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
@@ -786,7 +786,7 @@ if ($doTests) {
                     Write-Output $testCase.failure.message.innerText
                     Write-Output $testCase.failure."stack-trace".innerText
                     Write-Output ""
-                }                
+                }
             }
         }
     }

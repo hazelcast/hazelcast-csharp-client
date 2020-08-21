@@ -9,7 +9,7 @@ bin/
 *.suo
 *.snk
 
-/docs/templates/default/
+/doc/templates/default/
 
 _UpgradeReport_Files/
 Backup*/

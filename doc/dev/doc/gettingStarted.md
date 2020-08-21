@@ -1,4 +1,6 @@
-# Hazelcast client
+# Getting Started
+
+## Hazelcast client
 
 The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static @Hazelcast.HazelcastClientFactory. Before it can be used, it needs to be started via the @Hazelcast.IHazelcastClient.StartAsync* method. After it has been used, it needs to be disposed in order to properly release its resources.
 
