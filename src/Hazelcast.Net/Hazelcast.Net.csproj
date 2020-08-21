@@ -54,11 +54,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\IHMap.*.cs">
-        <DependentUpon>IHMap.cs</DependentUpon>
+    <Compile Update="DistributedObjects\IHDictionary.*.cs">
+        <DependentUpon>IHDictionary.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\IHReplicatedMap.*.cs">
-        <DependentUpon>IHReplicatedMap.cs</DependentUpon>
+    <Compile Update="DistributedObjects\IHReplicatedDictionary.*.cs">
+        <DependentUpon>IHReplicatedDictionary.cs</DependentUpon>
     </Compile>
     <Compile Update="Networking\SocketConnectionBase+*.cs">
         <DependentUpon>SocketConnectionBase.cs</DependentUpon>
@@ -81,20 +81,20 @@
     <Compile Update="DistributedObjects\Impl\HList.*.cs">
       <DependentUpon>HList.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.*.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HDictionary.*.cs">
+      <DependentUpon>HDictionary.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HMapWithCache.*.cs">
-      <DependentUpon>HMapWithCache.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HDictionaryWithCache.*.cs">
+      <DependentUpon>HDictionaryWithCache.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HMultiMap.*.cs">
-      <DependentUpon>HMultiMap.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HMultiDictionary.*.cs">
+      <DependentUpon>HMultiDictionary.cs</DependentUpon>
     </Compile>
     <Compile Update="DistributedObjects\Impl\HQueue.*.cs">
       <DependentUpon>HQueue.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HReplicatedMap.*.cs">
-      <DependentUpon>HReplicatedMap.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HReplicatedDictionary.*.cs">
+      <DependentUpon>HReplicatedDictionary.cs</DependentUpon>
     </Compile>
     <Compile Update="DistributedObjects\Impl\HRingBuffer.*.cs">
       <DependentUpon>HRingBuffer.cs</DependentUpon>
@@ -104,93 +104,6 @@
     </Compile>
     <Compile Update="DistributedObjects\Impl\HTopic.*.cs">
       <DependentUpon>HTopic.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="DistributedObjects\IHDictionary.AggrProj.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Caching.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Events.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Getting.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Indexing.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Intercepting.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Locking.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Processing.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Removing.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.Setting.cs">
-      <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHReplicatedDictionary.Events.cs">
-      <DependentUpon>IHReplicatedDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHReplicatedDictionary.Getting.cs">
-      <DependentUpon>IHReplicatedDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHReplicatedDictionary.Removing.cs">
-      <DependentUpon>IHReplicatedDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHReplicatedDictionary.Setting.cs">
-      <DependentUpon>IHReplicatedDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.AggrProj.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Caching.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Events.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Getting.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Indexing.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Intercepting.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Locking.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Processing.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Removing.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.Setting.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionaryWithCache.Getting.cs">
-      <DependentUpon>HDictionaryWithCache.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionaryWithCache.Processing.cs">
-      <DependentUpon>HDictionaryWithCache.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionaryWithCache.Removing.cs">
-      <DependentUpon>HDictionaryWithCache.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionaryWithCache.Setting.cs">
-      <DependentUpon>HDictionaryWithCache.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 
