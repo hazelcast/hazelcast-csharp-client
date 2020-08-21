@@ -401,7 +401,7 @@ if ($doCover) {
 
 if ($doNuget) {
     Write-Output "Package"
-    Write-Output "  To             : (tbd)"
+    Write-Output "  To             : $tmpDir/temp/output"
     Write-Output ""
 }
 
@@ -414,13 +414,13 @@ if ($doRc) {
 
 if ($doDocsServe) {
     Write-Output "Documentation Server"
-    Write-Output "  Path           : $tmpdir\docfx.site"
+    Write-Output "  Path           : $tmpdir/docfx.site"
     Write-Output ""
 }
 
 if ($doFailedTests) {
     Write-Output "Failed Tests"
-    Write-Output "  Path           : $tmpdir\tests\results"
+    Write-Output "  Path           : $tmpdir/tests/results"
     Write-Output ""
 }
 
@@ -634,7 +634,7 @@ function RunDotNetCoreTests($f) {
 
         Write-Output "exec: dotnet dotcover $dotCoverArgs"
         pushd "$srcDir/Hazelcast.Net.Tests"
-        dotnet dotcover $dotCoverArgs
+        &dotnet dotcover $dotCoverArgs
         popd
     }
     else {
@@ -653,7 +653,7 @@ function RunDotNetCoreTests($f) {
             "NUnit.Where=`"$testFilter`"" )
 
         Write-Output "exec: dotnet $dotnetArgs"
-        dotnet $dotnetArgs
+        &dotnet $dotnetArgs
     }
 
     # NUnit adapter does not support configuring the file name, move
@@ -814,6 +814,13 @@ if ($doDocsServe) {
     Write-Output "Documentation server is running..."
     Write-Output "Press ENTER to stop"
     &$docfx serve "$tmpDir\docfx.site"
+}
+
+if ($doNuget) {
+    Write-Output ""
+    Write-Output "Build NuGet package(s)..."
+    # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-pack
+    &dotnet pack "$srcDir\Hazelcast.Net\Hazelcast.Net.csproj" --no-build --nologo -o "$tmpDir\output"
 }
 
 Write-Output ""

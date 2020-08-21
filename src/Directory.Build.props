@@ -24,4 +24,27 @@
     <!--<Nullable>enable</Nullable>-->
   </PropertyGroup>
 
+  <PropertyGroup>
+
+    <!--
+    https://cezarypiatek.github.io/post/setting-assembly-and-package-metadata/
+    <Version>4.0.0-alpha.2</Version>
+    -->
+
+    <AssemblyVersion>4.0.0</AssemblyVersion>
+    <FileVersion>4.0.0</FileVersion>
+    <VersionPrefix>4.0.0</VersionPrefix>
+    <VersionSuffix>alpha.2</VersionSuffix>
+
+    <Authors>Hazelcast, Inc.</Authors>
+    <Product>Hazelcast .NET Client</Product>
+    <Company>Hazelcast, Inc.</Company>
+    <Copyright>Copyright (C) 2008-2020 Hazelcast, Inc.</Copyright>
+    <Title>Hazelcast .NET Client</Title>
+
+    <!-- https://devblogs.microsoft.com/nuget/managing-package-owners/ -->
+    <Owners>Hazelcast, Inc.</Owners>
+
+  </PropertyGroup>
+
 </Project>
