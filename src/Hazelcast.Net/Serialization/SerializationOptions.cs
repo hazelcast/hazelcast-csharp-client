@@ -263,7 +263,7 @@ namespace Hazelcast.Serialization
                 base.ToString(text);
                 text.Append(", serializedTypeName: '");
                 text.Append(SerializedTypeName ?? "<null>");
-                text.Append("'");
+                text.Append('\'');
             }
         }
 

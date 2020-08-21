@@ -68,7 +68,7 @@ namespace Hazelcast.Clustering
         /// </remarks>
         public bool NotifyNewConnection(Guid memberId, MemberConnection connection)
         {
-            var isFirst = _connections.Count == 0;
+            var isFirst = _connections.IsEmpty;
 
             if (_connections.ContainsKey(memberId))
                 throw new HazelcastException("Duplicate client.");
@@ -90,7 +90,7 @@ namespace Hazelcast.Clustering
         {
             _connections.TryRemove(connection.MemberId, out _);
 
-            var wasLast = _connections.Count == 0;
+            var wasLast = _connections.IsEmpty;
             return wasLast;
         }
 

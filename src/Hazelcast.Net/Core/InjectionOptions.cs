@@ -39,7 +39,7 @@ namespace Hazelcast.Core
             text.Append(GetType().Name);
             text.Append(" typeName: '");
             text.Append(TypeName ?? "<null>");
-            text.Append("'");
+            text.Append('\'');
 
             ToString(text);
 
@@ -51,7 +51,7 @@ namespace Hazelcast.Core
                     text.Append(argKey);
                     text.Append(": '");
                     text.Append(argValue ?? "<null>");
-                    text.Append("'");
+                    text.Append('\'');
                 }
             }
 

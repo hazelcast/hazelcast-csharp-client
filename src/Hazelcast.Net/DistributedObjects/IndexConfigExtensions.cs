@@ -86,7 +86,7 @@ namespace Hazelcast.DistributedObjects
             foreach (var normalizedAttributeName in normalizedAttributeNames)
             {
                 newConfig.AddAttribute(normalizedAttributeName);
-                nameBuilder?.Append("_").Append(normalizedAttributeName);
+                nameBuilder?.Append('_').Append(normalizedAttributeName);
             }
             if (nameBuilder != null)
                 indexName = nameBuilder.ToString();

@@ -57,7 +57,7 @@ namespace Hazelcast.NearCaching
         /// <remarks>
         /// <para>zero means forever.</para>
         /// </remarks>
-        public int MaxIdleSeconds { get; set; } = 0;
+        public int MaxIdleSeconds { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum size of the cache before entries get evicted.
@@ -67,7 +67,7 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Gets or sets the number of seconds entries stay in the cache before being evicted.
         /// </summary>
-        public int TimeToLiveSeconds { get; set; } = 0;
+        public int TimeToLiveSeconds { get; set; }
 
         /// <summary>
         /// Whether to invalidate entries when entries in the backing data structure are changed.

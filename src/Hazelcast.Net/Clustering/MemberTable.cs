@@ -68,7 +68,7 @@ namespace Hazelcast.Clustering
             text.Append(Count);
             text.Append(" members: ");
             text.Append(string.Join(", ", Members.Values));
-            text.Append(")");
+            text.Append(')');
             return text.ToString();
         }
     }

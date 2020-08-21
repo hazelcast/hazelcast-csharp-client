@@ -12,9 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if HZ_CONSOLE
 using System;
 using System.Globalization;
 using System.Threading;
+#else
+#pragma warning disable CA1801 // Review unused parameters
+#pragma warning disable CA1822 // Mark members as static
+#endif
 
 namespace Hazelcast.Core
 {
@@ -45,6 +50,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="indent">The indentation level.</param>
         /// <returns>This configuration object.</returns>
+
         public HConsoleConfiguration SetIndent(int indent)
         {
 #if HZ_CONSOLE
