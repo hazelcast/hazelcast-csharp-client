@@ -401,6 +401,7 @@ if ($doCover) {
 
 if ($doNuget) {
     Write-Output "Package"
+    Write-Output "  Configuration  : $configuration"
     Write-Output "  To             : $tmpDir/temp/output"
     Write-Output ""
 }
@@ -820,7 +821,7 @@ if ($doNuget) {
     Write-Output ""
     Write-Output "Build NuGet package(s)..."
     # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-pack
-    &dotnet pack "$srcDir\Hazelcast.Net\Hazelcast.Net.csproj" --no-build --nologo -o "$tmpDir\output"
+    &dotnet pack "$srcDir\Hazelcast.Net\Hazelcast.Net.csproj" --no-build --nologo -o "$tmpDir\output" -c $configuration
 }
 
 Write-Output ""
