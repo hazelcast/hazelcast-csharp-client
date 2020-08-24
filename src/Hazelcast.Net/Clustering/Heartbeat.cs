@@ -25,44 +25,60 @@ namespace Hazelcast.Clustering
 {
     internal class Heartbeat : IAsyncDisposable
     {
-        private readonly HeartbeatOptions _options;
         private readonly TimeSpan _period;
         private readonly TimeSpan _timeout;
+        private readonly int _pingTimeout;
 
-        private readonly Cluster _cluster;
+        private readonly ClusterState _clusterState;
+        private readonly ClusterMembers _clusterMembers;
+        private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
         private int _active;
         private Task _heartbeating;
-        private CancellationTokenSource _cancellation;
-        private CancellationTokenSource _linkedCancellation;
 
-        public Heartbeat(Cluster cluster, HeartbeatOptions options, ILoggerFactory loggerFactory)
+        public Heartbeat(ClusterState clusterState, ClusterMembers clusterMembers, ClusterMessaging clusterMessaging, HeartbeatOptions options, ILoggerFactory loggerFactory)
         {
-            _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _clusterState = clusterState ?? throw new ArgumentNullException(nameof(clusterState));
+            _clusterMembers = clusterMembers ?? throw new ArgumentNullException(nameof(clusterMembers));
+            _clusterMessaging = clusterMessaging ?? throw new ArgumentNullException(nameof(clusterMessaging));
+            if (options == null) throw new ArgumentNullException(nameof(options));
             _logger = loggerFactory?.CreateLogger<Heartbeat>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
             _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
+            _pingTimeout = options.PingTimeoutMilliseconds;
+
+            // sanity checks
+            if (_timeout <= _period)
+            {
+                var timeout = 2 * _period;
+                _logger.LogWarning("Heartbeat timeout {Timeout} is <= period {Period}, falling back to a {Value}ms timeout.",
+                    _timeout, _period, timeout);
+                _timeout = timeout;
+            }
+
+            if (_pingTimeout >= _period.TotalMilliseconds)
+            {
+                var pingTimeout = (int) _period.TotalMilliseconds / 2;
+                _logger.LogWarning("Ping timeout {Timeout} is >= period {Period}, falling back to a {Value}ms timeout.",
+                    _pingTimeout, _period, pingTimeout);
+                _pingTimeout = pingTimeout;
+            }
         }
 
-        public void Start(CancellationToken cancellationToken)
+        public void Start()
         {
             if (Interlocked.CompareExchange(ref _active, 1, 0) == 1)
                 throw new InvalidOperationException("Already active.");
 
-            _cancellation = new CancellationTokenSource();
-            _linkedCancellation = _cancellation.LinkedWith(cancellationToken);
-            _heartbeating ??= LoopAsync(_linkedCancellation.Token);
+            _heartbeating ??= LoopAsync(_clusterState.CancellationToken);
         }
 
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.CompareExchange(ref _active, 0, 1) == 0)
                 return;
-
-            _cancellation.Cancel();
 
             try
             {
@@ -78,13 +94,6 @@ namespace Hazelcast.Clustering
                 // unexpected
                 _logger.LogWarning(e, "Heartbeat has thrown an exception.");
             }
-            finally
-            {
-                _cancellation.Dispose();
-                _cancellation = null;
-                _linkedCancellation.Dispose();
-                _linkedCancellation = null;
-            }
         }
 
         private async Task LoopAsync(CancellationToken cancellationToken)
@@ -96,6 +105,10 @@ namespace Hazelcast.Clustering
                 {
                     await RunAsync(cancellationToken).CAF();
                 }
+                catch (OperationCanceledException)
+                {
+                    // expected
+                }
                 catch (Exception e)
                 {
                     // RunAsync should *not* throw
@@ -104,35 +117,39 @@ namespace Hazelcast.Clustering
             }
         }
 
+        // runs once on the whole cluster
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            var connections = _cluster.Members.SnapshotConnections(true);
-            var now = DateTime.UtcNow;
-
             _logger.LogDebug("Run heartbeat");
 
+            var now = DateTime.UtcNow;
+            var connections = _clusterMembers.SnapshotConnections(true);
+
+            // start one task per member
+            // TODO: throttle?
             var tasks = connections
                 .Select(x => RunAsync(x, now, cancellationToken))
                 .ToList();
 
-            await Task.WhenAll(tasks).CAF();
+            await Task.WhenAll(tasks).CAF(); // may throw in case of cancellation
         }
 
+        // runs once on a connection to a member
         private async Task RunAsync(MemberConnection connection, DateTime now, CancellationToken cancellationToken)
         {
             // must ensure that timeout > interval ?!
 
-            // make sure we read from the client at least every timeout
+            // make sure we read from the client at least every 'timeout',
             // which is greater than the interval, so we *should* have
             // read from the last ping, if nothing else, so no read means
-            // that the client is kinda dead - kill it for real
+            // that the client not responsive - terminate it
             if (now - connection.LastReadTime > _timeout)
             {
                 await TerminateConnection(connection).CAF();
                 return;
             }
 
-            // make sure we write to the client at least every interval
+            // make sure we write to the client at least every 'interval',
             // this should trigger a read when we receive the response
             if (now - connection.LastWriteTime > _period)
             {
@@ -144,9 +161,9 @@ namespace Hazelcast.Clustering
                 try
                 {
                     // cannot wait forever on a ping
-                    var responseMessage = await _cluster.Messaging
+                    var responseMessage = await _clusterMessaging
                         .SendToMemberAsync(requestMessage, connection, cancellation.Token)
-                        .TimeoutAfter(_options.PingTimeoutMilliseconds, cancellation, true)
+                        .TimeoutAfter(_pingTimeout, cancellation, true)
                         .CAF();
 
                     // just to be sure everything is ok

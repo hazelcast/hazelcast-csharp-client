@@ -37,7 +37,6 @@ namespace Hazelcast.Clustering
         // general cluster lifecycle
         private volatile int _disposed; // disposed flag
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Cluster"/> class.
         /// </summary>
@@ -69,14 +68,14 @@ namespace Hazelcast.Clustering
 
             _clusterState = new ClusterState(options, clusterName, clientName, Partitioner, loadBalancer, loggerFactory);
 
-            _heartbeat = new Heartbeat(this, options.Heartbeat, loggerFactory);
-            _heartbeat.Start(_clusterState.CancellationToken);
-
             Members = new ClusterMembers(_clusterState);
             Messaging = new ClusterMessaging(_clusterState, Members);
             Events = new ClusterEvents(_clusterState, Messaging, Members);
             ClusterEvents = new ClusterClusterEvents(_clusterState, Members, Events);
             Connections = new ClusterConnections(_clusterState, ClusterEvents, Events, Members, serializationService, TerminateAsync);
+
+            _heartbeat = new Heartbeat(_clusterState, Members, Messaging, options.Heartbeat, loggerFactory);
+            _heartbeat.Start();
 
             HConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
         }
@@ -172,29 +171,19 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            // stop heartbeat
-            try
-            {
-                // TODO: make it a task just like the others
-                await _heartbeat.DisposeAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Caught an exception while disposing the heartbeat.");
-            }
-
-            // stop background tasks
+            // cancel operations,
+            // stops background tasks
             // FIXME: explain the lock
             using (await _clusterState.ClusterLock.AcquireAsync().CAF())
             {
                 _clusterState.CancelOperations();
             }
 
-            // FIXME: review order + heartbeat should be the same
             await Connections.DisposeAsync().CAF();
             await ClusterEvents.DisposeAsync().CAF();
             await Events.DisposeAsync().CAF();
             await Members.DisposeAsync().CAF();
+            await _heartbeat.DisposeAsync().CAF();
 
             _clusterState.Dispose();
         }
