@@ -57,6 +57,8 @@ namespace Hazelcast.Serialization
             if (bytes != null && bytes.Length > 0 && bytes.Length < HeapDataOverHead)
                 throw new ArgumentException($"Data should either be empty or contain at least {HeapDataOverHead} bytes.");
 
+            // TODO: HeapData bytes should in fact never be null, we can simplify all this
+
             _bytes = bytes;
         }
 
@@ -86,7 +88,7 @@ namespace Hazelcast.Serialization
                _bytes.ReadInt(PartitionHashOffset, Endianness.BigEndian) != 0;
 
         /// <inheritdoc />
-        public byte[] ToByteArray() => _bytes ?? Array.Empty<byte>(); // FIXME should this be null?
+        public byte[] ToByteArray() => _bytes ?? Array.Empty<byte>();
 
         /// <inheritdoc />
         public int TypeId

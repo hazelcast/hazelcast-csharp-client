@@ -45,6 +45,7 @@ namespace Hazelcast.Serialization
         bool IsPortable { get; }
 
         /// <summary>Gets the byte array representation of this instance.</summary>
+        /// <remarks>Can return an empty array but never <c>null</c>.</remarks>
         byte[] ToByteArray();
     }
 }
