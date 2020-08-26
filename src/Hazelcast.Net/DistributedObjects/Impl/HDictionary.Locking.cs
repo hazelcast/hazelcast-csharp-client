@@ -25,16 +25,13 @@ namespace Hazelcast.DistributedObjects.Impl
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
-        public Task LockAsync(TKey key)
-            => LockAsync(key, CancellationToken.None);
-
-        private
+        public
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task LockAsync(TKey key, CancellationToken cancellationToken)
+        Task LockAsync(TKey key)
         {
-            var task = LockForAsync(key, TimeToLive.InfiniteTimeSpan, cancellationToken);
+            var task = LockAsync(key, TimeToLive.InfiniteTimeSpan);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -44,35 +41,26 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task LockForAsync(TKey key, TimeSpan leaseTime)
-            => LockForAsync(key, leaseTime, CancellationToken.None);
-
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task LockForAsync(TKey key, TimeSpan leaseTime, CancellationToken cancellationToken)
+        public async Task LockAsync(TKey key, TimeSpan leaseTime)
         {
-            var task = WaitLockForAsync(key, leaseTime, Timeout.InfiniteTimeSpan, cancellationToken);
+            var keyData = ToSafeData(key);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
+            var refId = _lockReferenceIdSequence.GetNext();
+            var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
+
+            var requestMessage = MapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, refId);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
+            _ = MapLockCodec.DecodeResponse(responseMessage);
         }
 
         /// <inheritdoc />
-        public Task<bool> TryLockAsync(TKey key)
-            => TryLockAsync(key, CancellationToken.None);
-
-        private
+        public
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<bool> TryLockAsync(TKey key, CancellationToken cancellationToken)
+        Task<bool> TryLockAsync(TKey key)
         {
-            var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, Timeout.InfiniteTimeSpan, cancellationToken);
+            var task = TryLockAsync(key, LeaseTime.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -82,16 +70,13 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait)
-            => WaitLockAsync(key, timeToWait, CancellationToken.None);
-
-        private
+        public
 #if !HZ_OPTIMIZE_ASYNC
-        async
+            async
 #endif
-        Task<bool> WaitLockAsync(TKey key, TimeSpan timeToWait, CancellationToken cancellationToken)
+            Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
         {
-            var task = WaitLockForAsync(key, LeaseTime.InfiniteTimeSpan, timeToWait, cancellationToken);
+            var task = TryLockAsync(key, timeToWait, Timeout.InfiniteTimeSpan);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -101,10 +86,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
-            => WaitLockForAsync(key, timeToWait, leaseTime, CancellationToken.None);
-
-        private async Task<bool> WaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime, CancellationToken cancellationToken)
+        public async Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
         {
             var keyData = ToSafeData(key);
 
@@ -113,7 +95,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var timeToWaitMs = timeToWait.CodecMilliseconds(0);
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
