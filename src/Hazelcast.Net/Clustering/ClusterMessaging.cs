@@ -123,7 +123,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (key == null) throw new ArgumentNullException(nameof(key));
 
-            var partitionId = _clusterState.Partitioner.GetPartitionId(key);
+            var partitionId = _clusterState.Partitioner.GetPartitionId(key.PartitionHash);
             if (partitionId < 0) throw new ArgumentException("Could not get a partition for this key.", nameof(key));
 
             message.PartitionId = partitionId;

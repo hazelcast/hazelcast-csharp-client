@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Partitioning;
-
 namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Represents the basic unit of serialization.
     /// </summary>
-    public interface IData : IHavePartitionHash
+    public interface IData
     {
         /// <summary>Gets the size of the data contained in this instance.</summary>
         int DataSize { get; }
@@ -40,6 +38,12 @@ namespace Hazelcast.Serialization
 
         /// <summary>Determines whether this instance has a partition hash.</summary>
         bool HasPartitionHash { get; }
+
+        /// <summary>
+        /// Gets the partition hash.
+        /// </summary>
+        /// <returns>The partition hash.</returns>
+        int PartitionHash { get; }
 
         /// <summary>Determines whether this instance was created from an <see cref="IPortable{T}"/> instance.</summary>
         bool IsPortable { get; }

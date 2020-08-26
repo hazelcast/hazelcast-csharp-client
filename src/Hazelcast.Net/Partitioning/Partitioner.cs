@@ -34,7 +34,8 @@ namespace Hazelcast.Partitioning
         /// Gets the unique identifier of the member owning a partition.
         /// </summary>
         /// <param name="partitionId">The identifier of the partition.</param>
-        /// <returns>The unique identifier of the member owning the partition, or an empty Guid if the partition has no owner.</returns>
+        /// <returns>The unique identifier of the member owning the partition with the specified <paramref name="partitionId"/>,
+        /// or an empty <see cref="Guid"/> if that partition has no owner.</returns>
         public Guid GetPartitionOwner(int partitionId)
         {
             if (partitionId < 0) return default;
@@ -47,31 +48,29 @@ namespace Hazelcast.Partitioning
         }
 
         /// <summary>
-        /// Gets the unique identifier of the member owning the partition of a key <see cref="IHavePartitionHash"/> instance.
+        /// Gets the unique identifier of the member owning the partition corresponding to a partition hash.
         /// </summary>
-        /// <param name="key">The key <see cref="IHavePartitionHash"/> instance.</param>
-        /// <returns>The unique identifier of the member owning the partition, or an empty Guid if the partition has no owner.</returns>
-        public Guid GetPartitionOwner(IHavePartitionHash key)
+        /// <param name="partitionHash">The partition hash.</param>
+        /// <returns>The unique identifier of the owner owning the partition corresponding to the specified
+        /// <paramref name="partitionHash"/>, or an empty <see cref="Guid"/> if that partition has no owner.</returns>
+        public Guid GetPartitionHashOwner(int partitionHash)
         {
-            return GetPartitionOwner(GetPartitionId(key));
+            return GetPartitionOwner(GetPartitionId(partitionHash));
         }
 
         /// <summary>
-        /// Gets the partition identifier of a key <see cref="IHavePartitionHash"/> instance.
+        /// Gets the identifier of the partition corresponding to a partition hash.
         /// </summary>
-        /// <param name="key">The key <see cref="IHavePartitionHash"/> instance.</param>
-        /// <returns>The partition identifier for the specified key <see cref="IHavePartitionHash"/> instance.</returns>
-        public int GetPartitionId(IHavePartitionHash key)
+        /// <param name="partitionHash">The partition hash.</param>
+        /// <returns>The identifier of the partition corresponding to the specified <paramref name="partitionHash"/>.</returns>
+        public int GetPartitionId(int partitionHash)
         {
-            if (key == null) throw new ArgumentNullException(nameof(key));
-
             if (Count == 0) return 0;
 
             // we can use whatever value count is, and it is atomic
-            var hash = key.PartitionHash;
-            return hash == int.MinValue // cannot Abs(int.MinValue)
+            return partitionHash == int.MinValue // cannot Abs(int.MinValue)
                 ? 0
-                : Math.Abs(hash) % Count;
+                : Math.Abs(partitionHash) % Count;
         }
 
         /// <summary>

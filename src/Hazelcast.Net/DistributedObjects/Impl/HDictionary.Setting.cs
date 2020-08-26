@@ -73,7 +73,7 @@ namespace Hazelcast.DistributedObjects.Impl
             {
                 var (keyData, valueData) = ToSafeData(key, value);
 
-                var partitionId = Cluster.Partitioner.GetPartitionId(keyData);
+                var partitionId = Cluster.Partitioner.GetPartitionId(keyData.PartitionHash);
                 var ownerId = Cluster.Partitioner.GetPartitionOwner(partitionId);
                 if (!ownerEntries.TryGetValue(ownerId, out var part))
                     part = ownerEntries[ownerId] = new Dictionary<int, List<KeyValuePair<IData, IData>>>();

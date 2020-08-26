@@ -83,7 +83,7 @@ namespace Hazelcast.NearCaching
             if (!Invalidating) return entry;
 
             // otherwise, populate the entry with repairing meta data
-            var partitionId = Cluster.Partitioner.GetPartitionId(entry.Key);
+            var partitionId = Cluster.Partitioner.GetPartitionId(entry.Key.PartitionHash);
             var metadata = RepairingHandler.GetMetadata(partitionId);
             entry.PartitionId = partitionId;
             entry.Sequence = metadata.Sequence;

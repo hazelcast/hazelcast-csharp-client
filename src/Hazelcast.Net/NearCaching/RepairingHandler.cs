@@ -253,7 +253,7 @@ namespace Hazelcast.NearCaching
             // `name` is used to determine partition ID of map-wide events like clear()
             // since key is `null`, we are using `name` to find the partition ID
             if (key == null) key = _serializationService.ToData(_nearCache.Name);
-            return _partitioner.GetPartitionId(key);
+            return _partitioner.GetPartitionId(key.PartitionHash);
         }
 
         // Calculates number of missed invalidations and checks if repair is needed for the supplied handler.

@@ -92,7 +92,7 @@ namespace Hazelcast.Testing
             {
                 var randomKey = TestUtils.RandomString();
                 var randomKeyData = clientInternal.SerializationService.ToData(randomKey);
-                if (clientInternal.Cluster.Partitioner.GetPartitionId(randomKeyData) == partitionId)
+                if (clientInternal.Cluster.Partitioner.GetPartitionId(randomKeyData.PartitionHash) == partitionId)
                     return randomKey;
             }
         }

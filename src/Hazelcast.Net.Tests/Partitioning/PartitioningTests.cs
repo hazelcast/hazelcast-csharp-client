@@ -91,23 +91,21 @@ namespace Hazelcast.Tests.Partitioning
 
             Assert.That(partitioner.Count, Is.EqualTo(0));
 
-            Assert.Throws<ArgumentNullException>(() => _ = partitioner.GetPartitionId(null));
-
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(Guid.Empty));
             Assert.That(partitioner.GetPartitionOwner(-1), Is.EqualTo(Guid.Empty));
-            Assert.That(partitioner.GetPartitionOwner(new PartitionHashClass(1)), Is.EqualTo(Guid.Empty));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(1)), Is.EqualTo(0));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(int.MinValue)), Is.EqualTo(0));
+            Assert.That(partitioner.GetPartitionOwner(new PartitionHashClass(1).PartitionHash), Is.EqualTo(Guid.Empty));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(1).PartitionHash), Is.EqualTo(0));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(int.MinValue).PartitionHash), Is.EqualTo(0));
             Assert.That(partitioner.GetRandomPartitionId(), Is.EqualTo(0));
 
             partitioner.NotifyPartitionsCount(4);
 
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(Guid.Empty));
             Assert.That(partitioner.GetPartitionOwner(-1), Is.EqualTo(Guid.Empty));
-            Assert.That(partitioner.GetPartitionOwner(new PartitionHashClass(1)), Is.EqualTo(Guid.Empty));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(1)), Is.EqualTo(1));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(5)), Is.EqualTo(1));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(int.MinValue)), Is.EqualTo(0));
+            Assert.That(partitioner.GetPartitionOwner(new PartitionHashClass(1).PartitionHash), Is.EqualTo(Guid.Empty));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(1).PartitionHash), Is.EqualTo(1));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(5).PartitionHash), Is.EqualTo(1));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(int.MinValue).PartitionHash), Is.EqualTo(0));
             var random = partitioner.GetRandomPartitionId();
             Assert.That(random, Is.GreaterThanOrEqualTo(0));
             Assert.That(random, Is.LessThan(4));
@@ -127,10 +125,10 @@ namespace Hazelcast.Tests.Partitioning
 
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(map[1]));
             Assert.That(partitioner.GetPartitionOwner(-1), Is.EqualTo(Guid.Empty));
-            Assert.That(partitioner.GetPartitionOwner(new PartitionHashClass(1)), Is.EqualTo(map[1]));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(1)), Is.EqualTo(1));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(4)), Is.EqualTo(1));
-            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(int.MinValue)), Is.EqualTo(0));
+            Assert.That(partitioner.GetPartitionOwner(new PartitionHashClass(1).PartitionHash), Is.EqualTo(map[1]));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(1).PartitionHash), Is.EqualTo(1));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(4).PartitionHash), Is.EqualTo(1));
+            Assert.That(partitioner.GetPartitionId(new PartitionHashClass(int.MinValue).PartitionHash), Is.EqualTo(0));
             random = partitioner.GetRandomPartitionId();
             Assert.That(random, Is.GreaterThanOrEqualTo(0));
             Assert.That(random, Is.LessThan(3));
@@ -182,7 +180,7 @@ namespace Hazelcast.Tests.Partitioning
             public object GetPartitionKey() => _partitionKey;
         }
 
-        private class PartitionHashClass : IHavePartitionHash
+        private class PartitionHashClass
         {
             public PartitionHashClass(int partitionHash)
             {
