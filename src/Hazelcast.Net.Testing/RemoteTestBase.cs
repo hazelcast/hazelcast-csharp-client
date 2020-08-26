@@ -31,8 +31,6 @@ namespace Hazelcast.Testing
         {
             var options = HazelcastOptions.Build();
 
-            options.AsyncStart = false;
-
             options.Networking.Addresses.Clear();
             options.Networking.Addresses.Add("127.0.0.1:5701");
 

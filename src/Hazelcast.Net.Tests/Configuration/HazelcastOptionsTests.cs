@@ -91,7 +91,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual("cluster", options.ClusterName);
             Assert.AreEqual("client", options.ClientName);
             Assert.AreEqual(2, options.Labels.Count);
-            Assert.IsTrue(options.AsyncStart);
 
             Assert.IsTrue(options.Labels.Contains("label_1"));
             Assert.IsTrue(options.Labels.Contains("label_2"));
@@ -108,7 +107,7 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void LoggingOptionsSection()
         {
-            var options = ReadResource(Resources.HazelcastOptions).Logging;
+            _ = ReadResource(Resources.HazelcastOptions).Logging;
 
             // nothing is configured here
         }

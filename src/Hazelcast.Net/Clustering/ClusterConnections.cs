@@ -416,8 +416,8 @@ namespace Hazelcast.Clustering
                     _clusterState.Options.Networking.ReconnectMode switch
                     {
                         ReconnectMode.DoNotReconnect => "remain disconnected",
-                        ReconnectMode.ReconnectSync => "not supported",
-                        ReconnectMode.ReconnectAsync => "trying to reconnect",
+                        ReconnectMode.ReconnectSync => "not supported -> trying to reconnect asynchronously",
+                        ReconnectMode.ReconnectAsync => "trying to reconnect asynchronously",
                         _ => "Meh?"
                     });
 
@@ -428,11 +428,8 @@ namespace Hazelcast.Clustering
                         terminate = true;
                         break;
 
-                    case ReconnectMode.ReconnectSync:
-                        _clusterState.ConnectionState = ClusterConnectionState.Connecting;
-                        // TODO: implement ReconnectSync
-                        // in original code this does ReconnectAsync
-                        throw new NotSupportedException("Reconnect mode 'ReconnectSync' is not supported.");
+                    // was never supported by the CSharp client, really - fallback to async
+                    case ReconnectMode.ReconnectSync: // TODO: implement ReconnectSync
 
                     case ReconnectMode.ReconnectAsync:
                         _clusterState.ConnectionState = ClusterConnectionState.Connecting;

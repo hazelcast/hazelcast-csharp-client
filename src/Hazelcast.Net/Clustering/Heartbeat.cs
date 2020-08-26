@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
             // sanity checks
             if (_timeout <= _period)
             {
-                var timeout = 2 * _period;
+                var timeout = TimeSpan.FromMilliseconds(2 * _period.TotalMilliseconds);
                 _logger.LogWarning("Heartbeat timeout {Timeout} is <= period {Period}, falling back to a {Value}ms timeout.",
                     _timeout, _period, timeout);
                 _timeout = timeout;
