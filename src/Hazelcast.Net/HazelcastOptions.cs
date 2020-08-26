@@ -44,7 +44,6 @@ namespace Hazelcast
             ClusterName = other.ClusterName;
             Subscribers = new List<IHazelcastClientEventSubscriber>(other.Subscribers);
             Labels = new HashSet<string>(other.Labels);
-            AsyncStart = other.AsyncStart;
 
             Core = other.Core.Clone();
             Logging = other.Logging.Clone();

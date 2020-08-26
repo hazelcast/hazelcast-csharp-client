@@ -7,9 +7,6 @@
     // name of the cluster
     "clusterName": "cluster",
 
-    // whether to start async (FIXME USAGE?)
-    "asyncStart": true,
-
     // client labels
     "labels": [
       "label_1",

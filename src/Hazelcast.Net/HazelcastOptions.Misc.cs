@@ -20,11 +20,9 @@ namespace Hazelcast
 {
     public partial class HazelcastOptions // Misc
     {
-        /// <summary>
-        /// Whether to start the client asynchronously.
-        /// </summary>
-        // TODO: should AsyncStart still exist (and what would it mean)?
-        public bool AsyncStart { get; set; }
+        // NOTE
+        // AsyncStart is not an option for the CSharp client,
+        // as it would make little sense for our full-async code
 
         /// <summary>
         /// Gets the logging options.
