@@ -25,7 +25,7 @@ namespace Hazelcast.Serialization
     /// factory to create instances, and deserialize fields, thus avoiding the costs otherwise
     /// associated with reflection.</para>
     /// </remarks>
-    public interface IIdentifiedDataSerializable // FIXME name? ISerializationHandler
+    public interface IIdentifiedDataSerializable
     {
         /// <summary>
         /// Deserializes the object by reading from an <see cref="IObjectDataInput"/>.
@@ -39,11 +39,6 @@ namespace Hazelcast.Serialization
         /// <param name="output">The output serialized data.</param>
         void WriteData(IObjectDataOutput output);
 
-        /*
-        /// <summary>Returns DataSerializableFactory factory id for this class.</summary>
-        /// <remarks>Returns DataSerializableFactory factory id for this class.</remarks>
-        /// <returns>factory id</returns>
-        */
         /// <summary>
         /// Gets the identifier of the <see cref="IDataSerializableFactory"/> that can create instances of the class.
         /// </summary>

@@ -17,7 +17,6 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Provides an <see cref="IDataSerializableFactory"/>.
     /// </summary>
-    /// fixme explain how it all works
     public interface IDataSerializerHook
     {
         /// <summary>

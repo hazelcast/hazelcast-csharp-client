@@ -33,8 +33,6 @@ namespace Hazelcast.DistributedObjects.Impl
         private readonly int _maxBatchSize;
         private long _capacity = -1;
 
-        // FIXME why do some methods use the partition key and some dont?
-
         /// <summary>
         /// Initializes a new instance of the <see cref="HRingBuffer{TItem}"/> class.
         /// </summary>

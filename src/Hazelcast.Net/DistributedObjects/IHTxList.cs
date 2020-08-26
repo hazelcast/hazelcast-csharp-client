@@ -18,9 +18,6 @@ namespace Hazelcast.DistributedObjects
 {
     public interface IHTxList<TItem>
     {
-        // FIXME wip
-        // - what happens if an operation throws? should we have tmieouts?
-
         /// <summary>Add new item to transactional list</summary>
         /// <param name="item">item</param>
         /// <returns>true if item is added successfully</returns>

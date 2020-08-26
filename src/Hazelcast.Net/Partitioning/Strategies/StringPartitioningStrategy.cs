@@ -21,6 +21,14 @@ namespace Hazelcast.Partitioning.Strategies
     {
         /// <inheritdoc />
         public object GetPartitionKey(object o)
-            => o is string s ? s.TrimStart('@') : null;
+            => o is string s ? GetPartitionKey(s) : null;
+
+        /// <summary>
+        /// Gets the partition key of a string value.
+        /// </summary>
+        /// <param name="s">The string value.</param>
+        /// <returns>The partition key of the string value.</returns>
+        public static string GetPartitionKey(string s)
+            => s?.TrimStart('@');
     }
 }

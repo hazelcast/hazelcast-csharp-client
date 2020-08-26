@@ -76,8 +76,8 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         // FIXME: Queue.Drain has issues
-        // may throw if the object is T but not TItem, need to review all these weird overloads
-        // bit silly, deserializing immediately instead of returning a lazy thing?
+        // it may throw if the object is T but not TItem, need to review all these weird overloads
+        // also deserializing immediately instead of returning a lazy thing?
 
         /// <inheritdoc />
         public async Task<int> DrainToAsync<TItem>(ICollection<TItem> items)

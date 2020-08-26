@@ -48,7 +48,7 @@ namespace Hazelcast.Tests.Partitioning
         [Test]
         public void AwareStrategy()
         {
-            var strategy = new AwarePartitioningStragegy();
+            var strategy = new PartitionAwarePartitioningStragegy();
 
             var o = new object();
             Assert.That(strategy.GetPartitionKey(o), Is.Null);

@@ -30,8 +30,6 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     internal abstract class DistributedObjectBase : IDistributedObject
     {
-        private static readonly IPartitioningStrategy PartitioningStrategy = new StringPartitioningStrategy();
-
         private readonly DistributedObjectFactory _factory;
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
         private Action<DistributedObjectBase> _onDispose;
@@ -83,10 +81,14 @@ namespace Hazelcast.DistributedObjects
         public string Name { get; }
 
         /// <inheritdoc />
-        // FIXME: PartitionKey always uses simple String strategy = ?! (see Java?)
-        public string PartitionKey => _partitionKey ??= (string) PartitioningStrategy.GetPartitionKey(Name);
+        public string PartitionKey => _partitionKey ??= StringPartitioningStrategy.GetPartitionKey(Name);
 
-        // FIXME document
+        /// <summary>
+        /// Get the partition key data of this object.
+        /// </summary>
+        /// <remarks>
+        /// <para>The partition key data is the <see cref="IData"/> conversion of <see cref="PartitionKey"/>.</para>
+        /// </remarks>
         public IData PartitionKeyData => _partitionKeyData ??= ToData(PartitionKey);
 
         /// <summary>

@@ -54,7 +54,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Whether to FIXME - what?
+        /// Whether to fully override (and ignore) the native CLR serialization.
         /// </summary>
         public bool OverrideClr { get; set; }
 

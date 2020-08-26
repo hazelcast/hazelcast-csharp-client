@@ -23,7 +23,7 @@ namespace Hazelcast.Partitioning.Strategies
         /// Gets the partition key of an object.
         /// </summary>
         /// <param name="o">The object.</param>
-        /// <returns>The partition key of the object, or null to fallback to the default strategy.</returns>
+        /// <returns>The partition key of the object, or <c>null</c> to fallback to the default strategy.</returns>
         object GetPartitionKey(object o);
     }
 }

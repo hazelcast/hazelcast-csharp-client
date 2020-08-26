@@ -72,7 +72,7 @@ namespace Hazelcast.NearCaching
             return await _caches.GetOrAddAsync(mapName, async (name, token) =>
             {
                 var nearCache = new NearCache(name, _cluster, _serializationService, _loggerFactory, options, GetMaxToleratedMissCount());
-                await InitializeNearCache(nearCache, token).CAF();
+                await InitializeNearCache(nearCache).CAF();
                 return nearCache;
             }, cancellationToken).CAF();
         }
@@ -88,8 +88,7 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Fetches and processes meta data for all managed caches.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private async ValueTask FetchMetadataAsync(CancellationToken cancellationToken)
+        private async ValueTask FetchMetadataAsync()
         {
             var names = new List<string>();
 
@@ -103,7 +102,7 @@ namespace Hazelcast.NearCaching
             {
                 await RepairGuids(response.PartitionUuidList).CAF();
                 await RepairSequences(response.NamePartitionSequenceList).CAF();
-            }, cancellationToken).CAF();
+            }).CAF();
         }
 
         /// <summary>
@@ -111,18 +110,15 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="names">The names of the caches.</param>
         /// <param name="process">A function to execute to process meta data.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        private async ValueTask FetchMetadataAsync(ICollection<string> names, Func<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters, ValueTask> process, CancellationToken cancellationToken)
+        private async ValueTask FetchMetadataAsync(ICollection<string> names, Func<MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters, ValueTask> process)
         {
             var dataMembers = _cluster.Members.LiteMembers;
             foreach (var member in dataMembers)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 try
                 {
                     var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
-                    var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id, cancellationToken).CAF();
+                    var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id).CAF();
                     var response = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
 
                     await process(response).CAF();
@@ -162,11 +158,11 @@ namespace Hazelcast.NearCaching
             return reconciliationIntervalSeconds;
         }
 
-        private async ValueTask InitializeNearCache(NearCacheBase baseNearCache, CancellationToken cancellationToken)
+        private async ValueTask InitializeNearCache(NearCacheBase baseNearCache)
         {
             try
             {
-                await baseNearCache.InitializeAsync().CAF(); // FIXME CANCELLATION
+                await baseNearCache.InitializeAsync().CAF();
 
                 if (!baseNearCache.Invalidating) return;
 
@@ -182,7 +178,7 @@ namespace Hazelcast.NearCaching
                     repairingHandler.InitializeGuids(response.PartitionUuidList);
                     repairingHandler.InitializeSequences(response.NamePartitionSequenceList);
                     return default;
-                }, cancellationToken).CAF();
+                }).CAF();
 
                 // start repairing task if not started
                 if (Interlocked.CompareExchange(ref _running, 1, 0) == 0)
@@ -267,7 +263,7 @@ namespace Hazelcast.NearCaching
             var sinceLastRun = Clock.Milliseconds - lastAntiEntropyRunMillis;
             if (sinceLastRun >= _reconciliationIntervalMillis)
             {
-                await FetchMetadataAsync(cancellationToken).CAF();
+                await FetchMetadataAsync().CAF();
                 Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
             }
         }

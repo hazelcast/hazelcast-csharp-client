@@ -17,7 +17,7 @@ namespace Hazelcast.Partitioning.Strategies
     /// <summary>
     /// Implements an <see cref="IPartitioningStrategy"/> that relies on <see cref="IPartitionAware"/> when possible, else returns null.
     /// </summary>
-    internal sealed class AwarePartitioningStragegy : IPartitioningStrategy
+    internal sealed class PartitionAwarePartitioningStragegy : IPartitioningStrategy
     {
         /// <inheritdoc />
         public object GetPartitionKey(object o)

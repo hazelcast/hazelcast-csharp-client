@@ -137,14 +137,18 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the partitioner.
         /// </summary>
-        public Partitioner Partitioner { get; } // TODO don't expose the partitioner?
+        public Partitioner Partitioner { get; }
 
         /// <summary>
         /// Throws if the cluster is disconnected (wait if it is connecting).
         /// </summary>
         public ValueTask ThrowIfNotConnected()
         {
-            _clusterState.ThrowIfNotConnected(); // FIXME sync or async?!
+            // method is async because eventually it should or at least may wait
+            // if the cluster is (re) connecting, to block calls somehow until the
+            // cluster is (re) connected.
+
+            _clusterState.ThrowIfNotConnected();
             return default;
         }
 

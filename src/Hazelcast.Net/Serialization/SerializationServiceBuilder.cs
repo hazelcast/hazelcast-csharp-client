@@ -21,17 +21,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
-    // NOTES
-    //
-    // this class contains a poor man's DI of some sort,
-    // to inject IHazelcastInstance in stuff, and it's not pretty
-    // all Activator.CreateInstance should migrate to Services,
-    // and injection too
-    //
-    // for the time being, commenting it out: look for PM.DI comments
-    //
-    // TODO: implement some sort of real DI
-
     internal sealed class SerializationServiceBuilder : ISerializationServiceBuilder
     {
         private readonly ILoggerFactory _loggerFactory;
@@ -69,12 +58,9 @@ namespace Hazelcast.Serialization
 
         public ISerializationServiceBuilder SetVersion(byte version)
         {
-            var maxVersion = SerializationService.SerializerVersion;
-            if (version > maxVersion)
-            {
-                throw new ArgumentException(
-                    "Configured serialization version is higher than the max supported version :" + maxVersion);
-            }
+            if (version > SerializationService.SerializerVersion)
+                throw new ArgumentException($"Value cannot be higher than the max supported version ({SerializationService.SerializerVersion}).");
+
             _version = version;
             return this;
         }
@@ -100,9 +86,8 @@ namespace Hazelcast.Serialization
         public ISerializationServiceBuilder SetPortableVersion(int version)
         {
             if (version < 0)
-            {
-                throw new ArgumentException("Version cannot be negative!");
-            }
+                throw new ArgumentOutOfRangeException(nameof(version), "Value must be greater than, or equal to, zero.");
+
             _portableVersion = version;
             return this;
         }
@@ -111,9 +96,7 @@ namespace Hazelcast.Serialization
         {
             _options = options;
             if (_portableVersion < 0)
-            {
                 _portableVersion = options.PortableVersion;
-            }
 
             _checkClassDefErrors = options.ValidateClassDefinitions;
             _endianness = options.Endianness;
@@ -161,13 +144,13 @@ namespace Hazelcast.Serialization
         {
             if (initialOutputBufferSize <= 0)
             {
-                throw new ArgumentException("Initial buffer size must be positive!");
+                throw new ArgumentOutOfRangeException(nameof(initialOutputBufferSize), "Value must be greater than zero.");
             }
             _initialOutputBufferSize = initialOutputBufferSize;
             return this;
         }
 
-        public ISerializationService Build() // FIXME can we kill this "builder"?
+        public ISerializationService Build()
         {
             if (_portableVersion < 0)
                 _portableVersion = 0;
@@ -179,8 +162,7 @@ namespace Hazelcast.Serialization
                 _classDefinitions = _classDefinitions.Union(_options.ClassDefinitions).ToList();
             }
 
-            //TODO: Add support for multiple versions
-            var ss = new SerializationService(
+            var service = new SerializationService(
                 CreateInputOutputFactory(),
                 _portableVersion,
                 _dataSerializableFactories,
@@ -197,12 +179,13 @@ namespace Hazelcast.Serialization
             {
                 var globalSerializer = _options.DefaultSerializer;
                 if (globalSerializer != null)
-                    ss.SetGlobalSerializer(globalSerializer.Service, globalSerializer.OverrideClr);
+                    service.SetGlobalSerializer(globalSerializer.Service, globalSerializer.OverrideClr);
 
                 foreach (var serializer in _options.Serializers)
-                    ss.AddConfiguredSerializer(serializer.SerializedType, serializer.Service);
+                    service.AddConfiguredSerializer(serializer.SerializedType, serializer.Service);
             }
-            return ss;
+
+            return service;
         }
 
         private static void AddConfigDataSerializableFactories(IDictionary<int, IDataSerializableFactory> dataSerializableFactories, SerializationOptions options)
@@ -210,10 +193,10 @@ namespace Hazelcast.Serialization
             foreach (var factoryOptions in options.DataSerializableFactories)
             {
                 if (factoryOptions.Id <= 0)
-                    throw new ArgumentException($"IDataSerializableFactory factoryId must be positive.");
+                    throw new ArgumentException("IDataSerializableFactory factoryId must be positive.");
 
                 if (dataSerializableFactories.ContainsKey(factoryOptions.Id))
-                    throw new ArgumentException($"IDataSerializableFactory with factoryId {factoryOptions.Id} is already registered.");
+                    throw new InvalidOperationException($"IDataSerializableFactory with factoryId {factoryOptions.Id} is already registered.");
 
                 dataSerializableFactories.Add(factoryOptions.Id, factoryOptions.Service);
             }
@@ -224,10 +207,10 @@ namespace Hazelcast.Serialization
             foreach (var factoryOptions in options.PortableFactories)
             {
                 if (factoryOptions.Id <= 0)
-                    throw new ArgumentException($"IPortableFactory factoryId must be positive.");
+                    throw new ArgumentException("IPortableFactory factoryId must be positive.");
 
                 if (portableFactories.ContainsKey(factoryOptions.Id))
-                    throw new ArgumentException($"IPortableFactory with factoryId {factoryOptions.Id} is already registered.");
+                    throw new InvalidOperationException($"IPortableFactory with factoryId {factoryOptions.Id} is already registered.");
 
                 portableFactories.Add(factoryOptions.Id, factoryOptions.Service);
             }

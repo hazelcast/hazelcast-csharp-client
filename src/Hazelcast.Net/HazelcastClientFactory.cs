@@ -85,7 +85,7 @@ namespace Hazelcast
             var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);
             serializationServiceBuilder
                 .SetConfig(options.Serialization)
-                .SetPartitioningStrategy(new NullPartitioningStrategy()) // should be configure-able
+                .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
                 .SetVersion(SerializationService.SerializerVersion) // uh? else default is wrong?
                 .AddHook<PredicateDataSerializerHook>() // shouldn't they be configurable?
                 .AddHook<AggregatorDataSerializerHook>()
