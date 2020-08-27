@@ -207,7 +207,7 @@ namespace Hazelcast.NearCaching
                 try
                 {
                     await FixSequenceGaps().CAF();
-                    await RunAntiEntropyIfNeededAsync(cancellationToken).CAF();
+                    await RunAntiEntropyIfNeededAsync().CAF();
                 }
                 catch (Exception e)
                 {
@@ -253,7 +253,7 @@ namespace Hazelcast.NearCaching
         }
 
         // Periodically sends generic operations to cluster members to get latest invalidation metadata.
-        private async ValueTask RunAntiEntropyIfNeededAsync(CancellationToken cancellationToken)
+        private async ValueTask RunAntiEntropyIfNeededAsync()
         {
             if (_reconciliationIntervalMillis == 0)
                 return;

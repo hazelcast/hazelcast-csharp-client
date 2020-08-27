@@ -113,8 +113,7 @@ namespace Hazelcast.Serialization
 
         private void Register(int factoryId, IDataSerializableFactory factory)
         {
-            IDataSerializableFactory current;
-            _factories.TryGetValue(factoryId, out current);
+            _factories.TryGetValue(factoryId, out var current);
             if (current != null)
             {
                 if (current.Equals(factory))

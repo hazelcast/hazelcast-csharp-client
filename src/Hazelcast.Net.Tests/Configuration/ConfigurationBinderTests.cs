@@ -21,6 +21,10 @@ using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 using ConfigurationBinder = Hazelcast.Configuration.Binding.ConfigurationBinder;
 
+// not my code
+#pragma warning disable all
+#pragma warning disable IDE0051
+
 namespace Hazelcast.Tests.Configuration
 {
     // this is the complete ConfigurationBinder test class from MS runtime source code
