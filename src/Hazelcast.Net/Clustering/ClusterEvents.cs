@@ -38,6 +38,7 @@ namespace Hazelcast.Clustering
         private readonly ClusterMembers _clusterMembers;
 
         private readonly ILogger _logger;
+        public readonly DistributedEventScheduler _scheduler;
 
         private Func<ValueTask> _onPartitionsUpdated;
         private Func<MemberLifecycleEventType, MemberLifecycleEventArgs, ValueTask> _onMemberLifecycleEvent;
@@ -63,6 +64,7 @@ namespace Hazelcast.Clustering
             _clusterMembers = clusterMembers;
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterEvents>();
+            _scheduler = new DistributedEventScheduler(_clusterState.LoggerFactory);
         }
 
         /// <summary>
@@ -389,10 +391,10 @@ namespace Hazelcast.Clustering
 
 
         /// <summary>
-        /// Handles an event message and trigger the appropriate events via the subscriptions.
+        /// Handles an event message and queues the appropriate events via the subscriptions.
         /// </summary>
         /// <param name="message">The event message.</param>
-        public async ValueTask OnEventMessage(ClientMessage message)
+        public void OnEventMessage(ClientMessage message)
         {
             HConsole.WriteLine(this, "Handle event message");
 
@@ -404,10 +406,10 @@ namespace Hazelcast.Clustering
                 return;
             }
 
-            // TODO: consider running event handler on background thread, limiting concurrency, setting a cancellation token
-
-            // exceptions are handled by caller (see Client.ReceiveEvent)
-            await subscription.HandleAsync(message).CAF();
+            // schedule the event
+            // will run async, but serialized per-partition
+            // FIXME: exceptions are handled by caller (see Client.ReceiveEvent)
+            _scheduler.Add(subscription, message);
         }
 
 
@@ -642,6 +644,8 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
+            await _scheduler.DisposeAsync().CAF();
+
             // FIXME: should we capture the task with a lock?
             await TaskEx.AwaitCanceled(_clusterEventsTask).CAF();
 

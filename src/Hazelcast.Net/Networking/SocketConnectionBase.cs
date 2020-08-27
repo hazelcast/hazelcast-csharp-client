@@ -34,7 +34,7 @@ namespace Hazelcast.Networking
     {
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
 
-        private Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, ValueTask<bool>> _onReceiveMessageBytes;
+        private Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, bool> _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
         private Action<SocketConnectionBase> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
@@ -70,7 +70,7 @@ namespace Hazelcast.Networking
         /// function has returned.</para>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, ValueTask<bool>> OnReceiveMessageBytes
+        public Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, bool> OnReceiveMessageBytes
         {
             get => _onReceiveMessageBytes;
             set
@@ -430,7 +430,7 @@ namespace Hazelcast.Networking
             try
             {
                 // handle the bytes (and slice the buffer accordingly)
-                return await _onReceiveMessageBytes(this, state).CAF();
+                return _onReceiveMessageBytes(this, state);
             }
             catch (Exception e)
             {

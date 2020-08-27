@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -693,6 +694,26 @@ namespace Hazelcast.Tests.DotNet
             cancellation.Cancel();
             completion.TrySetResult(42);
             Assert.ThrowsAsync<TaskCanceledException>(async () => _ = await completion.Task);
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public async Task ContinuationTest()
+        {
+            var e = new ManualResetEventSlim();
+
+            void ContinuationAction(Task task)
+            {
+                e.Wait();
+            }
+
+            var task = Task.CompletedTask.ContinueWith(ContinuationAction);
+
+            await Task.Delay(100);
+            Assert.That(!task.IsCompleted); // ContinueWith returns before running the continuation method
+            e.Set();
+            await Task.Delay(100);
+            await task;
         }
     }
 }

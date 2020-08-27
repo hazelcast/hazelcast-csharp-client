@@ -37,7 +37,7 @@ namespace Hazelcast.Messaging
         private readonly SemaphoreSlim _writer;
         private readonly ILogger _logger;
 
-        private Func<ClientMessageConnection, ClientMessage, ValueTask> _onReceiveMessage;
+        private Action<ClientMessageConnection, ClientMessage> _onReceiveMessage;
         private int _bytesLength = -1;
         private Frame _currentFrame;
         private bool _finalFrame;
@@ -63,7 +63,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets or sets the function that handles messages.
         /// </summary>
-        public Func<ClientMessageConnection, ClientMessage, ValueTask> OnReceiveMessage
+        public Action<ClientMessageConnection, ClientMessage> OnReceiveMessage
         {
             get => _onReceiveMessage;
             set
@@ -79,7 +79,7 @@ namespace Hazelcast.Messaging
         /// </summary>
         internal Action OnSending { get; set; }
 
-        private async ValueTask<bool> ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference<ReadOnlySequence<byte>> bufferReference)
+        private bool ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference<ReadOnlySequence<byte>> bufferReference)
         {
             HConsole.WriteLine(this, $"Received {bufferReference.Buffer.Length} bytes");
             var bytes = bufferReference.Buffer;
@@ -137,13 +137,13 @@ namespace Hazelcast.Messaging
             var message = _currentMessage;
             _currentMessage = null;
             HConsole.WriteLine(this, "Handle fragment");
-            await ReceiveFragmentAsync(message).CAF();
+            ReceiveFragmentAsync(message);
 
             return true;
         }
 
         // internal for tests
-        internal async ValueTask ReceiveFragmentAsync(ClientMessage fragment)
+        internal void ReceiveFragmentAsync(ClientMessage fragment)
         {
             if (fragment.Flags.HasAll(ClientMessageFlags.Unfragmented))
             {
@@ -151,7 +151,7 @@ namespace Hazelcast.Messaging
 
                 try
                 {
-                    await _onReceiveMessage(this, fragment).CAF();
+                    _onReceiveMessage(this, fragment);
                 }
                 catch (Exception e)
                 {
@@ -198,7 +198,7 @@ namespace Hazelcast.Messaging
 
                 try
                 {
-                    await _onReceiveMessage(this, message).CAF();
+                    _onReceiveMessage(this, message);
                 }
                 catch (Exception e)
                 {

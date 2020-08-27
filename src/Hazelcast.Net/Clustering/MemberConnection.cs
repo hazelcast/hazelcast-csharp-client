@@ -54,7 +54,7 @@ namespace Hazelcast.Clustering
         private readonly ILogger _logger;
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
-        private Func<ClientMessage, ValueTask> _onReceiveEventMessage;
+        private Action<ClientMessage> _onReceiveEventMessage;
         private Func<MemberConnection, ValueTask> _onShutdown;
 
 #pragma warning disable CA2213 // Disposable fields should be disposed - is owned by _messageConnection, which is disposed
@@ -144,7 +144,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when the client receives a message.
         /// </summary>
-        public Func<ClientMessage, ValueTask> OnReceiveEventMessage
+        public Action<ClientMessage> OnReceiveEventMessage
         {
             get => _onReceiveEventMessage;
             set
@@ -249,13 +249,13 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been handled.</returns>
-        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
+        private void ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
             if (message.IsEvent)
             {
                 HConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
                                          HConsole.Lines(this, 1, message.Dump()));
-                await ReceiveEvent(message).CAF(); // should not throw
+                ReceiveEvent(message); // should not throw
                 return;
             }
 
@@ -298,12 +298,12 @@ namespace Hazelcast.Clustering
                 ReceiveResponse(invocation, message); // should not throw
         }
 
-        private async ValueTask ReceiveEvent(ClientMessage message)
+        private void ReceiveEvent(ClientMessage message)
         {
             try
             {
                 HConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
-                await _onReceiveEventMessage(message).CAF();
+                _onReceiveEventMessage(message);
             }
             catch (Exception e)
             {

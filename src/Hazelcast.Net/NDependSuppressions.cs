@@ -159,6 +159,10 @@ using System.Diagnostics.CodeAnalysis;
     Target = /*~T:*/ "System.Runtime.CompilerServices.RuntimeHelpersEx",
     Scope = "type",
     Justification = "Imported code.")]
+[assembly: SuppressMessage("NDepend", "",
+    Target = /*~N:*/ "System.Collections.Concurrent",
+    Scope = "namespaceAndDescendants",
+    Justification = "Imported code.")]
 #endif
 
 #endif

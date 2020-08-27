@@ -40,17 +40,17 @@ namespace Hazelcast.Tests.Networking
 
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
-            connection.OnReceiveMessageBytes = (x, y) => new ValueTask<bool>(true);
+            connection.OnReceiveMessageBytes = (x, y) => true;
 
             // OnReceivePrefixBytes is missing
             Assert.ThrowsAsync<InvalidOperationException>(async () => await connection.ConnectAsync(default));
 
             await using var connection2 = new ClientSocketConnection(0, endpoint, options);
 
-            connection2.OnReceiveMessageBytes = (x, y) => new ValueTask<bool>(true);
+            connection2.OnReceiveMessageBytes = (x, y) => true;
             await connection2.ConnectAsync(default);
 
-            Assert.Throws<InvalidOperationException>(() => connection2.OnReceiveMessageBytes = (x, y) => new ValueTask<bool>(true));
+            Assert.Throws<InvalidOperationException>(() => connection2.OnReceiveMessageBytes = (x, y) => true);
             Assert.Throws<InvalidOperationException>(() => connection2.OnReceivePrefixBytes = (x, y) => new ValueTask());
             Assert.Throws<InvalidOperationException>(() => connection2.OnShutdown = x => { });
         }
@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Networking
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
             await using var socket = new ClientSocketConnection(0, endpoint, options);
-            socket.OnReceiveMessageBytes = (x, y) => new ValueTask<bool>(true);
+            socket.OnReceiveMessageBytes = (x, y) => true;
             await socket.ConnectAsync(default);
             // connected!
         }
@@ -78,7 +78,7 @@ namespace Hazelcast.Tests.Networking
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
             await using var socket = new ClientSocketConnection(0, endpoint, options);
-            socket.OnReceiveMessageBytes = (x, y) => new ValueTask<bool>(true);
+            socket.OnReceiveMessageBytes = (x, y) => true;
             await socket.ConnectAsync(default);
             // connected!
         }

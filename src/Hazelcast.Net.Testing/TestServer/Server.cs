@@ -42,6 +42,8 @@ namespace Hazelcast.Testing.TestServer
         private readonly IPEndPoint _endpoint;
         private readonly Guid _clusterId;
         private readonly Guid _memberId;
+        private readonly object _handlerLock = new object();
+        private Task _handlerTask;
         private ServerSocketListener _listener;
         private bool _open;
 
@@ -151,7 +153,22 @@ namespace Hazelcast.Testing.TestServer
             await connection.SendAsync(eventMessage).CAF();
         }
 
-        private async ValueTask ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
+        private void ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
+        {
+            lock (_handlerLock)
+            {
+                if (_handlerTask == null)
+                {
+                    _handlerTask = ReceiveMessageAsync(connection, requestMessage);
+                }
+                else
+                {
+                    _handlerTask = _handlerTask.ContinueWith(_ => ReceiveMessageAsync(connection, requestMessage)).Unwrap();
+                }
+            }
+        }
+
+        private async Task ReceiveMessageAsync(ClientMessageConnection connection, ClientMessage requestMessage)
         {
             var correlationId = requestMessage.CorrelationId;
 

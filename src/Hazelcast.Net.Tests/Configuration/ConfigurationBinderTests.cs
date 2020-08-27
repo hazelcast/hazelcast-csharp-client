@@ -330,7 +330,7 @@ namespace Hazelcast.Tests.Configuration
         [TestCase("trUE", typeof(bool))]
         [TestCase("255", typeof(byte))]
         [TestCase("127", typeof(sbyte))]
-        [TestCase("\uffff", typeof(char))]
+        [TestCase("\u25fb", typeof(char))]
         [TestCase("79228162514264337593543950335", typeof(decimal))]
         [TestCase("1.79769e+308", typeof(double))]
         [TestCase("3.40282347E+38", typeof(float))]
