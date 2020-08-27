@@ -74,7 +74,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             // cache the retrieved entries
             // none of them have a value yet, and ...
-            // FIXME what is it we want to put in the cache?
+            // TODO: what is it we want to put in the cache?
             foreach (var (key, entry) in entries.Entries)
                 await _cache.TryAdd(key, entry.ValueObject).CAF();
 

@@ -449,7 +449,6 @@ namespace Hazelcast.Clustering
 
         public async ValueTask DisposeAsync()
         {
-            // FIXME: should we capture the tasks with a lock?
             await TaskEx.AwaitCanceled(_clusterMembersTask).CAF();
             await TaskEx.AwaitCanceled(_clusterConnectTask).CAF();
         }

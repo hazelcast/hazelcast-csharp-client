@@ -164,7 +164,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAllAsync()
+        public async Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAsync()
         {
             var requestMessage = MultiMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();

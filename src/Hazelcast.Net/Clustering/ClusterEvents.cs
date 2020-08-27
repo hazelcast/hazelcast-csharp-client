@@ -406,9 +406,7 @@ namespace Hazelcast.Clustering
                 return;
             }
 
-            // schedule the event
-            // will run async, but serialized per-partition
-            // FIXME: exceptions are handled by caller (see Client.ReceiveEvent)
+            // schedule the event - will run async, but serialized per-partition
             _scheduler.Add(subscription, message);
         }
 
@@ -465,6 +463,7 @@ namespace Hazelcast.Clustering
                 if (connection == null)
                 {
                     // no clients => wait for clients
+                    // TODO: consider IRetryStrategy?
                     await Task.Delay(_clusterState.Options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();
                     continue;
                 }
@@ -475,7 +474,6 @@ namespace Hazelcast.Clustering
                 if (!await SubscribeToClusterEventsAsync(connection, correlationId, cancellationToken).CAF()) // does not throw
                 {
                     // failed => try another client
-                    // FIXME throttle!
                     connection = null;
                     continue;
                 }
@@ -646,7 +644,6 @@ namespace Hazelcast.Clustering
         {
             await _scheduler.DisposeAsync().CAF();
 
-            // FIXME: should we capture the task with a lock?
             await TaskEx.AwaitCanceled(_clusterEventsTask).CAF();
 
             var clusterEventsClientConnection = _clusterEventsConnection;

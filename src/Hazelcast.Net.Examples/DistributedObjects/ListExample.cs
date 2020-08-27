@@ -38,7 +38,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             Console.WriteLine("Get: " + await list.GetAsync(0));
 
-            Console.WriteLine("All: " + string.Join(", ", await list.GetAllAsync()));
+            Console.WriteLine("All: " + string.Join(", ", await list.GetAsync()));
 
             Console.WriteLine("Contains: " + await list.ContainsAsync("item2"));
 

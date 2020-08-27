@@ -45,7 +45,7 @@ namespace Hazelcast.Tests.Remote
             }
 
             NUnit.Framework.Assert.AreEqual(1, await list.CountAsync());
-            var items = await list.GetAllAsync();
+            var items = await list.GetAsync();
             NUnit.Framework.Assert.AreEqual(1, items.Count);
             NUnit.Framework.Assert.IsTrue(items.Contains("item2"));
 

@@ -40,7 +40,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         // <inheritdoc />
-        public override async Task<IReadOnlyList<T>> GetAllAsync()
+        public override async Task<IReadOnlyList<T>> GetAsync()
         {
             var requestMessage = QueueIteratorCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();

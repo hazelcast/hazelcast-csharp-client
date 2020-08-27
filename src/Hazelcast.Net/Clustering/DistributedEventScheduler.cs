@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -98,9 +98,6 @@ namespace Hazelcast.Clustering
             // avoid creating a Lazy per task, but manage a per-partition lock (so we only lock the
             // partition, not the whole dictionary) - yet that would mean a concurrent dictionary of
             // locks, etc?
-            //
-            // FIXME question:
-            // if the continuation takes ages to start then what happens?
 
             /*
             _lock.EnterReadLock();
@@ -150,10 +147,10 @@ namespace Hazelcast.Clustering
             => task.ContinueWith(_continueWithHandler, state, default, TaskContinuationOptions.None, TaskScheduler.Current).Unwrap();
 
         /*
-        private Task CreateFirstTask(int _, State state) 
+        private Task CreateFirstTask(int _, State state)
             => AddContinuation(Task.CompletedTask, state);
 
-        private Task AppendNextTask(int _, Task task, State state) 
+        private Task AppendNextTask(int _, Task task, State state)
             => AddContinuation(task, state);
         */
 
@@ -176,6 +173,7 @@ namespace Hazelcast.Clustering
             {
                 Interlocked.Increment(ref _exceptionCount);
                 var args = new DistributedEventExceptionEventArgs(e, state.Message);
+                var correlationId = state.Message.CorrelationId;
 
                 try
                 {
@@ -184,14 +182,14 @@ namespace Hazelcast.Clustering
                 catch (Exception ee)
                 {
                     var ae = new AggregateException(e, ee);
-                    _logger.LogError(ae, "An event handler has thrown an unhandled exception. " +
+                    _logger.LogError(ae, $"An event handler [{correlationId}] has thrown an unhandled exception. " +
                                          "In addition, the error handler has also thrown an exception.");
                 }
 
                 if (!args.Handled)
                 {
                     Interlocked.Increment(ref _unhandledExceptionCount);
-                    _logger.LogError(e, "An event handler has thrown an unhandled exception.");
+                    _logger.LogError(e, $"An event handler [{correlationId}] has thrown an unhandled exception.");
                 }
             }
         }

@@ -24,21 +24,54 @@ namespace Hazelcast.DistributedObjects
     {
         // these mimics ICollection<T>
 
+        /// <summary>
+        /// Gets the number of items in the collection.
+        /// </summary>
+        /// <returns>The number of items in the collection.</returns>
         Task<int> CountAsync();
 
+        /// <summary>
+        /// Adds an item to the collection.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns>Whether the item was added.</returns>
         Task<bool> AddAsync(T item);
 
+        /// <summary>
+        /// Clears the collection.
+        /// </summary>
+        /// <returns>A task that will complete when the collection has been cleared.</returns>
         Task ClearAsync();
 
+        /// <summary>
+        /// Determines whether the collection contains an item.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns><c>true</c> if the collection contains the item; otherwise <c>false</c>.</returns>
         Task<bool> ContainsAsync(T item);
 
+        /// <summary>
+        /// Removes an item from the collection.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns><c>true</c> if the item was removed; otherwise <c>false</c>.</returns>
         Task<bool> RemoveAsync(T item);
 
+        /// <summary>
+        /// Copies the collection items into an array.
+        /// </summary>
+        /// <param name="array">The destination array.</param>
+        /// <param name="arrayIndex">The destination initial index.</param>
+        /// <returns>A task that will complete when the items have been copied.</returns>
         Task CopyToAsync(T[] array, int arrayIndex);
 
         // rest is a mix of influences
 
-        Task<IReadOnlyList<T>> GetAllAsync();
+        /// <summary>
+        /// Gets the collection items.
+        /// </summary>
+        /// <returns>The collection items.</returns>
+        Task<IReadOnlyList<T>> GetAsync();
 
         /// <summary>
         /// Adds all.

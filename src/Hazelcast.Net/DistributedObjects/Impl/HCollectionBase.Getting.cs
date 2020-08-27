@@ -20,7 +20,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HCollectionBase<T> // Getting
     {
         /// <inheritdoc />
-        public abstract Task<IReadOnlyList<T>> GetAllAsync();
+        public abstract Task<IReadOnlyList<T>> GetAsync();
 
         /// <inheritdoc />
         public abstract Task<bool> ContainsAsync(T item);

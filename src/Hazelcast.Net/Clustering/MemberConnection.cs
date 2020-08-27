@@ -307,14 +307,10 @@ namespace Hazelcast.Clustering
             }
             catch (Exception e)
             {
-                // this is a bad enough situation: the event handler failed, and there is
-                // no way we can "bubble" the exception up to user's code since it all
-                // happen in the background, so we have to swallow the exception
+                // _onReceiveEventMessage should just queue the event and not fail - if it fails
+                // then some nasty internal error is happening - log, at least, make some noise
 
-                // at least, make some noise
-                // TODO: instrumentation
                 _logger.LogWarning(e, $"Failed to raise event [{message.CorrelationId}].");
-                HConsole.WriteLine(this, $"Failed to raise event [{message.CorrelationId}]." + e);
             }
         }
 

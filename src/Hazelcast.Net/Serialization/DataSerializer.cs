@@ -63,44 +63,31 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public IIdentifiedDataSerializable Read(IObjectDataInput input)
         {
-            int factoryId = 0;
-            int id = 0;
+            var factoryId = 0;
+            var id = 0;
             try
             {
                 var identified = input.ReadBool();
                 if (!identified)
-                {
                     throw new SerializationException("Non-identified DataSerializable is not supported by .NET client. " +
                                                               "Please use IIdentifiedDataSerializable instead.");
-                }
+                
                 factoryId = input.ReadInt();
-                IDataSerializableFactory dsf;
-                _factories.TryGetValue(factoryId, out dsf);
-                if (dsf == null)
-                {
-                    throw new SerializationException(
-                        "No DataSerializerFactory registered for factoryId: " + factoryId);
-                }
+                if (!_factories.TryGetValue(factoryId, out var factory))
+                    throw new SerializationException($"No DataSerializerFactory registered with id: {factoryId}.");
+                
                 id = input.ReadInt();
-                var ds = dsf.Create(id);
-                if (ds == null)
-                {
-                    throw new SerializationException($"{dsf} (factoryId: {factoryId}) failed to create an instance for id: {id}.");
-                }
-                ds.ReadData(input);
-                return ds;
+                var serializable = factory.Create(id);
+                if (serializable == null)
+                    throw new SerializationException($"{factory} (factoryId: {factoryId}) failed to create an instance for id: {id}.");
+
+                serializable.ReadData(input);
+                return serializable;
             }
+            catch (IOException) { throw; }
+            catch (SerializationException) { throw; }
             catch (Exception e)
             {
-                if (e is IOException)
-                {
-                    throw;
-                }
-                if (e is SerializationException)
-                {
-                    throw;
-                }
-
                 throw new SerializationException($"Failed to read DataSerializable with factoryId: {factoryId}, id: {id} ({e.GetType()}: {e.Message}).");
             }
         }

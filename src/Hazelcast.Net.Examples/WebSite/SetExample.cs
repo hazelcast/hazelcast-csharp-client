@@ -38,7 +38,7 @@ namespace Hazelcast.Examples.WebSite
             await set.AddAsync("item3");
 
             // Get the items. Note that there are no duplicates.
-            foreach (var item in await set.GetAllAsync())
+            foreach (var item in await set.GetAsync())
             {
                 Console.WriteLine(item);
             }

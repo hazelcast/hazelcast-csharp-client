@@ -34,7 +34,7 @@ namespace Hazelcast.Transactions
         private long _startTime; // the start time of the transaction
         private MemberConnection _connection; // the client supporting the transaction
 
-        // FIXME transactions need some TLC
+        // TODO transactions need some TLC
         // how is two-phases commit supposed to work? is it all server-side (and then, why
         // do we have 'prepared' state on client's side?)
         // what about TransactionXxxExceptions, are we ever throwing them, and where?

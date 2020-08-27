@@ -78,7 +78,7 @@ namespace Hazelcast.DistributedObjects
         ///     so changes to the map are <b>NOT</b> reflected in the set, and vice-versa.
         /// </remarks>
         /// <returns>a set clone of the keys mappings in this map</returns>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync();
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync();
 
         /// <summary>Returns the number of entries in this map.</summary>
         /// <remarks>Returns the number of entries in this map.</remarks>

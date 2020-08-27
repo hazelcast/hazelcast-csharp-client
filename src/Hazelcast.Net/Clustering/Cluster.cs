@@ -177,7 +177,7 @@ namespace Hazelcast.Clustering
 
             // cancel operations,
             // stops background tasks
-            // FIXME: explain the lock
+            // TODO: explain the lock
             using (await _clusterState.ClusterLock.AcquireAsync().CAF())
             {
                 _clusterState.CancelOperations();

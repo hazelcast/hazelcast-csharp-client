@@ -75,7 +75,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<T>(response);
         }
 
-        // FIXME: Queue.Drain has issues
+        // TODO: Queue.Drain has issues
         // it may throw if the object is T but not TItem, need to review all these weird overloads
         // also deserializing immediately instead of returning a lazy thing?
 

@@ -23,8 +23,7 @@ namespace Hazelcast.Serialization
         /// Creates an instance of a type.
         /// </summary>
         /// <param name="typeId">The unique identified of the type.</param>
-        /// <returns>An instance of the specified type, or null if the type identifier
-        /// is not know by the factory.</returns>
-        IIdentifiedDataSerializable Create(int typeId); // fixme should throw not supported?
+        /// <returns>An instance of the specified type, or <c>null</c> if the type identifier is not know by the factory.</returns>
+        IIdentifiedDataSerializable Create(int typeId);
     }
 }

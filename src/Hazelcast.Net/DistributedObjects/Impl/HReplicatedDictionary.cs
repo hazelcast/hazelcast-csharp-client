@@ -105,7 +105,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync()
+        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync()
         {
             var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
