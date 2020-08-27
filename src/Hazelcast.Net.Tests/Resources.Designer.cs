@@ -10,8 +10,8 @@
 
 namespace Hazelcast.Tests {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,15 +23,15 @@ namespace Hazelcast.Tests {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
-
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Hazelcast.Tests {
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,7 +59,27 @@ namespace Hazelcast.Tests {
                 resourceCulture = value;
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Cert_Client1 {
+            get {
+                object obj = ResourceManager.GetObject("Cert_Client1", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Cert_Client2 {
+            get {
+                object obj = ResourceManager.GetObject("Cert_Client2", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
@@ -77,7 +97,87 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_Default", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
+        ///
+        ///    &lt;network&gt;
+        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
+        ///        &lt;outbound-ports&gt;
+        ///            &lt;!--
+        ///            Allowed port range when connecting to other nodes.
+        ///        [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Cluster_MA_Optional {
+            get {
+                return ResourceManager.GetString("Cluster_MA_Optional", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
+        ///
+        ///    &lt;network&gt;
+        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
+        ///        &lt;outbound-ports&gt;
+        ///            &lt;!--
+        ///            Allowed port range when connecting to other nodes.
+        ///        [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Cluster_MA_Required {
+            get {
+                return ResourceManager.GetString("Cluster_MA_Required", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
+        ///
+        ///  &lt;network&gt;
+        ///    &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
+        ///    &lt;outbound-ports&gt;
+        ///      &lt;!--
+        ///            Allowed port range when connecting to other nodes.
+        ///            0 or * means use system provided port.
+        ///            [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Cluster_Ssl {
+            get {
+                return ResourceManager.GetString("Cluster_Ssl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
+        ///  
+        ///  &lt;network&gt;
+        ///    &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
+        ///    &lt;outbound-ports&gt;
+        ///      &lt;!--
+        ///            Allowed port range when connecting to other nodes.
+        ///            0 or * me [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Cluster_Ssl_Signed {
+            get {
+                return ResourceManager.GetString("Cluster_Ssl_Signed", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
@@ -90,7 +190,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Empty", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
@@ -103,7 +203,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("EmptyWithComments", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
@@ -113,9 +213,6 @@ namespace Hazelcast.Tests {
         ///
         ///    // name of the cluster
         ///    &quot;clusterName&quot;: &quot;cluster&quot;,
-        ///
-        ///    // whether to start async (FIXME USAGE?)
-        ///    &quot;asyncStart&quot;: true,
         ///
         ///    // client labels
         ///    &quot;labels&quot;: [
@@ -129,7 +226,11 @@ namespace Hazelcast.Tests {
         ///      // a subscriber
         ///      {
         ///        // name of the type of the subscriber
-        ///        &quot;typeName&quot;: &quot;Hazelcast.Tests.ConfigurationTests+TestSubscriber, Haze [rest of string was truncated]&quot;;.
+        ///        &quot;typeName&quot;: &quot;Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestSubscriber, Hazelcast.Net.Tests&quot;
+        ///      }
+        ///    ],
+        ///
+        ///    // logging opti [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string HazelcastOptions {
             get {

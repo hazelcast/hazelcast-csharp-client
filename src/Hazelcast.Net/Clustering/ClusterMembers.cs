@@ -367,6 +367,7 @@ namespace Hazelcast.Clustering
         public async ValueTask WaitForFirstMemberViewEventAsync(CancellationToken cancellationToken)
         {
             await _firstMembersView.WaitAsync(cancellationToken).CAF();
+            _firstMembersView.Dispose();
             _firstMembersView = null;
         }
 
@@ -375,7 +376,7 @@ namespace Hazelcast.Clustering
         public async ValueTask DisposeAsync()
         {
             await TerminateAll().CAF();
-            _firstMembersView.Dispose();
+            _firstMembersView?.Dispose();
         }
     }
 }

@@ -383,7 +383,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start client ");
-            var client1 = new MemberConnection(address, new MessagingOptions(), new SocketOptions(), new Int64Sequence(), new NullLoggerFactory());
+            var client1 = new MemberConnection(address, new MessagingOptions(), new SocketOptions(), new SslOptions(), new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync(CancellationToken.None).CAF();
 
             // RC assigns a GUID but the default cluster name is 'dev'

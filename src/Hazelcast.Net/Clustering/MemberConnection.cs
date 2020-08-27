@@ -48,6 +48,7 @@ namespace Hazelcast.Clustering
 
         private readonly MessagingOptions _messagingOptions;
         private readonly SocketOptions _socketOptions;
+        private readonly SslOptions _sslOptions;
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoggerFactory _loggerFactory;
@@ -73,10 +74,11 @@ namespace Hazelcast.Clustering
         /// <param name="address">The network address.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="socketOptions">Socket options.</param>
+        /// <param name="sslOptions">SSL options.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
-            : this(address, messagingOptions, socketOptions, new Int32Sequence(), correlationIdSequence, loggerFactory)
+        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+            : this(address, messagingOptions, socketOptions, sslOptions, new Int32Sequence(), correlationIdSequence, loggerFactory)
         { }
 
         /// <summary>
@@ -85,6 +87,7 @@ namespace Hazelcast.Clustering
         /// <param name="address">The network address.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="socketOptions">Socket options.</param>
+        /// <param name="sslOptions">SSL options.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
@@ -93,11 +96,12 @@ namespace Hazelcast.Clustering
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, SslOptions sslOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             _socketOptions = socketOptions ?? throw new ArgumentNullException(nameof(socketOptions));
+            _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
             _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
@@ -215,7 +219,7 @@ namespace Hazelcast.Clustering
             // MessageConnection is just a wrapper around a true SocketConnection
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _socketOptions) { OnShutdown = SocketShutdown };
+            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _socketOptions, _sslOptions, _loggerFactory) { OnShutdown = SocketShutdown };
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
             HConsole.Configure(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 

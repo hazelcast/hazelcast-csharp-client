@@ -309,7 +309,7 @@ namespace Hazelcast.Clustering
             address = _clusterMembers.MapAddress(address);
 
             // create the connection to the member
-            var connection = new MemberConnection(address, _clusterState.Options.Messaging, _clusterState.Options.Networking.Socket, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            var connection = new MemberConnection(address, _clusterState.Options.Messaging, _clusterState.Options.Networking.Socket, _clusterState.Options.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
             {
                 OnReceiveEventMessage = _clusterEvents.OnEventMessage,
                 OnShutdown = HandleConnectionTermination

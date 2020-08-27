@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Networking
             var endpoint = NetworkAddress.Parse("127.0.0.1:5701").IPEndPoint;
             var options = new SocketOptions();
 
-            await using var connection = new ClientSocketConnection(0, endpoint, options, 3);
+            await using var connection = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory(), 3);
 
             // OnReceiveMessageBytes is missing
             Assert.ThrowsAsync<InvalidOperationException>(async () => await connection.ConnectAsync(default));
@@ -45,9 +45,11 @@ namespace Hazelcast.Tests.Networking
             // OnReceivePrefixBytes is missing
             Assert.ThrowsAsync<InvalidOperationException>(async () => await connection.ConnectAsync(default));
 
-            await using var connection2 = new ClientSocketConnection(0, endpoint, options);
+            await using var connection2 = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            {
+                OnReceiveMessageBytes = (x, y) => true
+            };
 
-            connection2.OnReceiveMessageBytes = (x, y) => true;
             await connection2.ConnectAsync(default);
 
             Assert.Throws<InvalidOperationException>(() => connection2.OnReceiveMessageBytes = (x, y) => true);
@@ -63,8 +65,10 @@ namespace Hazelcast.Tests.Networking
 
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
-            await using var socket = new ClientSocketConnection(0, endpoint, options);
-            socket.OnReceiveMessageBytes = (x, y) => true;
+            await using var socket = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            {
+                OnReceiveMessageBytes = (x, y) => true
+            };
             await socket.ConnectAsync(default);
             // connected!
         }
@@ -77,8 +81,10 @@ namespace Hazelcast.Tests.Networking
 
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
-            await using var socket = new ClientSocketConnection(0, endpoint, options);
-            socket.OnReceiveMessageBytes = (x, y) => true;
+            await using var socket = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            {
+                OnReceiveMessageBytes = (x, y) => true
+            };
             await socket.ConnectAsync(default);
             // connected!
         }
@@ -97,7 +103,7 @@ namespace Hazelcast.Tests.Networking
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
             await server.StartAsync();
 
-            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new SocketOptions());
+            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new SocketOptions(), new SslOptions(), new NullLoggerFactory());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 

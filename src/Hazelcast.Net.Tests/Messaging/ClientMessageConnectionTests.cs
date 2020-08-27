@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.Messaging
         public void ArgumentExceptions()
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(1, endpoint, new SocketOptions());
+            var s = new ClientSocketConnection(1, endpoint, new SocketOptions(), new SslOptions(), new NullLoggerFactory());
             var c = new ClientMessageConnection(s, new NullLoggerFactory());
 
             Assert.ThrowsAsync<ArgumentNullException>(async () => _ = await c.SendAsync(null));
@@ -42,7 +42,7 @@ namespace Hazelcast.Tests.Messaging
         public async Task OnReceiveMessage()
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(1, endpoint, new SocketOptions());
+            var s = new ClientSocketConnection(1, endpoint, new SocketOptions(), new SslOptions(), new NullLoggerFactory());
             var c = new ClientMessageConnection(s, new NullLoggerFactory()) { OnReceiveMessage = OnReceiveMessageNotImplemented };
 
             Assert.That(c.OnReceiveMessage, Is.Not.Null);
@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Messaging
         public void HandleFragments()
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(1, endpoint, new SocketOptions());
+            var s = new ClientSocketConnection(1, endpoint, new SocketOptions(), new SslOptions(), new NullLoggerFactory());
             var c = new ClientMessageConnection(s, new NullLoggerFactory());
 
             ClientMessage recvd = null;
@@ -149,7 +149,7 @@ namespace Hazelcast.Tests.Messaging
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
             await server.StartAsync();
 
-            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new SocketOptions());
+            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new SocketOptions(), new SslOptions(), new NullLoggerFactory());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 
