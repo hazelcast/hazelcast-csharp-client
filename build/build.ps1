@@ -116,15 +116,6 @@ foreach ($t in $targets) {
     }
 }
 
-# validate targets / platform
-if ($doDocs -and -not $isWindows) {
-    throw "DocFX is not supported on platform '$platform', cannot build documentation."
-}
-$enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
-if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
-    throw "Enterprise features require an enterprise key in HAZELCAST_ENTERPRISE_KEY environment variable."
-}
-
 # set versions and configure
 $hzVersion = $server
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
@@ -145,6 +136,36 @@ if ($server.Contains("SNAPSHOT")) {
 } else {
     $mvnOssRepo = $mvnOssReleaseRepo
     $mvnEntRepo = $mvnEntReleaseRepo
+}
+
+# prepare directories
+$scriptRoot = "$PSScriptRoot" # expected to be ./build/
+$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot/..")
+
+$srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
+$tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
+$outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
+$docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
+$buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
+
+if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
+
+# validate targets / platform
+if ($doDocs -and -not $isWindows) {
+    throw "DocFX is not supported on platform '$platform', cannot build documentation."
+}
+
+# validate enterprise key
+$enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
+if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
+
+    if (test-path "$buildDir/enterprise.key") {
+        $enterpriseKey = (gc "$buildDir/enterprise.key")[0].Trim()
+        $env:HAZELCAST_ENTERPRISE_KEY = $enterpriseKey
+    }
+    else {
+        throw "Enterprise features require an enterprise key in HAZELCAST_ENTERPRISE_KEY environment variable."
+    }
 }
 
 # determine framework(s)
@@ -169,18 +190,6 @@ if(!($enterprise)) {
 
 if (-not [System.String]::IsNullOrWhiteSpace($coverageFilter)) { $coverageFilter += ";" }
 $coverageFilter += "-:Hazelcast.Net.Tests"
-
-# prepare directories
-$scriptRoot = "$PSScriptRoot" # expected to be ./build/
-$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot/..")
-
-$srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
-$tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
-$outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
-$docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
-$buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
-
-if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
 # finds latest version of a NuGet package in the ~/.nuget cache
 function findLatestVersion($path) {
