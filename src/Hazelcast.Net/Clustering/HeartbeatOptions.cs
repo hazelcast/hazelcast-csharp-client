@@ -38,12 +38,18 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets the heartbeat period.
         /// </summary>
+        /// <remarks>
+        /// <para>Heartbeat will run periodically, and send a ping request to connections
+        /// that have not been written to over the previous period.</para>
+        /// </remarks>
         public int PeriodMilliseconds { get; set; } = 5_000;
 
         /// <summary>
         /// Gets or sets the timeout (how long to wait before declaring a connection down).
         /// </summary>
         /// <remarks>
+        /// <para>Heartbeat will consider that connections that have not received data for
+        /// the timeout duration, although they should have been pinged, are down.</para>
         /// <para>The timeout should be longer than the period.</para>
         /// </remarks>
         public int TimeoutMilliseconds { get; set; } = 60_000;
@@ -51,7 +57,10 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets the ping timeout (how long to wait when pinging a member).
         /// </summary>
-        public int PingTimeoutMilliseconds { get; set; } = 10_000;
+        /// <remarks>
+        /// <para>The timeout should be shorter that the period.</para>
+        /// </remarks>
+        public int PingTimeoutMilliseconds { get; set; } = 2_000;
 
         /// <summary>
         /// Clones the options.

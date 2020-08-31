@@ -53,16 +53,16 @@ namespace Hazelcast.Clustering
             if (_timeout <= _period)
             {
                 var timeout = TimeSpan.FromMilliseconds(2 * _period.TotalMilliseconds);
-                _logger.LogWarning("Heartbeat timeout {Timeout} is <= period {Period}, falling back to a {Value}ms timeout.",
-                    _timeout, _period, timeout);
+                _logger.LogWarning("Heartbeat timeout {Timeout}ms is <= period {Period}ms, falling back to a {Value}ms timeout.",
+                    _timeout, _period.TotalMilliseconds, timeout);
                 _timeout = timeout;
             }
 
             if (_pingTimeout >= _period.TotalMilliseconds)
             {
                 var pingTimeout = (int) _period.TotalMilliseconds / 2;
-                _logger.LogWarning("Ping timeout {Timeout} is >= period {Period}, falling back to a {Value}ms timeout.",
-                    _pingTimeout, _period, pingTimeout);
+                _logger.LogWarning("Ping timeout {Timeout}ms is >= period {Period}ms, falling back to a {Value}ms timeout.",
+                    _pingTimeout, _period.TotalMilliseconds, pingTimeout);
                 _pingTimeout = pingTimeout;
             }
         }
