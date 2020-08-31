@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Microsoft.Extensions.Configuration;
@@ -60,6 +61,18 @@ namespace Hazelcast
             return Build(configuration, configure);
         }
 
+        // build hazelcast options, optionally binding alternate keys for tests
+        internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure, string altKey)
+        {
+            if (setup == null) throw new ArgumentNullException(nameof(setup));
+
+            var builder = new ConfigurationBuilder();
+            setup(builder);
+            var configuration = builder.Build();
+
+            return Build(configuration, configure, altKey);
+        }
+
         /// <summary>
         /// Builds Hazelcast options.
         /// </summary>
@@ -67,6 +80,10 @@ namespace Hazelcast
         /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
         public static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure = null)
+            => Build(configuration, configure, null);
+
+        // build options, optionally binding alternate keys
+        private static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure, string altKey)
         {
             // must HzBind here and not simply Bind because we use our custom
             // binder which handles more situations such as ignoring and/or
@@ -74,6 +91,10 @@ namespace Hazelcast
 
             var options = new HazelcastOptions();
             configuration.HzBind(Hazelcast, options);
+
+            if (altKey != null)
+                configuration.HzBind(altKey, options);
+
             configure?.Invoke(configuration, options);
             return options;
         }

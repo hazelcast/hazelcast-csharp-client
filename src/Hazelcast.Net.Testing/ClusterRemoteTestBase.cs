@@ -54,7 +54,7 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the remote cluster configuration.
         /// </summary>
-        protected string RcClusterConfiguration => Remote.Resources.hazelcast;
+        protected virtual string RcClusterConfiguration => Remote.Resources.hazelcast;
 
         /// <summary>
         /// Gets the remote controller client.

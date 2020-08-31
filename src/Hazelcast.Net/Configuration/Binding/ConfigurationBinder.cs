@@ -213,7 +213,7 @@ namespace Hazelcast.Configuration.Binding
 
         private static void BindProperty(PropertyInfo property, object instance, IConfiguration config, BinderOptions options)
         {
-            // hz
+            // hz - support making a property with [BinderIgnore] to ignore it
             var ignoreAttribute = property.GetCustomAttribute<BinderIgnoreAttribute>();
             if (ignoreAttribute != null && ignoreAttribute.Ignore)
                 return;
@@ -238,7 +238,7 @@ namespace Hazelcast.Configuration.Binding
                 return;
             }
 
-            // hz
+            // hz - support marking a property with [BinderName(...)] to rename it
             var name = property.GetCustomAttribute<BinderNameAttribute>()?.Name ?? property.Name;
 
             propertyValue = BindInstance(property.PropertyType, propertyValue, config.GetSection(name), options);

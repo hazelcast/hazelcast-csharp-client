@@ -26,7 +26,7 @@ namespace Hazelcast.Testing.Conditions
     /// <para>The specified value overrides the default value, which would come
     /// from the environment, or be the default value.</para>
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method)]
     public sealed class ServerVersionAttribute :  Attribute, IApplyToTest
     {
         public const string PropertyName = ServerVersion.EnvironmentVariableName;

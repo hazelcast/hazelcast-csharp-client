@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
+using System.Reflection;
 using Hazelcast.Testing.Conditions;
 using NuGet.Versioning;
 using NUnit.Framework;
@@ -23,18 +25,23 @@ namespace Hazelcast.Tests.Testing
     public class ServerVersionTests
     {
         [Test]
-        public void VersionIsDefaultValue()
+        public void VersionSources()
         {
-            Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
-        }
-
-        [Test]
-        public void VersionReadsEnv()
-        {
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "0.6");
-            Assert.AreEqual(NuGetVersion.Parse("0.6"), ServerVersion.GetVersion());
             Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
             Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
+            Assert.AreEqual(TestAssemblyServerVersion, ServerVersion.GetVersion(TestAssemblyServerVersion));
+
+            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "0.6");
+            Assert.AreEqual(NuGetVersion.Parse("0.6"), ServerVersion.GetVersion());
+            Assert.AreEqual(NuGetVersion.Parse("0.6"), ServerVersion.GetVersion(TestAssemblyServerVersion));
+
+            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
+            Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
+            Assert.AreEqual(TestAssemblyServerVersion, ServerVersion.GetVersion(TestAssemblyServerVersion));
         }
+
+        // gets the version indicated by the [assembly:ServerVersion()] in AssemblyInfo.cs
+        private NuGetVersion TestAssemblyServerVersion 
+            => GetType().Assembly.GetCustomAttributes<ServerVersionAttribute>().FirstOrDefault()?.Version;
     }
 }

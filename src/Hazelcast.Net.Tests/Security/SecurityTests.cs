@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Security;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Security
@@ -26,50 +27,54 @@ namespace Hazelcast.Tests.Security
         [Test]
         public void Default()
         {
-            var factory = new DefaultCredentialsFactory();
+            using var factory = new DefaultCredentialsFactory();
+
             var credentials = factory.NewCredentials();
             Assert.That(credentials, Is.InstanceOf<UsernamePasswordCredentials>());
             Assert.That(credentials.Name, Is.Null);
             Console.WriteLine(credentials);
-            factory.Dispose();
         }
 
         [Test]
         public void UserNamePassword1()
         {
-            var factory = new UsernamePasswordCredentialsFactory("username", "password");
+            using var factory = new UsernamePasswordCredentialsFactory("username", "password");
+
             var credentials = factory.NewCredentials();
             Assert.That(credentials, Is.InstanceOf<UsernamePasswordCredentials>());
             Assert.That(credentials.Name, Is.EqualTo("username"));
             Console.WriteLine(credentials);
+
             var typed = (UsernamePasswordCredentials) credentials;
             Assert.That(typed.Password, Is.EqualTo("password"));
-            factory.Dispose();
         }
 
         [Test]
         public void UserNamePassword2()
         {
-            var factory = new UsernamePasswordCredentialsFactory(new Dictionary<string, string>
+            using var factory = new UsernamePasswordCredentialsFactory(new Dictionary<string, string>
             {
                 { "username", "username" },
                 { "password", "password" },
                 { "foo", "bar" }
             });
+
             var credentials = factory.NewCredentials();
             Assert.That(credentials, Is.InstanceOf<UsernamePasswordCredentials>());
             Assert.That(credentials.Name, Is.EqualTo("username"));
             Console.WriteLine(credentials);
+
             var typed = (UsernamePasswordCredentials)credentials;
             Assert.That(typed.Password, Is.EqualTo("password"));
-            factory.Dispose();
         }
 
         [Test]
         public void Static()
         {
             var credentials = new UsernamePasswordCredentials();
-            var factory = new StaticCredentialsFactory(credentials);
+
+            using var factory = new StaticCredentialsFactory(credentials);
+
             Assert.That(factory.NewCredentials(), Is.SameAs(credentials));
         }
 
@@ -77,45 +82,51 @@ namespace Hazelcast.Tests.Security
         public void Token1()
         {
             var token = new byte[16];
-            var factory = new TokenCredentialsFactory(token);
+            
+            using var factory = new TokenCredentialsFactory(token);
+
             var credentials = factory.NewCredentials();
             Console.WriteLine(credentials);
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
             Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
+
             var typed = (TokenCredentials)credentials;
             Assert.That(typed.GetToken(), Is.SameAs(token));
-            factory.Dispose();
         }
 
         [Test]
         public void Token2()
         {
-            var factory = new TokenCredentialsFactory("token");
+            using var factory = new TokenCredentialsFactory("token");
+
             var credentials = factory.NewCredentials();
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
             Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
+
             var typed = (TokenCredentials) credentials;
             Assert.That(typed.GetToken(), Is.EqualTo(Encoding.UTF8.GetBytes("token")));
-            factory.Dispose();
         }
 
         [Test]
         public void Token3()
         {
-            var factory = new TokenCredentialsFactory(new Dictionary<string, string>
+            using var factory = new TokenCredentialsFactory(new Dictionary<string, string>
             {
                 { "token", "token" }
             });
+
             var credentials = factory.NewCredentials();
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
             Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
+
             var typed = (TokenCredentials)credentials;
             Assert.That(typed.GetToken(), Is.EqualTo(Encoding.UTF8.GetBytes("token")));
-            factory.Dispose();
         }
 
         [Test]
-        [Explicit("Fails - no kerberos for now")]
+        [Category("enterprise")] // Kerberos is an Enterprise feature
+        [Explicit("Requires KDC and domain + configuration.")]
+        [ServerCondition("[4.1,)")]
         public void Kerberos()
         {
             Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory(null));
@@ -124,19 +135,15 @@ namespace Hazelcast.Tests.Security
             Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory("spn", "u", null, "d"));
             Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory("spn", "u", "p", null));
 
-            var factory = new KerberosCredentialsFactory("spn");
+            using var factory = new KerberosCredentialsFactory("spn");
+
             var credentials = factory.NewCredentials();
             Console.WriteLine(credentials);
             Assert.That(credentials, Is.InstanceOf<KerberosCredentials>());
-            var typed = (KerberosCredentials) credentials;
-
-            // testing the actual credentials require Kerberos?
 
             Assert.That(factory.NewCredentials(), Is.SameAs(credentials));
             factory.Reset();
             Assert.That(factory.NewCredentials(), Is.Not.SameAs(credentials));
-
-            factory.Dispose();
         }
     }
 }

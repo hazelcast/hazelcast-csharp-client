@@ -140,7 +140,7 @@ namespace Hazelcast.Serialization
 
 
         /// <summary>
-        /// Writes a UTF8 <see cref="string"/> value.
+        /// Writes an UTF8 <see cref="string"/> value.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="endianness">The endianness.</param>
@@ -157,7 +157,6 @@ namespace Hazelcast.Serialization
         /// Writes a <see cref="string"/> value as bytes, assuming each char is 1-byte.
         /// </summary>
         /// <param name="value">The value.</param>
-        /// <param name="endianness">The endianness.</param>
         void WriteAsBytes(string value);
 
         /// <summary>

@@ -189,7 +189,10 @@ if(!($enterprise)) {
 }
 
 if (-not [System.String]::IsNullOrWhiteSpace($coverageFilter)) { $coverageFilter += ";" }
-$coverageFilter += "-:Hazelcast.Net.Tests"
+$coverageFilter += "-:Hazelcast.Net.Tests" # do not cover tests themselves
+
+# set server version (to filter tests)
+$env:HAZELCAST_SERVER_VERSION=$server.TrimEnd("-SNAPSHOT")
 
 # finds latest version of a NuGet package in the ~/.nuget cache
 function findLatestVersion($path) {
@@ -572,7 +575,17 @@ function StartRemoteController() {
         "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
         "-cp", "$script:classpath", `
         "com.hazelcast.remotecontroller.Main" `
-    ) + $javaFix
+    )
+
+    # uncomment to test Kerberos (but don't commit)
+    #$args = $args + @( `
+    #    "-Djava.util.logging.config.file=krb5/logging.properties", `
+    #    "-Djava.security.krb5.realm=HZ.LOCAL", `
+    #    "-Djava.security.krb5.kdc=SERVER19.HZ.LOCAL", `
+    #    "-Djava.security.krb5.conf=krb5/krb5.conf" `
+    #)
+
+    $args = $args + $javaFix
 
     $script:remoteController = Start-Process -FilePath $java -ArgumentList $args `
         -RedirectStandardOutput "$tmpDir/tests/rc/rc_stdout.log" -RedirectStandardError "$tmpDir/tests/rc/rc_stderr.log" -PassThru

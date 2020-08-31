@@ -21,8 +21,9 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Configures Kerberos as the authentication mechanism.
         /// </summary>
+        /// <param name="options">The authentication options.</param>
         /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
-        /// <returns>The security options.</returns>
+        /// <returns>The authentication options.</returns>
         public static AuthenticationOptions ConfigureKerberosCredentials(this AuthenticationOptions options, string spn)
         {
             options.CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);

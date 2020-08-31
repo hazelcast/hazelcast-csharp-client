@@ -14,8 +14,10 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace Hazelcast.Testing
 {
@@ -29,21 +31,31 @@ namespace Hazelcast.Testing
         /// </summary>
         protected virtual HazelcastOptions CreateHazelcastOptions()
         {
-            var options = HazelcastOptions.Build();
+            var options = HazelcastOptions.Build(builder =>
+            {
+                builder.AddDefaults(null);
+                builder.AddHazelcast(null);
+                builder.AddUserSecrets(GetType().Assembly, true);
+            }, null, ConfigurationSecretsKey);
 
             options.Networking.Addresses.Clear();
             options.Networking.Addresses.Add("127.0.0.1:5701");
-
-            //n.ReconnectMode = ReconnectMode.ReconnectSync;
-
-            //var r = n.ConnectionRetry;
-            //r.ClusterConnectionTimeoutMilliseconds = 60 * 1000;
-            //r.InitialBackoffMilliseconds = 2 * 1000;
 
             options.Logging.LoggerFactory.Creator = () => LoggerFactory;
 
             return options;
         }
+
+        /// <summary>
+        /// Gets the configuration secrets key.
+        /// </summary>
+        /// <remarks>
+        /// <para>By default this is "hazelcast", which means that any secrets configuration
+        /// options named "hazelcast:something" will be merged into configuration, but a
+        /// different value e.g. "hazelcast-tests-something" can be specified to select
+        /// different groups of secrets for different tests.</para>
+        /// </remarks>
+        protected virtual string ConfigurationSecretsKey { get; } = HazelcastOptions.Hazelcast;
 
         /// <summary>
         /// Gets the timeout for creating and opening a client.

@@ -14,6 +14,7 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using NuGet.Versioning;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
@@ -51,7 +52,7 @@ namespace Hazelcast.Testing.Conditions
         // [1.0]        x == 1.0
         // (,1.0]       x ≤ 1.0
         // (,1.0)       x< 1.0
-        // [1.0, 2.0    1.0 ≤ x ≤ 2.0
+        // [1.0, 2.0]   1.0 ≤ x ≤ 2.0
         // (1.0,2.0)    1.0 < x< 2.0
         // [1.0, 2.0)   1.0 ≤ x < 2.0
         // (1.0)        invalid
@@ -72,7 +73,10 @@ namespace Hazelcast.Testing.Conditions
             if (serverVersion == null && fixtureInfo != null)
                 serverVersion = fixtureInfo.GetCustomAttributes<ServerVersionAttribute>(true).FirstOrDefault()?.Version;
             if (serverVersion == null)
-                serverVersion = ServerVersion.GetVersion();
+            {
+                var assemblyServerVersion = fixtureInfo?.Assembly.GetCustomAttributes<ServerVersionAttribute>().FirstOrDefault()?.Version;
+                serverVersion = ServerVersion.GetVersion(assemblyServerVersion);
+            }
 
             if (_range.Satisfies(serverVersion))
                 return;
