@@ -7,6 +7,7 @@
 ## [HDictionary](hdictionary.md)
 ## [HList](hlist.md)
 # [Events](events.md)
+# [Kerberos](kerberos.md)
 # [Examples](examples.md)
 # [Internals](internals.md)
 ## [Sources](sources.md)
