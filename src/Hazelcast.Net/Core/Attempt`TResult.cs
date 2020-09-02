@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Core
 {
@@ -70,8 +71,22 @@ namespace Hazelcast.Core
         /// does not return it. To check the value, regardless of success, use the <see cref="Value"/>
         /// property.</para>
         /// </remarks>
-        public TResult ValueOr(TResult other)
+        [return: MaybeNull]
+        public TResult ValueOr([AllowNull] TResult other)
             => Success ? Value : other;
+
+        /// <summary>
+        /// Gets the value of the result, if successful, else the default value for <typeparamref name="TResult"/>.
+        /// </summary>
+        /// <returns>The value of the result, if successful, else the default value for <typeparamref name="TResult"/>.</returns>
+        /// <remarks>
+        /// <para>If not successful, the attempt may still carry a value, but this method
+        /// does not return it. To check the value, regardless of success, use the <see cref="Value"/>
+        /// property.</para>
+        /// </remarks>
+        [return: MaybeNull]
+        public TResult ValueOrDefault()
+            => Success ? Value : default;
 
         /// <summary>
         /// Gets a captured exception.

@@ -84,6 +84,14 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
+        /// Resets the number of entries.
+        /// </summary>
+        public void ResetEntryCount()
+        {
+            Interlocked.Exchange(ref _ownedEntryCount, 0);
+        }
+
+        /// <summary>
         /// Increments the number of evictions.
         /// </summary>
         public void IncrementEviction()

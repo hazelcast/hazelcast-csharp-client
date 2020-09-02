@@ -45,7 +45,7 @@ namespace Hazelcast
             var nearCacheOptions = _options.NearCache.GetConfig(name);
             var nearCache = nearCacheOptions == null
                 ? null
-                : await _nearCacheManager.GetOrCreateNearCacheAsync(name, nearCacheOptions).CAF();
+                : await _nearCacheManager.GetOrCreateNearCacheAsync<TValue>(name, nearCacheOptions).CAF();
 
             HDictionary<TKey, TValue> CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
                 => nearCacheOptions == null

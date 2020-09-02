@@ -19,6 +19,9 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.NearCaching
 {
+    /// <summary>
+    /// Represents an entry in the <see cref="NearCache"/>.
+    /// </summary>
     internal class NearCacheEntry
     {
         private readonly long _creationTime;
@@ -33,44 +36,44 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Initializes a new instance of the <see cref="NearCacheEntry"/> class.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="creationTime"></param>
-        /// <param name="expirationTime"></param>
-        internal NearCacheEntry(IData key, object value, long creationTime, long expirationTime)
+        /// <param name="keyData">The key data.</param>
+        /// <param name="valueObject">The value object.</param>
+        /// <param name="timeToLive">The time the entry lives, before expiring.</param>
+        /// <remarks>
+        /// <para>The <paramref name="valueObject"/> can be either <see cref="IData"/> or
+        /// TValue, depending on the configured <see cref="InMemoryFormat"/> of the cache.</para>
+        /// </remarks>
+        internal NearCacheEntry(IData keyData, object valueObject, long timeToLive)
         {
-            Key = key;
-            Value = value;
-
-            _creationTime = creationTime;
-            _expirationTime = expirationTime;
-            _lastHitTime = creationTime;
-
-            _sequence = _hits = 0;
+            KeyData = keyData;
+            ValueObject = valueObject;
+            _creationTime = Clock.Milliseconds;
+            _expirationTime = timeToLive > 0 ? _creationTime + timeToLive : Clock.Never;
+            _lastHitTime = Clock.Never;
         }
 
         /// <summary>
-        /// Gets or sets the unique identifier of the record.
+        /// Gets or sets the unique identifier of the entry.
         /// </summary>
         public Guid Guid { get; set; }
 
         /// <summary>
-        /// Gets the key of the record.
+        /// Gets the key data of the entry.
         /// </summary>
-        public IData Key { get; }
+        public IData KeyData { get; }
 
         /// <summary>
-        /// Gets the value of the record.
+        /// Gets the value object of the entry.
         /// </summary>
-        public object Value { get; }
+        public object ValueObject { get; }
 
         /// <summary>
-        /// Gets the number of time the record has been hit.
+        /// Gets the number of time the entry has been hit.
         /// </summary>
         public long Hits => Interlocked.Read(ref _hits);
 
         /// <summary>
-        /// Gets the partition identifier corresponding to the key.
+        /// Gets or sets the partition identifier corresponding to the entry key.
         /// </summary>
         public int PartitionId
         {
@@ -79,7 +82,7 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
-        /// Gets the sequence value.
+        /// Gets or sets the sequence value of the entry.
         /// </summary>
         public long Sequence
         {
@@ -88,7 +91,7 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
-        /// Gets the time when the record was last hit.
+        /// Gets the time when the entry was last hit.
         /// </summary>
         internal long LastHitTime => Interlocked.Read(ref _lastHitTime);
 
@@ -102,10 +105,10 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
-        /// Determines whether the record has expired at a given time.
+        /// Determines whether the record is expired at a given time.
         /// </summary>
         /// <param name="time">A time.</param>
-        /// <returns>true if the record has expired at the specified time; otherwise false.</returns>
+        /// <returns><c>true</c> if the record is expired at the specified time; otherwise <c>false</c>.</returns>
         internal bool IsExpiredAt(long time)
         {
             return _expirationTime > Clock.Never && _expirationTime <= time;
@@ -116,7 +119,7 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="idleMilliseconds">The period of time a record can remain un-hit before becoming idle.</param>
         /// <param name="time">A time.</param>
-        /// <returns>true if the record is idle at the specified time; otherwise false.</returns>
+        /// <returns><c>true</c> if the record is idle at the specified time; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>A record is idle if it has not been hit since <paramref name="idleMilliseconds"/>.</para>
         /// </remarks>

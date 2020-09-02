@@ -30,6 +30,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Predicates;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
@@ -40,20 +41,20 @@ namespace Hazelcast.DistributedObjects.Impl
         protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CAF();
-            if (removed) _cache.Invalidate(keyData);
+            if (removed) _cache.Remove(keyData);
             return removed;
         }
 
         /// <inheritdoc />
-        protected override async Task<TValue> RemoveAsync(IData keyData, CancellationToken cancellationToken)
+        protected override async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             try
             {
-                return await base.RemoveAsync(keyData, cancellationToken).CAF();
+                return await base.GetAndRemoveAsync(keyData, cancellationToken).CAF();
             }
             finally
             {
-                _cache.Invalidate(keyData);
+                _cache.Remove(keyData);
             }
         }
 
@@ -66,20 +67,34 @@ namespace Hazelcast.DistributedObjects.Impl
             }
             finally
             {
-                _cache.Invalidate(keyData);
+                _cache.Remove(keyData);
             }
         }
 
         /// <inheritdoc />
-        protected override async Task DeleteAsync(IData keyData, CancellationToken cancellationToken)
+        protected override Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             try
             {
-                await base.RemoveAsync(keyData, cancellationToken).CAF();
+                return base.RemoveAsync(predicate, cancellationToken);
             }
             finally
             {
-                _cache.Invalidate(keyData);
+                // not exactly pretty, but we cannot run the predicate locally
+                _cache.Clear();
+            }
+        }
+
+        /// <inheritdoc />
+        protected override async Task RemoveAsync(IData keyData, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await base.GetAndRemoveAsync(keyData, cancellationToken).CAF();
+            }
+            finally
+            {
+                _cache.Remove(keyData);
             }
         }
 
@@ -87,7 +102,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected override async Task ClearAsync(CancellationToken cancellationToken)
         {
             await base.ClearAsync(cancellationToken)
-                .ContinueWith(_ => _cache.InvalidateAll(), default, default, TaskScheduler.Current)
+                .ContinueWith(_ => _cache.Clear(), default, default, TaskScheduler.Current)
                 .CAF();
         }
     }

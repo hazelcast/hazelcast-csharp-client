@@ -92,8 +92,8 @@ namespace Hazelcast
             var options = new HazelcastOptions();
             configuration.HzBind(Hazelcast, options);
 
-            if (altKey != null)
-                configuration.HzBind(altKey, options);
+            //if (altKey != null)
+            //    configuration.HzBind(altKey, options);
 
             configure?.Invoke(configuration, options);
             return options;

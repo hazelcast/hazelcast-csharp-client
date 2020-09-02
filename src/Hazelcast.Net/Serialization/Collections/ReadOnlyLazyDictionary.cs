@@ -55,16 +55,6 @@ namespace Hazelcast.Serialization.Collections
         /// Adds entries.
         /// </summary>
         /// <param name="entries">Entries.</param>
-        public void Add(IEnumerable<KeyValuePair<IData, object>> entries)
-        {
-            foreach (var (keyData, valueObject) in entries)
-                _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
-        }
-
-        /// <summary>
-        /// Adds entries.
-        /// </summary>
-        /// <param name="entries">Entries.</param>
         public void Add(IEnumerable<KeyValuePair<IData, IData>> entries)
         {
             foreach (var (keyData, valueObject) in entries)
@@ -75,10 +65,10 @@ namespace Hazelcast.Serialization.Collections
         /// Adds a key-value pair.
         /// </summary>
         /// <param name="keyData">The key data.</param>
-        /// <param name="valueObject">The value source object.</param>
-        public void Add(IData keyData, object valueObject)
+        /// <param name="value">The value.</param>
+        public void Add(IData keyData, TValue value)
         {
-            _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
+            _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, value));
         }
 
         /// <summary>
@@ -100,7 +90,7 @@ namespace Hazelcast.Serialization.Collections
         {
             if (entry.HasValue) return;
 
-            entry.Value = _serializationService.ToObject<TValue>(entry.ValueObject);
+            entry.Value = _serializationService.ToObject<TValue>(entry.ValueData);
         }
 
         /// <inheritdoc />

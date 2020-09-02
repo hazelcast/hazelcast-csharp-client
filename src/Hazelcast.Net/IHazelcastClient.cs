@@ -45,6 +45,24 @@ namespace Hazelcast
         Task StartAsync(CancellationToken cancellationToken);
 
         /// <summary>
+        /// Whether the client is active.
+        /// </summary>
+        /// <returns><c>true</c> if the client is active; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>The client can be active but not connected, trying to reconnect.</para>
+        /// </remarks>
+        bool IsActive { get; }
+
+        /// <summary>
+        /// Whether the client is connected.
+        /// </summary>
+        /// <returns><c>true</c> if the client is connected; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>The client can be active but not connected, trying to reconnect.</para>
+        /// </remarks>
+        bool IsConnected { get; }
+
+        /// <summary>
         /// Begins a new transaction.
         /// </summary>
         /// <returns>A new transaction context.</returns>

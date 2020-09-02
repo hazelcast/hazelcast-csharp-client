@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var task = base.ExecuteAsync(processorData, keyData, cancellationToken).ContinueWith(t =>
             {
-                _cache.Invalidate(keyData);
+                _cache.Remove(keyData);
                 return t;
             }, default, default, TaskScheduler.Current);
 
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var task = base.ApplyAsync(processorData, keyData, cancellationToken).ContinueWith(t =>
             {
-                _cache.Invalidate(keyData);
+                _cache.Remove(keyData);
                 return t;
             }, default, default, TaskScheduler.Current);
 

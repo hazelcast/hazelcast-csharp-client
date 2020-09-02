@@ -28,8 +28,8 @@ namespace Hazelcast.NearCaching
             if (x == null) throw new ArgumentNullException(nameof(x));
             if (y == null) throw new ArgumentNullException(nameof(y));
 
-            var cx = x.Key.GetHashCode();
-            var cy = y.Key.GetHashCode();
+            var cx = x.KeyData.GetHashCode();
+            var cy = y.KeyData.GetHashCode();
 
             return cx.CompareTo(cy);
         }

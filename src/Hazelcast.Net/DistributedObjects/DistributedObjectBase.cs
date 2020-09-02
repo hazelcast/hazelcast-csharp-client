@@ -310,12 +310,12 @@ namespace Hazelcast.DistributedObjects
 
             _onDispose(this);
 
-            return DisposeAsyncInternal();
+            return DisposeAsyncCore();
         }
 
         /// <summary>
         /// Disposes resources.
         /// </summary>
-        protected virtual ValueTask DisposeAsyncInternal() => default;
+        protected virtual ValueTask DisposeAsyncCore() => default;
     }
 }

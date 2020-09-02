@@ -26,10 +26,10 @@ namespace Hazelcast.Serialization.Collections
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyEntry{TKey,TValue}"/> class.
         /// </summary>
-        /// <param name="key">A key.</param>
-        /// <param name="valueObject">A value object.</param>
-        public ReadOnlyLazyEntry(TKey key, object valueObject)
-            : base(valueObject)
+        /// <param name="key">The key.</param>
+        /// <param name="valueData">The value data.</param>
+        public ReadOnlyLazyEntry(TKey key, IData valueData)
+            : base(valueData)
         {
             Key = key;
         }
@@ -37,12 +37,34 @@ namespace Hazelcast.Serialization.Collections
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyEntry{TKey,TValue}"/> class.
         /// </summary>
-        /// <param name="key">A key data.</param>
-        /// <param name="valueObject">A value object.</param>
-        public ReadOnlyLazyEntry(IData key, object valueObject)
-            : base(valueObject)
+        /// <param name="keyData">The key data.</param>
+        /// <param name="value">The value.</param>
+        public ReadOnlyLazyEntry(IData keyData, TValue value)
+            : base(value)
         {
-            KeyData = key;
+            KeyData = keyData;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlyLazyEntry{TKey,TValue}"/> class.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        public ReadOnlyLazyEntry(TKey key, TValue value)
+            : base(value)
+        {
+            Key = key;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlyLazyEntry{TKey,TValue}"/> class.
+        /// </summary>
+        /// <param name="keyData">The key data.</param>
+        /// <param name="valueData">The value data.</param>
+        public ReadOnlyLazyEntry(IData keyData, IData valueData)
+            : base(valueData)
+        {
+            KeyData = keyData;
         }
 
         /// <summary>

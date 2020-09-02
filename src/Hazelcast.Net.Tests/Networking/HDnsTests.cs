@@ -20,20 +20,20 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
-    public class DnsExTests
+    public class HDnsTests
     {
         [Test]
         public void Test()
         {
-            Assert.That(DnsEx.GetHostName(), Is.EqualTo(Dns.GetHostName()));
+            Assert.That(HDns.GetHostName(), Is.EqualTo(Dns.GetHostName()));
 
-            Assert.That(AreEqual(DnsEx.GetHostEntry("127.0.0.1"), Dns.GetHostEntry("127.0.0.1")), Is.True);
-            Assert.That(AreEqual(DnsEx.GetHostEntry("www.hazelcast.com"), Dns.GetHostEntry("www.hazelcast.com")), Is.True);
+            Assert.That(AreEqual(HDns.GetHostEntry("127.0.0.1"), Dns.GetHostEntry("127.0.0.1")), Is.True);
+            Assert.That(AreEqual(HDns.GetHostEntry("www.hazelcast.com"), Dns.GetHostEntry("www.hazelcast.com")), Is.True);
 
-            Assert.That(AreEqual(DnsEx.GetHostEntry(IPAddress.Parse("127.0.0.1")), Dns.GetHostEntry(IPAddress.Parse("127.0.0.1"))), Is.True);
+            Assert.That(AreEqual(HDns.GetHostEntry(IPAddress.Parse("127.0.0.1")), Dns.GetHostEntry(IPAddress.Parse("127.0.0.1"))), Is.True);
 
-            Assert.That(AreEqual(DnsEx.GetHostAddresses("127.0.0.1"), Dns.GetHostAddresses("127.0.0.1")), Is.True);
-            Assert.That(AreEqual(DnsEx.GetHostAddresses("www.hazelcast.com"), Dns.GetHostAddresses("www.hazelcast.com")), Is.True);
+            Assert.That(AreEqual(HDns.GetHostAddresses("127.0.0.1"), Dns.GetHostAddresses("127.0.0.1")), Is.True);
+            Assert.That(AreEqual(HDns.GetHostAddresses("www.hazelcast.com"), Dns.GetHostAddresses("www.hazelcast.com")), Is.True);
         }
 
         private static bool AreEqual(IPAddress[] left, IPAddress[] right)

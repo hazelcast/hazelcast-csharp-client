@@ -34,8 +34,10 @@ namespace Hazelcast.NearCaching
         private NearCacheNamedOptions(NearCacheNamedOptions other)
         {
             EvictionPolicy = other.EvictionPolicy;
+            EvictionPercentage = other.EvictionPercentage;
             InMemoryFormat = other.InMemoryFormat;
             MaxIdleSeconds = other.MaxIdleSeconds;
+            CleanupPeriodSeconds = other.CleanupPeriodSeconds;
             MaxSize = other.MaxSize;
             TimeToLiveSeconds = other.TimeToLiveSeconds;
             InvalidateOnChange = other.InvalidateOnChange;
@@ -45,6 +47,11 @@ namespace Hazelcast.NearCaching
         /// Gets or sets the eviction policy.
         /// </summary>
         public EvictionPolicy EvictionPolicy { get; set; } = EvictionPolicy.Lru;
+
+        /// <summary>
+        /// Gets or sets the eviction percentage.
+        /// </summary>
+        public int EvictionPercentage { get; set; } = 20;
 
         /// <summary>
         /// Gets or sets the in-memory format.
@@ -58,6 +65,11 @@ namespace Hazelcast.NearCaching
         /// <para>zero means forever.</para>
         /// </remarks>
         public int MaxIdleSeconds { get; set; }
+
+        /// <summary>
+        /// Gets or sets the period of the cleanup.
+        /// </summary>
+        public int CleanupPeriodSeconds { get; set; } = 5;
 
         /// <summary>
         /// Gets or sets the maximum size of the cache before entries get evicted.

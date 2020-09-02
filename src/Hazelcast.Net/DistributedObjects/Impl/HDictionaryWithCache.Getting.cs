@@ -25,62 +25,56 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionaryWithCache<TKey, TValue> // Getting
     {
         /// <inheritdoc />
-        protected override async Task<IData> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected override async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            async Task<object> BaseGetAsync(IData data, CancellationToken token)
-                => await base.GetAsync(data, token).CAF();
+            async Task<IData> BaseGetAsync(IData kdata, CancellationToken token)
+                => await GetDataAsync(kdata, token).CAF();
 
-            try
-            {
-                var attempt = await _cache.TryGetOrAddAsync(keyData, data => BaseGetAsync(keyData, cancellationToken)).CAF();
-                return (IData)attempt.ValueOr(default);
-            }
-            catch
-            {
-                _cache.Invalidate(keyData);
-                throw;
-            }
+            return (await _cache.TryGetOrAddAsync(keyData, _ => BaseGetAsync(keyData, cancellationToken)).CAF()).ValueOrDefault();
         }
 
         /// <inheritdoc />
-        protected override async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownerKeys, CancellationToken cancellationToken)
+        protected override async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownersKeys, CancellationToken cancellationToken)
         {
-            var cachedEntries = new Dictionary<IData, object>();
+            // owner keys are grouped by owners (members) and partitions
 
-            foreach (var (_, part) in ownerKeys)
+            var cachedValues = new Dictionary<IData, TValue>();
+            var cachedKeys = new List<IData>();
+
+            foreach (var (_, ownerKeys) in ownersKeys)
             {
-                foreach (var (_, list) in part)
+                foreach (var (_, partitionKeys) in ownerKeys)
                 {
-                    var remove = new List<IData>();
-                    foreach (var key in list)
+                    cachedKeys.Clear();
+                    foreach (var keyData in partitionKeys)
                     {
-                        var (hasValue, value) = await _cache.TryGetValue(key).CAF();
+                        var (hasValue, value) = await _cache.TryGetAsync(keyData).CAF();
                         if (hasValue)
                         {
-                            remove.Add(key);
-                            cachedEntries[key] = value;
+                            cachedKeys.Add(keyData);
+                            cachedValues[keyData] = value;
                         }
                     }
 
-                    foreach (var key in remove)
-                        list.Remove(key);
+                    foreach (var keyData in cachedKeys)
+                        partitionKeys.Remove(keyData);
                 }
             }
 
-            var entries = await base.GetAsync(ownerKeys, cancellationToken).CAF();
+            var entries = await base.GetAsync(ownersKeys, cancellationToken).CAF();
 
-            // _cache may contain either the value data (IData) or the
-            // de-serialized object (TValue), depending on configuration
+            // 'entries' is a ReadOnlyLazyDictionary that contains values that are lazily
+            // deserialized - and since we just fetched the entries, none have been deserialized
+            // yet - so entry.ValueObject here is not null, and is an IData that we can pass
+            // to the cache - which will either deserialized or not depending on InMemoryFormat
 
-            // cache the retrieved entries
-            // none of them have a value yet, and ...
-            // TODO: what is it we want to put in the cache?
+            // can retrieved entries
             foreach (var (key, entry) in entries.Entries)
-                await _cache.TryAdd(key, entry.ValueObject).CAF();
+                await _cache.TryAddAsync(key, entry.ValueData).CAF();
 
-            // add cached entries to the retrieved entries
-            foreach (var (key, valueObject) in cachedEntries)
-                entries.Add(key, valueObject);
+            // merge cached entries and retrieved entries
+            foreach (var (keyData, valueObject) in cachedValues)
+                entries.Add(keyData, valueObject);
 
             return entries;
         }
@@ -88,7 +82,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
-            return await _cache.ContainsKey(keyData).CAF() || await base.ContainsKeyAsync(keyData, cancellationToken).CAF();
+            return await _cache.ContainsKeyAsync(keyData).CAF() || await base.ContainsKeyAsync(keyData, cancellationToken).CAF();
         }
     }
 }

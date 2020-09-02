@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task<TValue> AddOrUpdateAsync(IData keyData, IData valueData, TimeSpan timeToLive, bool returnValue, CancellationToken cancellationToken)
         {
-            _cache.Invalidate(keyData);
+            _cache.Remove(keyData);
             var task = base.AddOrUpdateAsync(keyData, valueData, timeToLive, returnValue, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -55,7 +55,7 @@ namespace Hazelcast.DistributedObjects.Impl
             void InvalidateEntries(IEnumerable<KeyValuePair<IData, IData>> list)
             {
                 foreach (var (key, _) in list)
-                    _cache.Invalidate(key);
+                    _cache.Remove(key);
             }
 
             var tasks = new List<Task>();
@@ -87,7 +87,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected override async Task<bool> TryAddOrUpdateAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
             var added = await base.TryAddOrUpdateAsync(keyData, valueData, serverTimeout, cancellationToken).CAF();
-            if (added) _cache.Invalidate(keyData);
+            if (added) _cache.Remove(keyData);
             return added;
         }
 
@@ -98,7 +98,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
             Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
-            _cache.Invalidate(keyData);
+            _cache.Remove(keyData);
             var task = base.GetOrAdd(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
@@ -115,7 +115,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
             Task AddOrUpdateTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
-            _cache.Invalidate(keyData);
+            _cache.Remove(keyData);
             var task = base.AddOrUpdateTransientAsync(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

@@ -34,8 +34,8 @@ namespace Hazelcast.NearCaching
             var c = cx.CompareTo(cy);
             if (c != 0) return c;
 
-            cx = x.Key.GetHashCode();
-            cy = y.Key.GetHashCode();
+            cx = x.KeyData.GetHashCode();
+            cy = y.KeyData.GetHashCode();
 
             return cx.CompareTo(cy);
         }

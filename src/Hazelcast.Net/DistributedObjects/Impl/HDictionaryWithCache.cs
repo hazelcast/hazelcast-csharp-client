@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects.Impl
     /// <typeparam name="TValue">The type of the values.</typeparam>
     internal partial class HDictionaryWithCache<TKey, TValue> : HDictionary<TKey, TValue>
     {
-        private readonly NearCacheBase _cache;
+        private readonly NearCache<TValue> _cache;
 
         /// <summary>
         /// Initializes a new version of the <see cref="HDictionaryWithCache{TKey,TValue}"/> class.
@@ -39,11 +39,14 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HDictionaryWithCache(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCacheBase cache, ILoggerFactory loggerFactory)
+        public HDictionaryWithCache(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory)
             : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
         {
             _cache = cache;
         }
+
+        // internal for tests only
+        internal NearCache<TValue> NearCache => _cache;
 
         // TODO: consider invalidating in a continuation?
         // TODO: not every methods are overriden, and then what?
@@ -52,9 +55,9 @@ namespace Hazelcast.DistributedObjects.Impl
         //       generally, Map+NearCache can be greatly optimized, but we'll do that later
 
         /// <inheritdoc />
-        protected override ValueTask DisposeAsyncInternal()
+        protected override async ValueTask DisposeAsyncCore()
         {
-            return _cache.DestroyAsync();
+            await _cache.DisposeAsync().CAF();
         }
     }
 }

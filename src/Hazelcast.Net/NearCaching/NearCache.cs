@@ -31,6 +31,7 @@ namespace Hazelcast.NearCaching
     internal class NearCache : NearCacheBase
     {
         private readonly int _maxToleratedMissCount;
+        private Guid _subscriptionId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NearCache"/> class.
@@ -62,28 +63,35 @@ namespace Hazelcast.NearCaching
             {
                 try
                 {
-                    SubscriptionId = await SubscribeToInvalidationEventsAsync().CAF();
+                    _subscriptionId = await SubscribeToInvalidationEventsAsync().CAF();
                     RepairingHandler = new RepairingHandler(Cluster.ClientId, this, _maxToleratedMissCount, Cluster.Partitioner, SerializationService, LoggerFactory);
-                    Invalidating = true;
+                    IsInvalidating = true;
                 }
                 catch (Exception e)
                 {
                     LoggerFactory.CreateLogger<NearCache>().LogCritical(e, "-----------------\n Near Cache is not initialized!!! \n-----------------");
-                    Invalidating = false;
+                    IsInvalidating = false;
                 }
             }
         }
 
         /// <inheritdoc />
-        protected override NearCacheEntry CreateEntry(IData key, object value)
+        protected override async ValueTask DisposeAsyncCore()
         {
-            var entry = base.CreateEntry(key, value);
+            if (_subscriptionId != default)
+                await Cluster.Events.RemoveSubscriptionAsync(_subscriptionId, CancellationToken.None).CAF();
+        }
+
+        /// <inheritdoc />
+        protected override NearCacheEntry CreateCacheEntry(IData keyData, object value)
+        {
+            var entry = base.CreateCacheEntry(keyData, value);
 
             // do not manage invalidation, just return the entry
-            if (!Invalidating) return entry;
+            if (!IsInvalidating) return entry;
 
             // otherwise, populate the entry with repairing meta data
-            var partitionId = Cluster.Partitioner.GetPartitionId(entry.Key.PartitionHash);
+            var partitionId = Cluster.Partitioner.GetPartitionId(entry.KeyData.PartitionHash);
             var metadata = RepairingHandler.GetMetadata(partitionId);
             entry.PartitionId = partitionId;
             entry.Sequence = metadata.Sequence;
@@ -96,14 +104,17 @@ namespace Hazelcast.NearCaching
         protected override bool IsStaleRead(NearCacheEntry entry)
         {
             // do not manage invalidation = cannot be stale
-            if (!Invalidating) return false;
+            if (!IsInvalidating) return false;
 
             // otherwise, check meta data
             var metadata = RepairingHandler.GetMetadata(entry.PartitionId);
             return entry.Guid != metadata.Guid || entry.Sequence < metadata.StaleSequence;
         }
 
-        #region Invalidation Events
+        /// <summary>
+        /// Whether the cache is invalidating.
+        /// </summary>
+        public bool IsInvalidating { get; private set; }
 
         /// <summary>
         /// Subscribes to invalidation events.
@@ -115,7 +126,7 @@ namespace Hazelcast.NearCaching
                 (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                 (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
                 (message, state) => MapRemoveEntryListenerCodec.DecodeResponse(message).Response,
-                (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync, LoggerFactory),
+                (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleInvalidationEventAsync, HandleBatchInvalidationEventAsync, LoggerFactory),
                 new EventState { Name = Name });
 
             await Cluster.Events.InstallSubscriptionAsync(subscription, CancellationToken.None).CAF();
@@ -137,9 +148,8 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceuuids"></param>
         /// <param name="partitionuuids"></param>
         /// <param name="sequences"></param>
-        private ValueTask HandleIMapBatchInvalidationEventAsync(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
+        private ValueTask HandleBatchInvalidationEventAsync(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
         {
-            // TODO: consider making RepairingHandler async
             RepairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
             return default;
         }
@@ -151,13 +161,10 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceUuid"></param>
         /// <param name="partitionUuid"></param>
         /// <param name="sequence"></param>
-        private ValueTask HandleIMapInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
+        private ValueTask HandleInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
-            // TODO: consider making RepairingHandler async
             RepairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
             return default;
         }
-
-        #endregion
     }
 }

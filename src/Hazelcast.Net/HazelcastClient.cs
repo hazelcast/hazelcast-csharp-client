@@ -84,6 +84,12 @@ namespace Hazelcast
         /// </summary>
         public Cluster Cluster { get; }
 
+        /// <inheritdoc />
+        public bool IsActive => Cluster.IsActive;
+
+        /// <inheritdoc />
+        public bool IsConnected => Cluster.IsConnected;
+
         /// <summary>
         /// Gets the <see cref="ISerializationService"/>.
         /// </summary>

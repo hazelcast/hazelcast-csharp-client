@@ -30,27 +30,31 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HDictionary<TKey, TValue> // Getting
     {
-        // NOTES
-        //
-        // all protected getters return objects, because a cached version of the map, overriding these
-        // methods, may choose to cache either the raw IData values coming from the server, or the
-        // de-serialized objects. In the first case, ToObject<TValue> deserializes the value. In the
-        // second case, ToObject<TValue> casts the object value to TValue.
-
         /// <inheritdoc />
         public Task<TValue> GetAsync(TKey key)
             => GetAsync(key, CancellationToken.None);
 
         private async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
-            => ToObject<TValue>(await GetAsync(ToSafeData(key), cancellationToken).CAF());
+            => await GetAsync(ToSafeData(key), cancellationToken).CAF();
 
         /// <summary>
         /// Gets the value for a key, or null if the map does not contain an entry with this key.
         /// </summary>
         /// <param name="keyData">The key data.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
+        protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
+        {
+            return ToObject<TValue>(await GetDataAsync(keyData, cancellationToken).CAF());
+        }
+
+        /// <summary>
+        /// Gets the value data for a key, or null if the map does not contain an entry with this key.
+        /// </summary>
+        /// <param name="keyData">The key data.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value data for the specified key, or null if the map does not contain an entry with this key.</returns>
-        protected virtual async Task<IData> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected async Task<IData> GetDataAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();

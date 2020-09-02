@@ -135,6 +135,16 @@ namespace Hazelcast.Clustering
         public bool IsSmartRouting => _options.Networking.SmartRouting;
 
         /// <summary>
+        /// Whether the cluster is connected.
+        /// </summary>
+        public bool IsConnected => _clusterState.IsConnected;
+
+        /// <summary>
+        /// Whether the cluster is active.
+        /// </summary>
+        public bool IsActive => _disposed == 0;
+
+        /// <summary>
         /// Gets the partitioner.
         /// </summary>
         public Partitioner Partitioner { get; }

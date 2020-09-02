@@ -75,7 +75,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken)
         {
-            var task = RemoveAsync(ToSafeData(key), cancellationToken);
+            var task = GetAndRemoveAsync(ToSafeData(key), cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -90,7 +90,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">The key.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value, if any, or default(TValue).</returns>
-        protected virtual async Task<TValue> RemoveAsync(IData keyData, CancellationToken cancellationToken)
+        protected virtual async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
@@ -147,7 +147,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task RemoveAsync(TKey key, CancellationToken cancellationToken)
         {
-            var task = DeleteAsync(ToSafeData(key), cancellationToken);
+            var task = RemoveAsync(ToSafeData(key), cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -160,7 +160,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task RemoveAsync(IPredicate predicate)
             => RemoveAsync(predicate, CancellationToken.None);
 
-        private
+        protected virtual
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
@@ -186,7 +186,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task DeleteAsync(IData keyData, CancellationToken cancellationToken = default)
+        Task RemoveAsync(IData keyData, CancellationToken cancellationToken = default)
         {
             var requestMessage = MapDeleteCodec.EncodeRequest(Name, keyData, ContextId);
             var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);

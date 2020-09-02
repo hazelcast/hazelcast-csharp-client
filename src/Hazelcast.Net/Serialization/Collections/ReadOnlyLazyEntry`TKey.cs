@@ -25,13 +25,19 @@ namespace Hazelcast.Serialization.Collections
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyEntry{TValue}"/> class.
         /// </summary>
-        /// <param name="valueObject">A value object.</param>
-        public ReadOnlyLazyEntry(object valueObject)
+        /// <param name="valueData">The value data.</param>
+        public ReadOnlyLazyEntry(IData valueData)
         {
-            if (valueObject is TValue value)
-                Value = value;
-            else
-                ValueObject = valueObject;
+            ValueData = valueData;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlyLazyEntry{TValue}"/> class.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        public ReadOnlyLazyEntry(TValue value)
+        {
+            Value = value;
         }
 
         /// <summary>
@@ -40,7 +46,7 @@ namespace Hazelcast.Serialization.Collections
         /// <remarks>
         /// <para>Once <see cref="Value"/> has been assigned, this property is reset to null.</para>
         /// </remarks>
-        public object ValueObject { get; private set; }
+        public IData ValueData { get; private set; }
 
         /// <summary>
         /// Gets or sets the value.
@@ -52,7 +58,7 @@ namespace Hazelcast.Serialization.Collections
             {
                 _value = value;
                 HasValue = true;
-                ValueObject = default;
+                ValueData = default;
             }
         }
 

@@ -44,22 +44,22 @@ namespace Hazelcast.Serialization.Collections
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue}"/> class.
         /// </summary>
-        /// <param name="valueObjects">Value objects.</param>
+        /// <param name="valueData">Value data items.</param>
         /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyList(IEnumerable<object> valueObjects, ISerializationService serializationService)
+        public ReadOnlyLazyList(IEnumerable<IData> valueData, ISerializationService serializationService)
         {
             _serializationService = serializationService;
-            foreach (var valueObject in valueObjects)
+            foreach (var valueObject in valueData)
                 _content.Add(new ReadOnlyLazyEntry<TValue>(valueObject));
         }
 
         /// <summary>
         /// Adds a value.
         /// </summary>
-        /// <param name="valueObject"></param>
-        public void Add(object valueObject)
+        /// <param name="valueData">The value data.</param>
+        public void Add(IData valueData)
         {
-            _content.Add(new ReadOnlyLazyEntry<TValue>(valueObject));
+            _content.Add(new ReadOnlyLazyEntry<TValue>(valueData));
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Hazelcast.Serialization.Collections
 
             // accepted race-condition here
 
-            entry.Value = _serializationService.ToObject<TValue>(entry.ValueObject);
+            entry.Value = _serializationService.ToObject<TValue>(entry.ValueData);
         }
 
         /// <inheritdoc />
