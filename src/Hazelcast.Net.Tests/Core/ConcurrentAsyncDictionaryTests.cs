@@ -29,13 +29,13 @@ namespace Hazelcast.Tests.Core
 
         public async Task Test()
         {
-            var d = new ConcurrentAsyncDictionary<string, int>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<int>>();
             var i = 0;
 
-            ValueTask<int> Factory(string key, CancellationToken _)
+            ValueTask<ValueItem<int>> Factory(string key, CancellationToken _)
             {
                 i++;
-                return new ValueTask<int>(2);
+                return new ValueTask<ValueItem<int>>(new ValueItem<int>(2));
             }
 
             var v = await d.GetOrAddAsync("a", Factory);
@@ -56,17 +56,17 @@ namespace Hazelcast.Tests.Core
             Assert.AreEqual(1, entries.Count);
             Assert.AreEqual("a:2", entries[0]);
 
-            var (hasValue, gotValue) = await d.TryGetValueAsync("a");
+            var (hasValue, gotValue) = await d.TryGetAsync("a");
             Assert.IsTrue(hasValue);
             Assert.AreEqual(2, gotValue);
 
             Assert.IsTrue(d.TryRemove("a"));
             Assert.IsFalse(d.TryRemove("a"));
 
-            (hasValue, _) = await d.TryGetValueAsync("a");
+            (hasValue, _) = await d.TryGetAsync("a");
             Assert.IsFalse(hasValue);
 
-            static ValueTask<int> DeadlyFactory(string key, CancellationToken _)
+            static ValueTask<ValueItem<int>> DeadlyFactory(string key, CancellationToken _)
             {
                 throw new InvalidOperationException("bang");
             }
@@ -80,10 +80,10 @@ namespace Hazelcast.Tests.Core
                 v = await task;
             });
 
-            (hasValue, _) = await d.TryGetValueAsync("a");
+            (hasValue, _) = await d.TryGetAsync("a");
             Assert.IsFalse(hasValue);
 
-            static async ValueTask<int> AsyncDeadlyFactory(string key, CancellationToken _)
+            static async ValueTask<ValueItem<int>> AsyncDeadlyFactory(string key, CancellationToken _)
             {
                 await Task.Yield();
                 throw new InvalidOperationException("bang");
@@ -98,7 +98,7 @@ namespace Hazelcast.Tests.Core
                 await task;
             });
 
-            (hasValue, _) = await d.TryGetValueAsync("a");
+            (hasValue, _) = await d.TryGetAsync("a");
             Assert.IsFalse(hasValue);
             /*
             Assert.IsTrue(d.TryAdd("a", _ => new ValueTask<int>(2)));
@@ -122,15 +122,15 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task Enumerate()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var created = 0;
 
-            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem();
-                return new ValueTask<ValueItem>(v);
+                var v = new ValueItem<string>();
+                return new ValueTask<ValueItem<string>>(v);
             }
 
             for (var i = 0; i < 20; i++)
@@ -179,11 +179,11 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task EnumerateBogus()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var ev = new ManualResetEventSlim();
 
-            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            async ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev.Wait();
@@ -220,7 +220,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task TryAddConcurrentBogus()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var ev = new ManualResetEventSlim();
 
@@ -228,7 +228,7 @@ namespace Hazelcast.Tests.Core
             var exception = 0;
 
             // beware, *must* be an async method to throw in the task, not when creating it
-            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            async ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 created++;
@@ -282,7 +282,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task GetOrAddConcurrentBogus()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var ev = new ManualResetEventSlim();
 
@@ -290,7 +290,7 @@ namespace Hazelcast.Tests.Core
             var exception = 0;
 
             // beware, *must* be an async method to throw in the task, not when creating it
-            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            async ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 created++;
@@ -342,9 +342,9 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task TryAddBogus()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
-            static ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            static ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 throw new Exception("bogus");
             }
@@ -363,9 +363,9 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task GetOrAddBogus()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
-            static ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            static ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 throw new Exception("bogus");
             }
@@ -384,24 +384,24 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task TryAdd()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var created = 0;
-            ValueItem value = null;
+            ValueItem<string> value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem();
+                var v = new ValueItem<string>();
                 value ??= v;
-                return new ValueTask<ValueItem>(v);
+                return new ValueTask<ValueItem<string>>(v);
             }
 
             var attempt = await d.TryAddAsync("key", CreateValueItem);
             Assert.That(attempt, Is.True);
             Assert.That(created, Is.EqualTo(1));
 
-            var added = await d.TryGetValueAsync("key");
+            var added = await d.TryGetAsync("key");
             Assert.That(added.Success, Is.True);
             Assert.That(added.Value, Is.SameAs(value));
 
@@ -413,17 +413,17 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task GetOrAdd()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var created = 0;
-            ValueItem value = null;
+            ValueItem<string> value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem();
+                var v = new ValueItem<string>();
                 value ??= v;
-                return new ValueTask<ValueItem>(v);
+                return new ValueTask<ValueItem<string>>(v);
             }
 
             var added = await d.GetOrAddAsync("key", CreateValueItem);
@@ -440,17 +440,17 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task TryRemove()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var created = 0;
-            ValueItem value = null;
+            ValueItem<string> value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem();
+                var v = new ValueItem<string>();
                 value ??= v;
-                return new ValueTask<ValueItem>(v);
+                return new ValueTask<ValueItem<string>>(v);
             }
 
             var added = await d.GetOrAddAsync("key", CreateValueItem);
@@ -458,14 +458,14 @@ namespace Hazelcast.Tests.Core
             Assert.That(added, Is.SameAs(value));
             Assert.That(created, Is.EqualTo(1));
 
-            var attempt = await d.TryGetValueAsync("key");
+            var attempt = await d.TryGetAsync("key");
             Assert.That(attempt.Success, Is.True);
             Assert.That(attempt.Value, Is.SameAs(value));
 
             Assert.That(d.TryRemove("key"), Is.True);
             Assert.That(d.TryRemove("key"), Is.False);
 
-            attempt = await d.TryGetValueAsync("key");
+            attempt = await d.TryGetAsync("key");
             Assert.That(attempt.Success, Is.False);
 
             added = await d.GetOrAddAsync("key", CreateValueItem);
@@ -477,17 +477,17 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task TryGetAndRemove()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var created = 0;
-            ValueItem value = null;
+            ValueItem<string> value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem();
+                var v = new ValueItem<string>();
                 value ??= v;
-                return new ValueTask<ValueItem>(v);
+                return new ValueTask<ValueItem<string>>(v);
             }
 
             var added = await d.GetOrAddAsync("key", CreateValueItem);
@@ -495,7 +495,7 @@ namespace Hazelcast.Tests.Core
             Assert.That(added, Is.SameAs(value));
             Assert.That(created, Is.EqualTo(1));
 
-            var attempt = await d.TryGetValueAsync("key");
+            var attempt = await d.TryGetAsync("key");
             Assert.That(attempt.Success, Is.True);
             Assert.That(attempt.Value, Is.SameAs(value));
 
@@ -506,7 +506,7 @@ namespace Hazelcast.Tests.Core
             attempt = await d.TryGetAndRemoveAsync("key");
             Assert.That(attempt.Success, Is.False);
 
-            attempt = await d.TryGetValueAsync("key");
+            attempt = await d.TryGetAsync("key");
             Assert.That(attempt.Success, Is.False);
 
             added = await d.GetOrAddAsync("key", CreateValueItem);
@@ -518,11 +518,11 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task TryGetAndRemoveBogus()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var ev = new ManualResetEventSlim();
 
-            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            async ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev.Wait();
@@ -555,17 +555,17 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task CountAndClear()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var created = 0;
-            ValueItem value = null;
+            ValueItem<string> value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem();
+                var v = new ValueItem<string>();
                 value ??= v;
-                return new ValueTask<ValueItem>(v);
+                return new ValueTask<ValueItem<string>>(v);
             }
 
             var added = await d.GetOrAddAsync("key1", CreateValueItem);
@@ -602,17 +602,17 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ContainsKey()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var created = 0;
-            ValueItem value = null;
+            ValueItem<string> value = null;
 
-            ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem();
+                var v = new ValueItem<string>();
                 value ??= v;
-                return new ValueTask<ValueItem>(v);
+                return new ValueTask<ValueItem<string>>(v);
             }
 
             var added = await d.GetOrAddAsync("key1", CreateValueItem);
@@ -633,17 +633,17 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ContainsKey2()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var ev = new ManualResetEventSlim();
 
             // beware, makes sure it's an async method that waits and throws when the
             // task runs, not when creating it!
-            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            async ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev.Wait();
-                return new ValueItem();
+                return new ValueItem<string>();
             }
 
             var task1 = d.GetOrAddAsync("key", CreateValueItem);
@@ -665,14 +665,14 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ContainsKeyBogus()
         {
-            var d = new ConcurrentAsyncDictionary<string, ValueItem>();
+            var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var ev1 = new ManualResetEventSlim();
             var ev2 = new ManualResetEventSlim();
 
             // beware, makes sure it's an async method that waits and throws when the
             // task runs, not when creating it!
-            async ValueTask<ValueItem> CreateValueItem(string key, CancellationToken _)
+            async ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 await Task.Yield();
                 ev2.Set();
@@ -713,32 +713,32 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task EntryTests()
         {
-            var entry = new ConcurrentAsyncDictionary<int, int>.Entry(42);
+            var entry = new ConcurrentAsyncDictionary<int, ValueItem<int>>.Entry(42);
 
             Assert.Throws<InvalidOperationException>(() =>
             {
                 var i = entry.Value;
             });
 
-            var v1 = await entry.GetValue((x, _) => new ValueTask<int>(x));
+            var v1 = await entry.GetValue((x, _) => new ValueTask<ValueItem<int>>(new ValueItem<int>(x)));
 
             // will use a bit of code that is usually not used except in some race conditions
-            var v2 = await entry.GetValue((x, _) => new ValueTask<int>(x));
+            var v2 = await entry.GetValue((x, _) => new ValueTask<ValueItem<int>>(new ValueItem<int>(x)));
 
             Assert.That(v1, Is.EqualTo(v2));
         }
 
-        private class ValueItem
+        private class ValueItem<T>
         {
             public ValueItem()
             { }
 
-            public ValueItem(string value)
+            public ValueItem(T value)
             {
                 Value = value;
             }
 
-            public string Value { get; set; }
+            public T Value { get; }
         }
     }
 }

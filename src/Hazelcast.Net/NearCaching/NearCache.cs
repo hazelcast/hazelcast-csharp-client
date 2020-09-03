@@ -86,12 +86,14 @@ namespace Hazelcast.NearCaching
         protected override NearCacheEntry CreateCacheEntry(IData keyData, object value)
         {
             var entry = base.CreateCacheEntry(keyData, value);
+            if (entry == null) return null;
 
             // do not manage invalidation, just return the entry
             if (!IsInvalidating) return entry;
 
             // otherwise, populate the entry with repairing meta data
-            var partitionId = Cluster.Partitioner.GetPartitionId(entry.KeyData.PartitionHash);
+            var partitionHash = entry.KeyData.PartitionHash;
+            var partitionId = Cluster.Partitioner.GetPartitionId(partitionHash);
             var metadata = RepairingHandler.GetMetadata(partitionId);
             entry.PartitionId = partitionId;
             entry.Sequence = metadata.Sequence;

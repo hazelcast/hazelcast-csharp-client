@@ -228,7 +228,7 @@ namespace Hazelcast.NearCaching
             {
                 foreach (var (partitionId, newSequence) in newSequences)
                 {
-                    var (hasCache, cache) = await _caches.TryGetValueAsync(name).CAF();
+                    var (hasCache, cache) = await _caches.TryGetAsync(name).CAF();
                     if (!hasCache) continue;
 
                     cache.RepairingHandler?.UpdateSequence(partitionId, newSequence, true);

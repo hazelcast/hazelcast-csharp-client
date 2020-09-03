@@ -68,17 +68,17 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
-        /// Decrements the number of entries.
+        /// Notifies of an added entry.
         /// </summary>
-        public void DecrementEntryCount()
+        public void NotifyEntryRemoved()
         {
             Interlocked.Decrement(ref _ownedEntryCount);
         }
 
         /// <summary>
-        /// Increments the number of entries.
+        /// Notifies of a removed entry.
         /// </summary>
-        public void IncrementEntryCount()
+        public void NotifyEntryAdded()
         {
             Interlocked.Increment(ref _ownedEntryCount);
         }
@@ -92,33 +92,33 @@ namespace Hazelcast.NearCaching
         }
 
         /// <summary>
-        /// Increments the number of evictions.
+        /// Notifies of an eviction.
         /// </summary>
-        public void IncrementEviction()
+        public void NotifyEviction()
         {
             Interlocked.Increment(ref _evictions);
         }
 
         /// <summary>
-        /// Increments the number of expirations.
+        /// Notifies of an expiration.
         /// </summary>
-        public void IncrementExpiration()
+        public void NotifyExpiration()
         {
             Interlocked.Increment(ref _expirations);
         }
 
         /// <summary>
-        /// Increment the number of hits.
+        /// Notifies of a hit.
         /// </summary>
-        public void IncrementHit()
+        public void NotifyHit()
         {
             Interlocked.Increment(ref _hits);
         }
 
         /// <summary>
-        /// Increment the number of misses.
+        /// Notifies of a miss.
         /// </summary>
-        public void IncrementMiss()
+        public void NotifyMiss()
         {
             Interlocked.Increment(ref _misses);
         }

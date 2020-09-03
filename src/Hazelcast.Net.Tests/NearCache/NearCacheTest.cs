@@ -131,6 +131,10 @@ namespace Hazelcast.Tests.NearCache
 
             // it's faster the second time
             Assert.IsTrue(secondRead < firstRead);
+
+            var cache = GetNearCache(_dictionary);
+            Assert.That(cache.Count, Is.EqualTo(MaxSize));
+            Assert.That(cache.Statistics.EntryCount, Is.EqualTo(MaxSize));
         }
 
         [Test]
@@ -140,6 +144,7 @@ namespace Hazelcast.Tests.NearCache
 
             await _dictionary.GetAsync("key");
             await _dictionary.GetAsync("invalidKey");
+
             Assert.That(await _dictionary.ContainsKeyAsync("key"));
             Assert.That(await _dictionary.ContainsKeyAsync("invalidKey"), Is.False);
         }
@@ -150,9 +155,9 @@ namespace Hazelcast.Tests.NearCache
             await _dictionary.AddOrUpdateAsync("key", "value");
             await _dictionary.GetAsync("key");
 
-            var nearCache = GetNearCache(_dictionary);
+            var cache = GetNearCache(_dictionary);
 
-            var getAttempt = await nearCache.TryGetAsync(ToData("key"));
+            var getAttempt = await cache.TryGetAsync(ToData("key"));
             Assert.That(getAttempt.Success, Is.True);
             Assert.That(getAttempt.Value, Is.EqualTo("value"));
         }
@@ -169,8 +174,10 @@ namespace Hazelcast.Tests.NearCache
 
             await _dictionary.GetAsync(keys);
 
-            var nearCache = GetNearCache(_dictionary);
-            Assert.AreEqual(100, nearCache.Statistics.EntryCount);
+            var cache = GetNearCache(_dictionary);
+
+            Assert.AreEqual(100, cache.Count);
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
         }
 
         [Test]
@@ -207,16 +214,20 @@ namespace Hazelcast.Tests.NearCache
             foreach (var k in keys)
                 await dictionary.AddOrUpdateAsync(k, k);
             Assert.AreEqual(0, cache.Count); // cache is still empty
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             const int nonIdleKey = 100;
             await dictionary.AddOrUpdateAsync(nonIdleKey, nonIdleKey);
             Assert.AreEqual(0, cache.Count); // cache is still empty
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             await dictionary.GetAsync(keys); // populates the cache
             Assert.AreEqual(keys.Count, cache.Count); // which only contains the 10 keys
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             await dictionary.GetAsync(nonIdleKey); // also the non-idle key
             Assert.AreEqual(keys.Count + 1, cache.Count); // now also contains the idle key
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             var nonIdleKeyData = ToData(nonIdleKey);
 
@@ -278,12 +289,14 @@ namespace Hazelcast.Tests.NearCache
             var cache = GetNearCache(dictionary);
 
             Assert.AreEqual(100, cache.Count);
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             await dictionary.RemoveAsync(new SqlPredicate("this == 'value2'"));
 
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.AreEqual(0, cache.Count);
+                Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             }, 8000, 500);
         }
@@ -330,6 +343,8 @@ namespace Hazelcast.Tests.NearCache
             await AssertEx.SucceedsEventually(async () =>
             {
                 Assert.IsTrue(cache.Count <= MaxSize, cache.Count + " should be less than " + MaxSize);
+                Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
+
                 foreach (var key in subList)
                 {
                     var keyData = ToData(key);
@@ -347,9 +362,10 @@ namespace Hazelcast.Tests.NearCache
             var value = await dictionary.GetAsync("key");
             Assert.AreEqual("value", value);
 
-            var clientNearCache = GetNearCache(dictionary);
+            var cache = GetNearCache(dictionary);
 
-            Assert.AreEqual(1, clientNearCache.Statistics.EntryCount);
+            Assert.AreEqual(1, cache.Count);
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             await dictionary.RemoveAsync("key");
             Assert.Null(await dictionary.GetAsync("key"));
@@ -382,6 +398,8 @@ namespace Hazelcast.Tests.NearCache
             await AssertEx.SucceedsEventually(async () =>
             {
                 Assert.IsTrue(cache.Count <= MaxSize, cache.Count + " should be less than " + MaxSize);
+                Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
+
                 foreach (var key in subList)
                 {
                     var keyData = ToData(key);
@@ -401,7 +419,8 @@ namespace Hazelcast.Tests.NearCache
             }
             await _dictionary.GetAsync(keys);
             var cache = GetNearCache(_dictionary);
-            Assert.AreEqual(MaxSize, cache.Statistics.EntryCount);
+            Assert.AreEqual(MaxSize, cache.Count);
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
         }
 
         [Test]
@@ -423,7 +442,6 @@ namespace Hazelcast.Tests.NearCache
 
                 await AssertEx.SucceedsEventually(async () =>
                 {
-
                     await dictionary.GetAsync(100); // force ttl check
                     foreach (var k in keys)
                     {
@@ -452,7 +470,8 @@ namespace Hazelcast.Tests.NearCache
 
                 var cache = GetNearCache(dictionary);
 
-                Assert.AreEqual(1, cache.Statistics.EntryCount);
+                Assert.AreEqual(1, cache.Count);
+                Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
                 await using (var client = await CreateAndStartClientAsync())
                 {

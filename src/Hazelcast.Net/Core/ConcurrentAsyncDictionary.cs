@@ -26,6 +26,7 @@ namespace Hazelcast.Core
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
     internal class ConcurrentAsyncDictionary<TKey, TValue> : IAsyncEnumerable<KeyValuePair<TKey, TValue>>
+        where TValue : class
     {
         // usage:
         // this class is used by the DistributedObjectFactory to cache its distributed objects, and by NearCache
@@ -43,18 +44,27 @@ namespace Hazelcast.Core
         {
             var entry = _dictionary.GetOrAdd(key, k => new Entry(k));
 
+            // it is possible to GetOrAdd a null value, if the factory returns a null
+            // value, but that value will not stay in the cache
+
             // fast
+            // may be null but then the entry will be removed eventually
             if (entry.HasValue) return entry.Value;
 
             try
             {
-                // await - may throw
-                return await entry.GetValue(factory, cancellationToken).CAF();
+                // await - may throw - meaning the factory has thrown, entry is failed
+                var value = await entry.GetValue(factory, cancellationToken).CAF();
+                if (value != null) return value;
+
+                // remove the invalid entry (with null value) from the dictionary
+                _dictionary.TryRemove(key, entry);
+                return null; // and the entry has been removed
             }
             catch
             {
                 // remove the failed entry from the dictionary
-                ((ICollection<KeyValuePair<TKey, Entry>>)_dictionary).Remove(new KeyValuePair<TKey, Entry>(key, entry));
+                _dictionary.TryRemove(key, entry);
                 throw;
             }
         }
@@ -71,16 +81,24 @@ namespace Hazelcast.Core
             var entry = new Entry(key);
             if (!_dictionary.TryAdd(key, entry)) return false;
 
+            // it is not possible to add a null value, if the factory returns a null
+            // value then TryAdd would return false and the value does not stay in
+            // the cache
+
             try
             {
-                // await - may throw
-                await entry.GetValue(factory, cancellationToken).CAF();
-                return true;
+                // await - may throw - meaning the factory has thrown, entry is failed
+                var value = await entry.GetValue(factory, cancellationToken).CAF();
+                if (value != null) return true;
+
+                // remove the invalid entry (with null value) from the dictionary
+                _dictionary.TryRemove(key, entry);
+                return false; // and the entry has been removed
             }
             catch
             {
                 // remove the failed entry from the dictionary
-                ((ICollection<KeyValuePair<TKey, Entry>>)_dictionary).Remove(new KeyValuePair<TKey, Entry>(key, entry));
+                _dictionary.TryRemove(key, entry);
                 throw;
             }
         }
@@ -90,11 +108,12 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
         /// <returns>An attempt at getting the value associated with the specified key.</returns>
-        public async ValueTask<Attempt<TValue>> TryGetValueAsync(TKey key)
+        public async ValueTask<Attempt<TValue>> TryGetAsync(TKey key)
         {
             if (!_dictionary.TryGetValue(key, out var entry)) return Attempt.Failed;
 
-            return entry.HasValue ? entry.Value : await entry.GetValue().CAF();
+            // it is not possible to get a null value
+            return await TryGetEntryValueAsync(entry).CAF();
         }
 
         /// <summary>
@@ -106,14 +125,32 @@ namespace Hazelcast.Core
         {
             if (!_dictionary.TryRemove(key, out var entry)) return Attempt.Failed;
 
+            // it is not possible to get a null value
+            return await TryGetEntryValueAsync(entry).CAF();
+        }
+
+        private static async ValueTask<Attempt<TValue>> TryGetEntryValueAsync(Entry entry)
+        {
+            // it is not possible to get a null value
+
+            // fast
+            if (entry.HasValue)
+            {
+                if (entry.Value != null) return entry.Value;
+                return Attempt.Failed;
+            }
+
             try
             {
-                return entry.HasValue ? entry.Value : await entry.GetValue().CAF();
+                var value = await entry.GetValue().CAF();
+                if (value != null) return value;
             }
             catch
             {
-                return Attempt.Failed; // ignore bogus entries
+                // ignore the exception here, it's handled by whatever has added the value
             }
+
+            return Attempt.Failed;
         }
 
         /// <summary>
@@ -135,17 +172,9 @@ namespace Hazelcast.Core
         {
             if (!_dictionary.TryGetValue(key, out var entry)) return false;
 
-            try
-            {
-                // ensure we really have a value, not a yet-unobserved error
-                if (entry.HasValue) return true;
-                await entry.GetValue().CAF();
-                return true;
-            }
-            catch
-            {
-                return false; // ignore bogus entries
-            }
+            // a null value is not a value
+            // return the attempt at getting the entry value
+            return await TryGetEntryValueAsync(entry).CAF();
         }
 
         /// <summary>
@@ -159,6 +188,10 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the number of entries contained in the dictionary.
         /// </summary>
+        /// <remarks>
+        /// <para>This is the total number of entries, including entries which do not yet have
+        /// a value, and may eventually be removed if their factory throws or return a null value.</para>
+        /// </remarks>
         public int Count => _dictionary.Count;
 
         /// <inheritdoc />
@@ -193,6 +226,7 @@ namespace Hazelcast.Core
                     try
                     {
                         var value = entry.HasValue ? entry.Value : await entry.GetValue().CAF();
+                        if (value == null) continue; // skip null values
                         _current = new KeyValuePair<TKey, TValue>(key, value);
                         return true;
                     }
@@ -262,7 +296,14 @@ namespace Hazelcast.Core
 
             public async Task<TValue> GetValue()
             {
-                return HasValue ? _value : await _creating.CAF();
+                Task<TValue> creating;
+                lock (_lock)
+                {
+                    if (HasValue) return _value;
+                    creating = _creating;
+                }
+
+                return await creating.CAF();
             }
         }
     }

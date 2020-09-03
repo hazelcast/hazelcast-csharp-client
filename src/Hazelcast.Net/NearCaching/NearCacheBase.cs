@@ -110,7 +110,10 @@ namespace Hazelcast.NearCaching
         /// </summary>
         public NearCacheStatistics Statistics { get; }
 
-        public int Count => _entries.Count; // FIXME here or in statistics + is it reliable in statistics?
+        /// <summary>
+        /// Gets the raw entries count.
+        /// </summary>
+        public int Count => _entries.Count;
 
         // for tests exclusively
         internal async Task<List<NearCacheEntry>> SnapshotEntriesAsync()
@@ -171,16 +174,14 @@ namespace Hazelcast.NearCaching
             // TryAddAsync completes, the value has been added (the factory has completed
             // too) - so, there is no need to remove anything from the cache in case
             // of an exception
-
-            // FIXME OTOH
-            // we do not handle the NULL entry.ValueObject as we do in TryGetOrAdd,
-            // could this be a parameter passed to the dictionary to treat nulls
-            // as invalid values?
+            //
+            // likewise, the dictionary treats null values as invalid and CreateCacheEntry
+            // returns null if the cached value (ValueObject) is null - all in all, safe
 
             try
             {
                 var added = await _entries.TryAddAsync(keyData, CreateEntry).CAF();
-                Statistics.IncrementEntryCount(); // only if successful
+                if (added) Statistics.NotifyEntryAdded();
                 return added;
             }
             catch
@@ -216,14 +217,19 @@ namespace Hazelcast.NearCaching
             {
                 var valueData = await valueFactory(keyData).CAF();
                 var cachedValue = ToCachedValue(valueData);
-                Statistics.IncrementEntryCount();
-                return CreateCacheEntry(keyData, cachedValue);
+                return CreateCacheEntry(keyData, cachedValue); // null if cachedValue is null
             }
 
             var entry = await _entries.GetOrAddAsync(keyData, CreateEntry).CAF();
-            if (entry.ValueObject != null) return entry.ValueObject;
+            if (entry != null) // null if ValueObject would have been null
+            {
+                Statistics.NotifyEntryAdded();
+                return entry.ValueObject;
+            }
 
-            Remove(keyData);
+            // the entry will not stick in _entries
+            // and we haven't notified statistics
+
             return Attempt.Failed;
         }
 
@@ -237,27 +243,34 @@ namespace Hazelcast.NearCaching
         {
             await ExpireEntries().CAF();
 
-            var (hasEntry, entry) = await _entries.TryGetValueAsync(keyData).CAF();
+            // it is not possible to get a null entry, nor an entry with a null ValueObject
+            var (hasEntry, entry) = await _entries.TryGetAsync(keyData).CAF();
 
-            if (!hasEntry || IsStaleRead(entry) || entry.ValueObject == null)
+            if (!hasEntry)
+            {
+                Statistics.NotifyMiss();
+                return Attempt.Failed;
+            }
+
+            if (IsStaleRead(entry))
             {
                 Remove(keyData);
-                Statistics.IncrementMiss();
+                Statistics.NotifyMiss();
                 return Attempt.Failed;
             }
 
             if (IsExpired(entry))
             {
                 Remove(keyData);
-                Statistics.IncrementMiss();
-                Statistics.IncrementExpiration();
+                Statistics.NotifyMiss();
+                Statistics.NotifyExpiration();
                 return Attempt.Failed;
             }
 
             if (hit)
             {
                 entry.NotifyHit();
-                Statistics.IncrementHit();
+                Statistics.NotifyHit();
             }
 
             return entry.ValueObject;
@@ -285,7 +298,7 @@ namespace Hazelcast.NearCaching
             if (!_entries.TryRemove(keyData))
                 return false;
 
-            Statistics.DecrementEntryCount();
+            Statistics.NotifyEntryRemoved();
             return true;
         }
 
@@ -303,10 +316,10 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="keyData">The key data.</param>
         /// <param name="valueObject">The value object, which is either <see cref="IData"/> or the actual <see cref="object"/>.</param>
-        /// <returns>A new cache entry.</returns>
+        /// <returns>A new cache entry, if <paramref name="valueObject"/> is not <c>null</c>, otherwise <c>null</c>.</returns>
         protected virtual NearCacheEntry CreateCacheEntry(IData keyData, object valueObject)
         {
-            return new NearCacheEntry(keyData, valueObject, _timeToLive);
+            return valueObject == null ? null : new NearCacheEntry(keyData, valueObject, _timeToLive);
         }
 
         /// <summary>
@@ -380,8 +393,8 @@ namespace Hazelcast.NearCaching
                 if (!_entries.TryRemove(entry.KeyData))
                     continue;
 
-                Statistics.DecrementEntryCount();
-                Statistics.IncrementEviction();
+                Statistics.NotifyEntryRemoved();
+                Statistics.NotifyEviction();
 
                 if (++count > evictCount)
                     break;
@@ -427,7 +440,7 @@ namespace Hazelcast.NearCaching
                 if (!IsExpired(entry)) continue;
 
                 Remove(key);
-                Statistics.IncrementExpiration();
+                Statistics.NotifyExpiration();
             }
         }
 
