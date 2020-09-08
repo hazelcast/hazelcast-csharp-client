@@ -204,7 +204,7 @@ namespace Hazelcast.NearCaching
             // (otherwise, TryGetAsync counts a miss, so we don't have to do it here)
             var (hasEntry, valueObject) = await TryGetAsync(keyData).CAF();
             if (hasEntry) return valueObject;
-
+            Console.WriteLine("??");
             // kick eviction policy if needed
             if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
                 await EvictEntries().CAF();
@@ -217,15 +217,18 @@ namespace Hazelcast.NearCaching
             {
                 var valueData = await valueFactory(keyData).CAF();
                 var cachedValue = ToCachedValue(valueData);
+                Console.WriteLine("cachedValue: " + cachedValue);
                 return CreateCacheEntry(keyData, cachedValue); // null if cachedValue is null
             }
 
             var entry = await _entries.GetOrAddAsync(keyData, CreateEntry).CAF();
             if (entry != null) // null if ValueObject would have been null
             {
+                Console.WriteLine("added");
                 Statistics.NotifyEntryAdded();
                 return entry.ValueObject;
             }
+            Console.WriteLine("meh"); // FIXME why this?!
 
             // the entry will not stick in _entries
             // and we haven't notified statistics
@@ -248,14 +251,17 @@ namespace Hazelcast.NearCaching
 
             if (!hasEntry)
             {
+                Console.WriteLine("Miss");
                 Statistics.NotifyMiss();
                 return Attempt.Failed;
             }
 
             if (IsStaleRead(entry))
             {
+                Console.WriteLine("IsStaleRead");
                 Remove(keyData);
                 Statistics.NotifyMiss();
+                Statistics.NotifyStaleRead();
                 return Attempt.Failed;
             }
 

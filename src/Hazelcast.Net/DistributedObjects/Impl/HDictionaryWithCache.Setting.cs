@@ -25,20 +25,15 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionaryWithCache<TKey, TValue> // Setting
     {
         /// <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<TValue> AddOrUpdateAsync(IData keyData, IData valueData, TimeSpan timeToLive, bool returnValue, CancellationToken cancellationToken)
+        protected override async Task<TValue> AddOrUpdateAsync(IData keyData, IData valueData, TimeSpan timeToLive, bool returnValue, CancellationToken cancellationToken)
         {
+            // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
+            // which would populate the cache with the wrong value - so we clear *after* the value has effectively
+            // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
+            // eventually all reads will get the correct value
+            var value = await base.AddOrUpdateAsync(keyData, valueData, timeToLive, returnValue, cancellationToken).CAF();
             _cache.Remove(keyData);
-            var task = base.AddOrUpdateAsync(keyData, valueData, timeToLive, returnValue, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            return value;
         }
 
         /// <inheritdoc />

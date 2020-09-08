@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // yet - so entry.ValueObject here is not null, and is an IData that we can pass
             // to the cache - which will either deserialized or not depending on InMemoryFormat
 
-            // can retrieved entries
+            // cache retrieved entries
             foreach (var (key, entry) in entries.Entries)
                 await _cache.TryAddAsync(key, entry.ValueData).CAF();
 

@@ -100,6 +100,8 @@ namespace Hazelcast.NearCaching
         /// <param name="viaAntiEntropy">Whether the method is invoked by the anti-entropy task.</param>
         public void UpdateSequence(int partitionId, long newSequence, bool viaAntiEntropy)
         {
+            // FIXME this updates the sequence but not the stale sequence
+            Console.WriteLine($"SEQ: -> {newSequence}");
             if (newSequence < 0) throw new ArgumentOutOfRangeException(nameof(newSequence));
 
             var metadata = GetMetadata(partitionId);
@@ -172,6 +174,7 @@ namespace Hazelcast.NearCaching
         /// <param name="sequence">The sequence.</param>
         public void Handle(IData key, Guid sourceClusterClientId, Guid partitionGuid, long sequence)
         {
+            Console.WriteLine("HANDLE: " + sequence);
             // apply invalidation if it's not originated by the cluster client (Hazelcast client)
             // running this code, because local Near Caches are invalidated immediately.
             if (!_clusterClientId.Equals(sourceClusterClientId))
@@ -198,6 +201,7 @@ namespace Hazelcast.NearCaching
         public void Handle(IEnumerable<IData> keys, IEnumerable<Guid> sourceClusterClientIds, IEnumerable<Guid> partitionUuids,
             IEnumerable<long> sequences)
         {
+            Console.WriteLine("SEQ: " + string.Join(",", sequences));
             foreach (var (key, sourceClusterClientId, partitionUuid, sequence) in EnumerableExtensions.Combine(keys, sourceClusterClientIds, partitionUuids, sequences))
                 Handle(key, sourceClusterClientId, partitionUuid, sequence);
         }

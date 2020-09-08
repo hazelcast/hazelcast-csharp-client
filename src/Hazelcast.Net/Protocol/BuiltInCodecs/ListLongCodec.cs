@@ -48,7 +48,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<long>(itemCount);
             for (var i = 0; i < itemCount; i++)
             {
-                result.Add(frame.Bytes.ReadLong(i * BytesExtensions.SizeOfLong));
+                result.Add(frame.Bytes.ReadLongL(i * BytesExtensions.SizeOfLong));
             }
             return result;
         }

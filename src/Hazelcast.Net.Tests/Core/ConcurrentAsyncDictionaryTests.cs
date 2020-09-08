@@ -129,10 +129,11 @@ namespace Hazelcast.Tests.Core
             ValueTask<ValueItem<string>> CreateValueItem(string key, CancellationToken _)
             {
                 created += 1;
-                var v = new ValueItem<string>();
+                var v = new ValueItem<string>("value_" + key.Substring("key_".Length));
                 return new ValueTask<ValueItem<string>>(v);
             }
 
+            // add a number of (key_N,value_N) pairs
             for (var i = 0; i < 20; i++)
             {
                 var attempt = await d.TryAddAsync("key_" + i, CreateValueItem);
@@ -142,12 +143,15 @@ namespace Hazelcast.Tests.Core
 
             var x = 0;
 
+            // async-enumerate the entries, and while enumerating
+            // - add a (doh_N,) entry
+            // - remove entry for key_15
             var entries = new List<string>();
             await foreach (var (key, value) in d)
             {
                 if (x++ == 3)
                 {
-                    var attempt = await d.TryAddAsync("doh_" + x, CreateValueItem);
+                    var attempt = await d.TryAddAsync("key_99", CreateValueItem);
                     Assert.That(attempt, Is.True);
                     Assert.That(created, Is.EqualTo(21));
                 }
@@ -157,22 +161,24 @@ namespace Hazelcast.Tests.Core
                     Assert.That(d.TryRemove("key_15"), Is.True);
                 }
 
-                entries.Add($"{key}:{value}");
+                entries.Add($"({key},{value})");
             }
 
-            // "The contents exposed through the enumerator may contain modifications made to the dictionary after GetEnumerator was called."
-            // enumerating is safe, but you get... "stuff"
-            // that test is kinda dangerous, it depends on implementation details
-            //
-            // here we assume that doh_3 is not there and key_15 is still there
+            // "The contents exposed through the enumerator may contain modifications made
+            // to the dictionary after GetEnumerator was called." enumerating is safe,
+            // but you get... "stuff"
 
+            // whether key_15 and key_99 have been enumerated is implementation- and
+            // timing-dependent, we cannot assume anything, however we:
+            // - must have enumerated at least 19 entries (original 20 minus key_15)
+            // - must have enumerated at max 21 entries (original 20 plus key_99)
             Assert.That(entries.Count, Is.GreaterThanOrEqualTo(19));
             Assert.That(entries.Count, Is.LessThanOrEqualTo(21));
 
             for (var i = 0; i < 20; i++)
             {
-                if (i == 15) continue;
-                Assert.That(entries.Contains("key_" + i + ":Hazelcast.Tests.Core.ConcurrentAsyncDictionaryTests+ValueItem"), Is.True, "Missing key_" + i);
+                if (i == 15) continue; // that one has been removed
+                Assert.That(entries.Contains($"(key_{i},value_{i})"), Is.True, $"Missing key_{i}");
             }
         }
 
@@ -739,6 +745,8 @@ namespace Hazelcast.Tests.Core
             }
 
             public T Value { get; }
+
+            public override string ToString() => Value.ToString();
         }
     }
 }

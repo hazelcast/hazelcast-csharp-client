@@ -136,6 +136,9 @@
   <data name="Cluster_MA_Required" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Cluster\ma-required.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="Cluster_NearCache" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Cluster\nearcache.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="Cluster_Ssl" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Cluster\ssl.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>

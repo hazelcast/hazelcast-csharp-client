@@ -24,7 +24,7 @@ namespace Hazelcast.NearCaching
         // Number of missed sequence count
         private long _missedSequenceCount;
 
-        // Sequence number of last received invalidation event
+        // sequence number of the last received invalidation event
         private long _sequence;
 
         // Holds the biggest sequence number that is lost, lower sequences from this sequence are accepted as stale

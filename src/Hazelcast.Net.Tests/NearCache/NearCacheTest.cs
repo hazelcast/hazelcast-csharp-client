@@ -30,7 +30,6 @@ namespace Hazelcast.Tests.NearCache
         private const int MaxSize = 1000;
 
         private IHazelcastClient _client;
-        private IHDictionary<object, object> _dictionary;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
@@ -46,27 +45,18 @@ namespace Hazelcast.Tests.NearCache
             var client = _client as HazelcastClient;
             Assert.That(client, Is.Not.Null);
             SerializationService = client.SerializationService;
-
-            _dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
-
-            var nearCache = GetNearCache(_dictionary);
-            Assert.That(nearCache, Is.InstanceOf<NearCaching.NearCache>());
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            await _dictionary.DestroyAsync();
-            _dictionary = null;
-
-            await _client.DisposeAsync();
+            if (_client != null) await _client.DisposeAsync();
             _client = null;
         }
 
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-
             var nearCacheOptions = options.NearCache;
 
             nearCacheOptions.Configurations["nc*"] = new NearCacheNamedOptions
@@ -113,93 +103,131 @@ namespace Hazelcast.Tests.NearCache
         }
 
         [Test]
-        public async Task TestNearCache()
+        public async Task TestNearCache() // CacheIsPopulatedByReads
         {
-            for (var i = 0; i < MaxSize; i++)
-                await _dictionary.AddOrUpdateAsync("key" + i, "value" + i);
+            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
 
+            // add values to the dictionary
+            for (var i = 0; i < MaxSize; i++)
+                await dictionary.AddOrUpdateAsync("key" + i, "value" + i);
+
+            // near cache remains empty
+            Assert.That(cache.Count, Is.EqualTo(0));
+
+            // get values, this will populate near cache
             var begin = DateTime.Now;
             for (var i = 0; i < MaxSize; i++)
-                await _dictionary.GetAsync("key" + i);
-
+                await dictionary.GetAsync("key" + i);
             var firstRead = DateTime.Now - begin;
+
+            // get values again, this should read from near cache = be way faster
+            // TODO: we should have a way (instrumentation) to count server requests
             begin = DateTime.Now;
             for (var i = 0; i < MaxSize; i++)
-                await _dictionary.GetAsync("key" + i);
-
+                await dictionary.GetAsync("key" + i);
             var secondRead = DateTime.Now - begin;
 
-            // it's faster the second time
+            // verify it's faster the second time
             Assert.IsTrue(secondRead < firstRead);
 
-            var cache = GetNearCache(_dictionary);
+            // verify the cache contains all values
             Assert.That(cache.Count, Is.EqualTo(MaxSize));
             Assert.That(cache.Statistics.EntryCount, Is.EqualTo(MaxSize));
         }
 
         [Test]
-        public async Task TestNearCacheContains()
+        public async Task TestNearCacheContains() // CacheIsUsedForContainsKey
         {
-            await _dictionary.AddOrUpdateAsync("key", "value");
+            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            //var cache = GetNearCache(dictionary);
 
-            await _dictionary.GetAsync("key");
-            await _dictionary.GetAsync("invalidKey");
+            // add a value to the dictionary
+            await dictionary.AddOrUpdateAsync("key", "value");
 
-            Assert.That(await _dictionary.ContainsKeyAsync("key"));
-            Assert.That(await _dictionary.ContainsKeyAsync("invalidKey"), Is.False);
+            // get two values, one existing and one non-existing
+            // this will hit the server
+            await dictionary.GetAsync("key");
+            await dictionary.GetAsync("invalidKey");
+
+            // get again - the first one should not hit the server
+            Assert.That(await dictionary.ContainsKeyAsync("key"));
+            Assert.That(await dictionary.ContainsKeyAsync("invalidKey"), Is.False);
         }
 
         [Test]
-        public async Task TestNearCacheGet()
+        public async Task TestNearCacheGet() // CacheIsPopulatedByRead
         {
-            await _dictionary.AddOrUpdateAsync("key", "value");
-            await _dictionary.GetAsync("key");
+            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
 
-            var cache = GetNearCache(_dictionary);
+            // add a vale to the dictionary
+            await dictionary.AddOrUpdateAsync("key", "value");
 
+            // get the value = populates the cache
+            await dictionary.GetAsync("key");
+
+            // validate that the value is in the cache
             var getAttempt = await cache.TryGetAsync(ToData("key"));
+
             Assert.That(getAttempt.Success, Is.True);
             Assert.That(getAttempt.Value, Is.EqualTo("value"));
         }
 
         [Test]
-        public async Task TestNearCacheGetAll()
+        public async Task TestNearCacheGetAll() // CacheIsPopulatedByReadMany
         {
+            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
+
+            // add values to the dictionary
             var keys = new List<object>();
             for (var i = 0; i < 100; i++)
             {
-                await _dictionary.AddOrUpdateAsync("key" + i, "value" + i);
+                await dictionary.AddOrUpdateAsync("key" + i, "value" + i);
                 keys.Add("key" + i);
             }
 
-            await _dictionary.GetAsync(keys);
+            // get all values
+            await dictionary.GetAsync(keys);
 
-            var cache = GetNearCache(_dictionary);
-
+            // validate that all values are in the cache
             Assert.AreEqual(100, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
         }
 
         [Test]
-        public async Task TestNearCacheGetAsync()
+        public async Task TestNearCacheGetAsync() // EntryIsHit
         {
-            await _dictionary.AddOrUpdateAsync("key", "value");
+            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
 
-            var result = await _dictionary.GetAsync("key");
+            // add a value to the dictionary
+            await dictionary.AddOrUpdateAsync("key", "value");
+
+            // get the value
+            var result = await dictionary.GetAsync("key");
             Assert.AreEqual("value", result);
 
-            var cache = GetNearCache(_dictionary);
+            // validate that the cache contains a value
+            Assert.AreEqual(1, cache.Count);
 
-            await AssertEx.SucceedsEventually(() =>
-            {
-                Assert.AreEqual(1, cache.Count);
-
-            }, 8000, 1000);
-
-            result = await _dictionary.GetAsync("key");
-            Assert.AreEqual("value", result);
-
+            // and that the corresponding entry has zero hits
             var cacheEntries = await cache.SnapshotEntriesAsync();
+            Assert.That(cacheEntries.Count, Is.EqualTo(1));
+            Assert.That(cacheEntries.First().Hits, Is.EqualTo(0));
+
+            // get the value again
+            result = await dictionary.GetAsync("key");
+            Assert.AreEqual("value", result);
+
+            // validate that the entry now has one hit
+            cacheEntries = await cache.SnapshotEntriesAsync();
             Assert.That(cacheEntries.Count, Is.EqualTo(1));
             Assert.That(cacheEntries.First().Hits, Is.EqualTo(1));
         }
@@ -208,6 +236,7 @@ namespace Hazelcast.Tests.NearCache
         public async Task TestNearCacheIdleEviction()
         {
             var dictionary = await _client.GetDictionaryAsync<int, int>("nc-idle-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
             var keys = Enumerable.Range(0, 10).ToList();
@@ -280,13 +309,14 @@ namespace Hazelcast.Tests.NearCache
         public async Task TestNearCacheInvalidationOnRemoveAllPredicate()
         {
             var dictionary = await _client.GetDictionaryAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
+
             for (var i = 0; i < 100; i++)
                 await dictionary.AddOrUpdateAsync("key" + i, "value" + i);
 
             for (var i = 0; i < 100; i++)
                 await dictionary.GetAsync("key" + i);
-
-            var cache = GetNearCache(dictionary);
 
             Assert.AreEqual(100, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
@@ -305,6 +335,9 @@ namespace Hazelcast.Tests.NearCache
         public async Task TestNearCacheLfuEviction()
         {
             var dictionary = await _client.GetDictionaryAsync<object, object>("nc-lfu-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
+
             var keys = new List<object>();
             for (var i = 0; i < MaxSize; i++)
             {
@@ -322,8 +355,6 @@ namespace Hazelcast.Tests.NearCache
             // Add another item, triggering eviction
             await dictionary.AddOrUpdateAsync(MaxSize, MaxSize);
             await dictionary.GetAsync(MaxSize);
-
-            var cache = GetNearCache(dictionary);
 
             // var sl = new SortedList<int, int>();
             //
@@ -357,12 +388,13 @@ namespace Hazelcast.Tests.NearCache
         public async Task TestNearCacheLocalInvalidations()
         {
             var dictionary = await _client.GetDictionaryAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
+
             await dictionary.AddOrUpdateAsync("key", "value");
 
             var value = await dictionary.GetAsync("key");
             Assert.AreEqual("value", value);
-
-            var cache = GetNearCache(dictionary);
 
             Assert.AreEqual(1, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
@@ -375,6 +407,9 @@ namespace Hazelcast.Tests.NearCache
         public async Task TestNearCacheLruEviction()
         {
             var dictionary = await _client.GetDictionaryAsync<object, object>("nc-lru-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
+
             var keys = new List<object>();
             for (var i = 0; i < MaxSize; i++)
             {
@@ -393,8 +428,6 @@ namespace Hazelcast.Tests.NearCache
             await dictionary.AddOrUpdateAsync(MaxSize, MaxSize);
             await dictionary.GetAsync(MaxSize);
 
-            var cache = GetNearCache(dictionary);
-
             await AssertEx.SucceedsEventually(async () =>
             {
                 Assert.IsTrue(cache.Count <= MaxSize, cache.Count + " should be less than " + MaxSize);
@@ -411,14 +444,18 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheNoEviction()
         {
+            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
+
             var keys = new List<object>();
             for (var i = 0; i < MaxSize * 2; i++)
             {
-                await _dictionary.AddOrUpdateAsync(i, i);
+                await dictionary.AddOrUpdateAsync(i, i);
                 keys.Add(i);
             }
-            await _dictionary.GetAsync(keys);
-            var cache = GetNearCache(_dictionary);
+            await dictionary.GetAsync(keys);
+
             Assert.AreEqual(MaxSize, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
         }
@@ -428,69 +465,56 @@ namespace Hazelcast.Tests.NearCache
         public async Task TestNearCacheTtlEviction()
         {
             var dictionary = await _client.GetDictionaryAsync<int, int>("nc-ttl-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
 
-            try
+            var keys = Enumerable.Range(0, 10).ToList();
+            foreach (var k in keys)
+                await dictionary.AddOrUpdateAsync(k, k);
+
+            await dictionary.GetAsync(keys);
+
+            Assert.AreEqual(keys.Count, cache.Count);
+
+            await AssertEx.SucceedsEventually(async () =>
             {
-                var keys = Enumerable.Range(0, 10).ToList();
+                await dictionary.GetAsync(100); // force ttl check
                 foreach (var k in keys)
-                    await dictionary.AddOrUpdateAsync(k, k);
-
-                await dictionary.GetAsync(keys);
-                var cache = GetNearCache(dictionary);
-
-                Assert.AreEqual(keys.Count, cache.Count);
-
-                await AssertEx.SucceedsEventually(async () =>
                 {
-                    await dictionary.GetAsync(100); // force ttl check
-                    foreach (var k in keys)
-                    {
-                        var keyData = ToData(k);
-                        Assert.That(await cache.ContainsKeyAsync(keyData), Is.False, $"Key {k} should have expired.");
-                    }
+                    var keyData = ToData(k);
+                    Assert.That(await cache.ContainsKeyAsync(keyData), Is.False, $"Key {k} should have expired.");
+                }
 
-                }, 8000, 1000);
-            }
-            finally
-            {
-                await _dictionary.DestroyAsync();
-            }
+            }, 8000, 1000);
         }
 
         private async Task TestInvalidateAsync(Func<IHDictionary<string, string>, string, Task> invalidatingAction)
         {
             var dictionary = await _client.GetDictionaryAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
 
-            try
+            await dictionary.AddOrUpdateAsync("key", "value");
+
+            var value = await dictionary.GetAsync("key");
+            Assert.AreEqual("value", value);
+
+            Assert.AreEqual(1, cache.Count);
+            Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
+
+            await using (var client = await CreateAndStartClientAsync())
             {
-                await dictionary.AddOrUpdateAsync("key", "value");
-
-                var value = await dictionary.GetAsync("key");
-                Assert.AreEqual("value", value);
-
-                var cache = GetNearCache(dictionary);
-
-                Assert.AreEqual(1, cache.Count);
-                Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
-
-                await using (var client = await CreateAndStartClientAsync())
-                {
-                    await invalidatingAction(await client.GetDictionaryAsync<string, string>(dictionary.Name), "key");
-                }
-
-                var keyData = ToData("key");
-
-                await AssertEx.SucceedsEventually(async () =>
-                {
-
-                    Assert.IsFalse(await cache.ContainsKeyAsync(keyData), "Key should have been invalidated");
-
-                }, 8000, 1000);
+                await invalidatingAction(await client.GetDictionaryAsync<string, string>(dictionary.Name), "key");
             }
-            finally
+
+            var keyData = ToData("key");
+
+            await AssertEx.SucceedsEventually(async () =>
             {
-                await _dictionary.DestroyAsync();
-            }
+
+                Assert.IsFalse(await cache.ContainsKeyAsync(keyData), "Key should have been invalidated");
+
+            }, 8000, 1000);
         }
     }
 }

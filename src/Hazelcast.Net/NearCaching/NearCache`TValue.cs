@@ -60,6 +60,9 @@ namespace Hazelcast.NearCaching
             {
                 var (success, valueObject) = await InnerCache.TryGetOrAddAsync(keyData, valueFactory).CAF();
                 var value = ToTValue(valueObject);
+                if (success && valueObject == null) Console.WriteLine("MEH! got null valueObject from the cache");
+                if (success && value == null) Console.WriteLine("MEH! got null value from " + valueObject);
+                if (!success) Console.WriteLine("MEH! failed to get value");
                 if (success) return value;
                 return Attempt.Fail(value);
             }
@@ -117,6 +120,8 @@ namespace Hazelcast.NearCaching
         /// </remarks>
         private TValue ToTValue(object valueObject)
         {
+            if (valueObject == null) return default; // FIXME?
+
             return InnerCache.InMemoryFormat.Equals(InMemoryFormat.Binary)
                 ? InnerCache.SerializationService.ToObject<TValue>(valueObject)
                 : (TValue) valueObject;

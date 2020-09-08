@@ -277,13 +277,15 @@ namespace Hazelcast.Core
             {
                 // there is only one factory, each method is not supposed to try another factory
 
+                Task<TValue> creating;
                 lock (_lock)
                 {
                     if (HasValue) return _value;
-                    _creating ??= factory(_key, cancellationToken).AsTask();
+                    creating = _creating ??= factory(_key, cancellationToken).AsTask();
                 }
 
-                _value = await _creating.CAF();
+                // FIXME error: _creating is null?!
+                _value = await creating.CAF();
 
                 lock (_lock)
                 {

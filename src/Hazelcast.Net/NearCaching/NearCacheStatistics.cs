@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 using Hazelcast.Core;
 
@@ -23,6 +24,7 @@ namespace Hazelcast.NearCaching
         private long _expirations;
         private long _hits;
         private long _misses;
+        private long _staleReads;
         private long _ownedEntryCount;
 
         /// <summary>
@@ -47,6 +49,11 @@ namespace Hazelcast.NearCaching
         /// Gets the number of misses.
         /// </summary>
         public long Misses => Interlocked.Read(ref _misses);
+
+        /// <summary>
+        /// Gets the number of stale reads.
+        /// </summary>
+        public long StaleReads => Interlocked.Read(ref _staleReads);
 
         /// <summary>
         /// Gets the number of evictions.
@@ -121,6 +128,15 @@ namespace Hazelcast.NearCaching
         public void NotifyMiss()
         {
             Interlocked.Increment(ref _misses);
+        }
+
+        /// <summary>
+        /// Notifies of a stale entry.
+        /// </summary>
+        public void NotifyStaleRead()
+        {
+            Console.WriteLine("Notify Stale Read");
+            Interlocked.Increment(ref _staleReads);
         }
     }
 }

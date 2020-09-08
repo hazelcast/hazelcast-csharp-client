@@ -157,6 +157,24 @@ namespace Hazelcast.Tests {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
+        ///
+        ///  &lt;properties&gt;
+        ///    &lt;property name=&quot;hazelcast.map.invalidation.batch.enabled&quot;&gt;true&lt;/property&gt;
+        ///    &lt;property name=&quot;hazelcast.cache.invalidation.batch.size&quot;&gt;10&lt;/property&gt;
+        ///    &lt;property name=&quot;hazel [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Cluster_NearCache {
+            get {
+                return ResourceManager.GetString("Cluster_NearCache", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
         ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
         ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config

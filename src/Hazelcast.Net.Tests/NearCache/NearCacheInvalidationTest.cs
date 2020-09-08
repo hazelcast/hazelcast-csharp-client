@@ -1,123 +1,141 @@
-﻿//// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-//// 
-//// Licensed under the Apache License, Version 2.0 (the "License");
-//// you may not use this file except in compliance with the License.
-//// You may obtain a copy of the License at
-//// 
-//// http://www.apache.org/licenses/LICENSE-2.0
-//// 
-//// Unless required by applicable law or agreed to in writing, software
-//// distributed under the License is distributed on an "AS IS" BASIS,
-//// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//// See the License for the specific language governing permissions and
-//// limitations under the License.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-//using System;
-//using Hazelcast.Client.Test;
-//using Hazelcast.Configuration;
-//using Hazelcast.DistributedObjects;
-//using Hazelcast.Test;
-//using Hazelcast.Tests.NearCache;
-//using NUnit.Framework;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.DistributedObjects;
+using Hazelcast.NearCaching;
+using Hazelcast.Testing;
+using NUnit.Framework;
 
-//namespace Hazelcast.NearCache.Test
-//{
-//    [TestFixture]
-//    [Category("3.8")]
-//    public class NearCacheInvalidationTest : NearCacheTestBase
-//    {
-//        protected override void InitMembers()
-//        {
-//            //Init 2 members
-//            StartNewMember();
-//            StartNewMember();
-//        }
+namespace Hazelcast.Tests.NearCache
+{
+    // this was NearCacheMetaDataDistortionTest.TestInvalidationDistortionSequenceAndGuid in the original code
+    //
+    // but ... what it really does is ensure that if uuids and sequences are randomly
+    // modified (distorted) on the server, the cache properly recovers.
 
-//        protected override string GetServerConfig()
-//        {
-//            return Tests.Resources.hazelcast;
-//        }
 
-//        [SetUp]
-//        public void Setup()
-//        {
-//            _map = Client.GetMap<object, object>("nearCachedMap-" + TestSupport.RandomString());
-//            var nc = GetNearCache(_map);
-//            Assert.AreEqual(typeof(Client.NearCache), nc.GetType());
-//        }
+    [TestFixture]
+    public class NearCacheInvalidationTest : NearCacheTestBase
+    {
+        private IHazelcastClient _client;
+        private IHDictionary<object, object> _dictionary;
 
-//        [TearDown]
-//        public void Destroy()
-//        {
-//            _map.Destroy();
-//        }
+        [OneTimeSetUp]
+        public async Task OneTimeSetUp()
+        {
+            // add members to the cluster
+            await AddMember();
+            await AddMember();
+        }
 
-//        private IMap<object, object> _map;
+        [SetUp]
+        public async Task Init()
+        {
+            _client = await CreateAndStartClientAsync();
+            var client = _client as HazelcastClient;
+            Assert.That(client, Is.Not.Null);
+            SerializationService = client.SerializationService;
 
-//        [OneTimeTearDown]
-//        public void RestoreEnvironmentVariables()
-//        {
-//            Environment.SetEnvironmentVariable("hazelcast.invalidation.max.tolerated.miss.count", null);
-//            Environment.SetEnvironmentVariable("hazelcast.invalidation.reconciliation.interval.seconds", null);
-//            Environment.SetEnvironmentVariable("hazelcast.invalidation.min.reconciliation.interval.seconds", null);
-//        }
+            _dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
 
-//        protected override void ConfigureClient(ClientConfig config)
-//        {
-//            base.ConfigureClient(config);
-//            Environment.SetEnvironmentVariable("hazelcast.invalidation.max.tolerated.miss.count", "0");
-//            Environment.SetEnvironmentVariable("hazelcast.invalidation.reconciliation.interval.seconds", "10");
-//            Environment.SetEnvironmentVariable("hazelcast.invalidation.min.reconciliation.interval.seconds", "10");
-//            var defaultConfig = new NearCacheConfig().SetInvalidateOnChange(true).SetEvictionPolicy("None")
-//                .SetInMemoryFormat(InMemoryFormat.Binary);
-//            config.AddNearCacheConfig("nearCachedMap*", defaultConfig);
-//        }
+            var nearCache = GetNearCache(_dictionary);
+            Assert.That(nearCache, Is.InstanceOf<NearCaching.NearCache>());
+        }
 
-//        [Test]
-//        public void TestSequenceFixIfKeyRemoveAtServer()
-//        {
-//            const string theKey = "key";
-//            _map.Put(theKey, "value1");
+        [TearDown]
+        public async Task TearDown()
+        {
+            if (_dictionary != null) await _dictionary.DestroyAsync();
+            _dictionary = null;
 
-//            var partitionId = ClientInternal.PartitionService.GetPartitionId(theKey);
-//            var nc = GetNearCache(_map) as Client.NearCache;
-//            var metaDataContainer = nc.RepairingHandler.GetMetaDataContainer(partitionId);
+            if (_client != null) await _client.DisposeAsync();
+            _client = null;
+        }
 
-//            TestSupport.AssertTrueEventually(() =>
-//            {
-//                var initialSequence = metaDataContainer.Sequence;
-//                Assert.AreEqual(1, initialSequence);
-//            });
-//            metaDataContainer.Sequence -= 2; //distort the sequence
+        protected override HazelcastOptions CreateHazelcastOptions()
+        {
+            var options = base.CreateHazelcastOptions();
 
-//            RemoveKeyAtServerAsync(_map.Name, theKey);
+            var nearCacheOptions = options.NearCache;
 
-//            TestSupport.AssertTrueEventually(() =>
-//            {
-//                var latestSequence = metaDataContainer.Sequence;
-//                Assert.AreEqual(2, latestSequence);
-//                Assert.IsTrue(nc.Records.IsEmpty);
-//            });
-//        }
+            nearCacheOptions.Configurations["nc*"] = new NearCacheNamedOptions
+            {
+                InvalidateOnChange = true,
+                EvictionPolicy = EvictionPolicy.None,
+                InMemoryFormat = InMemoryFormat.Binary
+            };
 
-//        [Test]
-//        public void TestSequenceUpdateIfKeyRemoveAtServer()
-//        {
-//            const string theKey = "key";
-//            _map.Put(theKey, "value");
+            nearCacheOptions.MaxToleratedMissCount = 0;
+            nearCacheOptions.ReconciliationIntervalSeconds = 10;
+            nearCacheOptions.MinReconciliationIntervalSeconds = 10;
 
-//            var partitionId = ClientInternal.PartitionService.GetPartitionId(theKey);
-//            var nc = GetNearCache(_map) as Client.NearCache;
-//            var metaDataContainer = nc.RepairingHandler.GetMetaDataContainer(partitionId);
-//            var initialSequence = metaDataContainer.Sequence;
+            return options;
+        }
 
-//            RemoveKeyAtServerAsync(_map.Name, theKey);
+        [Test]
+        public async Task TestSequenceFixIfKeyRemoveAtServer()
+        {
+            const string theKey = "key";
 
-//            TestSupport.AssertTrueEventually(() =>
-//            {
-//                var latestSequence = metaDataContainer.Sequence;
-//                Assert.Greater(latestSequence, initialSequence);
-//            });
-//        }
-//    }
-//}
+            await _dictionary.AddOrUpdateAsync(theKey, "value1");
+
+            var partitioner = ((HazelcastClient)_client).Cluster.Partitioner;
+            var keyData = ((HazelcastClient) _client).SerializationService.ToData(theKey);
+            var partitionId = partitioner.GetPartitionId(keyData.PartitionHash);
+
+            var cache = GetNearCache(_dictionary) as NearCaching.NearCache;
+            var metadata = cache.RepairingHandler.GetMetadata(partitionId);
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(metadata.Sequence, Is.EqualTo(1));
+            }, 2000, 200);
+
+            metadata.Sequence -= 2; //distort the sequence
+
+            await RemoveKeyAtServerAsync(_dictionary.Name, theKey);
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(metadata.Sequence, Is.EqualTo(2));
+                Assert.That(cache.Count, Is.EqualTo(0));
+            }, 2000, 200);
+        }
+
+        [Test]
+        public async Task TestSequenceUpdateIfKeyRemoveAtServer()
+        {
+            const string theKey = "key";
+
+            await _dictionary.AddOrUpdateAsync(theKey, "value1");
+
+            var partitioner = ((HazelcastClient) _client).Cluster.Partitioner;
+            var keyData = ((HazelcastClient)_client).SerializationService.ToData(theKey);
+            var partitionId = partitioner.GetPartitionId(keyData.PartitionHash);
+
+            var cache = GetNearCache(_dictionary) as NearCaching.NearCache;
+            var metadata = cache.RepairingHandler.GetMetadata(partitionId);
+            var initialSequence = metadata.Sequence;
+
+            await RemoveKeyAtServerAsync(_dictionary.Name, theKey);
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(metadata.Sequence, Is.GreaterThan(initialSequence));
+            }, 2000, 200);
+        }
+    }
+}

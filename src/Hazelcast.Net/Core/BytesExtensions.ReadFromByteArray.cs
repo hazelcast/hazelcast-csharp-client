@@ -130,9 +130,9 @@ namespace Hazelcast.Core
                       (long) bytes[position + 6] << 8  |        bytes[position + 7]
 
                     :        bytes[position]           | (long) bytes[position + 1] << 8 |
-                             (long) bytes[position + 2] << 16 | (long) bytes[position + 3] << 24 |
-                             (long) bytes[position + 4] << 32 | (long) bytes[position + 5] << 40 |
-                             (long) bytes[position + 6] << 48 | (long) bytes[position + 7] << 56;
+                      (long) bytes[position + 2] << 16 | (long) bytes[position + 3] << 24 |
+                      (long) bytes[position + 4] << 32 | (long) bytes[position + 5] << 40 |
+                      (long) bytes[position + 6] << 48 | (long) bytes[position + 7] << 56;
             }
         }
 

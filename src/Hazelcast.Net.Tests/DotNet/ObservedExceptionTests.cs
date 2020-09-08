@@ -60,12 +60,17 @@ namespace Hazelcast.Tests.DotNet
             {
                 RunTask(nameof(UnobservedExceptionIsRaised),  false);
 
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-
-                // there can be a timing issue on .NET Framework
                 var i = 0;
-                while (_count == 0 && i++ < 20) Thread.Sleep(100);
+                while (_count == 0 && i++ < 10)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+
+                    var j = 0;
+                    while (_count == 0 && j++ < 10) Thread.Sleep(200);
+
+                    if (_count ==0) Thread.Sleep(1000);
+                }
             }
             finally
             {
