@@ -126,7 +126,7 @@ namespace Hazelcast.Tests.Networking
 
         public class UserSerializer : IStreamSerializer<User>
         {
-            public int GetTypeId() => 123456;
+            public int TypeId => 123456;
 
             public User Read(IObjectDataInput input)
             {

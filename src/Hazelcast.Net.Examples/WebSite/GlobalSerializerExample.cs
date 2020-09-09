@@ -21,10 +21,7 @@ namespace Hazelcast.Examples.WebSite
 {
     public class GlobalSerializer : IStreamSerializer<object>
     {
-        public int GetTypeId()
-        {
-            return 20;
-        }
+        public int TypeId => 20;
 
         public void Destroy()
         {

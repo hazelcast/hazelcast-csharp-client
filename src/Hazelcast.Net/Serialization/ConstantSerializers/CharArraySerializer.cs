@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class CharArraySerializer : SingletonSerializerBase<char[]>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeCharArray;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeCharArray;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override char[] Read(IObjectDataInput input)

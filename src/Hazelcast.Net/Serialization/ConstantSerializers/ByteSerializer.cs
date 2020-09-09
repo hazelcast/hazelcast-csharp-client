@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class ByteSerializer : SingletonSerializerBase<byte>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeByte;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeByte;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override byte Read(IObjectDataInput input)

@@ -20,10 +20,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
     {
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public override int GetTypeId()
-        {
-            return SerializationConstants.JavaDefaultTypeDate;
-        }
+        public override int TypeId => SerializationConstants.JavaDefaultTypeDate;
 
         public override DateTime Read(IObjectDataInput input)
         {

@@ -16,8 +16,7 @@ namespace Hazelcast.Serialization
 {
     internal sealed class NullSerializer : SingletonSerializerBase<object>
     {
-        public override int GetTypeId()
-            => SerializationConstants.ConstantTypeNull;
+        public override int TypeId => SerializationConstants.ConstantTypeNull;
 
         public override object Read(IObjectDataInput input)
             => null;

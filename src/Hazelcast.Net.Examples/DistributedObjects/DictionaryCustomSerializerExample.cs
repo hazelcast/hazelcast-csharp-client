@@ -59,10 +59,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
     internal class CustomSerializer : IStreamSerializer<Person>
     {
-        public int GetTypeId()
-        {
-            return 10;
-        }
+        public int TypeId => 10;
 
         public void Destroy()
         {

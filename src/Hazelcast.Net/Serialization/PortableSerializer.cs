@@ -30,10 +30,7 @@ namespace Hazelcast.Serialization
             _factories = _factories.Union(portableFactories).ToDictionary(x => x.Key, x => x.Value);
         }
 
-        public int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypePortable;
-        }
+        public int TypeId => SerializationConstants.ConstantTypePortable;
 
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, IPortable p)
@@ -93,7 +90,7 @@ namespace Hazelcast.Serialization
         internal void WriteInternal(IBufferObjectDataOutput output, IPortable p)
         {
             var cd = _context.LookupOrRegisterClassDefinition(p);
-            output.Write(cd.GetVersion());
+            output.Write(cd.Version);
             var writer = new DefaultPortableWriter(this, output, cd);
             p.WritePortable(writer);
             writer.End();
@@ -101,8 +98,7 @@ namespace Hazelcast.Serialization
 
         private IPortable CreateNewPortableInstance(int factoryId, int classId)
         {
-            IPortableFactory portableFactory;
-            _factories.TryGetValue(factoryId, out portableFactory);
+            _factories.TryGetValue(factoryId, out var portableFactory);
             if (portableFactory == null)
             {
                 throw new SerializationException("Could not find PortableFactory for factory-id: " + factoryId);

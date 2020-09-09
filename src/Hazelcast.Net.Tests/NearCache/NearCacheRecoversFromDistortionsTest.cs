@@ -149,25 +149,6 @@ namespace Hazelcast.Tests.NearCache
             stop = true;
             await Task.WhenAll(caching, distortingSequence, distortingUuid, addingOnMember);
 
-            // FIXME
-            // getting: Bad value (i=129, server=1640458887, client=129)
-            // which means we're getting (from the client) the original value that was set on the server
-            // (and probably was cached by the caching task) but the value has been updated on the server
-            // and we are not aware of it
-            //
-            // also getting unhandled errors on event handlers
-            /*
-                System.ArgumentOutOfRangeException: L'argument spécifié n'était pas dans les limites de la plage des valeurs valides.
-                Nom du paramètre : newSequence
-                   à Hazelcast.NearCaching.RepairingHandler.UpdateSequence(Int32 partitionId, Int64 newSequence, Boolean viaAntiEntropy) dans /_/src/Hazelcast.Net/NearCaching/RepairingHandler.cs:ligne 105
-                   à Hazelcast.NearCaching.RepairingHandler.Handle(IData key, Guid sourceClusterClientId, Guid partitionGuid, Int64 sequence) dans /_/src/Hazelcast.Net/NearCaching/RepairingHandler.cs:ligne 191
-                   à Hazelcast.NearCaching.RepairingHandler.Handle(IEnumerable`1 keys, IEnumerable`1 sourceClusterClientIds, IEnumerable`1 partitionUuids, IEnumerable`1 sequences) dans /_/src/Hazelcast.Net/NearCaching/RepairingHandler.cs:ligne 205
-                   à Hazelcast.NearCaching.NearCache.HandleBatchInvalidationEventAsync(IEnumerable`1 keys, IEnumerable`1 sourceuuids, IEnumerable`1 partitionuuids, IEnumerable`1 sequences) dans /_/src/Hazelcast.Net/NearCaching/NearCache.cs:ligne 160
-                   à Hazelcast.Protocol.Codecs.MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(ClientMessage clientMessage, HandleIMapInvalidationEventAsync handleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync handleIMapBatchInvalidationEventAsync, ILoggerFactory loggerFactory) dans /_/src/Hazelcast.Net/Protocol/Codecs/MapAddNearCacheInvalidationListenerCodec.cs:ligne 116
-                   à Hazelcast.NearCaching.NearCache.<SubscribeToInvalidationEventsAsync>b__15_3(ClientMessage message, Object state) dans /_/src/Hazelcast.Net/NearCaching/NearCache.cs:ligne 136
-                   à Hazelcast.Clustering.ClusterSubscription.<HandleAsync>d__26.MoveNext() dans /_/src/Hazelcast.Net/Clustering/ClusterSubscription.cs:ligne 179
-            */
-
             Logger.LogInformation("Assert...");
             await AssertEx.SucceedsEventually(async () =>
             {

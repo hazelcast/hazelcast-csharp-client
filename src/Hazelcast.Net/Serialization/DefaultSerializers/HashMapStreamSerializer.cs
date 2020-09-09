@@ -18,7 +18,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
 {
     internal class HashMapStreamSerializer : DictStreamSerializerBase<Dictionary<object, object>>
     {
-        public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashMap;
+        public override int TypeId => SerializationConstants.JavaDefaultTypeHashMap;
 
         public override Dictionary<object, object> Read(IObjectDataInput input)
         {

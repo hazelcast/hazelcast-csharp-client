@@ -284,7 +284,6 @@ namespace Hazelcast.Core
                     creating = _creating ??= factory(_key, cancellationToken).AsTask();
                 }
 
-                // FIXME error: _creating is null?!
                 _value = await creating.CAF();
 
                 lock (_lock)

@@ -119,10 +119,7 @@ namespace Hazelcast.Tests.Serialization
 
     internal class CustomSerializer : IStreamSerializer<CustomSerializableType>
     {
-        public int GetTypeId()
-        {
-            return 10;
-        }
+        public int TypeId => 10;
 
         public void Destroy()
         {
@@ -162,10 +159,7 @@ namespace Hazelcast.Tests.Serialization
 
     public class GlobalSerializer : IStreamSerializer<object>
     {
-        public int GetTypeId()
-        {
-            return 20;
-        }
+        public int TypeId => 20;
 
         public void Destroy()
         {
@@ -186,10 +180,7 @@ namespace Hazelcast.Tests.Serialization
 
     public class GlobalListSerializer : IStreamSerializer<object>
     {
-        public int GetTypeId()
-        {
-            return 50;
-        }
+        public int TypeId => 50;
 
         public void Destroy()
         {

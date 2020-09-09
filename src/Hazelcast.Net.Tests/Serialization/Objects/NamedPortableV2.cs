@@ -44,10 +44,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             }
         }
 
-        public int GetClassVersion()
-        {
-            return 2;
-        }
+        public int ClassVersion => 2;
 
         public override bool Equals(object obj)
         {

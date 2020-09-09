@@ -97,7 +97,7 @@ namespace Hazelcast.Serialization
                 definition.AddSerializers(this);
 
             // add constant serializers
-            AddConstantSerializers();
+            AddMoreSerializers();
 
             // add class definitions
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
@@ -113,7 +113,6 @@ namespace Hazelcast.Serialization
 
         #region DataOutput / DataInput
 
-        /*
         private IBufferObjectDataOutput GetDataOutput() => _bufferPoolThreadLocal.Get().TakeOutputBuffer();
 
         private void ReturnDataOutput(IBufferObjectDataOutput output) => _bufferPoolThreadLocal.Get().ReturnOutputBuffer(output);
@@ -121,8 +120,9 @@ namespace Hazelcast.Serialization
         private IBufferObjectDataInput GetDataInput(IData data) => _bufferPoolThreadLocal.Get().TakeInputBuffer(data);
 
         private void ReturnDataInput(IBufferObjectDataInput input) => _bufferPoolThreadLocal.Get().ReturnInputBuffer(input);
-        */
 
+        // for debugging purposes it may be interesting to entirely disable our (weirdish) pooling
+        /*
         private IBufferObjectDataOutput GetDataOutput() => new ByteArrayObjectDataOutput(0, this, Endianness);
 
         private void ReturnDataOutput(IBufferObjectDataOutput output) { }
@@ -130,6 +130,7 @@ namespace Hazelcast.Serialization
         private IBufferObjectDataInput GetDataInput(IData data) => new ByteArrayObjectDataInput(data.ToByteArray(), HeapData.DataOffset, this, Endianness);
 
         private void ReturnDataInput(IBufferObjectDataInput input) { }
+        */
 
         #endregion
 
@@ -150,7 +151,7 @@ namespace Hazelcast.Serialization
                 var serializer = SerializerFor(o);
                 var partitionHash = CalculatePartitionHash(o, strategy);
                 output.Write(partitionHash, Endianness.BigEndian);
-                output.Write(serializer.GetTypeId(), Endianness.BigEndian);
+                output.Write(serializer.TypeId, Endianness.BigEndian);
                 serializer.Write(output, o);
                 return new HeapData(output.ToByteArray());
             }
@@ -207,7 +208,7 @@ namespace Hazelcast.Serialization
             try
             {
                 var serializer = SerializerFor(o);
-                output.Write(serializer.GetTypeId());
+                output.Write(serializer.TypeId);
                 serializer.Write(output, o);
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
@@ -282,54 +283,12 @@ namespace Hazelcast.Serialization
 
         #region Register constant serializers (cannot be overriden)
 
-        private void AddConstantSerializers()
+        private void AddMoreSerializers()
         {
             AddConstantSerializer(null, _nullSerializerAdapter); // TODO: why add it?
             AddConstantSerializer<IIdentifiedDataSerializable>(_dataSerializerAdapter); // TODO: why add it?
             AddConstantSerializer<IPortable>(_portableSerializerAdapter); // TODO: why add it?
-
-            AddConstantSerializer<byte>(new ConstantSerializers.ByteSerializer());
-            AddConstantSerializer<bool>(new ConstantSerializers.BooleanSerializer());
-            AddConstantSerializer<char>(new ConstantSerializers.CharSerializer());
-            AddConstantSerializer<short>(new ConstantSerializers.ShortSerializer());
-            AddConstantSerializer<int>(new ConstantSerializers.IntegerSerializer());
-            AddConstantSerializer<long>(new ConstantSerializers.LongSerializer());
-            AddConstantSerializer<float>(new ConstantSerializers.FloatSerializer());
-            AddConstantSerializer<double>(new ConstantSerializers.DoubleSerializer());
-            AddConstantSerializer<string>(new ConstantSerializers.StringSerializer());
-
-            AddConstantSerializer<byte[]>(new ConstantSerializers.ByteArraySerializer());
-            AddConstantSerializer<bool[]>(new ConstantSerializers.BooleanArraySerializer());
-            AddConstantSerializer<char[]>(new ConstantSerializers.CharArraySerializer());
-            AddConstantSerializer<short[]>(new ConstantSerializers.ShortArraySerializer());
-            AddConstantSerializer<int[]>(new ConstantSerializers.IntegerArraySerializer());
-            AddConstantSerializer<long[]>(new ConstantSerializers.LongArraySerializer());
-            AddConstantSerializer<float[]>(new ConstantSerializers.FloatArraySerializer());
-            AddConstantSerializer<double[]>(new ConstantSerializers.DoubleArraySerializer());
-            AddConstantSerializer<string[]>(new ConstantSerializers.StringArraySerializer());
-
-            AddConstantSerializer<Guid>(new ConstantSerializers.GuidSerializer());
-            AddConstantSerializer<KeyValuePair<object, object>>(new ConstantSerializers.KeyValuePairSerializer());
-
-            // TODO: below are "default" serializers and what is the difference with "constant"?
-
-            AddConstantSerializer<JavaClass>(new DefaultSerializers.JavaClassSerializer());
-            AddConstantSerializer<DateTime>(new DefaultSerializers.DateSerializer());
-            AddConstantSerializer<BigInteger>(new DefaultSerializers.BigIntegerSerializer());
-
-            AddConstantSerializer(typeof(object[]), new DefaultSerializers.ArrayStreamSerializer());
-
-            //TODO map server side collection types.
-            AddConstantSerializer<List<object>>(new DefaultSerializers.ListSerializer<object>());
-            AddConstantSerializer<LinkedList<object>>(new DefaultSerializers.LinkedListSerializer<object>());
-            AddConstantSerializer<Dictionary<object, object>>(new DefaultSerializers.HashMapStreamSerializer());
-            AddConstantSerializer<ConcurrentDictionary<object, object>>(new DefaultSerializers.ConcurrentHashMapStreamSerializer());
-            AddConstantSerializer<HashSet<object>>(new DefaultSerializers.HashSetStreamSerializer());
-
-            AddConstantSerializer<HazelcastJsonValue>(new DefaultSerializers.HazelcastJsonValueSerializer());
-
-            // TODO: why?
-            _idMap.TryAdd(_serializableSerializerAdapter.GetTypeId(), _serializableSerializerAdapter);
+            _idMap.TryAdd(_serializableSerializerAdapter.TypeId, _serializableSerializerAdapter); // TODO: why add it?
         }
 
         private void AddConstantSerializer(Type type, ISerializerAdapter adapter)
@@ -339,7 +298,7 @@ namespace Hazelcast.Serialization
             if (type != null)
                 _constantTypesMap.Add(type, adapter);
 
-            _constantTypeIds[IndexForDefaultType(adapter.GetTypeId())] = adapter;
+            _constantTypeIds[IndexForDefaultType(adapter.TypeId)] = adapter;
         }
 
         private void AddConstantSerializer(Type type, ISerializer serializer)
@@ -388,8 +347,8 @@ namespace Hazelcast.Serialization
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-            if (serializer.GetTypeId() <= 0)
-                throw new ArgumentException($"Serializer {serializer} has invalid id {serializer.GetTypeId()}", nameof(serializer));
+            if (serializer.TypeId <= 0)
+                throw new ArgumentException($"Serializer {serializer} has invalid id {serializer.TypeId}", nameof(serializer));
 
             AddSerializer(type, CreateSerializerAdapter(type, serializer));
         }
@@ -405,16 +364,16 @@ namespace Hazelcast.Serialization
             {
                 added = false;
                 var existing = _typeMap[type];
-                if (existing.GetImpl().GetType() != adapter.GetImpl().GetType())
-                    throw new InvalidOperationException($"Serializer {existing.GetImpl()} has already been registered for type {type}.");
+                if (existing.Serializer.GetType() != adapter.Serializer.GetType())
+                    throw new InvalidOperationException($"Serializer {existing.Serializer} has already been registered for type {type}.");
             }
 
-            if (!_idMap.TryAdd(adapter.GetTypeId(), adapter))
+            if (!_idMap.TryAdd(adapter.TypeId, adapter))
             {
                 added = false;
-                var existing = _idMap[adapter.GetTypeId()];
-                if (existing.GetImpl().GetType() != adapter.GetImpl().GetType())
-                    throw new InvalidOperationException($"Serializer {existing.GetImpl()} has already been registered for type id {adapter.GetTypeId()}.");
+                var existing = _idMap[adapter.TypeId];
+                if (existing.Serializer.GetType() != adapter.Serializer.GetType())
+                    throw new InvalidOperationException($"Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.");
             }
 
             return added;
@@ -434,14 +393,14 @@ namespace Hazelcast.Serialization
                 throw new InvalidOperationException("Global serializer is already registered!");
 
             _overrideClrSerialization = overrideClrSerialization;
-            if (!_idMap.TryAdd(serializer.GetTypeId(), adapter))
+            if (!_idMap.TryAdd(serializer.TypeId, adapter))
             {
-                var existing = _idMap[serializer.GetTypeId()];
-                if (existing.GetImpl().GetType() != adapter.GetImpl().GetType())
+                var existing = _idMap[serializer.TypeId];
+                if (existing.Serializer.GetType() != adapter.Serializer.GetType())
                 {
                     Interlocked.CompareExchange(ref _global, null, adapter);
                     _overrideClrSerialization = false;
-                    throw new InvalidOperationException($"Serializer {existing.GetImpl()} has already been registered for type id {adapter.GetTypeId()}.");
+                    throw new InvalidOperationException($"Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.");
                 }
             }
         }
@@ -651,9 +610,9 @@ namespace Hazelcast.Serialization
             for (var i = 0; i < cd.GetFieldCount(); i++)
             {
                 var fd = cd.GetField(i);
-                if (fd.GetFieldType() == FieldType.Portable || fd.GetFieldType() == FieldType.PortableArray)
+                if (fd.FieldType == FieldType.Portable || fd.FieldType == FieldType.PortableArray)
                 {
-                    var classId = fd.GetClassId();
+                    var classId = fd.ClassId;
                     classDefMap.TryGetValue(classId, out var nestedCd);
                     if (nestedCd != null)
                     {
@@ -679,12 +638,12 @@ namespace Hazelcast.Serialization
                 new Dictionary<int, IClassDefinition>(classDefinitions.Count);
             foreach (var cd in classDefinitions)
             {
-                if (classDefMap.ContainsKey(cd.GetClassId()))
+                if (classDefMap.ContainsKey(cd.ClassId))
                 {
                     throw new SerializationException("Duplicate registration found for class-id[" +
-                                                              cd.GetClassId() + "]!");
+                                                              cd.ClassId + "]!");
                 }
-                classDefMap.Add(cd.GetClassId(), cd);
+                classDefMap.Add(cd.ClassId, cd);
             }
             foreach (var classDefinition in classDefinitions)
             {

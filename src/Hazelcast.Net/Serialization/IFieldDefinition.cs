@@ -18,21 +18,21 @@ namespace Hazelcast.Serialization
     public interface IFieldDefinition
     {
         /// <returns>class id of this field's class</returns>
-        int GetClassId();
+        int ClassId { get; }
 
         /// <returns>factory id of this field's class</returns>
-        int GetFactoryId();
+        int FactoryId { get; }
 
         /// <returns>field type</returns>
-        FieldType GetFieldType();
+        FieldType FieldType { get; }
 
         /// <returns>field index</returns>
-        int GetIndex();
+        int Index { get; }
 
         /// <returns>field name</returns>
-        string GetName();
+        string Name { get; }
 
         /// <returns>field version</returns>
-        int GetVersion();
+        int Version { get; }
     }
 }

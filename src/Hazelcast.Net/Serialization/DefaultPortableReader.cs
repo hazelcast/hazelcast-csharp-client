@@ -55,10 +55,7 @@ namespace Hazelcast.Serialization
             _offset = @in.Position;
         }
 
-        public virtual int GetVersion()
-        {
-            return Cd.GetVersion();
-        }
+        public virtual int Version => Cd.Version;
 
         public virtual bool HasField(string fieldName)
         {
@@ -307,7 +304,7 @@ namespace Hazelcast.Serialization
                 {
                     throw ThrowUnknownFieldException(fieldName);
                 }
-                if (fd.GetFieldType() != FieldType.Portable)
+                if (fd.FieldType != FieldType.Portable)
                 {
                     throw new SerializationException("Not a Portable field: " + fieldName);
                 }
@@ -340,7 +337,7 @@ namespace Hazelcast.Serialization
                 {
                     throw ThrowUnknownFieldException(fieldName);
                 }
-                if (fd.GetFieldType() != FieldType.PortableArray)
+                if (fd.FieldType != FieldType.PortableArray)
                 {
                     throw new SerializationException("Not a Portable array field: " + fieldName);
                 }
@@ -392,14 +389,14 @@ namespace Hazelcast.Serialization
 
         private static void CheckFactoryAndClass(IFieldDefinition fd, int factoryId, int classId)
         {
-            if (factoryId != fd.GetFactoryId())
+            if (factoryId != fd.FactoryId)
             {
-                throw new ArgumentException("Invalid factoryId! Expected: " + fd.GetFactoryId() + ", Current: " +
+                throw new ArgumentException("Invalid factoryId! Expected: " + fd.FactoryId + ", Current: " +
                                             factoryId);
             }
-            if (classId != fd.GetClassId())
+            if (classId != fd.ClassId)
             {
-                throw new ArgumentException("Invalid classId! Expected: " + fd.GetClassId() + ", Current: " + classId);
+                throw new ArgumentException("Invalid classId! Expected: " + fd.ClassId + ", Current: " + classId);
             }
         }
 
@@ -435,7 +432,7 @@ namespace Hazelcast.Serialization
                 {
                     throw ThrowUnknownFieldException(fieldName);
                 }
-                if (fd.GetFieldType() != type)
+                if (fd.FieldType != type)
                 {
                     throw new SerializationException("Not a '" + type + "' field: " + fieldName);
                 }
@@ -457,7 +454,7 @@ namespace Hazelcast.Serialization
             {
                 return ReadNestedPosition(fieldName, type);
             }
-            if (fd.GetFieldType() != type)
+            if (fd.FieldType != type)
             {
                 throw new SerializationException("Not a '" + type + "' field: " + fieldName);
             }
@@ -467,7 +464,7 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"/>
         private int ReadPosition(IFieldDefinition fd)
         {
-            var pos = _in.ReadInt(_offset + fd.GetIndex()* BytesExtensions.SizeOfInt);
+            var pos = _in.ReadInt(_offset + fd.Index* BytesExtensions.SizeOfInt);
             var len = _in.ReadShort(pos);
             // name + len + type
             return pos + BytesExtensions.SizeOfShort + len + 1;
@@ -477,7 +474,7 @@ namespace Hazelcast.Serialization
         {
             return
                 new SerializationException("Unknown field name: '" + fieldName + "' for ClassDefinition {id: " +
-                                                    Cd.GetClassId() + ", version: " + Cd.GetVersion() + "}");
+                                                    Cd.ClassId + ", version: " + Cd.Version + "}");
         }
     }
 }

@@ -30,10 +30,9 @@ namespace Hazelcast.Serialization.ConstantSerializers
             service.AddConstantSerializer<float>(new FloatSerializer());
             service.AddConstantSerializer<double>(new DoubleSerializer());
             service.AddConstantSerializer<string>(new StringSerializer());
-            service.AddConstantSerializer<Guid>(new GuidSerializer());
-            service.AddConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
-            service.AddConstantSerializer<bool[]>(new BooleanArraySerializer());
+
             service.AddConstantSerializer<byte[]>(new ByteArraySerializer());
+            service.AddConstantSerializer<bool[]>(new BooleanArraySerializer());
             service.AddConstantSerializer<char[]>(new CharArraySerializer());
             service.AddConstantSerializer<short[]>(new ShortArraySerializer());
             service.AddConstantSerializer<int[]>(new IntegerArraySerializer());
@@ -41,6 +40,9 @@ namespace Hazelcast.Serialization.ConstantSerializers
             service.AddConstantSerializer<float[]>(new FloatArraySerializer());
             service.AddConstantSerializer<double[]>(new DoubleArraySerializer());
             service.AddConstantSerializer<string[]>(new StringArraySerializer());
+
+            service.AddConstantSerializer<Guid>(new GuidSerializer());
+            service.AddConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
         }
     }
 }

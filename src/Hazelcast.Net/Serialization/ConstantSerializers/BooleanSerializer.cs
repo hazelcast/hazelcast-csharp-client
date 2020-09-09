@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class BooleanSerializer : SingletonSerializerBase<bool>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeBoolean;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeBoolean;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override bool Read(IObjectDataInput input)

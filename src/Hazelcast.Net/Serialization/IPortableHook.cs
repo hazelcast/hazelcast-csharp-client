@@ -21,6 +21,7 @@ namespace Hazelcast.Serialization
         IPortableFactory CreateFactory();
 
         ICollection<IClassDefinition> GetBuiltinDefinitions();
-        int GetFactoryId();
+
+        int FactoryId { get; }
     }
 }

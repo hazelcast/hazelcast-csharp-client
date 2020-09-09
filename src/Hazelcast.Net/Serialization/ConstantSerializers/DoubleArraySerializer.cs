@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class DoubleArraySerializer : SingletonSerializerBase<double[]>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeDoubleArray;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeDoubleArray;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override double[] Read(IObjectDataInput input)

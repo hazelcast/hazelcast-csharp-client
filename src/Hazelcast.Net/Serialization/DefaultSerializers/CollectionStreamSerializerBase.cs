@@ -23,7 +23,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
         {
         }
 
-        public abstract int GetTypeId();
+        public abstract int TypeId { get; }
 
         public abstract CollectionType Read(IObjectDataInput input);
 

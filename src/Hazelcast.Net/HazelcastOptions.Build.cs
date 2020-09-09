@@ -92,6 +92,7 @@ namespace Hazelcast
             var options = new HazelcastOptions();
             configuration.HzBind(Hazelcast, options);
 
+            // FIXME ??
             //if (altKey != null)
             //    configuration.HzBind(altKey, options);
 

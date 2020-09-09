@@ -30,8 +30,7 @@ namespace Hazelcast.Serialization
         private int _version = -1;
 
         public ClassDefinition()
-        {
-        }
+        { }
 
         public ClassDefinition(int factoryId, int classId, int version)
         {
@@ -50,7 +49,7 @@ namespace Hazelcast.Serialization
             if (fieldIndex < 0 || fieldIndex >= _fieldDefinitionsMap.Count)
                 throw new ArgumentOutOfRangeException(nameof(fieldIndex), $"Cannot get field with index {fieldIndex}, map contains {_fieldDefinitionsMap.Count} fields.");
 
-            var fieldDefinition = _fieldDefinitionsMap.Values.FirstOrDefault(x => x.GetIndex() == fieldIndex);
+            var fieldDefinition = _fieldDefinitionsMap.Values.FirstOrDefault(x => x.Index == fieldIndex);
             if (fieldDefinition != null) return fieldDefinition;
 
             throw new InvalidOperationException($"Failed to find field with index {fieldIndex} in map containing {_fieldDefinitionsMap.Count} fields.");
@@ -71,7 +70,7 @@ namespace Hazelcast.Serialization
             var fd = GetField(fieldName);
             if (fd != null)
             {
-                return fd.GetFieldType();
+                return fd.FieldType;
             }
             throw new ArgumentException("Unknown field: " + fieldName);
         }
@@ -81,7 +80,7 @@ namespace Hazelcast.Serialization
             var fd = GetField(fieldName);
             if (fd != null)
             {
-                return fd.GetClassId();
+                return fd.ClassId;
             }
             throw new ArgumentException("Unknown field: " + fieldName);
         }
@@ -91,20 +90,11 @@ namespace Hazelcast.Serialization
             return _fieldDefinitionsMap.Count;
         }
 
-        public int GetFactoryId()
-        {
-            return _factoryId;
-        }
+        public int FactoryId => _factoryId;
 
-        public int GetClassId()
-        {
-            return _classId;
-        }
+        public int ClassId => _classId;
 
-        public int GetVersion()
-        {
-            return _version;
-        }
+        public int Version => _version;
 
         public override bool Equals(object obj)
         {
@@ -142,7 +132,7 @@ namespace Hazelcast.Serialization
 
         internal virtual void AddFieldDef(FieldDefinition fd)
         {
-            _fieldDefinitionsMap[fd.GetName()] = fd;
+            _fieldDefinitionsMap[fd.Name] = fd;
         }
 
         internal virtual ICollection<IFieldDefinition> GetFieldDefinitions()
@@ -152,7 +142,7 @@ namespace Hazelcast.Serialization
 
         internal virtual void SetVersionIfNotSet(int version)
         {
-            if (GetVersion() < 0)
+            if (Version < 0)
             {
                 _version = version;
             }

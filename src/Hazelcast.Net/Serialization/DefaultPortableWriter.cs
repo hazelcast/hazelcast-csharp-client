@@ -113,8 +113,8 @@ namespace Hazelcast.Serialization
             var fd = SetPosition(fieldName, FieldType.Portable);
             var isNull = portable == null;
             _out.Write(isNull);
-            _out.Write(fd.GetFactoryId());
-            _out.Write(fd.GetClassId());
+            _out.Write(fd.FactoryId);
+            _out.Write(fd.ClassId);
             if (!isNull)
             {
                 CheckPortableAttributes(fd, portable);
@@ -200,8 +200,8 @@ namespace Hazelcast.Serialization
             var fd = SetPosition(fieldName, FieldType.PortableArray);
             var len = portables == null ? ArraySerializer.NullArrayLength : portables.Length;
             _out.Write(len);
-            _out.Write(fd.GetFactoryId());
-            _out.Write(fd.GetClassId());
+            _out.Write(fd.FactoryId);
+            _out.Write(fd.ClassId);
             if (len > 0)
             {
                 var offset = _out.Position;
@@ -233,7 +233,7 @@ namespace Hazelcast.Serialization
 
         public virtual int GetVersion()
         {
-            return _cd.GetVersion();
+            return _cd.Version;
         }
 
         /// <exception cref="System.IO.IOException" />
@@ -246,17 +246,17 @@ namespace Hazelcast.Serialization
 
         private static void CheckPortableAttributes(IFieldDefinition fd, IPortable portable)
         {
-            if (fd.GetFactoryId() != portable.FactoryId)
+            if (fd.FactoryId != portable.FactoryId)
             {
                 throw new SerializationException(
                     "Wrong Portable type! Generic portable types are not supported! " + " Expected factory-id: " +
-                    fd.GetFactoryId() + ", Actual factory-id: " + portable.FactoryId);
+                    fd.FactoryId + ", Actual factory-id: " + portable.FactoryId);
             }
-            if (fd.GetClassId() != portable.ClassId)
+            if (fd.ClassId != portable.ClassId)
             {
                 throw new SerializationException(
                     "Wrong Portable type! Generic portable types are not supported! " + "Expected class-id: " +
-                    fd.GetClassId() + ", Actual class-id: " + portable.ClassId);
+                    fd.ClassId + ", Actual class-id: " + portable.ClassId);
             }
         }
 
@@ -272,13 +272,13 @@ namespace Hazelcast.Serialization
             if (fd == null)
             {
                 throw new SerializationException("Invalid field name: '" + fieldName +
-                                                          "' for ClassDefinition {id: " + _cd.GetClassId() +
-                                                          ", version: " + _cd.GetVersion() + "}");
+                                                          "' for ClassDefinition {id: " + _cd.ClassId +
+                                                          ", version: " + _cd.Version + "}");
             }
             if (_writtenFields.Add(fieldName))
             {
                 var pos = _out.Position;
-                var index = fd.GetIndex();
+                var index = fd.Index;
                 _out.Write(_offset + index* BytesExtensions.SizeOfInt, pos);
                 _out.Write((short) fieldName.Length);
                 _out.WriteAsBytes(fieldName);

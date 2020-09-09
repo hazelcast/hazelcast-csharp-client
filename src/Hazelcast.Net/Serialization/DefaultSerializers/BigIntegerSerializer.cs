@@ -19,10 +19,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
 {
     internal class BigIntegerSerializer : SingletonSerializerBase<BigInteger>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.JavaDefaultTypeBigInteger;
-        }
+        public override int TypeId => SerializationConstants.JavaDefaultTypeBigInteger;
 
         public override BigInteger Read(IObjectDataInput input)
         {

@@ -117,7 +117,7 @@ namespace Hazelcast.NearCaching
         /// </remarks>
         private TValue ToTValue(object valueObject)
         {
-            if (valueObject == null) return default; // FIXME?
+            if (valueObject == null) return default;
 
             return InnerCache.InMemoryFormat.Equals(InMemoryFormat.Binary)
                 ? InnerCache.SerializationService.ToObject<TValue>(valueObject)

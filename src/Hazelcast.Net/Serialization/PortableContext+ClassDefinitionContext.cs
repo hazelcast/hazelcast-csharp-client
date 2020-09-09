@@ -58,7 +58,7 @@ namespace Hazelcast.Serialization
                 {
                     return null;
                 }
-                if (cd.GetFactoryId() != _factoryId)
+                if (cd.FactoryId != _factoryId)
                 {
                     throw new SerializationException("Invalid factory-id! " + _factoryId + " -> " + cd);
                 }
@@ -66,7 +66,7 @@ namespace Hazelcast.Serialization
                 {
                     cdImpl.SetVersionIfNotSet(_portableContext.GetVersion());
                 }
-                var versionedClassId = CombineToLong(cd.GetClassId(), cd.GetVersion());
+                var versionedClassId = CombineToLong(cd.ClassId, cd.Version);
                 var currentCd = _versionedDefinitions.GetOrAdd(versionedClassId, cd);
                 if (Equals(currentCd, cd))
                 {

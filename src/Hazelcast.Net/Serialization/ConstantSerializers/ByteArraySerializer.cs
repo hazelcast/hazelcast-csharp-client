@@ -16,7 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class ByteArraySerializer : IByteArraySerializer<byte[]>
     {
-        public int GetTypeId() => SerializationConstants.ConstantTypeByteArray;
+        public int TypeId => SerializationConstants.ConstantTypeByteArray;
 
         /// <exception cref="System.IO.IOException"></exception>
         public byte[] Write(byte[] @object)

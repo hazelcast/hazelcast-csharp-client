@@ -29,7 +29,7 @@ namespace Hazelcast.Serialization
             {
                 return false;
             }
-            if (fd.GetFieldType() != FieldType.Boolean)
+            if (fd.FieldType != FieldType.Boolean)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -44,7 +44,7 @@ namespace Hazelcast.Serialization
             {
                 return 0;
             }
-            if (fd.GetFieldType() != FieldType.Byte)
+            if (fd.FieldType != FieldType.Byte)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -59,7 +59,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.ByteArray)
+            if (fd.FieldType != FieldType.ByteArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -74,7 +74,7 @@ namespace Hazelcast.Serialization
             {
                 return '\0';
             }
-            if (fd.GetFieldType() != FieldType.Char)
+            if (fd.FieldType != FieldType.Char)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -89,7 +89,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.CharArray)
+            if (fd.FieldType != FieldType.CharArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -104,7 +104,7 @@ namespace Hazelcast.Serialization
             {
                 return 0d;
             }
-            switch (fd.GetFieldType())
+            switch (fd.FieldType)
             {
                 case FieldType.Double:
                 {
@@ -156,7 +156,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.DoubleArray)
+            if (fd.FieldType != FieldType.DoubleArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -171,7 +171,7 @@ namespace Hazelcast.Serialization
             {
                 return 0f;
             }
-            switch (fd.GetFieldType())
+            switch (fd.FieldType)
             {
                 case FieldType.Float:
                 {
@@ -213,7 +213,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.FloatArray)
+            if (fd.FieldType != FieldType.FloatArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -228,7 +228,7 @@ namespace Hazelcast.Serialization
             {
                 return 0;
             }
-            switch (fd.GetFieldType())
+            switch (fd.FieldType)
             {
                 case FieldType.Int:
                 {
@@ -265,7 +265,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.IntArray)
+            if (fd.FieldType != FieldType.IntArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -280,7 +280,7 @@ namespace Hazelcast.Serialization
             {
                 return 0L;
             }
-            switch (fd.GetFieldType())
+            switch (fd.FieldType)
             {
                 case FieldType.Long:
                 {
@@ -322,7 +322,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.LongArray)
+            if (fd.FieldType != FieldType.LongArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -335,9 +335,9 @@ namespace Hazelcast.Serialization
             var fd = Cd.GetField(fieldName);
             if (fd == null)
             {
-                return default(TPortable);
+                return default;
             }
-            if (fd.GetFieldType() != FieldType.Portable)
+            if (fd.FieldType != FieldType.Portable)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -352,7 +352,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.PortableArray)
+            if (fd.FieldType != FieldType.PortableArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -367,7 +367,7 @@ namespace Hazelcast.Serialization
             {
                 return 0;
             }
-            switch (fd.GetFieldType())
+            switch (fd.FieldType)
             {
                 case FieldType.Short:
                 {
@@ -394,7 +394,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.ShortArray)
+            if (fd.FieldType != FieldType.ShortArray)
             {
                 throw new InvalidPortableFieldException();
             }
@@ -409,7 +409,7 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-            if (fd.GetFieldType() != FieldType.Utf)
+            if (fd.FieldType != FieldType.Utf)
             {
                 throw new InvalidPortableFieldException();
             }

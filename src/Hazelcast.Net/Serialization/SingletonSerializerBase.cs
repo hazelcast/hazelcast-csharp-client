@@ -19,7 +19,7 @@ namespace Hazelcast.Serialization
             public virtual void Destroy()
             { }
 
-            public abstract int GetTypeId();
+            public abstract int TypeId { get; }
 
             public abstract T Read(IObjectDataInput input);
 

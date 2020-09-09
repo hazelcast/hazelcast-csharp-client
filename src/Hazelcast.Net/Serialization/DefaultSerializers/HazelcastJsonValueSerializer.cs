@@ -18,10 +18,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
 {
     internal sealed class HazelcastJsonValueSerializer : SingletonSerializerBase<HazelcastJsonValue>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.JavascriptJsonSerializationType;
-        }
+        public override int TypeId => SerializationConstants.JavascriptJsonSerializationType;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override HazelcastJsonValue Read(IObjectDataInput input)

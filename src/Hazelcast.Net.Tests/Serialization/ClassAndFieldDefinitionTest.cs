@@ -111,9 +111,9 @@ namespace Hazelcast.Tests.Serialization
             var cd = (ClassDefinition) new ClassDefinitionBuilder(1, 2, portableVersion).Build();
             cd.SetVersionIfNotSet(3);
             cd.SetVersionIfNotSet(5);
-            Assert.AreEqual(1, cd.GetFactoryId());
-            Assert.AreEqual(2, cd.GetClassId());
-            Assert.AreEqual(portableVersion, cd.GetVersion());
+            Assert.AreEqual(1, cd.FactoryId);
+            Assert.AreEqual(2, cd.ClassId);
+            Assert.AreEqual(portableVersion, cd.Version);
             Assert.AreEqual(3, classDefinition.GetFieldCount());
         }
 
@@ -158,29 +158,29 @@ namespace Hazelcast.Tests.Serialization
             var fd_nullName = new FieldDefinition(10, null, FieldType.Portable, 15, 16, 17);
             Assert.AreEqual(field, field0);
 
-            Assert.AreEqual(0, field.GetFactoryId());
-            Assert.AreEqual(0, field.GetClassId());
-            Assert.AreEqual(3, field.GetVersion());
+            Assert.AreEqual(0, field.FactoryId);
+            Assert.AreEqual(0, field.ClassId);
+            Assert.AreEqual(3, field.Version);
 
-            Assert.AreEqual(0, field.GetIndex());
-            Assert.AreEqual("f1", field.GetName());
-            Assert.AreEqual(FieldType.Byte, field.GetFieldType());
+            Assert.AreEqual(0, field.Index);
+            Assert.AreEqual("f1", field.Name);
+            Assert.AreEqual(FieldType.Byte, field.FieldType);
 
-            Assert.AreEqual(5, fd.GetFactoryId());
-            Assert.AreEqual(6, fd.GetClassId());
-            Assert.AreEqual(7, fd.GetVersion());
+            Assert.AreEqual(5, fd.FactoryId);
+            Assert.AreEqual(6, fd.ClassId);
+            Assert.AreEqual(7, fd.Version);
 
-            Assert.AreEqual(9, fd.GetIndex());
-            Assert.AreEqual("name", fd.GetName());
-            Assert.AreEqual(FieldType.Portable, fd.GetFieldType());
+            Assert.AreEqual(9, fd.Index);
+            Assert.AreEqual("name", fd.Name);
+            Assert.AreEqual(FieldType.Portable, fd.FieldType);
 
-            Assert.AreEqual(15, fd_nullName.GetFactoryId());
-            Assert.AreEqual(16, fd_nullName.GetClassId());
-            Assert.AreEqual(17, fd_nullName.GetVersion());
+            Assert.AreEqual(15, fd_nullName.FactoryId);
+            Assert.AreEqual(16, fd_nullName.ClassId);
+            Assert.AreEqual(17, fd_nullName.Version);
 
-            Assert.AreEqual(10, fd_nullName.GetIndex());
-            Assert.AreEqual(null, fd_nullName.GetName());
-            Assert.AreEqual(FieldType.Portable, fd_nullName.GetFieldType());
+            Assert.AreEqual(10, fd_nullName.Index);
+            Assert.AreEqual(null, fd_nullName.Name);
+            Assert.AreEqual(FieldType.Portable, fd_nullName.FieldType);
         }
 
         [Test]

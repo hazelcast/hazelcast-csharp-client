@@ -18,9 +18,9 @@ namespace Hazelcast.Serialization
     {
         void Destroy();
 
-        ISerializer GetImpl();
+        ISerializer Serializer { get; }
 
-        int GetTypeId();
+        int TypeId { get; }
 
         /// <exception cref="System.IO.IOException"></exception>
         object Read(IObjectDataInput @in);

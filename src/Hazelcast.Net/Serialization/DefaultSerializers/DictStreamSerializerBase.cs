@@ -21,7 +21,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
     internal abstract class DictStreamSerializerBase<DType> : IStreamSerializer<DType>
             where DType : IDictionary<object, object>
         {
-            public abstract int GetTypeId();
+            public abstract int TypeId { get; }
 
             public void Destroy()
             {

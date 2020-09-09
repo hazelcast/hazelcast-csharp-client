@@ -18,10 +18,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
 {
     internal class ListSerializer<T> : SingletonSerializerBase<List<T>>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.JavaDefaultTypeArrayList;
-        }
+        public override int TypeId => SerializationConstants.JavaDefaultTypeArrayList;
 
         public override List<T> Read(IObjectDataInput input)
         {

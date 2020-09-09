@@ -18,7 +18,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal class KeyValuePairSerializer : SingletonSerializerBase<KeyValuePair<object, object>>
     {
-        public override int GetTypeId() => SerializationConstants.ConstantTypeSimpleEntry;
+        public override int TypeId => SerializationConstants.ConstantTypeSimpleEntry;
 
         public override KeyValuePair<object, object> Read(IObjectDataInput input)
         {

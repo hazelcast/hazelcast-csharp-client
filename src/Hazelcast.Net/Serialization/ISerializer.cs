@@ -30,6 +30,6 @@ namespace Hazelcast.Serialization
         void Destroy();
 
         /// <returns>typeId of serializer</returns>
-        int GetTypeId();
+        int TypeId { get; }
     }
 }

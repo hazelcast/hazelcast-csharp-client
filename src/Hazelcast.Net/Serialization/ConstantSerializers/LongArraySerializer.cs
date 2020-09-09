@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class LongArraySerializer : SingletonSerializerBase<long[]>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeLongArray;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeLongArray;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override long[] Read(IObjectDataInput input)

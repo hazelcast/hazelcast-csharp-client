@@ -25,6 +25,6 @@ namespace Hazelcast.Serialization
     {
         /// <summary>Returns version for this Portable class</summary>
         /// <returns>class version</returns>
-        int GetClassVersion();
+        int ClassVersion { get; }
     }
 }

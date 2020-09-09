@@ -21,14 +21,11 @@ namespace Hazelcast.Serialization
         public static int GetVersion(IPortable portable, int defaultVersion)
         {
             var version = defaultVersion;
-            if (portable is IVersionedPortable)
+            if (portable is IVersionedPortable versionedPortable)
             {
-                var versionedPortable = (IVersionedPortable) portable;
-                version = versionedPortable.GetClassVersion();
+                version = versionedPortable.ClassVersion;
                 if (version < 0)
-                {
                     throw new ArgumentException("Version cannot be negative!");
-                }
             }
             return version;
         }

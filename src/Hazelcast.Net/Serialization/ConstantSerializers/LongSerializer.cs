@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class LongSerializer : SingletonSerializerBase<long>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeLong;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeLong;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override long Read(IObjectDataInput input)

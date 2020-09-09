@@ -21,59 +21,39 @@ namespace Hazelcast.Serialization
     {
         private readonly int _classId;
         private readonly int _factoryId;
-        private readonly string _fieldName;
+        private readonly string _name;
         private readonly int _index;
         private readonly FieldType _type;
         private readonly int _version;
 
         internal FieldDefinition()
-        {
-        }
+        { }
 
-        internal FieldDefinition(int index, string fieldName, FieldType type, int version)
-            : this(index, fieldName, type, 0, 0, version)
-        {
-        }
+        internal FieldDefinition(int index, string name, FieldType type, int version)
+            : this(index, name, type, 0, 0, version)
+        { }
 
-        internal FieldDefinition(int index, string fieldName, FieldType type, int factoryId, int classId, int version)
+        internal FieldDefinition(int index, string name, FieldType type, int factoryId, int classId, int version)
         {
             _classId = classId;
             _type = type;
-            _fieldName = fieldName;
+            _name = name;
             _index = index;
             _factoryId = factoryId;
             _version = version;
         }
 
-        public virtual FieldType GetFieldType()
-        {
-            return _type;
-        }
+        public virtual FieldType FieldType => _type;
 
-        public virtual string GetName()
-        {
-            return _fieldName;
-        }
+        public virtual string Name => _name;
 
-        public virtual int GetIndex()
-        {
-            return _index;
-        }
+        public virtual int Index => _index;
 
-        public virtual int GetFactoryId()
-        {
-            return _factoryId;
-        }
+        public virtual int FactoryId => _factoryId;
 
-        public virtual int GetClassId()
-        {
-            return _classId;
-        }
+        public virtual int ClassId => _classId;
 
-        public virtual int GetVersion()
-        {
-            return _version;
-        }
+        public virtual int Version => _version;
 
         public override bool Equals(object obj)
         {
@@ -89,7 +69,7 @@ namespace Hazelcast.Serialization
             {
                 var hashCode = _classId;
                 hashCode = (hashCode*397) ^ _factoryId;
-                hashCode = (hashCode*397) ^ (_fieldName != null ? _fieldName.GetHashCode(StringComparison.Ordinal) : 0);
+                hashCode = (hashCode*397) ^ (_name != null ? _name.GetHashCode(StringComparison.Ordinal) : 0);
                 hashCode = (hashCode*397) ^ _index;
                 hashCode = (hashCode*397) ^ (int) _type;
                 hashCode = (hashCode*397) ^ _version;
@@ -101,7 +81,7 @@ namespace Hazelcast.Serialization
         {
             var sb = new StringBuilder("FieldDefinition{");
             sb.Append("index=").Append(_index);
-            sb.Append(", fieldName='").Append(_fieldName).Append('\'');
+            sb.Append(", fieldName='").Append(_name).Append('\'');
             sb.Append(", type=").Append(_type);
             sb.Append(", classId=").Append(_classId);
             sb.Append(", factoryId=").Append(_factoryId);
@@ -113,7 +93,7 @@ namespace Hazelcast.Serialization
         protected bool Equals(FieldDefinition other)
         {
             return _classId == other._classId && _factoryId == other._factoryId &&
-                   string.Equals(_fieldName, other._fieldName, StringComparison.Ordinal) &&
+                   string.Equals(_name, other._name, StringComparison.Ordinal) &&
                    _index == other._index && _type == other._type &&
                    _version == other._version;
         }

@@ -21,7 +21,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
     {
         private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
 
-        public override int GetTypeId() => SerializationConstants.JavaDefaultTypeConcurrentHashMap;
+        public override int TypeId => SerializationConstants.JavaDefaultTypeConcurrentHashMap;
 
         public override ConcurrentDictionary<object, object> Read(IObjectDataInput input)
         {

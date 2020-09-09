@@ -55,10 +55,7 @@ namespace Hazelcast.Serialization
                 RegisterHook(hook);
         }
 
-        public int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeDataSerializable;
-        }
+        public int TypeId => SerializationConstants.ConstantTypeDataSerializable;
 
         /// <exception cref="System.IO.IOException"></exception>
         public IIdentifiedDataSerializable Read(IObjectDataInput input)

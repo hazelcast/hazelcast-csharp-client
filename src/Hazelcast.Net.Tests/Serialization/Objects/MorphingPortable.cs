@@ -28,9 +28,6 @@ namespace Hazelcast.Tests.Serialization.Objects
         public MorphingPortable()
         { }
 
-        public virtual int GetClassVersion()
-        {
-            return 2;
-        }
+        public virtual int ClassVersion => 2;
     }
 }

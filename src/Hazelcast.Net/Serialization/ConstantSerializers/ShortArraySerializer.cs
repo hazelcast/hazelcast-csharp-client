@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class ShortArraySerializer : SingletonSerializerBase<short[]>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeShortArray;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeShortArray;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override short[] Read(IObjectDataInput input)

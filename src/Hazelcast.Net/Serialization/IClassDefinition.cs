@@ -28,10 +28,10 @@ namespace Hazelcast.Serialization
     public interface IClassDefinition
     {
         /// <returns>class id</returns>
-        int GetClassId();
+        int ClassId { get; }
 
         /// <returns>factory id</returns>
-        int GetFactoryId();
+        int FactoryId { get; }
 
         /// <param name="name">name of the field</param>
         /// <returns>field definition by given name or null</returns>
@@ -59,7 +59,7 @@ namespace Hazelcast.Serialization
         FieldType GetFieldType(string fieldName);
 
         /// <returns>version</returns>
-        int GetVersion();
+        int Version { get; }
 
         /// <param name="fieldName">field name</param>
         /// <returns>true if this class definition contains a field named by given name</returns>

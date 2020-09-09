@@ -16,10 +16,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class DoubleSerializer : SingletonSerializerBase<double>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeDouble;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeDouble;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override double Read(IObjectDataInput input)

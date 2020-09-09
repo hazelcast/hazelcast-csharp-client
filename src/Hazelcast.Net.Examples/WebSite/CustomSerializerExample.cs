@@ -26,10 +26,7 @@ namespace Hazelcast.Examples.WebSite
 
     internal class CustomSerializer : IStreamSerializer<CustomSerializableType>
     {
-        public int GetTypeId()
-        {
-            return 10;
-        }
+        public int TypeId => 10;
 
         public void Destroy()
         {

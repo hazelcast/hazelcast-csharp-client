@@ -156,12 +156,12 @@ namespace Hazelcast.Serialization
         {
             if (def == null) throw new ArgumentNullException(nameof(def));
             Check();
-            if (def.GetClassId() == 0)
+            if (def.ClassId == 0)
             {
                 throw new ArgumentException("Portable class id cannot be zero!");
             }
-            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.PortableArray, def.GetFactoryId(),
-                def.GetClassId(), def.GetVersion()));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.PortableArray, def.FactoryId,
+                def.ClassId, def.Version));
             return this;
         }
 
@@ -169,12 +169,12 @@ namespace Hazelcast.Serialization
         {
             if (def == null) throw new ArgumentNullException(nameof(def));
             Check();
-            if (def.GetClassId() == 0)
+            if (def.ClassId == 0)
             {
                 throw new ArgumentException("Portable class id cannot be zero!");
             }
-            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Portable, def.GetFactoryId(),
-                def.GetClassId(), def.GetVersion()));
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Portable, def.FactoryId,
+                def.ClassId, def.Version));
             return this;
         }
 
@@ -217,25 +217,16 @@ namespace Hazelcast.Serialization
             return cd;
         }
 
-        public int GetClassId()
-        {
-            return _classId;
-        }
+        public int ClassId => _classId;
 
-        public int GetFactoryId()
-        {
-            return _factoryId;
-        }
+        public int FactoryId => _factoryId;
 
-        public int GetVersion()
-        {
-            return _version;
-        }
+        public int Version => _version;
 
         internal ClassDefinitionBuilder AddField(FieldDefinition fieldDefinition)
         {
             Check();
-            if (_index != fieldDefinition.GetIndex())
+            if (_index != fieldDefinition.Index)
             {
                 throw new ArgumentException("Invalid field index");
             }

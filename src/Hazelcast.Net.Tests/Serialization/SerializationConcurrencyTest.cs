@@ -16,7 +16,6 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
-using Hazelcast.Serialization.ConstantSerializers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -25,77 +24,6 @@ namespace Hazelcast.Tests.Serialization
     public class SerializationConcurrencyTest
     {
         internal const short FactoryId = 1;
-
-        //[Test]
-        //public void WTF()
-        //{
-        //    static IData SsToData(string s)
-        //    {
-        //        var bytes = new byte[1024];
-        //        var position = 2 * BytesExtensions.SizeOfInt;
-        //        bytes.WriteInt(position, s.Length);
-        //        position += BytesExtensions.SizeOfInt;
-        //        foreach (var c in s) bytes.WriteUtf8Char(ref position, c);
-        //        var buffer = new byte[position];
-        //        Buffer.BlockCopy(bytes, 0, buffer, 0, position);
-        //        return new HeapData(buffer);
-
-        //        var output = new ByteArrayObjectDataOutput(0, null, Endianness.BigEndian);
-        //        output.Write(0);
-        //        output.Write(0);
-        //        new StringSerializer().Write(output, s);
-        //        return new HeapData(output.ToByteArray());
-        //    }
-
-        //    static string SsToObject(IData dk)
-        //    {
-        //        // THIS fixes it on net462 too so it's something with ByteArrayObjectDataInput ?!
-        //        /*
-        //        var bytes = dk.ToByteArray();
-        //        var position = 2 * BytesExtensions.SizeOfInt;
-        //        var length = bytes.ReadInt(position);
-        //        position += BytesExtensions.SizeOfInt;
-        //        var chars = new char[length];
-        //        for (var i = 0; i < length; i++)
-        //        {
-        //            chars[i] = bytes.ReadUtf8Char(ref position);
-        //        }
-        //        return new string(chars);
-        //        */
-
-        //        // THAT is enough
-        //        return new ByteArrayObjectDataInput(dk.ToByteArray(), HeapData.DataOffset, null, Endianness.BigEndian).ReadString();
-
-        //        return new StringSerializer().Read(new ByteArrayObjectDataInput(dk.ToByteArray(), HeapData.DataOffset, null, Endianness.BigEndian));
-        //    }
-
-        //    const int tasksCount = 2; // FIXME 2 is enough to get it crazy confused on net462?
-        //    var tasks = new Task[tasksCount];
-        //    for (var i = 0; i < tasksCount; i++)
-        //    {
-        //        var ti = i;
-        //        tasks[i] = Task.Run(() =>
-        //        {
-        //            for (var j = 0; j < 10000; j++)
-        //            {
-        //                var key = $"key-{ti}-{j}-{Rnd()}";
-        //                Console.WriteLine($"TEST {ti} {j} {key}");
-
-        //                var data = SsToData(key);
-        //                var toObject = SsToObject(data);
-
-        //                if (key != toObject)
-        //                {
-        //                    Console.WriteLine("!!! " + key + " != " + toObject + " >> " + SsToObject(data));
-        //                }
-
-        //                Assert.AreEqual(key, toObject);
-        //            }
-        //        });
-        //    }
-
-        //    Task.WaitAll(tasks, TimeSpan.FromSeconds(30));
-        //}
 
         [Test]
         public virtual void Test()

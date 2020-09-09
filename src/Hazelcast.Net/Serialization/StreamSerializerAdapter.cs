@@ -37,20 +37,14 @@ namespace Hazelcast.Serialization
             return _serializer.Read(input);
         }
 
-        public int GetTypeId()
-        {
-            return _serializer.GetTypeId();
-        }
+        public int TypeId => _serializer.TypeId;
 
         public void Destroy()
         {
             _serializer.Destroy();
         }
 
-        public ISerializer GetImpl()
-        {
-            return _serializer;
-        }
+        public ISerializer Serializer => _serializer;
 
         public override string ToString()
         {

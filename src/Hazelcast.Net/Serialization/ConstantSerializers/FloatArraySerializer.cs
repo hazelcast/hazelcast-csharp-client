@@ -18,10 +18,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal sealed class FloatArraySerializer : SingletonSerializerBase<float[]>
     {
-        public override int GetTypeId()
-        {
-            return SerializationConstants.ConstantTypeFloatArray;
-        }
+        public override int TypeId => SerializationConstants.ConstantTypeFloatArray;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override float[] Read(IObjectDataInput input)

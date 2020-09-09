@@ -19,7 +19,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal class GuidSerializer : SingletonSerializerBase<Guid>
     {
-        public override int GetTypeId() => SerializationConstants.ConstantTypeUuid;
+        public override int TypeId => SerializationConstants.ConstantTypeUuid;
 
         /// <exception cref="System.IO.IOException"></exception>
         public override Guid Read(IObjectDataInput input)

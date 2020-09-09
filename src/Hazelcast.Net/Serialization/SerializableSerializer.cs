@@ -22,8 +22,7 @@ namespace Hazelcast.Serialization
     /// </summary>
     internal class SerializableSerializer : SingletonSerializerBase<object>
     {
-        public override int GetTypeId()
-            => SerializationConstants.CsharpClrSerializationType;
+        public override int TypeId => SerializationConstants.CsharpClrSerializationType;
 
         public override object Read(IObjectDataInput input)
         {

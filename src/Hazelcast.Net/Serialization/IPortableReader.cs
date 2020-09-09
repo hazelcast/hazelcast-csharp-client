@@ -47,7 +47,7 @@ namespace Hazelcast.Serialization
         IObjectDataInput GetRawDataInput();
 
         /// <returns>version global version of portable classes</returns>
-        int GetVersion();
+        int Version { get; }
 
         /// <param name="fieldName">name of the field</param>
         /// <returns>true if field exist in this class.</returns>

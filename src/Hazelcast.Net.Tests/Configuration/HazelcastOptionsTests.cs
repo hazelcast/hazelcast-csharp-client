@@ -332,10 +332,7 @@ namespace Hazelcast.Tests.Configuration
                 throw new NotSupportedException();
             }
 
-            public int GetTypeId()
-            {
-                throw new NotSupportedException();
-            }
+            public int TypeId => throw new NotSupportedException();
         }
 
         public class TestSerializer : ISerializer
@@ -345,10 +342,7 @@ namespace Hazelcast.Tests.Configuration
                 throw new NotSupportedException();
             }
 
-            public int GetTypeId()
-            {
-                throw new NotSupportedException();
-            }
+            public int TypeId => throw new NotSupportedException();
         }
     }
 }

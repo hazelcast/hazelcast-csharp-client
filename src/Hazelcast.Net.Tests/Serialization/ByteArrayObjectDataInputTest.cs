@@ -380,11 +380,8 @@ namespace Hazelcast.Tests.Serialization
             var read = _input.ReadBytes(InitData, 0, 10);
             Assert.AreEqual(10, read);
 
-            // FIXME meh - that is supposed to return -1, not throw?
             read = _input.ReadBytes(InitData, 0, 1);
 
-            //_input.Position = 100;
-            //var read = _input.ReadBytes(InitData, 0, 1);
             Assert.AreEqual(-1, read);
         }
 

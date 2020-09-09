@@ -18,7 +18,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
 {
     internal class HashSetStreamSerializer : CollectionStreamSerializerBase<HashSet<object>>
     {
-        public override int GetTypeId() => SerializationConstants.JavaDefaultTypeHashSet;
+        public override int TypeId => SerializationConstants.JavaDefaultTypeHashSet;
 
         public override HashSet<object> Read(IObjectDataInput input)
         {
