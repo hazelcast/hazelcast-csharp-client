@@ -24,7 +24,7 @@ namespace Hazelcast.Serialization
         private byte[] _data;
         private int _length;
         private int _position;
-        private readonly int _initialLength;
+        private readonly int _initialLength; // TODO: how come this is never update even when re-used?
 
         internal ByteArrayObjectDataOutput(int size, ISerializationService service, Endianness endianness)
             : base(service, endianness)
@@ -45,7 +45,8 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="position">The position.</param>
         /// <param name="count">The number of bytes.</param>
-        private void Validate(int position, int count)
+        // internal for tests only
+        internal void Validate(int position, int count)
         {
             if (position < 0)
                 throw new ArgumentOutOfRangeException(nameof(position));
@@ -55,7 +56,7 @@ namespace Hazelcast.Serialization
             if (_length - position >= count)
                 return;
 
-            if (_data == null)
+            if (_data == null || _data.Length == 0)
             {
                 _length = count > _initialLength / 2 ? count * 2 : _initialLength;
                 _data = new byte[_length];
@@ -80,8 +81,8 @@ namespace Hazelcast.Serialization
         /// <inheritdoc />
         public void Write(int position, byte value)
         {
-            Validate(_position, value);
-            _data.WriteByte(_position, value);
+            Validate(position, BytesExtensions.SizeOfByte);
+            _data.WriteByte(position, value);
         }
 
         /// <inheritdoc />
@@ -182,6 +183,7 @@ namespace Hazelcast.Serialization
             Write(length, endianness);
             if (values == null || length <= 0) return;
 
+            Validate(_position, length * BytesExtensions.SizeOfLong);
             foreach (var value in values)
             {
                 _data.WriteLong(_position, value, endianness);
@@ -202,7 +204,7 @@ namespace Hazelcast.Serialization
         public void Write(int position, float value, Endianness endianness = Endianness.Unspecified)
         {
             Validate(position, BytesExtensions.SizeOfFloat);
-            _data.WriteFloat(position, value, endianness);
+            _data.WriteFloat(position, value, endianness.Resolve(DefaultEndianness));
         }
 
         /// <inheritdoc />
@@ -216,7 +218,7 @@ namespace Hazelcast.Serialization
         public void Write(int position, double value, Endianness endianness = Endianness.Unspecified)
         {
             Validate(position, BytesExtensions.SizeOfDouble);
-            _data.WriteDouble(position, value, endianness);
+            _data.WriteDouble(position, value, endianness.Resolve(DefaultEndianness));
         }
 
         /// <inheritdoc />
@@ -249,7 +251,7 @@ namespace Hazelcast.Serialization
             foreach (var value in values)
             {
                 _data.WriteFloat(_position, value, endianness);
-                _position += BytesExtensions.SizeOfDouble;
+                _position += BytesExtensions.SizeOfFloat;
             }
         }
 
@@ -298,7 +300,7 @@ namespace Hazelcast.Serialization
         public void Write(int position, char value, Endianness endianness = Endianness.Unspecified)
         {
             Validate(position, BytesExtensions.SizeOfChar);
-            _data.WriteChar(position, value, endianness);
+            _data.WriteChar(position, value, endianness.Resolve(DefaultEndianness));
         }
 
         /// <inheritdoc />
@@ -321,10 +323,16 @@ namespace Hazelcast.Serialization
 
 
         /// <inheritdoc />
-        public void WriteAsChars(string value, Endianness endianness = Endianness.Unspecified)
+        public void WriteAsCharArray(string value, Endianness endianness = Endianness.Unspecified)
         {
+            endianness = endianness.Resolve(DefaultEndianness);
+
             var length = value.Length;
-            Validate(_position, length * BytesExtensions.SizeOfChar);
+            Validate(_position, BytesExtensions.SizeOfInt + length * BytesExtensions.SizeOfChar);
+            
+            _data.WriteInt(_position, length, endianness);
+
+            _position += BytesExtensions.SizeOfInt;
             for (var i = 0; i < length; i++)
             {
                 _data.WriteChar(_position, value[i], endianness);
@@ -336,7 +344,9 @@ namespace Hazelcast.Serialization
         public void WriteAsBytes(string s)
         {
             var length = s.Length;
+            
             Validate(_position, length * BytesExtensions.SizeOfByte);
+            
             for (var i = 0; i < length; i++)
             {
                 var b = unchecked((byte) s[i]); // TODO: losing data here?!

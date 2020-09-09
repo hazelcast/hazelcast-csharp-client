@@ -135,7 +135,6 @@ namespace Hazelcast.NearCaching
         /// </summary>
         public void NotifyStaleRead()
         {
-            Console.WriteLine("Notify Stale Read");
             Interlocked.Increment(ref _staleReads);
         }
     }

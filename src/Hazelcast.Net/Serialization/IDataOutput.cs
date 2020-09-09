@@ -151,7 +151,7 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="endianness">The endianness.</param>
-        void WriteAsChars(string value, Endianness endianness = Endianness.Unspecified);
+        void WriteAsCharArray(string value, Endianness endianness = Endianness.Unspecified);
 
         /// <summary>
         /// Writes a <see cref="string"/> value as bytes, assuming each char is 1-byte.

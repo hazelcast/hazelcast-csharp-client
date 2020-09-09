@@ -117,7 +117,7 @@ namespace Hazelcast.Serialization
             // nothing
         }
 
-        public void WriteAsChars(string value, Endianness endianness = Endianness.Unspecified)
+        public void WriteAsCharArray(string value, Endianness endianness = Endianness.Unspecified)
         {
             // nothing
         }

@@ -200,8 +200,12 @@ namespace Hazelcast.Core
             if (position < 0 || bytes.Length < position + SizeOfFloat)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
-            var unsigned = (uint) value;
-
+#if NETSTANDARD2_0
+            var unsigned = (uint) BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
+#else
+            // this is essentially an unsafe *((int*)&value)
+            var unsigned = (uint) BitConverter.SingleToInt32Bits(value);
+#endif
             unchecked
             {
                 if (endianness.Resolve().IsBigEndian())
@@ -236,7 +240,8 @@ namespace Hazelcast.Core
             if (position < 0 || bytes.Length < position + SizeOfDouble)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
-            var unsigned = (ulong)value;
+            // this is essentially an unsafe *((long*)&value)
+            var unsigned = (ulong) BitConverter.DoubleToInt64Bits(value);
 
             unchecked
             {

@@ -42,12 +42,12 @@ namespace Hazelcast.Serialization
             {
                 throw new ArgumentException("ObjectDataOutput must be instance of BufferObjectDataOutput!");
             }
-            if (p.GetClassId() == 0)
+            if (p.ClassId == 0)
             {
                 throw new ArgumentException("Portable class id cannot be zero!");
             }
-            output.Write(p.GetFactoryId());
-            output.Write(p.GetClassId());
+            output.Write(p.FactoryId);
+            output.Write(p.ClassId);
             WriteInternal((IBufferObjectDataOutput) output, p);
         }
 

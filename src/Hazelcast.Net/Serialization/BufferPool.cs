@@ -25,14 +25,12 @@ namespace Hazelcast.Serialization
 
         public BufferPool(ISerializationService serializationService)
         {
-            var serializationService1 = serializationService;
-
             _inputPool = new ObjectPool<IBufferObjectDataInput>(MaxPooledItems,
-                () => serializationService1.CreateObjectDataInput((byte[])null),
+                () => serializationService.CreateObjectDataInput((byte[])null),
                 item => item.Clear());
 
             _outputPool = new ObjectPool<IBufferObjectDataOutput>(MaxPooledItems,
-                () => serializationService1.CreateObjectDataOutput(),
+                () => serializationService.CreateObjectDataOutput(),
                 item => item.Clear());
         }
 

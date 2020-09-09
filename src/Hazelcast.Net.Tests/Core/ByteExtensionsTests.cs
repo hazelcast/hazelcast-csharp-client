@@ -15,6 +15,7 @@
 using System;
 using System.Buffers;
 using Hazelcast.Core;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Core
@@ -460,35 +461,35 @@ namespace Hazelcast.Tests.Core
             var bytes = new byte[8];
 
             var pos = 0;
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteUtf8Char(ref pos, Utf8Char1Byte));
+            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteUtf8Char(ref pos, Utf8Char.OneByte));
             pos = -1;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char1Byte));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.OneByte));
             pos = 8;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char1Byte));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.OneByte));
             pos = 7;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char2Bytes));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.TwoBytes));
             pos = 6;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char3Bytes));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.ThreeBytes));
 
             pos = 2;
-            bytes.WriteUtf8Char(ref pos, Utf8Char1Byte);
+            bytes.WriteUtf8Char(ref pos, Utf8Char.OneByte);
             Assert.That(pos, Is.EqualTo(3));
             AssertBytes(bytes, 0, 0, 0x78, 0, 0, 0, 0, 0);
 
             pos = 2;
-            bytes.WriteUtf8Char(ref pos, Utf8Char2Bytes);
+            bytes.WriteUtf8Char(ref pos, Utf8Char.TwoBytes);
             Assert.That(pos, Is.EqualTo(4));
             AssertBytes(bytes, 0, 0, 0xc3, 0xa3, 0, 0, 0, 0);
 
             pos = 2;
-            bytes.WriteUtf8Char(ref pos, Utf8Char3Bytes);
+            bytes.WriteUtf8Char(ref pos, Utf8Char.ThreeBytes);
             Assert.That(pos, Is.EqualTo(5));
             AssertBytes(bytes, 0, 0, 0xe0, 0xa3, 0x9f, 0, 0, 0);
 
             // cannot write surrogate pairs
             // TODO: support writing surrogate pairs
             pos = 2;
-            Assert.Throws<InvalidOperationException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char4BytesH));
+            Assert.Throws<InvalidOperationException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.FourBytesH));
         }
 
         [Test]
@@ -508,17 +509,17 @@ namespace Hazelcast.Tests.Core
 
             bytes = new byte[] { 0, 0, 0x78, 0, 0, 0, 0, 0 };
             pos = 2;
-            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char1Byte));
+            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char.OneByte));
             Assert.That(pos, Is.EqualTo(3));
 
             bytes = new byte[] { 0, 0, 0xc3, 0xe3, 0, 0, 0, 0 };
             pos = 2;
-            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char2Bytes));
+            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char.TwoBytes));
             Assert.That(pos, Is.EqualTo(4));
 
             bytes = new byte[] { 0, 0, 0xe0, 0xa3, 0x9f, 0, 0, 0 };
             pos = 2;
-            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char3Bytes));
+            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char.ThreeBytes));
             Assert.That(pos, Is.EqualTo(5));
 
             // cannot read surrogate pairs
@@ -617,19 +618,6 @@ namespace Hazelcast.Tests.Core
 
             Assert.Fail($"Expected ({string.Join(" ", values)}) but got ({string.Join(" ", bytes)}).");
         }
-
-        // http://www.i18nguy.com/unicode/supplementary-test.html
-        //
-        // '\u0078' ('x') LATIN SMALL LETTER X (U+0078) 78
-        private const char Utf8Char1Byte = '\u0078';
-        // '\u00E3' ('ã') LATIN SMALL LETTER A WITH TILDE (U+00E3) c3a3
-        private const char Utf8Char2Bytes = '\u00e3';
-        // '\u08DF' ARABIC SMALL HIGH WORD WAQFA (U+08DF) e0a39f
-        private const char Utf8Char3Bytes = '\u08df';
-        // there are no '4 bytes' chars in C#, surrogate pairs are 2 chars
-        // '\u2070e' CJK UNIFIED IDEOGRAPH-2070E f0a09c8e
-        private const char Utf8Char4BytesH = '\uf0a0';
-        private const char Utf8Char4BytesL = '\u8c8e';
 
         private enum SomeEnum
         {

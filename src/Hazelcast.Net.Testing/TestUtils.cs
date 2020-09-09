@@ -48,7 +48,7 @@ namespace Hazelcast.Testing
 
         public static char RandomChar()
         {
-            return RandomString()[0];
+            return (char) RandomProvider.Random.Next(0x1000); // but avoid surrogate pairs!
         }
 
         public static double RandomDouble()

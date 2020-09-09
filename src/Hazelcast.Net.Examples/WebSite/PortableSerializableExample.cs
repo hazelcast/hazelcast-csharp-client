@@ -23,21 +23,15 @@ namespace Hazelcast.Examples.WebSite
     {
         public class Customer : IPortable
         {
-            public const int ClassId = 1;
+            public const int TheClassId = 1;
 
             public string Name { get; set; }
             public int Id { get; set; }
             public DateTime LastOrder { get; set; }
 
-            public int GetFactoryId()
-            {
-                return SamplePortableFactory.FactoryId;
-            }
+            public int FactoryId => SamplePortableFactory.FactoryId;
 
-            public int GetClassId()
-            {
-                return ClassId;
-            }
+            public int ClassId => TheClassId;
 
             public void WritePortable(IPortableWriter writer)
             {
@@ -60,7 +54,7 @@ namespace Hazelcast.Examples.WebSite
 
             public IPortable Create(int classId)
             {
-                if (classId == Customer.ClassId)  return new Customer();
+                if (classId == Customer.TheClassId)  return new Customer();
                 return null;
             }
         }

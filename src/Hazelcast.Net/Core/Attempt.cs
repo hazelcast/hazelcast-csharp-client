@@ -79,5 +79,26 @@ namespace Hazelcast.Core
         /// <returns>A failed attempt.</returns>
         public static Attempt<TResult> Fail<TResult>()
             => Attempt<TResult>.Failed;
+
+        /// <summary>
+        /// Creates an attempt based on a condition.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="condition">Whether the attempt is successful.</param>
+        /// <param name="value">The value of the result.</param>
+        /// <returns>A successful attempt, if <paramref name="condition"/> is <c>true</c>; otherwise a failed attempt.</returns>
+        public static Attempt<TResult> If<TResult>(bool condition, TResult value)
+            => condition ? new Attempt<TResult>(true, value) : Attempt<TResult>.Failed;
+
+        /// <summary>
+        /// Creates an attempt based on a condition.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <param name="condition">Whether the attempt is successful.</param>
+        /// <param name="value">The value of the result when the attempt is successful.</param>
+        /// <param name="failedValue">The value of the result when the attempt failed.</param>
+        /// <returns>A successful attempt, if <paramref name="condition"/> is <c>true</c>; otherwise a failed attempt.</returns>
+        public static Attempt<TResult> If<TResult>(bool condition, TResult value, TResult failedValue)
+            => new Attempt<TResult>(condition, condition ? value : failedValue);
     }
 }

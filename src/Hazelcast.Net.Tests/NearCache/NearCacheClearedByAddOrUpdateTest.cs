@@ -159,10 +159,8 @@ namespace Hazelcast.Tests.NearCache
             using var started = new SemaphoreSlim(0);
             tasks.Add(Task.Run(() => AddOrUpdateTask(dictionary, started, 0)));
 
-            Console.WriteLine("wait " + Clock.Milliseconds);
             // wait for writer thread to start before starting getter threads
             var hasStarted = await started.WaitAsync(20_000);
-            Console.WriteLine("bam " + Clock.Milliseconds);
             if (!hasStarted) Assert.Fail("Fail to start AddOrUpdate task.");
 
             // start reader tasks
@@ -188,12 +186,9 @@ namespace Hazelcast.Tests.NearCache
 
         private async Task AddOrUpdateTask(IHDictionary<string, string> dictionary, SemaphoreSlim started, int id)
         {
-            Console.WriteLine("let us start " + Clock.Milliseconds);
             var i = 0;
             while (!_stop)
             {
-                if (i== 0) Console.WriteLine("starting!");
-
                 i++;
                 // put new value and update last state
                 // note: the value in the map/Near Cache is *always* larger or equal to valuePut
@@ -201,7 +196,7 @@ namespace Hazelcast.Tests.NearCache
                 await dictionary.AddOrUpdateAsync(Key, i.ToString()).CAF();
                 _valuePut = i;
 
-                // FIXME move here - ensure we have a value
+                // ensure we have a value
                 if (i == 1) started.Release();
 
                 // check if we see our last update
@@ -231,7 +226,6 @@ namespace Hazelcast.Tests.NearCache
                 _failed = true;
                 _stop = true;
             }
-            Console.WriteLine("over and out " + Clock.Milliseconds);
             Logger.LogInformation($"AddOrUpdate task {id} performed {i} operations.");
         }
 

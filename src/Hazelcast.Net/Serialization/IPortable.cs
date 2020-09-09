@@ -42,11 +42,11 @@ namespace Hazelcast.Serialization
         /// <remarks>Returns class identifier for this portable class. Class id should be unique per PortableFactory.
         /// 	</remarks>
         /// <returns>class id</returns>
-        int GetClassId();
+        int ClassId { get; }
 
         /// <summary>Returns PortableFactory id for this portable class</summary>
         /// <returns>factory id</returns>
-        int GetFactoryId();
+        int FactoryId { get; }
 
         /// <summary>Read portable fields using PortableReader</summary>
         /// <param name="reader">PortableReader</param>

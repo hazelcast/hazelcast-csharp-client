@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Threading;
 using Hazelcast.Core;
@@ -77,35 +78,26 @@ namespace Hazelcast.Serialization
             _bufferPoolThreadLocal = new BufferPoolThreadLocal(this);
             _portableContext = new PortableContext(this, version);
 
-            // create data serializer
+            // create data serializer (will be added as constant)
             var dataSerializer = new DataSerializer(hooks, dataSerializableFactories, loggerFactory);
             _dataSerializerAdapter = CreateSerializerAdapter<IIdentifiedDataSerializable>(dataSerializer);
 
-            // TODO: why add it?
-            AddConstantSerializer<IIdentifiedDataSerializable>(_dataSerializerAdapter);
-
-            // create portable serializer
+            // create portable serializer (will be added as constant)
             _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
             _portableSerializerAdapter = CreateSerializerAdapter<IPortable>(_portableSerializer);
 
-            // TODO: why add it?
-            AddConstantSerializer<IPortable>(_portableSerializerAdapter);
-
-            // create the serializer of null objects
+            // create the serializer of null objects (will be added as constant)
             _nullSerializerAdapter = CreateSerializerAdapter<object>(new NullSerializer());
 
-            // TODO: why add it?
-            AddConstantSerializer(null, _nullSerializerAdapter);
-
-            // create the serializable adapter
+            // create the serializable adapter (will be added as constant)
             _serializableSerializerAdapter = CreateSerializerAdapter<object>(new SerializableSerializer());
-
-            // TODO: why?
-            _idMap.TryAdd(_serializableSerializerAdapter.GetTypeId(), _serializableSerializerAdapter);
 
             // add defined serializers
             foreach (var definition in definitions)
                 definition.AddSerializers(this);
+
+            // add constant serializers
+            AddConstantSerializers();
 
             // add class definitions
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
@@ -119,6 +111,28 @@ namespace Hazelcast.Serialization
 
         public virtual bool IsActive() => _isActive;
 
+        #region DataOutput / DataInput
+
+        /*
+        private IBufferObjectDataOutput GetDataOutput() => _bufferPoolThreadLocal.Get().TakeOutputBuffer();
+
+        private void ReturnDataOutput(IBufferObjectDataOutput output) => _bufferPoolThreadLocal.Get().ReturnOutputBuffer(output);
+
+        private IBufferObjectDataInput GetDataInput(IData data) => _bufferPoolThreadLocal.Get().TakeInputBuffer(data);
+
+        private void ReturnDataInput(IBufferObjectDataInput input) => _bufferPoolThreadLocal.Get().ReturnInputBuffer(input);
+        */
+
+        private IBufferObjectDataOutput GetDataOutput() => new ByteArrayObjectDataOutput(0, this, Endianness);
+
+        private void ReturnDataOutput(IBufferObjectDataOutput output) { }
+
+        private IBufferObjectDataInput GetDataInput(IData data) => new ByteArrayObjectDataInput(data.ToByteArray(), HeapData.DataOffset, this, Endianness);
+
+        private void ReturnDataInput(IBufferObjectDataInput input) { }
+
+        #endregion
+
         #region ToData, WriteObject, ToObject, ReadObject
 
         public IData ToData(object o)
@@ -129,8 +143,7 @@ namespace Hazelcast.Serialization
             if (o is null) return null;
             if (o is IData data) return data;
 
-            var pool = _bufferPoolThreadLocal.Get();
-            var output = pool.TakeOutputBuffer();
+            var output = GetDataOutput();
 
             try
             {
@@ -147,7 +160,7 @@ namespace Hazelcast.Serialization
             }
             finally
             {
-                pool.ReturnOutputBuffer(output);
+                ReturnDataOutput(output);
             }
         }
 
@@ -167,8 +180,7 @@ namespace Hazelcast.Serialization
             if (!(o is IData data))
                 return o;
 
-            var pool = _bufferPoolThreadLocal.Get();
-            var input = pool.TakeInputBuffer(data);
+            var input = GetDataInput(data); // FIXME why is this disposable in the first place?
 
             try
             {
@@ -183,7 +195,7 @@ namespace Hazelcast.Serialization
             }
             finally
             {
-                pool.ReturnInputBuffer(input);
+                ReturnDataInput(input);
             }
         }
 
@@ -216,7 +228,13 @@ namespace Hazelcast.Serialization
                     ThrowMissingSerializer(typeId);
 
                 var o = serializer.Read(input);
-                if (o is null) return default;
+                if (o is null)
+                {
+                    var typeOfT = typeof (T);
+                    if (typeOfT.IsValueType && !typeOfT.IsNullableType())
+                        throw new SerializationException($"Deserialized null value cannot be of value type {typeof (T)}.");
+                    return default;
+                }
                 if (o is T ot) return ot;
                 throw new InvalidCastException($"Deserialized object is of type {o.GetType()}, not {typeof (T)}.");
             }
@@ -263,6 +281,56 @@ namespace Hazelcast.Serialization
         #endregion
 
         #region Register constant serializers (cannot be overriden)
+
+        private void AddConstantSerializers()
+        {
+            AddConstantSerializer(null, _nullSerializerAdapter); // TODO: why add it?
+            AddConstantSerializer<IIdentifiedDataSerializable>(_dataSerializerAdapter); // TODO: why add it?
+            AddConstantSerializer<IPortable>(_portableSerializerAdapter); // TODO: why add it?
+
+            AddConstantSerializer<byte>(new ConstantSerializers.ByteSerializer());
+            AddConstantSerializer<bool>(new ConstantSerializers.BooleanSerializer());
+            AddConstantSerializer<char>(new ConstantSerializers.CharSerializer());
+            AddConstantSerializer<short>(new ConstantSerializers.ShortSerializer());
+            AddConstantSerializer<int>(new ConstantSerializers.IntegerSerializer());
+            AddConstantSerializer<long>(new ConstantSerializers.LongSerializer());
+            AddConstantSerializer<float>(new ConstantSerializers.FloatSerializer());
+            AddConstantSerializer<double>(new ConstantSerializers.DoubleSerializer());
+            AddConstantSerializer<string>(new ConstantSerializers.StringSerializer());
+
+            AddConstantSerializer<byte[]>(new ConstantSerializers.ByteArraySerializer());
+            AddConstantSerializer<bool[]>(new ConstantSerializers.BooleanArraySerializer());
+            AddConstantSerializer<char[]>(new ConstantSerializers.CharArraySerializer());
+            AddConstantSerializer<short[]>(new ConstantSerializers.ShortArraySerializer());
+            AddConstantSerializer<int[]>(new ConstantSerializers.IntegerArraySerializer());
+            AddConstantSerializer<long[]>(new ConstantSerializers.LongArraySerializer());
+            AddConstantSerializer<float[]>(new ConstantSerializers.FloatArraySerializer());
+            AddConstantSerializer<double[]>(new ConstantSerializers.DoubleArraySerializer());
+            AddConstantSerializer<string[]>(new ConstantSerializers.StringArraySerializer());
+
+            AddConstantSerializer<Guid>(new ConstantSerializers.GuidSerializer());
+            AddConstantSerializer<KeyValuePair<object, object>>(new ConstantSerializers.KeyValuePairSerializer());
+
+            // TODO: below are "default" serializers and what is the difference with "constant"?
+
+            AddConstantSerializer<JavaClass>(new DefaultSerializers.JavaClassSerializer());
+            AddConstantSerializer<DateTime>(new DefaultSerializers.DateSerializer());
+            AddConstantSerializer<BigInteger>(new DefaultSerializers.BigIntegerSerializer());
+
+            AddConstantSerializer(typeof(object[]), new DefaultSerializers.ArrayStreamSerializer());
+
+            //TODO map server side collection types.
+            AddConstantSerializer<List<object>>(new DefaultSerializers.ListSerializer<object>());
+            AddConstantSerializer<LinkedList<object>>(new DefaultSerializers.LinkedListSerializer<object>());
+            AddConstantSerializer<Dictionary<object, object>>(new DefaultSerializers.HashMapStreamSerializer());
+            AddConstantSerializer<ConcurrentDictionary<object, object>>(new DefaultSerializers.ConcurrentHashMapStreamSerializer());
+            AddConstantSerializer<HashSet<object>>(new DefaultSerializers.HashSetStreamSerializer());
+
+            AddConstantSerializer<HazelcastJsonValue>(new DefaultSerializers.HazelcastJsonValueSerializer());
+
+            // TODO: why?
+            _idMap.TryAdd(_serializableSerializerAdapter.GetTypeId(), _serializableSerializerAdapter);
+        }
 
         private void AddConstantSerializer(Type type, ISerializerAdapter adapter)
         {
@@ -381,6 +449,9 @@ namespace Hazelcast.Serialization
         #endregion
 
         #region Get serializers
+
+        // internal for tests only
+        internal PortableSerializer PortableSerializer => _portableSerializer;
 
         private ISerializerAdapter SerializerFor(object obj)
         {
@@ -520,7 +591,7 @@ namespace Hazelcast.Serialization
             return _portableSerializer.CreateReader(input);
         }
 
-        public virtual void Destroy()
+        public virtual void Destroy() // FIXME make this disposable
         {
             _isActive = false;
             foreach (var serializer in _typeMap.Values)

@@ -59,7 +59,6 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapGetCodec.DecodeResponse(responseMessage).Response;
-            Console.WriteLine("Got: " + (response == null ? "<null>" : response.ToString()));
             return response;
         }
 

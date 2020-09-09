@@ -23,7 +23,7 @@ namespace Hazelcast.Examples.Models
 
         public IPortable Create(int classId)
         {
-            if (classId == Customer.ClassId)
+            if (classId == Customer.TheClassId)
             {
                 return new Customer();
             }

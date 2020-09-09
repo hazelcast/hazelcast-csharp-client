@@ -88,7 +88,7 @@ namespace Hazelcast.Serialization
             catch (SerializationException) { throw; }
             catch (Exception e)
             {
-                throw new SerializationException($"Failed to read DataSerializable with factoryId: {factoryId}, id: {id} ({e.GetType()}: {e.Message}).");
+                throw new SerializationException($"Failed to read DataSerializable with factoryId: {factoryId}, id: {id} ({e.GetType()}: {e.Message}).", e);
             }
         }
 

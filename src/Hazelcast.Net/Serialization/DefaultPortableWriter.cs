@@ -246,17 +246,17 @@ namespace Hazelcast.Serialization
 
         private static void CheckPortableAttributes(IFieldDefinition fd, IPortable portable)
         {
-            if (fd.GetFactoryId() != portable.GetFactoryId())
+            if (fd.GetFactoryId() != portable.FactoryId)
             {
                 throw new SerializationException(
                     "Wrong Portable type! Generic portable types are not supported! " + " Expected factory-id: " +
-                    fd.GetFactoryId() + ", Actual factory-id: " + portable.GetFactoryId());
+                    fd.GetFactoryId() + ", Actual factory-id: " + portable.FactoryId);
             }
-            if (fd.GetClassId() != portable.GetClassId())
+            if (fd.GetClassId() != portable.ClassId)
             {
                 throw new SerializationException(
                     "Wrong Portable type! Generic portable types are not supported! " + "Expected class-id: " +
-                    fd.GetClassId() + ", Actual class-id: " + portable.GetClassId());
+                    fd.GetClassId() + ", Actual class-id: " + portable.ClassId);
             }
         }
 

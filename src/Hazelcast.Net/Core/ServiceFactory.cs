@@ -45,7 +45,7 @@ namespace Hazelcast.Core
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static T CreateInstance<T>(IDictionary<string, string> stringArgs, params object[] paramArgs)
+        public static T CreateInstance<T>(IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
 
@@ -73,7 +73,7 @@ namespace Hazelcast.Core
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static T CreateInstance<T>(Type type, IDictionary<string, string> stringArgs, params object[] paramArgs)
+        public static T CreateInstance<T>(Type type, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
@@ -102,7 +102,7 @@ namespace Hazelcast.Core
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static T CreateInstance<T>(string typeName, IDictionary<string, string> stringArgs, params object[] paramArgs)
+        public static T CreateInstance<T>(string typeName, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
@@ -130,7 +130,7 @@ namespace Hazelcast.Core
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static object CreateInstance(Type type, IDictionary<string, string> stringArgs, params object[] paramArgs)
+        public static object CreateInstance(Type type, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
@@ -158,7 +158,7 @@ namespace Hazelcast.Core
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static object CreateInstance(string typeName, IDictionary<string, string> stringArgs, params object[] paramArgs)
+        public static object CreateInstance(string typeName, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));

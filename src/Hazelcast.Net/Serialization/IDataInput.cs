@@ -30,6 +30,12 @@ namespace Hazelcast.Serialization
         byte ReadByte();
 
         /// <summary>
+        /// Tries to read a <see cref="byte"/> value.
+        /// </summary>
+        /// <returns>An attempt at reading a byte value, which may fail if the end of the buffer has been reached.</returns>
+        Attempt<byte> TryReadByte();
+
+        /// <summary>
         /// Reads an array of <see cref="byte"/> items.
         /// </summary>
         /// <param name="endianness">The endianness.</param>
@@ -179,7 +185,7 @@ namespace Hazelcast.Serialization
         /// Reads bytes.
         /// </summary>
         /// <param name="bytes">The destination array of bytes.</param>
-        void ReadBytes(byte[] bytes);
+        int ReadBytes(byte[] bytes);
 
         /// <summary>
         /// Reads bytes.
@@ -187,7 +193,7 @@ namespace Hazelcast.Serialization
         /// <param name="bytes">The destination array of bytes.</param>
         /// <param name="offset">The destination offset.</param>
         /// <param name="count">The number of bytes to read.</param>
-        void ReadBytes(byte[] bytes, int offset, int count);
+        int ReadBytes(byte[] bytes, int offset, int count);
 
         /// <summary>
         /// Skips bytes.

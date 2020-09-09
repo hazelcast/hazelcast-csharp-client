@@ -135,10 +135,6 @@ namespace Hazelcast.Tests.NearCache
                 // 2. get all values from server directly
                 var memberValues = await GetAllValueFromMemberAsync(entryCount, _name);
 
-                Console.WriteLine($"Statistics: \n\tHits:   {cache.Statistics.Hits}\n\tMisses: {cache.Statistics.Misses}\n\tStale:  {cache.Statistics.StaleReads}\n\tEvict:  {cache.Statistics.Evictions}");
-                Console.WriteLine("C: " + string.Join(",", cacheValues));
-                Console.WriteLine("S: " + string.Join(",", memberValues));
-
                 // after a while, all values in the cache will be same as server
                 for (var i = 0; i < entryCount; i++)
                     Assert.AreEqual(memberValues[i], cacheValues[i]);

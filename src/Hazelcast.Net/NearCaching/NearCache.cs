@@ -111,10 +111,6 @@ namespace Hazelcast.NearCaching
             // otherwise, check meta data
             var metadata = RepairingHandler.GetMetadata(entry.PartitionId);
 
-            // FIXME how can this report 'false' but still we count stale reads?
-            var stale = entry.Guid != metadata.Guid || entry.Sequence < metadata.StaleSequence;
-            Console.WriteLine($"IsStale: {stale}, {(entry.Guid==metadata.Guid?"same":"different")} guid, {entry.Sequence} ? {metadata.StaleSequence}, value={entry.ValueObject}");
-
             return entry.Guid != metadata.Guid || entry.Sequence < metadata.StaleSequence;
         }
 

@@ -99,6 +99,20 @@ namespace Hazelcast.Serialization
         }
 
         /// <inheritdoc />
+        public Attempt<byte> TryReadByte()
+        {
+            var attempt = TryReadByte(_position);
+            if (attempt) _position += BytesExtensions.SizeOfByte;
+            return attempt;
+        }
+
+        /// <inheritdoc />
+        public Attempt<byte> TryReadByte(int position)
+        {
+            return Attempt.If(_length - position >= BytesExtensions.SizeOfByte, _data.ReadByte(_position));
+        }
+
+        /// <inheritdoc />
         public byte[] ReadByteArray(Endianness endianness = Endianness.Unspecified)
         {
             var length = ReadInt(endianness);
@@ -328,7 +342,7 @@ namespace Hazelcast.Serialization
         /// <inheritdoc />
         public float ReadFloat(Endianness endianness = Endianness.Unspecified)
         {
-            var value = ReadFloat(_position);
+            var value = ReadFloat(_position, endianness);
             _position += BytesExtensions.SizeOfFloat;
             return value;
         }
@@ -367,13 +381,13 @@ namespace Hazelcast.Serialization
             var value = ReadDouble(_position, endianness);
             _position += BytesExtensions.SizeOfDouble;
             return value;
-            //return BitConverter.Int64BitsToDouble(ReadLong(endianness));
         }
 
         /// <inheritdoc />
         public double ReadDouble(int position, Endianness endianness = Endianness.Unspecified)
         {
-            return BitConverter.Int64BitsToDouble(ReadLong(position, endianness));
+            Validate(position, BytesExtensions.SizeOfDouble);
+            return _data.ReadDouble(position, endianness.Resolve(DefaultEndianness));
         }
 
         /// <inheritdoc />
@@ -410,13 +424,12 @@ namespace Hazelcast.Serialization
             {
                 for (var i = 0; i < length; i++)
                     buffer[i] = _data.ReadUtf8Char(ref _position);
+                return new string(buffer, 0, length);
             }
             finally
             {
                 ArrayPool<char>.Shared.Return(buffer);
             }
-
-            return new string(buffer, 0, length);
         }
 
         /// <inheritdoc />
@@ -439,26 +452,26 @@ namespace Hazelcast.Serialization
 
 
         /// <inheritdoc />
-        public void ReadBytes(byte[] bytes)
+        public int ReadBytes(byte[] bytes)
         {
-            ReadBytes(bytes, 0, bytes.Length);
+            return ReadBytes(bytes, 0, bytes.Length);
         }
 
         /// <inheritdoc />
-        public void ReadBytes(byte[] bytes, int offset, int count)
+        public int ReadBytes(byte[] bytes, int offset, int count)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (offset < 0 || offset >= bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
             if (count < 0 || offset + count > bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
 
-            if (count == 0) return;
-            if (_position >= _length) throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
+            if (count == 0) return 0;
+            if (_position >= _length) return -1;
 
-            // TODO: so we can reduce the count ??? without returning how many bytes were read???
             count = Math.Min(count, _length - _position);
 
             Buffer.BlockCopy(_data, _position, bytes, offset, count);
             _position += count;
+            return count;
         }
 
         /// <inheritdoc />

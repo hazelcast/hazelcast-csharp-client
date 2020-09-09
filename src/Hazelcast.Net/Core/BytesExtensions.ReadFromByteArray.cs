@@ -152,9 +152,10 @@ namespace Hazelcast.Core
             if (position < 0 || bytes.Length < position + SizeOfFloat)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
+            int value;
             unchecked
             {
-                return endianness.Resolve().IsBigEndian()
+                value = endianness.Resolve().IsBigEndian()
 
                     ? bytes[position] << 24     | bytes[position + 1] << 16 |
                       bytes[position + 2] << 8  | bytes[position + 3]
@@ -162,6 +163,13 @@ namespace Hazelcast.Core
                     : bytes[position]           | bytes[position + 1] << 8 |
                       bytes[position + 2] << 16 | bytes[position + 3] << 24;
             }
+
+#if NETSTANDARD2_0
+            return BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
+#else
+            // this is essentially an unsafe *((float*)&value)
+            return BitConverter.Int32BitsToSingle(value);
+#endif
         }
 
         /// <summary>
@@ -178,9 +186,10 @@ namespace Hazelcast.Core
             if (position < 0 || bytes.Length < position + SizeOfDouble)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
+            long value;
             unchecked
             {
-                return endianness.Resolve().IsBigEndian()
+                value = endianness.Resolve().IsBigEndian()
 
                     ? (long) bytes[position] << 56     | (long) bytes[position + 1] << 48 |
                       (long) bytes[position + 2] << 40 | (long) bytes[position + 3] << 32 |
@@ -192,6 +201,9 @@ namespace Hazelcast.Core
                       (long) bytes[position + 4] << 32 | (long) bytes[position + 5] << 40 |
                       (long) bytes[position + 6] << 48 | (long) bytes[position + 7] << 56;
             }
+
+            // this is essentially an unsafe *((double*)&value)
+            return BitConverter.Int64BitsToDouble(value);
         }
 
 

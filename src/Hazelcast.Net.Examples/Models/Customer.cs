@@ -19,21 +19,15 @@ namespace Hazelcast.Examples.Models
 {
     public class Customer : IPortable
     {
-        public const int ClassId = 1;
+        public const int TheClassId = 1;
 
         public string Name { get; set; }
         public int Id { get; set; }
         public DateTime LastOrder { get; set; }
 
-        public int GetFactoryId()
-        {
-            return ExamplePortableFactory.Id;
-        }
+        public int FactoryId => ExamplePortableFactory.Id;
 
-        public int GetClassId()
-        {
-            return ClassId;
-        }
+        public int ClassId => TheClassId;
 
         public void WritePortable(IPortableWriter writer)
         {

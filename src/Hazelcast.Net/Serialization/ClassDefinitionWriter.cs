@@ -148,7 +148,7 @@ namespace Hazelcast.Serialization
             }
             var version = PortableVersionHelper.GetVersion(portable, _context.GetVersion());
             var nestedClassDef = CreateNestedClassDef(portable, new ClassDefinitionBuilder
-                (portable.GetFactoryId(), portable.GetClassId(), version));
+                (portable.FactoryId, portable.ClassId, version));
             _builder.AddPortableField(fieldName, nestedClassDef);
         }
 
@@ -174,17 +174,17 @@ namespace Hazelcast.Serialization
                                                           + "registering class definition!");
             }
             var p = portables[0];
-            var classId = p.GetClassId();
+            var classId = p.ClassId;
             for (var i = 1; i < portables.Length; i++)
             {
-                if (portables[i].GetClassId() != classId)
+                if (portables[i].ClassId != classId)
                 {
                     throw new ArgumentException("Detected different class-ids in portable array!");
                 }
             }
             var version = PortableVersionHelper.GetVersion(p, _context.GetVersion());
             var nestedClassDef = CreateNestedClassDef(p, new ClassDefinitionBuilder
-                (p.GetFactoryId(), classId, version));
+                (p.FactoryId, classId, version));
             _builder.AddPortableArrayField(fieldName, nestedClassDef);
         }
 

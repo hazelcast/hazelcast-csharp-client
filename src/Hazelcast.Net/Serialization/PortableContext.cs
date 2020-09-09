@@ -75,10 +75,10 @@ namespace Hazelcast.Serialization
         public IClassDefinition LookupOrRegisterClassDefinition(IPortable p)
         {
             var portableVersion = PortableVersionHelper.GetVersion(p, _version);
-            var cd = LookupClassDefinition(p.GetFactoryId(), p.GetClassId(), portableVersion);
+            var cd = LookupClassDefinition(p.FactoryId, p.ClassId, portableVersion);
             if (cd == null)
             {
-                var writer = new ClassDefinitionWriter(this, p.GetFactoryId(), p.GetClassId(), portableVersion);
+                var writer = new ClassDefinitionWriter(this, p.FactoryId, p.ClassId, portableVersion);
                 p.WritePortable(writer);
                 cd = writer.RegisterAndGet();
             }

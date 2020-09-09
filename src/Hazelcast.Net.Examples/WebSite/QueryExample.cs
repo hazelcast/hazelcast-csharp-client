@@ -25,7 +25,7 @@ namespace Hazelcast.Examples.WebSite
     {
         public class User : IPortable
         {
-            public const int ClassId = 1;
+            public const int TheClassId = 1;
 
             private string _username;
             private int _age;
@@ -42,15 +42,9 @@ namespace Hazelcast.Examples.WebSite
                 _active = active;
             }
 
-            public int GetFactoryId()
-            {
-                return PortableFactory.FactoryId;
-            }
+            public int FactoryId => PortableFactory.FactoryId;
 
-            public int GetClassId()
-            {
-                return ClassId;
-            }
+            public int ClassId => TheClassId;
 
             public void ReadPortable(IPortableReader reader)
             {
@@ -75,7 +69,7 @@ namespace Hazelcast.Examples.WebSite
 
             public IPortable Create(int classId)
             {
-                if (classId == User.ClassId) return new User();
+                if (classId == User.TheClassId) return new User();
                 return null;
             }
         }
