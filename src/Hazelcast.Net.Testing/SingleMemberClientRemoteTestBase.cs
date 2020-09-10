@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,35 +13,31 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Testing
 {
-    /// <summary>
-    /// Provides a base class for Hazelcast tests that require a remote environment with one single member.
-    /// </summary>
-    public abstract class SingleMemberRemoteTestBase : ClusterRemoteTestBase
+    public class SingleMemberClientRemoteTestBase : SingleMemberRemoteTestBase
     {
         [OneTimeSetUp]
-        public async Task MemberOneTimeSetUp()
+        public async Task ClientOneTimeSetUp()
         {
-            // add a member to the cluster
-            RcMember = await RcClient.StartMemberAsync(RcCluster);
+            Client = await CreateAndStartClientAsync().CAF();
         }
 
         [OneTimeTearDown]
-        public async Task MemberOneTimeTearDown()
+        public async Task ClientOneTimeTearDown()
         {
-            // terminate & remove member
-            if (RcMember != null)
-            {
-                await RcClient.StopMemberAsync(RcCluster, RcMember);
-            }
+            if (Client == null) return;
+
+            await Client.DisposeAsync();
+            Client = null;
         }
 
         /// <summary>
-        /// Gets the remote member.
+        /// Gets the Hazelcast client.
         /// </summary>
-        protected Remote.Member RcMember { get; private set; }
+        public IHazelcastClient Client { get; private set; }
     }
 }

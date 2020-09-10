@@ -27,22 +27,28 @@ namespace Hazelcast.Testing
         private static readonly ISequence<int> UniqueNameSequence = new Int32Sequence();
         private static readonly string UniqueNamePrefix = DateTime.Now.ToString("HHmmss_");
 
-        [SetUp]
-        public void HazelcastTestBaseSetUp()
+        [OneTimeSetUp]
+        public void HazelcastOneTimeSetUp()
         {
-            // creating the client via an async method means we may not have a context - ensure here
-            AsyncContext.Ensure();
-
             // setup the logger
             LoggerFactory = CreateLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
             Logger.LogInformation($"Setup {GetType()}");
         }
 
+        [SetUp]
+        public void HazelcastTestBaseSetUp()
+        {
+            // creating the client via an async method means we may not have a context - ensure here
+            // (before each test)
+            AsyncContext.Reset(); // we want a new one
+        }
+
         [TearDown]
         public void HazelcastTestBaseTearDown()
         {
             // in case it's been used by tests, reset the clock
+            // (after each test)
             Clock.Reset();
         }
 

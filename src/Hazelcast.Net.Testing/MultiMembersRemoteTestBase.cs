@@ -26,7 +26,7 @@ namespace Hazelcast.Testing
     public class MultiMembersRemoteTestBase : ClusterRemoteTestBase
     {
         [OneTimeTearDown]
-        public async Task OneTimeTearDown()
+        public async Task MembersOneTimeTearDown()
         {
             // terminate & remove members
             foreach (var member in RcMembers.Values)
