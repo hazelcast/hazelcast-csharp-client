@@ -12,7 +12,10 @@ namespace Hazelcast.Protocol
         /// <returns><c>true</c> is the enumerator can move next to a non-end frame; otherwise <c>false</c>.</returns>
         public static bool NextIsNotTheEnd(this IEnumerator<Frame> enumerator)
         {
-            var next = enumerator.Current?.Next;
+            var current = enumerator.Current;
+            if (current == null) return false; // what else?
+            if (current.IsEndStruct) return false;
+            var next = current.Next;
             return next != null && !next.IsEndStruct;
         }
     }

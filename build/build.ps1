@@ -192,6 +192,7 @@ if(!($enterprise)) {
 
 if (-not [System.String]::IsNullOrWhiteSpace($coverageFilter)) { $coverageFilter += ";" }
 $coverageFilter += "-:Hazelcast.Net.Tests" # do not cover tests themselves
+$coverageFilter += "-:Hazelcast.Net.Testing" # nor the testing plumbing
 
 # set server version (to filter tests)
 $env:HAZELCAST_SERVER_VERSION=$server.TrimEnd("-SNAPSHOT")
