@@ -20,7 +20,7 @@ param (
     # (make sure it remains in the first position)
     [Alias("t")]
     [string[]]
-    $targets = @("clean", "build", "docsIf", "tests"),
+    $targets = @( "clean", "build", "docsIf", "tests" ),
 
     # Whether to test enterprise features.
     [switch]
@@ -59,6 +59,13 @@ param (
     [string]
     $coverageFilter
 )
+
+# process targets
+# in case it was passed by a script and not processed as an array
+# PowerShell can be weird at times ;(
+if ($targets.Length -eq 1 -and $targets[0].Contains(',')) {
+    $targets = $targets[0].Replace(" ", "").Split(',')
+}
 
 # clear rogue environment variable
 $env:FrameworkPathOverride=""

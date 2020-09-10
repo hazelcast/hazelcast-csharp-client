@@ -13,6 +13,6 @@ if [ -z $POWERSHELL ]; then
   exit 1
 fi
 
-$POWERSHELL build/build.ps1 $*
+$POWERSHELL build/build.ps1 "$@"
 
 #eof
