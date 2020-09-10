@@ -84,6 +84,7 @@ foreach ($t in $targets) {
             Write-Output "  cover            : when running tests, also perform code coverage analysis"
             Write-Output "  nuget            : builds the NuGet package(s)"
             Write-Output "  rc               : runs the remote controller for tests"
+            Write-Output "  server           : runs a server for tests"
             Write-Output "  docsServe (ds)   : serves the documentation"
             Write-Output "  failedTests (ft) : details failed tests"
             Write-Output ""
@@ -106,6 +107,7 @@ foreach ($t in $targets) {
         "cover"          { $doCover = $true }
         "nuget"          { $doNuget = $true }
         "rc"             { $doRc = $true }
+        "server"         { $doServer = $true }
         "docsServe"      { $doDocsServe = $true }
         "ds"             { $doDocsServe = $true }
         "failedtests"    { $doFailedTests = $true }
@@ -422,6 +424,16 @@ if ($doRc) {
     Write-Output "Remote Controller"
     Write-Output "  Server version : $server"
     Write-Output "  Enterprise     : $enterprise"
+    Write-Output "  Logging to     : $tmpDir/tests/rc"
+    Write-Output ""
+}
+
+if ($doServer) {
+    Write-Output "Server"
+    Write-Output "  Server version : $server"
+    Write-Output "  Enterprise     : $enterprise"
+    Write-Output "  Configuration  : n/a"
+    Write-Output "  Logging to     : $tmpDir/tests/server"
     Write-Output ""
 }
 
@@ -598,6 +610,43 @@ function StartRemoteController() {
 	}
 }
 
+function StartServer() {
+
+    if (-not (test-path "$tmpDir/tests/server")) { mkdir "$tmpDir/tests/server" >$null }
+
+    Write-Output ""
+    Write-Output "Starting Server..."
+
+    # start the server
+    $args = @( `
+        "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
+        "-cp", "$script:classpath", `
+        "-Dhazelcast/config=./hazelcast.xml", `
+        "-server", "-Xms2g", "-Xmx2g", "-Dhazelcast.multicast.group=224.206.1.1", "-Djava.net.preferIPv4Stack=true", `
+        "com.hazelcast.core.server.HazelcastMemberStarter" `
+    )
+
+    # uncomment to test Kerberos (but don't commit)
+    #$args = $args + @( `
+    #    "-Djava.util.logging.config.file=krb5/logging.properties", `
+    #    "-Djava.security.krb5.realm=HZ.LOCAL", `
+    #    "-Djava.security.krb5.kdc=SERVER19.HZ.LOCAL", `
+    #    "-Djava.security.krb5.conf=krb5/krb5.conf" `
+    #)
+
+    $args = $args + $javaFix
+
+    $script:server = Start-Process -FilePath $java -ArgumentList $args `
+        -RedirectStandardOutput "$tmpDir/tests/server/server_stdout.log" -RedirectStandardError "$tmpDir/tests/server/server_stderr.log" -PassThru
+    Start-Sleep -Seconds 4
+
+    Write-Output "Started server with pid=$($script:server.Id)"
+
+    if ($script:server.HasExited) {
+        throw "Server has exited immediately."
+	}
+}
+
 function StopRemoteController() {
 
     # stop the remote controller
@@ -609,6 +658,20 @@ function StopRemoteController() {
 	}
     else {
         Write-Output "Remote controller is not running."
+	}
+}
+
+function StopServer() {
+
+    # stop the server
+    Write-Output ""
+    if ($script:server -and $script:server.Id -and -not $script:server.HasExited) {
+        Write-Output "Stopping server..."
+        Stop-Process -Force -Id $script:server.Id
+        #$script:server.Kill($true)
+	}
+    else {
+        Write-Output "Server is not running."
 	}
 }
 
@@ -825,6 +888,18 @@ if ($doRc) {
     }
     finally {
         StopRemoteController
+    }
+}
+
+if ($doServer) {
+    try {
+
+        Write-Output ""
+        Write-Output "Server is running..."
+        Read-Host "Press ENTER to stop"
+    }
+    finally{
+
     }
 }
 
