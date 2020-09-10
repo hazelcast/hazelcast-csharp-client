@@ -99,19 +99,19 @@ foreach ($t in $targets) {
             Write-Output ""
             exit 0
 		}
-        "clean"          { $doClean = $true }
-        "build"          { $doBuild = $true }
-        "docs"           { $doDocs = $true }
-        "docsIfWindows"  { $doDocs = $isWindows }
-        "tests"          { $doTests = $true }
-        "cover"          { $doCover = $true }
-        "nuget"          { $doNuget = $true }
-        "rc"             { $doRc = $true }
-        "server"         { $doServer = $true }
-        "docsServe"      { $doDocsServe = $true }
-        "ds"             { $doDocsServe = $true }
-        "failedtests"    { $doFailedTests = $true }
-        "ft"             { $doFailedTests = $true }
+        "clean"       { $doClean = $true }
+        "build"       { $doBuild = $true }
+        "docs"        { $doDocs = $true }
+        "docsIf"      { $doDocs = $isWindows }
+        "tests"       { $doTests = $true }
+        "cover"       { $doCover = $true }
+        "nuget"       { $doNuget = $true }
+        "rc"          { $doRc = $true }
+        "server"      { $doServer = $true }
+        "docsServe"   { $doDocsServe = $true }
+        "ds"          { $doDocsServe = $true }
+        "failedtests" { $doFailedTests = $true }
+        "ft"          { $doFailedTests = $true }
         default {
             throw "Unknown target '$($t.Trim())' - use 'help' to list targets."
         }
