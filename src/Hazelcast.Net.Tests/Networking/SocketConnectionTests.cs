@@ -98,6 +98,7 @@ namespace Hazelcast.Tests.Networking
             }
 
             var now = DateTime.Now;
+            await Task.Delay(100);
 
             var address = NetworkAddress.Parse("127.0.0.1:11000");
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
