@@ -42,13 +42,33 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Removes from this list all of its elements that are contained in the specified collection (optional operation).
     ///</summary>
+#if SERVER_CODEC
+    internal static class ListCompareAndRemoveAllServerCodec
+#else
     internal static class ListCompareAndRemoveAllCodec
+#endif
     {
         public const int RequestMessageType = 329472; // 0x050700
         public const int ResponseMessageType = 329473; // 0x050701
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the List
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The list of values to compare for removal.
+            ///</summary>
+            public IList<IData> Values { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, ICollection<IData> values)
         {
@@ -66,6 +86,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Values = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -74,6 +106,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(bool response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

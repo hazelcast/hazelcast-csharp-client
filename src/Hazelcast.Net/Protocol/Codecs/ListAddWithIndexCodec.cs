@@ -43,13 +43,38 @@ namespace Hazelcast.Protocol.Codecs
     /// Inserts the specified element at the specified position in this list (optional operation). Shifts the element
     /// currently at that position (if any) and any subsequent elements to the right (adds one to their indices).
     ///</summary>
+#if SERVER_CODEC
+    internal static class ListAddWithIndexServerCodec
+#else
     internal static class ListAddWithIndexCodec
+#endif
     {
         public const int RequestMessageType = 332032; // 0x051100
         public const int ResponseMessageType = 332033; // 0x051101
         private const int RequestIndexFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestIndexFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the List
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// index at which the specified element is to be inserted
+            ///</summary>
+            public int Index { get; set; }
+
+            /// <summary>
+            /// Value to be inserted.
+            ///</summary>
+            public IData Value { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, int index, IData @value)
         {
@@ -68,9 +93,33 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.Index = initialFrame.Bytes.ReadIntL(RequestIndexFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

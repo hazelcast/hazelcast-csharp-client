@@ -42,12 +42,27 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Retrieves, but does not remove, the head of this queue, or returns null if this queue is empty.
     ///</summary>
+#if SERVER_CODEC
+    internal static class QueuePeekServerCodec
+#else
     internal static class QueuePeekCodec
+#endif
     {
         public const int RequestMessageType = 198400; // 0x030700
         public const int ResponseMessageType = 198401; // 0x030701
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Queue
+            ///</summary>
+            public string Name { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name)
         {
@@ -64,6 +79,17 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -72,6 +98,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

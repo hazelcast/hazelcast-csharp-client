@@ -42,7 +42,11 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Adds a cluster view listener to a connection.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ClientAddClusterViewListenerServerCodec
+#else
     internal static class ClientAddClusterViewListenerCodec
+#endif
     {
         public const int RequestMessageType = 768; // 0x000300
         public const int ResponseMessageType = 769; // 0x000301
@@ -54,6 +58,12 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventPartitionsViewVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventPartitionsViewInitialFrameSize = EventPartitionsViewVersionFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventPartitionsViewMessageType = 771; // 0x000303
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+        }
+#endif
 
         public static ClientMessage EncodeRequest()
         {
@@ -69,9 +79,30 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
@@ -81,17 +112,45 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodeMembersViewEvent(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventMembersViewInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventMembersViewMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(EventMembersViewVersionFieldOffset, version);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            ListMultiFrameCodec.Encode(clientMessage, memberInfos, MemberInfoCodec.Encode);
+            return clientMessage;
+        }
+        public static ClientMessage EncodePartitionsViewEvent(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventPartitionsViewInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventPartitionsViewMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(EventPartitionsViewVersionFieldOffset, version);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            EntryListUUIDListIntegerCodec.Encode(clientMessage, partitions);
+            return clientMessage;
+        }
+#endif
         public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleMembersViewEventAsync handleMembersViewEventAsync, HandlePartitionsViewEventAsync handlePartitionsViewEventAsync, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventMembersViewMessageType) {
+            if (messageType == EventMembersViewMessageType)
+            {
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadIntL(EventMembersViewVersionFieldOffset);
                 var memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
                 return handleMembersViewEventAsync(version, memberInfos);
             }
-            if (messageType == EventPartitionsViewMessageType) {
+            if (messageType == EventPartitionsViewMessageType)
+            {
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadIntL(EventPartitionsViewVersionFieldOffset);
                 var partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
@@ -101,8 +160,8 @@ namespace Hazelcast.Protocol.Codecs
             return default;
         }
 
-        public delegate ValueTask HandleMembersViewEventAsync(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos);
+        public delegate ValueTask HandleMembersViewEventAsync(int version, IList<Hazelcast.Data.MemberInfo> memberInfos);
 
-        public delegate ValueTask HandlePartitionsViewEventAsync(int version, ICollection<KeyValuePair<Guid, IList<int>>> partitions);
+        public delegate ValueTask HandlePartitionsViewEventAsync(int version, IList<KeyValuePair<Guid, IList<int>>> partitions);
     }
 }

@@ -43,13 +43,33 @@ namespace Hazelcast.Protocol.Codecs
     /// Returns true if this set contains all of the elements of the specified collection. If the specified collection is
     /// also a set, this method returns true if it is a subset of this set.
     ///</summary>
+#if SERVER_CODEC
+    internal static class SetContainsAllServerCodec
+#else
     internal static class SetContainsAllCodec
+#endif
     {
         public const int RequestMessageType = 393984; // 0x060300
         public const int ResponseMessageType = 393985; // 0x060301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Set
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Collection to be checked for containment in this list
+            ///</summary>
+            public IList<IData> Items { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, ICollection<IData> items)
         {
@@ -67,6 +87,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Items = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -76,6 +108,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(bool response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

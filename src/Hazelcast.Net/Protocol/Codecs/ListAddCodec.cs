@@ -45,13 +45,33 @@ namespace Hazelcast.Protocol.Codecs
     /// elements, and others will impose restrictions on the type of elements that may be added. List classes should
     /// clearly specify in their documentation any restrictions on what elements may be added.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ListAddServerCodec
+#else
     internal static class ListAddCodec
+#endif
     {
         public const int RequestMessageType = 328704; // 0x050400
         public const int ResponseMessageType = 328705; // 0x050401
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the List
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Element to be appended to this list
+            ///</summary>
+            public IData Value { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData @value)
         {
@@ -69,6 +89,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -77,6 +109,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(bool response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -42,7 +42,11 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Adds an listener for this collection. Listener will be notified or all collection add/remove events.
     ///</summary>
+#if SERVER_CODEC
+    internal static class QueueAddListenerServerCodec
+#else
     internal static class QueueAddListenerCodec
+#endif
     {
         public const int RequestMessageType = 200960; // 0x031100
         public const int ResponseMessageType = 200961; // 0x031101
@@ -55,6 +59,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventItemEventTypeFieldOffset = EventItemUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventItemInitialFrameSize = EventItemEventTypeFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventItemMessageType = 200962; // 0x031102
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Queue
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// <tt>true</tt> if the updated item should be passed to the item listener, <tt>false</tt> otherwise.
+            ///</summary>
+            public bool IncludeValue { get; set; }
+
+            /// <summary>
+            /// if true fires events that originated from this node only, otherwise fires all events
+            ///</summary>
+            public bool LocalOnly { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
@@ -73,6 +98,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.IncludeValue = initialFrame.Bytes.ReadBoolL(RequestIncludeValueFieldOffset);
+            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -81,6 +119,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(Guid response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
@@ -91,11 +141,27 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodeItemEvent(IData item, Guid uuid, int eventType)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventItemInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventItemMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(EventItemUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteIntL(EventItemEventTypeFieldOffset, eventType);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            CodecUtil.EncodeNullable(clientMessage, item, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
         public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleItemEventAsync handleItemEventAsync, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventItemMessageType) {
+            if (messageType == EventItemMessageType)
+            {
                 var initialFrame = iterator.Take();
                 var uuid =  initialFrame.Bytes.ReadGuidL(EventItemUuidFieldOffset);
                 var eventType =  initialFrame.Bytes.ReadIntL(EventItemEventTypeFieldOffset);

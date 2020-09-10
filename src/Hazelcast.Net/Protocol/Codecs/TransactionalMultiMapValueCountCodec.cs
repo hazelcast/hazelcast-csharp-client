@@ -42,7 +42,11 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Returns the number of values matching the given key in the multimap.
     ///</summary>
+#if SERVER_CODEC
+    internal static class TransactionalMultiMapValueCountServerCodec
+#else
     internal static class TransactionalMultiMapValueCountCodec
+#endif
     {
         public const int RequestMessageType = 984320; // 0x0F0500
         public const int ResponseMessageType = 984321; // 0x0F0501
@@ -51,6 +55,32 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Transactional Multi Map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// ID of the this transaction operation
+            ///</summary>
+            public Guid TxnId { get; set; }
+
+            /// <summary>
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///</summary>
+            public long ThreadId { get; set; }
+
+            /// <summary>
+            /// The key whose number of values are returned
+            ///</summary>
+            public IData Key { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key)
         {
@@ -70,6 +100,20 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -78,6 +122,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public int Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(int response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

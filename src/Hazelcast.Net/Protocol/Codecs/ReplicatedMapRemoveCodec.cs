@@ -45,12 +45,32 @@ namespace Hazelcast.Protocol.Codecs
     /// null does not necessarily indicate that the map contained no mapping for the key; it's also possible that the map
     /// explicitly mapped the key to null. The map will not contain a mapping for the specified key once the call returns.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ReplicatedMapRemoveServerCodec
+#else
     internal static class ReplicatedMapRemoveCodec
+#endif
     {
         public const int RequestMessageType = 853760; // 0x0D0700
         public const int ResponseMessageType = 853761; // 0x0D0701
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the ReplicatedMap
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Key with which the specified value is to be associated.
+            ///</summary>
+            public IData Key { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key)
         {
@@ -68,6 +88,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -76,6 +108,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

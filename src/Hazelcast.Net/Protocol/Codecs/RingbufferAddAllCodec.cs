@@ -49,7 +49,11 @@ namespace Hazelcast.Protocol.Codecs
     /// If an addAll is executed concurrently with an add or addAll, no guarantee is given that items are contiguous.
     /// The result of the future contains the sequenceId of the last written item
     ///</summary>
+#if SERVER_CODEC
+    internal static class RingbufferAddAllServerCodec
+#else
     internal static class RingbufferAddAllCodec
+#endif
     {
         public const int RequestMessageType = 1509376; // 0x170800
         public const int ResponseMessageType = 1509377; // 0x170801
@@ -57,6 +61,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestOverflowPolicyFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Ringbuffer
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// the batch of items to add
+            ///</summary>
+            public IList<IData> ValueList { get; set; }
+
+            /// <summary>
+            /// the overflowPolicy to use
+            ///</summary>
+            public int OverflowPolicy { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, ICollection<IData> valueList, int overflowPolicy)
         {
@@ -75,6 +100,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.OverflowPolicy = initialFrame.Bytes.ReadIntL(RequestOverflowPolicyFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.ValueList = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -83,6 +121,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(long response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLongL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

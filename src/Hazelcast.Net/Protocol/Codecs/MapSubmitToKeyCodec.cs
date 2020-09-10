@@ -44,13 +44,43 @@ namespace Hazelcast.Protocol.Codecs
     /// representing that task.EntryProcessor is not cancellable, so calling Future.cancel() method won't cancel the
     /// operation of EntryProcessor.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapSubmitToKeyServerCodec
+#else
     internal static class MapSubmitToKeyCodec
+#endif
     {
         public const int RequestMessageType = 77568; // 0x012F00
         public const int ResponseMessageType = 77569; // 0x012F01
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// entry processor to be executed on the entry.
+            ///</summary>
+            public IData EntryProcessor { get; set; }
+
+            /// <summary>
+            /// the key of the map entry.
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// Id of the thread that the task is submitted from.
+            ///</summary>
+            public long ThreadId { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData entryProcessor, IData key, long threadId)
         {
@@ -70,6 +100,20 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.EntryProcessor = DataCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -78,6 +122,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

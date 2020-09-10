@@ -46,7 +46,11 @@ namespace Hazelcast.Protocol.Codecs
     /// The behavior of this operation is undefined if the specified collection is modified while the operation is in progress.
     /// (Note that this will occur if the specified collection is this list, and it's nonempty.)
     ///</summary>
+#if SERVER_CODEC
+    internal static class ListAddAllWithIndexServerCodec
+#else
     internal static class ListAddAllWithIndexCodec
+#endif
     {
         public const int RequestMessageType = 331264; // 0x050E00
         public const int ResponseMessageType = 331265; // 0x050E01
@@ -54,6 +58,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestIndexFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the List
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// index at which to insert the first element from the specified collection.
+            ///</summary>
+            public int Index { get; set; }
+
+            /// <summary>
+            /// The list of value to insert into the list.
+            ///</summary>
+            public IList<IData> ValueList { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, int index, ICollection<IData> valueList)
         {
@@ -72,6 +97,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.Index = initialFrame.Bytes.ReadIntL(RequestIndexFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.ValueList = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -80,6 +118,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(bool response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

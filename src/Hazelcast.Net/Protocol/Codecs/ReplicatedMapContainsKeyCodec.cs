@@ -42,13 +42,33 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Returns true if this map contains a mapping for the specified key.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ReplicatedMapContainsKeyServerCodec
+#else
     internal static class ReplicatedMapContainsKeyCodec
+#endif
     {
         public const int RequestMessageType = 852992; // 0x0D0400
         public const int ResponseMessageType = 852993; // 0x0D0401
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the ReplicatedMap
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The key whose associated value is to be returned.
+            ///</summary>
+            public IData Key { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key)
         {
@@ -66,6 +86,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -74,6 +106,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(bool response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

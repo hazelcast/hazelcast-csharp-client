@@ -42,12 +42,22 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Gets the list of distributed objects in the cluster.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ClientGetDistributedObjectsServerCodec
+#else
     internal static class ClientGetDistributedObjectsCodec
+#endif
     {
         public const int RequestMessageType = 2048; // 0x000800
         public const int ResponseMessageType = 2049; // 0x000801
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+        }
+#endif
 
         public static ClientMessage EncodeRequest()
         {
@@ -63,6 +73,16 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -71,6 +91,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public ICollection<Hazelcast.Data.DistributedObjectInfo> Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(ICollection<Hazelcast.Data.DistributedObjectInfo> response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DistributedObjectInfoCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

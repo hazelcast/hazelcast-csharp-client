@@ -43,7 +43,11 @@ namespace Hazelcast.Protocol.Codecs
     /// Adds a distributed object listener to the cluster. This listener will be notified
     /// when a distributed object is created or destroyed.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ClientAddDistributedObjectListenerServerCodec
+#else
     internal static class ClientAddDistributedObjectListenerCodec
+#endif
     {
         public const int RequestMessageType = 2304; // 0x000900
         public const int ResponseMessageType = 2305; // 0x000901
@@ -54,6 +58,18 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventDistributedObjectSourceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventDistributedObjectMessageType = 2306; // 0x000902
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// If set to true, the server adds the listener only to itself, otherwise the listener is is added for all
+            /// members in the cluster.
+            ///</summary>
+            public bool LocalOnly { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(bool localOnly)
         {
@@ -70,6 +86,17 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -78,6 +105,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(Guid response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
@@ -88,11 +127,28 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodeDistributedObjectEvent(string name, string serviceName, string eventType, Guid source)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventDistributedObjectInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventDistributedObjectMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(EventDistributedObjectSourceFieldOffset, source);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            StringCodec.Encode(clientMessage, name);
+            StringCodec.Encode(clientMessage, serviceName);
+            StringCodec.Encode(clientMessage, eventType);
+            return clientMessage;
+        }
+#endif
         public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleDistributedObjectEventAsync handleDistributedObjectEventAsync, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventDistributedObjectMessageType) {
+            if (messageType == EventDistributedObjectMessageType)
+            {
                 var initialFrame = iterator.Take();
                 var source =  initialFrame.Bytes.ReadGuidL(EventDistributedObjectSourceFieldOffset);
                 var name = StringCodec.Decode(iterator);

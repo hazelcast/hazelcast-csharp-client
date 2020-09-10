@@ -45,12 +45,32 @@ namespace Hazelcast.Protocol.Codecs
     /// in the collection, and vice-versa. This method is always executed by a distributed query, so it may throw a
     /// QueryResultSizeExceededException if query result size limit is configured.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapEntriesWithPagingPredicateServerCodec
+#else
     internal static class MapEntriesWithPagingPredicateCodec
+#endif
     {
         public const int RequestMessageType = 79360; // 0x013600
         public const int ResponseMessageType = 79361; // 0x013601
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// specified query criteria.
+            ///</summary>
+            public Hazelcast.Protocol.Data.PagingPredicateHolder Predicate { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Data.PagingPredicateHolder predicate)
         {
@@ -68,6 +88,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Predicate = PagingPredicateHolderCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -81,6 +113,19 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Hazelcast.Protocol.Data.AnchorDataListHolder AnchorDataList { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(ICollection<KeyValuePair<IData, IData>> response, Hazelcast.Protocol.Data.AnchorDataListHolder anchorDataList)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            EntryListCodec.Encode(clientMessage, response, DataCodec.Encode, DataCodec.Encode);
+            AnchorDataListHolderCodec.Encode(clientMessage, anchorDataList);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

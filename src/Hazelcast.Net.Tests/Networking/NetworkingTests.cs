@@ -468,7 +468,7 @@ namespace Hazelcast.Tests.Networking
             await using var server = new Server(NetworkAddress.Parse("127.0.0.1:11000"), (svr, connection, message) => new ValueTask(), LoggerFactory);
             await server.StartAsync().CAF();
 
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
 
             // server is listening, can connect within 1s timeout
             await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000).CAF();
@@ -481,7 +481,7 @@ namespace Hazelcast.Tests.Networking
         [Timeout(20_000)]
         public void SocketTimeout2()
         {
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
 
             // server is not listening, connecting results in timeout after 1s
             Assert.ThrowsAsync<TimeoutException>(async () =>
@@ -504,7 +504,7 @@ namespace Hazelcast.Tests.Networking
         [Timeout(60_000)]
         public async Task SocketTimeout3()
         {
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
 
             try
             {

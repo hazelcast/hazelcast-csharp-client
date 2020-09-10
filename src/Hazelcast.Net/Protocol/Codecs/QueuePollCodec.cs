@@ -43,13 +43,33 @@ namespace Hazelcast.Protocol.Codecs
     /// Retrieves and removes the head of this queue, waiting up to the specified wait time if necessary for an element
     /// to become available.
     ///</summary>
+#if SERVER_CODEC
+    internal static class QueuePollServerCodec
+#else
     internal static class QueuePollCodec
+#endif
     {
         public const int RequestMessageType = 197888; // 0x030500
         public const int ResponseMessageType = 197889; // 0x030501
         private const int RequestTimeoutMillisFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestTimeoutMillisFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Queue
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Maximum time in milliseconds to wait for acquiring the lock for the key.
+            ///</summary>
+            public long TimeoutMillis { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, long timeoutMillis)
         {
@@ -67,6 +87,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.TimeoutMillis = initialFrame.Bytes.ReadLongL(RequestTimeoutMillisFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -75,6 +107,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

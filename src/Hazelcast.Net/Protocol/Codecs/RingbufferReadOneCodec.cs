@@ -45,13 +45,33 @@ namespace Hazelcast.Protocol.Codecs
     /// readers or it can be read multiple times by the same reader. Currently it isn't possible to control how long this
     /// call is going to block. In the future we could add e.g. tryReadOne(long sequence, long timeout, TimeUnit unit).
     ///</summary>
+#if SERVER_CODEC
+    internal static class RingbufferReadOneServerCodec
+#else
     internal static class RingbufferReadOneCodec
+#endif
     {
         public const int RequestMessageType = 1509120; // 0x170700
         public const int ResponseMessageType = 1509121; // 0x170701
         private const int RequestSequenceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestSequenceFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Ringbuffer
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// the sequence of the item to read.
+            ///</summary>
+            public long Sequence { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, long sequence)
         {
@@ -69,6 +89,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.Sequence = initialFrame.Bytes.ReadLongL(RequestSequenceFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -77,6 +109,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Collections.Generic;
@@ -68,16 +69,15 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             var initialFrame = iterator.Take();
             var pageSize = initialFrame.Bytes.ReadIntL(PageSizeFieldOffset);
+
             var page = initialFrame.Bytes.ReadIntL(PageFieldOffset);
             var iterationTypeId = initialFrame.Bytes.ReadByteL(IterationTypeIdFieldOffset);
-
             var anchorDataListHolder = AnchorDataListHolderCodec.Decode(iterator);
             var predicateData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             var comparatorData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             var partitionKeyData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
 
             iterator.SkipToStructEnd();
-
             return new Hazelcast.Protocol.Data.PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pageSize, page, iterationTypeId, partitionKeyData);
         }
     }

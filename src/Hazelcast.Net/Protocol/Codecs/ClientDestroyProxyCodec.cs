@@ -42,12 +42,47 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Destroys the proxy given by its name cluster-wide. Also, clears and releases all resources of this proxy.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ClientDestroyProxyServerCodec
+#else
     internal static class ClientDestroyProxyCodec
+#endif
     {
         public const int RequestMessageType = 1280; // 0x000500
         public const int ResponseMessageType = 1281; // 0x000501
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// The distributed object name for which the proxy is being destroyed for.
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The name of the service. Possible service names are:
+            /// "hz:impl:listService"
+            /// "hz:impl:queueService"
+            /// "hz:impl:setService"
+            /// "hz:impl:idGeneratorService"
+            /// "hz:impl:executorService"
+            /// "hz:impl:mapService"
+            /// "hz:impl:multiMapService"
+            /// "hz:impl:splitBrainProtectionService"
+            /// "hz:impl:replicatedMapService"
+            /// "hz:impl:ringbufferService"
+            /// "hz:core:proxyService"
+            /// "hz:impl:reliableTopicService"
+            /// "hz:impl:topicService"
+            /// "hz:core:txManagerService"
+            /// "hz:impl:xaService"
+            ///</summary>
+            public string ServiceName { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, string serviceName)
         {
@@ -65,9 +100,32 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.ServiceName = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

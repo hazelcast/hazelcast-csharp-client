@@ -43,12 +43,27 @@ namespace Hazelcast.Protocol.Codecs
     /// If this map has a MapStore, this method flushes all the local dirty entries by calling MapStore.storeAll()
     /// and/or MapStore.deleteAll().
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapFlushServerCodec
+#else
     internal static class MapFlushCodec
+#endif
     {
         public const int RequestMessageType = 68096; // 0x010A00
         public const int ResponseMessageType = 68097; // 0x010A01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the map.
+            ///</summary>
+            public string Name { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name)
         {
@@ -65,9 +80,31 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -68,5 +68,10 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             return new BitmapIndexOptions { UniqueKey = uniqueKey, UniqueKeyTransformation = (UniqueKeyTransformation) uniqueKeyTransformation };
         }
+
+        public static EndpointQualifier CreateEndpointQualifier(int type, string identifier)
+        {
+            return new EndpointQualifier((ProtocolType) type, identifier);
+        }
     }
 }

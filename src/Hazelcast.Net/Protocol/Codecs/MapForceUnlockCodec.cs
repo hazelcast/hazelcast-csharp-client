@@ -43,13 +43,38 @@ namespace Hazelcast.Protocol.Codecs
     /// Releases the lock for the specified key regardless of the lock owner.It always successfully unlocks the key,
     /// never blocks,and returns immediately.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapForceUnlockServerCodec
+#else
     internal static class MapForceUnlockCodec
+#endif
     {
         public const int RequestMessageType = 78592; // 0x013300
         public const int ResponseMessageType = 78593; // 0x013301
         private const int RequestReferenceIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestReferenceIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// the key of the map entry.
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// The client-wide unique id for this request. It is used to make the request idempotent by sending the same reference id during retries.
+            ///</summary>
+            public long ReferenceId { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key, long referenceId)
         {
@@ -68,9 +93,33 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.ReferenceId = initialFrame.Bytes.ReadLongL(RequestReferenceIdFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

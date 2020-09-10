@@ -48,7 +48,11 @@ namespace Hazelcast.Protocol.Codecs
     /// true are returned. Using filters is a good way to prevent getting items that are of no value to the receiver.
     /// This reduces the amount of IO and the number of operations being executed, and can result in a significant performance improvement.
     ///</summary>
+#if SERVER_CODEC
+    internal static class RingbufferReadManyServerCodec
+#else
     internal static class RingbufferReadManyCodec
+#endif
     {
         public const int RequestMessageType = 1509632; // 0x170900
         public const int ResponseMessageType = 1509633; // 0x170901
@@ -59,6 +63,37 @@ namespace Hazelcast.Protocol.Codecs
         private const int ResponseReadCountFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseNextSeqFieldOffset = ResponseReadCountFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = ResponseNextSeqFieldOffset + BytesExtensions.SizeOfLong;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Ringbuffer
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// the startSequence of the first item to read
+            ///</summary>
+            public long StartSequence { get; set; }
+
+            /// <summary>
+            /// the minimum number of items to read.
+            ///</summary>
+            public int MinCount { get; set; }
+
+            /// <summary>
+            /// the maximum number of items to read.
+            ///</summary>
+            public int MaxCount { get; set; }
+
+            /// <summary>
+            /// Filter is allowed to be null, indicating there is no filter.
+            ///</summary>
+            public IData Filter { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, long startSequence, int minCount, int maxCount, IData filter)
         {
@@ -78,6 +113,21 @@ namespace Hazelcast.Protocol.Codecs
             CodecUtil.EncodeNullable(clientMessage, filter, DataCodec.Encode);
             return clientMessage;
         }
+
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.StartSequence = initialFrame.Bytes.ReadLongL(RequestStartSequenceFieldOffset);
+            request.MinCount = initialFrame.Bytes.ReadIntL(RequestMinCountFieldOffset);
+            request.MaxCount = initialFrame.Bytes.ReadIntL(RequestMaxCountFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Filter = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            return request;
+        }
+#endif
 
         public sealed class ResponseParameters
         {
@@ -102,6 +152,21 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long NextSeq { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(int readCount, ICollection<IData> items, long[] itemSeqs, long nextSeq)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(ResponseReadCountFieldOffset, readCount);
+            initialFrame.Bytes.WriteLongL(ResponseNextSeqFieldOffset, nextSeq);
+            clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, items, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, itemSeqs, LongArrayCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

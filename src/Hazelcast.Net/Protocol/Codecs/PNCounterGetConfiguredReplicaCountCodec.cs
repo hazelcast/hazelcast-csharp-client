@@ -45,13 +45,28 @@ namespace Hazelcast.Protocol.Codecs
     /// The actual replica count may be less, depending on the number of data
     /// members in the cluster (members that own data).
     ///</summary>
+#if SERVER_CODEC
+    internal static class PNCounterGetConfiguredReplicaCountServerCodec
+#else
     internal static class PNCounterGetConfiguredReplicaCountCodec
+#endif
     {
         public const int RequestMessageType = 1901312; // 0x1D0300
         public const int ResponseMessageType = 1901313; // 0x1D0301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// the name of the PNCounter
+            ///</summary>
+            public string Name { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name)
         {
@@ -68,6 +83,17 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -76,6 +102,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public int Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(int response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

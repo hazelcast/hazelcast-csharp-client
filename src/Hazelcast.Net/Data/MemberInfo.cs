@@ -39,6 +39,7 @@ namespace Hazelcast.Data
             Version = version;
             IsLite = isLite;
             Attributes = new ReadOnlyDictionary<string, string>(attributes);
+            AddressMap = new Dictionary<EndpointQualifier, NetworkAddress>();
         }
 
         /// <summary>
@@ -52,9 +53,11 @@ namespace Hazelcast.Data
         /// <remarks>
         /// <para>That overload of the constructor is required by generated codecs.</para>
         /// </remarks>
-        internal MemberInfo(NetworkAddress address, Guid id, IDictionary<string, string> attributes, bool isLite, MemberVersion version)
+        internal MemberInfo(NetworkAddress address, Guid id, IDictionary<string, string> attributes, bool isLite, MemberVersion version, bool addressMapExists, IDictionary<EndpointQualifier, NetworkAddress> addressMap)
             : this(id, address, version, isLite, attributes)
-        { }
+        {
+            if (addressMapExists) AddressMap = addressMap;
+        }
 
         /// <summary>
         /// Gets the unique identifier of the member.
@@ -100,6 +103,11 @@ namespace Hazelcast.Data
         /// Gets the attributes of the member.
         /// </summary>
         public IReadOnlyDictionary<string, string> Attributes { get; }
+
+        /// <summary>
+        /// Gets the address map.
+        /// </summary>
+        public IDictionary<EndpointQualifier, NetworkAddress> AddressMap { get; }
 
         /// <inheritdoc />
         public override bool Equals(object obj)

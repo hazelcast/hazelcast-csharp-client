@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     if (list.Count == 0) continue;
 
-                    var requestMessage = MapPutAllCodec.EncodeRequest(Name, list);
+                    var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
                     requestMessage.PartitionId = partitionId;
                     var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
                         .ContinueWith(_ => InvalidateEntries(list), default, default, TaskScheduler.Current);

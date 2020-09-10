@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             AddressCodec.Encode(clientMessage, memberInfo.Address);
             MapCodec.Encode(clientMessage, memberInfo.Attributes, StringCodec.Encode, StringCodec.Encode);
             MemberVersionCodec.Encode(clientMessage, memberInfo.Version);
+            MapCodec.Encode(clientMessage, memberInfo.AddressMap, EndpointQualifierCodec.Encode, AddressCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
@@ -65,15 +67,21 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             var initialFrame = iterator.Take();
             var uuid = initialFrame.Bytes.ReadGuidL(UuidFieldOffset);
-            var liteMember = initialFrame.Bytes.ReadBoolL(LiteMemberFieldOffset);
 
+            var liteMember = initialFrame.Bytes.ReadBoolL(LiteMemberFieldOffset);
             var address = AddressCodec.Decode(iterator);
             var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
             var version = MemberVersionCodec.Decode(iterator);
+            var isAddressMapExists = false;
+            IDictionary<Hazelcast.Data.EndpointQualifier, Hazelcast.Networking.NetworkAddress> addressMap = default;
+            if (iterator.NextIsNotTheEnd())
+            {
+                addressMap = MapCodec.Decode(iterator, EndpointQualifierCodec.Decode, AddressCodec.Decode);
+                isAddressMapExists = true;
+            }
 
             iterator.SkipToStructEnd();
-
-            return new Hazelcast.Data.MemberInfo(address, uuid, attributes, liteMember, version);
+            return new Hazelcast.Data.MemberInfo(address, uuid, attributes, liteMember, version, isAddressMapExists, addressMap);
         }
     }
 }

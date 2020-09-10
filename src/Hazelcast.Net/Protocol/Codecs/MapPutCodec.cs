@@ -45,7 +45,11 @@ namespace Hazelcast.Protocol.Codecs
     /// (identically equal) value previously put into the map.Time resolution for TTL is seconds. The given TTL value is
     /// rounded to the next closest second value.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapPutServerCodec
+#else
     internal static class MapPutCodec
+#endif
     {
         public const int RequestMessageType = 65792; // 0x010100
         public const int ResponseMessageType = 65793; // 0x010101
@@ -53,6 +57,37 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the map.
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Key for the map entry.
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// Value for the map entry.
+            ///</summary>
+            public IData Value { get; set; }
+
+            /// <summary>
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///</summary>
+            public long ThreadId { get; set; }
+
+            /// <summary>
+            /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
+            ///</summary>
+            public long Ttl { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl)
         {
@@ -73,6 +108,21 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -81,6 +131,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

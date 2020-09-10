@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Collections.Generic;
@@ -80,6 +81,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             var initialFrame = iterator.Take();
             var cost = initialFrame.Bytes.ReadLongL(CostFieldOffset);
+
             var creationTime = initialFrame.Bytes.ReadLongL(CreationTimeFieldOffset);
             var expirationTime = initialFrame.Bytes.ReadLongL(ExpirationTimeFieldOffset);
             var hits = initialFrame.Bytes.ReadLongL(HitsFieldOffset);
@@ -89,12 +91,10 @@ namespace Hazelcast.Protocol.CustomCodecs
             var version = initialFrame.Bytes.ReadLongL(VersionFieldOffset);
             var ttl = initialFrame.Bytes.ReadLongL(TtlFieldOffset);
             var maxIdle = initialFrame.Bytes.ReadLongL(MaxIdleFieldOffset);
-
             var key = DataCodec.Decode(iterator);
             var @value = DataCodec.Decode(iterator);
 
             iterator.SkipToStructEnd();
-
             return CustomTypeFactory.CreateSimpleEntryView(key, @value, cost, creationTime, expirationTime, hits, lastAccessTime, lastStoredTime, lastUpdateTime, version, ttl, maxIdle);
         }
     }

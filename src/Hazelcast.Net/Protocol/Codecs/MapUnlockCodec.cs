@@ -45,7 +45,11 @@ namespace Hazelcast.Protocol.Codecs
     /// then the lock is released.  If the current thread is not the holder of this lock,
     /// then ILLEGAL_MONITOR_STATE is thrown.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapUnlockServerCodec
+#else
     internal static class MapUnlockCodec
+#endif
     {
         public const int RequestMessageType = 70400; // 0x011300
         public const int ResponseMessageType = 70401; // 0x011301
@@ -53,6 +57,32 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestReferenceIdFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestInitialFrameSize = RequestReferenceIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Key for the map entry to unlock
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///</summary>
+            public long ThreadId { get; set; }
+
+            /// <summary>
+            /// The client-wide unique id for this request. It is used to make the request idempotent by sending the same reference id during retries.
+            ///</summary>
+            public long ReferenceId { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key, long threadId, long referenceId)
         {
@@ -72,9 +102,34 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.ReferenceId = initialFrame.Bytes.ReadLongL(RequestReferenceIdFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

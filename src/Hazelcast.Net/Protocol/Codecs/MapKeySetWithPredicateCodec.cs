@@ -45,12 +45,32 @@ namespace Hazelcast.Protocol.Codecs
     /// set, and vice-versa. This method is always executed by a distributed query, so it may throw a
     /// QueryResultSizeExceededException if query result size limit is configured.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapKeySetWithPredicateServerCodec
+#else
     internal static class MapKeySetWithPredicateCodec
+#endif
     {
         public const int RequestMessageType = 75264; // 0x012600
         public const int ResponseMessageType = 75265; // 0x012601
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map.
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// specified query criteria.
+            ///</summary>
+            public IData Predicate { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData predicate)
         {
@@ -68,6 +88,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Predicate = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -76,6 +108,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IList<IData> Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(ICollection<IData> response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

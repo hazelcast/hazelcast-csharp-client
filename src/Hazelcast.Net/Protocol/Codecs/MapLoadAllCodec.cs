@@ -42,13 +42,34 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Loads all keys into the store. This is a batch load operation so that an implementation can optimize the multiple loads.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapLoadAllServerCodec
+#else
     internal static class MapLoadAllCodec
+#endif
     {
         public const int RequestMessageType = 73728; // 0x012000
         public const int ResponseMessageType = 73729; // 0x012001
         private const int RequestReplaceExistingValuesFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestReplaceExistingValuesFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// when <code>true</code>, existing values in the Map will
+            /// be replaced by those loaded from the MapLoader
+            ///</summary>
+            public bool ReplaceExistingValues { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, bool replaceExistingValues)
         {
@@ -66,9 +87,32 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.ReplaceExistingValues = initialFrame.Bytes.ReadBoolL(RequestReplaceExistingValuesFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -12,8 +12,12 @@
     <RootNamespace>Hazelcast.Testing</RootNamespace>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants)</DefineConstants>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>$(DefineConstants);SERVER_CODEC</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>$(DefineConstants);SERVER_CODEC</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -43,6 +47,13 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Hazelcast.Net\Protocol\Codecs\**\*.cs">
+      <!--<Link>%(RecursiveDir)%(FileName)%(Extension)</Link>-->
+      <Link>Protocol\Codecs\%(FileName)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
 </Project>

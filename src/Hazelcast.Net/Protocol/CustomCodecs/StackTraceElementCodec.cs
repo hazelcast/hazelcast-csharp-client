@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Collections.Generic;
@@ -69,7 +70,6 @@ namespace Hazelcast.Protocol.CustomCodecs
             var fileName = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
 
             iterator.SkipToStructEnd();
-
             return new Hazelcast.Exceptions.StackTraceElement(className, methodName, fileName, lineNumber);
         }
     }

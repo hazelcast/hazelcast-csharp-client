@@ -52,7 +52,11 @@ namespace Hazelcast.Protocol.Codecs
     /// this id is not the sequence of the item you are about to publish but from a previously published item. So it can't be used
     /// to find that item.
     ///</summary>
+#if SERVER_CODEC
+    internal static class RingbufferAddServerCodec
+#else
     internal static class RingbufferAddCodec
+#endif
     {
         public const int RequestMessageType = 1508864; // 0x170600
         public const int ResponseMessageType = 1508865; // 0x170601
@@ -60,6 +64,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestOverflowPolicyFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Ringbuffer
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// the OverflowPolicy to use.
+            ///</summary>
+            public int OverflowPolicy { get; set; }
+
+            /// <summary>
+            /// to item to add
+            ///</summary>
+            public IData Value { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, int overflowPolicy, IData @value)
         {
@@ -78,6 +103,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.OverflowPolicy = initialFrame.Bytes.ReadIntL(RequestOverflowPolicyFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -86,6 +124,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(long response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLongL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

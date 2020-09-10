@@ -47,14 +47,18 @@ namespace Hazelcast.Protocol.Codecs
     /// The entry will expire and get evicted after the TTL. If the TTL is 0,
     /// then the entry lives forever. If the TTL is negative, then the TTL
     /// from the map configuration will be used (default: forever).
-    ///
+    /// 
     /// If there is no entry with key {@code key}, this call has no effect.
-    ///
+    /// 
     /// <b>Warning:</b>
     /// <p>
     /// Time resolution for TTL is seconds. The given TTL value is rounded to the next closest second value.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapSetTtlServerCodec
+#else
     internal static class MapSetTtlCodec
+#endif
     {
         public const int RequestMessageType = 82688; // 0x014300
         public const int ResponseMessageType = 82689; // 0x014301
@@ -62,6 +66,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Key for the map entry
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
+            ///</summary>
+            public long Ttl { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key, long ttl)
         {
@@ -80,6 +105,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -88,6 +126,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(bool response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

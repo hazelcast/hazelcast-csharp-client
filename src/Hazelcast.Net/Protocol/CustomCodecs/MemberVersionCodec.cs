@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Collections.Generic;
@@ -63,11 +64,10 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             var initialFrame = iterator.Take();
             var major = initialFrame.Bytes.ReadByteL(MajorFieldOffset);
+
             var minor = initialFrame.Bytes.ReadByteL(MinorFieldOffset);
             var patch = initialFrame.Bytes.ReadByteL(PatchFieldOffset);
-
             iterator.SkipToStructEnd();
-
             return new Hazelcast.Data.MemberVersion(major, minor, patch);
         }
     }

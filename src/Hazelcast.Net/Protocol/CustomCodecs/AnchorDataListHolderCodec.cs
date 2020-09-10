@@ -22,6 +22,7 @@
 #pragma warning disable IDE0051 // Remove unused private members
 // ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantUsingDirective
+// ReSharper disable CheckNamespace
 
 using System;
 using System.Collections.Generic;
@@ -53,12 +54,10 @@ namespace Hazelcast.Protocol.CustomCodecs
         {
             // begin frame
             iterator.Take();
-
             var anchorPageList = ListIntegerCodec.Decode(iterator);
             var anchorDataList = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
 
             iterator.SkipToStructEnd();
-
             return new Hazelcast.Protocol.Data.AnchorDataListHolder(anchorPageList, anchorDataList);
         }
     }

@@ -44,7 +44,11 @@ namespace Hazelcast.Protocol.Codecs
     /// This method returns a clone of original mapping, modifying the returned value does not change the actual value
     /// in the map. One should put modified value back to make changes visible to all nodes.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapGetEntryViewServerCodec
+#else
     internal static class MapGetEntryViewCodec
+#endif
     {
         public const int RequestMessageType = 72960; // 0x011D00
         public const int ResponseMessageType = 72961; // 0x011D01
@@ -52,6 +56,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseMaxIdleFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseMaxIdleFieldOffset + BytesExtensions.SizeOfLong;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// the key of the entry.
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///</summary>
+            public long ThreadId { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
@@ -70,6 +95,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -83,6 +121,19 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long MaxIdle { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(Hazelcast.Data.HDictionaryEntry<IData, IData> response, long maxIdle)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLongL(ResponseMaxIdleFieldOffset, maxIdle);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, SimpleEntryViewCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

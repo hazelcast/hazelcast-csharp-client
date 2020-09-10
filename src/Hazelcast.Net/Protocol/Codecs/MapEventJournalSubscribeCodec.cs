@@ -44,7 +44,11 @@ namespace Hazelcast.Protocol.Codecs
     /// This includes retrieving the event journal sequences of the
     /// oldest and newest event in the journal.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapEventJournalSubscribeServerCodec
+#else
     internal static class MapEventJournalSubscribeCodec
+#endif
     {
         public const int RequestMessageType = 82176; // 0x014100
         public const int ResponseMessageType = 82177; // 0x014101
@@ -52,6 +56,17 @@ namespace Hazelcast.Protocol.Codecs
         private const int ResponseOldestSequenceFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseNewestSequenceFieldOffset = ResponseOldestSequenceFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = ResponseNewestSequenceFieldOffset + BytesExtensions.SizeOfLong;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of the map
+            ///</summary>
+            public string Name { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name)
         {
@@ -68,6 +83,17 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -81,6 +107,19 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long NewestSequence { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(long oldestSequence, long newestSequence)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLongL(ResponseOldestSequenceFieldOffset, oldestSequence);
+            initialFrame.Bytes.WriteLongL(ResponseNewestSequenceFieldOffset, newestSequence);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

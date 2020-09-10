@@ -42,7 +42,11 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Adds a partition lost listener to the cluster.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ClientAddPartitionLostListenerServerCodec
+#else
     internal static class ClientAddPartitionLostListenerCodec
+#endif
     {
         public const int RequestMessageType = 1536; // 0x000600
         public const int ResponseMessageType = 1537; // 0x000601
@@ -55,6 +59,18 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventPartitionLostSourceFieldOffset = EventPartitionLostLostBackupCountFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventPartitionLostInitialFrameSize = EventPartitionLostSourceFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventPartitionLostMessageType = 1538; // 0x000602
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// if true only node that has the partition sends the request, if false
+            /// sends all partition lost events.
+            ///</summary>
+            public bool LocalOnly { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(bool localOnly)
         {
@@ -71,6 +87,17 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -79,6 +106,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(Guid response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
@@ -89,11 +128,27 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodePartitionLostEvent(int partitionId, int lostBackupCount, Guid source)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventPartitionLostInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventPartitionLostMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(EventPartitionLostPartitionIdFieldOffset, partitionId);
+            initialFrame.Bytes.WriteIntL(EventPartitionLostLostBackupCountFieldOffset, lostBackupCount);
+            initialFrame.Bytes.WriteGuidL(EventPartitionLostSourceFieldOffset, source);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            return clientMessage;
+        }
+#endif
         public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandlePartitionLostEventAsync handlePartitionLostEventAsync, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventPartitionLostMessageType) {
+            if (messageType == EventPartitionLostMessageType)
+            {
                 var initialFrame = iterator.Take();
                 var partitionId =  initialFrame.Bytes.ReadIntL(EventPartitionLostPartitionIdFieldOffset);
                 var lostBackupCount =  initialFrame.Bytes.ReadIntL(EventPartitionLostLostBackupCountFieldOffset);

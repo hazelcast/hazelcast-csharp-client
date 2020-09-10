@@ -43,12 +43,32 @@ namespace Hazelcast.Protocol.Codecs
     /// Adds an interceptor for this map. Added interceptor will intercept operations
     /// and execute user defined methods and will cancel operations if user defined method throw exception.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapAddInterceptorServerCodec
+#else
     internal static class MapAddInterceptorCodec
+#endif
     {
         public const int RequestMessageType = 70656; // 0x011400
         public const int ResponseMessageType = 70657; // 0x011401
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// interceptor to add
+            ///</summary>
+            public IData Interceptor { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData interceptor)
         {
@@ -66,6 +86,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Interceptor = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -74,6 +106,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public string Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(string response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            StringCodec.Encode(clientMessage, response);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

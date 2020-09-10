@@ -42,12 +42,32 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Applies the aggregation logic on all map entries and returns the result
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapAggregateServerCodec
+#else
     internal static class MapAggregateCodec
+#endif
     {
         public const int RequestMessageType = 80128; // 0x013900
         public const int ResponseMessageType = 80129; // 0x013901
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the map.
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// aggregator to aggregate the entries with
+            ///</summary>
+            public IData Aggregator { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData aggregator)
         {
@@ -65,6 +85,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Aggregator = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -73,6 +105,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

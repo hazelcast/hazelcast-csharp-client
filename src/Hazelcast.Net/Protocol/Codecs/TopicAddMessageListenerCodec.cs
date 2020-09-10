@@ -43,7 +43,11 @@ namespace Hazelcast.Protocol.Codecs
     /// Subscribes to this topic. When someone publishes a message on this topic. onMessage() function of the given
     /// MessageListener is called. More than one message listener can be added on one instance.
     ///</summary>
+#if SERVER_CODEC
+    internal static class TopicAddMessageListenerServerCodec
+#else
     internal static class TopicAddMessageListenerCodec
+#endif
     {
         public const int RequestMessageType = 262656; // 0x040200
         public const int ResponseMessageType = 262657; // 0x040201
@@ -55,6 +59,22 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventTopicUuidFieldOffset = EventTopicPublishTimeFieldOffset + BytesExtensions.SizeOfLong;
         private const int EventTopicInitialFrameSize = EventTopicUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventTopicMessageType = 262658; // 0x040202
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Topic
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// if true listens only local events on registered member
+            ///</summary>
+            public bool LocalOnly { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, bool localOnly)
         {
@@ -72,6 +92,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -80,6 +112,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(Guid response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
@@ -90,11 +134,27 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodeTopicEvent(IData item, long publishTime, Guid uuid)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventTopicInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventTopicMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(EventTopicPublishTimeFieldOffset, publishTime);
+            initialFrame.Bytes.WriteGuidL(EventTopicUuidFieldOffset, uuid);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            DataCodec.Encode(clientMessage, item);
+            return clientMessage;
+        }
+#endif
         public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleTopicEventAsync handleTopicEventAsync, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventTopicMessageType) {
+            if (messageType == EventTopicMessageType)
+            {
                 var initialFrame = iterator.Take();
                 var publishTime =  initialFrame.Bytes.ReadLongL(EventTopicPublishTimeFieldOffset);
                 var uuid =  initialFrame.Bytes.ReadGuidL(EventTopicUuidFieldOffset);

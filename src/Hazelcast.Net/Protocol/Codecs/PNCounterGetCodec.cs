@@ -49,7 +49,11 @@ namespace Hazelcast.Protocol.Codecs
     /// If smart routing is disabled, the actual member processing the client
     /// message may act as a proxy.
     ///</summary>
+#if SERVER_CODEC
+    internal static class PNCounterGetServerCodec
+#else
     internal static class PNCounterGetCodec
+#endif
     {
         public const int RequestMessageType = 1900800; // 0x1D0100
         public const int ResponseMessageType = 1900801; // 0x1D0101
@@ -58,6 +62,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int ResponseValueFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + BytesExtensions.SizeOfInt;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// the name of the PNCounter
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// last observed replica timestamps (vector clock)
+            ///</summary>
+            public IList<KeyValuePair<Guid, long>> ReplicaTimestamps { get; set; }
+
+            /// <summary>
+            /// the target replica
+            ///</summary>
+            public Guid TargetReplicaUUID { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<Guid, long>> replicaTimestamps, Guid targetReplicaUUID)
         {
@@ -75,6 +100,19 @@ namespace Hazelcast.Protocol.Codecs
             EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
             return clientMessage;
         }
+
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.TargetReplicaUUID = initialFrame.Bytes.ReadGuidL(RequestTargetReplicaUUIDFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
+            return request;
+        }
+#endif
 
         public sealed class ResponseParameters
         {
@@ -94,6 +132,20 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public int ReplicaCount { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(long @value, ICollection<KeyValuePair<Guid, long>> replicaTimestamps, int replicaCount)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLongL(ResponseValueFieldOffset, @value);
+            initialFrame.Bytes.WriteIntL(ResponseReplicaCountFieldOffset, replicaCount);
+            clientMessage.Append(initialFrame);
+            EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -49,7 +49,11 @@ namespace Hazelcast.Protocol.Codecs
     /// The predicate, filter and projection may be {@code null} in which case all elements are returned
     /// and no projection is applied.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapEventJournalReadServerCodec
+#else
     internal static class MapEventJournalReadCodec
+#endif
     {
         public const int RequestMessageType = 82432; // 0x014200
         public const int ResponseMessageType = 82433; // 0x014201
@@ -60,6 +64,42 @@ namespace Hazelcast.Protocol.Codecs
         private const int ResponseReadCountFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseNextSeqFieldOffset = ResponseReadCountFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = ResponseNextSeqFieldOffset + BytesExtensions.SizeOfLong;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of the map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// the startSequence of the first item to read
+            ///</summary>
+            public long StartSequence { get; set; }
+
+            /// <summary>
+            /// the minimum number of items to read.
+            ///</summary>
+            public int MinSize { get; set; }
+
+            /// <summary>
+            /// the maximum number of items to read.
+            ///</summary>
+            public int MaxSize { get; set; }
+
+            /// <summary>
+            /// the predicate to apply before processing events
+            ///</summary>
+            public IData Predicate { get; set; }
+
+            /// <summary>
+            /// the projection to apply to journal events
+            ///</summary>
+            public IData Projection { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, long startSequence, int minSize, int maxSize, IData predicate, IData projection)
         {
@@ -80,6 +120,22 @@ namespace Hazelcast.Protocol.Codecs
             CodecUtil.EncodeNullable(clientMessage, projection, DataCodec.Encode);
             return clientMessage;
         }
+
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.StartSequence = initialFrame.Bytes.ReadLongL(RequestStartSequenceFieldOffset);
+            request.MinSize = initialFrame.Bytes.ReadIntL(RequestMinSizeFieldOffset);
+            request.MaxSize = initialFrame.Bytes.ReadIntL(RequestMaxSizeFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Predicate = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            request.Projection = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            return request;
+        }
+#endif
 
         public sealed class ResponseParameters
         {
@@ -104,6 +160,21 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public long NextSeq { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(int readCount, ICollection<IData> items, long[] itemSeqs, long nextSeq)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(ResponseReadCountFieldOffset, readCount);
+            initialFrame.Bytes.WriteLongL(ResponseNextSeqFieldOffset, nextSeq);
+            clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, items, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, itemSeqs, LongArrayCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

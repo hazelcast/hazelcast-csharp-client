@@ -43,12 +43,22 @@ namespace Hazelcast.Protocol.Codecs
     /// Triggers partition assignment manually on the cluster.
     /// Note that Partition based operations triggers this automatically
     ///</summary>
+#if SERVER_CODEC
+    internal static class ClientTriggerPartitionAssignmentServerCodec
+#else
     internal static class ClientTriggerPartitionAssignmentCodec
+#endif
     {
         public const int RequestMessageType = 4096; // 0x001000
         public const int ResponseMessageType = 4097; // 0x001001
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+        }
+#endif
 
         public static ClientMessage EncodeRequest()
         {
@@ -64,9 +74,30 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

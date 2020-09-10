@@ -43,7 +43,11 @@ namespace Hazelcast.Protocol.Codecs
     /// Inserts the specified element into this queue, waiting up to the specified wait time if necessary for space to
     /// become available.
     ///</summary>
+#if SERVER_CODEC
+    internal static class TransactionalQueueOfferServerCodec
+#else
     internal static class TransactionalQueueOfferCodec
+#endif
     {
         public const int RequestMessageType = 1179904; // 0x120100
         public const int ResponseMessageType = 1179905; // 0x120101
@@ -53,6 +57,37 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestInitialFrameSize = RequestTimeoutFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Transcational Queue
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// ID of the transaction
+            ///</summary>
+            public Guid TxnId { get; set; }
+
+            /// <summary>
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///</summary>
+            public long ThreadId { get; set; }
+
+            /// <summary>
+            /// The element to add
+            ///</summary>
+            public IData Item { get; set; }
+
+            /// <summary>
+            /// How long to wait before giving up, in milliseconds
+            ///</summary>
+            public long Timeout { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData item, long timeout)
         {
@@ -73,6 +108,21 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Timeout = initialFrame.Bytes.ReadLongL(RequestTimeoutFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Item = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -81,6 +131,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public bool Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(bool response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -52,7 +52,11 @@ namespace Hazelcast.Protocol.Codecs
     /// structurally modified in any way other than via the returned list.(Structural modifications are those that change
     /// the size of this list, or otherwise perturb it in such a fashion that iterations in progress may yield incorrect results.)
     ///</summary>
+#if SERVER_CODEC
+    internal static class ListSubServerCodec
+#else
     internal static class ListSubCodec
+#endif
     {
         public const int RequestMessageType = 333056; // 0x051500
         public const int ResponseMessageType = 333057; // 0x051501
@@ -60,6 +64,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestToFieldOffset = RequestFromFieldOffset + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestToFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the List
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Low endpoint (inclusive) of the subList
+            ///</summary>
+            public int From { get; set; }
+
+            /// <summary>
+            /// High endpoint (exclusive) of the subList
+            ///</summary>
+            public int To { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, int @from, int to)
         {
@@ -78,6 +103,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.From = initialFrame.Bytes.ReadIntL(RequestFromFieldOffset);
+            request.To = initialFrame.Bytes.ReadIntL(RequestToFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -86,6 +124,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IList<IData> Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(ICollection<IData> response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

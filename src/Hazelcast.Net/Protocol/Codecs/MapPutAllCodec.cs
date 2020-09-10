@@ -48,14 +48,46 @@ namespace Hazelcast.Protocol.Codecs
     /// matching to a different partition id shall be ignored. The API implementation using this request may need to send multiple
     /// of these request messages for filling a request for a key set if the keys belong to different partitions.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapPutAllServerCodec
+#else
     internal static class MapPutAllCodec
+#endif
     {
         public const int RequestMessageType = 76800; // 0x012C00
         public const int ResponseMessageType = 76801; // 0x012C01
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestTriggerMapLoaderFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestTriggerMapLoaderFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
-        public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<IData, IData>> entries)
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// mappings to be stored in this map
+            ///</summary>
+            public IList<KeyValuePair<IData, IData>> Entries { get; set; }
+
+            /// <summary>
+            /// should trigger MapLoader for elements not in this map
+            ///</summary>
+            public bool TriggerMapLoader { get; set; }
+
+            /// <summary>
+            /// <c>true</c> if the triggerMapLoader is received from the client, <c>false</c> otherwise.
+            /// If this is false, triggerMapLoader has the default value for its type.
+            /// </summary>
+            public bool IsTriggerMapLoaderExists { get; set; }
+        }
+#endif
+
+        public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<IData, IData>> entries, bool triggerMapLoader)
         {
             var clientMessage = new ClientMessage
             {
@@ -65,15 +97,45 @@ namespace Hazelcast.Protocol.Codecs
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBoolL(RequestTriggerMapLoaderFieldOffset, triggerMapLoader);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             EntryListCodec.Encode(clientMessage, entries, DataCodec.Encode, DataCodec.Encode);
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            if (initialFrame.Bytes.Length >= RequestTriggerMapLoaderFieldOffset + BytesExtensions.SizeOfBool)
+            {
+                request.TriggerMapLoader = initialFrame.Bytes.ReadBoolL(RequestTriggerMapLoaderFieldOffset);
+                request.IsTriggerMapLoaderExists = true;
+            }
+            else request.IsTriggerMapLoaderExists = false;
+            request.Name = StringCodec.Decode(iterator);
+            request.Entries = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -42,12 +42,32 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Inserts the specified element into this queue, waiting if necessary for space to become available.
     ///</summary>
+#if SERVER_CODEC
+    internal static class QueuePutServerCodec
+#else
     internal static class QueuePutCodec
+#endif
     {
         public const int RequestMessageType = 197120; // 0x030200
         public const int ResponseMessageType = 197121; // 0x030201
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Queue
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The element to add
+            ///</summary>
+            public IData Value { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData @value)
         {
@@ -65,9 +85,32 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            iterator.Take(); // empty initial frame
+            request.Name = StringCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

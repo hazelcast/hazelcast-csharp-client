@@ -42,13 +42,38 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Fetches specified number of entries from the specified partition starting from specified table index.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapFetchEntriesServerCodec
+#else
     internal static class MapFetchEntriesCodec
+#endif
     {
         public const int RequestMessageType = 79872; // 0x013800
         public const int ResponseMessageType = 79873; // 0x013801
         private const int RequestBatchFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestBatchFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the map.
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The index-size pairs that define the state of iteration
+            ///</summary>
+            public IList<KeyValuePair<int, int>> IterationPointers { get; set; }
+
+            /// <summary>
+            /// The number of items to be batched
+            ///</summary>
+            public int Batch { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, ICollection<KeyValuePair<int, int>> iterationPointers, int batch)
         {
@@ -67,6 +92,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.Batch = initialFrame.Bytes.ReadIntL(RequestBatchFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.IterationPointers = EntryListIntegerIntegerCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -80,6 +118,19 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IList<KeyValuePair<IData, IData>> Entries { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(ICollection<KeyValuePair<int, int>> iterationPointers, ICollection<KeyValuePair<IData, IData>> entries)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            EntryListIntegerIntegerCodec.Encode(clientMessage, iterationPointers);
+            EntryListCodec.Encode(clientMessage, entries, DataCodec.Encode, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

@@ -44,13 +44,43 @@ namespace Hazelcast.Protocol.Codecs
     /// be replaced by the specified one and returned from the call. In addition, you have to specify a ttl and its TimeUnit
     /// to define when the value is outdated and thus should be removed from the replicated map.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ReplicatedMapPutServerCodec
+#else
     internal static class ReplicatedMapPutCodec
+#endif
     {
         public const int RequestMessageType = 852224; // 0x0D0100
         public const int ResponseMessageType = 852225; // 0x0D0101
         private const int RequestTtlFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the ReplicatedMap
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Key with which the specified value is to be associated.
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// Value to be associated with the specified key
+            ///</summary>
+            public IData Value { get; set; }
+
+            /// <summary>
+            /// ttl in milliseconds to be associated with the specified key-value pair
+            ///</summary>
+            public long Ttl { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key, IData @value, long ttl)
         {
@@ -70,6 +100,20 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -78,6 +122,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IData Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(IData response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

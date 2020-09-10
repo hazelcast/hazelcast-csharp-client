@@ -42,13 +42,38 @@ namespace Hazelcast.Protocol.Codecs
     /// <summary>
     /// Loads the given keys. This is a batch load operation so that an implementation can optimize the multiple loads.
     ///</summary>
+#if SERVER_CODEC
+    internal static class MapLoadGivenKeysServerCodec
+#else
     internal static class MapLoadGivenKeysCodec
+#endif
     {
         public const int RequestMessageType = 73984; // 0x012100
         public const int ResponseMessageType = 73985; // 0x012101
         private const int RequestReplaceExistingValuesFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestReplaceExistingValuesFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// name of map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// keys to load
+            ///</summary>
+            public IList<IData> Keys { get; set; }
+
+            /// <summary>
+            /// when <code>true</code>, existing values in the Map will be replaced by those loaded from the MapLoader
+            ///</summary>
+            public bool ReplaceExistingValues { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, ICollection<IData> keys, bool replaceExistingValues)
         {
@@ -67,9 +92,33 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.ReplaceExistingValues = initialFrame.Bytes.ReadBoolL(RequestReplaceExistingValuesFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse()
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {

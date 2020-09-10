@@ -43,7 +43,11 @@ namespace Hazelcast.Protocol.Codecs
     /// Adds the specified entry listener for the specified key. The listener will be notified for all
     /// add/remove/update/evict events of the specified key only.
     ///</summary>
+#if SERVER_CODEC
+    internal static class ReplicatedMapAddEntryListenerToKeyServerCodec
+#else
     internal static class ReplicatedMapAddEntryListenerToKeyCodec
+#endif
     {
         public const int RequestMessageType = 855040; // 0x0D0C00
         public const int ResponseMessageType = 855041; // 0x0D0C01
@@ -56,6 +60,27 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventEntryNumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventEntryInitialFrameSize = EventEntryNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventEntryMessageType = 855042; // 0x0D0C02
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Replicated Map
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Key with which the specified value is to be associated.
+            ///</summary>
+            public IData Key { get; set; }
+
+            /// <summary>
+            /// if true fires events that originated from this node only, otherwise fires all events
+            ///</summary>
+            public bool LocalOnly { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, IData key, bool localOnly)
         {
@@ -74,6 +99,19 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -82,6 +120,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public Guid Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(Guid response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
+            clientMessage.Append(initialFrame);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
@@ -92,11 +142,31 @@ namespace Hazelcast.Protocol.Codecs
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodeEntryEvent(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventEntryInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventEntryMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(EventEntryEventTypeFieldOffset, eventType);
+            initialFrame.Bytes.WriteGuidL(EventEntryUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteIntL(EventEntryNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, @value, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, oldValue, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, mergingValue, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
         public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleEntryEventAsync handleEntryEventAsync, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventEntryMessageType) {
+            if (messageType == EventEntryMessageType)
+            {
                 var initialFrame = iterator.Take();
                 var eventType =  initialFrame.Bytes.ReadIntL(EventEntryEventTypeFieldOffset);
                 var uuid =  initialFrame.Bytes.ReadGuidL(EventEntryUuidFieldOffset);

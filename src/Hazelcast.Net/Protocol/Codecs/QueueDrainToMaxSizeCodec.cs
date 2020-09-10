@@ -46,13 +46,33 @@ namespace Hazelcast.Protocol.Codecs
     /// ILLEGAL_ARGUMENT. Further, the behavior of this operation is undefined if the specified collection is
     /// modified while the operation is in progress.
     ///</summary>
+#if SERVER_CODEC
+    internal static class QueueDrainToMaxSizeServerCodec
+#else
     internal static class QueueDrainToMaxSizeCodec
+#endif
     {
         public const int RequestMessageType = 199168; // 0x030A00
         public const int ResponseMessageType = 199169; // 0x030A01
         private const int RequestMaxSizeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestMaxSizeFieldOffset + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+
+#if SERVER_CODEC
+        public sealed class RequestParameters
+        {
+
+            /// <summary>
+            /// Name of the Queue
+            ///</summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The maximum number of elements to transfer
+            ///</summary>
+            public int MaxSize { get; set; }
+        }
+#endif
 
         public static ClientMessage EncodeRequest(string name, int maxSize)
         {
@@ -70,6 +90,18 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
+#if SERVER_CODEC
+        public static RequestParameters DecodeRequest(ClientMessage clientMessage)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var request = new RequestParameters();
+            var initialFrame = iterator.Take();
+            request.MaxSize = initialFrame.Bytes.ReadIntL(RequestMaxSizeFieldOffset);
+            request.Name = StringCodec.Decode(iterator);
+            return request;
+        }
+#endif
+
         public sealed class ResponseParameters
         {
 
@@ -78,6 +110,18 @@ namespace Hazelcast.Protocol.Codecs
             ///</summary>
             public IList<IData> Response { get; set; }
         }
+
+#if SERVER_CODEC
+        public static ClientMessage EncodeResponse(ICollection<IData> response)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
 
         public static ResponseParameters DecodeResponse(ClientMessage clientMessage)
         {
