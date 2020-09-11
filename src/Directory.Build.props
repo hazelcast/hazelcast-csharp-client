@@ -1,0 +1,50 @@
+<Project>
+
+  <!--
+    note that project files that define constants must do so as
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+  -->
+
+  <!--
+    DEFINES
+    - HZ_CONSOLE enables the Hazelcast troubleshooting console
+        do *not* ship a release with HZ_CONSOLE defined!
+    - CODE_ANALYSIS enables NDepend code analysis
+    - HZ_OPTIMIZE_ASYNC enables async/await optimizations
+  -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>HZ_CONSOLE,CODE_ANALYSIS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants></DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <!--<Nullable>enable</Nullable>-->
+  </PropertyGroup>
+
+  <PropertyGroup>
+
+    <!--
+    https://cezarypiatek.github.io/post/setting-assembly-and-package-metadata/
+    <Version>4.0.0-alpha.2</Version>
+    -->
+
+    <AssemblyVersion>4.0.0</AssemblyVersion>
+    <FileVersion>4.0.0</FileVersion>
+    <VersionPrefix>4.0.0</VersionPrefix>
+    <VersionSuffix>alpha.3</VersionSuffix>
+
+    <Authors>Hazelcast, Inc.</Authors>
+    <Product>Hazelcast .NET Client</Product>
+    <Company>Hazelcast, Inc.</Company>
+    <Copyright>Copyright (C) 2008-2020 Hazelcast, Inc.</Copyright>
+    <Title>Hazelcast .NET Client</Title>
+
+    <!-- https://devblogs.microsoft.com/nuget/managing-package-owners/ -->
+    <Owners>Hazelcast, Inc.</Owners>
+
+  </PropertyGroup>
+
+</Project>

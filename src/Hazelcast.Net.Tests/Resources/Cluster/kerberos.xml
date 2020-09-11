@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
+
+  <properties>
+    <property name="hazelcast.map.invalidation.batch.enabled">false</property>
+    <property name="hazelcast.cache.invalidation.batch.size">10</property>
+    <property name="hazelcast.partition.count">271</property>
+  </properties>
+
+  <network>
+    <port auto-increment="true" port-count="100">5701</port>
+    <outbound-ports>
+      <!--
+            Allowed port range when connecting to other nodes.
+            0 or * means use system provided port.
+            -->
+      <ports>0</ports>
+    </outbound-ports>
+    <join>
+      <multicast enabled="true">
+        <multicast-group>224.7.7.7</multicast-group>
+        <multicast-port>54327</multicast-port>
+      </multicast>
+      <tcp-ip enabled="false">
+        <interface>127.0.0.1</interface>
+      </tcp-ip>
+    </join>
+    <public-address>127.0.0.1</public-address>
+    <ssl enabled="false"/>
+    <socket-interceptor enabled="false"/>
+  </network>
+  <serialization>
+    <data-serializable-factories>
+      <data-serializable-factory factory-id="66">
+        com.hazelcast.client.test.IdentifiedFactory
+      </data-serializable-factory>
+    </data-serializable-factories>
+  </serialization>
+
+  <queue name="ClientQueueTest*">
+    <!--
+            Maximum size of the queue. When a JVM's local queue size reaches the maximum,
+            all put/offer operations will get blocked until the queue size
+            of the JVM goes down below the maximum.
+            Any integer between 0 and Integer.MAX_VALUE. 0 means
+            Integer.MAX_VALUE. Default is 0.
+        -->
+    <max-size>6</max-size>
+  </queue>
+  <ringbuffer name="ClientRingbufferTest*">
+    <capacity>10</capacity>
+  </ringbuffer>
+  <ringbuffer name="ClientRingbufferTestWithTTL*">
+    <capacity>10</capacity>
+    <time-to-live-seconds>180</time-to-live-seconds>
+  </ringbuffer>
+
+  <security enabled="true">
+    <realms>
+
+      <realm name="kerberosRealm">
+        <authentication>
+          <kerberos>
+            <security-realm>krb5Acceptor</security-realm>
+
+            <!-- relax flags check because .NET tokens have too many things -->
+            <relax-flags-check>true</relax-flags-check>
+
+            <!-- permissions via LDAP -->
+            <ldap>
+              <!-- LDAP server -->
+              <url>ldap://server19.hz.local/</url>
+
+              <!-- LDAP auth -->
+              <system-user-dn>CN=Administrateur,CN=Users,DC=hz,DC=local</system-user-dn>
+              <system-user-password>kErb!55</system-user-password>
+
+              <!-- no need to auth the user, it's been done already by Kerberos -->
+              <skip-authentication>true</skip-authentication>
+
+              <!-- find the user in AD (ensure UPN is set in AD!) -->
+              <user-context>CN=Users,DC=hz,DC=local</user-context>
+              <user-search-scope>subtree</user-search-scope>
+              <user-filter>(userPrincipalName={login})</user-filter>
+
+              <!-- map one attribute to a role -->
+              <!--
+              <role-mapping-mode>attribute</role-mapping-mode>
+              <role-mapping-attribute>cn</role-mapping-attribute>
+              -->
+
+              <!-- map roles via groups -->
+              <role-mapping-mode>reverse</role-mapping-mode>
+              <role-context>CN=Users,DC=hz,DC=local</role-context>
+              <role-search-scope>subtree</role-search-scope>
+              <role-filter>(member={memberDN})</role-filter>
+              <!--  (&(member=CN=hzclient,CN=Users,DC=hz,DC=local)(objectClass=group)) -->
+              <role-recursion-max-depth>4</role-recursion-max-depth>
+              <role-name-attribute>cn</role-name-attribute>
+            </ldap>
+          </kerberos>
+        </authentication>
+      </realm>
+
+      <realm name="krb5Acceptor">
+        <authentication>
+          <jaas>
+            <login-module class-name="com.sun.security.auth.module.Krb5LoginModule" usage="REQUIRED">
+              <properties>
+                <property name="isInitiator">false</property>
+                <property name="useTicketCache">false</property>
+                <property name="doNotPrompt">true</property>
+                <property name="useKeyTab">true</property>
+                <property name="storeKey">true</property>
+
+                <!-- the service principal -->
+                <property name="principal">hz/cluster1234@HZ.LOCAL</property>
+
+                <!-- on Windows, be sure to use the proper Windows paths with backslashes, not slashes! -->
+                <property name="keyTab">d:\d\Hazelcast\CSharpClient_zb\krb5\hzcluster1234.keytab</property>
+              </properties>
+            </login-module>
+          </jaas>
+        </authentication>
+      </realm>
+
+    </realms>
+
+    <client-authentication realm="kerberosRealm"/>
+
+    <client-permissions>
+      <!--
+        give all permissions to principal hzclient@HZ.LOCAL, i.e. the
+        user which is running the .NET client application
+
+        if this is missing, tests fail:
+        Permission ("com.hazelcast.security.permission.MapPermission" "4073adc9-ca43-4d46-a9cf-94eab5c6b26c" "create") denied!
+      -->
+      <!--
+      <all-permissions principal="hzclient@HZ.LOCAL" />
+      -->
+      <all-permissions principal="hzcluster1234users" />
+    </client-permissions>
+
+  </security>
+
+</hazelcast>

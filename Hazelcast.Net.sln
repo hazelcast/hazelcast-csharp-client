@@ -1,25 +1,37 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.29728.190
+VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net", "Hazelcast.Net\Hazelcast.Net.csproj", "{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Tests", "src\Hazelcast.Net.Tests\Hazelcast.Net.Tests.csproj", "{C28F0950-963B-4C2B-B6F3-EDE222FA7863}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Test", "Hazelcast.Test\Hazelcast.Test.csproj", "{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Benchmarks", "src\Hazelcast.Net.Benchmarks\Hazelcast.Net.Benchmarks.csproj", "{96D8AFF5-1DE2-49B5-9AA1-EC3638E5DD0E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Examples", "Hazelcast.Examples\Hazelcast.Examples.csproj", "{0A545288-EF38-4594-9E53-65163B0C12CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net", "src\Hazelcast.Net\Hazelcast.Net.csproj", "{0FFB1214-5F8E-46AC-A3A1-F299D6024D8A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9D8841A5-B15F-45D4-BB4E-C3AD198AFB61}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Testing", "src\Hazelcast.Net.Testing\Hazelcast.Net.Testing.csproj", "{E2C1EA65-5600-4793-BB28-27DC975E1EF0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD4710D4-ECC2-452E-A7C6-0320AFAFF124}"
 	ProjectSection(SolutionItems) = preProject
-		build-docs.bat = build-docs.bat
-		build-nuget.bat = build-nuget.bat
-		build.bat = build.bat
-		build.proj = build.proj
-		build.ps1 = build.ps1
-		build.sh = build.sh
+		src\Directory.Build.props = src\Directory.Build.props
+		LICENSE = LICENSE
 		README.md = README.md
-		shared.project.props = shared.project.props
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Examples", "src\Hazelcast.Net.Examples\Hazelcast.Net.Examples.csproj", "{44933339-75E4-46D0-8688-6687D112E6C9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.DependencyInjection", "src\Hazelcast.Net.DependencyInjection\Hazelcast.Net.DependencyInjection.csproj", "{4CABE35C-8941-43B4-AED8-2ADB6334469D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.JetBrainsAnnotations", "src\Hazelcast.Net.JetBrainsAnnotations\Hazelcast.Net.JetBrainsAnnotations.csproj", "{8516E872-D7ED-4FD8-BBF6-9002B2329E86}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{25300DF5-472C-4D9B-898A-820577F2F9C7}"
+	ProjectSection(SolutionItems) = preProject
+		build\build.proj = build\build.proj
+		build\build.ps1 = build\build.ps1
+		build\build.sh = build\build.sh
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Win32", "src\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj", "{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,23 +39,46 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F131E4AA-9EC7-4840-9E8B-6E6C3A894AB5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FBF1B1FA-66DD-4212-AF51-9391F7391EA6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A545288-EF38-4594-9E53-65163B0C12CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A545288-EF38-4594-9E53-65163B0C12CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A545288-EF38-4594-9E53-65163B0C12CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A545288-EF38-4594-9E53-65163B0C12CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C28F0950-963B-4C2B-B6F3-EDE222FA7863}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C28F0950-963B-4C2B-B6F3-EDE222FA7863}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C28F0950-963B-4C2B-B6F3-EDE222FA7863}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C28F0950-963B-4C2B-B6F3-EDE222FA7863}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96D8AFF5-1DE2-49B5-9AA1-EC3638E5DD0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96D8AFF5-1DE2-49B5-9AA1-EC3638E5DD0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96D8AFF5-1DE2-49B5-9AA1-EC3638E5DD0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96D8AFF5-1DE2-49B5-9AA1-EC3638E5DD0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FFB1214-5F8E-46AC-A3A1-F299D6024D8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FFB1214-5F8E-46AC-A3A1-F299D6024D8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FFB1214-5F8E-46AC-A3A1-F299D6024D8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FFB1214-5F8E-46AC-A3A1-F299D6024D8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2C1EA65-5600-4793-BB28-27DC975E1EF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2C1EA65-5600-4793-BB28-27DC975E1EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2C1EA65-5600-4793-BB28-27DC975E1EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2C1EA65-5600-4793-BB28-27DC975E1EF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44933339-75E4-46D0-8688-6687D112E6C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44933339-75E4-46D0-8688-6687D112E6C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44933339-75E4-46D0-8688-6687D112E6C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44933339-75E4-46D0-8688-6687D112E6C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CABE35C-8941-43B4-AED8-2ADB6334469D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CABE35C-8941-43B4-AED8-2ADB6334469D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CABE35C-8941-43B4-AED8-2ADB6334469D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CABE35C-8941-43B4-AED8-2ADB6334469D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8516E872-D7ED-4FD8-BBF6-9002B2329E86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8516E872-D7ED-4FD8-BBF6-9002B2329E86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8516E872-D7ED-4FD8-BBF6-9002B2329E86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8516E872-D7ED-4FD8-BBF6-9002B2329E86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{25300DF5-472C-4D9B-898A-820577F2F9C7} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {71240A11-E6A4-4AA3-8E3A-C91CB4921246}
+		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}
 	EndGlobalSection
 EndGlobal

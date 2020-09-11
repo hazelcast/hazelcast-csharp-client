@@ -1,0 +1,369 @@
+﻿
+#### NOTES ABOUT ATOMICITY
+
+Partition I, Section 12.6.6 of the CLI spec states: "A conforming CLI shall guarantee
+that read and write access to properly aligned memory locations no larger than the native
+word size is atomic when all the write accesses to a location are the same size."
+
+And, C# specs section 5.5 states: "Reads and writes of the following data types are
+atomic: bool, char, byte, sbyte, short, ushort, uint, int, float, and reference types.
+In addition, reads and writes of enum types with an underlying type in the previous
+list are also atomic. Reads and writes of other types, including long, ulong, double,
+and decimal, as well as user-defined types, are not guaranteed to be atomic."
+
+However - atomic does not imply thread-safety due to the processor reordering reads and
+writes. The variables should be marked volatile, or accessed through Interlocked.
+
+References
+https://stackoverflow.com/questions/9666/is-accessing-a-variable-in-c-sharp-an-atomic-operation
+https://stackoverflow.com/questions/2433772/are-primitive-data-types-in-c-sharp-atomic-thread-safe
+
+So,
+Anything safe as per section 5.5 quoted above has to be volatile
+Anything not safe has to be Interlocked.
+
+
+#### NOTES ABOUT HASHING
+
+In most cases, we keep the original hashing code instead of replacing it with more
+recent and more efficient code available for instance in netstandard 2.1, because before
+we replace the code we need to make sure that it is OK wrt the other clients.
+
+#### NOTES ABOUT CONFIGURE AWAIT
+
+Although not relevant on .NET Core anymore, ConfigureAwait(false) is still important
+in libraries that can be used with the .NET Framework. such as Hazelcast.NET. While we
+could think about weaving it automatically (e.g. with Fody) this is considered too
+cumbersome for now. Instead, we use our own .CAF() extension methods, that could be
+easily nullified with [Conditional] code.
+
+References
+https://particular.net/blog/async-await-tips-and-tricks
+https://github.com/Fody/Fody/
+
+#### NOTES ABOUT FILE NAMING
+
+Class Foo goes into file Foo.cs
+Class Bar nested into class Foo goes into file Foo+Bar.cs
+Partial of class Foo for Bar purpose goes into file Foo.Bar.cs
+Class Foo<T> goes into file Foo`T.cs if needed
+Class Foo<T,U> goes into file Foo`TU.cs if needed
+
+Static classes defining extension methods are named FooBarExtensions where FooBar
+indicates what is being extended and, if necessary, for what purpose.
+
+### NOTES ABOUT TIMEOUT AND CANCELLATION
+
+Every internal asynchronous method can be cancelled via a CancellationToken. Every
+public-facing asynchronous method can be cancelled via a CancellationToken, and also
+exposes an overload accepting a TimeSpan which indicates a timeout.
+
+Methods which are naturally cancelled throw OperationCancelledException whereas
+methods that reach their timeout throw TimeoutException.
+
+#### NOTES ABOUT C# VERSION
+
+References
+https://medium.com/@joni2nja/consider-using-c-8-with-the-net-framework-9dceb20647c5
+https://stackoverflow.com/questions/56651472/does-c-sharp-8-support-the-net-framework
+https://stu.dev/csharp8-doing-unsupported-things/
+
+Decision to use C# 8.0 on all projects, avoiding features not supported by netstandard 2.0.
+"nullable" is currently not enabled because of the amount of warnings, consider it.
+
+
+        // NOTES
+        //
+        // read
+        //  danger of completion source
+        //    https://devblogs.microsoft.com/premier-developer/the-danger-of-taskcompletionsourcet-class/
+        //
+        // sending: we can either queue messages, or just send them immediately
+        //  it does not make a diff for user, who's going to wait anyways
+        //  but queueing may prevent flooding the server
+        //  and, in order to be multi-threaded, we HAVE to serialize the sending
+        //  of messages through the socket - either by queuing or by forcing
+        //  the client to wait - which is kind of a nice way to apply back-
+        //  pressure?
+        //
+        // TODO
+        //  must: implement something, lock in connection
+        //  alternative: implement queuing in connection
+        //
+        // receiving: we process messages immediately so there is no queuing of
+        //  messages - should we have some?
+        //
+        // TODO: understand the schedulers in HZ code
+
+
+#### NOTES ABOUT TASK vs VALUETASK
+
+References
+https://blog.scooletz.com/2018/05/14/task-async-await-valuetask-ivaluetasksource-and-how-to-keep-your-sanity-in-modern-net-world/
+https://stackoverflow.com/questions/43000520/why-would-one-use-taskt-over-valuetaskt-in-c
+https://github.com/dotnet/runtime/issues/15809
+
+ValueTask can greatly improve performances when tasks may complete synchronously,
+but there may be drawbacks too - in fact, the recommendation seems to be to bubble
+ValueTask up when possible, else use Task by default, until actual performance
+benchmarking shows that ValueTask brings some benefits.
+
+
+#### NOTES ABOUT COMPARING TO NULL
+
+C# specs section 7.10.6 states that "The x == null construct is permitted even though T could represent
+a value type, and the result is simply defined to be false when T is a value type." so the line below is
+safe even when key is of type TKey which can be a value type... BUT see Eric Lippert answer
+on https://stackoverflow.com/questions/8823239 for caveats.
+
+if (key == null) throw new ArgumentNullException(nameof(key));
+
+
+
+
+
+
+        // NOTES - FIXME: move this out!
+        //
+        // original hazelcast client internals - on start
+        //
+        // - create configured listeners
+        //     creates the listener classes from configuration
+        //
+        // - start lifecycle service w/listeners
+        //     registers the ILifecycleListener listeners = adds them to _lifecycleListeners
+        //     fire 'starting' lifecycle event
+        //     set 'active'
+        //     fire 'started' lifecycle event
+        //
+        // - start invocation service
+        //     schedules with fixed delay a 'clean resources' task
+        //     which kills the pending 'invocations' when their connection is dead
+        //
+        // - start cluster service w/listeners
+        //     registers the IMembershipListener listeners = adds them to _listeners
+        //     registers the cluster service as a connection listener
+        //       'connection added' => use as 'cluster client' if needed
+        //       'connection removed' => find a new 'cluster client' if needed
+        //
+        // - start connection manager
+        //     start the heartbeat task
+        //       ?
+        //     connects to the cluster
+        //       tries all known addresses until it can obtain a client for that address,
+        //       and that client becomes the 'cluster client' which will handle the 'members
+        //       view' and 'partition view' events
+        //     if smart routing is enabled, schedules with fixed delay a 'connect task'
+        //       which periodically reconnects to all cluster members
+        //     fires 'connection added' / 'connection removed' events
+        //
+        // - wait for initial list of members from cluster service ('members view' event)
+        //     wait for cluster service _initialListFetchedLatch
+        //
+        // - connect to all cluster members
+        //     get or connect to each member (by address)
+        //     todo: maybe this could be lazy?
+        //
+        // - start listener service
+        //     registers the listener service as a connection listener
+        //       'connection added' => for all _registrations, register w/server => _eventHandlers
+        //       'connection removed' => for all _registrations, clear _eventHandlers
+        //
+        // - initialize proxy manager
+        //     fixme: ?
+        //
+        // - initialize load balancer
+        //     fixme: ?
+        //
+        // - add client config listeners
+        //     registers the IDistributedObjectListener listeners = via proxy manager,
+        //       installs the remote subscription on all known clients (in listener service _registrations)
+        //     registers the IPartitionLostListener listeners = via partition service,
+        //       installs the remote subscription on all known clients (in listener service _registrations)
+        //
+        // when a remote subscription is installed via listener service, it goes in _registrations
+        //   this is for any type of subscriptions but cluster events
+        //   ie 'distributed object' and 'partition lost' cluster events, and all dist. object events
+        //   they are installed / maintained on every client
+        //
+        //
+        // obtaining a client for an address means
+        // - establishing a socket connection to that address
+        // - authenticate
+        //     todo: implement retry-able auth for kerberos etc
+        // - if there are no other connections, and cluster id has changed (HandleSuccessfulAuth)
+        //     ha.client.OnClusterRestart fixme=? dispose all 'onClusterChangeDisposables' (none) + clear member list version
+        //     ha.client is 'CONNECTED' + triggers InitializeClientOnCluster
+        //       which "sends state" ie do factory . createAll
+        //       and then, hz.client is 'INITIALIZES' + triggers 'connected' life cycle event
+        //   else if cluster id has not changed, ha.client is 'INITIALIZED' + trigger 'connected' life cycle event
+        // - fire 'connection added'
+        //     cluster considers it for new 'cluster client' if there is none
+        //     listener adds registrations
+        //
+        // the 'cluster client' listens to 'members view' and 'partitions view' events in order to
+        // manage the list of known members and partitions in the cluster
+        //
+        //   handling the 'members view' event means
+        //   - if it's the first time, signal _initialListFetchedLatch
+        //   - fire 'member added' / 'member removed' events
+        //   - which are only used to notify the load balancer
+        //
+        //   handling the 'partition view' event means
+        //   // ?
+        //
+        //
+        // on successful auth, something happens w/cluster?
+        // todo: handle cluster id change (see connection manager)
+        //
+        // when a client is removed,
+        // - properly removed = ListenerService.ConnectionRemoved = ?
+        // - lost = its subscriptions are cleared (but not uninstalled)
+        //
+        // if that client is the 'cluster client', the cluster polls addresses again, to get a new
+        // 'cluster client' - either using the existing client for that address, or connecting a
+        // new client - and then this 'cluster client' subscribes to the 'members view' and
+        // 'partitions view'
+        // todo: it may be faster to consider existing clients first?
+        //
+        //
+        // FIXME and then, create new connections, or re-use existing???
+        //
+        // in 'unisocket' mode, the cluster uses only 1 client - in 'smart routing' mode it
+        // directly talks to the member owning the partition, when relevant.
+        //
+        // wants to talk to a particular member and there is no client for that member yet,
+        //
+        // when a user subscribes to a distributed object (eg, map entry added) event, a subscription
+        // is installed on the cluster, which in turns installs the subscription on each client
+        //
+        // when the user unsubscribes, the subscription is removed on each client
+
+
+#### NOTES ABOUT EXCEPTIONS
+
+src/Hazelcast.Net/Core/ public ServiceFactoryException : HazelcastException
+              +
+
+src/Hazelcast.Net/Exceptions/ public HazelcastException : SystemException
+              ->                                        : Exception
+
+src/Hazelcast.Net/Exceptions/ public InvalidConfigurationException : HazelcastException
+              ->  Configuration/     ConfigurationException
+
+src/Hazelcast.Net/Client/ internal AuthenticationException : HazelcastException
+              ->  Exceptions/ public
+
+src/Hazelcast.Net/Client/Spi/ public ClientNotAllowedInClusterException : HazelcastException
+              ->  Exceptions/        AuthenticationException
+              ->  Exceptions/        ConnectionException
+
+src/Hazelcast.Net/Client/Spi/ internal CpSubsystemException : HazelcastException
+              X
+              / was base class for more exceptions which -> ClientProtocolException
+
+src/Hazelcast.Net/Client/Spi/ internal AssertException : Exception
+src/Hazelcast.Net/Client/Spi/ public CallerNotMemberException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ public RetryableHazelcastException : HazelcastException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ public HazelcastInstanceNotActiveException : InvalidOperationException
+src/Hazelcast.Net/Client/Spi/ public TargetDisconnectedException : HazelcastException
+              / becomes a non-retryable protocol exception but can be retried (see code)
+src/Hazelcast.Net/Client/Spi/ public TargetNotMemberException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ public UndefinedErrorCodeException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal CannotReplicateException : CpSubsystemException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ internal ConfigMismatchException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal CpGroupDestroyedException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal DuplicateTaskException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal HazelcastOverloadException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal IndeterminateOperationStateException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal LeaderDemotedException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal LocalMemberResetException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal LockAcquireLimitReachedException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal LockOwnershipLostException : SynchronizationLockException
+src/Hazelcast.Net/Client/Spi/ internal MaxMessageSizeExceeded : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal MemberLeftException : AggregateException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ internal MutationDisallowedException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal NativeOutOfMemoryException : Exception
+src/Hazelcast.Net/Client/Spi/ internal NodeIdOutOfRangeException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal NotLeaderException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal PartitionMigratingException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ internal QueryResultSizeExceededException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal ReachedMaxSizeException : Exception
+src/Hazelcast.Net/Client/Spi/ internal ReplicatedMapCantBeCreatedOnLiteMemberException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal ResponseAlreadySentException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal RetryableIOException : IOException, IRetryableException
+src/Hazelcast.Net/Client/Spi/ internal ServiceNotFoundException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal SessionExpiredException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal SplitBrainProtectionException : TransactionException
+src/Hazelcast.Net/Client/Spi/ internal StaleAppendRequestException : CpSubsystemException
+src/Hazelcast.Net/Client/Spi/ internal StaleTaskException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal StaleTaskIdException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal TargetNotReplicaException : RetryableHazelcastException
+src/Hazelcast.Net/Client/Spi/ internal TopicOverloadException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal VersionMismatchException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal WaitKeyCancelledException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal WanQueueFullException : HazelcastException
+src/Hazelcast.Net/Client/Spi/ internal WrongTargetException : RetryableHazelcastException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+
+src/Hazelcast.Net/Exceptions/ public ConsistencyLostException : HazelcastException
+src/Hazelcast.Net/Exceptions/ public NoDataMemberInClusterException : HazelcastException
+src/Hazelcast.Net/Exceptions/ public QueryException : HazelcastException
+src/Hazelcast.Net/Exceptions/ public StaleSequenceException : HazelcastException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+
+src/Hazelcast.Net/Net/ internal InvalidAddressException : ArgumentException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+
+src/Hazelcast.Net/Exceptions/ public DistributedObjectDestroyedException : HazelcastException
+              ->  Protocol/   public ClientProtocoleException : HazelcastException
+              / was also thrown when retrieving the object of a 'destroyed' event
+              / should not do it else it just recreates the object
+
+src/Hazelcast.Net/Exceptions/ public HazelcastClientNotActiveException : InvalidOperationException
+              ->                     ClientNotConnectedException : HazelcastException
+
+src/Hazelcast.Net/Serialization/ public HazelcastSerializationException : HazelcastException
+              ->                        SerializationException
+
+src/Hazelcast.Net/Serialization/ internal IncompatibleClassChangeError : SystemException
+              ->                          InvalidPortableField : HazelcastException
+
+src/Hazelcast.Net/Transactions/ internal TransactionException : HazelcastException
+
+src/Hazelcast.Net/Transactions/ internal TransactionNotActiveException : HazelcastException
+              ->                                                         TransactionException
+
+src/Hazelcast.Net/Transactions/ internal TransactionTimedOutException : TransactionException
+
+src/Hazelcast.Tests/Hazelcast.Remote/ public ServerException : TException, TBase
+
+#### NOTES ON TASK SCHEDULER
+
+References
+https://stackoverflow.com/questions/51311321/when-should-task-continuewith-be-called-with-taskscheduler-current-as-an-argumen
+
+TaskScheduler.Default - run on threadpool scheduler
+TaskScheduler.Current - keep running on same scheduler
+
+considering that most of the runtime code uses TaskScheduler.Current when a scheduler is not supplied,
+we pass TaskScheduler.Current whenever a scheduler is required (CA2008)
+
+#### NOTES ON OPTIMIZING ASYNC
+
+References
+https://blog.stephencleary.com/2016/12/eliding-async-await.html
+
+idea is: consider removing async/await for simple overloads - anything else is potentially dangerous
+
+also there is an issue with disposing -> ThenDispose()
+and, benchmarks show that it is very slighly faster to *not* ThenDispose() but rather to async/await
+
+|             Method |     Mean |     Error |    StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------------- |---------:|----------:|----------:|-------:|------:|------:|----------:|
+|        DoSomething | 1.844 us | 0.0345 us | 0.0323 us | 0.0896 |     - |     - |     383 B |
+| DoSomethingEliding | 1.999 us | 0.0361 us | 0.0721 us | 0.1259 |     - |     - |     529 B |
+
+
+
+####

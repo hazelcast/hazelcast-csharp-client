@@ -1,0 +1,157 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <RootNamespace>Hazelcast</RootNamespace>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>Open-source .NET client for Hazelcast, the open-source in-memory distributed computing platform.</Description>
+    <PackageProjectUrl>https://hazelcast.github.io/hazelcast-csharp-client/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/hazelcast/hazelcast-csharp-client</RepositoryUrl>
+    <PackageTags>hazelcast cache imdg big-data in-memory datagrid clustering scalabilty distributed caching</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryType>Git</RepositoryType>
+    <PackageIcon>nuget-logo.png</PackageIcon>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- repository url can be published to nuspec -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <!-- building generates some *.AssemblyInfo.cs files that we want to embed -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- TODO add a Condition="'$(JENKINS_CI)' == 'true'" of some sort + args to the build script? -->
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.7" />
+    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hazelcast.Net.JetBrainsAnnotations\Hazelcast.Net.JetBrainsAnnotations.csproj" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!--
+  <ItemGroup>
+    <None Include="nuget-logo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+  -->
+
+  <!-- required for building net462+ -->
+  <!--
+  <ItemGroup>
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.IdentityModel.Selectors" />
+  </ItemGroup>
+  -->
+
+  <ItemGroup>
+    <Compile Update="Core\BytesExtensions.*.cs">
+        <DependentUpon>BytesExtensions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Clustering\Cluster.*.cs">
+        <DependentUpon>Cluster.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Clustering\Cluster+*.cs">
+        <DependentUpon>Cluster.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Configuration\Binding\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHDictionary.*.cs">
+        <DependentUpon>IHDictionary.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHReplicatedDictionary.*.cs">
+        <DependentUpon>IHReplicatedDictionary.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Networking\SocketConnectionBase+*.cs">
+        <DependentUpon>SocketConnectionBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Serialization\PortableContext+*.cs">
+        <DependentUpon>PortableContext.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Messaging\ClientMessage+*.cs">
+        <DependentUpon>ClientMessage.cs</DependentUpon>
+    </Compile>
+    <Compile Update="HazelcastClient.*.cs">
+      <DependentUpon>HazelcastClient.cs</DependentUpon>
+    </Compile>
+    <Compile Update="HazelcastOptions.*.cs">
+      <DependentUpon>HazelcastOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HCollectionBase.*.cs">
+      <DependentUpon>HCollectionBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HList.*.cs">
+      <DependentUpon>HList.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HDictionary.*.cs">
+      <DependentUpon>HDictionary.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HDictionaryWithCache.*.cs">
+      <DependentUpon>HDictionaryWithCache.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMultiDictionary.*.cs">
+      <DependentUpon>HMultiDictionary.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HQueue.*.cs">
+      <DependentUpon>HQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HReplicatedDictionary.*.cs">
+      <DependentUpon>HReplicatedDictionary.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HRingBuffer.*.cs">
+      <DependentUpon>HRingBuffer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HSet.*.cs">
+      <DependentUpon>HSet.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HTopic.*.cs">
+      <DependentUpon>HTopic.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Configuration\Binding\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="nuget-logo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
