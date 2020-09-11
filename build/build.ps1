@@ -193,13 +193,13 @@ if (-not [System.String]::IsNullOrWhiteSpace($framework)) {
 
 # determine tests categories
 if(!($enterprise)) {
-    if (-not [System.String]::IsNullOrWhiteSpace($testFilter)) { $testFilter += " && " }
+    if (-not [System.String]::IsNullOrWhiteSpace($testFilter)) { $testFilter += " && " } else { $testFilter = "" }
     $testFilter += "cat != enterprise"
 }
 
+ # do not cover tests themselves, nor the testing plumbing
 if (-not [System.String]::IsNullOrWhiteSpace($coverageFilter)) { $coverageFilter += ";" }
-$coverageFilter += "-:Hazelcast.Net.Tests" # do not cover tests themselves
-$coverageFilter += " -:Hazelcast.Net.Testing" # nor the testing plumbing
+$coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing"
 
 # set server version (to filter tests)
 $env:HAZELCAST_SERVER_VERSION=$server.TrimEnd("-SNAPSHOT")
@@ -722,9 +722,9 @@ function RunDotNetCoreTests($f) {
             `
             "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
             "NUnit.TestOutputXml=`".`"", `
-            "NUnit.Labels=Before", `
-            "NUnit.Where=`"$testFilter`"" )
+            "NUnit.Labels=Before" )
 
+        if ($testFilter -ne "") { $dotCoverArgs += "NUnit.Where=`"$testFilter`"" }
 
         Write-Output "exec: dotnet dotcover $dotCoverArgs"
         pushd "$srcDir/Hazelcast.Net.Tests"
@@ -743,8 +743,9 @@ function RunDotNetCoreTests($f) {
             `
             "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
             "NUnit.TestOutputXml=`".`"", `
-            "NUnit.Labels=Before", `
-            "NUnit.Where=`"$testFilter`"" )
+            "NUnit.Labels=Before" )
+
+            if ($testFilter -ne "") { $dotCoverArgs += "NUnit.Where=`"$testFilter`"" }
 
         Write-Output "exec: dotnet $dotnetArgs"
         &dotnet $dotnetArgs
@@ -769,9 +770,7 @@ function RunDotNetFrameworkTests($f) {
     $nunit = "$userHome/.nuget/packages/nunit.consolerunner/$v/tools/nunit3-console.exe"
     $nunitArgs=@("`"${testDLL}`"", "--labels=Before", "--result=`"$tmpDir/tests/results/results-$f.xml`"", "--framework=$nuf")
 
-    if ($testFilter.Length -gt 0) {
-        $nunitArgs += @("--where=`"${testCategory}`"")
-    }
+    if ($testFilter -ne "") { $nunitArgs += @("--where=`"${testFilter}`"") }
 
     if ($doCover) {
 
