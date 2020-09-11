@@ -38,7 +38,7 @@ namespace Hazelcast.Clustering
         private readonly ClusterMembers _clusterMembers;
 
         private readonly ILogger _logger;
-        public readonly DistributedEventScheduler _scheduler;
+        private readonly DistributedEventScheduler _scheduler;
 
         private Func<ValueTask> _onPartitionsUpdated;
         private Func<MemberLifecycleEventType, MemberLifecycleEventArgs, ValueTask> _onMemberLifecycleEvent;
