@@ -33,8 +33,8 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var map = await client.GetReplicatedDictionaryAsync<string, string>("replicatedMap-example");
 
             // add values
-            await map.AddOrUpdateAsync("key", "value");
-            await map.AddOrUpdateAsync("key2", "value2");
+            await map.SetAsync("key", "value");
+            await map.SetAsync("key2", "value2");
 
             // report
             Console.WriteLine("Key: " + await map.GetAsync("key"));

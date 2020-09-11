@@ -35,8 +35,8 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // add values
             Console.WriteLine("Populate map");
-            await map.AddOrUpdateAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
-            await map.AddOrUpdateAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
+            await map.SetAsync("item1", new HazelcastJsonValue("{ \"age\": 4 }"));
+            await map.SetAsync("item2", new HazelcastJsonValue("{ \"age\": 20 }"));
 
             // count
             Console.WriteLine("Count");

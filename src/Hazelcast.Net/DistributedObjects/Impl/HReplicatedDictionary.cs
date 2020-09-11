@@ -37,10 +37,10 @@ namespace Hazelcast.DistributedObjects.Impl
             _partitionId = partitionId;
         }
 
-        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value)
-            => AddOrUpdateAsync(key, value, TimeToLive.InfiniteTimeSpan);
+        public Task<TValue> SetAsync(TKey key, TValue value)
+            => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public async Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task<TValue> SetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries)
+        public async Task SetAsync(IDictionary<TKey, TValue> entries)
         {
             var entriesData = new List<KeyValuePair<IData, IData>>(entries.Count);
             foreach (var (key, value) in entries)

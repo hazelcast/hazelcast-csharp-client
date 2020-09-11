@@ -67,27 +67,46 @@ namespace Hazelcast.DistributedObjects
         Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.AddOrUpdateAsync(TKey, TValue, bool)"/>.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.SetAsync(TKey, TValue)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
-        /// <param name="returnValue">Whether to return the updated value, if any.</param>
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, bool returnValue = false);
+        Task SetAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.AddOrUpdateAsync(TKey, TValue, TimeSpan, bool)"/>.
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAndSetAsync(TKey, TValue)"/>.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <remarks>
+        /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<TValue> GetAndSetAsync(TKey key, TValue value);
+
+        /// <summary>
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.SetAsync(TKey, TValue, TimeSpan)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <param name="timeToLive">A time to live.</param>
-        /// <param name="returnValue">Whether to return the updated value, if any.</param>
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive, bool returnValue = false);
+        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAndSetAsync(TKey, TValue, TimeSpan)"/>.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// <remarks>
+        /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
+        /// </remarks>
+        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetOrAddAsync(TKey, TValue)"/>.

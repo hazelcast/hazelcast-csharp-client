@@ -114,7 +114,7 @@ namespace Hazelcast.Tests.Networking
             var client = await CreateAndStartClientAsync();
             var dictionary = await client.GetDictionaryAsync<string, User>(CreateUniqueName());
             var user = new User { Name = "Mr Random" };
-            await dictionary.AddOrUpdateAsync("x", user);
+            await dictionary.SetAsync("x", user);
             var user2 = await dictionary.GetAsync("x");
             Assert.AreEqual(user.Name, user2.Name);
         }

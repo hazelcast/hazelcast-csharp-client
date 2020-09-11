@@ -89,28 +89,32 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public Task<TValue> AddOrUpdateAsync(TKey key, TValue value, bool returnValue)
-            => AddOrUpdateAsync(key, value, TimeToLive.InfiniteTimeSpan, returnValue);
+        public Task SetAsync(TKey key, TValue value)
+            => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public async Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive, bool returnValue)
+        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
+            => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
+
+        public async Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
 
-            if (returnValue)
-            {
-                var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMilliseconds);
-                var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
-                var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
-                return ToObject<TValue>(response);
-            }
-            else
-            {
-                var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
-                var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
-                _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
-                return default;
-            }
+            // FIXME TIME TO LIVE??
+            var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
+            _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
+        }
+
+        public async Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
+
+            var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMilliseconds);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
+            var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
+            return ToObject<TValue>(response);
         }
 
         public async Task<TValue> GetOrAddAsync(TKey key, TValue value)

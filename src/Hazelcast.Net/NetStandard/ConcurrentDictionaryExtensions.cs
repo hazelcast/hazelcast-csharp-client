@@ -42,7 +42,7 @@ namespace System.Collections.Concurrent
                         return resultingValue;
                     }
                 }
-            }         
+            }
         */
 
         public static TValue AddOrUpdate<TKey, TValue, TArg>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TArg, TValue> addValueFactory, Func<TKey, TValue, TArg, TValue> updateValueFactory, TArg factoryArgument)
@@ -56,7 +56,7 @@ namespace System.Collections.Concurrent
                 {
                     // key exists, try to update
                     var newValue = updateValueFactory(key, oldValue, factoryArgument);
-                    if (dictionary.TryUpdate(key, newValue, oldValue)) 
+                    if (dictionary.TryUpdate(key, newValue, oldValue))
                         return newValue;
                 }
                 else

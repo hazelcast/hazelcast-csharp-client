@@ -22,42 +22,53 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHDictionary<TKey, TValue> // Setting
     {
         /// <summary>
-        /// Adds or updates an entry.
+        /// Sets (adds or updates) an entry.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
-        /// <param name="returnValue">Whether to return the updated value, if any.</param>
-        /// <returns>The updated value, if any.</returns>
-        /// <remarks>
-        /// <para>For performance reasons, <paramref name="returnValue"/> is <c>false</c> by
-        /// default and the method returns <c>default(TValue)</c>. Set <paramref name="returnValue"/>
-        /// to true if you are interested in the updated value.</para>
-        /// </remarks>
-        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, bool returnValue = false);
+        /// <returns>A task that will complete when the entry has been added or updated.</returns>
+        Task SetAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Adds or updates an entry.
+        /// Gets existing value (if any) and sets (adds or updates) an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <returns>The updated value, if any.</returns>
+        Task<TValue> GetAndSetAsync(TKey key, TValue value);
+
+        /// <summary>
+        /// Sets (adds or updates) an entry.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <param name="timeToLive">A time to live.</param>
-        /// <param name="returnValue">Whether to return the updated value, if any.</param>
+        /// <returns>A task that will complete when the entry has been added or updated.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
+        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// </remarks>
+        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Gets existing value (if any) and sets (adds or updates) an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
         /// <returns>The updated value, if any.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
-        /// <para>For performance reasons, <paramref name="returnValue"/> is <c>false</c> by
-        /// default and the method returns <c>default(TValue)</c>. Set <paramref name="returnValue"/>
-        /// to true if you are interested in the updated value.</para>
         /// </remarks>
-        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive, bool returnValue = false);
+        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Adds or updates entries.
+        /// Sets (adds or updates) entries.
         /// </summary>
         /// <param name="entries">Entries.</param>
         /// <returns>A task that will complete when the entries have been added or updated.</returns>
-        Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries);
+        Task SetAsync(IDictionary<TKey, TValue> entries);
 
         /// <summary>
         /// Updates an entry if it exists.
@@ -86,7 +97,7 @@ namespace Hazelcast.DistributedObjects
         Task<bool> TryUpdateAsync(TKey key, TValue comparisonValue, TValue newValue);
 
         /// <summary>
-        /// Tries to add or update an entry within a server-side timeout.
+        /// Tries to set (add or update) an entry within a server-side timeout.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -96,7 +107,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>This method returns <c>false</c> when no lock on the key could be
         /// acquired within the specified server-side timeout.</para>
         /// </remarks>
-        Task<bool> TryAddOrUpdateAsync(TKey key, TValue value, TimeSpan serverTimeout);
+        Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout);
 
         /// <summary>
         /// Adds an entry if no entry with the key already exists.
@@ -136,6 +147,6 @@ namespace Hazelcast.DistributedObjects
         /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
         /// TODO: is it really removed? or just evicted?
         /// </remarks>
-        Task AddOrUpdateTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
     }
 }

@@ -25,13 +25,24 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionaryWithCache<TKey, TValue> // Setting
     {
         /// <inheritdoc />
-        protected override async Task<TValue> AddOrUpdateAsync(IData keyData, IData valueData, TimeSpan timeToLive, bool returnValue, CancellationToken cancellationToken)
+        protected override async Task SetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
         {
             // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            var value = await base.AddOrUpdateAsync(keyData, valueData, timeToLive, returnValue, cancellationToken).CAF();
+            await base.SetAsync(keyData, valueData, timeToLive).CAF();
+            _cache.Remove(keyData);
+        }
+
+        /// <inheritdoc />
+        protected override async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        {
+            // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
+            // which would populate the cache with the wrong value - so we clear *after* the value has effectively
+            // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
+            // eventually all reads will get the correct value
+            var value = await base.GetAndSetAsync(keyData, valueData, timeToLive).CAF();
             _cache.Remove(keyData);
             return value;
         }
@@ -41,7 +52,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task AddOrUpdateAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
+        Task SetAsync(Dictionary<Guid, Dictionary<int, List<KeyValuePair<IData, IData>>>> ownerEntries, CancellationToken cancellationToken)
         {
             // see comments on the base Map class
             // this should be no different except for this entry invalidation method,
@@ -79,9 +90,9 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        protected override async Task<bool> TryAddOrUpdateAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        protected override async Task<bool> TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var added = await base.TryAddOrUpdateAsync(keyData, valueData, serverTimeout, cancellationToken).CAF();
+            var added = await base.TrySetAsync(keyData, valueData, serverTimeout, cancellationToken).CAF();
             if (added) _cache.Remove(keyData);
             return added;
         }
@@ -108,10 +119,10 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task AddOrUpdateTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+            Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
         {
             _cache.Remove(keyData);
-            var task = base.AddOrUpdateTransientAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.SetTransientAsync(keyData, valueData, timeToLive, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

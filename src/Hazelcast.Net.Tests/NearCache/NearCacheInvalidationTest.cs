@@ -90,7 +90,7 @@ namespace Hazelcast.Tests.NearCache
         {
             const string theKey = "key";
 
-            await _dictionary.AddOrUpdateAsync(theKey, "value1");
+            await _dictionary.SetAsync(theKey, "value1");
 
             var partitioner = ((HazelcastClient)_client).Cluster.Partitioner;
             var keyData = ((HazelcastClient) _client).SerializationService.ToData(theKey);
@@ -120,7 +120,7 @@ namespace Hazelcast.Tests.NearCache
         {
             const string theKey = "key";
 
-            await _dictionary.AddOrUpdateAsync(theKey, "value1");
+            await _dictionary.SetAsync(theKey, "value1");
 
             var partitioner = ((HazelcastClient) _client).Cluster.Partitioner;
             var keyData = ((HazelcastClient)_client).SerializationService.ToData(theKey);

@@ -111,7 +111,7 @@ namespace Hazelcast.Tests.NearCache
 
             // add values to the dictionary
             for (var i = 0; i < MaxSize; i++)
-                await dictionary.AddOrUpdateAsync("key" + i, "value" + i);
+                await dictionary.SetAsync("key" + i, "value" + i);
 
             // near cache remains empty
             Assert.That(cache.Count, Is.EqualTo(0));
@@ -145,7 +145,7 @@ namespace Hazelcast.Tests.NearCache
             //var cache = GetNearCache(dictionary);
 
             // add a value to the dictionary
-            await dictionary.AddOrUpdateAsync("key", "value");
+            await dictionary.SetAsync("key", "value");
 
             // get two values, one existing and one non-existing
             // this will hit the server
@@ -165,7 +165,7 @@ namespace Hazelcast.Tests.NearCache
             var cache = GetNearCache(dictionary);
 
             // add a vale to the dictionary
-            await dictionary.AddOrUpdateAsync("key", "value");
+            await dictionary.SetAsync("key", "value");
 
             // get the value = populates the cache
             await dictionary.GetAsync("key");
@@ -188,7 +188,7 @@ namespace Hazelcast.Tests.NearCache
             var keys = new List<object>();
             for (var i = 0; i < 100; i++)
             {
-                await dictionary.AddOrUpdateAsync("key" + i, "value" + i);
+                await dictionary.SetAsync("key" + i, "value" + i);
                 keys.Add("key" + i);
             }
 
@@ -208,7 +208,7 @@ namespace Hazelcast.Tests.NearCache
             var cache = GetNearCache(dictionary);
 
             // add a value to the dictionary
-            await dictionary.AddOrUpdateAsync("key", "value");
+            await dictionary.SetAsync("key", "value");
 
             // get the value
             var result = await dictionary.GetAsync("key");
@@ -241,12 +241,12 @@ namespace Hazelcast.Tests.NearCache
 
             var keys = Enumerable.Range(0, 10).ToList();
             foreach (var k in keys)
-                await dictionary.AddOrUpdateAsync(k, k);
+                await dictionary.SetAsync(k, k);
             Assert.AreEqual(0, cache.Count); // cache is still empty
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             const int nonIdleKey = 100;
-            await dictionary.AddOrUpdateAsync(nonIdleKey, nonIdleKey);
+            await dictionary.SetAsync(nonIdleKey, nonIdleKey);
             Assert.AreEqual(0, cache.Count); // cache is still empty
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
@@ -313,7 +313,7 @@ namespace Hazelcast.Tests.NearCache
             var cache = GetNearCache(dictionary);
 
             for (var i = 0; i < 100; i++)
-                await dictionary.AddOrUpdateAsync("key" + i, "value" + i);
+                await dictionary.SetAsync("key" + i, "value" + i);
 
             for (var i = 0; i < 100; i++)
                 await dictionary.GetAsync("key" + i);
@@ -341,7 +341,7 @@ namespace Hazelcast.Tests.NearCache
             var keys = new List<object>();
             for (var i = 0; i < MaxSize; i++)
             {
-                await dictionary.AddOrUpdateAsync(i, i);
+                await dictionary.SetAsync(i, i);
                 keys.Add(i);
             }
 
@@ -353,7 +353,7 @@ namespace Hazelcast.Tests.NearCache
             await dictionary.GetAsync(subList);
 
             // Add another item, triggering eviction
-            await dictionary.AddOrUpdateAsync(MaxSize, MaxSize);
+            await dictionary.SetAsync(MaxSize, MaxSize);
             await dictionary.GetAsync(MaxSize);
 
             // var sl = new SortedList<int, int>();
@@ -391,7 +391,7 @@ namespace Hazelcast.Tests.NearCache
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
-            await dictionary.AddOrUpdateAsync("key", "value");
+            await dictionary.SetAsync("key", "value");
 
             var value = await dictionary.GetAsync("key");
             Assert.AreEqual("value", value);
@@ -413,7 +413,7 @@ namespace Hazelcast.Tests.NearCache
             var keys = new List<object>();
             for (var i = 0; i < MaxSize; i++)
             {
-                await dictionary.AddOrUpdateAsync(i, i);
+                await dictionary.SetAsync(i, i);
                 keys.Add(i);
             }
 
@@ -425,7 +425,7 @@ namespace Hazelcast.Tests.NearCache
             await dictionary.GetAsync(subList);
 
             // Add another item, triggering eviction
-            await dictionary.AddOrUpdateAsync(MaxSize, MaxSize);
+            await dictionary.SetAsync(MaxSize, MaxSize);
             await dictionary.GetAsync(MaxSize);
 
             await AssertEx.SucceedsEventually(async () =>
@@ -451,7 +451,7 @@ namespace Hazelcast.Tests.NearCache
             var keys = new List<object>();
             for (var i = 0; i < MaxSize * 2; i++)
             {
-                await dictionary.AddOrUpdateAsync(i, i);
+                await dictionary.SetAsync(i, i);
                 keys.Add(i);
             }
             await dictionary.GetAsync(keys);
@@ -470,7 +470,7 @@ namespace Hazelcast.Tests.NearCache
 
             var keys = Enumerable.Range(0, 10).ToList();
             foreach (var k in keys)
-                await dictionary.AddOrUpdateAsync(k, k);
+                await dictionary.SetAsync(k, k);
 
             await dictionary.GetAsync(keys);
 
@@ -494,7 +494,7 @@ namespace Hazelcast.Tests.NearCache
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
-            await dictionary.AddOrUpdateAsync("key", "value");
+            await dictionary.SetAsync("key", "value");
 
             var value = await dictionary.GetAsync("key");
             Assert.AreEqual("value", value);

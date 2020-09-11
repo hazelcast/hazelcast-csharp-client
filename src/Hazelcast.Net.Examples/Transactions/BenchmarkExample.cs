@@ -49,8 +49,8 @@ namespace Hazelcast.Examples.Transactions
                     var txMap1 = await transactionContext.GetMapAsync<int, string>("test1");
                     var txMap2 = await transactionContext.GetMapAsync<int, string>("test2");
 
-                    await txMap1.AddOrUpdateAsync(i, "value");
-                    await txMap2.AddOrUpdateAsync(i, "value");
+                    await txMap1.SetAsync(i, "value");
+                    await txMap2.SetAsync(i, "value");
 
                     await transactionContext.CommitAsync();
                 }

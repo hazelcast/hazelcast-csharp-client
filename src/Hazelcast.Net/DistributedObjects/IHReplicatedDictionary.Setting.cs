@@ -55,7 +55,7 @@ namespace Hazelcast.DistributedObjects
         ///     <c>key</c>
         ///     .
         /// </returns>
-        Task<TValue> AddOrUpdateAsync(TKey key, TValue value);
+        Task<TValue> SetAsync(TKey key, TValue value);
 
         /// <summary>
         /// Associates a given value to the specified key and replicates it to the
@@ -71,12 +71,12 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">value to be associated with the specified key.</param>
         /// <param name="timeToLive">ttl to be associated with the specified key-value pair.</param>
         /// <returns>old value of the entry</returns>
-        Task<TValue> AddOrUpdateAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         ///     Copies all of the mappings from the specified map to this map
         /// </summary>
         /// <param name="entries">mappings to be stored in this map</param>
-        Task AddOrUpdateAsync(IDictionary<TKey, TValue> entries);
+        Task SetAsync(IDictionary<TKey, TValue> entries);
     }
 }

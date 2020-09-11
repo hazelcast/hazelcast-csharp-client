@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.NearCache
     // correctly
 
     [TestFixture]
-    public class NearCacheClearedByAddOrUpdateTest : NearCacheTestBase
+    public class NearCacheClearedBySetTest : NearCacheTestBase
     {
         private const int MaxRuntime = 30;
         private const string Key = "key123";
@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.NearCache
         [TestCase(true)]
         [TestCase(false)]
         [Timeout(5*60_000)]
-        public async Task NearCacheClearedByAddOrUpdate(bool strict)
+        public async Task NearCacheClearedBySet(bool strict)
         {
             var dictionary = await _client.GetDictionaryAsync<string, string>(_name);
             await using var _ = new AsyncDisposable(() => dictionary?.DestroyAsync() ?? default);
@@ -148,7 +148,7 @@ namespace Hazelcast.Tests.NearCache
                 Assert.Fail(msg);
             }
         }
-        
+
         private async Task RunTestInternal(IHDictionary<string, string> dictionary)
         {
             var tasks = new List<Task>();
@@ -157,7 +157,7 @@ namespace Hazelcast.Tests.NearCache
 
             // start 1 writer thread
             using var started = new SemaphoreSlim(0);
-            tasks.Add(Task.Run(() => AddOrUpdateTask(dictionary, started, 0)));
+            tasks.Add(Task.Run(() => SetTask(dictionary, started, 0)));
 
             // wait for writer thread to start before starting getter threads
             var hasStarted = await started.WaitAsync(20_000);
@@ -184,7 +184,7 @@ namespace Hazelcast.Tests.NearCache
             await Task.WhenAll(tasks);
         }
 
-        private async Task AddOrUpdateTask(IHDictionary<string, string> dictionary, SemaphoreSlim started, int id)
+        private async Task SetTask(IHDictionary<string, string> dictionary, SemaphoreSlim started, int id)
         {
             var i = 0;
             while (!_stop)
@@ -193,7 +193,7 @@ namespace Hazelcast.Tests.NearCache
                 // put new value and update last state
                 // note: the value in the map/Near Cache is *always* larger or equal to valuePut
                 // assertion: valueMap >= valuePut
-                await dictionary.AddOrUpdateAsync(Key, i.ToString()).CAF();
+                await dictionary.SetAsync(Key, i.ToString()).CAF();
                 _valuePut = i;
 
                 // ensure we have a value
