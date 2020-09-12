@@ -16,11 +16,10 @@
 
 param (
 
-    # Targets.
+    # Commands.
     # (make sure it remains in the first position)
-    [Alias("t")]
     [string[]]
-    $targets = @( "clean", "build", "docsIf", "tests" ),
+    $commands = @( "clean", "build", "docsIf", "tests" ),
 
     # Whether to test enterprise features.
     [switch]
@@ -57,14 +56,32 @@ param (
 
     [Alias("cf")]
     [string]
-    $coverageFilter
+    $coverageFilter,
+
+    # Whether to sign the assembly
+    [switch]
+    $sign = $false,
+
+    # Whether to cover the tests
+    [switch]
+    $cover = $false
 )
 
-# process targets
+# die - PowerShell display of errors is a pain
+function Die($message) {
+    [Console]::Error.WriteLine()
+    [Console]::ForegroundColor = 'red'
+    [Console]::Error.WriteLine($message)
+    [Console]::ResetColor()
+    [Console]::Error.WriteLine()
+    Exit
+}
+
+# process commands
 # in case it was passed by a script and not processed as an array
 # PowerShell can be weird at times ;(
-if ($targets.Length -eq 1 -and $targets[0].Contains(',')) {
-    $targets = $targets[0].Replace(" ", "").Split(',')
+if ($commands.Length -eq 1 -and $commands[0].Contains(',')) {
+    $commands = $commands[0].Replace(" ", "").Split(',')
 }
 
 # clear rogue environment variable
@@ -77,32 +94,63 @@ if ($isWindows) { $platform = "windows" }
 if ($isMacOS) { $platform = "macOS" }
 if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
 
-# validate targets and define actions ($doXxx)
-foreach ($t in $targets) {
+# validate commands and define actions ($doXxx)
+foreach ($t in $commands) {
     switch ($t.Trim().ToLower()) {
         "help" {
-            Write-Output "build.ps1 [<targets>] [-enterprise] [-server <version>] [-framework <version>]"
-            Write-Output "<targets> is a csv list of:"
-            Write-Output "  clean            : cleans the solution"
-            Write-Output "  build            : builds the solution"
-            Write-Output "  docs             : builds the documentation"
-            Write-Output "  docsIf           : builds the documentation if supported by platform"
-            Write-Output "  tests            : runs the tests"
-            Write-Output "  cover            : when running tests, also perform code coverage analysis"
-            Write-Output "  nuget            : builds the NuGet package(s)"
-            Write-Output "  rc               : runs the remote controller for tests"
-            Write-Output "  server           : runs a server for tests"
-            Write-Output "  docsServe (ds)   : serves the documentation"
-            Write-Output "  failedTests (ft) : details failed tests"
+            Write-Output "Hazelcast .NET Command Line"
             Write-Output ""
-            Write-Output "When no target is specified, the script does 'clean,build,docsIf,tests'. Note that"
+            Write-Output "usage hz.[ps1|sh] [<option>] [<commands>]"
+            Write-Output ""
+            Write-Output "<commands> is a csv list of:"
+            Write-Output "  clean       : cleans the solution"
+            Write-Output "  build       : builds the solution"
+            Write-Output "  docs        : builds the documentation"
+            Write-Output "  docsIf      : builds the documentation if supported by platform"
+            Write-Output "  tests       : runs the tests"
+            Write-Output "  cover       : when running tests, also perform code coverage analysis"
+            Write-Output "  nuget       : builds the NuGet package(s)"
+            Write-Output "  rc          : runs the remote controller for tests"
+            Write-Output "  server      : runs a server for tests"
+            Write-Output "  docsServe   : serves the documentation (alias: ds)"
+            Write-Output "  failedTests : details failed tests (alias: ft)"
+            Write-Output ""
+            Write-Output "When no command is specified, the script does 'clean,build,docsIf,tests'. Note that"
             Write-Output "building the documentation is not supported on non-Windows platforms as DocFX is not"
             Write-Output "supported on .NET Core yet."
             Write-Output ""
+            Write-Output "<options> is:"
+            Write-Output "  -enterprise                    : whether to run enterprise tests"
+            Write-Output "  -sign                          : whether to sign assemblies"
+            Write-Output "  -cover                         : whether to do test coverage"
+            Write-Output "  -server <version>              : the server version for tests"
+            Write-Output "  -framework <version>           : the framework to build (default is all, alias: -f)"
+            Write-Output "  -configuration <configuration> : the build configuration (default is Release, alias: -c)"
+            Write-Output "  -testFilter <filter>           : a test filter (default is all, alias: tf)"
+            Write-Output "  -coverageFilter <filter>       : a coverage filter (default is all, alias: cf)"
+            Write-Output ""
             Write-Output "Server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or"
             Write-Output "4.1-SNAPSHOT. Server JARs are automatically downloaded for tests."
+            Write-Output ""
             Write-Output "Framework <version> must match a valid .NET target framework moniker, e.g. net462"
             Write-Output "or netcoreapp3.1. Check the project files (.csproj) for supported versions."
+            Write-Output ""
+            Write-Output "Configuration is Release by default but can be forced to Debug."
+            Write-Output ""
+            Write-Output "Signing assemblies requires the privage signing key in build/hazelcast.snk file."
+            Write-Output ""
+            Write-Output "Running enterprise tests require an enterprise key, which can be supplied either"
+            Write-Output "via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key"
+            Write-Output "file."
+            Write-Output ""
+            Write-Output "Test <filter> can be used to filter the tests to run, it must respect the NUnit test"
+            Write-Output "selection language, which is detailed at:"
+            Write-Output "https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html"
+            Write-Output "Example: -tf `"test == /Hazelcast.Tests.NearCache.NearCacheRecoversFromDistortionsTest/`""
+            Write-Output ""
+            Write-Output "Coverage <filter> can be used to filter the tests to cover, it must respect the"
+            Write-Output "dotCover language, which is detailed at:"
+            Write-Output "https://www.jetbrains.com/help/dotcover/Running_Coverage_Analysis_from_the_Command_LIne.html#filters"
             Write-Output ""
             exit 0
 		}
@@ -111,7 +159,6 @@ foreach ($t in $targets) {
         "docs"        { $doDocs = $true }
         "docsIf"      { $doDocs = $isWindows }
         "tests"       { $doTests = $true }
-        "cover"       { $doCover = $true }
         "nuget"       { $doNuget = $true }
         "rc"          { $doRc = $true }
         "server"      { $doServer = $true }
@@ -120,7 +167,7 @@ foreach ($t in $targets) {
         "failedtests" { $doFailedTests = $true }
         "ft"          { $doFailedTests = $true }
         default {
-            throw "Unknown target '$($t.Trim())' - use 'help' to list targets."
+            Die "Unknown command '$($t.Trim())' - use 'help' to list valid commands."
         }
     }
 }
@@ -149,7 +196,7 @@ if ($server.Contains("SNAPSHOT")) {
 
 # prepare directories
 $scriptRoot = "$PSScriptRoot" # expected to be ./build/
-$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot/..")
+$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot")
 
 $srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
 $tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
@@ -159,9 +206,9 @@ $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
-# validate targets / platform
+# validate commands / platform
 if ($doDocs -and -not $isWindows) {
-    throw "DocFX is not supported on platform '$platform', cannot build documentation."
+    Die "DocFX is not supported on platform '$platform', cannot build documentation."
 }
 
 # validate enterprise key
@@ -173,7 +220,7 @@ if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpa
         $env:HAZELCAST_ENTERPRISE_KEY = $enterpriseKey
     }
     else {
-        throw "Enterprise features require an enterprise key in HAZELCAST_ENTERPRISE_KEY environment variable."
+        Die "Enterprise features require an enterprise key, either in`n- HAZELCAST_ENTERPRISE_KEY environment variable, or`n- $buildDir/enterprise.key file."
     }
 }
 
@@ -185,7 +232,7 @@ if (-not $isWindows) {
 if (-not [System.String]::IsNullOrWhiteSpace($framework)) {
     $framework = $framework.ToLower()
     if (-not $frameworks.Contains($framework)) {
-        throw "Framework '$framework' is not supported on platform '$platform', supported frameworks are: " + `
+        Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: " + `
               [System.String]::Join(", ", $frameworks) + "."
     }
     $frameworks = @( $framework )
@@ -227,8 +274,7 @@ function findLatestVersion($path) {
 function ensureCommand($command) {
     $r = get-command $command 2>&1
     if ($r.Name -eq $null) {
-        Write-Output "Command '$command' is missing."
-        exit 1
+        Die "Command '$command' is missing."
     }
     else {
         Write-Output "Detected $command"
@@ -249,7 +295,7 @@ function ensureNuGet() {
         {
             Write-Output "Download NuGet..."
             Invoke-WebRequest $source -OutFile $nuget
-            if (-not $?) { throw "Failed to download NuGet." }
+            if (-not $?) { Die "Failed to download NuGet." }
             Write-Output "  -> $nuget"
         }
         else {
@@ -259,7 +305,7 @@ function ensureNuGet() {
     }
     elseif (-not (test-path $nuget))
     {
-        throw "Failed to locate NuGet.exe."
+        Die "Failed to locate NuGet.exe."
     }
 }
 
@@ -343,7 +389,7 @@ function ensureMsBuild() {
     }
 
     if (-not (test-path $msBuild)) {
-        throw "Failed to locate MsBuild.exe."
+        Die "Failed to locate MsBuild.exe."
     }
     else {
         Write-Output "Selecting $vsName ($vsVersion)"
@@ -377,31 +423,32 @@ function ensureMemberPage() {
 }
 
 function ensureJar($jar, $repo, $artifact) {
-    if(Test-Path "$tmpDir/tests/lib/$jar") {
-        Write-Output "Detected $jar."
+    if(Test-Path "$tmpDir/lib/$jar") {
+        Write-Output "Detected $jar"
     } else {
         Write-Output "Downloading $jar ..."
-        &"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/tests/lib/$jar"
+        &"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
     }
     $s = ";"
     if (-not $isWindows) { $s = ":" }
     $classpath = $script:classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
-    $classpath += "$tmpDir/tests/lib/$jar"
+    $classpath += "$tmpDir/lib/$jar"
     $script:classpath = $classpath
 }
 
 # say hello
-Write-Output "Hazelcast .NET Client"
+Write-Output "Hazelcast .NET Command Line"
 Write-Output ""
 
 if ($doBuild) {
     Write-Output "Build"
     Write-Output "  Platform       : $platform"
-    Write-Output "  Targets        : $targets"
+    Write-Output "  Commands       : $commands"
     Write-Output "  Configuration  : $configuration"
     Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
     Write-Output "  Building to    : $outDir"
+    Write-Output "  Sign code      : $sign"
     Write-Output ""
 }
 
@@ -414,17 +461,17 @@ if ($doTests) {
     Write-Output ""
 }
 
-if ($doCover) {
-    Write-Output "Test Coverage"
+if ($doTests -and $cover) {
+    Write-Output "Tests Coverage"
     Write-Output "  Filter         : $coverageFilter"
     Write-Output "  Reports        : $tmpDir/tests/cover"
     Write-Output ""
 }
 
 if ($doNuget) {
-    Write-Output "Package"
+    Write-Output "Nuget Package"
     Write-Output "  Configuration  : $configuration"
-    Write-Output "  To             : $tmpDir/temp/output"
+    Write-Output "  To             : $tmpDir/output"
     Write-Output ""
 }
 
@@ -432,7 +479,7 @@ if ($doRc) {
     Write-Output "Remote Controller"
     Write-Output "  Server version : $server"
     Write-Output "  Enterprise     : $enterprise"
-    Write-Output "  Logging to     : $tmpDir/tests/rc"
+    Write-Output "  Logging to     : $tmpDir/rc"
     Write-Output ""
 }
 
@@ -440,8 +487,8 @@ if ($doServer) {
     Write-Output "Server"
     Write-Output "  Server version : $server"
     Write-Output "  Enterprise     : $enterprise"
-    Write-Output "  Configuration  : n/a"
-    Write-Output "  Logging to     : $tmpDir/tests/server"
+    Write-Output "  Configuration  : $buildDir/hazelcast-$hzVersion.xml"
+    Write-Output "  Logging to     : $tmpDir/server"
     Write-Output ""
 }
 
@@ -459,12 +506,20 @@ if ($doFailedTests) {
 
 # cleanup, prepare
 if ($doClean) {
+    Write-Output ""
+    Write-Output "Clean solution..."
+
     # remove all the bins and objs recursively
     gci $slnRoot -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
 
-    # clears directories
+    # clears output
     if (test-path $outDir) { remove-item $outDir -force -recurse }
+    # clears tests (results, cover...)
     if (test-path "$tmpDir/tests") { remove-item "$tmpDir/tests" -force -recurse }
+    # clears logs (server, rc...)
+    gci $tmpDir -include *.log -Recurse | foreach ($_) { remove-item $_.fullname -Force }
+    # clears docs
+    if (test-path "$tmpDir/docfx.site") { remove-item "$tmpDir/docfx.site" -force -recurse }
 }
 
 if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
@@ -480,12 +535,10 @@ if ($isWindows) {
 Write-Output ""
 Write-Output "Restore NuGet packages for building and testing..."
 if ($isWindows) {
-    &$nuget restore "$buildDir/build.proj"
-    Write-Output ""
+    &$nuget restore "$buildDir/build.proj" -Verbosity Quiet
 }
 else {
     dotnet restore "$buildDir/build.proj"
-    Write-Output ""
 }
 
 # get the required packages version (as specified in build.proj)
@@ -515,6 +568,13 @@ if ($doBuild -or -$doTests) {
   ensureCommand "dotnet"
 }
 
+# ensure we can sign
+if ($doBuild -and $sign) {
+    if (!(test-path "$buildDir\hazelcast.snk")) {
+        Die "Cannot sign code, missing key file $buildDir\hazelcast.snk"
+    }
+}
+
 # ensure we have docfx for documentation
 if ($doDocs -or $doDocsServe) {
     ensureDocFx
@@ -525,7 +585,7 @@ if ($doDocs -or $doDocsServe) {
 $java = "java"
 $javaFix=@()
 if ($isWindows) { $java = "javaw" }
-if ($doTests -or $doRc) {
+if ($doTests -or $doRc -or $doServer) {
     Write-Output ""
     ensureCommand $java
     ensureCommand "mvn"
@@ -537,10 +597,26 @@ if ($doTests -or $doRc) {
     $p1 = $v.LastIndexOf('"')
     $v = $v.SubString($p0+1,$p1-$p0-1)
 
+    Write-Output ""
+    Write-Output "Running Java v$v"
+
     if (-not $v.StartsWith("1.8")) {
         # starting with Java 9 ... weird things can happen
         $javaFix = @( "-Dcom.google.inject.internal.cglib.\$experimental_asm7=true",  "--add-opens java.base/java.lang=ALL-UNNAMED" )
         $env:MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true --add-opens java.base/java.lang=ALL-UNNAMED"
+
+        $javaFix = $javaFix + ( `
+            `
+            "--add-modules", "java.se", `
+            "--add-exports", "java.base/jdk.internal.ref=ALL-UNNAMED", `
+            "--add-opens",   "java.base/java.lang=ALL-UNNAMED", `
+            "--add-opens",   "java.base/java.nio=ALL-UNNAMED",  `
+            "--add-opens",   "java.base/sun.nio.ch=ALL-UNNAMED", `
+            "--add-opens",   "java.management/sun.management=ALL-UNNAMED", `
+            "--add-opens",   "jdk.management/com.sun.management.internal=ALL-UNNAMED", `
+            `
+            "--add-opens",   "java.base/java.io=ALL-UNNAMED" `
+        )
 	}
 }
 
@@ -550,10 +626,20 @@ if ($doBuild) {
     Write-Output ""
     Write-Output "Build solution..."
     if ($isWindows) {
-        &$msBuild "$slnRoot/Hazelcast.Net.sln" `
-            /p:Configuration=$configuration `
-            /target:"Restore;Build"
-            #/p:TargetFramework=$framework `
+        $msBuildArgs = @(
+            "$slnRoot/Hazelcast.Net.sln", `
+            "/p:Configuration=$configuration", `
+            "/target:`"Restore;Build`""
+            #/p:TargetFramework=$framework
+        )
+
+        if ($signAssembly) {
+            $msBuildArgs += "/p:SignAssembly=true"
+            $msBuildArgs += "/p:PublicSign=false"
+            $msBuildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
+        }
+
+        &$msBuild $msBuildArgs
     }
     else {
         dotnet build "$slnRoot/Hazelcast.Net.sln" -c $configuration # -f $framework
@@ -561,8 +647,7 @@ if ($doBuild) {
 
     # if it failed, we can stop here
     if ($LASTEXITCODE) {
-        Write-Output "Build failed, aborting."
-        exit $LASTEXITCODE
+        Die "Build failed, aborting."
     }
 }
 
@@ -583,9 +668,18 @@ if ($doDocs) {
     &$docfx build "$docDir/docfx.json" --template $template
 }
 
+function getJavaKerberosArgs() {
+    return @( `
+        "-Djava.util.logging.config.file=krb5/logging.properties", `
+        "-Djava.security.krb5.realm=HZ.LOCAL", `
+        "-Djava.security.krb5.kdc=SERVER19.HZ.LOCAL", `
+        "-Djava.security.krb5.conf=krb5/krb5.conf" `
+    )
+}
+
 function StartRemoteController() {
 
-    if (-not (test-path "$tmpDir/tests/rc")) { mkdir "$tmpDir/tests/rc" >$null }
+    if (-not (test-path "$tmpDir/rc")) { mkdir "$tmpDir/rc" >$null }
 
     Write-Output ""
     Write-Output "Starting Remote Controller..."
@@ -597,62 +691,69 @@ function StartRemoteController() {
         "com.hazelcast.remotecontroller.Main" `
     )
 
-    # uncomment to test Kerberos (but don't commit)
-    #$args = $args + @( `
-    #    "-Djava.util.logging.config.file=krb5/logging.properties", `
-    #    "-Djava.security.krb5.realm=HZ.LOCAL", `
-    #    "-Djava.security.krb5.kdc=SERVER19.HZ.LOCAL", `
-    #    "-Djava.security.krb5.conf=krb5/krb5.conf" `
-    #)
-
     $args = $args + $javaFix
 
+    # uncomment to test Kerberos (but don't commit)
+    #$args = $args + getJavaKerberosArgs
+
     $script:remoteController = Start-Process -FilePath $java -ArgumentList $args `
-        -RedirectStandardOutput "$tmpDir/tests/rc/rc_stdout.log" -RedirectStandardError "$tmpDir/tests/rc/rc_stderr.log" -PassThru
+        -RedirectStandardOutput "$tmpDir/rc/stdout-$hzVersion.log" `
+        -RedirectStandardError "$tmpDir/rc/stderr-$hzVersion.log" `
+        -PassThru
     Start-Sleep -Seconds 4
 
-    Write-Output "Started remote controller with pid=$($script:remoteController.Id)"
-
     if ($script:remoteController.HasExited) {
-        throw "Remote controller has exited immediately."
+        Die "Remote controller has exited immediately."
 	}
+    else {
+        Write-Output "Started remote controller with pid=$($script:remoteController.Id)"
+    }
 }
 
 function StartServer() {
 
-    if (-not (test-path "$tmpDir/tests/server")) { mkdir "$tmpDir/tests/server" >$null }
+    if (-not (test-path "$tmpDir/server")) { mkdir "$tmpDir/server" >$null }
+
+    # ensure we have a configuration file
+    if (!(test-path "$buildDir/hazelcast-$hzVersion.xml")) {
+        Die "Missing server configuration file $buildDir/hazelcast-$hzVersion.xml"
+    }
 
     Write-Output ""
     Write-Output "Starting Server..."
+
+    # depending on server version, different starter class
+    $mainClass = "com.hazelcast.core.server.HazelcastMemberStarter" # 4.0
+    if ($server.StartsWith("3.")) {
+        $mainClass = "com.hazelcast.core.server.StartServer" # 3.x
+    }
 
     # start the server
     $args = @( `
         "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
         "-cp", "$script:classpath", `
-        "-Dhazelcast/config=./hazelcast.xml", `
+        "-Dhazelcast.config=$buildDir/hazelcast-$hzVersion.xml", `
         "-server", "-Xms2g", "-Xmx2g", "-Dhazelcast.multicast.group=224.206.1.1", "-Djava.net.preferIPv4Stack=true", `
-        "com.hazelcast.core.server.HazelcastMemberStarter" `
+        "$mainClass" `
     )
-
-    # uncomment to test Kerberos (but don't commit)
-    #$args = $args + @( `
-    #    "-Djava.util.logging.config.file=krb5/logging.properties", `
-    #    "-Djava.security.krb5.realm=HZ.LOCAL", `
-    #    "-Djava.security.krb5.kdc=SERVER19.HZ.LOCAL", `
-    #    "-Djava.security.krb5.conf=krb5/krb5.conf" `
-    #)
 
     $args = $args + $javaFix
 
-    $script:server = Start-Process -FilePath $java -ArgumentList $args `
-        -RedirectStandardOutput "$tmpDir/tests/server/server_stdout.log" -RedirectStandardError "$tmpDir/tests/server/server_stderr.log" -PassThru
+    # uncomment to test Kerberos (but don't commit)
+    #$args = $args + getJavaKerberosArgs
+
+    $script:serverProcess = Start-Process -FilePath $java -ArgumentList $args `
+        -RedirectStandardOutput "$tmpDir/server/stdout-$hzVersion.log" `
+        -RedirectStandardError "$tmpDir/server/stderr-$hzVersion.log" `
+        -PassThru
     Start-Sleep -Seconds 4
 
-    Write-Output "Started server with pid=$($script:server.Id)"
-
-    if ($script:server.HasExited) {
-        throw "Server has exited immediately."
+    if ($script:serverProcess.HasExited) {
+        Die "Server has exited immediately."
 	}
+    else {
+        Write-Output "Started server with pid=$($script:serverProcess.Id)"
+    }
 }
 
 function StopRemoteController() {
@@ -673,9 +774,9 @@ function StopServer() {
 
     # stop the server
     Write-Output ""
-    if ($script:server -and $script:server.Id -and -not $script:server.HasExited) {
+    if ($script:serverProcess -and $script:serverProcess.Id -and -not $script:serverProcess.HasExited) {
         Write-Output "Stopping server..."
-        Stop-Process -Force -Id $script:server.Id
+        Stop-Process -Force -Id $script:serverProcess.Id
         #$script:server.Kill($true)
 	}
     else {
@@ -700,7 +801,7 @@ function RunDotNetCoreTests($f) {
     #    --logger:"nunit;LogFilePath=$tmpDir/tests/results/tests-$f.xml"
     # instead: http://blog.prokrams.com/2019/12/16/nunit3-filter-dotnet/
     #
-    if ($doCover) {
+    if ($cover) {
         $coveragePath = "$tmpDir/tests/cover/cover-$f"
         if (!(test-path $coveragePath)) {
             mkdir $coveragePath > $null
@@ -745,7 +846,7 @@ function RunDotNetCoreTests($f) {
             "NUnit.TestOutputXml=`".`"", `
             "NUnit.Labels=Before" )
 
-            if ($testFilter -ne "") { $dotCoverArgs += "NUnit.Where=`"$testFilter`"" }
+            if ($testFilter -ne "") { $dotnetArgs += "NUnit.Where=`"$testFilter`"" }
 
         Write-Output "exec: dotnet $dotnetArgs"
         &dotnet $dotnetArgs
@@ -763,7 +864,7 @@ function RunDotNetFrameworkTests($f) {
 
     switch ($f) {
         "net462" { $nuf = "net-4.6.2" }
-        default { throw "Framework '$f' not supported here." }
+        default { Die "Framework '$f' not supported here." }
     }
 
     $v = $nunitVersion
@@ -772,7 +873,7 @@ function RunDotNetFrameworkTests($f) {
 
     if ($testFilter -ne "") { $nunitArgs += @("--where=`"${testFilter}`"") }
 
-    if ($doCover) {
+    if ($cover) {
 
         $coveragePath = "$tmpDir/tests/cover/cover-$f"
         if (!(test-path $coveragePath)) {
@@ -805,11 +906,11 @@ function RunDotNetFrameworkTests($f) {
     CollectTestResults $f "$tmpDir/tests/results/results-$f.xml"
 }
 
-if ($doTests -or $doRc) {
-   # prepare for tests
+if ($doTests -or $doRc -or $doServer) {
+   # prepare server/rc
     Write-Output ""
-    Write-Output "Prepare for tests..."
-    if (-not (test-path "$tmpDir/tests/lib")) { mkdir "$tmpDir/tests/lib" >$null }
+    Write-Output "Prepare server/rc..."
+    if (-not (test-path "$tmpDir/lib")) { mkdir "$tmpDir/lib" >$null }
     [string]$classpath=""
 
     # ensure we have the remote controller + hazelcast test jar
@@ -872,9 +973,8 @@ if ($doTests) {
             "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
 
         if ($failed -gt 0) {
-            Write-Output ""
             foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
-                Write-Output "$($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
+                Write-Output "    $($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
                 if ($doFailedTests) {
                     Write-Output $testCase.failure.message.innerText
                     Write-Output $testCase.failure."stack-trace".innerText
@@ -900,19 +1000,20 @@ if ($doRc) {
 
 if ($doServer) {
     try {
+        StartServer
 
         Write-Output ""
         Write-Output "Server is running..."
         Read-Host "Press ENTER to stop"
     }
-    finally{
-
+    finally {
+        StopServer
     }
 }
 
 if ($doDocsServe) {
     if (-not (test-path "$tmpDir\docfx.site")) {
-        throw "Missing documentation directory."
+        Die "Missing documentation directory."
     }
 
     Write-Output ""
