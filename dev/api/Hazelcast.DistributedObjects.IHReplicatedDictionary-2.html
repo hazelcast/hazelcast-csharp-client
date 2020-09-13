@@ -1,0 +1,303 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IHReplicatedDictionary&lt;TKey, TValue&gt; Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IHReplicatedDictionary&lt;TKey, TValue&gt; Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.55.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2" class="text-break">IHReplicatedDictionary&lt;TKey, TValue&gt; Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.DistributedObjects.html">Hazelcast.DistributedObjects</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents a distributed dictionary with weak consistency and values locally stored on every node of the cluster.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IHReplicatedDictionary&lt;TKey, TValue&gt; : IDistributedObject, IAsyncDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.Name.html#Hazelcast_DistributedObjects_IDistributedObject_Name">IDistributedObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.html#Hazelcast_DistributedObjects_IDistributedObject_PartitionKey">IDistributedObject.PartitionKey</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync.html#Hazelcast_DistributedObjects_IDistributedObject_DestroyAsync">IDistributedObject.DestroyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#System_IAsyncDisposable_DisposeAsync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TKey</span></td>
+        <td><p>the type of keys maintained by this map</p>
+</td>
+      </tr>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TValue</span></td>
+        <td><p>the type of mapped values</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Whenever a value is written asynchronously, the new value will be internally
+distributed to all existing cluster members, and eventually every node will have
+the new value.</p>
+<p>When a new node joins the cluster, the new node initially will request existing
+ values from older nodes and replicate them locally.</p>
+</div>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ClearAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.ClearAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ClearAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ClearAsync">ClearAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>The clear operation wipes data out of the replicated maps.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsAsync__1_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.ContainsAsync(`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ContainsAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsAsync__1_">ContainsAsync(TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Determines whether this map contains one or more keys to the specified value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsKeyAsync__0_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.ContainsKeyAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ContainsKeyAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsKeyAsync__0_">ContainsKeyAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Determines whether this map contains an entry for the specified key.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_CountAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.CountAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.CountAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_CountAsync">CountAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the number of entries in this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync">GetAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns a <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iset-1">ISet&lt;T&gt;</a> clone of the mappings contained in this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync__0_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync__0_">GetAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the value for the specified key, or <code>null</code> if this map does not contain this key.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetKeysAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetKeysAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetKeysAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetKeysAsync">GetKeysAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns a set clone of the keys contained in this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetValuesAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetValuesAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetValuesAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetValuesAsync">GetValuesAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns a collection clone of the values contained in this map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_IsEmptyAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.IsEmptyAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_IsEmptyAsync">IsEmptyAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns <code>true</code> if this map contains no entries.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_RemoveAsync__0_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.RemoveAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.RemoveAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_RemoveAsync__0_">RemoveAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes the mapping for a key from this map if it is present.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SetAsync(`0,`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_">SetAsync(TKey, TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Associates the specified value with the specified key in this map
+If the map previously contained a mapping for
+the key, the old value is replaced by the specified value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SetAsync(`0,`1,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_System_TimeSpan_">SetAsync(TKey, TValue, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Associates a given value to the specified key and replicates it to the
+cluster. If there is an old value, it will be replaced by the specified
+one and returned from the call.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync_System_Collections_Generic_IDictionary__0__1__" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SetAsync(System.Collections.Generic.IDictionary{`0,`1})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync_System_Collections_Generic_IDictionary__0__1__">SetAsync(IDictionary&lt;TKey, TValue&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Copies all of the mappings from the specified map to this map</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(`0,Hazelcast.Predicates.IPredicate,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(TKey, IPredicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(`0,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(TKey, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(Hazelcast.Predicates.IPredicate,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(IPredicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_UnsubscribeAsync_System_Guid_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.UnsubscribeAsync(System.Guid)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.UnsubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_UnsubscribeAsync_System_Guid_">UnsubscribeAsync(Guid)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Unsubscribe from events.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2020 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
