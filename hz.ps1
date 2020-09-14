@@ -32,7 +32,7 @@ param (
     # Target framework(s).
     [Alias("f")]
     [string]
-    $framework,
+    $framework, # defaults to all
 
     # Configuration.
     # May need "Debug" for testing and covering things such as HConsole.
@@ -64,7 +64,11 @@ param (
 
     # Whether to cover the tests
     [switch]
-    $cover = $false
+    $cover = $false,
+
+    # Version to build
+    [string]
+    $version # defaults to what's in src/Directory.Build.props
 )
 
 # die - PowerShell display of errors is a pain
@@ -128,12 +132,16 @@ foreach ($t in $commands) {
             Write-Output "  -configuration <configuration> : the build configuration (default is Release, alias: -c)"
             Write-Output "  -testFilter <filter>           : a test filter (default is all, alias: tf)"
             Write-Output "  -coverageFilter <filter>       : a coverage filter (default is all, alias: cf)"
+            Write-Output "  -version <version>             : the version to build"
             Write-Output ""
             Write-Output "Server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or"
             Write-Output "4.1-SNAPSHOT. Server JARs are automatically downloaded for tests."
             Write-Output ""
             Write-Output "Framework <version> must match a valid .NET target framework moniker, e.g. net462"
             Write-Output "or netcoreapp3.1. Check the project files (.csproj) for supported versions."
+            Write-Output ""
+            Write-Output "The <version> to build must be a valid SemVer version such as 3.2.1 or 6.7.8-preview.2,"
+            Write-Output "if no value is specified then the version is obtained from src/Directory.Build.props."
             Write-Output ""
             Write-Output "Configuration is Release by default but can be forced to Debug."
             Write-Output ""
@@ -170,6 +178,19 @@ foreach ($t in $commands) {
             Die "Unknown command '$($t.Trim())' - use 'help' to list valid commands."
         }
     }
+}
+
+# validate the version to build
+$hasVersion = $false
+if (-not [System.String]::IsNullOrWhiteSpace($version)) {
+
+    if (-not ($version -match '^(\d+\.\d+\.\d+)(?:\-([a-z0-9\.\-]*))?$')) {
+        Die "Version `"$version`" is not a valid SemVer version"
+    }
+
+    $versionPrefix = $Matches.1
+    $versionSuffix = $Matches.2
+    $hasVersion = $true
 }
 
 # set versions and configure
@@ -449,6 +470,9 @@ if ($doBuild) {
     Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $sign"
+    if ($hasVersion) {
+        Write-Output "  Version        : $version"
+    }
     Write-Output ""
 }
 
@@ -639,10 +663,29 @@ if ($doBuild) {
             $msBuildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
         }
 
+        if ($hasVersion) {
+            $msBuildArgs += "/p:AssemblyVersion=$versionPrefix"
+            $msBuildArgs += "/p:FileVersion=$versionPrefix"
+            $msBuildArgs += "/p:VersionPrefix=$versionPrefix"
+            $msBuildArgs += "/p:VersionSuffix=$versionSuffix"
+        }
+
         &$msBuild $msBuildArgs
     }
     else {
-        dotnet build "$slnRoot/Hazelcast.Net.sln" -c $configuration # -f $framework
+        $buildArgs = @(
+            "$slnRoot/Hazelcast.Net.sln", `
+            "-c", "$configuration"
+            # "-f", "$framework"
+        )
+        if ($hasVersion) {
+            $packArgs += "/p:AssemblyVersion=$versionPrefix"
+            $packArgs += "/p:FileVersion=$versionPrefix"
+            $packArgs += "/p:VersionPrefix=$versionPrefix"
+            $packArgs += "/p:VersionSuffix=$versionSuffix"
+        }
+
+        dotnet build $buildArgs
     }
 
     # if it failed, we can stop here
@@ -1024,9 +1067,25 @@ if ($doDocsServe) {
 
 if ($doNuget) {
     Write-Output ""
-    Write-Output "Build NuGet package(s)..."
+    Write-Output "Build NuGet packages..."
+
+    # creates the nupkg (which contains Hazelcast.Net.dll)
+    # creates the snupkg (which contains Hazelcast.Net.pdb with source code reference)
     # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-pack
-    &dotnet pack "$srcDir\Hazelcast.Net\Hazelcast.Net.csproj" --no-build --nologo -o "$tmpDir\output" -c $configuration
+
+    $packArgs = @(
+        "$srcDir\Hazelcast.Net\Hazelcast.Net.csproj", `
+        "--no-build", "--nologo", `
+        "-o", "$tmpDir\output", `
+        "-c", "$configuration"
+    )
+    if ($hasVersion) {
+        $packArgs += "/p:AssemblyVersion=$versionPrefix"
+        $packArgs += "/p:FileVersion=$versionPrefix"
+        $packArgs += "/p:VersionPrefix=$versionPrefix"
+        $packArgs += "/p:VersionSuffix=$versionSuffix"
+    }
+    &dotnet pack $packArgs
 }
 
 Write-Output ""
