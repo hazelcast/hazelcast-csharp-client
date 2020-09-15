@@ -534,16 +534,36 @@ if ($doClean) {
     Write-Output "Clean solution..."
 
     # remove all the bins and objs recursively
-    gci $slnRoot -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
+    gci $slnRoot -include bin,obj -Recurse | foreach ($_) {
+        Write-Output "  $($_.fullname)"
+        remove-item $_.fullname -Force -Recurse
+    }
 
     # clears output
-    if (test-path $outDir) { remove-item $outDir -force -recurse }
+    if (test-path $outDir) {
+        Write-Output "  $outDir"
+        remove-item $outDir -force -recurse
+    }
+
     # clears tests (results, cover...)
-    if (test-path "$tmpDir/tests") { remove-item "$tmpDir/tests" -force -recurse }
+    if (test-path "$tmpDir/tests") {
+        Write-Output "  $tmpDir/tests"
+        remove-item "$tmpDir/tests" -force -recurse
+    }
+
     # clears logs (server, rc...)
-    gci $tmpDir -include *.log -Recurse | foreach ($_) { remove-item $_.fullname -Force }
+    gci $tmpDir -include *.log -Recurse | foreach ($_) {
+        Write-Output "  $($_.fullname)"
+        remove-item $_.fullname -Force
+    }
+
     # clears docs
-    if (test-path "$tmpDir/docfx.site") { remove-item "$tmpDir/docfx.site" -force -recurse }
+    if (test-path "$tmpDir/docfx.site") {
+        Write-Output "  $tmpDir/docfx.site"
+        remove-item "$tmpDir/docfx.site" -force -recurse
+    }
+
+    Write-Output ""
 }
 
 if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
