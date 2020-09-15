@@ -127,6 +127,32 @@ namespace Hazelcast.Core
             return this;
         }
 
+        /// <summary>
+        /// Sets the log level to -1 (never writes).
+        /// </summary>
+        /// <returns>This configuration object.</returns>
+        public HConsoleConfiguration SetQuiet()
+        {
+#if HZ_CONSOLE
+            MaxLevel = -1;
+            _hasMaxLevel = true;
+#endif
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the log level to int.MaxValue (always writes).
+        /// </summary>
+        /// <returns>This configuration object.</returns>
+        public HConsoleConfiguration SetVerbose()
+        {
+#if HZ_CONSOLE
+            MaxLevel = int.MaxValue;
+            _hasMaxLevel = true;
+#endif
+            return this;
+        }
+
 #if HZ_CONSOLE
         /// <summary>
         /// Gets the indentation level.
@@ -195,7 +221,7 @@ namespace Hazelcast.Core
         /// <inheritdoc />
         public override string ToString()
 #if HZ_CONSOLE
-            => $"{{Config: {(_hasIndent ? Indent.ToString(CultureInfo.InvariantCulture) : "?")}, {(_hasPrefix ? ("\"" + Prefix + "\"") : "?")}, {(_hasMaxLevel ? MaxLevel.ToString(CultureInfo.InvariantCulture) : "?")}}}";
+            => $"indent = {(_hasIndent ? Indent.ToString(CultureInfo.InvariantCulture) : "?")}, prefix = {(_hasPrefix ? ("\"" + Prefix + "\"") : "?")}, maxLevel = {(_hasMaxLevel ? MaxLevel.ToString(CultureInfo.InvariantCulture) : "?")}";
 #else
             => "";
 #endif

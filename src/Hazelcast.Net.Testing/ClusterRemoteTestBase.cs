@@ -27,7 +27,7 @@ namespace Hazelcast.Testing
         public async Task ClusterOneTimeSetUp()
         {
             // create remote client and cluster
-            RcClient = await CreateRemoteControllerAsync().CAF();
+            RcClient = await ConnectToRemoteControllerAsync().CAF();
             RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CAF();
         }
 

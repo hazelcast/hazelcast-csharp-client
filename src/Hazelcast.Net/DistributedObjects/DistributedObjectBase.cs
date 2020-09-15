@@ -277,11 +277,11 @@ namespace Hazelcast.DistributedObjects
         /// trigger anymore, the server may keep sending (ignored) event messages. It is therefore
         /// recommended to retry unsubscribing until it is successful.</para>
         /// </remarks>
-        public
+        protected
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
+        ValueTask<bool> UnsubscribeBaseAsync(Guid subscriptionId)
         {
             var task = Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
 

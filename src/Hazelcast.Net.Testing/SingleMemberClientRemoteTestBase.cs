@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.DistributedObjects;
 using NUnit.Framework;
 
 namespace Hazelcast.Testing
@@ -39,5 +41,22 @@ namespace Hazelcast.Testing
         /// Gets the Hazelcast client.
         /// </summary>
         public IHazelcastClient Client { get; private set; }
+
+        // ensures that the object is destroyed and disposed at the end of a test method
+        // see usage in tests
+        /// <summary>
+        /// Ensures that a distributed object is destroyed and disposed at the
+        /// end of a test method, via an async-disposable object.
+        /// </summary>
+        /// <param name="o">The object.</param>
+        /// <returns>A disposable object.</returns>
+        protected IAsyncDisposable DestroyOnDispose(IDistributedObject o)
+        {
+            return new AsyncDisposable(async () =>
+            {
+                await Client.DestroyAsync(o);
+                await o.DisposeAsync();
+            });
+        }
     }
 }

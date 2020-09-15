@@ -36,7 +36,7 @@ namespace Hazelcast.Tests.Networking
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
-            RcClient = await CreateRemoteControllerAsync();
+            RcClient = await ConnectToRemoteControllerAsync();
         }
 
         [OneTimeTearDown]

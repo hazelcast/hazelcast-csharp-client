@@ -27,22 +27,22 @@ namespace Hazelcast.Testing
 {
     public abstract partial class RemoteTestBase // Remoting
     {
-        private static bool _canStartRemoteController = true;
+        private static bool _canConnectToRemoveController = true;
 
         /// <summary>
-        /// Creates a remote controller.
+        /// Connects to the remote controller.
         /// </summary>
-        /// <returns>A new remote controller.</returns>
+        /// <returns>A new remote controller client.</returns>
         protected
 #if !NETFRAMEWORK
             async
 #endif
-        Task<IRemoteControllerClient> CreateRemoteControllerAsync()
+        Task<IRemoteControllerClient> ConnectToRemoteControllerAsync()
         {
             // assume we can start the RC, else mark the test as inconclusive without even trying
             // so... if starting the RC fails once, we probably have a problem (is it even running?)
             // and there is no point trying again and again - faster to stop here
-            Assume.That(_canStartRemoteController, Is.True, () => "Cannot start Remote Controller.");
+            Assume.That(_canConnectToRemoveController, Is.True, () => "Cannot connect to the Remote Controller (is it running?).");
 
             try
             {
@@ -65,9 +65,9 @@ namespace Hazelcast.Testing
             }
             catch (Exception e)
             {
-                _canStartRemoteController = false; // fail fast other tests
-                Logger?.LogDebug(e, "Cannot start Remote Controller");
-                throw new AssertionException("Cannot start Remote Controller", e);
+                _canConnectToRemoveController = false; // fail fast other tests
+                Logger?.LogDebug(e, "Cannot connect to the Remote Controller (is it running?)");
+                throw new AssertionException("Cannot connect to the Remote Controller (is it running?)", e);
             }
         }
     }

@@ -167,10 +167,13 @@ namespace Hazelcast.Clustering
 
             try
             {
+                HConsole.WriteLine(this, "Execute event handler");
                 await state.Subscription.HandleAsync(state.Message).CAF();
             }
             catch (Exception e)
             {
+                HConsole.WriteLine(this, "Handler has thrown.");
+
                 Interlocked.Increment(ref _exceptionCount);
                 var args = new DistributedEventExceptionEventArgs(e, state.Message);
                 var correlationId = state.Message.CorrelationId;
