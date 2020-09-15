@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var itemData = ToSafeData(item);
             var requestMessage = ListAddWithIndexCodec.EncodeRequest(Name, index, itemData);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
-            _ = ListSetCodec.DecodeResponse(responseMessage).Response;
+            _ = ListAddWithIndexCodec.DecodeResponse(responseMessage);
         }
 
         /// <inheritdoc />

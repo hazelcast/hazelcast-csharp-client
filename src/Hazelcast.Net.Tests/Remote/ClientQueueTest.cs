@@ -13,13 +13,11 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Testing;
-using Hazelcast.Tests.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
