@@ -253,8 +253,7 @@ if (-not $isWindows) {
 if (-not [System.String]::IsNullOrWhiteSpace($framework)) {
     $framework = $framework.ToLower()
     if (-not $frameworks.Contains($framework)) {
-        Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: " + `
-              [System.String]::Join(", ", $frameworks) + "."
+        Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
     }
     $frameworks = @( $framework )
 }
@@ -552,9 +551,11 @@ if ($doClean) {
     }
 
     # clears logs (server, rc...)
-    gci $tmpDir -include *.log -Recurse | foreach ($_) {
-        Write-Output "  $($_.fullname)"
-        remove-item $_.fullname -Force
+    if (test-path "$tmpDir") {
+        gci $tmpDir -include *.log -Recurse | foreach ($_) {
+            Write-Output "  $($_.fullname)"
+            remove-item $_.fullname -Force
+        }
     }
 
     # clears docs
@@ -573,6 +574,20 @@ if (-not (test-path $outDir)) { mkdir $outDir >$null }
 if ($isWindows) {
     $nuget = "$tmpDir/nuget.exe"
     ensureNuGet
+}
+
+# ensure we have dotnet for build and tests
+if ($doBuild -or -$doTests) {
+  ensureCommand "dotnet"
+  $sdks = (&dotnet --list-sdks)
+  $v21 = ($sdks | select-string -pattern "^2\.1" | foreach-object { $_.ToString().Split(' ')[0] } | select -last 1)
+  if ($v21 -eq $null) {
+        Die "Could not find dotnet SDK version 2.1.x"
+  }
+  $v31 = ($sdks | select-string -pattern "^3\.1" | foreach-object { $_.ToString().Split(' ')[0] } | select -last 1)
+  if ($v31 -eq $null) {
+        Die "Could not find dotnet SDK version 3.1.x"
+  }
 }
 
 # use NuGet to ensure we have the required packages for building and testing
@@ -595,7 +610,6 @@ $buildLibs.PSObject.Properties.Name | Foreach-Object {
     if ($name -eq "vswhere") { $vswhereVersion = $version }
     if ($name -eq "nunit.consolerunner") { $nunitVersion = $version }
     if ($name -eq "jetbrains.dotcover.commandlinetools") { $dotcoverVersion = $version }
-    if ($name -eq "jetbrains.dotcover.commandlinetools.linux") { $dotcoverLinuxVersion = $version }
     if ($name -eq "docfx.console") { $docfxVersion = $version }
     if ($name -eq "memberpage") { $memberpageVersion = $version }
 }
@@ -605,11 +619,6 @@ if ($doBuild -and $isWindows) {
     ensureVsWhere
     $msBuild = ""
     ensureMsBuild
-}
-
-# ensure we have dotnet for build and tests
-if ($doBuild -or -$doTests) {
-  ensureCommand "dotnet"
 }
 
 # ensure we can sign
@@ -896,7 +905,7 @@ function RunDotNetCoreTests($f) {
         popd
     }
     else {
-        $dotnetArgs = @( "test", `
+        $dotnetArgs = @( `
             "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj", `
             "-c", "$configuration", `
             "--no-restore", `
@@ -909,14 +918,19 @@ function RunDotNetCoreTests($f) {
             "NUnit.TestOutputXml=`".`"", `
             "NUnit.Labels=Before" )
 
-            if ($testFilter -ne "") { $dotnetArgs += "NUnit.Where=`"$testFilter`"" }
+        if ($testFilter -ne "") { $dotnetArgs += "NUnit.Where=`"$testFilter`"" }
 
         Write-Output "exec: dotnet $dotnetArgs"
-        &dotnet $dotnetArgs
+        &dotnet test $dotnetArgs
     }
 
     # NUnit adapter does not support configuring the file name, move
-    move-item -force "$tmpDir/tests/results/Hazelcast.Net.Tests.xml" "$tmpDir/tests/results/results-$f.xml"
+    if (test-path "$tmpDir/tests/results/Hazelcast.Net.Tests.xml") {
+        move-item -force "$tmpDir/tests/results/Hazelcast.Net.Tests.xml" "$tmpDir/tests/results/results-$f.xml"
+    }
+    elseif (test-path "$tmpDir/tests/results/results-$f.xml") {
+        rm "$tmpDir/tests/results/results-$f.xml"
+    }
     CollectTestResults $f "$tmpDir/tests/results/results-$f.xml"
 }
 
@@ -945,7 +959,6 @@ function RunDotNetFrameworkTests($f) {
 
         $v = $dotcoverVersion
         $dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools/$v/tools/dotCover.exe"
-        #$dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools.linux/$v/tools/dotCover.sh"
 
         # note: separate attributes filters with ';'
         $dotCoverArgs = @( "cover", `
@@ -1021,29 +1034,35 @@ if ($doTests) {
     Write-Output "Summary:"
     foreach ($testResult in $testResults) {
 
-        $xml = [xml] (gc $testResult)
-
-        $run = $xml."test-run"
-        #$fwk = ($run."test-suite".settings.setting | where { $_.name -eq "RuntimeFramework" }).value
         $fwk = [System.IO.Path]::GetFileNameWithoutExtension($testResult).TrimStart("result-")
-        $total = $run.total
-        $passed = $run.passed
-        $failed = $run.failed
-        $skipped = $run.skipped
-        $inconclusive = $run.inconclusive
 
-        Write-Output `
-            "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
+        if (test-path $testResult) {
+            $xml = [xml] (gc $testResult)
 
-        if ($failed -gt 0) {
-            foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
-                Write-Output "    $($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
-                if ($doFailedTests) {
-                    Write-Output $testCase.failure.message.innerText
-                    Write-Output $testCase.failure."stack-trace".innerText
-                    Write-Output ""
+            $run = $xml."test-run"
+            $total = $run.total
+            $passed = $run.passed
+            $failed = $run.failed
+            $skipped = $run.skipped
+            $inconclusive = $run.inconclusive
+
+            Write-Output `
+                "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
+
+            if ($failed -gt 0) {
+                foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
+                    Write-Output "    $($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
+                    if ($doFailedTests) {
+                        Write-Output $testCase.failure.message.innerText
+                        Write-Output $testCase.failure."stack-trace".innerText
+                        Write-Output ""
+                    }
                 }
             }
+        }
+        else {
+            Write-Output `
+                "  $($fwk.PadRight(16)) :  FAILED (no test report)."
         }
     }
 }

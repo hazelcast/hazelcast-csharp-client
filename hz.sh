@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/bash
 
 POWERSHELL=powershell
 if ! type $POWERSHELL >/dev/null 2>&1; then
@@ -13,6 +13,21 @@ if [ -z $POWERSHELL ]; then
   exit 1
 fi
 
-$POWERSHELL ./hz.ps1 "$@"
+# put quotes around args that contain whitespaces,
+# this black magic thing works in bash on Windows and Linux,
+# though I would have a hard time explaining why exactly.
+
+c=()
+for i in "$@"
+do
+	if [[ "$OS" == "Windows_NT" ]] && [[ "$i" =~ " " ]];
+	then
+    	c+=("\"$i\"")
+	else
+		c+=("$i")
+	fi
+done
+
+$POWERSHELL ./hz.ps1 "${c[@]}"
 
 #eof
