@@ -74,7 +74,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             // just to make sure that inheriting classes *will* implement it!
             // TODO: should just be abstract then!
-            throw new NotImplementedException();
+            throw new NotImplementedException("ALL IMPLEMENTING CLASSES SHOULD IMPLEMENT CODECHANDLEEVENTASYNC!");
         }
 
         protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);

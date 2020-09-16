@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetRemoveCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -33,7 +33,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -41,14 +41,14 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             return SetCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
         public override async Task ClearAsync()
         {
             var requestMessage = SetClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
             _ = SetClearCodec.DecodeResponse(responseMessage);
         }
     }
