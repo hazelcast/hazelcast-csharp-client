@@ -12,6 +12,9 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Hazelcast.Examples</RootNamespace>
     <AssemblyName>hx</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -12,6 +12,9 @@
     <IsPackable>false</IsPackable>
     <RootNamespace>Hazelcast.Tests</RootNamespace>
     <UserSecretsId>7aab0d14-5061-42a3-a706-fe9f428ea22c</UserSecretsId>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -38,7 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2020.1.3" />
+    <!-- BEWARE, version must align with build/build.proj! -->
+    <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2020.2.2" />
   </ItemGroup>
 
   <ItemGroup>

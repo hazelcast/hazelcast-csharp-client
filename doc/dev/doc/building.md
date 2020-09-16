@@ -92,3 +92,19 @@ PS> build/build.ps1 docs,docsServe
 ```
 
 When the `-enterprise` option is set, in order to test the enterprise features, the `HAZELCAST_ENTERPRISE_KEY` environment variable must contain a valid Hazelcast Enterprise key.
+
+## SDK Selection
+
+The `global.json` file at the root of the project contains:
+
+```json
+{
+  "sdk": {
+    "allowPrerelease": false
+  }
+}
+```
+
+This ensures that any use of the `dotnet` command actuallys use the lastest stable release installed on the machine, and avoids any pre-release versions, as these may break the build. Should you want to experiment with pre-releases of the .NET SDK, change `false` to `true` (but do not commit the change!).
+
+For more details, see the [Select the .NET Core version to use](https://docs.microsoft.com/en-us/dotnet/core/versions/selection) and [global.json overview](https://docs.microsoft.com/en-us/dotnet/core/tools/global-json) articles from Microsoft.

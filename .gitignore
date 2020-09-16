@@ -21,4 +21,6 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
 build/enterprise.key
+build/hazelcast-*.xml
