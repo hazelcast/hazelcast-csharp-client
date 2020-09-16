@@ -214,9 +214,6 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListener()
         {
-            HConsole.Configure<object>(c => c.SetVerbose());
-            HConsole.Configure<AsyncContext>(c => c.SetQuiet());
-
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyOnDispose(queue);
 

@@ -646,9 +646,13 @@ namespace Hazelcast.Clustering
 
             await TaskEx.AwaitCanceled(_clusterEventsTask).CAF();
 
-            var clusterEventsClientConnection = _clusterEventsConnection;
-            if (clusterEventsClientConnection != null)
-                await clusterEventsClientConnection.DisposeAsync().CAF();
+            // connection is going down
+            // FIXME: should we unsubscribe?
+            _clusterEventsConnection = null;
+
+            //var clusterEventsClientConnection = _clusterEventsConnection;
+            //if (clusterEventsClientConnection != null)
+            //    await clusterEventsClientConnection.DisposeAsync().CAF();
         }
     }
 }

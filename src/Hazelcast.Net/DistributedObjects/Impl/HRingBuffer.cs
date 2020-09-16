@@ -30,7 +30,6 @@ namespace Hazelcast.DistributedObjects.Impl
     /// <typeparam name="TItem">The type of the items.</typeparam>
     internal class HRingBuffer<TItem> : DistributedObjectBase, IHRingBuffer<TItem>
     {
-        private readonly int _maxBatchSize;
         private long _capacity = -1;
 
         /// <summary>
@@ -45,8 +44,11 @@ namespace Hazelcast.DistributedObjects.Impl
         public HRingBuffer(string name, DistributedObjectFactory factory, Cluster cluster, int maxBatchSize, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HRingBuffer.ServiceName, name, factory, cluster, serializationService, loggerFactory)
         {
-            _maxBatchSize = maxBatchSize;
+            MaxBatchSize = maxBatchSize;
         }
+
+        /// <inheritdoc />
+        public int MaxBatchSize { get; }
 
         /// <inheritdoc />
         public async Task<long> AddAsync(TItem item)
@@ -100,7 +102,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var capacity = await GetCapacityAsync().CAF();
             if (minCount > capacity) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be smaller than, or equal to, the capacity.");
-            if (maxCount > _maxBatchSize) throw new ArgumentOutOfRangeException(nameof(maxCount), "The value of maxCount must be lower than, or equal to, the max batch size.");
+            if (maxCount > MaxBatchSize) throw new ArgumentOutOfRangeException(nameof(maxCount), "The value of maxCount must be lower than, or equal to, the max batch size.");
 
             var requestMessage = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
