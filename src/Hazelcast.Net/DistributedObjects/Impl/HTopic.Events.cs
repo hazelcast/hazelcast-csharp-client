@@ -75,5 +75,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private static bool ReadUnsubscribeResponse(ClientMessage message, object state)
             => TopicRemoveMessageListenerCodec.DecodeResponse(message).Response;
+
+        public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
+            => UnsubscribeBaseAsync(subscriptionId);
     }
 }

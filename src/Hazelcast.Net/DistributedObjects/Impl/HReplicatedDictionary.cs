@@ -268,5 +268,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             return ReplicatedMapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
         }
+
+        public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
+            => UnsubscribeBaseAsync(subscriptionId);
     }
 }

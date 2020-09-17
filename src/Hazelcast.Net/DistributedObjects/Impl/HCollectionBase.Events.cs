@@ -20,6 +20,7 @@ using Hazelcast.Data;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
@@ -65,7 +66,15 @@ namespace Hazelcast.DistributedObjects.Impl
                 }
             }
 
+            return CodecHandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory);
             return ListAddListenerCodec.HandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory);
+        }
+
+        protected virtual ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, ValueTask> f, ILoggerFactory loggerFactory)
+        {
+            // just to make sure that inheriting classes *will* implement it!
+            // TODO: should just be abstract then!
+            throw new NotImplementedException();
         }
 
         protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);
@@ -93,5 +102,8 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         protected abstract bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state);
+
+        public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
+            => UnsubscribeBaseAsync(subscriptionId);
     }
 }

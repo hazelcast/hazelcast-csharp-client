@@ -13,8 +13,13 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Data;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
@@ -35,5 +40,12 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
             => QueueRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
+
+        /// <inheritdoc />
+        protected override ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, ValueTask> f, ILoggerFactory loggerFactory)
+            => QueueAddListenerCodec.HandleEventAsync(
+                eventMessage,
+                (itemData, memberId, eventTypeData) => f(itemData, memberId, eventTypeData),
+                LoggerFactory);
     }
 }

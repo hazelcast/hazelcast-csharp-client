@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.Testing
         [Test]
         public async Task CanStartAndShutdownRemoteController()
         {
-            var rc = await CreateRemoteControllerAsync();
+            var rc = await ConnectToRemoteControllerAsync();
 
             // we have a remote controller
 
@@ -34,7 +34,7 @@ namespace Hazelcast.Tests.Testing
         [Test]
         public async Task CanStartAndShutdownCluster()
         {
-            var rc = await CreateRemoteControllerAsync();
+            var rc = await ConnectToRemoteControllerAsync();
             var cluster = await rc.CreateClusterAsync(Resources.Cluster_Default);
 
             // we have a cluster
@@ -46,7 +46,7 @@ namespace Hazelcast.Tests.Testing
         [Test]
         public async Task CanStartAndShutdownMember()
         {
-            var rc = await CreateRemoteControllerAsync();
+            var rc = await ConnectToRemoteControllerAsync();
             var cluster = await rc.CreateClusterAsync();
             var member = await rc.StartMemberAsync(cluster.Id);
 

@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -67,6 +69,17 @@ namespace Hazelcast.DistributedObjects.Impl
                 array[index] = default;
 
             return array;
+        }
+
+        /// <inheritdoc />
+        public virtual async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            // all collections are async enumerable,
+            // but by default we load the whole items set at once,
+            // then iterate in memory
+            var items = await GetAsync().CAF();
+            foreach (var item in items)
+                yield return item;
         }
     }
 }
