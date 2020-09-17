@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Remote
         public async Task RemoveRetainAll()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             Assert.That(await list.AddAsync("item_1"));
             Assert.That(await list.AddAsync("item_2"));
@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddAll()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             var l = new List<string> { "item_1", "item_2" };
             Assert.That(await list.AddRangeAsync(l));
@@ -74,7 +74,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddSetRemove()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             Assert.That(await list.AddAsync("item_1"));
             Assert.That(await list.AddAsync("item_2"));
@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestContains()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             Assert.IsTrue(await list.AddAsync("item1"));
             Assert.IsTrue(await list.AddAsync("item2"));
@@ -119,7 +119,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestIndexOf()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             Assert.IsTrue(await list.AddAsync("item1"));
             Assert.IsTrue(await list.AddAsync("item2"));
@@ -135,7 +135,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestInsert()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             await list.AddAsync("item0");
             await list.AddAsync("item1");
@@ -151,7 +151,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestIsEmpty()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             Assert.IsTrue(await list.IsEmptyAsync());
             await list.AddAsync("item1");
@@ -164,7 +164,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestIterator()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             Assert.IsTrue(await list.AddAsync("item1"));
             Assert.IsTrue(await list.AddAsync("item2"));
@@ -191,7 +191,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestListener()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             var eventsCount = 0;
             var sid = await list.SubscribeAsync(true, handle => handle
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestRemoveListener()
         {
             var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(list);
+            await using var _ = DestroyAndDispose(list);
 
             var eventsCount = 0;
             var sid = await list.SubscribeAsync(true, handle => handle

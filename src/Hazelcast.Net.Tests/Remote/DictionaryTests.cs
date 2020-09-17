@@ -30,7 +30,7 @@ namespace Hazelcast.Tests.Remote
         public async Task Set()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // Set adds a new value, or replaces an existing value,
             // and does not return anything
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Remote
         public async Task SetWithTimeout()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and does not return anything
@@ -80,7 +80,7 @@ namespace Hazelcast.Tests.Remote
         public async Task GetAndSet()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and returns the existing value, or the default value
@@ -104,7 +104,7 @@ namespace Hazelcast.Tests.Remote
         public async Task Add()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // TryAdd adds a new value if no value exists already,
             // and returns the existing value, or the default value
@@ -133,7 +133,7 @@ namespace Hazelcast.Tests.Remote
         public async Task SetMany()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // AddOrReplace adds new values, or replaces existing values
             // NOTE: no way to know what happened
@@ -164,7 +164,7 @@ namespace Hazelcast.Tests.Remote
         public async Task ReplaceByKey()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
@@ -186,7 +186,7 @@ namespace Hazelcast.Tests.Remote
         public async Task ReplaceByKeyAndValue()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // Replace replaces an existing value, and returns the existing value,
             // else does nothing if no value exists already (does not add)
@@ -208,7 +208,7 @@ namespace Hazelcast.Tests.Remote
         public async Task SetWithTimeToLive()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // AddOrReplace adds a new value, or replaces an existing value,
             // and does not return anything
@@ -232,7 +232,7 @@ namespace Hazelcast.Tests.Remote
         public async Task SetTransient()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // AddTransient adds a new value, or replaces an existing value,
             // and does not return anything
@@ -257,7 +257,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TrySet()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             // TryAddOrReplace is like AddOrReplace but with a timeout
 
@@ -278,7 +278,7 @@ namespace Hazelcast.Tests.Remote
         public async Task Clear()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             var entries = new Dictionary<string, int>();
             for (var i = 0; i < 100; i++)
@@ -300,7 +300,7 @@ namespace Hazelcast.Tests.Remote
         public async Task GetAll()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             var entries = new Dictionary<string, int>();
             for (var i = 0; i < 100; i++)
@@ -344,7 +344,7 @@ namespace Hazelcast.Tests.Remote
         public async Task Events()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             var eventsCount = 0;
             var id = await map.SubscribeAsync(on => on
@@ -374,7 +374,7 @@ namespace Hazelcast.Tests.Remote
         public async Task AsyncEvents()
         {
             var map = await Client.GetDictionaryAsync<string, int>("map_" + CreateUniqueName()).CAF();
-            await using var _ = DestroyOnDispose(map);
+            await using var _ = DestroyAndDispose(map);
 
             var eventsCount = 0;
             var id = await map.SubscribeAsync(on => on

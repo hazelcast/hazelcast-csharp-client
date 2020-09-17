@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddAll()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             var s = await rb.AddAsync(new List<string> {"foo", "bar"}, OverflowPolicy.Overwrite);
 
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddAndReadOne()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             var sequence = await rb.AddAsync("foo");
 
@@ -65,7 +65,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddAsync()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             var s = await rb.AddAsync("foo", OverflowPolicy.Overwrite);
 
@@ -76,7 +76,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestCapacity()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             Assert.AreEqual(Capacity, await rb.GetCapacityAsync());
         }
@@ -86,7 +86,7 @@ namespace Hazelcast.Tests.Remote
 		public async Task TestExcessiveMaxCount()
 		{
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             await AssertEx.ThrowsAsync<ArgumentException>(async () =>
             {
@@ -99,7 +99,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestExcessiveMinCount()
 		{
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             await AssertEx.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
@@ -113,7 +113,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestHeadSequence()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             for (var k = 0; k < 2*Capacity; k++)
             {
@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Remote
 		public async Task TestInvalidReadCount()
 		{
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
@@ -139,7 +139,7 @@ namespace Hazelcast.Tests.Remote
 		public async Task TestInvalidSequence()
 		{
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
@@ -151,7 +151,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestReadManyAsync()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             await rb.AddAsync("1");
             await rb.AddAsync("2");
@@ -165,7 +165,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestReadManyAsyncWithMaxCount()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             await rb.AddAsync("1");
             await rb.AddAsync("2");
@@ -183,7 +183,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestRemainingCapacity()
         {
             var rb = await Client.GetRingBufferAsync<string>("ClientRingbufferTestWithTTL" + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             await rb.AddAsync("foo");
 
@@ -196,7 +196,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestSize()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             await rb.AddAsync("foo");
 
@@ -207,7 +207,7 @@ namespace Hazelcast.Tests.Remote
 		public async Task TestStaleSequence()
 		{
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             for (var k = 0; k < Capacity * 2; k++)
             {
@@ -229,7 +229,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestTailSequence()
         {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(rb);
+            await using var _ = DestroyAndDispose(rb);
 
             for (var k = 0; k < 2*Capacity; k++)
             {

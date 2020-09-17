@@ -42,15 +42,13 @@ namespace Hazelcast.Testing
         /// </summary>
         public IHazelcastClient Client { get; private set; }
 
-        // ensures that the object is destroyed and disposed at the end of a test method
-        // see usage in tests
         /// <summary>
-        /// Ensures that a distributed object is destroyed and disposed at the
-        /// end of a test method, via an async-disposable object.
+        /// Gets a disposable object that will destroy and dispose a distributed
+        /// object when disposed.
         /// </summary>
         /// <param name="o">The object.</param>
         /// <returns>A disposable object.</returns>
-        protected IAsyncDisposable DestroyOnDispose(IDistributedObject o)
+        protected IAsyncDisposable DestroyAndDispose(IDistributedObject o)
         {
             return new AsyncDisposable(async () =>
             {

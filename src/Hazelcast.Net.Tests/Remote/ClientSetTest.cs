@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Remote
         public async Task RemoveRetainAll()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             Assert.IsTrue(await set.AddAsync("item1"));
             Assert.IsTrue(await set.AddAsync("item2"));
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddAll()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             var l = new List<string> { "item1", "item2" };
             Assert.IsTrue(await set.AddRangeAsync(l));
@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddRemove()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             Assert.IsTrue(await set.AddAsync("item1"));
             Assert.IsTrue(await set.AddAsync("item2"));
@@ -83,7 +83,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestContains()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             Assert.IsTrue(await set.AddAsync("item1"));
             Assert.IsTrue(await set.AddAsync("item2"));
@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestIsEmpty()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             Assert.IsTrue(await set.IsEmptyAsync());
             await set.AddAsync("item1");
@@ -114,7 +114,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestIterator()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             Assert.IsTrue(await set.AddAsync("item1"));
             Assert.IsTrue(await set.AddAsync("item2"));
@@ -138,7 +138,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestListener()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             var eventsCount = 0;
             var sid = await set.SubscribeAsync(true, handle => handle
@@ -160,7 +160,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestRemoveListener()
         {
             var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(set);
+            await using var _ = DestroyAndDispose(set);
 
             var eventsCount = 0;
             var sid = await set.SubscribeAsync(true, handle => handle
