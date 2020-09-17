@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.Remote
 
             await using (var tx = await client.BeginTransactionAsync())
             {
-                var txList = await tx.GetListAsync(list);
+                var txList = await tx.GetTransactionalAsync(list);
 
                 NUnit.Framework.Assert.IsTrue(await txList.AddAsync("item2"));
                 NUnit.Framework.Assert.AreEqual(2, await txList.CountAsync());

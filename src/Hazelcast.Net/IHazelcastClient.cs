@@ -147,7 +147,7 @@ namespace Hazelcast
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name);
+        Task<IHMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHTopic{T}"/> distributed object.

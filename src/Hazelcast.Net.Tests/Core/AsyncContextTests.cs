@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Core
         {
             await Task.Yield(); // ensure it's async, else creates an app-wide context
 
-            AsyncContext.Reset();
+            AsyncContext.ResetSequence();
 
             Assert.That(AsyncContext.HasCurrent, Is.False);
 
@@ -41,7 +41,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task StartsWithNoContext2()
         {
-            AsyncContext.Reset();
+            AsyncContext.ResetSequence();
 
             // how can this be true?
             Assert.That(AsyncContext.HasCurrent, Is.False);
@@ -58,7 +58,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task FlowsWithAsync()
         {
-            AsyncContext.Reset();
+            AsyncContext.ResetSequence();
             AsyncContext.Ensure();
 
             Assert.That(AsyncContext.HasCurrent, Is.True);
@@ -76,7 +76,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task WithNewContext()
         {
-            AsyncContext.Reset();
+            AsyncContext.ResetSequence();
             AsyncContext.Ensure();
 
             Assert.That(AsyncContext.HasCurrent, Is.True);

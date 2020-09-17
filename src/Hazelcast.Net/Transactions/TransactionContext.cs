@@ -101,10 +101,14 @@ namespace Hazelcast.Transactions
             if (InTransaction)
                 throw new InvalidOperationException("Nested transactions are not supported.");
 
+            // TODO: think about race conditions?
             _connection = await _cluster.Members.WaitRandomConnection().CAF();
             InTransaction = true;
+
             _threadId = ContextId;
             _startTime = Clock.Milliseconds;
+
+            HConsole.WriteLine(this, $"Begin transaction on context #{ContextId}");
 
             try
             {
@@ -132,11 +136,16 @@ namespace Hazelcast.Transactions
                 throw new InvalidOperationException("There is no active transaction to commit.");
 
             if (_threadId != ContextId)
-                throw new InvalidOperationException("Transactions cannot span multiple threads.");
+            {
+                HConsole.WriteLine(this, $"Commit transaction on context #{ContextId} that was started on #{_threadId}");
+                throw new InvalidOperationException("Transactions cannot span multiple async contexts.");
+            }
 
             var timeoutMilliseconds = _options.Timeout.TimeoutMilliseconds(0, int.MaxValue);
             if (_startTime + timeoutMilliseconds < Clock.Milliseconds)
                 throw new TransactionException("Transaction has timed out.");
+
+            HConsole.WriteLine(this, $"Commit transaction on context #{ContextId}");
 
             try
             {
@@ -169,7 +178,12 @@ namespace Hazelcast.Transactions
                 throw new InvalidOperationException("There is no active transaction to roll back.");
 
             if (_threadId != ContextId)
-                throw new InvalidOperationException("Transactions cannot span multiple threads.");
+            {
+                HConsole.WriteLine(this, $"Rollback transaction on context #{ContextId} that was started on #{_threadId}");
+                throw new InvalidOperationException("Transactions cannot span multiple async contexts.");
+            }
+
+            HConsole.WriteLine(this, $"Rollback transaction on context #{ContextId}");
 
             try
             {
@@ -217,7 +231,7 @@ namespace Hazelcast.Transactions
         // Objects
 
         /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetListAsync<TItem>(IHList<TItem> source)
+        public Task<IHTxList<TItem>> GetTransactionalAsync<TItem>(IHList<TItem> source)
             => GetListAsync<TItem>(source.Name);
 
         /// <inheritdoc />
@@ -229,7 +243,7 @@ namespace Hazelcast.Transactions
         }
 
         /// <inheritdoc />
-        public Task<IHTxSet<TItem>> GetSetAsync<TItem>(IHSet<TItem> source)
+        public Task<IHTxSet<TItem>> GetTransactionalAsync<TItem>(IHSet<TItem> source)
             => GetSetAsync<TItem>(source.Name);
 
         /// <inheritdoc />
@@ -240,7 +254,7 @@ namespace Hazelcast.Transactions
                     => new HTxSet<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(IHQueue<TItem> source)
+        public Task<IHTxQueue<TItem>> GetTransactionalAsync<TItem>(IHQueue<TItem> source)
             => GetQueueAsync<TItem>(source.Name);
 
         public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name)
@@ -250,20 +264,20 @@ namespace Hazelcast.Transactions
                     => new HTxQueue<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(IHMultiDictionary<TKey, TValue> source)
-            => GetMultiMapAsync<TKey, TValue>(source.Name);
+        public Task<IHTxMultiDictionary<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiDictionary<TKey, TValue> source)
+            => GetMultiDictionaryAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
+        public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiDictionary<TKey, TValue>, HTxMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxMultiDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxDictionary<TKey, TValue>> GetMapAsync<TKey, TValue>(IHDictionary<TKey, TValue> source)
-            => GetMapAsync<TKey, TValue>(source.Name);
+        public Task<IHTxDictionary<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHDictionary<TKey, TValue> source)
+            => GetDictionaryAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxDictionary<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
+        public Task<IHTxDictionary<TKey, TValue>> GetDictionaryAsync<TKey, TValue>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxDictionary<TKey, TValue>, HTxDictionary<TKey, TValue>>(HDictionary.ServiceName, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)

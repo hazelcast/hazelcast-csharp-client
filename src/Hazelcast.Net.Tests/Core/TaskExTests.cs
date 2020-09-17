@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Core
         [TearDown]
         public void Reset()
         {
-            AsyncContext.Reset();
+            AsyncContext.ResetSequence();
         }
 
         [Test]

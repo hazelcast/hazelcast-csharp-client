@@ -25,6 +25,7 @@ namespace Hazelcast.Core
     /// </summary>
     public sealed class AsyncContext
     {
+        // the sequence of unique identifiers for contexts
         private static ISequence<long> _idSequence = new Int64Sequence();
 
 #if !HZ_CONSOLE
@@ -47,6 +48,7 @@ namespace Hazelcast.Core
         /// </summary>
         private AsyncContext()
         {
+            // assign the unique identifier using the sequence
             Id = _idSequence.GetNext();
         }
 
@@ -71,9 +73,9 @@ namespace Hazelcast.Core
         internal static bool HasCurrent => Current.Value != null;
 
         /// <summary>
-        /// Resets the context. This method is provided for tests only.
+        /// Resets the sequence of unique identifiers. This method is provided for tests only.
         /// </summary>
-        internal static void Reset()
+        internal static void ResetSequence()
         {
             _idSequence = new Int64Sequence();
         }
@@ -84,6 +86,14 @@ namespace Hazelcast.Core
         internal static void Ensure()
         {
             Current.Value ??= new AsyncContext();
+        }
+
+        /// <summary>
+        /// Ensures that a context exists. This method is provided for tests only.
+        /// </summary>
+        internal static void EnsureNew()
+        {
+            Current.Value = new AsyncContext();
         }
 
         /// <summary>

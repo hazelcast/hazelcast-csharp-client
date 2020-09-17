@@ -80,7 +80,7 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<IHMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
+        Task<IHMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiDictionary<TKey, TValue>, HMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
                 (n, f, c, sr, lf)

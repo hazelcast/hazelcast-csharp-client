@@ -30,7 +30,7 @@ namespace Hazelcast.Examples.DistributedObjects
             await client.StartAsync();
 
             // get the distributed map from the cluster
-            await using var map = await client.GetMultiMapAsync<string, string>("multimap-example");
+            await using var map = await client.GetMultiDictionaryAsync<string, string>("multimap-example");
 
             // add values
             await map.TryAddAsync("key", "value");
