@@ -57,6 +57,7 @@ namespace Hazelcast.Tests.Remote
                 await context.CommitAsync();
 
                 // this tests comes from old code and I am not entirely sure what we are testing
+                // only 1 because we should only connect to 1 member in non-smart mode!
                 Assert.AreEqual(1, cm.SnapshotConnections(false).Count);
             }
         }
