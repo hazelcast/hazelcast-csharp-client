@@ -114,6 +114,7 @@ foreach ($t in $commands) {
             Write-Output "  tests       : runs the tests"
             Write-Output "  cover       : when running tests, also perform code coverage analysis"
             Write-Output "  nuget       : builds the NuGet package(s)"
+            Write-Output "  nupush      : pushes the NuGet package(s)"
             Write-Output "  rc          : runs the remote controller for tests"
             Write-Output "  server      : runs a server for tests"
             Write-Output "  docsServe   : serves the documentation (alias: ds)"
@@ -130,8 +131,8 @@ foreach ($t in $commands) {
             Write-Output "  -server <version>              : the server version for tests"
             Write-Output "  -framework <version>           : the framework to build (default is all, alias: -f)"
             Write-Output "  -configuration <configuration> : the build configuration (default is Release, alias: -c)"
-            Write-Output "  -testFilter <filter>           : a test filter (default is all, alias: tf)"
-            Write-Output "  -coverageFilter <filter>       : a coverage filter (default is all, alias: cf)"
+            Write-Output "  -testFilter <filter>           : a test filter (default is all, alias: -tf)"
+            Write-Output "  -coverageFilter <filter>       : a coverage filter (default is all, alias: -cf)"
             Write-Output "  -version <version>             : the version to build"
             Write-Output ""
             Write-Output "Server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or"
@@ -151,6 +152,9 @@ foreach ($t in $commands) {
             Write-Output "via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key"
             Write-Output "file."
             Write-Output ""
+            Write-Output "Pushing the NuGet packages requires a NuGet API key, via the NUGET_API_KEY"
+            Write-Output "environment variable."
+            Write-Output ""
             Write-Output "Test <filter> can be used to filter the tests to run, it must respect the NUnit test"
             Write-Output "selection language, which is detailed at:"
             Write-Output "https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html"
@@ -168,6 +172,7 @@ foreach ($t in $commands) {
         "docsIf"      { $doDocs = $isWindows }
         "tests"       { $doTests = $true }
         "nuget"       { $doNuget = $true }
+        "nupush"      { $doNupush = $true }
         "rc"          { $doRc = $true }
         "server"      { $doServer = $true }
         "docsServe"   { $doDocsServe = $true }
@@ -243,6 +248,12 @@ if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpa
     else {
         Die "Enterprise features require an enterprise key, either in`n- HAZELCAST_ENTERPRISE_KEY environment variable, or`n- $buildDir/enterprise.key file."
     }
+}
+
+# validate nuget key
+$nugetApiKey = $env:NUGET_API_KEY
+if ($doNupush -and [System.String]::IsNullOrWhiteSpace($nugetApiKey)) {
+    Die "Pushing to NuGet requires a NuGet API key in NUGET_API_KEY environment variable."
 }
 
 # determine framework(s)
@@ -1003,6 +1014,7 @@ if ($doTests -or $doRc -or $doServer) {
     }
 }
 
+$testsSuccess = $true
 if ($doTests) {
 
     # run tests
@@ -1050,6 +1062,9 @@ if ($doTests) {
                 "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
 
             if ($failed -gt 0) {
+
+                $testsSuccess = $false
+
                 foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
                     Write-Output "    $($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
                     if ($doFailedTests) {
@@ -1061,6 +1076,7 @@ if ($doTests) {
             }
         }
         else {
+            $testsSuccess = $false
             Write-Output `
                 "  $($fwk.PadRight(16)) :  FAILED (no test report)."
         }
@@ -1104,6 +1120,12 @@ if ($doDocsServe) {
     &$docfx serve "$tmpDir\docfx.site"
 }
 
+if ($doNuget -and -not $testsSuccess) {
+    Write-Output ""
+    Write-Output "Tests failed, skipping building NuGet packages..."
+    $doNuget = $false
+}
+
 if ($doNuget) {
     Write-Output ""
     Write-Output "Build NuGet packages..."
@@ -1125,6 +1147,30 @@ if ($doNuget) {
         $packArgs += "/p:VersionSuffix=$versionSuffix"
     }
     &dotnet pack $packArgs
+}
+
+if ($doNupush -and -not $testsSuccess) {
+    Write-Output ""
+    Write-Output "Tests failed, skipping pushing NuGet packages..."
+    $doNupush = $false
+}
+
+if ($doNupush) {
+    Write-Output ""
+    Write-Output "Push NuGet packages..."
+
+    if (-not $hasVersion)
+    {
+        $xml = [xml] (gc "$srcDir/Directory.Build.props")
+        $versionPrefix = $xml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+        $versionSuffix = $xml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+        $version = $versionPrefix.Trim()
+        if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix)) {
+            $version += "-$($versionSuffix.Trim())"
+        }
+    }
+
+    &$nuget push "Hazelcast.Net.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
 }
 
 Write-Output ""
