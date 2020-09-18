@@ -14,6 +14,7 @@
 
 using System;
 using System.Text;
+using Hazelcast.Protocol;
 
 namespace Hazelcast.Messaging
 {
@@ -30,7 +31,7 @@ namespace Hazelcast.Messaging
         public static string Dump(this ClientMessage message)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
-
+#if DEBUG
             string prefix;
             var text = new StringBuilder();
 
@@ -48,10 +49,10 @@ namespace Hazelcast.Messaging
                     ? "EVENT"
                     : (message.MessageType & 1) > 0 ? "RESPONSE" : "REQUEST";
 
-                var s = string.IsNullOrWhiteSpace(message.OperationName) ? "" : " ";
+                var name = message.OperationName ?? CodecConstants.GetMessageTypeName(message.MessageType);
 
                 text.AppendLine($"{prefix} [{message.CorrelationId}]");
-                text.AppendLine($"TYPE 0x{message.MessageType:x}{s}{message.OperationName}");
+                text.AppendLine($"TYPE 0x{message.MessageType:x} {name}");
             }
 
             if (prefix == "REQUEST")
@@ -73,6 +74,9 @@ namespace Hazelcast.Messaging
             //text.Append("\u001b[0m");
 
             return text.ToString();
+#else
+            return string.Empty;
+#endif
         }
     }
 }

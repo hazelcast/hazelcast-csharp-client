@@ -28,7 +28,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var i = 0;
             foreach (var value in collection)
             {
-                frame.Bytes.WriteInt(i* BytesExtensions.SizeOfInt, value);
+                frame.Bytes.WriteIntL(i* BytesExtensions.SizeOfInt, value);
                 i++;
             }
 
@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<int>(itemCount);
             for (var i = 0; i < itemCount; i++)
             {
-                result.Add(frame.Bytes.ReadInt(i * BytesExtensions.SizeOfInt));
+                result.Add(frame.Bytes.ReadIntL(i * BytesExtensions.SizeOfInt));
             }
             return result;
         }

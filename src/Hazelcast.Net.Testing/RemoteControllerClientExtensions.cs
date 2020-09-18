@@ -82,7 +82,7 @@ namespace Hazelcast.Testing
         /// <param name="cluster">The cluster.</param>
         /// <param name="expectedPartitionOwnersCount">The expected number of partition owners.</param>
         /// <returns>The new member.</returns>
-        public static async Task<Member> StartMemberAddedAsync(this IRemoteControllerClient rc, IHazelcastClient client, Cluster cluster, int expectedPartitionOwnersCount)
+        public static async Task<Member> StartMemberWaitAddedAsync(this IRemoteControllerClient rc, IHazelcastClient client, Cluster cluster, int expectedPartitionOwnersCount)
         {
             var clientInternal = (HazelcastClient) client;
             var added = new SemaphoreSlim(0);
@@ -140,7 +140,7 @@ namespace Hazelcast.Testing
         /// <param name="client">The Hazelcast client.</param>
         /// <param name="cluster">The cluster.</param>
         /// <param name="member">The member.</param>
-        public static async Task StopMemberRemovedAsync(this IRemoteControllerClient rc, IHazelcastClient client, Cluster cluster, Member member)
+        public static async Task StopMemberWaitRemovedAsync(this IRemoteControllerClient rc, IHazelcastClient client, Cluster cluster, Member member)
         {
             var clientInternal = (HazelcastClient) client;
             var removed = new SemaphoreSlim(0);

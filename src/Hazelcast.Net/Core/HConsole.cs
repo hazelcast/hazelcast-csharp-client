@@ -18,6 +18,8 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 #if HZ_CONSOLE
 using System.Collections.Generic;
 
@@ -32,12 +34,17 @@ namespace Hazelcast.Core
     /// <para>To enable the console, define HZ_CONSOLE. Otherwise, none of the console
     /// method invocations will be compiled (thanks to <see cref="ConditionalAttribute"/>)
     /// and therefore the impact on actual (production) code will be null.</para>
+    /// <para>The original <see cref="Console"/> can become somewhat erratic when used
+    /// in heavy multi-threaded code, therefore this console writes to a <see cref="StringBuilder"/>
+    /// which can be rendered with the <see cref="WriteAndClear"/> method.</para>
     /// </remarks>
     internal static class HConsole
     {
 #if HZ_CONSOLE
         private static readonly Dictionary<object, HConsoleConfiguration> SourceConfigs = new Dictionary<object, HConsoleConfiguration>();
         private static readonly Dictionary<Type, HConsoleConfiguration> TypeConfigs = new Dictionary<Type, HConsoleConfiguration>();
+        private static readonly StringBuilder TextBuilder = new StringBuilder();
+        private static readonly object TestBuilderLock = new object();
 
         private static readonly HConsoleConfiguration DefaultConfig = new HConsoleConfiguration()
             .SetPrefix(default)
@@ -93,6 +100,41 @@ namespace Hazelcast.Core
         // a call to WriteLine, which will *not* be compiled anyways.
 
         /// <summary>
+        /// Gets the text.
+        /// </summary>
+        public static string Text
+        {
+#if HZ_CONSOLE
+            get => TextBuilder.ToString();
+#else
+            get => string.Empty;
+#endif
+        }
+
+        /// <summary>
+        /// Clears the text buffer.
+        /// </summary>
+        [Conditional("HZ_CONSOLE")]
+        public static void Clear()
+        {
+#if HZ_CONSOLE
+            lock (TestBuilderLock) TextBuilder.Clear();
+#endif
+        }
+
+        /// <summary>
+        /// Writes the text to the actual System.Console and clears the buffer.
+        /// </summary>
+        [Conditional("HZ_CONSOLE")]
+        public static void WriteAndClear()
+        {
+#if HZ_CONSOLE
+            Console.Write(TextBuilder.ToString());
+            lock (TestBuilderLock) TextBuilder.Clear();
+#endif
+        }
+
+        /// <summary>
         /// Configure the console for a source object.
         /// </summary>
         /// <param name="source">The source object.</param>
@@ -126,6 +168,18 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Configure the console defaults (for the <see cref="object"/> type).
+        /// </summary>
+        /// <param name="configure">A action to configure the console.</param>
+        [Conditional("HZ_CONSOLE")]
+        public static void Configure(Action<HConsoleConfiguration> configure)
+        {
+#if HZ_CONSOLE
+            Configure<object>(configure);
+#endif
+        }
+
+        /// <summary>
         /// Clears the configuration for a source object.
         /// </summary>
         /// <param name="source">The source object.</param>
@@ -146,6 +200,18 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             TypeConfigs.Remove(typeof(TObject));
+#endif
+        }
+
+        /// <summary>
+        /// Clears the complete configuration.
+        /// </summary>
+        [Conditional("HZ_CONSOLE")]
+        public static void ClearConfiguration()
+        {
+#if HZ_CONSOLE
+            TypeConfigs.Clear();
+            SourceConfigs.Clear();
 #endif
         }
 
@@ -187,7 +253,7 @@ namespace Hazelcast.Core
             if (source == null) throw new ArgumentNullException(nameof(source));
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
-            Console.WriteLine(config.FormattedPrefix + text);
+            lock (TestBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + text);
 #endif
         }
 
@@ -219,7 +285,7 @@ namespace Hazelcast.Core
             if (source == null) throw new ArgumentNullException(nameof(source));
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
-            Console.WriteLine(config.FormattedPrefix + format, args);
+            lock (TestBuilderLock) TextBuilder.AppendFormat(CultureInfo.InvariantCulture, config.FormattedPrefix + format + Environment.NewLine, args);
 #endif
         }
 
@@ -249,7 +315,7 @@ namespace Hazelcast.Core
             if (source == null) throw new ArgumentNullException(nameof(source));
             var config = GetConfig(source);
             if (config.Ignore(level)) return;
-            Console.WriteLine(config.FormattedPrefix + o);
+            lock (TestBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + o);
 #endif
         }
 

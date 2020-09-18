@@ -73,7 +73,7 @@ namespace Hazelcast.Tests.NearCache
 
         [Test]
         [Timeout(120_000)]
-        public async Task CanConnectToCluster()
+        public void CanConnectToCluster()
         {
             var client = (HazelcastClient) _client;
             var cluster = client.Cluster;

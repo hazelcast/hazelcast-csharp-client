@@ -28,13 +28,22 @@ namespace Hazelcast.Testing
         private static readonly string UniqueNamePrefix = DateTime.Now.ToString("HHmmss_");
 
         [OneTimeSetUp]
-        public void HazelcastOneTimeSetUp()
+        public void HazelcastTestBaseOneTimeRootSetUp()
         {
             // setup the logger
             LoggerFactory = CreateLoggerFactory();
             Logger = LoggerFactory.CreateLogger(GetType());
             Logger.LogInformation($"Setup {GetType()}");
+
+            // start fresh
+            HConsole.ClearConfiguration();
+
+            // top-level overrides
+            HazelcastTestBaseOneTimeSetUp();
         }
+
+        public virtual void HazelcastTestBaseOneTimeSetUp()
+        { }
 
         [SetUp]
         public void HazelcastTestBaseSetUp()
@@ -50,6 +59,9 @@ namespace Hazelcast.Testing
             // in case it's been used by tests, reset the clock
             // (after each test)
             Clock.Reset();
+
+            // same for console
+            HConsole.WriteAndClear();
         }
 
         protected override void ReportUnobservedException(string message, Exception exception)

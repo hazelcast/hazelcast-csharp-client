@@ -50,8 +50,15 @@ namespace Hazelcast
                         await Cluster.ClusterEvents.AddPartitionLostSubscription().CAF();
                         break;
 
+                    case MemberLifecycleEventHandler _ :
+                    case PartitionsUpdatedEventHandler _:
+                    case ConnectionLifecycleEventHandler _:
+                    case ClientLifecycleEventHandler _:
+                        // nothing to do (but don't throw)
+                        break;
+
                     default:
-                        throw new NotSupportedException();
+                        throw new NotSupportedException($"Handler of type {handler.GetType()} is not supported here.");
                 }
             }
 
@@ -74,7 +81,11 @@ namespace Hazelcast
                 {
                     DistributedObjectLifecycleEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CAF(),
                     PartitionLostEventHandler _ => await Cluster.ClusterEvents.RemovePartitionLostSubscription().CAF(),
-                    _ => throw new NotSupportedException()
+                    MemberLifecycleEventHandler _ => true,
+                    PartitionsUpdatedEventHandler _ => true,
+                    ConnectionLifecycleEventHandler _ => true,
+                    ClientLifecycleEventHandler _ => true,
+                    _ => throw new NotSupportedException($"Handler of type {handler.GetType()} is not supported here.")
                 };
 
                 allRemoved &= removed;

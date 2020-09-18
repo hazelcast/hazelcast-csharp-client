@@ -14,22 +14,23 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
+    // ReSharper disable once InconsistentNaming
     internal static class EntryListUUIDListIntegerCodec
     {
-        //private const int EntrySizeInBytes = GuidSizeInBytes + LongSizeInBytes;
-
         public static void Encode(ClientMessage clientMessage, ICollection<KeyValuePair<Guid, IList<int>>> collection)
         {
             var keyList = new List<Guid>(collection.Count);
             clientMessage.Append(Frame.CreateBeginStruct());
-            foreach (var kvp in collection)
+            foreach (var (ownerId, partitionIds) in collection)
             {
-                keyList.Add(kvp.Key);
-                ListIntegerCodec.Encode(clientMessage, kvp.Value);
+                keyList.Add(ownerId);
+                ListIntegerCodec.Encode(clientMessage, partitionIds);
             }
             clientMessage.Append(Frame.CreateEndStruct());
             ListUUIDCodec.Encode(clientMessage, keyList);
@@ -39,26 +40,24 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             var keyList = new List<Guid>(collection.Count);
             clientMessage.Append(Frame.CreateBeginStruct());
-            foreach (var kvp in collection)
+            foreach (var (ownerId, partitionIds) in collection)
             {
-                keyList.Add(kvp.Key);
-                ListIntegerCodec.Encode(clientMessage, kvp.Value);
+                keyList.Add(ownerId);
+                ListIntegerCodec.Encode(clientMessage, partitionIds);
             }
             clientMessage.Append(Frame.CreateEndStruct());
             ListUUIDCodec.Encode(clientMessage, keyList);
         }
 
+        // TODO: refactor codecs to work with IDictionary
         public static IList<KeyValuePair<Guid, IList<int>>> Decode(IEnumerator<Frame> iterator)
         {
-            var listV = ListMultiFrameCodec.Decode(iterator, ListIntegerCodec.Decode);
-            var listK = ListUUIDCodec.Decode(iterator);
+            var ownerPartitionIds = ListMultiFrameCodec.Decode(iterator, ListIntegerCodec.Decode);
+            var ownerIds = ListUUIDCodec.Decode(iterator);
 
-            var result = new List<KeyValuePair<Guid, IList<int>>>(listK.Count);
-            for (var i = 0; i < listK.Count; i++)
-            {
-                result.Add(new KeyValuePair<Guid, IList<int>>(listK[i], listV[i]));
-            }
-            return result;
+            return (ownerIds, ownerPartitionIds).Combine()
+                .Select(x => new KeyValuePair<Guid, IList<int>>(x.Item1, x.Item2))
+                .ToList();
         }
     }
 }

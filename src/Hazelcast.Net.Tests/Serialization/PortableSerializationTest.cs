@@ -250,7 +250,6 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestClassDefinitionConfigWithErrors()
         {
-            int portableVersion = 1;
             var serializationConfig = new SerializationOptions();
             serializationConfig.AddPortableFactory(SerializationTestsConstants.PORTABLE_FACTORY_ID,
                 new TestPortableFactory());

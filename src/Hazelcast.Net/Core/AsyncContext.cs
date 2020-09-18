@@ -39,7 +39,7 @@ namespace Hazelcast.Core
         {
             static string ToString(AsyncContext context) => context?.Id.ToString(CultureInfo.InvariantCulture) ?? "x";
 
-            HConsole.WriteLine(HConsoleObject, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -> {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? "(execution context change)" : "")}");
+            HConsole.WriteLine(HConsoleObject, 10, $"AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -> {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? "(execution context change)" : "")}");
         }
 #endif
 
