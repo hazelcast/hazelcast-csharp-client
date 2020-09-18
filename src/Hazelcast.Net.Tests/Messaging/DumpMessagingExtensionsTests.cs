@@ -21,7 +21,6 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Messaging
 {
     [TestFixture]
-    [Explicit("Only runs with Configuration=Debug.")]
     public class DumpMessagingExtensionsTests
     {
         [Test]
@@ -34,9 +33,13 @@ namespace Hazelcast.Tests.Messaging
             m.MessageType = 0;
             var s = m.Dump();
 
+#if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"EXCEPTION
 FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
-
+#else
+            // works, but produces an empty string
+            Assert.That(s.ToLf(), Is.EqualTo(""));
+#endif
             // message
             m = new ClientMessage(new Frame(new byte[64]));
             m.Append(new Frame(new byte[64]));
@@ -47,13 +50,17 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             m.OperationName = "operation";
             s = m.Dump();
 
+#if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"REQUEST [0]
 TYPE 0x11900 operation
 PARTID 55
 FRAME {Frame: 70 bytes, Unfragmented (0x0000C000)}
 FRAME {Frame: 70 bytes, Default (0x00000000)}
 FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
-
+#else
+            // works, but produces an empty string
+            Assert.That(s.ToLf(), Is.EqualTo(""));
+#endif
             m = new ClientMessage(new Frame(new byte[64]));
             m.Append(new Frame(new byte[64]));
             m.Append(new Frame(new byte[64]));
@@ -61,11 +68,16 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             m.Flags |= ClientMessageFlags.Unfragmented;
             s = m.Dump();
 
+#if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"RESPONSE [0]
 TYPE 0x11901 MapAddEntryListener.Response
 FRAME {Frame: 70 bytes, Unfragmented (0x0000C000)}
 FRAME {Frame: 70 bytes, Default (0x00000000)}
 FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
+#else
+            // works, but produces an empty string
+            Assert.That(s.ToLf(), Is.EqualTo(""));
+#endif
 
             // event
             m = new ClientMessage(new Frame(new byte[64]));
@@ -73,9 +85,14 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             m.Flags |= ClientMessageFlags.Event;
             s = m.Dump();
 
+#if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"EVENT [0]
 TYPE 0x11902 MapAddEntryListener.Entry
 FRAME {Frame: 70 bytes, Final, Event (0x00002200)}".ToLf()));
+#else
+            // works, but produces an empty string
+            Assert.That(s.ToLf(), Is.EqualTo(""));
+#endif
 
         }
     }
