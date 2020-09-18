@@ -21,6 +21,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Messaging
 {
     [TestFixture]
+    [Explicit("Only runs with Configuration=Debug.")]
     public class DumpMessagingExtensionsTests
     {
         [Test]
@@ -61,7 +62,7 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             s = m.Dump();
 
             Assert.That(s.ToLf(), Is.EqualTo(@"RESPONSE [0]
-TYPE 0x11901
+TYPE 0x11901 MapAddEntryListener.Response
 FRAME {Frame: 70 bytes, Unfragmented (0x0000C000)}
 FRAME {Frame: 70 bytes, Default (0x00000000)}
 FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
@@ -73,7 +74,7 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             s = m.Dump();
 
             Assert.That(s.ToLf(), Is.EqualTo(@"EVENT [0]
-TYPE 0x11902
+TYPE 0x11902 MapAddEntryListener.Entry
 FRAME {Frame: 70 bytes, Final, Event (0x00002200)}".ToLf()));
 
         }
