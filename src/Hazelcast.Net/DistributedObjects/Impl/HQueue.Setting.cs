@@ -134,7 +134,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
             return QueueAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemData = ToSafeData(item);
             var requestMessage = QueueRemoveCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
             return QueueRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
             return QueueCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
             return QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public override async Task ClearAsync()
         {
             var requestMessage = QueueClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
             _ = QueueClearCodec.DecodeResponse(responseMessage);
         }
     }
