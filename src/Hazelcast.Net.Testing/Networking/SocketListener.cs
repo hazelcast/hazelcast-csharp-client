@@ -90,8 +90,12 @@ namespace Hazelcast.Testing.Networking
 
         private static void AcceptCallback(IAsyncResult result)
         {
-            var l = (Socket)result.AsyncState;
-            var h = l.EndAccept(result);
+            try
+            {
+                var l = (Socket) result.AsyncState;
+                var h = l.EndAccept(result);
+            }
+            catch { /* can happen */ }
         }
 
         public void Dispose()

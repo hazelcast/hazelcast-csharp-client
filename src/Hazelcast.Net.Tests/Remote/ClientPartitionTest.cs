@@ -15,10 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.Messaging;
-using Hazelcast.Networking;
 using Hazelcast.Partitioning;
 using Hazelcast.Testing;
 using NUnit.Framework;
@@ -29,15 +26,6 @@ namespace Hazelcast.Tests.Remote
     public class ClientPartitionTest : SingleMemberClientRemoteTestBase
     {
         private IHDictionary<object, object> _dictionary;
-
-        public override void HazelcastTestBaseOneTimeSetUp()
-        {
-            HConsole.Configure(config => config.SetMaxLevel(9));
-            HConsole.Configure<AsyncContext>(config => config.SetQuiet());
-            HConsole.Configure<ClientSocketConnection>(config => config.SetQuiet());
-            HConsole.Configure<ClientMessageConnection>(config => config.SetQuiet());
-            HConsole.WriteLine(this, "START");
-        }
 
         [SetUp]
         public async Task Setup()
