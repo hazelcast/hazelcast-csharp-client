@@ -172,10 +172,9 @@ namespace Hazelcast
 #endif
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name)
         {
-            const int maxBatchSize = 1000; // TODO: should become an option
             var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(HRingBuffer.ServiceName, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HRingBuffer<T>(n, factory, cluster, maxBatchSize, serializationService, loggerFactory));
+                    => new HRingBuffer<T>(n, factory, cluster, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
