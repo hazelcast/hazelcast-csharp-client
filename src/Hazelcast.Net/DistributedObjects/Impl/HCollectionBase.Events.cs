@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HCollectionBase<T> // Events
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle)
+        public async Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> handle, bool includeValue=true)
         {
             if (handle == null) throw new ArgumentNullException(nameof(handle));
 

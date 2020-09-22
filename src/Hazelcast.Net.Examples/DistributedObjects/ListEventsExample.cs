@@ -35,7 +35,7 @@ namespace Hazelcast.Examples.DistributedObjects
             var count = 0;
 
             // subscribe to some events
-            await list.SubscribeAsync(true, handle => handle
+            await list.SubscribeAsync(handle => handle
                 .ItemAdded((sender, args) =>
                 {
                     Console.WriteLine("Item added: " + args.Item);

@@ -27,19 +27,19 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListener()
         {
-            var topic = await Client.GetSetAsync<string>(TopicNameBase + CreateUniqueName());
+            var topic = await Client.GetTopicAsync<string>(TopicNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(topic);
 
             var eventsCount = 0;
-            var sid = await topic.SubscribeAsync(true, handle => handle
-                .ItemAdded((sender, args) =>
+            var sid = await topic.SubscribeAsync(handle => handle
+                .Message((sender, args) =>
                 {
                     Interlocked.Increment(ref eventsCount);
                 }));
 
             for (var i = 0; i < 10; i++)
             {
-                await topic.AddAsync("naber" + i);
+                await topic.PublishAsync("naber" + i);
             }
 
             await AssertEx.SucceedsEventually(() => Assert.That(eventsCount, Is.EqualTo(10)), 4000, 500);
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(topic);
 
             var eventsCount = 0;
-            var sid = await topic.SubscribeAsync(true, handle => handle
+            var sid = await topic.SubscribeAsync(handle => handle
                 .ItemAdded((sender, args) =>
                 {
                     Interlocked.Increment(ref eventsCount);

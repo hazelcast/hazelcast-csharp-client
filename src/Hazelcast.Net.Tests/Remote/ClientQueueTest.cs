@@ -180,19 +180,6 @@ namespace Hazelcast.Tests.Remote
             Assert.That(await queue.IsEmptyAsync());
         }
 
-        // was old code, we do not support readonly anymore
-        // TODO: remove this code
-        /*
-        [Test]
-        public async Task TestIsReadOnly()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
-
-            Assert.That(await queue.IsReadOnlyAsync());
-        }
-        */
-
         [Test]
         public async Task TestIterator()
         {
@@ -210,6 +197,26 @@ namespace Hazelcast.Tests.Remote
                 Assert.That(item, Is.EqualTo("item_" + j++));
             }
         }
+        
+        
+        [Test]
+        public async Task TestGetAll()
+        {
+            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
+            await using var _ = DestroyAndDispose(queue);
+
+            for (var i = 0; i < 5; i++)
+            {
+                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
+            }
+
+            var j = 0;
+            foreach (var item in await queue.GetAllAsync())
+            {
+                Assert.That(item, Is.EqualTo("item_" + j++));
+            }
+        }
+
 
         [Test]
         public async Task TestListener()
@@ -220,7 +227,7 @@ namespace Hazelcast.Tests.Remote
             Assert.That(await queue.CountAsync(), Is.EqualTo(0));
 
             var eventsCount = 0;
-            var sid = await queue.SubscribeAsync(true, handle => handle
+            var sid = await queue.SubscribeAsync(handle => handle
                 .ItemAdded((sender, args) =>
                 {
                     HConsole.WriteLine(this, $"! added: {args.Item}");
@@ -273,7 +280,7 @@ namespace Hazelcast.Tests.Remote
             var sids = new List<Guid>();
             for (var i = 0; i < testItemCount; i++)
             {
-                var sid =await queue.SubscribeAsync(true, handle => handle
+                var sid =await queue.SubscribeAsync(handle => handle
                     .ItemRemoved((sender, args) =>
                     {
                         Interlocked.Increment(ref eventsCount);
@@ -388,8 +395,8 @@ namespace Hazelcast.Tests.Remote
             Assert.That(await queue.CountAsync(), Is.EqualTo(3));
             Assert.That(await queue.RemoveAsync("item2"));
             Assert.That(await queue.CountAsync(), Is.EqualTo(2));
-            Assert.That(await queue.DequeueAsync(false), Is.EqualTo("item1"));
-            Assert.That(await queue.DequeueAsync(false), Is.EqualTo("item3"));
+            Assert.That(await queue.DequeueAsync(), Is.EqualTo("item1"));
+            Assert.That(await queue.DequeueAsync(), Is.EqualTo("item3"));
 
             Assert.That(await queue.RemoveAsync("itemX"), Is.False);
             Assert.That(await queue.TryEnqueueAsync("itemX"));
@@ -445,7 +452,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.TryEnqueueAsync("item1"));
-            Assert.That(await queue.DequeueAsync(false), Is.EqualTo("item1"));
+            Assert.That(await queue.DequeueAsync(), Is.EqualTo("item1"));
         }
 
         [Test]
@@ -476,27 +483,5 @@ namespace Hazelcast.Tests.Remote
                 Assert.That(item, Is.EqualTo("item_" + j++));
             }
         }
-
-        // that was an old tests when queues where ICollection
-        // TODO: remove this code
-        /*
-        [Test]
-        public void TestWrapperMethods()
-        {
-            var qc = (ICollection<object>) queue;
-
-            qc.Add("asd");
-            Assert.IsTrue(qc.Contains("asd"));
-
-            var enumerator = qc.GetEnumerator();
-
-            enumerator.MoveNext();
-            Assert.AreEqual("asd", enumerator.Current);
-
-            var enuma = ((IEnumerable) qc).GetEnumerator();
-            enuma.MoveNext();
-            Assert.AreEqual("asd", enuma.Current);
-        }
-        */
     }
 }

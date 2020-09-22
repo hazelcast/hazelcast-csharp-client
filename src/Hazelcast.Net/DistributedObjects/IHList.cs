@@ -18,8 +18,13 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    ///     Concurrent, distributed implementation of <see cref="IList{T}"/>IList
+    /// Concurrent and distributed List
     /// </summary>
+    /// <remarks>
+    /// <para>The Hazelcast IList is not a partitioned data-structure. Entire contents
+    /// of an IList is stored on a single machine (and in the backup). The IList
+    /// will not scale by adding more members to the cluster.</para>
+    /// </remarks>
     public interface IHList<T> : IHCollection<T>
     {
         /// <summary>
@@ -44,11 +49,21 @@ namespace Hazelcast.DistributedObjects
         /// collection is this list, and it's nonempty.)
         /// </summary>
         /// <param name="index">index at which to insert the first element from the specified collection</param>
-        /// <param name="c">collection containing elements to be added to this list</param>
+        /// <param name="items">collection containing elements to be added to this list</param>
         /// <typeparam name="TItem"></typeparam>
         /// <returns><tt>true</tt> if this list changed as a result of the call</returns>
         Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items) where TItem : T;
 
+        /// <summary>
+        /// Replaces the element at the specified position in this list with the
+        /// specified element.
+        /// </summary>
+        /// <param name="index">index index of the element to replace</param>
+        /// <param name="item">element to be stored at the specified position</param>
+        /// <returns></returns>
+        Task<T> SetAsync(int index, T item);
+
+        //Getting
         /// <summary>
         /// Returns the element in the specified position in this list
         /// </summary>
@@ -57,19 +72,37 @@ namespace Hazelcast.DistributedObjects
         Task<T> GetAsync(int index);
 
         /// <summary>
+        /// Returns a view of the portion of this list between the specified
+        /// <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.  (If
+        /// <tt>fromIndex</tt> and <tt>toIndex</tt> are equal, the returned list is
+        /// empty.)
+        /// </summary>
+        /// <param name="fromIndex">low endpoint (inclusive) of the subList</param>
+        /// <param name="toIndex">high endpoint (exclusive) of the subList</param>
+        /// <returns>a view of the specified range within this list</returns>
+        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex);
+
+        /// <summary>
+        /// Returns the zero-based index of the first occurrence of a specific item in this list.
+        /// </summary>
+        /// <param name="item">element to search for</param>
+        /// <returns>the index of the first occurrence of the specified element in
+        ///  this list, or -1 if this list does not contain the element</returns>
+        Task<int> IndexOfAsync(T item);
+
+        /// <summary>
         /// Returns the index of the last occurrence of the specified element
         /// in this list, or -1 if this list does not contain the element.
         /// More formally, returns the highest index <tt>i</tt> such that
         /// <tt>(o == null ? get(i) == null : o.equals(get(i)))</tt>
         /// or -1 if there is no such index.
         /// </summary>
-        /// <param name="o">element to search for</param>
+        /// <param name="item">element to search for</param>
         /// <returns>the index of the last occurrence of the specified element in
         ///  this list, or -1 if this list does not contain the element</returns>
         Task<int> LastIndexOfAsync(T item);
 
-        Task<int> IndexOfAsync(T item);
-
+        //Removing
         /// <summary>
         /// Removes the first occurrence of the specified element from this list,
         /// if it is present (optional operation).  If this list does not contain
@@ -83,25 +116,5 @@ namespace Hazelcast.DistributedObjects
         /// <param name="index">element to be removed from this list, if present</param>
         /// <returns><tt>true</tt> if this list contained the specified element</returns>
         Task<T> RemoveAtAsync(int index);
-
-        /// <summary>
-        /// Replaces the element at the specified position in this list with the
-        /// specified element.
-        /// </summary>
-        /// <param name="index">index index of the element to replace</param>
-        /// <param name="item">element to be stored at the specified position</param>
-        /// <returns></returns>
-        Task<T> SetAsync(int index, T item);
-
-        /// <summary>
-        /// Returns a view of the portion of this list between the specified
-        /// <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.  (If
-        /// <tt>fromIndex</tt> and <tt>toIndex</tt> are equal, the returned list is
-        /// empty.)
-        /// </summary>
-        /// <param name="fromIndex">low endpoint (inclusive) of the subList</param>
-        /// <param name="toIndex">high endpoint (exclusive) of the subList</param>
-        /// <returns>a view of the specified range within this list</returns>
-        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex);
     }
 }

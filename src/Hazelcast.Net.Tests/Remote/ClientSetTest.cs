@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Testing;
@@ -133,6 +135,30 @@ namespace Hazelcast.Tests.Remote
             Assert.IsTrue(iter.Current.StartsWith("item"));
             Assert.IsFalse(await iter.MoveNextAsync());
         }
+        
+        [Test]
+        public async Task TestGetAll()
+        {
+            var set = await Client.GetSetAsync<string>(SetNameBase + CreateUniqueName());
+            await using var _ = DestroyAndDispose(set);
+            var actualItems = new HashSet<string>();
+            for (var i = 0; i < 10; i++)
+            {
+                actualItems.Add("item-" + i);
+            }
+
+            foreach (var item in actualItems)
+            {
+                await set.AddAsync(item);
+            }
+
+            var allItems = await set.GetAllAsync();
+            for (var i = 0; i < 10; i++)
+            {
+                Assert.True(actualItems.Contains(allItems[i]));
+            }
+        }
+
 
         [Test]
         public async Task TestListener()
@@ -141,7 +167,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(set);
 
             var eventsCount = 0;
-            var sid = await set.SubscribeAsync(true, handle => handle
+            var sid = await set.SubscribeAsync(handle => handle
                 .ItemAdded((sender, args) =>
                 {
                     Interlocked.Increment(ref eventsCount);
@@ -163,7 +189,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(set);
 
             var eventsCount = 0;
-            var sid = await set.SubscribeAsync(true, handle => handle
+            var sid = await set.SubscribeAsync(handle => handle
                 .ItemAdded((sender, args) =>
                 {
                     Interlocked.Increment(ref eventsCount);

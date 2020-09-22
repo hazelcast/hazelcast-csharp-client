@@ -37,7 +37,7 @@ namespace Hazelcast.Examples.DistributedObjects
             await set.AddAsync("item3");
             await set.AddAsync("item3");
 
-            Console.WriteLine("All: " + string.Join(", ", await set.GetAsync()));
+            Console.WriteLine("All: " + string.Join(", ", await set.GetAllAsync()));
 
             Console.WriteLine("Contains: " + await set.ContainsAsync("item2"));
 

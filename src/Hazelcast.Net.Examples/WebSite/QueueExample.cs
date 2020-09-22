@@ -37,7 +37,7 @@ namespace Hazelcast.Examples.WebSite
             await queue.TryDequeueAsync(TimeSpan.FromSeconds(5));
             //Indefinitely blocking Operations
             await queue.EnqueueAsync("yetanotheritem");
-            Console.WriteLine(await queue.DequeueAsync(true));
+            Console.WriteLine(await queue.DequeueAsync());
         }
     }
 }
