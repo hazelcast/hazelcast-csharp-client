@@ -13,13 +13,11 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Testing;
-using Hazelcast.Tests.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -35,7 +33,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAdd()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -49,7 +47,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestAddAll()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             var coll = new List<string> { "item1", "item2", "item3", "item4" };
             Assert.IsTrue(await queue.AddRangeAsync(coll));
@@ -60,7 +58,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestClear()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -77,7 +75,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestContains()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -91,7 +89,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestContainsAll()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -111,7 +109,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestCopyto()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -128,7 +126,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestDrain()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -154,7 +152,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestElement()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.TryEnqueueAsync("item_0"));
             Assert.That(await queue.PeekAsync(), Is.EqualTo("item_0"));
@@ -164,7 +162,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestEnumeration()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.TryEnqueueAsync("item_0"));
 
@@ -177,7 +175,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestIsEmpty()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.IsEmptyAsync());
         }
@@ -199,7 +197,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestIterator()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -216,11 +214,8 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListener()
         {
-            HConsole.Configure<object>(c => c.SetVerbose());
-            HConsole.Configure<AsyncContext>(c => c.SetQuiet());
-
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.CountAsync(), Is.EqualTo(0));
 
@@ -261,7 +256,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestListenerExtreme()
         {
             var queue = await Client.GetQueueAsync<string>("AnotherQueue" + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.CountAsync(), Is.EqualTo(0));
 
@@ -302,7 +297,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestOfferPoll()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 10; i++)
             {
@@ -351,7 +346,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestPeek()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.TryEnqueueAsync("item_0"));
             Assert.That(await queue.PeekAsync(), Is.EqualTo("item_0"));
@@ -362,7 +357,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestPut()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             await queue.EnqueueAsync("item_0");
 
@@ -373,7 +368,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestRemainingCapacity()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.GetRemainingCapacityAsync(), Is.EqualTo(6));
             Assert.That(await queue.TryEnqueueAsync("item_0"));
@@ -384,7 +379,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestRemove()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.TryEnqueueAsync("item1"));
             Assert.That(await queue.TryEnqueueAsync("item2"));
@@ -416,7 +411,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestRemoveRetain()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {
@@ -447,7 +442,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestTake()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.TryEnqueueAsync("item1"));
             Assert.That(await queue.DequeueAsync(false), Is.EqualTo("item1"));
@@ -457,7 +452,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestToArray()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyOnDispose(queue);
+            await using var _ = DestroyAndDispose(queue);
 
             for (var i = 0; i < 5; i++)
             {

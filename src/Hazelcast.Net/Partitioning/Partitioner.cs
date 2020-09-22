@@ -93,7 +93,8 @@ namespace Hazelcast.Partitioning
             if (partitionsMap == null) throw new ArgumentNullException(nameof(partitionsMap));
 
             HConsole.WriteLine(this, $"Received partition table v{version}");
-            HConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key}:{kvp.Value}")));
+            HConsole.WriteLine(this, 1, $"Partitions v{version}:\n" + 
+                                        string.Join("\n", partitionsMap.Select(kvp => $"\t{kvp.Key,-16}{kvp.Value}")));
 
             lock (_partitionsLock) // one at a time please
             {
@@ -115,6 +116,7 @@ namespace Hazelcast.Partitioning
             {
                 if (_partitions != null)
                 {
+                    // TODO: should return true/false and not throw a totally unrelated exception here
                     if (count != Count)
                         throw new ConnectionException("Failed to open a connection because " +
                                                       $"the partitions count announced by the member ({count}) " +

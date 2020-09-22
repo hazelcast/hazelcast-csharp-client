@@ -33,6 +33,35 @@ namespace Hazelcast.Core
             => source.OrderBy(x => RandomProvider.Random.Next());
 
         /// <summary>
+        /// Combine multiple <see cref="IEnumerable{T}"/> instances.
+        /// </summary>
+        /// <typeparam name="T1">The first enumerated type.</typeparam>
+        /// <typeparam name="T2">The second enumerated type.</typeparam>
+        /// <param name="source">The instances to combine.</param>
+        /// <returns>One single <see cref="IEnumerable{T}"/> combining the multiple instances.</returns>
+        public static IEnumerable<(T1, T2)> Combine<T1, T2>(this (IEnumerable<T1> Source1, IEnumerable<T2> Source2) source)
+        {
+            var (source1, source2) = source;
+
+            if (source1 == null) throw new ArgumentException("Element #1 of source is null.", nameof(source));
+            if (source2 == null) throw new ArgumentException("Element #2 of source is null.", nameof(source));
+
+            var i1 = source1.GetEnumerator();
+            var i2 = source2.GetEnumerator();
+
+            try
+            {
+                while (i1.MoveNext() && i2.MoveNext())
+                    yield return (i1.Current, i2.Current);
+            }
+            finally
+            {
+                i1.Dispose();
+                i2.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Combine <see cref="IEnumerable{T}"/>.
         /// </summary>
         /// <typeparam name="T1">The first enumerated type.</typeparam>
@@ -44,6 +73,7 @@ namespace Hazelcast.Core
         /// <param name="t3">The third <see cref="IEnumerable{T}"/>.</param>
         /// <param name="t4">The fourth <see cref="IEnumerable{T}"/>.</param>
         /// <returns></returns>
+        // TODO: rewrite as the one above
         public static IEnumerable<(T1, T2, T3, T4)> Combine<T1, T2, T3, T4>(IEnumerable<T1> t1, IEnumerable<T2> t2, IEnumerable<T3> t3, IEnumerable<T4> t4)
         {
             if (t1 == null) throw new ArgumentNullException(nameof(t1));
@@ -58,7 +88,7 @@ namespace Hazelcast.Core
 
             try
             {
-                while (i1.MoveNext() && i4.MoveNext() && i3.MoveNext() && i2.MoveNext())
+                while (i1.MoveNext() && i2.MoveNext() && i3.MoveNext() && i4.MoveNext())
                     yield return (i1.Current, i2.Current, i3.Current, i4.Current);
             }
             finally
@@ -69,5 +99,25 @@ namespace Hazelcast.Core
                 i4.Dispose();
             }
         }
+
+        /// <summary>
+        /// Creates a <see cref="Dictionary{TKey,TValue}"/> from an <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/>.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}"/> to create a <see cref="IDictionary{TKey,TValue}"/> from.</param>
+        /// <returns>A <see cref="Dictionary{TKey,TValue}"/> that contains values provided by <paramref name="source"/>.</returns>
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source)
+            => source.ToDictionary(x => x.Key, x => x.Value);
+
+        /// <summary>
+        /// Creates a <see cref="Dictionary{TKey,TValue}"/> from an <see cref="IEnumerable{T}"/> of (key, value) pairs.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}"/> to create a <see cref="IDictionary{TKey,TValue}"/> from.</param>
+        /// <returns>A <see cref="Dictionary{TKey,TValue}"/> that contains values provided by <paramref name="source"/>.</returns>
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey Key, TValue Value)> source)
+            => source.ToDictionary(x => x.Key, x => x.Value);
     }
 }

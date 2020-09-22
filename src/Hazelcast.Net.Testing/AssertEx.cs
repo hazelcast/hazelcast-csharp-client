@@ -90,5 +90,36 @@ namespace Hazelcast.Testing
                 await Task.Delay(pollingMilliseconds);
             }
         }
+
+        /// <summary>
+        /// Verifies that an async action throws a particular exception when called.
+        /// </summary>
+        /// <typeparam name="TException">The type of the expected exception.</typeparam>
+        /// <param name="action">The action.</param>
+        /// <returns>The caught exception.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <para>The original NUnit Assert.ThrowsAsync method does sync-over-async and is prone
+        /// to deadlocks, as detailed in this issue https://github.com/nunit/nunit/issues/2843
+        /// which is still open as of Sept. 2020. Our own implementation works around this.</para>
+        public static async ValueTask<TException> ThrowsAsync<TException>(Func<ValueTask> action)
+            where TException : Exception
+        {
+            Exception caughtException = null;
+
+            try
+            {
+                await action();
+            }
+            catch (TException e)
+            {
+                caughtException = e;
+            }
+
+            Assert.That(caughtException, Is.Not.Null, $"Expected a {typeof(TException)}, but code did not throw.");
+            Assert.That(caughtException, Is.InstanceOf<TException>(), $"Expected a {typeof(TException)}, not a {caughtException.GetType()}");
+
+            return (TException) caughtException;
+        }
     }
 }

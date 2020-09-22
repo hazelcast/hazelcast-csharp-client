@@ -67,15 +67,9 @@ namespace Hazelcast.DistributedObjects.Impl
             }
 
             return CodecHandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory);
-            return ListAddListenerCodec.HandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory);
         }
 
-        protected virtual ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, ValueTask> f, ILoggerFactory loggerFactory)
-        {
-            // just to make sure that inheriting classes *will* implement it!
-            // TODO: should just be abstract then!
-            throw new NotImplementedException();
-        }
+        protected abstract ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, ValueTask> f, ILoggerFactory loggerFactory);
 
         protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);
 

@@ -14,12 +14,14 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
     [Category("enterprise")]
+    [KnownIssue(304, "fail erratically")]
     public class ClientSslMutualAuthTests : ClientSslTestBase
     {
         [Test]

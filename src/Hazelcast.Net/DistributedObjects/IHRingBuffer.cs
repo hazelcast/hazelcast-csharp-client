@@ -238,5 +238,7 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         /// <returns>the sequence of the tail.</returns>
         Task<long> GetTailSequenceAsync();
+
+        int MaxBatchSize { get; }
     }
 }

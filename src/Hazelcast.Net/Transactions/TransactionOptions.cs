@@ -13,12 +13,15 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Configuration;
 
 namespace Hazelcast.Transactions
 {
     /// <summary>Contains the configuration for a transaction</summary>
     public sealed class TransactionOptions
     {
+        private int _durability = 1;
+
         public enum TransactionType
         {
             /// <summary>
@@ -47,11 +50,20 @@ namespace Hazelcast.Transactions
         /// <summary>
         /// Gets or sets the transaction durability.
         /// </summary>
-        public int Durability { get; set; } = 1;
+        public int Durability
+        {
+            get => _durability;
+            set
+            {
+                if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), "Value must be positive.");
+                _durability = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the transaction timeout.
         /// </summary>
+        // TODO: what happens when timeout is -1 (infinite)?
         public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(2);
 
         /// <summary>

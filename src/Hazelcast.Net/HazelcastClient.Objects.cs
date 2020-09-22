@@ -80,7 +80,7 @@ namespace Hazelcast
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<IHMultiDictionary<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
+        Task<IHMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name)
         {
             var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiDictionary<TKey, TValue>, HMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
                 (n, f, c, sr, lf)
@@ -172,10 +172,9 @@ namespace Hazelcast
 #endif
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name)
         {
-            const int maxBatchSize = 1000; // TODO: should become an option
             var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(HRingBuffer.ServiceName, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HRingBuffer<T>(n, factory, cluster, maxBatchSize, serializationService, loggerFactory));
+                    => new HRingBuffer<T>(n, factory, cluster, serializationService, loggerFactory));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

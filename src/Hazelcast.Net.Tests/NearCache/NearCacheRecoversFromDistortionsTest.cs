@@ -22,6 +22,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.NearCache
 {
     [TestFixture]
+    [KnownIssue(305, "fails on Linux")]
     public class NearCacheRecoversFromDistortionsTest : NearCacheTestBase
     {
         private IHazelcastClient _client;
@@ -73,7 +74,7 @@ namespace Hazelcast.Tests.NearCache
 
         [Test]
         [Timeout(120_000)]
-        public async Task CanConnectToCluster()
+        public void CanConnectToCluster()
         {
             var client = (HazelcastClient) _client;
             var cluster = client.Cluster;

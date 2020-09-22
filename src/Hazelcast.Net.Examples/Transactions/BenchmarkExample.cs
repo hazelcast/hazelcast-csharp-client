@@ -46,8 +46,8 @@ namespace Hazelcast.Examples.Transactions
                 await using (var transactionContext = await client.BeginTransactionAsync(
                     new TransactionOptions { Type = TransactionOptions.TransactionType.TwoPhase }))
                 {
-                    var txMap1 = await transactionContext.GetMapAsync<int, string>("test1");
-                    var txMap2 = await transactionContext.GetMapAsync<int, string>("test2");
+                    var txMap1 = await transactionContext.GetDictionaryAsync<int, string>("test1");
+                    var txMap2 = await transactionContext.GetDictionaryAsync<int, string>("test2");
 
                     await txMap1.SetAsync(i, "value");
                     await txMap2.SetAsync(i, "value");

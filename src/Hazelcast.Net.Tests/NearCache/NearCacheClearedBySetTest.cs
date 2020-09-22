@@ -40,7 +40,6 @@ namespace Hazelcast.Tests.NearCache
         private int _valuePut;
         private bool _stop;
         private int _assertionViolationCount;
-        private bool _failed;
         private string _name;
 
         private IHazelcastClient _client;
@@ -61,7 +60,7 @@ namespace Hazelcast.Tests.NearCache
             SerializationService = client.SerializationService;
 
             _valuePut = _assertionViolationCount = 0;
-            _stop = _failed = false;
+            _stop = false;
 
             _name = "nc-" + TestUtils.RandomString();
         }
@@ -223,7 +222,6 @@ namespace Hazelcast.Tests.NearCache
                 // in non-strict, we'll give it plenty
 
                 // abort all
-                _failed = true;
                 _stop = true;
             }
             Logger.LogInformation($"AddOrUpdate task {id} performed {i} operations.");

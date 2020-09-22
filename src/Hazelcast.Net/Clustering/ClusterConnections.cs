@@ -119,9 +119,10 @@ namespace Hazelcast.Clustering
                 // wait for the member table
                 await _clusterMembers.WaitForFirstMemberViewEventAsync(cancellationToken).CAF();
 
-                // start connecting members
+                // start connecting members - if we're smart-routing - else there's only 1 connection
                 // this is a background task that cancels with the cluster
-                _clusterMembersTask = EnsureMemberConnectionsAsync(_clusterState.CancellationToken);
+                if (_clusterState.Options.Networking.SmartRouting)
+                    _clusterMembersTask = EnsureMemberConnectionsAsync(_clusterState.CancellationToken);
 
                 // execute subscribers
                 await OnFirstConnection(cancellationToken).CAF();
