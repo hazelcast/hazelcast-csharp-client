@@ -19,9 +19,15 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Concurrent, distributed, partitioned, listenable collection.
+    /// Defines a concurrent, distributed, and listenable collection.
     /// </summary>
-    /// <typeparam name="T">item</typeparam>
+    /// <remarks>
+    /// <para>This is not a partitioned data-structure. Entire contents
+    /// is stored on a single machine (and in the backup). It will not
+    /// scale by adding more members to the cluster.
+    /// </para>
+    /// </remarks>
+    /// <typeparam name="T">The type of the items in the collection</typeparam>
     public interface IHCollection<T> : IDistributedObject, IAsyncEnumerable<T>
     {
         //setting

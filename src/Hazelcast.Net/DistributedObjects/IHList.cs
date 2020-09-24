@@ -18,14 +18,9 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Concurrent and distributed List
+    /// Defines a concurrent, distributed, and listenable list
     /// </summary>
-    /// <remarks>
-    /// <para>The Hazelcast IList is not a partitioned data-structure. Entire contents
-    /// of an IList is stored on a single machine (and in the backup). The IList
-    /// will not scale by adding more members to the cluster.</para>
-    /// </remarks>
-    public interface IHList<T> : IHCollection<T>
+     public interface IHList<T> : IHCollection<T>
     {
         /// <summary>
         /// Inserts the specified element at the specified position in this list.

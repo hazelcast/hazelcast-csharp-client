@@ -18,7 +18,9 @@ using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
-    /// <summary>Concurrent, blocking, distributed, observable queue.</summary>
+    /// <summary>
+    /// Defines a concurrent, blocking, distributed, and observable queue.
+    /// </summary>
     public interface IHQueue<T> : IHCollection<T>
     {
         /// <summary>
