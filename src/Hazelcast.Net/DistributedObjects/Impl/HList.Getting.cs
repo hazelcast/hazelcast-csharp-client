@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HList<T> // Getting
     {
         /// <inheritdoc />
-        public override async Task<IReadOnlyList<T>> GetAsync()
+        public override async Task<IReadOnlyList<T>> GetAllAsync()
         {
             var requestMessage = ListGetAllCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

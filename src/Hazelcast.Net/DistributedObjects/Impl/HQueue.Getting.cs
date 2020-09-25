@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HQueue<T> // Getting
     {
-        // <inheritdoc />
+        /// <inheritdoc />
         public override async Task<int> CountAsync()
         {
             var requestMessage = QueueSizeCodec.EncodeRequest(Name);
@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return QueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        // <inheritdoc />
+        /// <inheritdoc />
         public override async Task<bool> ContainsAsync(T item)
         {
             var itemData = ToSafeData(item);
@@ -39,8 +39,8 @@ namespace Hazelcast.DistributedObjects.Impl
             return QueueContainsCodec.DecodeResponse(responseMessage).Response;
         }
 
-        // <inheritdoc />
-        public override async Task<IReadOnlyList<T>> GetAsync()
+        /// <inheritdoc />
+        public override async Task<IReadOnlyList<T>> GetAllAsync()
         {
             var requestMessage = QueueIteratorCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }
 
-        // <inheritdoc />
+        /// <inheritdoc />
         public override async Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
@@ -57,7 +57,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return QueueContainsAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        // <inheritdoc />
+        /// <inheritdoc />
         public override async Task<bool> IsEmptyAsync()
         {
             var requestMessage = QueueIsEmptyCodec.EncodeRequest(Name);
@@ -65,7 +65,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return QueueIsEmptyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        // <inheritdoc />
+        /// <inheritdoc />
         public async Task<int> GetRemainingCapacityAsync()
         {
             var requestMessage = QueueRemainingCapacityCodec.EncodeRequest(Name);

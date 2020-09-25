@@ -12,8 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.Collections;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
@@ -27,5 +33,20 @@ namespace Hazelcast.DistributedObjects.Impl
         public HList(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(HList.ServiceName, name, factory, cluster, serializationService, loggerFactory)
         { }
+
+        public override async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
+        {
+            var items = await IterateAllAsync().CAF();
+            foreach (var item in items)
+                yield return item;
+        }
+
+        private async Task<IReadOnlyList<T>> IterateAllAsync()
+        {
+            var requestMessage = ListIteratorCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var response = ListIteratorCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList<T>(response, SerializationService);
+        }
     }
 }

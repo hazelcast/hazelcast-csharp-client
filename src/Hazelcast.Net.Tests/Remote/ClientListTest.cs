@@ -194,7 +194,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(list);
 
             var eventsCount = 0;
-            var sid = await list.SubscribeAsync(true, handle => handle
+            var sid = await list.SubscribeAsync(handle => handle
                 .ItemAdded((sender, args) =>
                 {
                     Interlocked.Increment(ref eventsCount);
@@ -216,7 +216,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(list);
 
             var eventsCount = 0;
-            var sid = await list.SubscribeAsync(true, handle => handle
+            var sid = await list.SubscribeAsync(handle => handle
                 .ItemAdded((sender, args) =>
                 {
                     Interlocked.Increment(ref eventsCount);
@@ -228,6 +228,23 @@ namespace Hazelcast.Tests.Remote
 
             await Task.Delay(4_000);
             Assert.That(eventsCount, Is.Zero);
+        }
+
+        [Test]
+        public async Task TestGetAll()
+        {
+            var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
+            await using var _ = DestroyAndDispose(list);
+            for (var i = 0; i < 10; i++)
+            {
+                await list.AddAsync("item-" + i);
+            }
+
+            var allItems = await list.GetAllAsync();
+            for (var i = 0; i < 10; i++)
+            {
+                Assert.AreEqual("item-" + i, allItems[i]);
+            }
         }
     }
 }

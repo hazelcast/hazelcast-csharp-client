@@ -18,18 +18,19 @@ using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
-    /// <summary>Concurrent, distributed, partitioned, listenable collection.</summary>
-    /// <remarks>Concurrent, distributed, partitioned, listenable collection.</remarks>
+    /// <summary>
+    /// Defines a concurrent, distributed, and listenable collection.
+    /// </summary>
+    /// <remarks>
+    /// <para>This is not a partitioned data-structure. Entire contents
+    /// is stored on a single machine (and in the backup). It will not
+    /// scale by adding more members to the cluster.
+    /// </para>
+    /// </remarks>
+    /// <typeparam name="T">The type of the items in the collection</typeparam>
     public interface IHCollection<T> : IDistributedObject, IAsyncEnumerable<T>
     {
-        // these mimics ICollection<T>
-
-        /// <summary>
-        /// Gets the number of items in the collection.
-        /// </summary>
-        /// <returns>The number of items in the collection.</returns>
-        Task<int> CountAsync();
-
+        //setting
         /// <summary>
         /// Adds an item to the collection.
         /// </summary>
@@ -38,56 +39,25 @@ namespace Hazelcast.DistributedObjects
         Task<bool> AddAsync(T item);
 
         /// <summary>
-        /// Clears the collection.
+        /// Adds all.
         /// </summary>
-        /// <returns>A task that will complete when the collection has been cleared.</returns>
-        Task ClearAsync();
+        /// <typeparam name="TItem">type of elements</typeparam>
+        /// <param name="items">element collection</param>
+        /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
+        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
-        /// <summary>
-        /// Determines whether the collection contains an item.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        /// <returns><c>true</c> if the collection contains the item; otherwise <c>false</c>.</returns>
-        Task<bool> ContainsAsync(T item);
-
-        /// <summary>
-        /// Removes an item from the collection.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        /// <returns><c>true</c> if the item was removed; otherwise <c>false</c>.</returns>
-        Task<bool> RemoveAsync(T item);
-
-        /// <summary>
-        /// Copies the collection items into an array.
-        /// </summary>
-        /// <param name="array">The destination array.</param>
-        /// <param name="arrayIndex">The destination initial index.</param>
-        /// <returns>A task that will complete when the items have been copied.</returns>
-        Task CopyToAsync(T[] array, int arrayIndex);
-
-        // rest is a mix of influences
-
+        //getting
         /// <summary>
         /// Gets the collection items.
         /// </summary>
         /// <returns>The collection items.</returns>
-        Task<IReadOnlyList<T>> GetAsync();
+        Task<IReadOnlyList<T>> GetAllAsync();
 
         /// <summary>
-        /// Adds all.
+        /// Gets the number of items in the collection.
         /// </summary>
-        /// <typeparam name="TItem">type of elements</typeparam>
-        /// <param name="c">element collection</param>
-        /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items) where TItem : T;
-
-        /// <summary>
-        /// Determines whether this collection contains all of the elements in the specified collection.
-        /// </summary>
-        /// <typeparam name="TItem">type of elements</typeparam>
-        /// <param name="c">The collection</param>
-        /// <returns><c>true</c> if this collection contains all of the elements in the specified collection; otherwise, <c>false</c>.</returns>
-        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
+        /// <returns>The number of items in the collection.</returns>
+        Task<int> CountAsync();
 
         /// <summary>
         /// Determines whether this instance is empty.
@@ -96,10 +66,33 @@ namespace Hazelcast.DistributedObjects
         Task<bool> IsEmptyAsync();
 
         /// <summary>
+        /// Determines whether this collection contains all of the elements in the specified collection.
+        /// </summary>
+        /// <typeparam name="TItem">type of elements</typeparam>
+        /// <param name="items">The collection</param>
+        /// <returns><c>true</c> if this collection contains all of the elements in the specified collection; otherwise, <c>false</c>.</returns>
+        Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
+
+        /// <summary>
+        /// Determines whether the collection contains an item.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns><c>true</c> if the collection contains the item; otherwise <c>false</c>.</returns>
+        Task<bool> ContainsAsync(T item);
+
+        //removing
+        /// <summary>
+        /// Removes an item from the collection.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns><c>true</c> if the item was removed; otherwise <c>false</c>.</returns>
+        Task<bool> RemoveAsync(T item);
+
+        /// <summary>
         /// Removes all of the elements in the specified collection from this collection.
         /// </summary>
         /// <typeparam name="TItem">type of elements</typeparam>
-        /// <param name="c">element collection to be removed</param>
+        /// <param name="items">element collection to be removed</param>
         /// <returns><c>true</c> if all removed, <c>false</c> otherwise.</returns>
         Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
@@ -111,29 +104,23 @@ namespace Hazelcast.DistributedObjects
         /// In other words, removes from this collection all of its elements that are not contained in the specified collection
         /// </remarks>
         /// <typeparam name="TItem">type of elements</typeparam>
-        /// <param name="c">The c.</param>
+        /// <param name="items">The c.</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
         Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
         /// <summary>
-        /// Returns an array containing all of the elements in this collection.
+        /// Clears the collection.
         /// </summary>
-        /// <returns>an array containing all of the elements in this collection.</returns>
-        Task<T[]> ToArrayAsync();
+        /// <returns>A task that will complete when the collection has been cleared.</returns>
+        Task ClearAsync();
 
         /// <summary>
-        /// Returns an array containing all of the elements in this collection
-        /// the runtime type of the returned array is that of the specified array
+        /// Subscribes to events.
         /// </summary>
-        /// <typeparam name="TItem">return array type</typeparam>
-        /// <param name="a">the array into which the elements of this collection are to be
-        /// stored, if it is big enough; otherwise, a new array of the same
-        /// runtime type is allocated for this purpose</param>
-        /// <returns>an array containing all of the elements in this collection</returns>
-        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array) where TItem : T;
-
-        //
-        Task<Guid> SubscribeAsync(bool includeValue, Action<CollectionItemEventHandlers<T>> handle);
+        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="includeValue">Whether to include values in event arguments.</param>
+        /// <returns>The unique identifier of the subscription.</returns>
+        Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> handle, bool includeValue = true);
 
         /// <summary>
         /// Unsubscribe from events.
@@ -150,5 +137,31 @@ namespace Hazelcast.DistributedObjects
         /// recommended to retry unsubscribing until it is successful.</para>
         /// </remarks>
         ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
+
+        //misc
+        /// <summary>
+        /// Copies the collection items into an array.
+        /// </summary>
+        /// <param name="array">The destination array.</param>
+        /// <param name="arrayIndex">The destination initial index.</param>
+        /// <returns>A task that will complete when the items have been copied.</returns>
+        Task CopyToAsync(T[] array, int arrayIndex);
+
+        /// <summary>
+        /// Returns an array containing all of the elements in this collection.
+        /// </summary>
+        /// <returns>an array containing all of the elements in this collection.</returns>
+        Task<T[]> ToArrayAsync();
+
+        /// <summary>
+        /// Returns an array containing all of the elements in this collection
+        /// the runtime type of the returned array is that of the specified array
+        /// </summary>
+        /// <typeparam name="TItem">return array type</typeparam>
+        /// <param name="array">the array into which the elements of this collection are to be
+        /// stored, if it is big enough; otherwise, a new array of the same
+        /// runtime type is allocated for this purpose</param>
+        /// <returns>an array containing all of the elements in this collection</returns>
+        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array) where TItem : T;
     }
 }
