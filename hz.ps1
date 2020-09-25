@@ -91,6 +91,12 @@ if ($commands.Length -eq 1 -and $commands[0].Contains(',')) {
 # clear rogue environment variable
 $env:FrameworkPathOverride=""
 
+# this will be SystemDefault by default, and on some oldish environment (Windows 8...) it
+# may not enable Tls12 by default, and use Tls10, and that will prevent us from connecting
+# to some SSL/TLS servers (for instance, NuGet) => explicitly add Tls12
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol `
+    -bor [Net.SecurityProtocolType]::Tls12
+
 # determine platform
 $platform = "windows"
 if ($isLinux) { $platform = "linux" }
