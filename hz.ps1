@@ -1170,7 +1170,7 @@ if ($doNupush) {
         }
     }
 
-    &$nuget push "Hazelcast.Net.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
+    &$nuget push "$tmpDir\output\Hazelcast.Net.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
 }
 
 Write-Output ""
