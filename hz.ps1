@@ -215,7 +215,7 @@ $hzVsPreview = $false # whether to look for previews of VS
 # determine java code repositories for tests
 $mvnOssSnapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot/"
-$mvnOssReleaseRepo = "http://repo1.maven.apache.org/maven2"
+$mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release/"
 
 if ($server.Contains("SNAPSHOT")) {
@@ -319,6 +319,30 @@ function ensureCommand($command) {
     }
 }
 
+function invokeWebRequest($url, $dest) {
+    $args = @{ Uri = $url }
+    if (![System.String]::IsNullOrWhiteSpace($dest)) {
+        $args.OutFile = $dest
+        $args.PassThru = $true
+    }
+
+    $pp = $progressPreference
+    $progressPreference = 'SilentlyContinue'
+
+    # PowerShell 7+ has -skipHttpErrorCheck parameter but not everyone will have it
+    # so, try... catch is required
+    try {
+        return invoke-webRequest @args
+    }
+    catch [System.Net.WebException] {
+        $response = $_.Exception.Response
+        Die "Failed to GET $url : $($response.StatusCode) $($response.StatusDescription)"
+    }
+    finally {
+        $progressPreference = $pp
+    }
+}
+
 # ensure we have NuGet
 function ensureNuGet() {
     if (-not $hzLocalBuild)
@@ -331,8 +355,8 @@ function ensureNuGet() {
         if (-not (test-path $nuget))
         {
             Write-Output "Download NuGet..."
-            Invoke-WebRequest $source -OutFile $nuget
-            if (-not $?) { Die "Failed to download NuGet." }
+            $response = invokeWebRequest $source $nuget
+            if ($response.StatusCode -ne 200) { Die "Failed to download NuGet." }
             Write-Output "  -> $nuget"
         }
         else {
@@ -343,6 +367,39 @@ function ensureNuGet() {
     elseif (-not (test-path $nuget))
     {
         Die "Failed to locate NuGet.exe."
+    }
+}
+
+# get a Maven artifact
+function getMvn($repoUrl, $group, $artifact, $version, $classifier, $dest) {
+
+    if ($version.EndsWith("-SNAPSHOT")) {
+        $url = "$repoUrl/$group/$artifact/$version/maven-metadata.xml"
+        $response = invokeWebRequest $url
+        if ($response.StatusCode -ne 200) {
+            Die "GET $url : $($response.StatusCode) $($response.StatusDescription)"
+        }
+
+        $metadata = [xml] $response.Content
+        $xpath = "//snapshotVersion [extension='jar'"
+        if (![System.String]::IsNullOrWhiteSpace($classifier)) {
+            $xpath += " and classifier='$classifier'"
+        }
+        $xpath += "]"
+        $jarVersion = "-" + $metadata.SelectNodes($xpath)[0].value
+    }
+    else {
+        $jarVersion = "-" + $version
+    }
+
+    $url = "$repoUrl/$group/$artifact/$version/$artifact$jarVersion"
+    if (![System.String]::IsNullOrWhiteSpace($classifier)) {
+        $url += "-$classifier"
+    }
+    $url += ".jar"
+    $response = invokeWebRequest $url $dest
+    if ($response.StatusCode -ne 200) {
+        Die "GET $url : $($response.StatusCode) $($response.StatusDescription)"
     }
 }
 
@@ -464,7 +521,20 @@ function ensureJar($jar, $repo, $artifact) {
         Write-Output "Detected $jar"
     } else {
         Write-Output "Downloading $jar ..."
-        &"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
+        #Write-Output "mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
+        #&"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
+
+        $parts = $artifact.Split(':')
+        $group = $parts[0].Replace('.', '/')
+        $art = $parts[1]
+        $ver = $parts[2]
+
+        $cls = $null
+        if ($parts.Length -eq 5 -and $parts[4] -eq "tests") {
+            $cls = "tests"
+        }
+
+        getMvn $repo $group $art $ver $cls "$tmpDir/lib/$jar"
     }
     $s = ";"
     if (-not $isWindows) { $s = ":" }
@@ -658,7 +728,6 @@ if ($isWindows) { $java = "javaw" }
 if ($doTests -or $doRc -or $doServer) {
     Write-Output ""
     ensureCommand $java
-    ensureCommand "mvn"
 
     # sad java
     $v = & java -version 2>&1
@@ -673,7 +742,6 @@ if ($doTests -or $doRc -or $doServer) {
     if (-not $v.StartsWith("1.8")) {
         # starting with Java 9 ... weird things can happen
         $javaFix = @( "-Dcom.google.inject.internal.cglib.\$experimental_asm7=true",  "--add-opens java.base/java.lang=ALL-UNNAMED" )
-        $env:MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true --add-opens java.base/java.lang=ALL-UNNAMED"
 
         $javaFix = $javaFix + ( `
             `
