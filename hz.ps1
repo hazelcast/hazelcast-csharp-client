@@ -97,6 +97,31 @@ $env:FrameworkPathOverride=""
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol `
     -bor [Net.SecurityProtocolType]::Tls12
 
+# determine PowerShellVersion (see also $psVersionTable)
+# PowerShell 2.0 is integrated since Windows 7 and Server 2008 R2
+#            3.0                             8            2012
+#            4.0                             8.1          2012 R2
+#            5.0                             10
+#            5.1                             10AU         2016
+$psVersion = (get-host | select-object Version).Version
+$minVersion = [System.Version]::Parse("5.1.0.0")
+if ($psVersion -lt $minVersion) {
+    Write-Output "This script requires at least version $($minVersion.Major).$($minVersion.Minor) of PowerShell, but you seem to be running version $($psVersion.Major).$($psVersion.Minor)."
+
+    try {
+        $x = (pwsh --version)
+        Write-Output "However we have detected the 'pwsh' command in your PATH, which provides $x."
+        Write-Output "Maybe you invoked PowerShell with the old 'powershell' command? Please use 'pwsh' instead."
+    }
+    catch {
+        Write-Output "We recommend you install the most recent stable version available for download at:"
+        Write-Output "https://github.com/PowerShell/PowerShell/releases"
+        Write-Output "Please note that this version will need to be invoked with 'pwsh' not 'powershell'."
+    }
+
+    Die "Unsupported PowerShell version: $($psVersion.Major).$($psVersion.Minor)"
+}
+
 # determine platform
 $platform = "windows"
 if ($isLinux) { $platform = "linux" }
@@ -109,6 +134,7 @@ foreach ($t in $commands) {
     switch ($t.Trim().ToLower()) {
         "help" {
             Write-Output "Hazelcast .NET Command Line"
+            Write-Output "PowerShell $psVersion"
             Write-Output ""
             Write-Output "usage hz.[ps1|sh] [<option>] [<commands>]"
             Write-Output ""
