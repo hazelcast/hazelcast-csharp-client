@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -54,6 +55,16 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var requestMessage = MapFlushCodec.EncodeRequest(Name);
             await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
+        }
+
+        public Task LoadAllAsync(bool replaceExistingValues)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task LoadAllAsync(ICollection<TKey> keys, bool replaceExistingValues)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

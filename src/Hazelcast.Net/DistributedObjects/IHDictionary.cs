@@ -26,13 +26,8 @@ namespace Hazelcast.DistributedObjects
     /// changes visible to all nodes.</para>
     /// </remarks>
     // ReSharper disable UnusedTypeParameter
-    public partial interface IHDictionary<TKey, TValue> : IDistributedObject
+    public partial interface IHDictionary<TKey, TValue> : IHDictionaryBase<TKey, TValue>, IKeyLockable<TKey>
     // ReSharper restore UnusedTypeParameter
     {
-        // NOTES
-        //
-        // In most cases it would be pointless to return async enumerable since we must fetch
-        // everything from the network anyways (else we'd hang the socket) before returning,
-        // and therefore all that remains is CPU-bound de-serialization of data.
     }
 }

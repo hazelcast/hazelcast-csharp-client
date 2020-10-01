@@ -44,7 +44,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // get all
             Console.WriteLine("List");
-            var entries = await map.GetAsync();
+            var entries = await map.GetEntriesAsync();
 #if NETCOREAPP
             foreach (var (key, value) in entries)
                 Console.WriteLine($"[{key}]: {value}");

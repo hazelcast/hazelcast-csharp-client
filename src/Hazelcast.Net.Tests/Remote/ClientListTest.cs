@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -134,7 +135,16 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestInsert()
         {
-            var list = await Client.GetListAsync<string>(ListNameBase + CreateUniqueName());
+            var list = await Client.GetListAsync<string>("myList");
+            try
+            {
+                await list.InsertAsync(10, "item");
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Console.WriteLine(e);
+            }
+            
             await using var _ = DestroyAndDispose(list);
 
             await list.AddAsync("item0");

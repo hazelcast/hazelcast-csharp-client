@@ -250,7 +250,7 @@ namespace Hazelcast.Tests.NearCache
             Assert.AreEqual(0, cache.Count); // cache is still empty
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
-            await dictionary.GetAsync(keys); // populates the cache
+            await dictionary.GetAllAsync(keys); // populates the cache
             Assert.AreEqual(keys.Count, cache.Count); // which only contains the 10 keys
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
@@ -472,7 +472,7 @@ namespace Hazelcast.Tests.NearCache
             foreach (var k in keys)
                 await dictionary.SetAsync(k, k);
 
-            await dictionary.GetAsync(keys);
+            await dictionary.GetAllAsync(keys);
 
             Assert.AreEqual(keys.Count, cache.Count);
 
