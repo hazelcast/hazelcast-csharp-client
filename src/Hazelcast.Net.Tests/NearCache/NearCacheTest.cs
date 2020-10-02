@@ -180,12 +180,12 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheGetAll() // CacheIsPopulatedByReadMany
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetDictionaryAsync<string, string>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
             // add values to the dictionary
-            var keys = new List<object>();
+            var keys = new List<string>();
             for (var i = 0; i < 100; i++)
             {
                 await dictionary.SetAsync("key" + i, "value" + i);
@@ -193,7 +193,7 @@ namespace Hazelcast.Tests.NearCache
             }
 
             // get all values
-            await dictionary.GetAsync(keys);
+            await dictionary.GetAllAsync(keys);
 
             // validate that all values are in the cache
             Assert.AreEqual(100, cache.Count);
@@ -334,11 +334,11 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheLfuEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-lfu-" + TestUtils.RandomString());
+            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-lfu-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
-            var keys = new List<object>();
+            var keys = new List<int>();
             for (var i = 0; i < MaxSize; i++)
             {
                 await dictionary.SetAsync(i, i);
@@ -346,11 +346,11 @@ namespace Hazelcast.Tests.NearCache
             }
 
             // make sure all keys are cached
-            await dictionary.GetAsync(keys);
+            await dictionary.GetAllAsync(keys);
 
             // make keys in sublist accessed again
             var subList = keys.Take(MaxSize / 2).ToList();
-            await dictionary.GetAsync(subList);
+            await dictionary.GetAllAsync(subList);
 
             // Add another item, triggering eviction
             await dictionary.SetAsync(MaxSize, MaxSize);
@@ -406,11 +406,11 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheLruEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-lru-" + TestUtils.RandomString());
+            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-lru-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
-            var keys = new List<object>();
+            var keys = new List<int>();
             for (var i = 0; i < MaxSize; i++)
             {
                 await dictionary.SetAsync(i, i);
@@ -418,11 +418,11 @@ namespace Hazelcast.Tests.NearCache
             }
 
             // make sure all keys are cached
-            await dictionary.GetAsync(keys);
+            await dictionary.GetAllAsync(keys);
 
             // make keys in sublist accessed again
             var subList = keys.Take(MaxSize / 2).ToList();
-            await dictionary.GetAsync(subList);
+            await dictionary.GetAllAsync(subList);
 
             // Add another item, triggering eviction
             await dictionary.SetAsync(MaxSize, MaxSize);
@@ -444,17 +444,17 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheNoEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
-            var keys = new List<object>();
+            var keys = new List<int>();
             for (var i = 0; i < MaxSize * 2; i++)
             {
                 await dictionary.SetAsync(i, i);
                 keys.Add(i);
             }
-            await dictionary.GetAsync(keys);
+            await dictionary.GetAllAsync(keys);
 
             Assert.AreEqual(MaxSize, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
