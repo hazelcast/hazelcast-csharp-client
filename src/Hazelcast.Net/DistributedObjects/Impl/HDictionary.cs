@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="logggerFactory">A logger factory.</param>
         public HDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
-            : base(HDictionary.ServiceName, name, factory, cluster, serializationService, logggerFactory)
+            : base(ServiceNames.Dictionary, name, factory, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }

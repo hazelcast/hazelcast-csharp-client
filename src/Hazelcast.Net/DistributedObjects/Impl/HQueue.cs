@@ -21,7 +21,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HQueue<T> : HCollectionBase<T>, IHQueue<T>
     {
         public HQueue(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HQueue.ServiceName, name, factory, cluster, serializationService, loggerFactory)
+            : base(ServiceNames.Queue, name, factory, cluster, serializationService, loggerFactory)
         { }
     }
 }
