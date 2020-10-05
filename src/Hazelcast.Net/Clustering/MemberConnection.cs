@@ -325,7 +325,7 @@ namespace Hazelcast.Clustering
             Exception exception;
             try
             {
-                exception = ClientProtocolExceptions.CreateException(ErrorsCodec.Decode(message));
+                exception = RemoteExceptions.CreateException(ErrorsCodec.Decode(message));
             }
             catch (Exception e)
             {

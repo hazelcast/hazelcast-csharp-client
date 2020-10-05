@@ -20,10 +20,10 @@ using Hazelcast.Protocol.Data;
 namespace Hazelcast.Protocol
 {
     /// <summary>
-    /// Represents a client protocol error.
+    /// Represents an exception that was thrown remotely on a server.
     /// </summary>
     [Serializable]
-    public sealed class ClientProtocolException : HazelcastException
+    public sealed class RemoteException : HazelcastException
     {
         private const string InnerExceptionPrefix = " ---> ";
 
@@ -33,21 +33,21 @@ namespace Hazelcast.Protocol
         // displaying exceptions, which omits the Error and Retryable properties,
         // unless we also store them as data
         //
-        private ClientProtocolError _error;
+        private RemoteError _error;
         private bool _retryable;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class.
         /// </summary>
-        public ClientProtocolException()
-            : base("Client Protocol Error")
+        public RemoteException()
+            : base("Remote Exception")
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public ClientProtocolException(string message)
+        public RemoteException(string message)
             : base(message)
         { }
 
@@ -56,7 +56,7 @@ namespace Hazelcast.Protocol
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception.</param>
-        public ClientProtocolException(string message, Exception innerException)
+        public RemoteException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
@@ -65,7 +65,7 @@ namespace Hazelcast.Protocol
         /// </summary>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
         /// <param name="error">The client protocol error.</param>
-        public ClientProtocolException(ClientProtocolError error, bool retryable = false)
+        public RemoteException(RemoteError error, bool retryable = false)
             : base(error.ToString())
         {
             Error = error;
@@ -78,7 +78,7 @@ namespace Hazelcast.Protocol
         /// <param name="error">The client protocol error.</param>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public ClientProtocolException(ClientProtocolError error, string message, bool retryable = false)
+        public RemoteException(RemoteError error, string message, bool retryable = false)
             : base(message)
         {
             Error = error;
@@ -93,7 +93,7 @@ namespace Hazelcast.Protocol
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public ClientProtocolException(ClientProtocolError error, Exception innerException, bool retryable = false)
+        public RemoteException(RemoteError error, Exception innerException, bool retryable = false)
             : base(error.ToString(), innerException)
         {
             Error = error;
@@ -109,7 +109,7 @@ namespace Hazelcast.Protocol
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public ClientProtocolException(ClientProtocolError error, string message, Exception innerException, bool retryable = false)
+        public RemoteException(RemoteError error, string message, Exception innerException, bool retryable = false)
             : base(message, innerException)
         {
             Error = error;
@@ -123,17 +123,17 @@ namespace Hazelcast.Protocol
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        private ClientProtocolException(SerializationInfo info, StreamingContext context)
+        private RemoteException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            Error = (ClientProtocolError) info.GetInt32("error");
+            Error = (RemoteError) info.GetInt32("error");
             Retryable = info.GetBoolean("retryable");
         }
 
         /// <summary>
         /// Gets the protocol error.
         /// </summary>
-        public ClientProtocolError Error
+        public RemoteError Error
         {
             get => _error;
             set
@@ -196,7 +196,7 @@ namespace Hazelcast.Protocol
             if (serverStackTrace != null)
             {
                 s = s + Environment.NewLine + InnerExceptionPrefix + Error + Environment.NewLine + serverStackTrace + Environment.NewLine +
-                    "   " + "--- End of server stack trace ---";
+                    "   " + "--- End of remote stack trace ---";
             }
 
             return s;

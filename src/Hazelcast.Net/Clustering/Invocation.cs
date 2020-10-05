@@ -201,12 +201,12 @@ namespace Hazelcast.Clustering
                     return TargetClientConnection == null; // not bound to a client
 
                 case SocketException _:
-                case ClientProtocolException cpe when cpe.Retryable:
+                case RemoteException cpe when cpe.Retryable:
                     return true;
 
                 // target disconnected protocol error is not automatically retryable,
                 // because we need to perform more checks on the client and message
-                case ClientProtocolException cpe when cpe.Error == ClientProtocolError.TargetDisconnected:
+                case RemoteException cpe when cpe.Error == RemoteError.TargetDisconnected:
                 case TargetDisconnectedException _:
                     return TargetClientConnection == null && // not bound to a client
                            (RequestMessage.IsRetryable || retryOnTargetDisconnected);

@@ -25,27 +25,27 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Exceptions
 {
     [TestFixture]
-    public class ClientProtocolExceptionTests
+    public class RemoteExceptionTests
     {
         [Test]
         public void Constructors()
         {
-            _ = new ClientProtocolException();
-            _ = new ClientProtocolException("exception");
-            _ = new ClientProtocolException("exception", new Exception("bang"));
-            _ = new ClientProtocolException(ClientProtocolError.Undefined, true);
-            _ = new ClientProtocolException(ClientProtocolError.Undefined, "exception");
-            _ = new ClientProtocolException(ClientProtocolError.Undefined, "exception", true);
-            _ = new ClientProtocolException(ClientProtocolError.Undefined, new Exception("bang"));
-            _ = new ClientProtocolException(ClientProtocolError.Undefined, "exception", new Exception("bang"));
-            _ = new ClientProtocolException(ClientProtocolError.Undefined, new Exception("bang"), true);
-            var e = new ClientProtocolException(ClientProtocolError.AccessControl, "exception", new Exception("bang"), true);
+            _ = new RemoteException();
+            _ = new RemoteException("exception");
+            _ = new RemoteException("exception", new Exception("bang"));
+            _ = new RemoteException(RemoteError.Undefined, true);
+            _ = new RemoteException(RemoteError.Undefined, "exception");
+            _ = new RemoteException(RemoteError.Undefined, "exception", true);
+            _ = new RemoteException(RemoteError.Undefined, new Exception("bang"));
+            _ = new RemoteException(RemoteError.Undefined, "exception", new Exception("bang"));
+            _ = new RemoteException(RemoteError.Undefined, new Exception("bang"), true);
+            var e = new RemoteException(RemoteError.AccessControl, "exception", new Exception("bang"), true);
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
             Assert.That(e.Retryable, Is.True);
-            Assert.That(e.Error, Is.EqualTo(ClientProtocolError.AccessControl));
+            Assert.That(e.Error, Is.EqualTo(RemoteError.AccessControl));
 
             e = e.SerializeAndDeSerialize();
 
@@ -53,7 +53,7 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
             Assert.That(e.Retryable, Is.True);
-            Assert.That(e.Error, Is.EqualTo(ClientProtocolError.AccessControl));
+            Assert.That(e.Error, Is.EqualTo(RemoteError.AccessControl));
 
             Assert.Throws<ArgumentNullException>(() => e.GetObjectData(default!, default));
         }
@@ -61,20 +61,20 @@ namespace Hazelcast.Tests.Exceptions
         [Test]
         public void DefaultToString()
         {
-            const string start = @"Hazelcast.Protocol.ClientProtocolException (IllegalState): message";
+            const string start = @"Hazelcast.Protocol.RemoteException (IllegalState): message";
             const string end = @" ---> IllegalState
    at className_0.methodName_0(...) in fileName_0:0
    at className_1.methodName_1(...) in fileName_1:1
    at className_2.methodName_2(...) in fileName_2:2
    at className_3.methodName_3(...) in fileName_3:3
    at className_4.methodName_4(...) in fileName_4:4
-   --- End of server stack trace ---";
+   --- End of remote stack trace ---";
 
             try
             {
-                ThrowClientProtocolException(ClientProtocolError.IllegalState);
+                ThrowRemoteException(RemoteError.IllegalState);
             }
-            catch (ClientProtocolException exception)
+            catch (RemoteException exception)
             {
                 var s = exception.ToString();
 
@@ -89,18 +89,18 @@ namespace Hazelcast.Tests.Exceptions
         [Test]
         public void RetryableToString()
         {
-            const string start = @"Hazelcast.Protocol.ClientProtocolException (MemberLeft,Retryable): message";
+            const string start = @"Hazelcast.Protocol.RemoteException (MemberLeft,Retryable): message";
             const string end = @" ---> MemberLeft
    at className_0.methodName_0(...) in fileName_0:0
    at className_1.methodName_1(...) in fileName_1:1
    at className_2.methodName_2(...) in fileName_2:2
    at className_3.methodName_3(...) in fileName_3:3
    at className_4.methodName_4(...) in fileName_4:4
-   --- End of server stack trace ---";
+   --- End of remote stack trace ---";
 
             try
             {
-                ThrowClientProtocolException(ClientProtocolError.MemberLeft);
+                ThrowRemoteException(RemoteError.MemberLeft);
             }
             catch (Exception exception)
             {
@@ -117,15 +117,15 @@ namespace Hazelcast.Tests.Exceptions
         [Test]
         public void InnerToString()
         {
-            const string start = @"Hazelcast.Protocol.ClientProtocolException (MemberLeft,Retryable): message
- ---> Hazelcast.Protocol.ClientProtocolException (MemberLeft,Retryable): message
+            const string start = @"Hazelcast.Protocol.RemoteException (MemberLeft,Retryable): message
+ ---> Hazelcast.Protocol.RemoteException (MemberLeft,Retryable): message
  ---> MemberLeft
    at className_0.methodName_0(...) in fileName_0:0
    at className_1.methodName_1(...) in fileName_1:1
    at className_2.methodName_2(...) in fileName_2:2
    at className_3.methodName_3(...) in fileName_3:3
    at className_4.methodName_4(...) in fileName_4:4
-   --- End of server stack trace ---
+   --- End of remote stack trace ---
    --- End of inner exception ---
 ";
             const string end = @" ---> MemberLeft
@@ -134,11 +134,11 @@ namespace Hazelcast.Tests.Exceptions
    at className_2.methodName_2(...) in fileName_2:2
    at className_3.methodName_3(...) in fileName_3:3
    at className_4.methodName_4(...) in fileName_4:4
-   --- End of server stack trace ---";
+   --- End of remote stack trace ---";
 
             try
             {
-                ThrowClientProtocolExceptionWithInner(ClientProtocolError.MemberLeft);
+                ThrowRemoteExceptionWithInner(RemoteError.MemberLeft);
             }
             catch (Exception exception)
             {
@@ -152,7 +152,7 @@ namespace Hazelcast.Tests.Exceptions
             }
         }
 
-        private static void ThrowClientProtocolException(ClientProtocolError error)
+        private static void ThrowRemoteException(RemoteError error)
         {
             var stackTraceElements = new List<StackTraceElement>();
             for (var i = 0; i < 5; i++)
@@ -160,12 +160,12 @@ namespace Hazelcast.Tests.Exceptions
 
             var errorHolder = new ErrorHolder((int) error, "className", "message", stackTraceElements);
 
-            var exception = ClientProtocolExceptions.CreateException(new[] { errorHolder });
+            var exception = RemoteExceptions.CreateException(new[] { errorHolder });
 
             throw exception;
         }
 
-        private static void ThrowClientProtocolExceptionWithInner(ClientProtocolError error)
+        private static void ThrowRemoteExceptionWithInner(RemoteError error)
         {
             var stackTraceElements = new List<StackTraceElement>();
             for (var i = 0; i < 5; i++)
@@ -173,7 +173,7 @@ namespace Hazelcast.Tests.Exceptions
 
             var errorHolder = new ErrorHolder((int)error, "className", "message", stackTraceElements);
 
-            var exception = ClientProtocolExceptions.CreateException(new[] { errorHolder, errorHolder });
+            var exception = RemoteExceptions.CreateException(new[] { errorHolder, errorHolder });
 
             throw exception;
         }
