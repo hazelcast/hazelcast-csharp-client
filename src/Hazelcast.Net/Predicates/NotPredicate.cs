@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class NotPredicate : IPredicate
+    public class NotPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private IPredicate _predicate;
 

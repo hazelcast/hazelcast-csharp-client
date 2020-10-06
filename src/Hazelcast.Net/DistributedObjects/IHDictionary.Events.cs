@@ -23,85 +23,50 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="handle">An event handlers collection builder.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> handle);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
+        /// <param name="events">An event handlers collection builder.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, Action<DictionaryEventHandlers<TKey, TValue>> handle);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
+        /// <param name="events">An event handlers collection builder.</param>
         /// <param name="key">A key to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, Action<DictionaryEventHandlers<TKey, TValue>> handle);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="key">A key to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<DictionaryEventHandlers<TKey, TValue>> handle);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
+        /// <param name="events">An event handlers collection builder.</param>
         /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
+        /// <param name="events">An event handlers collection builder.</param>
         /// <param name="key">A key to filter events.</param>
         /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
-        /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle);
-
-        /// <summary>
-        /// Subscribes to events.
-        /// </summary>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
-        /// <param name="key">A key to filter events.</param>
-        /// <param name="predicate">A predicate to filter events.</param>
-        /// <param name="handle">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true);
 
         /// <summary>
         /// Unsubscribe from events.
         /// </summary>
         /// <param name="subscriptionId">The unique identifier of the subscription.</param>
-        /// <returns>Whether the operation was successful.</returns>
         /// <remarks>
-        /// <para>Once this method has been invoked, and whatever its result, the subscription is
-        /// de-activated, which means that no events will trigger anymore, even if the client
-        /// receives event messages from the servers.</para>
-        /// <para>If this method returns <c>false</c>, then one or more client connection has not
-        /// been able to get its server to remove the subscription. Even though no events will
-        /// trigger anymore, the server may keep sending (ignored) event messages. It is therefore
-        /// recommended to retry unsubscribing until it is successful.</para>
+        /// <para>
+        /// When this method completes, event handler will stop receiving events immediately.
+        /// Member side event subscriptions will eventually be removed.
+        /// </para>
         /// </remarks>
+        /// <returns><c>true</c> if subscription is removed successfully, <c>false</c> if there is no such subscription</returns>
         ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
     }
 }

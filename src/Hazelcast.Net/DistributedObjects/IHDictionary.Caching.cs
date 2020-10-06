@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -20,15 +21,23 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHDictionary<TKey, TValue> // Caching
     {
         /// <summary>
-        /// Evicts an entry from the cache.
+        /// Evicts the specified key from the dictionary.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns><c>true</c> if the entry was evicted; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>Locked entries are not evicted (TODO: true?)</para>
-        /// <para>Evicts the entry from the in-memory cache. The entry is not removed from
-        /// the map. If a <see cref="MapStore"/> is defined for this map, The entry is
-        /// not evicted from the map store.</para>
+        /// <para>
+        /// If a <c>MapStore</c> on server is defined for this dictionary,
+        /// then the entry is not deleted from the underlying <c>MapStore</c>,
+        /// evict only removes the entry from the memory.
+        /// Use <see cref="RemoveAsync(TKey)"/> or <see cref="GetAndRemoveAsync(TKey)"/>
+        /// if <c>MapStore.delete(object)</c> needs to be called.
+        /// </para>
+        /// <para>
+        /// This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
+        /// the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
+        /// defined in <c>key</c>'s class.
+        /// </para>
         /// </remarks>
         Task<bool> EvictAsync(TKey key);
 
@@ -37,21 +46,41 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <returns>A task that will complete when all entries have been evicted.</returns>
         /// <remarks>
-        /// <para>Locked entries are not evicted.</para>
-        /// <para>Evicts entries from the in-memory cache. Entries are not removed from
-        /// the map. If a <see cref="MapStore"/> is defined for this map, entries are
-        /// not evicted from the map store.</para>
+        /// <para>
+        /// If a <c>MapStore</c> is defined on server for this dictionary,
+        /// then <c>MapStore.deleteAll</c> is not called by this method,
+        /// If you do want <c>MapStore.deleteAll</c> to be called use the <see cref="ClearAsync"/> method.
+        /// </para>
         /// </remarks>
         Task EvictAllAsync();
 
         /// <summary>
-        /// Flushes the map store, if any.
+        /// Flushes the <c>MapStore</c> on server, if any.
         /// </summary>
         /// <returns>A task that will complete when the map store has been flushed.</returns>
         /// <remarks>
-        /// <para>If a <see cref="MapStore"/> is defined for this map, this method flushes
+        /// <para>If a <c>MapStore</c> is defined for this dictionary, this method flushes
         /// all dirty entries by deleting or storing them.</para>
         /// </remarks>
         Task FlushAsync();
+
+        /// <summary>
+        /// Loads all keys into the store.
+        /// </summary>
+        /// <param name="replaceExistingValues">
+        /// when <c>true</c>, existing values in the <see cref="IHDictionary{TKey,TValue}"/> will be replaced by those loaded from the MapLoader
+        /// </param>
+        /// <returns>A task that will complete when the map store has been loaded.</returns>
+        Task LoadAllAsync(bool replaceExistingValues);
+        
+        /// <summary>
+        /// Loads the given keys into the store.
+        /// </summary>
+        /// <param name="keys">keys of the values entries to load (keys inside the collection cannot be null)</param>
+        /// <param name="replaceExistingValues">
+        /// when <c>true</c>, existing values in the <see cref="IHDictionary{TKey,TValue}"/> will be replaced by those loaded from the MapLoader
+        /// </param>
+        /// <returns>A task that will complete when the map store has been loaded.</returns>
+        Task LoadAllAsync(ICollection<TKey> keys, bool replaceExistingValues);
     }
 }

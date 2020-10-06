@@ -29,6 +29,13 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task AddIndexAsync(IndexConfig indexConfig)
             => AddIndexAsync(indexConfig, CancellationToken.None);
 
+        public Task AddIndexAsync(IndexType indexType, params string[] attributes)
+        {
+            var indexConfig = new IndexConfig {Type = indexType};
+            indexConfig.AddAttributes(attributes);
+            return AddIndexAsync(indexConfig, CancellationToken.None);
+        }
+
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
