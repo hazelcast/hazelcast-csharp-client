@@ -85,7 +85,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Responded");
         }
 
-        private ClientMessage CreateErrorMessage(ClientProtocolError error)
+        private ClientMessage CreateErrorMessage(RemoteError error)
         {
             // can we prepare server messages?
             var errorHolders = new List<ErrorHolder>
@@ -152,7 +152,7 @@ namespace Hazelcast.Tests.Networking
 
                     default:
                         HConsole.WriteLine(svr, "Respond with error.");
-                        var response = CreateErrorMessage(ClientProtocolError.RetryableHazelcast);
+                        var response = CreateErrorMessage(RemoteError.RetryableHazelcast);
                         await ResponseAsync(response).CAF();
                         break;
                 }
@@ -200,7 +200,7 @@ namespace Hazelcast.Tests.Networking
                 else
                 {
                     HConsole.WriteLine(svr, "Respond with error.");
-                    response = CreateErrorMessage(ClientProtocolError.RetryableHazelcast);
+                    response = CreateErrorMessage(RemoteError.RetryableHazelcast);
                     response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                 }
                 response.CorrelationId = msg.CorrelationId;

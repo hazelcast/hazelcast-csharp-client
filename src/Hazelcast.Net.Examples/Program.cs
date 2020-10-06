@@ -96,7 +96,7 @@ namespace Hazelcast.Examples
 
         private static string ClientExceptionCode(Exception e)
         {
-            if (!(e is ClientProtocolException cpe)) return null;
+            if (!(e is RemoteException cpe)) return null;
 
             return " - " + cpe.Error;
         }

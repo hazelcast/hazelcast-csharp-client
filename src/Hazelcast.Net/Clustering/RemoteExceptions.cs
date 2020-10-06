@@ -21,34 +21,34 @@ using Hazelcast.Protocol.Data;
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Maps server error codes to C# exceptions.
+    /// Maps remote exceptions to C# exceptions.
     /// </summary>
-    internal static class ClientProtocolExceptions
+    internal static class RemoteExceptions
     {
-        private static readonly HashSet<ClientProtocolError> RetryableErrors = new HashSet<ClientProtocolError>
+        private static readonly HashSet<RemoteError> RetryableExceptions = new HashSet<RemoteError>
         {
-            ClientProtocolError.CallerNotMember,
-            ClientProtocolError.MemberLeft,
-            ClientProtocolError.PartitionMigrating,
-            ClientProtocolError.RetryableHazelcast,
-            ClientProtocolError.RetryableIO,
-            ClientProtocolError.TargetNotMember,
-            ClientProtocolError.WrongTarget,
-            ClientProtocolError.TargetNotReplicaException,
-            ClientProtocolError.CannotReplicateException,
-            ClientProtocolError.HazelcastInstanceNotActive,
+            RemoteError.CallerNotMember,
+            RemoteError.MemberLeft,
+            RemoteError.PartitionMigrating,
+            RemoteError.RetryableHazelcast,
+            RemoteError.RetryableIO,
+            RemoteError.TargetNotMember,
+            RemoteError.WrongTarget,
+            RemoteError.TargetNotReplicaException,
+            RemoteError.CannotReplicateException,
+            RemoteError.HazelcastInstanceNotActive,
 
             // this one must *not* automatically retryable, because it requires more
             // checks on the client and message in order to decide whether to retry
-            //ClientProtocolErrors.TargetDisconnected,
+            //RemoteError.TargetDisconnected,
         };
 
         /// <summary>
-        /// Creates an exception representing server errors.
+        /// Creates a C# exception that represents an exception that was thrown remotely on a server.
         /// </summary>
         /// <param name="errorHolders">Server errors.</param>
         /// <returns>An exception representing the specified server errors.</returns>
-        internal static ClientProtocolException CreateException(IEnumerable<ErrorHolder> errorHolders)
+        internal static RemoteException CreateException(IEnumerable<ErrorHolder> errorHolders)
         {
             if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
 
@@ -56,11 +56,11 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Create an exception representing server errors.
+        /// Create a C# exception that represents an exception that was thrown remotely on a server.
         /// </summary>
         /// <param name="errorHolders">Server errors.</param>
         /// <returns>An exception representing the specified server errors.</returns>
-        private static ClientProtocolException CreateException(IEnumerator<ErrorHolder> errorHolders)
+        private static RemoteException CreateException(IEnumerator<ErrorHolder> errorHolders)
         {
             if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
 
@@ -68,16 +68,16 @@ namespace Hazelcast.Clustering
                 return null;
 
             var errorHolder = errorHolders.Current;
-            if (errorHolder == null) return new ClientProtocolException(ClientProtocolError.Undefined);
+            if (errorHolder == null) return new RemoteException(RemoteError.Undefined);
 
             var innerException = CreateException(errorHolders);
 
-            var error = ClientProtocolError.Undefined;
-            if (Enum.IsDefined(typeof(ClientProtocolError), errorHolder.ErrorCode))
-                error = (ClientProtocolError) errorHolder.ErrorCode;
+            var error = RemoteError.Undefined;
+            if (Enum.IsDefined(typeof(RemoteError), errorHolder.ErrorCode))
+                error = (RemoteError) errorHolder.ErrorCode;
 
-            var retryable = RetryableErrors.Contains(error);
-            var exception = new ClientProtocolException(error, errorHolder.Message, innerException, retryable);
+            var retryable = RetryableExceptions.Contains(error);
+            var exception = new RemoteException(error, errorHolder.Message, innerException, retryable);
 
             var sb = new StringBuilder();
             var first = true;
