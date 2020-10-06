@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HList<T> : HCollectionBase<T>, IHList<T>
     {
         public HList(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HList.ServiceName, name, factory, cluster, serializationService, loggerFactory)
+            : base(ServiceNames.List, name, factory, cluster, serializationService, loggerFactory)
         { }
 
         public override async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())

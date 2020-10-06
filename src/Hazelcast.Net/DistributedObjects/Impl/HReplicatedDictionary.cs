@@ -33,7 +33,7 @@ namespace Hazelcast.DistributedObjects.Impl
         private readonly int _partitionId;
 
         public HReplicatedDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, int partitionId, ILoggerFactory loggerFactory)
-            : base(HReplicatedDictionary.ServiceName, name, factory, cluster, serializationService, loggerFactory)
+            : base(ServiceNames.ReplicatedDictionary, name, factory, cluster, serializationService, loggerFactory)
         {
             _partitionId = partitionId;
         }

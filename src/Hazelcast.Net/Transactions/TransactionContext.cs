@@ -237,7 +237,7 @@ namespace Hazelcast.Transactions
         /// <inheritdoc />
         public Task<IHTxList<TItem>> GetListAsync<TItem>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxList<TItem>, HTxList<TItem>>(HList.ServiceName, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxList<TItem>, HTxList<TItem>>(ServiceNames.List, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxList<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
@@ -249,7 +249,7 @@ namespace Hazelcast.Transactions
         /// <inheritdoc />
         public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxSet<TItem>, HTxSet<TItem>>(HSet.ServiceName, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxSet<TItem>, HTxSet<TItem>>(ServiceNames.Set, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxSet<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
@@ -259,7 +259,7 @@ namespace Hazelcast.Transactions
 
         public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxQueue<TItem>, HTxQueue<TItem>>(HQueue.ServiceName, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxQueue<TItem>, HTxQueue<TItem>>(ServiceNames.Queue, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxQueue<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
@@ -269,7 +269,7 @@ namespace Hazelcast.Transactions
 
         public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiDictionary<TKey, TValue>, HTxMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiDictionary<TKey, TValue>, HTxMultiDictionary<TKey, TValue>>(ServiceNames.MultiDictionary, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxMultiDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
@@ -279,7 +279,7 @@ namespace Hazelcast.Transactions
 
         public Task<IHTxDictionary<TKey, TValue>> GetDictionaryAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxDictionary<TKey, TValue>, HTxDictionary<TKey, TValue>>(HDictionary.ServiceName, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxDictionary<TKey, TValue>, HTxDictionary<TKey, TValue>>(ServiceNames.Dictionary, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }

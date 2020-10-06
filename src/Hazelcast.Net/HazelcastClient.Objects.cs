@@ -52,7 +52,7 @@ namespace Hazelcast
                     ? new HDictionary<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
                     : new HDictionaryWithCache<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
-            return await _distributedObjectFactory.GetOrCreateAsync<IHDictionary<TKey, TValue>, HDictionary<TKey, TValue>>(HDictionary.ServiceName, name, true, CreateMap).CAF();
+            return await _distributedObjectFactory.GetOrCreateAsync<IHDictionary<TKey, TValue>, HDictionary<TKey, TValue>>(ServiceNames.Dictionary, name, true, CreateMap).CAF();
         }
 
         /// <inheritdoc />
@@ -64,7 +64,7 @@ namespace Hazelcast
         {
             var partitionId = Cluster.Partitioner.GetRandomPartitionId();
 
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedDictionary<TKey, TValue>, HReplicatedDictionary<TKey, TValue>>(HReplicatedDictionary.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedDictionary<TKey, TValue>, HReplicatedDictionary<TKey, TValue>>(ServiceNames.ReplicatedDictionary, name, true,
                 (n, f, c, sr, lf)
                     => new HReplicatedDictionary<TKey,TValue>(n, f, c, sr, partitionId, lf));
 
@@ -82,7 +82,7 @@ namespace Hazelcast
 #endif
         Task<IHMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiDictionary<TKey, TValue>, HMultiDictionary<TKey, TValue>>(HMultiDictionary.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiDictionary<TKey, TValue>, HMultiDictionary<TKey, TValue>>(ServiceNames.MultiDictionary, name, true,
                 (n, f, c, sr, lf)
                     => new HMultiDictionary<TKey, TValue>(n, f, c, sr, _lockReferenceIdSequence, lf));
 
@@ -100,7 +100,7 @@ namespace Hazelcast
 #endif
         Task<IHTopic<T>> GetTopicAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(HTopic.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(ServiceNames.Topic, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTopic<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -118,7 +118,7 @@ namespace Hazelcast
 #endif
         Task<IHList<T>> GetListAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHList<T>, HList<T>>(HList.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHList<T>, HList<T>>(ServiceNames.List, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HList<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -136,7 +136,7 @@ namespace Hazelcast
 #endif
         Task<IHSet<T>> GetSetAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHSet<T>, HSet<T>>(HSet.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHSet<T>, HSet<T>>(ServiceNames.Set, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HSet<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -154,7 +154,7 @@ namespace Hazelcast
 #endif
         Task<IHQueue<T>> GetQueueAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHQueue<T>, HQueue<T>>(HQueue.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHQueue<T>, HQueue<T>>(ServiceNames.Queue, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HQueue<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -172,7 +172,7 @@ namespace Hazelcast
 #endif
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(HRingBuffer.ServiceName, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(ServiceNames.RingBuffer, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HRingBuffer<T>(n, factory, cluster, serializationService, loggerFactory));
 

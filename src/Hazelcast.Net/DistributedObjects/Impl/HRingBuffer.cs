@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public HRingBuffer(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(HRingBuffer.ServiceName, name, factory, cluster, serializationService, loggerFactory)
+            : base(ServiceNames.RingBuffer, name, factory, cluster, serializationService, loggerFactory)
         {
             const int maxBatchSize = 1000;
             MaxBatchSize = maxBatchSize;
