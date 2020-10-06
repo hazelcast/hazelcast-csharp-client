@@ -54,7 +54,7 @@ namespace Hazelcast.Predicates
     /// Console.WriteLine("values = " + values) // will print 'values = [0, 1]'
     /// </code>
     /// </example>
-    public class PagingPredicate : IPredicate
+    public class PagingPredicate : IPredicate, IIdentifiedDataSerializable
     {
         //private static readonly KeyValuePair<int, KeyValuePair<object, object>> NullAnchor = new KeyValuePair<int, KeyValuePair<object, object>>(-1, new KeyValuePair<object, object>(null, null));
 

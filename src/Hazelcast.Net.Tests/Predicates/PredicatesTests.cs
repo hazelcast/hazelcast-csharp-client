@@ -263,7 +263,7 @@ namespace Hazelcast.Tests.Predicates
         }
 
         private T AssertPredicate<T>(T predicate, int classId)
-            where T : IPredicate
+            where T : IIdentifiedDataSerializable
         {
             Assert.That(predicate.FactoryId, Is.EqualTo(FactoryIds.PredicateFactoryId));
             Assert.That(predicate.ClassId, Is.EqualTo(classId));

@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Serialization;
+
 namespace Hazelcast.Predicates
 {
-    public class CaseInsensitiveLikePredicate : LikePredicate
+    public class CaseInsensitiveLikePredicate : LikePredicate, IIdentifiedDataSerializable
     {
         public CaseInsensitiveLikePredicate()
         { }

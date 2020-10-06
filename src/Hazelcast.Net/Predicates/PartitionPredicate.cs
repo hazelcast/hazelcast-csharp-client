@@ -25,7 +25,7 @@ namespace Hazelcast.Predicates
     ///
     /// This predicate can only be used as an outer predicate
     /// </remarks>
-    public class PartitionPredicate : IPredicate
+    public class PartitionPredicate : IPredicate, IIdentifiedDataSerializable
     {
         public PartitionPredicate()
         { }

@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class LikePredicate : IPredicate
+    public class LikePredicate : IPredicate, IIdentifiedDataSerializable
     {
         protected string AttributeName { get;private set; }
         protected string Expression { get; private set; }
