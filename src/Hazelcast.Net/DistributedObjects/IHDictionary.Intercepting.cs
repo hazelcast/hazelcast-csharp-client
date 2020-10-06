@@ -20,20 +20,22 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHDictionary<TKey, TValue> // Interception
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
-        // TODO what is an interceptor?
-
         /// <summary>
-        /// Adds an interceptor.
+        /// Adds an interceptor on the server side.
         /// </summary>
         /// <param name="interceptor">The interceptor.</param>
         /// <returns>The interceptor unique identifier.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="interceptor"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
         Task<string> AddInterceptorAsync(IDictionaryInterceptor interceptor);
 
         /// <summary>
-        /// Removes an interceptor.
+        /// Removes the interceptor that identified by id.
         /// </summary>
         /// <param name="id">The identifier of the interceptor.</param>
-        /// <returns>A task that will complete when the interceptor has been removed.</returns>
-        Task RemoveInterceptorAsync(string id);
+        /// <returns><c>true</c> if registration is removed, <c>false</c> otherwise</returns>
+        Task<bool> RemoveInterceptorAsync(string id);
     }
 }

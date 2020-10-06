@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="aggregator">The aggregator.</param>
-        /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <param name="predicate">A predicate to filter the entries with.</param>
         /// <returns>The result of the aggregation.</returns>
         /// <remarks>
         /// <para>The <paramref name="aggregator"/> and <paramref name="predicate"/> must be
@@ -59,19 +59,19 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="projection"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection);
+        Task<IReadOnlyCollection<TResult>> ProjectAsync<TResult>(IProjection projection);
 
         /// <summary>
         /// Projects values.
         /// </summary>
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="projection">The projection.</param>
-        /// <param name="predicate">An optional predicate to filter the entries with.</param>
+        /// <param name="predicate">A predicate to filter the entries with.</param>
         /// <returns>The projected values.</returns>
         /// <remarks>
         /// <para>The <paramref name="projection"/> and <paramref name="predicate"/> must be
         /// serializable via Hazelcast serialization, and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate);
+        Task<IReadOnlyCollection<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate);
     }
 }

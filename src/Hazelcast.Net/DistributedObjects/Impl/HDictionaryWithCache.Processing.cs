@@ -21,44 +21,16 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HDictionaryWithCache<TKey, TValue> // Processing
     {
-        // <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<object> ExecuteAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
+        protected override async Task<TResult> ExecuteAsync<TResult>(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
-            var task = base.ExecuteAsync(processorData, keyData, cancellationToken).ContinueWith(t =>
+            try
+            {
+                return await base.ExecuteAsync<TResult>(processorData, keyData, cancellationToken).CAF();
+            }
+            finally
             {
                 _cache.Remove(keyData);
-                return t;
-            }, default, default, TaskScheduler.Current);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        // <inheritdoc />
-        protected override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-            Task<object> ApplyAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
-        {
-            var task = base.ApplyAsync(processorData, keyData, cancellationToken).ContinueWith(t =>
-            {
-                _cache.Remove(keyData);
-                return t;
-            }, default, default, TaskScheduler.Current);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
+            }
         }
     }
 }

@@ -63,14 +63,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys)
-            => GetAsync(keys, CancellationToken.None);
+        public Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys)
+            => GetAllAsync(keys, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys, CancellationToken cancellationToken)
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys, CancellationToken cancellationToken)
         {
             var ownerKeys = new Dictionary<Guid, Dictionary<int, List<IData>>>();
 
@@ -138,10 +138,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IHDictionaryEntry<TKey, TValue>> GetEntryAsync(TKey key)
-            => GetEntryAsync(key, CancellationToken.None);
+        public Task<IHDictionaryEntry<TKey, TValue>> GetEntryStatsAsync(TKey key)
+            => GetEntryStatsAsync(key, CancellationToken.None);
 
-        private async Task<IHDictionaryEntry<TKey, TValue>> GetEntryAsync(TKey key, CancellationToken cancellationToken)
+        private async Task<IHDictionaryEntry<TKey, TValue>> GetEntryStatsAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
@@ -169,10 +169,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyDictionary<TKey, TValue>> GetAsync()
-            => GetAsync(CancellationToken.None);
+        public Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync()
+            => GetEntriesAsync(CancellationToken.None);
 
-        private async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(CancellationToken cancellationToken)
+        private async Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
@@ -181,10 +181,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate)
-            => GetAsync(predicate, CancellationToken.None);
+        public Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(IPredicate predicate)
+            => GetEntriesAsync(predicate, CancellationToken.None);
 
-        private async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate, CancellationToken cancellationToken)
+        private async Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -212,10 +212,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyList<TKey>> GetKeysAsync()
+        public Task<IReadOnlyCollection<TKey>> GetKeysAsync()
             => GetKeysAsync(CancellationToken.None);
 
-        private async Task<IReadOnlyList<TKey>> GetKeysAsync(CancellationToken cancellationToken)
+        private async Task<IReadOnlyCollection<TKey>> GetKeysAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
@@ -224,10 +224,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate)
+        public Task<IReadOnlyCollection<TKey>> GetKeysAsync(IPredicate predicate)
             => GetKeysAsync(predicate, CancellationToken.None);
 
-        private async Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken)
+        private async Task<IReadOnlyCollection<TKey>> GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -255,10 +255,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyList<TValue>> GetValuesAsync()
+        public Task<IReadOnlyCollection<TValue>> GetValuesAsync()
             => GetValuesAsync(CancellationToken.None);
 
-        private async Task<IReadOnlyList<TValue>> GetValuesAsync(CancellationToken cancellationToken)
+        private async Task<IReadOnlyCollection<TValue>> GetValuesAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
@@ -267,10 +267,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate)
+        public Task<IReadOnlyCollection<TValue>> GetValuesAsync(IPredicate predicate)
             => GetValuesAsync(predicate, CancellationToken.None);
 
-        private async Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken)
+        private async Task<IReadOnlyCollection<TValue>> GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken)
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             var pagingPredicate = UnwrapPagingPredicate(predicate);
@@ -355,10 +355,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> ContainsAsync(TValue value)
-            => ContainsAsync(value, CancellationToken.None);
+        public Task<bool> ContainsValueAsync(TValue value)
+            => ContainsValueAsync(value, CancellationToken.None);
 
-        private async Task<bool> ContainsAsync(TValue value, CancellationToken cancellationToken)
+        private async Task<bool> ContainsValueAsync(TValue value, CancellationToken cancellationToken)
         {
             var valueData = ToSafeData(value);
 
@@ -370,5 +370,15 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
             => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.Target as PagingPredicate;
+
+        public async IAsyncEnumerator<KeyValuePair<TKey, TValue>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            // all collections are async enumerable,
+            // but by default we load the whole items set at once,
+            // then iterate in memory
+            var items = await GetEntriesAsync(cancellationToken).CAF();
+            foreach (var item in items)
+                yield return item;
+        }
     }
 }

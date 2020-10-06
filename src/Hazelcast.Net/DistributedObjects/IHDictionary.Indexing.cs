@@ -21,8 +21,21 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHDictionary<TKey, TValue> // Indexing
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
-        // TODO what is this?
 
+        /// <summary>
+        /// Adds an index to this dictionary for the specified entries so that queries can run faster.
+        /// </summary>
+        /// <param name="indexConfig">Index configuration.</param>
+        /// <returns>A task that will complete when the index added.</returns>
         Task AddIndexAsync(IndexConfig indexConfig);
+
+        /// <summary>
+        /// Convenient method to add an index to this dictionary with the given type and attributes.
+        /// Attributes are indexed in ascending order.
+        /// </summary>
+        /// <param name="type">Index type.</param>
+        /// <param name="attributes">Attributes to be indexed.</param>
+        /// <returns>A task that will complete when the index added.</returns>
+        Task AddIndexAsync(IndexType type, params string[] attributes);
     }
 }
