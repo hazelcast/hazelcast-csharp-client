@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.DistributedObjects
             Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
             Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
             Console.WriteLine("Count: " + await map.CountAsync());
-            // Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntriesAsync()));
+            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntrySetAsync()));
             Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
             Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
 

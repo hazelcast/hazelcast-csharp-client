@@ -38,20 +38,20 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> handle, bool includeValues = true)
-            => SubscribeAsync(includeValues, default, false, handle);
+        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true)
+            => SubscribeAsync(includeValues, default, false, events);
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> handle, TKey key, bool includeValues = true)
-            => SubscribeAsync(includeValues, key, true, handle);
+        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true)
+            => SubscribeAsync(includeValues, key, true, events);
 
-        private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MultiDictionaryEventHandlers<TKey, TValue>> handle)
+        private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MultiDictionaryEventHandlers<TKey, TValue>> events)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
-            if (handle == null) throw new ArgumentNullException(nameof(handle));
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new MultiDictionaryEventHandlers<TKey, TValue>();
-            handle(handlers);
+            events(handlers);
 
             // 0: no entryKey
             // 1: entryKey
