@@ -20,14 +20,14 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Examples.WebSite
 {
-    public class IncEntryProcessor : IEntryProcessor, IIdentifiedDataSerializable
+    public class IdentifiedEntryProcessor : IEntryProcessor, IIdentifiedDataSerializable
     {
         public const int FactoryIdConst = 66; // Id of EntryProcessorDataSerializableFactory
         public const int ClassIdConst = 1; // corresponds to hazelcast-test.jar com.hazelcast.client.test.IdentifiedEntryProcessor
 
         private string _value;
 
-        public IncEntryProcessor(string value)
+        public IdentifiedEntryProcessor(string value)
         {
             _value = value;
         }
@@ -39,7 +39,6 @@ namespace Hazelcast.Examples.WebSite
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(_value);
         }
 
         public int FactoryId => FactoryIdConst;
@@ -64,12 +63,11 @@ namespace Hazelcast.Examples.WebSite
 
             // Get the Distributed Map from Cluster.
             await using var map = await client.GetDictionaryAsync<string, string>("my-distributed-map");
-            // Put the integer value of 0 into the Distributed Map
-            // uh - that processor on the server can only work with strings?
-            await map.GetOrAddAsync("key", "value");
-            // Run the IncEntryProcessor class on the Hazelcast Cluster Member holding the key called "key"
-            await map.ExecuteAsync(new IncEntryProcessor("duh"), "key");
-            // Show that the IncEntryProcessor updated the value.
+            //Set the key-value pair
+            await map.SetAsync("key", "value");
+            // Run the IdentifiedEntryProcessor class on the Hazelcast Cluster Member holding the key called "key"
+            await map.ExecuteAsync<string>(new IdentifiedEntryProcessor("duh"), "key");
+            // Show that the IdentifiedEntryProcessor updated the value.
             Console.WriteLine("new value:" + await map.GetAsync("key"));
         }
     }

@@ -18,7 +18,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class InPredicate : IPredicate
+    public class InPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private string _attributeName;
         private object[] _values;

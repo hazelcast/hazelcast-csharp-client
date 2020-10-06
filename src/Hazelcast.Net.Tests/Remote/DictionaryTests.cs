@@ -143,7 +143,7 @@ namespace Hazelcast.Tests.Remote
             var value1 = await map.GetAsync("key1").CAF();
             Assert.AreEqual(42, value1);
 
-            await map.SetAsync(new Dictionary<string, int>
+            await map.SetAllAsync(new Dictionary<string, int>
             {
                 ["key1"] = 43,
                 ["key2"] = 44
@@ -284,7 +284,7 @@ namespace Hazelcast.Tests.Remote
             for (var i = 0; i < 100; i++)
                 entries["key" + i] = i;
 
-            await map.SetAsync(entries).CAF();
+            await map.SetAllAsync(entries).CAF();
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(100, count);
@@ -306,7 +306,7 @@ namespace Hazelcast.Tests.Remote
             for (var i = 0; i < 100; i++)
                 entries["key" + i] = i;
 
-            await map.SetAsync(entries).CAF();
+            await map.SetAllAsync(entries).CAF();
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(100, count);

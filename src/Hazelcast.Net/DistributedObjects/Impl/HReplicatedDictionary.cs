@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -37,10 +38,10 @@ namespace Hazelcast.DistributedObjects.Impl
             _partitionId = partitionId;
         }
 
-        public Task<TValue> SetAsync(TKey key, TValue value)
-            => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
+        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
+            => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public async Task<TValue> SetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
@@ -50,7 +51,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task SetAsync(IDictionary<TKey, TValue> entries)
+        public async Task SetAllAsync(IDictionary<TKey, TValue> entries)
         {
             var entriesData = new List<KeyValuePair<IData, IData>>(entries.Count);
             foreach (var (key, value) in entries)
@@ -64,7 +65,7 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> RemoveAsync(TKey key)
+        public async Task<TValue> GetAndRemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
@@ -89,7 +90,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task<IReadOnlyList<TKey>> GetKeysAsync()
+        public async Task<IReadOnlyCollection<TKey>> GetKeysAsync()
         {
             var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
@@ -97,7 +98,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync()
+        public async Task<IReadOnlyCollection<TValue>> GetValuesAsync()
         {
             var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
@@ -105,10 +106,12 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyDictionary<TKey, TValue>> GetAsync()
+        public Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync() => GetEntriesAsync(CancellationToken.None);
+        
+        private async Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(CancellationToken cancellationToken)
         {
             var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CAF();
             var response = ReplicatedMapEntrySetCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
         }
@@ -135,7 +138,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ReplicatedMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> ContainsAsync(TValue value)
+        public async Task<bool> ContainsValueAsync(TValue value)
         {
             var valueData = ToSafeData(value);
             var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
@@ -143,14 +146,14 @@ namespace Hazelcast.DistributedObjects.Impl
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
-        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> handle)
+        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
-            if (handle == null) throw new ArgumentNullException(nameof(handle));
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new ReplicatedDictionaryEventHandlers<TKey, TValue>();
-            handle(handlers);
+            events(handlers);
 
             // 0: no entryKey, no predicate
             // 1: entryKey, no predicate
@@ -180,17 +183,17 @@ namespace Hazelcast.DistributedObjects.Impl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(default, false, default, false, handle);
+        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events)
+            => SubscribeAsync(default, false, default, false, events);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(default, false, key, true, handle);
+        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key)
+            => SubscribeAsync(default, false, key, true, events);
 
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(predicate, true, default, false, handle);
+        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate)
+            => SubscribeAsync(predicate, true, default, false, events);
 
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(predicate, true, key, true, handle);
+        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate)
+            => SubscribeAsync(predicate, true, key, true, events);
 
         private class MapSubscriptionState : SubscriptionState<ReplicatedDictionaryEventHandlers<TKey, TValue>>
         {
@@ -271,5 +274,16 @@ namespace Hazelcast.DistributedObjects.Impl
 
         public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
             => UnsubscribeBaseAsync(subscriptionId);
+
+
+        public async IAsyncEnumerator<KeyValuePair<TKey, TValue>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            // all collections are async enumerable,
+            // but by default we load the whole items set at once,
+            // then iterate in memory
+            var items = await GetEntriesAsync(cancellationToken).CAF();
+            foreach (var item in items)
+                yield return item;
+        }
     }
 }

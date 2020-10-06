@@ -33,17 +33,17 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var map = await client.GetReplicatedDictionaryAsync<string, string>("replicatedMap-example");
 
             // add values
-            await map.SetAsync("key", "value");
-            await map.SetAsync("key2", "value2");
+            await map.GetAndSetAsync("key", "value");
+            await map.GetAndSetAsync("key2", "value2");
 
             // report
             Console.WriteLine("Key: " + await map.GetAsync("key"));
             Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
             Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
             Console.WriteLine("Count: " + await map.CountAsync());
-            Console.WriteLine("Entries: " + string.Join(", ", await map.GetAsync()));
+            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntriesAsync()));
             Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
-            Console.WriteLine("ContainsValue: " + await map.ContainsAsync("value"));
+            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
 
             // destroy the map
             await client.DestroyAsync(map);

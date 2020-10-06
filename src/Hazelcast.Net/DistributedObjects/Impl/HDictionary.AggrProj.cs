@@ -57,10 +57,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection)
+        public Task<IReadOnlyCollection<TResult>> ProjectAsync<TResult>(IProjection projection)
             => ProjectAsync<TResult>(projection, CancellationToken.None);
 
-        private async Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, CancellationToken cancellationToken)
+        private async Task<IReadOnlyCollection<TResult>> ProjectAsync<TResult>(IProjection projection, CancellationToken cancellationToken)
         {
             var projectionData = ToSafeData(projection);
 
@@ -71,10 +71,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate)
+        public Task<IReadOnlyCollection<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate)
             => ProjectAsync<TResult>(projection, predicate, CancellationToken.None);
 
-        private async Task<IReadOnlyList<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, CancellationToken cancellationToken)
+        private async Task<IReadOnlyCollection<TResult>> ProjectAsync<TResult>(IProjection projection, IPredicate predicate, CancellationToken cancellationToken)
         {
             var (projectionData, predicateData) = ToSafeData(projection, predicate);
 

@@ -27,14 +27,14 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HDictionary<TKey, TValue> // Events
     {
-        private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<DictionaryEventHandlers<TKey, TValue>> handle, CancellationToken cancellationToken)
+        private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<DictionaryEventHandlers<TKey, TValue>> events, CancellationToken cancellationToken)
         {
             if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
-            if (handle == null) throw new ArgumentNullException(nameof(handle));
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new DictionaryEventHandlers<TKey, TValue>();
-            handle(handlers);
+            events(handlers);
 
             var flags = HDictionaryEventTypes.Nothing;
             foreach (var handler in handlers)
@@ -68,29 +68,17 @@ namespace Hazelcast.DistributedObjects.Impl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(true, default, false, default, false, handle, CancellationToken.None);
+        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true)
+            => SubscribeAsync(includeValues, default, false, default, false, events, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(includeValues, default, false, default, false, handle, CancellationToken.None);
+        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true)
+            => SubscribeAsync(includeValues, default, false, key, true, events, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(TKey key, Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(true, default, false, key, true, handle, CancellationToken.None);
+        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true)
+            => SubscribeAsync(includeValues, predicate, true, default, false, events, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(includeValues, default, false, key, true, handle, CancellationToken.None);
-
-        public Task<Guid> SubscribeAsync(IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(true, predicate, true, default, false, handle, CancellationToken.None);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(includeValues, predicate, true, default, false, handle, CancellationToken.None);
-
-        public Task<Guid> SubscribeAsync(TKey key, IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(true, predicate, true, key, true, handle, CancellationToken.None);
-
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, IPredicate predicate, Action<DictionaryEventHandlers<TKey, TValue>> handle)
-            => SubscribeAsync(includeValues, predicate, true, key, true, handle, CancellationToken.None);
+        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true)
+            => SubscribeAsync(includeValues, predicate, true, key, true, events, CancellationToken.None);
 
         private class MapSubscriptionState : SubscriptionState<DictionaryEventHandlers<TKey, TValue>>
         {

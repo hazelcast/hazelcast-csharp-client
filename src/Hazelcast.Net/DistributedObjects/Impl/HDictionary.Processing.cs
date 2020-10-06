@@ -28,17 +28,17 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionary<TKey, TValue> // Processing
     {
         /// <inheritdoc />
-        public Task<object> ExecuteAsync(IEntryProcessor processor, TKey key)
-            => ExecuteAsync(processor, key, CancellationToken.None);
+        public Task<TResult> ExecuteAsync<TResult>(IEntryProcessor processor, TKey key)
+            => ExecuteAsync<TResult>(processor, key, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<object> ExecuteAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
+        Task<TResult> ExecuteAsync<TResult>(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
-            var task = ExecuteAsync(processorData, keyData, cancellationToken);
+            var task = ExecuteAsync<TResult>(processorData, keyData, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -57,46 +57,46 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <remarks>
         /// <para>The <paramref name="processorData"/> must have a counterpart on the server.</para>
         /// </remarks>
-        protected virtual async Task<object> ExecuteAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
+        protected virtual async Task<TResult> ExecuteAsync<TResult>(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response);
+            return ToObject<TResult>(response);
         }
 
         /// <inheritdoc />
-        public Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys)
-            => ExecuteAsync(processor, keys, CancellationToken.None);
+        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IEnumerable<TKey> keys)
+            => ExecuteAsync<TResult>(processor, keys, CancellationToken.None);
 
-        private async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken)
+        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
 
             var keysmap = keys.ToDictionary(x => ToSafeData(x), x => x);
-            if (keysmap.Count == 0) return new Dictionary<TKey, object>();
+            if (keysmap.Count == 0) return new Dictionary<TKey, TResult>();
             var processorData = ToSafeData(processor);
 
             var requestMessage = MapExecuteOnKeysCodec.EncodeRequest(Name, processorData, keysmap.Keys);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapExecuteOnKeysCodec.DecodeResponse(responseMessage).Response;
 
-            var result = new Dictionary<TKey, object>();
+            var result = new Dictionary<TKey, TResult>();
             foreach (var (keyData, valueData) in response)
             {
                 if (!keysmap.TryGetValue(keyData, out var key))
                     throw new InvalidOperationException("Server returned an unexpected key.");
-                result[key] = ToObject<object>(valueData);
+                result[key] = ToObject<TResult>(valueData);
             }
 
             return result;
         }
 
         /// <inheritdoc />
-        public Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor)
-            => ExecuteAsync(processor, CancellationToken.None);
+        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor)
+            => ExecuteAsync<TResult>(processor, CancellationToken.None);
 
-        private async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, CancellationToken cancellationToken)
+        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, CancellationToken cancellationToken)
         {
             var processorData = ToSafeData(processor);
 
@@ -104,18 +104,18 @@ namespace Hazelcast.DistributedObjects.Impl
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapExecuteOnAllKeysCodec.DecodeResponse(responseMessage).Response;
 
-            var result = new Dictionary<TKey, object>();
+            var result = new Dictionary<TKey, TResult>();
             foreach (var (keyData, valueData) in response)
-                result[ToObject<TKey>(keyData)] = ToObject<object>(valueData);
+                result[ToObject<TKey>(keyData)] = ToObject<TResult>(valueData);
             return result;
 
         }
 
         /// <inheritdoc />
-        public Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate)
-            => ExecuteAsync(processor, predicate, CancellationToken.None);
+        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IPredicate predicate)
+            => ExecuteAsync<TResult>(processor, predicate, CancellationToken.None);
 
-        private async Task<IDictionary<TKey, object>> ExecuteAsync(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken)
+        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken)
         {
             var (processorData, predicateData) = ToSafeData(processor, predicate);
 
@@ -123,51 +123,11 @@ namespace Hazelcast.DistributedObjects.Impl
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MapExecuteWithPredicateCodec.DecodeResponse(responseMessage).Response;
 
-            var result = new Dictionary<TKey, object>();
+            var result = new Dictionary<TKey, TResult>();
             foreach (var (keyData, valueData) in response)
-                result[ToObject<TKey>(keyData)] = ToObject<object>(valueData);
+                result[ToObject<TKey>(keyData)] = ToObject<TResult>(valueData);
             return result;
 
-        }
-
-        /// <inheritdoc />
-        public Task<object> ApplyAsync(IEntryProcessor processor, TKey key)
-            => ApplyAsync(processor, key, CancellationToken.None);
-
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task<object> ApplyAsync(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
-        {
-            var (keyData, processorData) = ToSafeData(key, processor);
-            var task = ApplyAsync(processorData, keyData, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        // TODO: understand what this does, and document
-        //
-        // documentation says that... "execute processes ..., blocking until the processing is
-        // complete and the result is returned" and "submit processes ... and provides a way to
-        // register a callback to receive notifications about the result of the entry processing".
-        //
-        // in the original code, "execute" returns a value whereas "submit" returns a task that
-        // can be awaited - but since we are fully async now, all our code now returns tasks.
-        //
-        // however, "execute" uses MapExecuteOnKeyCodec (77312 // 0x012E00) whereas "submit" uses
-        // MapSubmitToKeyCodec (77568 // 0x012F00) which is a different codec
-
-        protected virtual async Task<object> ApplyAsync(IData processorData, IData keyData, CancellationToken cancellationToken)
-        {
-            var requestMessage = MapSubmitToKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
-            var response = MapSubmitToKeyCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response);
         }
     }
 }

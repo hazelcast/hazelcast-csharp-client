@@ -22,30 +22,19 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHDictionary<TKey, TValue> // Removing
     {
         /// <summary>
-        /// Tries to remove an entry.
+        /// Tries to remove the entry with the given key from this dictionary
+        /// within the specified time to wait value.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="timeToWait">The time to wait for a lock on the key.</param>
         /// <returns>true if the entry was removed; otherwise false.</returns>
         /// <remarks>
-        /// <para>This method returns false when no lock on the key could be
-        /// acquired within the timeout.</para>
-        /// TODO or when there was no value with that key?
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether an entry is removed on the servers or not.</para>
+        /// <para>
+        /// If the key is already locked by another thread and/or member,
+        /// then this operation will wait the time to wait amount for acquiring the lock.
+        /// </para>
         /// </remarks>
         Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait);
-
-        /// <summary>
-        /// Removes an entry and returns the removed value, if any.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns>The removed value if any, else <c>default(TValue)</c>.</returns>
-        /// <remarks>
-        /// <para>This method serializes the return value. For performance reasons, prefer
-        /// <see cref="RemoveAsync(TKey, CancellationToken)"/> when the returned value is not used.</para>
-        /// </remarks>
-        Task<TValue> GetAndRemoveAsync(TKey key);
 
         /// <summary>
         /// Removes an entry.
@@ -65,34 +54,15 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the removed value. Prefer
-        /// <see cref="GetAndRemoveAsync"/> if the value is required.</para>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether an entry is removed on the servers or not.</para>
+        /// <see cref="IHDictionaryBase{TKey,TValue}.GetAndRemoveAsync"/> if the value is required.</para>
         /// </remarks>
         Task RemoveAsync(TKey key);
 
         /// <summary>
-        /// Removes entries.
+        /// Removes all entries which match with the supplied predicate.
         /// </summary>
         /// <param name="predicate">A predicate used to select entries to be removed.</param>
         /// <returns>A task that will complete when entries have been removed.</returns>
-        /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether entries were removed on the servers or not. On the other hand, either the
-        /// specified entries have been removed, or not. The operation cannot be cancelled while only
-        /// some entries have been removed.</para>
-        /// </remarks>
         Task RemoveAsync(IPredicate predicate);
-
-        /// <summary>
-        /// Removes all entries.
-        /// </summary>
-        /// <remarks>
-        /// <para>If the operation is cancelled, there is no guarantee on what is actually performed,
-        /// i.e. on whether entries were removed on the servers or not. On the other hand, either the
-        /// map has been cleared, or not. The operation cannot be cancelled while only some entries
-        /// have been removed.</para>
-        /// </remarks>
-        Task ClearAsync();
     }
 }

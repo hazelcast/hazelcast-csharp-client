@@ -22,97 +22,82 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHDictionary<TKey, TValue> // Getting
     {
         /// <summary>
-        /// Gets the value for a key, or <c>null</c> if the map does not contain an entry with this key.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns>The value for the specified key, or <c>null</c> if the map does not contain an entry with this key.</returns>
-        Task<TValue> GetAsync(TKey key);
-
-        /// <summary>
         /// Gets all entries for keys.
         /// </summary>
         /// <param name="keys">The keys.</param>
         /// <returns>The values for the specified keys.</returns>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(ICollection<TKey> keys);
+        /// <remarks>
+        /// <para>
+        /// The returned readonly dictionary is <b>NOT</b> backed by the hazelcast dictionary,
+        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHDictionary{TKey,TValue}"/>,
+        /// and vice-versa.
+        /// </para>
+        /// </remarks>
+        Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys);
 
         /// <summary>
-        /// Gets an entry for a key, or <c>null</c> if the map does not contain an entry with this key.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns>An entry for the specified key, or <c>null</c> if the map does not contain an entry with this key.</returns>
-        Task<IHDictionaryEntry<TKey, TValue>> GetEntryAsync(TKey key);
-
-        /// <summary>
-        /// Queries entries.
-        /// </summary>
-        /// <returns>All entries.</returns>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync();
-
-        /// <summary>
-        /// Queries entries.
+        /// Queries the dictionary based on the specified predicate and returns keys matching the predicate. 
         /// </summary>
         /// <param name="predicate">A predicate to filter the entries with.</param>
-        /// <returns>Entries matching the <paramref name="predicate"/>.</returns>
+        /// <returns>readonly clone of all keys matching the predicate.</returns>
         /// <remarks>
+        /// <para>
+        /// Specified predicate runs on all members in parallel.
+        /// </para>
+        /// <para>
+        /// The returned collection is <b>NOT</b> backed by this dictionary,
+        /// so changes to the dictionary are <b>NOT</b> reflected in the collection, and vice-versa.
+        /// </para>
         /// <para>The <paramref name="predicate"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyDictionary<TKey, TValue>> GetAsync(IPredicate predicate);
-
+        Task<IReadOnlyCollection<TKey>> GetKeysAsync(IPredicate predicate);
+        
         /// <summary>
-        /// Gets keys.
-        /// </summary>
-        /// <returns>All keys.</returns>
-        Task<IReadOnlyList<TKey>> GetKeysAsync();
-
-        /// <summary>
-        /// Gets keys.
-        /// </summary>
-        /// <param name="predicate">An predicate to filter the entries with.</param>
-        /// <returns>All keys matching the predicate.</returns>
-        Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate);
-
-        /// <summary>
-        /// Gets all values.
-        /// </summary>
-        /// <returns>All values.</returns>
-        Task<IReadOnlyList<TValue>> GetValuesAsync();
-
-        /// <summary>
+        /// Queries the dictionary based on the specified predicate and returns a readonly collection of the values of matching entries.
         /// Gets values for entries matching a predicate.
         /// </summary>
-        /// <param name="predicate">An optional predicate to filter the entries.</param>
-        /// <returns>All values.</returns>
+        /// <param name="predicate">A predicate to filter the entries.</param>
+        /// <returns>readonly collection of the values of matching entries.</returns>
         /// <remarks>
+        /// <para>
+        /// Specified predicate runs on all members in parallel.
+        /// </para>
+        /// <para>
+        /// The returned collection is <b>NOT</b> backed by this dictionary,
+        /// so changes to the dictionary are <b>NOT</b> reflected in the collection, and vice-versa.
+        /// </para>
         /// <para>The <paramref name="predicate"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate);
+        Task<IReadOnlyCollection<TValue>> GetValuesAsync(IPredicate predicate);
 
         /// <summary>
-        /// Gets the number of entries.
+        /// Queries the dictionary based on the specified predicate and returns a readonly dictionary of the matching entries.
         /// </summary>
-        /// <returns>The total number of entries in the map.</returns>
-        Task<int> CountAsync();
+        /// <param name="predicate">A predicate to filter the entries with.</param>
+        /// <returns>readonly dictionary of the matching entries.</returns>
+        /// <remarks>
+        /// <para>
+        /// Specified predicate runs on all members in parallel.
+        /// </para>
+        /// <para>
+        /// The returned readonly dictionary is <b>NOT</b> backed by the hazelcast dictionary,
+        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHDictionary{TKey,TValue}"/>,
+        /// and vice-versa.
+        /// </para>
+        /// <para>
+        /// The <paramref name="predicate"/> must be serializable via Hazelcast serialization,
+        /// and have a counterpart on the server.</para>
+        /// </remarks>
+        Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(IPredicate predicate);
 
         /// <summary>
-        /// Determines whether this map is empty.
-        /// </summary>
-        /// <returns><c>true</c> if the map does not contain entries; otherwise <c>false</c>.</returns>
-        Task<bool> IsEmptyAsync();
-
-        /// <summary>
-        /// Determines whether this map contains an entry for a key.
+        /// Gets an entry with statistics for a key, or <c>null</c> if the dictionary does not contain an entry with this key.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <returns><c>true</c> if the map contains an entry for the specified key; otherwise <c>false</c>.</returns>
-        Task<bool> ContainsKeyAsync(TKey key);
-
-        /// <summary>
-        /// Determines whether this map contains at least one entry with a value.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        /// <returns><c>true</c> if the map contains at least an entry with the specified value; otherwise <c>false</c>.</returns>
-        Task<bool> ContainsAsync(TValue value);
+        /// <returns>An <see cref="IHDictionaryEntry{TKey,TValue}"/> for the specified key,
+        /// or <c>null</c> if the dictionary does not contain an entry with this key.</returns>
+        Task<IHDictionaryEntry<TKey, TValue>> GetEntryStatsAsync(TKey key);
     }
 }

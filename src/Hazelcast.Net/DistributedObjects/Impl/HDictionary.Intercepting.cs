@@ -40,25 +40,17 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task RemoveInterceptorAsync(string id)
+        public Task<bool> RemoveInterceptorAsync(string id)
             => RemoveInterceptorAsync(id, CancellationToken.None);
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task RemoveInterceptorAsync(string id, CancellationToken cancellationToken = default)
+        private async Task<bool> RemoveInterceptorAsync(string id, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(id));
 
             var requestMessage = MapRemoveInterceptorCodec.EncodeRequest(Name, id);
-            var task = Cluster.Messaging.SendAsync(requestMessage, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CAF();
-#endif
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
+            var response = MapRemoveInterceptorCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
     }
 }

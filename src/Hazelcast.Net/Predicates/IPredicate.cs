@@ -17,6 +17,18 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Predicates
 {
 
-    public interface IPredicate : IIdentifiedDataSerializable
+    /// <summary>
+    /// A place holder interface for <c>com.hazelcast.query.Predicate</c> on server side.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// All builtin predicates can be accessed via <see cref="Predicate"/> static class.
+    /// </para>
+    /// <para>
+    /// A custom predicate must be serializable via Hazelcast serialization,
+    /// and have a counterpart on the server.
+    /// </para>
+    /// </remarks>
+    public interface IPredicate
     { }
 }

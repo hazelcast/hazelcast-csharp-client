@@ -63,14 +63,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task SetAsync(IDictionary<TKey, TValue> entries)
-            => SetAsync(entries, CancellationToken.None);
+        public Task SetAllAsync(IDictionary<TKey, TValue> entries)
+            => SetAllAsync(entries, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task SetAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
+        Task SetAllAsync(IDictionary<TKey, TValue> entries, CancellationToken cancellationToken)
         {
             // TODO: is this transactional? can some entries be created and others be missing?
 
@@ -338,6 +338,11 @@ namespace Hazelcast.DistributedObjects.Impl
 #else
             await task.CAF();
 #endif
+        }
+
+        public Task<bool> UpdateTimeToLive(TKey key, TimeSpan timeToLive)
+        {
+            throw new NotImplementedException();
         }
     }
 }
