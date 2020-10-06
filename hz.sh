@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 
-POWERSHELL=powershell
+POWERSHELL=pwsh
 if ! type $POWERSHELL >/dev/null 2>&1; then
-  POWERSHELL=pwsh
+  POWERSHELL=powershell
 fi
 if ! type $POWERSHELL >/dev/null 2>&1; then
   POWERSHELL=""
