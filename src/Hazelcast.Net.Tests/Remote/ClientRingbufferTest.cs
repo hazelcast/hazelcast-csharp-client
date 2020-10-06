@@ -219,9 +219,9 @@ namespace Hazelcast.Tests.Remote
                 await rb.GetAsync(await rb.GetHeadSequenceAsync() - 1);
                 Assert.Fail("Expected an exception.");
             }
-            catch (ClientProtocolException e)
+            catch (RemoteException e)
             {
-                Assert.That(e.Error, Is.EqualTo(ClientProtocolError.StaleSequence));
+                Assert.That(e.Error, Is.EqualTo(RemoteError.StaleSequence));
             }
 		}
 

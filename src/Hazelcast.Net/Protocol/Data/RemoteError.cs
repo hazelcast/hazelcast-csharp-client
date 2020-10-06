@@ -15,9 +15,9 @@
 namespace Hazelcast.Protocol.Data
 {
     /// <summary>
-    /// Defines the server error code for the client protocol.
+    /// Defines the error codes that can be returned by a remote server.
     /// </summary>
-    public enum ClientProtocolError
+    public enum RemoteError
     {
         Undefined = 0,
         ArrayIndexOutOfBounds = 1,
