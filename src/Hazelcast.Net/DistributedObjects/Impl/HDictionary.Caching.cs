@@ -13,10 +13,12 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
@@ -57,14 +59,19 @@ namespace Hazelcast.DistributedObjects.Impl
             await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
         }
 
-        public Task LoadAllAsync(bool replaceExistingValues)
+        /// <inheritdoc />
+        public async Task LoadAllAsync(bool replaceExistingValues)
         {
-            throw new System.NotImplementedException();
+            var requestMessage = MapLoadAllCodec.EncodeRequest(Name, replaceExistingValues);
+            await Cluster.Messaging.SendAsync(requestMessage).CAF();
         }
 
-        public Task LoadAllAsync(ICollection<TKey> keys, bool replaceExistingValues)
+        /// <inheritdoc />
+        public async Task LoadAllAsync(ICollection<TKey> keys, bool replaceExistingValues)
         {
-            throw new System.NotImplementedException();
+            var keysData = keys.Select(key => ToSafeData(key)).ToList();
+            var requestMessage = MapLoadGivenKeysCodec.EncodeRequest(Name, keysData, replaceExistingValues);
+            await Cluster.Messaging.SendAsync(requestMessage).CAF();
         }
     }
 }
