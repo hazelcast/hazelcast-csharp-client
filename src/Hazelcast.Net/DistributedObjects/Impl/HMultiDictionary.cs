@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -36,10 +37,12 @@ namespace Hazelcast.DistributedObjects.Impl
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }
 
-        public Task<Guid> SubscribeAsync(bool includeValues, Action<MultiDictionaryEventHandlers<TKey, TValue>> handle)
+        /// <inheritdoc />
+        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> handle, bool includeValues = true)
             => SubscribeAsync(includeValues, default, false, handle);
 
-        public Task<Guid> SubscribeAsync(bool includeValues, TKey key, Action<MultiDictionaryEventHandlers<TKey, TValue>> handle)
+        /// <inheritdoc />
+        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> handle, TKey key, bool includeValues = true)
             => SubscribeAsync(includeValues, key, true, handle);
 
         private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MultiDictionaryEventHandlers<TKey, TValue>> handle)
@@ -146,7 +149,12 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             return MultiMapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
         }
-
+        
+        /// <inheritdoc />
+        public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
+            => UnsubscribeBaseAsync(subscriptionId);
+        
+        /// <inheritdoc />
         public async Task<bool> TryAddAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
@@ -155,7 +163,8 @@ namespace Hazelcast.DistributedObjects.Impl
             return MultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key)
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapGetCodec.EncodeRequest(Name, keyData, ContextId);
@@ -164,15 +173,20 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>> GetAsync()
+        /// <inheritdoc />
+        public Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync() 
+             => GetEntrySetAsync(CancellationToken.None);
+
+        private async Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync(CancellationToken cancellationToken)
         {
             var requestMessage = MultiMapEntrySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MultiMapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyDictionaryOfList<TKey, TValue>(SerializationService) { response };
+            return new ReadOnlyLazyList<KeyValuePair<TKey, TValue>>(SerializationService);
         }
 
-        public async Task<IReadOnlyList<TKey>> GetKeysAsync()
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<TKey>> GetKeysAsync()
         {
             var requestMessage = MultiMapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
@@ -180,7 +194,8 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync()
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<TValue>> GetValuesAsync()
         {
             var requestMessage = MultiMapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
@@ -188,6 +203,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
+        /// <inheritdoc />
         public async Task<bool> ContainsEntryAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
@@ -196,22 +212,25 @@ namespace Hazelcast.DistributedObjects.Impl
             return MultiMapContainsEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
+        /// <inheritdoc />
         public async Task<bool> ContainsKeyAsync(TKey key)
         {
-            var keyData = ToData(key);
+            var keyData = ToSafeData(key);
             var requestMessage = MultiMapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             return MultiMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<bool> ContainsAsync(TValue value)
+        /// <inheritdoc />
+        public async Task<bool> ContainsValueAsync(TValue value)
         {
-            var valueData = ToData(value);
+            var valueData = ToSafeData(value);
             var requestMessage = MultiMapContainsValueCodec.EncodeRequest(Name, valueData);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
             return MultiMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
+        /// <inheritdoc />
         public async Task<int> CountAsync()
         {
             var requestMessage = MultiMapSizeCodec.EncodeRequest(Name);
@@ -219,14 +238,16 @@ namespace Hazelcast.DistributedObjects.Impl
             return MultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
+        /// <inheritdoc />
         public async Task<int> CountValuesAsync(TKey key)
         {
-            var keyData = ToData(key);
+            var keyData = ToSafeData(key);
             var requestMessage = MultiMapValueCountCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             return MultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
         }
 
+        /// <inheritdoc />
         public async Task<bool> RemoveAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
@@ -236,9 +257,10 @@ namespace Hazelcast.DistributedObjects.Impl
             return MultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key)
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<TValue>> GetAndRemoveAsync(TKey key)
         {
-            var keyData = ToData(key);
+            var keyData = ToSafeData(key);
 
             var requestMessage = MultiMapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
@@ -246,6 +268,16 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
+        /// <inheritdoc />
+        public async Task RemoveAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+
+            var requestMessage = MultiMapDeleteCodec.EncodeRequest(Name, keyData, ContextId);
+            await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
+        }
+
+        /// <inheritdoc />
         public async Task ClearAsync()
         {
             var requestMessage = MultiMapClearCodec.EncodeRequest(Name);
@@ -253,36 +285,40 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = MultiMapClearCodec.DecodeResponse(responseMessage);
         }
 
-        public Task LockAsync(TKey key)
-            => LockForAsync(key, LeaseTime.InfiniteTimeSpan);
+        /// <inheritdoc />
+        public Task LockAsync(TKey key) 
+            => LockAsync(key, Timeout.InfiniteTimeSpan);
 
-        public Task<bool> TryLockAsync(TKey key)
-        {
-            throw new NotImplementedException();
-        }
+        /// <inheritdoc />
+        public Task<bool> TryLockAsync(TKey key) 
+            => TryLockAsync(key, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
 
-        public Task<bool> TryWaitLockAsync(TKey key, TimeSpan timeToWait)
-            => TryWaitLockForAsync(key, timeToWait, LeaseTime.InfiniteTimeSpan);
+        /// <inheritdoc />
+        public Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
+            => TryLockAsync(key, timeToWait, Timeout.InfiniteTimeSpan);
 
-        public async Task<bool> TryWaitLockForAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
+        /// <inheritdoc />
+        public async Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
         {
             var keyData = ToSafeData(key);
-            var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
-            var timeToWaitMs = timeToWait.CodecMilliseconds(0);
+            var leaseTimeMs = (long) leaseTime.TotalMilliseconds;
+            var timeToWaitMs = (long) timeToWait.TotalMilliseconds;
             var requestMessage = MultiMapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             return MultiMapTryLockCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task LockForAsync(TKey key, TimeSpan leaseTime)
+        /// <inheritdoc />
+        public async Task LockAsync(TKey key, TimeSpan leaseTime)
         {
             var keyData = ToSafeData(key);
-            var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
+            var leaseTimeMs = (long) leaseTime.TotalMilliseconds;
             var requestMessage = MultiMapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             _ = MultiMapLockCodec.DecodeResponse(responseMessage);
         }
 
+        /// <inheritdoc />
         public async Task<bool> IsLockedAsync(TKey key)
         {
             var keyData = ToSafeData(key);
@@ -291,6 +327,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return MultiMapIsLockedCodec.DecodeResponse(responseMessage).Response;
         }
 
+        /// <inheritdoc />
         public async Task UnlockAsync(TKey key)
         {
             var keyData = ToSafeData(key);
@@ -299,12 +336,24 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = MultiMapUnlockCodec.DecodeResponse(responseMessage);
         }
 
+        /// <inheritdoc />
         public async Task ForceUnlockAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapForceUnlockCodec.EncodeRequest(Name, keyData, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             _ = MultiMapForceUnlockCodec.DecodeResponse(responseMessage);
+        }
+
+        /// <inheritdoc />
+        public async IAsyncEnumerator<KeyValuePair<TKey, TValue>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            // all collections are async enumerable,
+            // but by default we load the whole items set at once,
+            // then iterate in memory
+            var items = await GetEntrySetAsync(cancellationToken).CAF();
+            foreach (var item in items)
+                yield return item;
         }
     }
 }
