@@ -77,11 +77,6 @@ namespace Hazelcast.Data
             return this;
         }
 
-        /// <summary>
-        /// Add multiple index attributes.
-        /// </summary>
-        /// <param name="attributes">Attributes to be indexed.</param>
-        /// <returns>This instance for chaining.</returns>
         public IndexConfig AddAttributes(params string[] attributes)
         {
             foreach (var attribute in attributes)
@@ -95,7 +90,7 @@ namespace Hazelcast.Data
             return this;
         }
 
-        internal static void ValidateAttribute(IndexConfig config, string attributeName)
+        public static void ValidateAttribute(IndexConfig config, string attributeName)
         {
             if (attributeName == null)
                 throw new ArgumentNullException(nameof(attributeName), $"Attribute name cannot be null: {config}");

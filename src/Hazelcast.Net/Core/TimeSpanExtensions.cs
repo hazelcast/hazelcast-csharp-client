@@ -20,7 +20,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods to the <see cref="TimeSpan"/> struct.
     /// </summary>
-    public static class TimeSpanExtensions
+    internal static class TimeSpanExtensions
     {
         /// <summary>
         /// Gets the value of the <see cref="TimeSpan"/> expressed in whole milliseconds.

@@ -18,7 +18,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
