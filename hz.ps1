@@ -91,6 +91,37 @@ if ($commands.Length -eq 1 -and $commands[0].Contains(',')) {
 # clear rogue environment variable
 $env:FrameworkPathOverride=""
 
+# this will be SystemDefault by default, and on some oldish environment (Windows 8...) it
+# may not enable Tls12 by default, and use Tls10, and that will prevent us from connecting
+# to some SSL/TLS servers (for instance, NuGet) => explicitly add Tls12
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol `
+    -bor [Net.SecurityProtocolType]::Tls12
+
+# determine PowerShellVersion (see also $psVersionTable)
+# PowerShell 2.0 is integrated since Windows 7 and Server 2008 R2
+#            3.0                             8            2012
+#            4.0                             8.1          2012 R2
+#            5.0                             10
+#            5.1                             10AU         2016
+$psVersion = (get-host | select-object Version).Version
+$minVersion = [System.Version]::Parse("5.1.0.0")
+if ($psVersion -lt $minVersion) {
+    Write-Output "This script requires at least version $($minVersion.Major).$($minVersion.Minor) of PowerShell, but you seem to be running version $($psVersion.Major).$($psVersion.Minor)."
+
+    try {
+        $x = (pwsh --version)
+        Write-Output "However we have detected the 'pwsh' command in your PATH, which provides $x."
+        Write-Output "Maybe you invoked PowerShell with the old 'powershell' command? Please use 'pwsh' instead."
+    }
+    catch {
+        Write-Output "We recommend you install the most recent stable version available for download at:"
+        Write-Output "https://github.com/PowerShell/PowerShell/releases"
+        Write-Output "Please note that this version will need to be invoked with 'pwsh' not 'powershell'."
+    }
+
+    Die "Unsupported PowerShell version: $($psVersion.Major).$($psVersion.Minor)"
+}
+
 # determine platform
 $platform = "windows"
 if ($isLinux) { $platform = "linux" }
@@ -103,6 +134,7 @@ foreach ($t in $commands) {
     switch ($t.Trim().ToLower()) {
         "help" {
             Write-Output "Hazelcast .NET Command Line"
+            Write-Output "PowerShell $psVersion"
             Write-Output ""
             Write-Output "usage hz.[ps1|sh] [<option>] [<commands>]"
             Write-Output ""
@@ -209,7 +241,7 @@ $hzVsPreview = $false # whether to look for previews of VS
 # determine java code repositories for tests
 $mvnOssSnapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots"
 $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot/"
-$mvnOssReleaseRepo = "http://repo1.maven.apache.org/maven2"
+$mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release/"
 
 if ($server.Contains("SNAPSHOT")) {
@@ -313,6 +345,30 @@ function ensureCommand($command) {
     }
 }
 
+function invokeWebRequest($url, $dest) {
+    $args = @{ Uri = $url }
+    if (![System.String]::IsNullOrWhiteSpace($dest)) {
+        $args.OutFile = $dest
+        $args.PassThru = $true
+    }
+
+    $pp = $progressPreference
+    $progressPreference = 'SilentlyContinue'
+
+    # PowerShell 7+ has -skipHttpErrorCheck parameter but not everyone will have it
+    # so, try... catch is required
+    try {
+        return invoke-webRequest @args
+    }
+    catch [System.Net.WebException] {
+        $response = $_.Exception.Response
+        Die "Failed to GET $url : $($response.StatusCode) $($response.StatusDescription)"
+    }
+    finally {
+        $progressPreference = $pp
+    }
+}
+
 # ensure we have NuGet
 function ensureNuGet() {
     if (-not $hzLocalBuild)
@@ -325,8 +381,8 @@ function ensureNuGet() {
         if (-not (test-path $nuget))
         {
             Write-Output "Download NuGet..."
-            Invoke-WebRequest $source -OutFile $nuget
-            if (-not $?) { Die "Failed to download NuGet." }
+            $response = invokeWebRequest $source $nuget
+            if ($response.StatusCode -ne 200) { Die "Failed to download NuGet." }
             Write-Output "  -> $nuget"
         }
         else {
@@ -337,6 +393,39 @@ function ensureNuGet() {
     elseif (-not (test-path $nuget))
     {
         Die "Failed to locate NuGet.exe."
+    }
+}
+
+# get a Maven artifact
+function getMvn($repoUrl, $group, $artifact, $version, $classifier, $dest) {
+
+    if ($version.EndsWith("-SNAPSHOT")) {
+        $url = "$repoUrl/$group/$artifact/$version/maven-metadata.xml"
+        $response = invokeWebRequest $url
+        if ($response.StatusCode -ne 200) {
+            Die "GET $url : $($response.StatusCode) $($response.StatusDescription)"
+        }
+
+        $metadata = [xml] $response.Content
+        $xpath = "//snapshotVersion [extension='jar'"
+        if (![System.String]::IsNullOrWhiteSpace($classifier)) {
+            $xpath += " and classifier='$classifier'"
+        }
+        $xpath += "]"
+        $jarVersion = "-" + $metadata.SelectNodes($xpath)[0].value
+    }
+    else {
+        $jarVersion = "-" + $version
+    }
+
+    $url = "$repoUrl/$group/$artifact/$version/$artifact$jarVersion"
+    if (![System.String]::IsNullOrWhiteSpace($classifier)) {
+        $url += "-$classifier"
+    }
+    $url += ".jar"
+    $response = invokeWebRequest $url $dest
+    if ($response.StatusCode -ne 200) {
+        Die "GET $url : $($response.StatusCode) $($response.StatusDescription)"
     }
 }
 
@@ -458,7 +547,20 @@ function ensureJar($jar, $repo, $artifact) {
         Write-Output "Detected $jar"
     } else {
         Write-Output "Downloading $jar ..."
-        &"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
+        #Write-Output "mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
+        #&"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
+
+        $parts = $artifact.Split(':')
+        $group = $parts[0].Replace('.', '/')
+        $art = $parts[1]
+        $ver = $parts[2]
+
+        $cls = $null
+        if ($parts.Length -eq 5 -and $parts[4] -eq "tests") {
+            $cls = "tests"
+        }
+
+        getMvn $repo $group $art $ver $cls "$tmpDir/lib/$jar"
     }
     $s = ";"
     if (-not $isWindows) { $s = ":" }
@@ -593,10 +695,14 @@ if ($doBuild -or -$doTests) {
   $sdks = (&dotnet --list-sdks)
   $v21 = ($sdks | select-string -pattern "^2\.1" | foreach-object { $_.ToString().Split(' ')[0] } | select -last 1)
   if ($v21 -eq $null) {
+        Write-Host ""
+        Write-Host "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 2.1.x"
   }
   $v31 = ($sdks | select-string -pattern "^3\.1" | foreach-object { $_.ToString().Split(' ')[0] } | select -last 1)
   if ($v31 -eq $null) {
+        Write-Host ""
+        Write-Host "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 3.1.x"
   }
 }
@@ -652,7 +758,6 @@ if ($isWindows) { $java = "javaw" }
 if ($doTests -or $doRc -or $doServer) {
     Write-Output ""
     ensureCommand $java
-    ensureCommand "mvn"
 
     # sad java
     $v = & java -version 2>&1
@@ -667,7 +772,6 @@ if ($doTests -or $doRc -or $doServer) {
     if (-not $v.StartsWith("1.8")) {
         # starting with Java 9 ... weird things can happen
         $javaFix = @( "-Dcom.google.inject.internal.cglib.\$experimental_asm7=true",  "--add-opens java.base/java.lang=ALL-UNNAMED" )
-        $env:MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true --add-opens java.base/java.lang=ALL-UNNAMED"
 
         $javaFix = $javaFix + ( `
             `
