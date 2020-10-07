@@ -18,8 +18,15 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Defines a concurrent, distributed, and listenable list
+    /// Defines a concurrent, distributed, non-partitioned and listenable list
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The Hazelcast <c>IHList</c> is not a partitioned data-structure. Entire contents
+    /// of an <c>IHList</c> is stored on a single machine (and in the backup). The <c>IHList</c>
+    /// will not scale by adding more members to the cluster.
+    /// </para>
+    /// </remarks>
      public interface IHList<T> : IHCollection<T>
     {
         /// <summary>
@@ -34,28 +41,29 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>
         /// Inserts all of the elements in the specified collection into this
-        /// list at the specified position (optional operation).  Shifts the
-        /// element currently at that position (if any) and any subsequent
+        /// list at the specified position.
+        /// </summary>
+        /// <param name="index">index at which to insert the first element from the specified collection</param>
+        /// <param name="items">collection containing elements to be added to this list</param>
+        /// <typeparam name="TItem"></typeparam>
+        /// <returns><c>true</c> if this list changed as a result of the call</returns>
+        /// <remarks>
+        /// Shifts the element currently at that position (if any) and any subsequent
         /// elements to the right (increases their indices).  The new elements
         /// will appear in this list in the order that they are returned by the
         /// specified collection's iterator.  The behavior of this operation is
         /// undefined if the specified collection is modified while the
         /// operation is in progress.  (Note that this will occur if the specified
         /// collection is this list, and it's nonempty.)
-        /// </summary>
-        /// <param name="index">index at which to insert the first element from the specified collection</param>
-        /// <param name="items">collection containing elements to be added to this list</param>
-        /// <typeparam name="TItem"></typeparam>
-        /// <returns><tt>true</tt> if this list changed as a result of the call</returns>
+        /// </remarks>
         Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items) where TItem : T;
 
         /// <summary>
-        /// Replaces the element at the specified position in this list with the
-        /// specified element.
+        /// Replaces the element at the specified position in this list with the specified element.
         /// </summary>
         /// <param name="index">index index of the element to replace</param>
         /// <param name="item">element to be stored at the specified position</param>
-        /// <returns></returns>
+        /// <returns>The element previously at the specified position</returns>
         Task<T> SetAsync(int index, T item);
 
         //Getting
@@ -68,13 +76,14 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>
         /// Returns a view of the portion of this list between the specified
-        /// <tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.  (If
-        /// <tt>fromIndex</tt> and <tt>toIndex</tt> are equal, the returned list is
-        /// empty.)
+        /// <c>fromIndex</c>, inclusive, and <c>toIndex</c>, exclusive.
         /// </summary>
         /// <param name="fromIndex">low endpoint (inclusive) of the subList</param>
         /// <param name="toIndex">high endpoint (exclusive) of the subList</param>
         /// <returns>a view of the specified range within this list</returns>
+        /// <remarks>
+        /// If  <c>fromIndex</c> and <tt>toIndex</tt> are equal, the returned list is empty.
+        /// </remarks>
         Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex);
 
         /// <summary>
@@ -88,9 +97,6 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Returns the index of the last occurrence of the specified element
         /// in this list, or -1 if this list does not contain the element.
-        /// More formally, returns the highest index <tt>i</tt> such that
-        /// <tt>(o == null ? get(i) == null : o.equals(get(i)))</tt>
-        /// or -1 if there is no such index.
         /// </summary>
         /// <param name="item">element to search for</param>
         /// <returns>the index of the last occurrence of the specified element in
@@ -99,17 +105,11 @@ namespace Hazelcast.DistributedObjects
 
         //Removing
         /// <summary>
-        /// Removes the first occurrence of the specified element from this list,
-        /// if it is present (optional operation).  If this list does not contain
-        /// the element, it is unchanged.  More formally, removes the element with
-        /// the lowest index <tt>i</tt> such that
-        /// <tt>(o==null ? get(i)==null : o.equals(get(i)))</tt>
-        /// (if such an element exists).  Returns <tt>true</tt> if this list
-        /// contained the specified element (or equivalently, if this list changed
-        /// as a result of the call).
+        /// Removes the first occurrence of the specified element from this list, if it is present.
+        /// If this list does not contain the element, it is unchanged.
         /// </summary>
         /// <param name="index">element to be removed from this list, if present</param>
-        /// <returns><tt>true</tt> if this list contained the specified element</returns>
+        /// <returns><c>true</c> if this list contained the specified element</returns>
         Task<T> RemoveAtAsync(int index);
     }
 }

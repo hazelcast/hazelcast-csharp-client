@@ -30,47 +30,6 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
         { }
 
-        // usage? just define it on the read-only list?
-        public async Task CopyToAsync(T[] array, int index)
-        {
-            if (index < 0 || index >= array.Length)
-                throw new ArgumentOutOfRangeException(nameof(index));
-
-            var items = await GetAllAsync().CAF();
-
-            if (array.Length - index < items.Count)
-                throw new ArgumentException("The number of elements in the source array is greater than the available number of elements from index to the end of the destination array.");
-
-            foreach (var item in items)
-                array[index++] = item;
-        }
-
-        // usage? going to allocate for no reason
-        public async Task<T[]> ToArrayAsync()
-        {
-            return (await GetAllAsync().CAF()).ToArray();
-        }
-
-        // usage? going to allocate for no reason
-        public async Task<TItem[]> ToArrayAsync<TItem>(TItem[] array)
-            where TItem : T
-        {
-            var items = await GetAllAsync().CAF();
-
-            if (array == null || array.Length < items.Count)
-                return items.Cast<TItem>().ToArray();
-
-            var index = 0;
-
-            foreach (var item in items)
-                array[index++] = (TItem)item;
-
-            for (; index < array.Length; index++)
-                array[index] = default;
-
-            return array;
-        }
-
         /// <inheritdoc />
         public virtual async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {

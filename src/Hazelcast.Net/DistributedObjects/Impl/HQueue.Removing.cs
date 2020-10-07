@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
@@ -21,7 +22,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HQueue<T> // Removing
     {
-        // <inheritdoc />
+        /// <inheritdoc />
         public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
@@ -30,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return QueueRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
-        // <inheritdoc />
+        /// <inheritdoc />
         public override async Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
@@ -39,7 +40,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return QueueCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        // <inheritdoc />
+        /// <inheritdoc />
         public override async Task<bool> RetainAllAsync<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
@@ -48,12 +49,21 @@ namespace Hazelcast.DistributedObjects.Impl
             return QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        // <inheritdoc />
-        public override async Task ClearAsync()
+        /// <inheritdoc />
+        public override
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task ClearAsync()
         {
             var requestMessage = QueueClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
-            _ = QueueClearCodec.DecodeResponse(responseMessage);
+            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CAF();
+#endif
         }
     }
 }

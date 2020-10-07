@@ -97,11 +97,10 @@ namespace Hazelcast.DistributedObjects
         Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items) where TItem : T;
 
         /// <summary>
-        /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
+        /// Retains only the elements in this collection that are contained in the specified collection.
         /// </summary>
         /// <remarks>
-        /// Retains only the elements in this collection that are contained in the specified collection (optional operation).
-        /// In other words, removes from this collection all of its elements that are not contained in the specified collection
+        /// In other words, removes from this collection all of its elements that are not contained in the specified collection.
         /// </remarks>
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="items">The c.</param>
@@ -117,10 +116,10 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="events">An event handlers collection builder.</param>
         /// <param name="includeValue">Whether to include values in event arguments.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> handle, bool includeValue = true);
+        Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> events, bool includeValue = true);
 
         /// <summary>
         /// Unsubscribe from events.
@@ -137,31 +136,5 @@ namespace Hazelcast.DistributedObjects
         /// recommended to retry unsubscribing until it is successful.</para>
         /// </remarks>
         ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
-
-        //misc
-        /// <summary>
-        /// Copies the collection items into an array.
-        /// </summary>
-        /// <param name="array">The destination array.</param>
-        /// <param name="arrayIndex">The destination initial index.</param>
-        /// <returns>A task that will complete when the items have been copied.</returns>
-        Task CopyToAsync(T[] array, int arrayIndex);
-
-        /// <summary>
-        /// Returns an array containing all of the elements in this collection.
-        /// </summary>
-        /// <returns>an array containing all of the elements in this collection.</returns>
-        Task<T[]> ToArrayAsync();
-
-        /// <summary>
-        /// Returns an array containing all of the elements in this collection
-        /// the runtime type of the returned array is that of the specified array
-        /// </summary>
-        /// <typeparam name="TItem">return array type</typeparam>
-        /// <param name="array">the array into which the elements of this collection are to be
-        /// stored, if it is big enough; otherwise, a new array of the same
-        /// runtime type is allocated for this purpose</param>
-        /// <returns>an array containing all of the elements in this collection</returns>
-        Task<TItem[]> ToArrayAsync<TItem>(TItem[] array) where TItem : T;
     }
 }

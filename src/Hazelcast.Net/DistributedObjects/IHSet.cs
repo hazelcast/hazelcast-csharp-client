@@ -15,8 +15,15 @@
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Defines a concurrent, distributed, and listenable set
+    /// Defines a concurrent, distributed, non-partitioned and listenable set
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The Hazelcast <c>IHSet</c> is not a partitioned data-structure. Entire contents
+    /// of an <c>IHSet</c> is stored on a single machine (and in the backup). The <c>IHSet</c>
+    /// will not scale by adding more members to the cluster.
+    /// </para>
+    /// </remarks>
     public interface IHSet<T> : IHCollection<T>
     { }
 }

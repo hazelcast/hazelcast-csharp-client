@@ -27,62 +27,25 @@ namespace Hazelcast.DistributedObjects.Impl
         // <inheritdoc />
         // need that one because we are an HCollection - weird?
         // tries to enqueue immediately, does not wait & does not throw
-        public override
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> AddAsync(T item)
-        {
-            var task = EnqueueAsync(item, TimeToWait.Zero, false, CancellationToken.None);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
+        public override async Task<bool> AddAsync(T item) => await TryEnqueueAsync(item).CAF();
+        
         // <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> TryEnqueueAsync(T item)
-        {
-            var task = EnqueueAsync(item, TimeToWait.Zero, false, CancellationToken.None);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
-
-        // <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait)
-        {
-            var task = EnqueueAsync(item, timeToWait, false, CancellationToken.None);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CAF();
-#endif
-        }
+        public async Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait = default) 
+            => await TryEnqueueAsync(item, timeToWait, CancellationToken.None).CAF();
 
         // <inheritdoc />
         // was: Put - enqueue, wait indefinitely, may throw
-        public
+        public Task EnqueueAsync(T item) => EnqueueAsync(item, CancellationToken.None);
+
+        private
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task EnqueueAsync(T item)
+            Task EnqueueAsync(T item, CancellationToken cancellationToken)
         {
-            var task = EnqueueAsync(item, TimeToWait.InfiniteTimeSpan, true, CancellationToken.None);
+            var itemData = ToSafeData(item);
+            var requestMessage = QueuePutCodec.EncodeRequest(Name, itemData);
+            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -91,40 +54,14 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         }
 
-        private async Task<bool> EnqueueAsync(T item, TimeSpan timeToWait, bool doThrow, CancellationToken cancellationToken)
+        private async Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
             var itemData = ToSafeData(item);
 
-            var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
-            var requestMessage = timeToWaitMilliseconds < 0
-                ? QueuePutCodec.EncodeRequest(Name, itemData)
-                : QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
-
-            ClientMessage responseMessage;
-            try
-            {
-                responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, PartitionKeyData, cancellationToken).CAF();
-            }
-            catch
-            {
-                if (doThrow) throw;
-                return false;
-            }
-
-            bool queued;
-            if (timeToWaitMilliseconds < 0)
-            {
-                _ = QueuePutCodec.DecodeResponse(responseMessage);
-                queued = true;
-            }
-            else
-            {
-                queued = QueueOfferCodec.DecodeResponse(responseMessage).Response;
-            }
-
-            if (queued) return true;
-            if (doThrow) throw new InvalidOperationException("Queue is full.");
-            return false;
+            var timeToWaitMilliseconds = (long)timeToWait.TotalMilliseconds;
+            var requestMessage = QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CAF();
+            return QueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
         // <inheritdoc />

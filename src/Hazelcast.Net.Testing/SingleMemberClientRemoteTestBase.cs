@@ -40,7 +40,7 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the Hazelcast client.
         /// </summary>
-        public IHazelcastClient Client { get; private set; }
+        public static IHazelcastClient Client { get; private set; }
 
         /// <summary>
         /// Gets a disposable object that will destroy and dispose a distributed

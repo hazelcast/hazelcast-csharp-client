@@ -27,12 +27,12 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HCollectionBase<T> // Events
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> handle, bool includeValue = true)
+        public async Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> events, bool includeValue = true)
         {
-            if (handle == null) throw new ArgumentNullException(nameof(handle));
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new CollectionItemEventHandlers<T>();
-            handle(handlers);
+            events(handlers);
 
             var subscription = new ClusterSubscription(
                 CreateSubscribeRequest(includeValue, Cluster.IsSmartRouting),
