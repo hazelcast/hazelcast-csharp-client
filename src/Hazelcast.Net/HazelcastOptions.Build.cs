@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Microsoft.Extensions.Configuration;
@@ -62,6 +61,9 @@ namespace Hazelcast
         }
 
         // build hazelcast options, optionally binding alternate keys for tests
+        // this allows 1 json file to contain several configuration sets, and that
+        // is convenient when using the "user secrets" during tests.
+        // this is for tests, and *not* publicly exposed to users.
         internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure, string altKey)
         {
             if (setup == null) throw new ArgumentNullException(nameof(setup));
@@ -92,9 +94,8 @@ namespace Hazelcast
             var options = new HazelcastOptions();
             configuration.HzBind(Hazelcast, options);
 
-            // FIXME ??
-            //if (altKey != null)
-            //    configuration.HzBind(altKey, options);
+            if (altKey != null && altKey != Hazelcast)
+                configuration.HzBind(altKey, options);
 
             configure?.Invoke(configuration, options);
             return options;
