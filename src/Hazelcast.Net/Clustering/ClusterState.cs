@@ -126,6 +126,11 @@ namespace Hazelcast.Clustering
         public long GetNextCorrelationId() => CorrelationIdSequence.GetNext();
 
         /// <summary>
+        /// Gets the connection identifier sequence.
+        /// </summary>
+        public ISequence<int> ConnectionIdSequence { get; } = new Int32Sequence();
+
+        /// <summary>
         /// Throws an <see cref="InvalidOperationException"/> if properties (On...) are read-only.
         /// </summary>
         public void ThrowIfReadOnlyProperties()

@@ -55,6 +55,11 @@ namespace Hazelcast.Messaging
         }
 
         /// <summary>
+        /// Gets or sets the unique identifier of the member that sent the message, if any.
+        /// </summary>
+        public Guid Sender { get; set; }
+
+        /// <summary>
         /// Whether the operation carried by this message can be retried.
         /// </summary>
         public bool IsRetryable { get; set; }

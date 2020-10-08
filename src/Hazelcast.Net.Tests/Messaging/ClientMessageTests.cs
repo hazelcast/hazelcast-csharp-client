@@ -77,6 +77,10 @@ namespace Hazelcast.Tests.Messaging
             Assert.That(m.IsRetryable, Is.False);
             m.IsRetryable = true;
             Assert.That(m.IsRetryable);
+
+            var senderId = Guid.NewGuid();
+            m.Sender = senderId;
+            Assert.That(m.Sender, Is.EqualTo(senderId));
         }
 
         [Test]

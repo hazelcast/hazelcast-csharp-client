@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Tests.Testing
+namespace Hazelcast.Testing
 {
     /// <summary>
     /// Provides extension methods to the <see cref="string"/> class.
@@ -20,13 +20,26 @@ namespace Hazelcast.Tests.Testing
     public static class StringExtensions
     {
         /// <summary>
-        /// Converts all cr/lf to lf.
+        /// Converts all cr/lf in this string to lf.
         /// </summary>
-        /// <param name="s">The string to convert.</param>
+        /// <param name="s">This string.</param>
         /// <returns>The converted string.</returns>
         public static string ToLf(this string s)
         {
             return s.Replace("\r\n", "\n").Replace("\r", "\n");
+        }
+
+        /// <summary>
+        /// Appends a string to this string, with a dot separator.
+        /// </summary>
+        /// <param name="s">This string.</param>
+        /// <param name="dotted">The string to append.</param>
+        /// <returns>This string, with the dotted string appended.</returns>
+        public static string Dot(this string s, string dotted)
+        {
+            return string.IsNullOrWhiteSpace(dotted)
+                ? s
+                : s + "." + dotted;
         }
     }
 }

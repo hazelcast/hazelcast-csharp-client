@@ -28,20 +28,22 @@ namespace Hazelcast.Clustering
     internal class DistributedEventScheduler : IAsyncDisposable
     {
         private readonly Dictionary<int, Task> _partitionTasks = new Dictionary<int, Task>();
-        //private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+        private readonly Func<Task, object, Task> _continueWithHandler;
+        private readonly Action<Task, object> _removeAfterUse;
+        private readonly Func<ClusterSubscription, Guid, long, ValueTask> _onOrphan;
         private readonly object _mutex = new object();
         private readonly ILogger _logger;
         private bool _disposed;
         private int _exceptionCount, _unhandledExceptionCount;
-        private readonly Func<Task, object, Task> _continueWithHandler;
-        private readonly Action<Task, object> _removeAfterUse;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedEventScheduler"/> class.
         /// </summary>
+        /// <param name="onOrphan">A method to handle orphan events.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public DistributedEventScheduler(ILoggerFactory loggerFactory)
+        public DistributedEventScheduler(Func<ClusterSubscription, Guid, long, ValueTask>  onOrphan, ILoggerFactory loggerFactory)
         {
+            _onOrphan = onOrphan ?? throw new ArgumentNullException(nameof(onOrphan));
             _logger = loggerFactory?.CreateLogger<DistributedEventScheduler>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _continueWithHandler = ContinueWithHandler;
@@ -80,7 +82,7 @@ namespace Hazelcast.Clustering
             if (eventMessage == null) throw new ArgumentNullException(nameof(eventMessage));
 
             var partitionId = eventMessage.PartitionId;
-            var state = new State { Subscription = subscription, Message = eventMessage, PartitionId = partitionId };
+            var state = new State { Subscription = subscription, Orphaned = subscription.Orphaned, Message = eventMessage, PartitionId = partitionId };
 
             // the factories in ConcurrentDictionary.AddOrUpdate are *not* thread-safe, i.e. in order
             // to run with minimal locking, the ConcurrentDictionary may run the two of them, or one
@@ -138,6 +140,8 @@ namespace Hazelcast.Clustering
         {
             public ClusterSubscription Subscription { get; set; }
 
+            public bool Orphaned { get; set; }
+
             public ClientMessage Message { get; set; }
 
             public int PartitionId { get; set; }
@@ -164,6 +168,14 @@ namespace Hazelcast.Clustering
         private async Task ContinueWithHandler(Task task, object stateObject)
         {
             var state = (State) stateObject;
+
+            if (state.Orphaned)
+            {
+                // the subscription was orphaned when the event was scheduled
+                // we are *not* handling the event, but reporting the orphan
+                await _onOrphan(state.Subscription, state.Message.Sender, state.Message.CorrelationId).CAF();
+                return;
+            }
 
             try
             {

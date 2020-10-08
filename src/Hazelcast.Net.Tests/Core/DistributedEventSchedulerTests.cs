@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Testing;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Core
@@ -59,9 +61,11 @@ namespace Hazelcast.Tests.Core
         {
             // this test verifies that the scheduler works as expected
 
+            static ValueTask OnOrphan(ClusterSubscription subscription, Guid memberId, long correlationId) => default;
+
             using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             var logger = loggerFactory.CreateLogger("TEST");
-            var scheduler = new DistributedEventScheduler(loggerFactory);
+            var scheduler = new DistributedEventScheduler(OnOrphan, loggerFactory);
 
             var pe = new ConcurrentDictionary<int, long>();
 
@@ -142,6 +146,42 @@ namespace Hazelcast.Tests.Core
 
             // all tasks are gone
             Assert.That(scheduler.PartitionTasksCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public async Task SchedulerOrphanTest()
+        {
+            var orphaned = 0;
+
+            async ValueTask OnOrphan(ClusterSubscription subscription, Guid memberId, long correlationId)
+            {
+                await Task.Yield();
+                Interlocked.Increment(ref orphaned);
+            }
+
+            var scheduler = new DistributedEventScheduler(OnOrphan, new NullLoggerFactory());
+
+            var handled = 0;
+            var s = new ClusterSubscription(async (clientMessage, state) =>
+            {
+                await Task.Yield();
+                Interlocked.Increment(ref handled);
+            });
+
+            s.SetOrphaned();
+
+            var m = new ClientMessage(new Frame(new byte[64]))
+            {
+                PartitionId = 666,
+                CorrelationId = 1,
+            };
+
+            // can add the event
+            Assert.That(scheduler.Add(s, m), Is.True);
+
+            await AssertEx.SucceedsEventually(() => Assert.That(orphaned, Is.EqualTo(1)), 2000, 200);
+
+            Assert.That(handled, Is.Zero);
         }
     }
 }

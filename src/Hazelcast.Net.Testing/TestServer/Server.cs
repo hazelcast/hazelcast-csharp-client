@@ -38,11 +38,9 @@ namespace Hazelcast.Testing.TestServer
         private readonly ConcurrentDictionary<int, ServerSocketConnection> _connections = new ConcurrentDictionary<int, ServerSocketConnection>();
         private readonly Func<Server, ClientMessageConnection, ClientMessage, ValueTask> _handler;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly NetworkAddress _address;
         private readonly IPEndPoint _endpoint;
-        private readonly Guid _clusterId;
-        private readonly Guid _memberId;
         private readonly object _handlerLock = new object();
+        private readonly string _hcname;
         private Task _handlerTask;
         private ServerSocketListener _listener;
         private bool _open;
@@ -52,20 +50,44 @@ namespace Hazelcast.Testing.TestServer
         /// </summary>
         /// <param name="address">The socket network address.</param>
         /// <param name="handler">A handler for incoming messages.</param>
+        /// <param name="state">A server-state object.</param>
+        /// <param name="hcname">An HConsole name complement.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Server(NetworkAddress address, Func<Server, ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory loggerFactory)
+        public Server(NetworkAddress address, Func<Server, ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory loggerFactory, object state = null, string hcname = "")
         {
-            _address = address;
+            Address = address;
+            State = state;
             _endpoint = address.IPEndPoint;
             _handler = handler;
             _loggerFactory = loggerFactory;
+            _hcname = hcname;
 
-            _clusterId = Guid.NewGuid();
-            _memberId = Guid.NewGuid();
+            ClusterId = Guid.NewGuid();
+            MemberId = Guid.NewGuid();
 
             HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(20).SetPrefix("SERVER")));
+                .Set(this, xx => xx.SetIndent(20).SetPrefix("SERVER".Dot(_hcname))));
         }
+
+        /// <summary>
+        /// Gets the address of the server.
+        /// </summary>
+        public NetworkAddress Address { get; }
+
+        /// <summary>
+        /// Gets the server state object.
+        /// </summary>
+        public object State { get; }
+
+        /// <summary>
+        /// Gets the member identifier of the server.
+        /// </summary>
+        public Guid MemberId { get; set; }
+
+        /// <summary>
+        /// Gets the cluster identifier of the server.
+        /// </summary>
+        public Guid ClusterId { get; set; }
 
         /// <summary>
         /// Starts the server.
@@ -75,9 +97,8 @@ namespace Hazelcast.Testing.TestServer
         {
             HConsole.WriteLine(this, $"Start server at {_endpoint}");
 
-            _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
-            HConsole.Configure(x => x
-                .Set(_listener, xx => xx.SetIndent(24).SetPrefix("LISTENER")));
+            _listener = new ServerSocketListener(_endpoint, _hcname) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
+
             _open = true;
             await _listener.StartAsync().CAF();
 
@@ -141,7 +162,7 @@ namespace Hazelcast.Testing.TestServer
 
                 var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
                 HConsole.Configure(x => x
-                    .Set(messageConnection, xx => xx.SetIndent(28).SetPrefix("MSG.SERVER")));
+                    .Set(messageConnection, xx => xx.SetIndent(28).SetPrefix("MSG.SERVER".Dot(_hcname))));
                 serverConnection.OnShutdown = SocketShutdown;
                 serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
                 serverConnection.Accept();
@@ -162,55 +183,12 @@ namespace Hazelcast.Testing.TestServer
             {
                 if (_handlerTask == null)
                 {
-                    _handlerTask = ReceiveMessageAsync(connection, requestMessage);
+                    _handlerTask = _handler(this, connection, requestMessage).AsTask();
                 }
                 else
                 {
-                    _handlerTask = _handlerTask.ContinueWith(_ => ReceiveMessageAsync(connection, requestMessage)).Unwrap();
+                    _handlerTask = _handlerTask.ContinueWith(_ => _handler(this, connection, requestMessage).AsTask()).Unwrap();
                 }
-            }
-        }
-
-        private async Task ReceiveMessageAsync(ClientMessageConnection connection, ClientMessage requestMessage)
-        {
-            var correlationId = requestMessage.CorrelationId;
-
-            switch (requestMessage.MessageType)
-            {
-                // handle authentication
-                case ClientAuthenticationServerCodec.RequestMessageType:
-                {
-                    var request = ClientAuthenticationServerCodec.DecodeRequest(requestMessage);
-                    var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
-                        0, _address, _memberId, SerializationService.SerializerVersion,
-                        "4.0", 1, _clusterId, false);
-                    await SendAsync(connection, responseMessage, correlationId).CAF();
-                    break;
-                }
-
-                // handle events
-                case ClientAddClusterViewListenerServerCodec.RequestMessageType:
-                {
-                    var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
-                    var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                    await SendAsync(connection, responseMessage, correlationId).CAF();
-
-                    _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(500).CAF();
-                        var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
-                        {
-                            new MemberInfo(_memberId, _address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
-                        });
-                        await SendAsync(connection, eventMessage, correlationId).CAF();
-                    });
-                    break;
-                }
-
-                // handle others
-                default:
-                    await _handler(this, connection, requestMessage).CAF();
-                    break;
             }
         }
 
