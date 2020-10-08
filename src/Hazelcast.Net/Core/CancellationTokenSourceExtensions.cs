@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 
 namespace Hazelcast.Core
@@ -29,5 +30,13 @@ namespace Hazelcast.Core
         /// <returns>The combined cancellation.</returns>
         public static CancellationTokenSource LinkedWith(this CancellationTokenSource source, CancellationToken cancellationToken)
             => CancellationTokenSource.CreateLinkedTokenSource(source.Token, cancellationToken);
+
+
+        /// <summary>
+        /// Throws an <see cref="OperationCanceledException"/> if this source has had cancellation requested.
+        /// </summary>
+        /// <param name="source">A cancellation token source.</param>
+        public static void ThrowIfCancellationRequested(this CancellationTokenSource source)
+            => source.Token.ThrowIfCancellationRequested();
     }
 }

@@ -33,6 +33,12 @@ namespace Hazelcast.Core
 
         private readonly ConcurrentDictionary<TKey, Entry> _dictionary = new ConcurrentDictionary<TKey, Entry>();
 
+        // for tests exclusively
+        internal bool AddEntry(TKey key, Entry entry)
+        {
+            return _dictionary.TryAdd(key, entry);
+        }
+
         /// <summary>
         /// Adds a key/value pair if the key does not already exists, or return the existing value if the key exists.
         /// </summary>
@@ -129,7 +135,7 @@ namespace Hazelcast.Core
             return await TryGetEntryValueAsync(entry).CAF();
         }
 
-        private static async ValueTask<Attempt<TValue>> TryGetEntryValueAsync(Entry entry)
+        internal static async ValueTask<Attempt<TValue>> TryGetEntryValueAsync(Entry entry)
         {
             // it is not possible to get a null value
 
@@ -260,6 +266,15 @@ namespace Hazelcast.Core
             public Entry(TKey key)
             {
                 _key = key;
+            }
+
+            // for tests exclusively
+            internal Entry(TKey key, bool hasValue, TValue value = default, Task<TValue> creating = default)
+            {
+                _key = key;
+                HasValue = hasValue;
+                _value = value;
+                _creating = creating;
             }
 
             public bool HasValue { get; private set; }
