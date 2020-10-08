@@ -14,13 +14,13 @@
 
 using System;
 
-namespace Hazelcast.Tests.Sandbox
+namespace Hazelcast.Tests.Sandbox.ClassMaybe
 {
+    // keep all classes in 1 file to simplify understanding!
+    //
     // https://www.dotnetcurry.com/patterns-practices/1510/maybe-monad-csharp
     // https://www.dotnetcurry.com/patterns-practices/1526/maybe-monad-csharp-examples
     // https://github.com/ymassad/MaybeExamples
-
-    // could also implement Maybe as a struct?
 
     public static class Maybe
     {
@@ -95,29 +95,5 @@ namespace Hazelcast.Tests.Sandbox
     public sealed class None<T> : Maybe<T>
     {
         public override T ValueOr(T value) => value;
-    }
-
-
-    public class TestClass
-    {
-        public void Test()
-        {
-            var foo = Maybe.Some(123);
-            if (foo.TryGetValue(out var value))
-                Console.WriteLine(value);
-
-            var none = Maybe<int>.None;
-            // implicit cast of Maybe.None to Maybe.None<T>?
-        }
-
-        public Maybe<int> GetMaybeInt1()
-        {
-            return 3;
-        }
-
-        public Maybe<int> GetMaybeInt2()
-        {
-            return Maybe.None;
-        }
     }
 }

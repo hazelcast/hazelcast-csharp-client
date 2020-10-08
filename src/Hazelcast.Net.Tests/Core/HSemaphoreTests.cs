@@ -12,19 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Buffers;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using NUnit.Framework;
 
-namespace Hazelcast.Core
+namespace Hazelcast.Tests.Core
 {
-    /// <summary>
-    /// References a buffer.
-    /// </summary>
-    /// <typeparam name="T">The type of the buffer.</typeparam>
-    internal interface IBufferReference<T>
+    [TestFixture]
+    public class HSemaphoreTests
     {
-        /// <summary>
-        /// Gets or sets the buffer.
-        /// </summary>
-        T Buffer { get; set; }
+        [Test]
+        public async Task Test()
+        {
+            using IHSemaphore semaphore = new HSemaphore(1, 1);
+
+            await semaphore.WaitAsync(default);
+            semaphore.Release();
+        }
     }
 }

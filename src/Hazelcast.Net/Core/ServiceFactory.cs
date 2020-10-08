@@ -173,14 +173,19 @@ namespace Hazelcast.Core
             }
         }
 
-        private static T As<T>(object o)
+        // internal for tests
+        internal static T As<T>(object o)
         {
-            return o switch
+            // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
+            switch (o)
             {
-                T t => t,
-                null => throw new ArgumentNullException(nameof(o)),
-                _ => throw new InvalidCastException($"Failed to cast object of type {o.GetType()} to {typeof(T)}.")
-            };
+                case T t:
+                    return t;
+                case null:
+                    throw new ArgumentNullException(nameof(o));
+                default:
+                    throw new InvalidCastException($"Failed to cast object of type {o.GetType()} to {typeof (T)}.");
+            }
         }
 
         private static Type GetType(string typeName)
