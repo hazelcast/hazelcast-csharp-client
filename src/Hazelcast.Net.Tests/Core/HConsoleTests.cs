@@ -38,75 +38,101 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ConfigureToString()
         {
-            HConsole.Configure<object>(x => x
+            HConsole.Configure(x => x.Set<object>(xx => xx
                 .SetIndent(4)
-                .SetMaxLevel(3));
+                .SetLogLevel(3)));
 
             var o = new object();
 
-            HConsole.Configure(o, x => x
+            HConsole.Configure(x => x.Set(o, xx => xx
                 .SetPrefix("XX")
-                .SetMaxLevel(4));
+                .SetLogLevel(4)));
 
-            Assert.That(HConsole.GetConfig(o).ToString(), Is.EqualTo("{Config: 4, \"XX\", 4}"));
+            Assert.That(HConsole.Options.Get(o).ToString(), Is.EqualTo("indent = 4, prefix = \"XX\", level = 4"));
         }
 
         [Test]
         public void Configure()
         {
-            HConsole.Configure<object>(x => x
+            HConsole.Configure(x => x.Set<object>(xx => xx
                 .SetIndent(4)
                 .SetPrefix("XX")
-                .SetMaxLevel(3));
+                .SetLogLevel(3)));
 
-            var config = HConsole.GetConfig(new object());
+            var config = HConsole.Options.Get(new object());
 
             Assert.That(config.Prefix, Is.EqualTo("XX"));
             Assert.That(config.Indent, Is.EqualTo(4));
-            Assert.That(config.MaxLevel, Is.EqualTo(3));
+            Assert.That(config.Level, Is.EqualTo(3));
 
-            HConsole.Configure<object>(x => x
+            HConsole.Configure(x => x.Set(xx => xx
+                .SetIndent(33)
+                .SetPrefix("YY")
+                .SetLogLevel(44)));
+
+            config = HConsole.Options.Get(new object());
+
+            Assert.That(config.Prefix, Is.EqualTo("YY"));
+            Assert.That(config.Indent, Is.EqualTo(33));
+            Assert.That(config.Level, Is.EqualTo(44));
+
+            HConsole.Configure(x => x.Set<object>(xx => xx
                 .ClearIndent()
                 .ClearPrefix()
-                .ClearMaxLevel());
+                .ClearLevel()));
 
-            config = HConsole.GetConfig(new object());
+            config = HConsole.Options.Get(new object());
 
             Assert.That(config.Prefix, Is.Null);
             Assert.That(config.Indent, Is.EqualTo(0));
-            Assert.That(config.MaxLevel, Is.EqualTo(-1));
+            Assert.That(config.Level, Is.EqualTo(-1));
 
-            HConsole.ClearConfiguration<object>();
+            HConsole.Configure(x => x.Clear<object>());
 
             var o = new object();
 
-            HConsole.Configure(o, x => x
+            HConsole.Configure(x => x.Set(o, xx => xx
                 .SetIndent(4)
                 .SetPrefix("XX")
-                .SetMaxLevel(3));
+                .SetLogLevel(3)));
 
-            config = HConsole.GetConfig(o);
+            config = HConsole.Options.Get(o);
 
             Assert.That(config.Prefix, Is.EqualTo("XX"));
             Assert.That(config.Indent, Is.EqualTo(4));
-            Assert.That(config.MaxLevel, Is.EqualTo(3));
+            Assert.That(config.Level, Is.EqualTo(3));
 
-            HConsole.ClearConfiguration(o);
+            HConsole.Configure(x => x.Clear(o));
 
-            config = HConsole.GetConfig(o);
+            config = HConsole.Options.Get(o);
 
             Assert.That(config.Prefix, Is.Null);
             Assert.That(config.Indent, Is.EqualTo(0));
-            Assert.That(config.MaxLevel, Is.EqualTo(-1));
+            Assert.That(config.Level, Is.EqualTo(-1));
+
+            HConsole.Reset();
+            config = HConsole.Options.Get(new object());
+
+            Assert.That(config.Prefix, Is.Null);
+            Assert.That(config.Indent, Is.EqualTo(0));
+            Assert.That(config.Level, Is.EqualTo(-1));
+
+            HConsole.Configure(x => x.Set(xx => xx.Verbose()));
+            config = HConsole.Options.Get(new object());
+            Assert.That(config.Level, Is.EqualTo(int.MaxValue));
+
+            HConsole.Configure(x => x.Set(xx => xx.Quiet()));
+            config = HConsole.Options.Get(new object());
+            Assert.That(config.Level, Is.EqualTo(-1));
         }
 
         [Test]
         public void MergeConfiguration()
         {
-            var config1 = new HConsoleConfiguration()
+            var config1 = new HConsoleTargetOptions()
                 .SetIndent(3);
 
-            var config2 = new HConsoleConfiguration()
+            var config2 = new HConsoleTargetOptions()
                 .SetPrefix("XX");
 
             var merged = config1.Merge(config2);
@@ -125,8 +151,10 @@ namespace Hazelcast.Tests.Core
             Assert.Throws<ArgumentNullException>(() => HConsole.WriteLine(null, 0, "text"));
             Assert.Throws<ArgumentNullException>(() => HConsole.WriteLine(null, 0, "{0}", 0));
             Assert.Throws<ArgumentNullException>(() => HConsole.WriteLine(null, 0, 1));
-            Assert.Throws<ArgumentNullException>(() => HConsole.Configure(new object(), null));
-            Assert.Throws<ArgumentNullException>(() => HConsole.Configure<object>(null));
+
+            Assert.Throws<ArgumentNullException>(() => HConsole.Configure(null));
+            Assert.Throws<ArgumentNullException>(() => HConsole.Configure(x => x.Set(new object(), null)));
+            Assert.Throws<ArgumentNullException>(() => HConsole.Configure(x => x.Set<object>(null)));
 
             Assert.Throws<ArgumentNullException>(() => HConsole.Lines(null, 0, ""));
         }
@@ -135,7 +163,7 @@ namespace Hazelcast.Tests.Core
         public void Lines()
         {
             var o = new object();
-            HConsole.Configure(o, config => config.SetMaxLevel(0));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
 
             const string source = @"aaa
 bbb
@@ -143,12 +171,12 @@ ccc";
 
             Assert.That(HConsole.Lines(o, 1, source), Is.EqualTo(""));
 
-            Assert.That(HConsole.Lines(o, 0, source).ToLf(), Is.EqualTo($@"
+            Assert.That(HConsole.Lines(o, 0, source).ToLf(), Is.EqualTo(@"
        aaa
        bbb
        ccc".ToLf()));
 
-            HConsole.Configure<object>(config => config.SetPrefix("XX"));
+            HConsole.Configure(x => x.Set<object>(xx => xx.SetPrefix("XX")));
 
             Assert.That(HConsole.Lines(o, 0, source).ToLf(), Is.EqualTo($@"
          aaa
@@ -159,44 +187,34 @@ ccc";
         [Test]
         public void WritesWithPrefix()
         {
-            HConsole.Configure<object>(config => config.SetPrefix("XX"));
-
-            var capture = new ConsoleCapture();
+            HConsole.Configure(x => x.Set<object>(xx => xx.SetPrefix("XX")));
 
             var o = new object();
-            HConsole.Configure(o, config => config.SetMaxLevel(0));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
 
-            using (capture.Output())
-            {
-                HConsole.WriteLine(o, "text0");
-            }
+            HConsole.WriteLine(o, "text0");
 
-            Assert.That(capture.ReadToEnd().ToLf(), Is.EqualTo($"{Prefix("XX")}text0\n".ToLf()));
+            Assert.That(HConsole.Text.ToLf(), Is.EqualTo($"{Prefix("XX")}text0\n".ToLf()));
         }
 
         [Test]
         public void WritesOverloads()
         {
-            var capture = new ConsoleCapture();
-
             var o = new object();
-            HConsole.Configure(o, config => config.SetMaxLevel(0));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
 
-            using (capture.Output())
-            {
-                HConsole.WriteLine(o, "text0");
-                HConsole.WriteLine(o, 0, "text1");
-                HConsole.WriteLine(o, 2);
-                HConsole.WriteLine(o, 0, 3);
-                HConsole.WriteLine(o, "-{0}-", 4);
-                HConsole.WriteLine(o, 0, "-{0}-", 5);
+            HConsole.WriteLine(o, "text0");
+            HConsole.WriteLine(o, 0, "text1");
+            HConsole.WriteLine(o, 2);
+            HConsole.WriteLine(o, 0, 3);
+            HConsole.WriteLine(o, "-{0}-", 4);
+            HConsole.WriteLine(o, 0, "-{0}-", 5);
 
-                HConsole.WriteLine(o, 1, "text1");
-                HConsole.WriteLine(o, 1, 3);
-                HConsole.WriteLine(o, 1, "-{0}-", 5);
-            }
+            HConsole.WriteLine(o, 1, "text1");
+            HConsole.WriteLine(o, 1, 3);
+            HConsole.WriteLine(o, 1, "-{0}-", 5);
 
-            Assert.That(capture.ReadToEnd().ToLf(), Is.EqualTo($@"{Prefix()}text0
+            Assert.That(HConsole.Text.ToLf(), Is.EqualTo($@"{Prefix()}text0
 {Prefix()}text1
 {Prefix()}2
 {Prefix()}3
@@ -208,76 +226,97 @@ ccc";
         [Test]
         public void WritesNothingByDefault()
         {
-            var capture = new ConsoleCapture();
-
             var o = new object();
 
-            using (capture.Output())
-            {
-                HConsole.WriteLine(o, "text0"); // default level is 0
-                HConsole.WriteLine(o, 1, "text1");
-            }
+            HConsole.WriteLine(o, "text0"); // default level is 0
+            HConsole.WriteLine(o, 1, "text1");
 
-            Assert.That(capture.ReadToEnd().ToLf(), Is.EqualTo("".ToLf()));
+            Assert.That(HConsole.Text.ToLf(), Is.EqualTo("".ToLf()));
         }
 
         [Test]
         public void WritesLevelZeroIfConfigured()
         {
-            var capture = new ConsoleCapture();
-
             var o = new object();
-            HConsole.Configure(o, config => config.SetMaxLevel(0));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
 
-            using (capture.Output())
-            {
-                HConsole.WriteLine(o, "text0"); // default level is 0
-                HConsole.WriteLine(o, 1, "text1");
-            }
+            HConsole.WriteLine(o, "text0"); // default level is 0
+            HConsole.WriteLine(o, 1, "text1");
 
-            Assert.That(capture.ReadToEnd().ToLf(), Is.EqualTo($"{Prefix()}text0\n".ToLf()));
+            Assert.That(HConsole.Text.ToLf(), Is.EqualTo($"{Prefix()}text0\n".ToLf()));
         }
 
         [Test]
         public void WritesOtherLevelsIfConfigured()
         {
-            var capture = new ConsoleCapture();
-
             var o = new object();
-            HConsole.Configure(o, config => config.SetMaxLevel(1));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(1)));
 
-            using (capture.Output())
-            {
-                HConsole.WriteLine(o, "text0"); // default level is 0
-                HConsole.WriteLine(o, 1, "text1");
-            }
+            HConsole.WriteLine(o, "text0"); // default level is 0
+            HConsole.WriteLine(o, 1, "text1");
 
-            Assert.That(capture.ReadToEnd().ToLf(), Is.EqualTo($"{Prefix()}text0\n{Prefix()}text1\n".ToLf()));
+            Assert.That(HConsole.Text.ToLf(), Is.EqualTo($"{Prefix()}text0\n{Prefix()}text1\n".ToLf()));
         }
 
         [Test]
         public void CanResetConfiguration()
         {
-            var capture = new ConsoleCapture();
-
             var o = new object();
-            HConsole.Configure(o, config => config.SetMaxLevel(1));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(1)));
 
-            using (capture.Output())
-            {
-                HConsole.WriteLine(o, 1, "text1");
-            }
+            HConsole.WriteLine(o, 1, "text1");
 
-            Assert.That(capture.ReadToEnd().ToLf(), Is.EqualTo($"{Prefix()}text1\n".ToLf()));
+            Assert.That(HConsole.Text.ToLf(), Is.EqualTo($"{Prefix()}text1\n".ToLf()));
 
             HConsole.Reset();
 
+            HConsole.WriteLine(o, 1, "text0");
+
+            Assert.That(HConsole.Text, Is.EqualTo(""));
+        }
+
+        [Test]
+        public void WriteAndClear()
+        {
+            var capture = new ConsoleCapture();
+
+            HConsole.WriteAndClear();
+            Assert.That(HConsole.Text.Length, Is.Zero);
+
+            HConsole.WriteAndClear();
+            Assert.That(HConsole.Text.Length, Is.Zero);
+
+            HConsole.Configure(x => x.Set(xx => xx.Verbose()));
+            HConsole.WriteLine(this, "meh");
+            Assert.That(HConsole.Text.Length, Is.GreaterThan(0));
+
             using (capture.Output())
             {
-                HConsole.WriteLine(o, 1, "text0");
+                HConsole.WriteAndClear();
             }
 
-            Assert.That(capture.ReadToEnd(), Is.EqualTo(""));
+            Assert.That(HConsole.Text.Length, Is.Zero);
+            Assert.That(capture.ReadToEnd(), Does.EndWith("meh" + Environment.NewLine));
+
+            HConsole.WriteLine(this, "meh");
+            Assert.That(HConsole.Text.Length, Is.GreaterThan(0));
+
+            using (capture.Output())
+            {
+                HConsole.Clear();
+            }
+
+            Assert.That(HConsole.Text.Length, Is.Zero);
+            Assert.That(capture.ReadToEnd().Length, Is.Zero);
+
+            HConsole.WriteLine(this, "meh");
+            using (capture.Output())
+            {
+                using (HConsole.Mshva()) { }
+            }
+
+            Assert.That(HConsole.Text.Length, Is.Zero);
+            Assert.That(capture.ReadToEnd(), Does.EndWith("meh" + Environment.NewLine));
         }
 
 #endif

@@ -40,7 +40,9 @@ namespace Hazelcast.Testing.TestServer
             : base(id)
         {
             _acceptingSocket = socket ?? throw new ArgumentNullException(nameof(socket));
-            HConsole.Configure(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]"));
+
+            HConsole.Configure(x => x
+                .Set(this, xx => xx.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]")));
         }
 
         /// <summary>
