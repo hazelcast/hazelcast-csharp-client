@@ -92,22 +92,20 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(5, (await dictionary.GetEntrySetAsync()).Count); // all key-value pairs
         }
 
-        private IDisposable EnableHConsoleForTest()
-        {
-            HConsole.Configure(x => x.SetVerbose());
-            HConsole.Configure(this, x => x.SetPrefix("TEST"));
-            HConsole.Configure<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET").SetMaxLevel(0));
-            HConsole.Configure<ClientSocketConnection>(x => x.SetQuiet());
-            HConsole.Configure<ClientMessageConnection>(x => x.SetQuiet());
-            HConsole.Configure<AsyncContext>(x => x.SetQuiet());
-            HConsole.Configure<Partitioner>(x => x.SetMaxLevel(1));
-            return new Disposable(() => HConsole.WriteAndClear());
-        }
+        private IDisposable HConsoleForTest()
+
+            => HConsole.Capture(options => options
+                .Set(x => x.Verbose())
+                .Set(this, x => x.SetPrefix("TEST"))
+                .Set<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET").SetLevel(0))
+                .Set<ClientMessageConnection>(x => x.Quiet())
+                .Set<AsyncContext>(x => x.Quiet())
+                .Set<Partitioner>(x => x.SetLevel(1)));
 
         [Test]
         public async Task TestListener()
         {
-            using var __ = EnableHConsoleForTest();
+            using var __ = HConsoleForTest();
 
             var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);

@@ -36,7 +36,7 @@ namespace Hazelcast.Testing
             Logger.LogInformation($"Setup {GetType()}");
 
             // start fresh
-            HConsole.ClearConfiguration();
+            HConsole.Configure(x => x.ClearAll());
 
             // top-level overrides
             HazelcastTestBaseOneTimeSetUp();

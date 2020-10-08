@@ -100,89 +100,6 @@ namespace Hazelcast.Core
 #endif
         }
 
-        /*
-        /// <summary>
-        /// Configure the console for a source object.
-        /// </summary>
-        /// <param name="source">The source object.</param>
-        /// <param name="configure">A action to configure the console.</param>
-        [Conditional("HZ_CONSOLE")]
-        public static void Configure(object source, Action<HConsoleTargetOptions> configure)
-        {
-#if HZ_CONSOLE
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            if (!SourceConfigs.TryGetValue(source, out var info))
-                info = SourceConfigs[source] = new HConsoleTargetOptions();
-            configure(info);
-#endif
-        }
-
-        /// <summary>
-        /// Configure the console for a type of objects.
-        /// </summary>
-        /// <typeparam name="TObject">The type of objects.</typeparam>
-        /// <param name="configure">A action to configure the console.</param>
-        [Conditional("HZ_CONSOLE")]
-        public static void Configure<TObject>(Action<HConsoleTargetOptions> configure)
-        {
-#if HZ_CONSOLE
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            var type = typeof(TObject);
-            if (!TypeConfigs.TryGetValue(type, out var info))
-                info = TypeConfigs[type] = new HConsoleTargetOptions();
-            configure(info);
-#endif
-        }
-
-        /// <summary>
-        /// Configure the console defaults (for the <see cref="object"/> type).
-        /// </summary>
-        /// <param name="configure">A action to configure the console.</param>
-        [Conditional("HZ_CONSOLE")]
-        public static void Configure(Action<HConsoleTargetOptions> configure)
-        {
-#if HZ_CONSOLE
-            Configure<object>(configure);
-#endif
-        }
-
-        /// <summary>
-        /// Clears the configuration for a source object.
-        /// </summary>
-        /// <param name="source">The source object.</param>
-        [Conditional("HZ_CONSOLE")]
-        public static void ClearConfiguration(object source)
-        {
-#if HZ_CONSOLE
-            SourceConfigs.Remove(source);
-#endif
-        }
-
-        /// <summary>
-        /// Clears the configuration for a type of objects.
-        /// </summary>
-        /// <typeparam name="TObject">The type of objects.</typeparam>
-        [Conditional("HZ_CONSOLE")]
-        public static void ClearConfiguration<TObject>()
-        {
-#if HZ_CONSOLE
-            TypeConfigs.Remove(typeof(TObject));
-#endif
-        }
-
-        /// <summary>
-        /// Clears the complete configuration.
-        /// </summary>
-        [Conditional("HZ_CONSOLE")]
-        public static void ClearConfiguration()
-        {
-#if HZ_CONSOLE
-            TypeConfigs.Clear();
-            SourceConfigs.Clear();
-#endif
-        }
-        */
-
         /// <summary>
         /// Resets the console.
         /// </summary>
@@ -202,18 +119,22 @@ namespace Hazelcast.Core
         [Conditional("HZ_CONSOLE")]
         public static void Configure(Action<HConsoleOptions> configure)
         {
+#if HZ_CONSOLE
             if (configure == null) throw new ArgumentNullException(nameof(configure));
             configure(Options);
+#endif
         }
 
         /// <summary>
         /// Gets a disposable that, when disposed, will write and clear the console.
         /// </summary>
+        /// <param name="configure">An optional action to configure the options.</param>
         /// <returns>A disposable that, when disposed, will write and clear the console.</returns>
         // cannot be [Conditional] when return type is not void
-        public static IDisposable Mshva() // FIXME Capture? Session?
+        public static IDisposable Capture(Action<HConsoleOptions> configure = null)
         {
 #if HZ_CONSOLE
+            configure?.Invoke(Options);
             return new Disposable();
 #else
             return null;

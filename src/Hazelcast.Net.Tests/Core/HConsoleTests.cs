@@ -40,13 +40,13 @@ namespace Hazelcast.Tests.Core
         {
             HConsole.Configure(x => x.Set<object>(xx => xx
                 .SetIndent(4)
-                .SetLogLevel(3)));
+                .SetLevel(3)));
 
             var o = new object();
 
             HConsole.Configure(x => x.Set(o, xx => xx
                 .SetPrefix("XX")
-                .SetLogLevel(4)));
+                .SetLevel(4)));
 
             Assert.That(HConsole.Options.Get(o).ToString(), Is.EqualTo("indent = 4, prefix = \"XX\", level = 4"));
         }
@@ -57,7 +57,7 @@ namespace Hazelcast.Tests.Core
             HConsole.Configure(x => x.Set<object>(xx => xx
                 .SetIndent(4)
                 .SetPrefix("XX")
-                .SetLogLevel(3)));
+                .SetLevel(3)));
 
             var config = HConsole.Options.Get(new object());
 
@@ -68,7 +68,7 @@ namespace Hazelcast.Tests.Core
             HConsole.Configure(x => x.Set(xx => xx
                 .SetIndent(33)
                 .SetPrefix("YY")
-                .SetLogLevel(44)));
+                .SetLevel(44)));
 
             config = HConsole.Options.Get(new object());
 
@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.Core
             HConsole.Configure(x => x.Set(o, xx => xx
                 .SetIndent(4)
                 .SetPrefix("XX")
-                .SetLogLevel(3)));
+                .SetLevel(3)));
 
             config = HConsole.Options.Get(o);
 
@@ -163,7 +163,7 @@ namespace Hazelcast.Tests.Core
         public void Lines()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
 
             const string source = @"aaa
 bbb
@@ -190,7 +190,7 @@ ccc";
             HConsole.Configure(x => x.Set<object>(xx => xx.SetPrefix("XX")));
 
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
 
             HConsole.WriteLine(o, "text0");
 
@@ -201,7 +201,7 @@ ccc";
         public void WritesOverloads()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
 
             HConsole.WriteLine(o, "text0");
             HConsole.WriteLine(o, 0, "text1");
@@ -238,7 +238,7 @@ ccc";
         public void WritesLevelZeroIfConfigured()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(0)));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
 
             HConsole.WriteLine(o, "text0"); // default level is 0
             HConsole.WriteLine(o, 1, "text1");
@@ -250,7 +250,7 @@ ccc";
         public void WritesOtherLevelsIfConfigured()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(1)));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(1)));
 
             HConsole.WriteLine(o, "text0"); // default level is 0
             HConsole.WriteLine(o, 1, "text1");
@@ -262,7 +262,7 @@ ccc";
         public void CanResetConfiguration()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLogLevel(1)));
+            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(1)));
 
             HConsole.WriteLine(o, 1, "text1");
 
@@ -312,7 +312,7 @@ ccc";
             HConsole.WriteLine(this, "meh");
             using (capture.Output())
             {
-                using (HConsole.Mshva()) { }
+                using (HConsole.Capture()) { }
             }
 
             Assert.That(HConsole.Text.Length, Is.Zero);

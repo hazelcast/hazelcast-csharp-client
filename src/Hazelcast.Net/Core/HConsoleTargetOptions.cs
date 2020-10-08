@@ -44,7 +44,7 @@ namespace Hazelcast.Core
            var clone = new HConsoleTargetOptions();
            if (_hasIndent) clone.SetIndent(Indent);
            if (_hasPrefix) clone.SetPrefix(Prefix);
-           if (_hasLevel) clone.SetLogLevel(Level);
+           if (_hasLevel) clone.SetLevel(Level);
            return clone;
        }
 
@@ -53,7 +53,7 @@ namespace Hazelcast.Core
         /// </summary>
         public static HConsoleTargetOptions Default { get; } = new HConsoleTargetOptions()
            .SetPrefix(default)
-           .SetLogLevel(-1)
+           .SetLevel(-1)
            .SetIndent(0);
 #endif
 
@@ -117,7 +117,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="maxLevel">The log level.</param>
         /// <returns>This configuration object.</returns>
-        public HConsoleTargetOptions SetLogLevel(int maxLevel)
+        public HConsoleTargetOptions SetLevel(int maxLevel)
         {
 #if HZ_CONSOLE
             Level = maxLevel;
@@ -203,7 +203,7 @@ namespace Hazelcast.Core
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (!_hasIndent && config._hasIndent) SetIndent(config.Indent);
             if (!_hasPrefix && config._hasPrefix) SetPrefix(config.Prefix);
-            if (!_hasLevel && config._hasLevel) SetLogLevel(config.Level);
+            if (!_hasLevel && config._hasLevel) SetLevel(config.Level);
             return this;
         }
 #endif

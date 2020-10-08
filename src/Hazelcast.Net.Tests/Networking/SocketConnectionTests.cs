@@ -39,13 +39,13 @@ namespace Hazelcast.Tests.Networking
             HConsole.Reset();
         }
 
-        private IDisposable EnableHConsoleForTest()
-        {
-            HConsole.Configure(x => x.SetVerbose());
-            HConsole.Configure(this, x => x.SetPrefix("TEST"));
-            HConsole.Configure<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET"));
-            return new Disposable(() => HConsole.WriteAndClear());
-        }
+        private IDisposable HConsoleForTest()
+
+            => HConsole.Capture(options => options
+                .ClearAll()
+                .Set(x => x.Verbose())
+                .Set(this, x => x.SetPrefix("TEST"))
+                .Set<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET")));
 
         [Test]
         public async Task Exceptions()
@@ -187,7 +187,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task MoreExceptions()
         {
-            using var _ = EnableHConsoleForTest();
+            using var _ = HConsoleForTest();
 
             // note: a MemoryStream does not block, so connection immediately closes
             // use a pipe stream instead

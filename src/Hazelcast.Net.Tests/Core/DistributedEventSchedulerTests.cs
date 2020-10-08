@@ -59,12 +59,9 @@ namespace Hazelcast.Tests.Core
         {
             // this test verifies that the scheduler works as expected
 
-            // TODO: we need proper mocking
-            var messaging = new ClusterMessaging(null, null);
-
             using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             var logger = loggerFactory.CreateLogger("TEST");
-            var scheduler = new DistributedEventScheduler(messaging, loggerFactory);
+            var scheduler = new DistributedEventScheduler(loggerFactory);
 
             var pe = new ConcurrentDictionary<int, long>();
 
