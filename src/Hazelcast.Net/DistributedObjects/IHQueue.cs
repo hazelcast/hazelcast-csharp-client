@@ -19,8 +19,15 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Defines a concurrent, blocking, distributed, and observable queue.
+    /// Defines a concurrent, blocking, distributed, non-partitioned and observable queue.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The Hazelcast <c>IHQueue</c> is not a partitioned data-structure. Entire contents
+    /// of an <c>IHQueue</c> is stored on a single machine (and in the backup). The <c>IHQueue</c>
+    /// will not scale by adding more members to the cluster.
+    /// </para>
+    /// </remarks>
     public interface IHQueue<T> : IHCollection<T>
     {
         /// <summary>
@@ -71,30 +78,31 @@ namespace Hazelcast.DistributedObjects
         Task<T> TryDequeueAsync(TimeSpan timeToWait=default);
 
         /// <summary>
-        /// Removes at most the given number of available elements from
-        /// this queue and adds them to the given collection.  A failure
-        /// encountered while attempting to Add elements to
-        /// collection <c>c</c> may result in elements being in neither,
-        /// either or both collections when the associated exception is
-        /// thrown.  Attempts to drain a queue to itself result in
-        /// <c>IllegalArgumentException</c>. Further, the behavior of
-        /// this operation is undefined if the specified collection is
-        /// modified while the operation is in progress.
+        /// Removes all available elements from this queue and adds them to the given collection.
         /// </summary>
-        /// <typeparam name="TItem">type of elements</typeparam>
+        /// <param name="items">the collection to transfer elements into</param>
+        /// <returns>the number of elements transferred</returns>
+        /// <remarks>
+        /// A failure encountered while attempting to Add elements to
+        /// collection <c>items</c> may result in elements being in neither,
+        /// either or both collections when the associated exception is
+        /// thrown.
+        /// </remarks>
+        Task<int> DrainToAsync(ICollection<T> items);
+
+        /// <summary>
+        /// Removes at most the given number of available elements from this queue and adds them to the given collection.
+        /// </summary>
         /// <param name="items">the collection to transfer elements into</param>
         /// <param name="maxElements">the maximum number of elements to transfer</param>
         /// <returns>the number of elements transferred</returns>
-        Task<int> DrainToAsync<TItem>(ICollection<TItem> items, int maxElements = int.MaxValue) where TItem : T;
-
-        /// <summary>
-        /// Retrieves, but does not remove, the head of this queue.
-        /// </summary>
         /// <remarks>
-        /// This method differs from <see cref="TryPeekAsync"/> only in that it throws an exception if this queue is empty.
+        /// A failure encountered while attempting to Add elements to
+        /// collection <c>items</c> may result in elements being in neither,
+        /// either or both collections when the associated exception is
+        /// thrown.
         /// </remarks>
-        /// <returns>the head of this queue</returns>
-        Task<T> PeekAsync();
+        Task<int> DrainToAsync(ICollection<T> items, int maxElements);
 
         /// <summary>
         /// Retrieves, but does not remove, the head of this queue, or returns <c>null</c> if this queue is empty.
@@ -105,17 +113,17 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Returns the number of additional elements that this queue can ideally
         /// (in the absence of memory or resource constraints) accept without
-        /// blocking, or <c>Int64.MaxValue</c> if there is no intrinsic
+        /// blocking, or <see cref="int.MaxValue"/> if there is no intrinsic
         /// limit.
-        ///</summary>
+        /// </summary>
+        /// <returns>the remaining capacity </returns>
         /// <remarks>
         /// <para>Note that you <em>cannot</em> always tell if an attempt to insert
-        /// an element will succeed by inspecting <c>remainingCapacity</c>
+        /// an element will succeed by inspecting <see cref="GetRemainingCapacityAsync"/>
         /// because it may be the case that another thread is about to
         /// insert or remove an element.
-        ///</para>
+        /// </para>
         /// </remarks>
-        ///<returns>the remaining capacity </returns>
         Task<int> GetRemainingCapacityAsync();
     }
 }

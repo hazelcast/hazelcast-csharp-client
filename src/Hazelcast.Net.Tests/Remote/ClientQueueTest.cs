@@ -14,365 +14,141 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
-using Hazelcast.Testing;
+using Hazelcast.DistributedObjects;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class ClientQueueTest : SingleMemberClientRemoteTestBase
+    public class ClientQueueTest : ClientCollectionTestBase
     {
         // important to stick with this name as it is configured in hazelcast.xml
         // with a corresponding queue max size of 6 items
         private const string QueueNameBase = "ClientQueueTest";
-
-        [Test]
-        public async Task TestAdd()
+        
+        protected override async Task<IHCollection<string>> GetHCollectionAsync(string baseName = default, bool isUnique = true)
         {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.AddAsync("item_" + i));
-            }
-
-            Assert.AreEqual(5, await queue.CountAsync());
+            return await Client.GetQueueAsync<string>(
+                baseName == default ? QueueNameBase : baseName + (isUnique ? CreateUniqueName() : ""));
         }
 
         [Test]
-        public async Task TestAddAll()
+        public async Task TestEnqueueAsync()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
-
-            var coll = new List<string> { "item1", "item2", "item3", "item4" };
-            Assert.IsTrue(await queue.AddRangeAsync(coll));
-            Assert.That(await queue.CountAsync(), Is.EqualTo(coll.Count));
+            
+            await queue.EnqueueAsync("item0");
+            
+            Assert.That(await queue.CountAsync(), Is.EqualTo(1));
         }
 
         [Test]
-        public async Task TestClear()
+        public async Task TestTryEnqueueAsync_waitZero()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
+            //configured max capacity in server config.
+            const int maxCapacity = 6;
+            await FillCollection(queue, maxCapacity-1);
+            
+            Assert.True(await queue.TryEnqueueAsync("item6"));
+            Assert.False(await queue.TryEnqueueAsync("item6"));
+        }
+        
+        [Test]
+        public async Task TestTryEnqueueAsync_waitNonZero()
+        {
+            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
+            await using var _ = DestroyAndDispose(queue);
 
-            await queue.ClearAsync();
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(0));
-            Assert.That(await queue.TryDequeueAsync(), Is.Null);
+            //configured max capacity in server config.
+            const int maxCapacity = 6;
+            await FillCollection(queue, maxCapacity);
+            
+            Assert.False(await queue.TryEnqueueAsync("item", TimeSpan.FromSeconds(2)));
         }
 
         [Test]
-        public async Task TestContains()
+        public async Task TestDequeueAsync()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
-
-            Assert.That(await queue.ContainsAsync("item_3"));
+            var dequeueTask = queue.DequeueAsync();
+            await queue.TryEnqueueAsync("item0");
+            Assert.That(await dequeueTask, Is.EqualTo("item0"));
         }
 
         [Test]
-        public async Task TestContainsAll()
+        public async Task TestTryDequeueAsync_waitZero()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
-
-            Assert.That(await queue.ContainsAsync("item_3"));
-            Assert.That(await queue.ContainsAsync("item_9"), Is.False);
-
-            var list = new List<string>(2) { "item_4", "item_2" };
-            Assert.That(await queue.ContainsAllAsync(list));
-            list.Add("item");
-            Assert.That(await queue.ContainsAllAsync(list), Is.False);
+            await queue.TryEnqueueAsync("item0");
+            Assert.That(await queue.TryDequeueAsync(), Is.EqualTo("item0"));
         }
 
         [Test]
-        public async Task TestCopyto()
+        public async Task TestTryDequeueAsync_waitNonZero()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
-
-            var objects = new string[await queue.CountAsync()];
-            await queue.CopyToAsync(objects, 0);
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(objects.Length));
+            await queue.TryEnqueueAsync("item0");
+            Assert.That(await queue.TryDequeueAsync(TimeSpan.FromSeconds(2)), Is.EqualTo("item0"));
+            Assert.IsNull(await queue.TryDequeueAsync(TimeSpan.FromSeconds(2)));
         }
 
         [Test]
-        public async Task TestDrain()
+        public async Task TestDrainToAsync()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            for (var i = 0; i < 5; i++)
+            const int count = 5;
+            await FillCollection(queue, count);
+
+            var list = new List<string>();
+            var drainToAsync = await queue.DrainToAsync(list);
+            Assert.That(drainToAsync, Is.EqualTo(count));
+            for (var i = 0; i < count; i++)
             {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
+                Assert.That(list[i], Is.EqualTo("item" + i));
             }
+        }
+        
+        [Test]
+        public async Task TestDrainToAsync_witMaxSize()
+        {
+            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
+            await using var _ = DestroyAndDispose(queue);
+
+            const int count = 5;
+            await FillCollection(queue, count);
 
             var list = new List<string>();
             Assert.That(await queue.DrainToAsync(list, 2), Is.EqualTo(2));
             for (var i = 0; i < 2; i++)
             {
-                Assert.That(list[i], Is.EqualTo("item_" + i));
-            }
-
-            list.Clear();
-            Assert.That(await queue.DrainToAsync(list), Is.EqualTo(3));
-            for (var i = 0; i < 3; i++)
-            {
-                Assert.That(list[i], Is.EqualTo("item_" + (i+2)));
+                Assert.That(list[i], Is.EqualTo("item" + i));
             }
         }
 
         [Test]
-        public async Task TestElement()
+        public async Task TestTryPeekAsync()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            Assert.That(await queue.TryEnqueueAsync("item_0"));
-            Assert.That(await queue.PeekAsync(), Is.EqualTo("item_0"));
+            Assert.IsNull(await queue.TryPeekAsync());
         }
 
         [Test]
-        public async Task TestEnumeration()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            Assert.That(await queue.TryEnqueueAsync("item_0"));
-
-            var e = queue.GetAsyncEnumerator();
-            Assert.That(await e.MoveNextAsync());
-            Assert.That(e.Current, Is.EqualTo("item_0"));
-        }
-
-        [Test]
-        public async Task TestIsEmpty()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            Assert.That(await queue.IsEmptyAsync());
-        }
-
-        [Test]
-        public async Task TestIterator()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
-
-            var j = 0;
-            await foreach (var item in queue)
-            {
-                Assert.That(item, Is.EqualTo("item_" + j++));
-            }
-        }
-        
-        
-        [Test]
-        public async Task TestGetAll()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
-
-            var j = 0;
-            foreach (var item in await queue.GetAllAsync())
-            {
-                Assert.That(item, Is.EqualTo("item_" + j++));
-            }
-        }
-
-
-        [Test]
-        public async Task TestListener()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(0));
-
-            var eventsCount = 0;
-            var sid = await queue.SubscribeAsync(handle => handle
-                .ItemAdded((sender, args) =>
-                {
-                    HConsole.WriteLine(this, $"! added: {args.Item}");
-                    Interlocked.Increment(ref eventsCount);
-                }));
-
-            var adding = Task.Run(async () =>
-            {
-                for (var i = 0; i < 5; i++)
-                {
-                    HConsole.WriteLine(this, "Enqueue item...");
-                    Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-                }
-
-            });
-
-            await AssertEx.SucceedsEventually(() =>
-                    Assert.That(eventsCount, Is.EqualTo(5)),
-                4000, 500);
-
-            await adding;
-            Assert.That(await queue.CountAsync(), Is.EqualTo(5));
-
-            // TODO
-            // at the moment disposing the IDistributedObject does not remove
-            // all the event listeners, but really it would make sense to do
-            // so since disposing also removes the cached object from the dist.
-            // obj. factory => look into this
-            await queue.UnsubscribeAsync(sid);
-        }
-
-        [Test]
-        public async Task TestListenerExtreme()
-        {
-            var queue = await Client.GetQueueAsync<string>("AnotherQueue" + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(0));
-
-            const int testItemCount = 40;
-
-            for (var i = 0; i < testItemCount; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(testItemCount));
-
-            var eventsCount = 0;
-            var sids = new List<Guid>();
-            for (var i = 0; i < testItemCount; i++)
-            {
-                var sid =await queue.SubscribeAsync(handle => handle
-                    .ItemRemoved((sender, args) =>
-                    {
-                        Interlocked.Increment(ref eventsCount);
-                    }));
-                sids.Add(sid);
-            }
-
-            await queue.ClearAsync();
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(0));
-
-            await AssertEx.SucceedsEventually(() =>
-                    Assert.That(eventsCount, Is.EqualTo(testItemCount * testItemCount)),
-                4000, 500);
-
-            foreach (var sid in sids)
-                await queue.UnsubscribeAsync(sid);
-        }
-
-        [Test]
-        public async Task TestOfferPoll()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            for (var i = 0; i < 10; i++)
-            {
-                var result = await queue.TryEnqueueAsync("item");
-                if (i < 6)
-                    Assert.IsTrue(result);
-                else
-                    Assert.IsFalse(result);
-            }
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(6));
-
-            var task = Task.Run(async () =>
-            {
-                await Task.Delay(100);
-                await queue.TryDequeueAsync();
-            });
-
-            Assert.That(await queue.TryEnqueueAsync("item", TimeSpan.FromMilliseconds(200)));
-
-            await task;
-
-            for (var i = 0; i < 10; i++)
-            {
-                var result = await queue.TryDequeueAsync();
-                if (i < 6)
-                    Assert.IsNotNull(result);
-                else
-                    Assert.IsNull(result);
-            }
-
-            Assert.That(await queue.CountAsync(), Is.Zero);
-
-            task = Task.Run(async () =>
-            {
-                await Task.Delay(200);
-                await queue.TryEnqueueAsync("item1");
-            });
-
-            Assert.That(await queue.TryDequeueAsync(TimeSpan.FromMilliseconds(300)), Is.EqualTo("item1"));
-
-            await task;
-        }
-
-        [Test]
-        public async Task TestPeek()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            Assert.That(await queue.TryEnqueueAsync("item_0"));
-            Assert.That(await queue.PeekAsync(), Is.EqualTo("item_0"));
-            Assert.That(await queue.CountAsync(), Is.EqualTo(1));
-        }
-
-        [Test]
-        public async Task TestPut()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            await queue.EnqueueAsync("item_0");
-
-            Assert.That(await queue.CountAsync(), Is.EqualTo(1));
-        }
-
-        [Test]
-        public async Task TestRemainingCapacity()
+        public async Task TestGetRemainingCapacityAsync()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
@@ -380,108 +156,6 @@ namespace Hazelcast.Tests.Remote
             Assert.That(await queue.GetRemainingCapacityAsync(), Is.EqualTo(6));
             Assert.That(await queue.TryEnqueueAsync("item_0"));
             Assert.That(await queue.GetRemainingCapacityAsync(), Is.EqualTo(5));
-        }
-
-        [Test]
-        public async Task TestRemove()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            Assert.That(await queue.TryEnqueueAsync("item1"));
-            Assert.That(await queue.TryEnqueueAsync("item2"));
-            Assert.That(await queue.TryEnqueueAsync("item3"));
-            Assert.That(await queue.RemoveAsync("item4"), Is.False);
-            Assert.That(await queue.CountAsync(), Is.EqualTo(3));
-            Assert.That(await queue.RemoveAsync("item2"));
-            Assert.That(await queue.CountAsync(), Is.EqualTo(2));
-            Assert.That(await queue.DequeueAsync(), Is.EqualTo("item1"));
-            Assert.That(await queue.DequeueAsync(), Is.EqualTo("item3"));
-
-            Assert.That(await queue.RemoveAsync("itemX"), Is.False);
-            Assert.That(await queue.TryEnqueueAsync("itemX"));
-
-            // old code from when queue was ICollection
-            // TODO: remove this code
-            /*
-            Assert.IsTrue(((ICollection<object>) queue).Remove("itemX")); //??
-            */
-
-            Assert.That(await queue.TryEnqueueAsync("itemY"));
-
-            // FIXME what's queue.Remove() ??
-            //Assert.That(await queue.RemoveAsync(), Is.EqualTo("itemY")); // ???
-            //Assert.AreEqual("itemY", queue.Remove());
-        }
-
-        [Test]
-        public async Task TestRemoveRetain()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.That(await queue.TryEnqueueAsync("item" + (i+1)));
-            }
-
-            var list = new List<string> { "item8", "item9" };
-
-            Assert.That(await queue.RemoveAllAsync(list), Is.False);
-            Assert.That(await queue.CountAsync(), Is.EqualTo(5));
-            list.Add("item3");
-            list.Add("item4");
-            list.Add("item1");
-            Assert.That(await queue.RemoveAllAsync(list));
-            Assert.That(await queue.CountAsync(), Is.EqualTo(2));
-            list.Clear();
-            list.Add("item2");
-            list.Add("item5");
-            Assert.That(await queue.RetainAllAsync(list), Is.False);
-            Assert.That(await queue.CountAsync(), Is.EqualTo(2));
-            list.Clear();
-            Assert.That(await queue.RetainAllAsync(list));
-            Assert.That(await queue.CountAsync(), Is.EqualTo(0));
-        }
-
-
-        [Test]
-        public async Task TestTake()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            Assert.That(await queue.TryEnqueueAsync("item1"));
-            Assert.That(await queue.DequeueAsync(), Is.EqualTo("item1"));
-        }
-
-        [Test]
-        public async Task TestToArray()
-        {
-            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
-            await using var _ = DestroyAndDispose(queue);
-
-            for (var i = 0; i < 5; i++)
-            {
-                Assert.IsTrue(await queue.TryEnqueueAsync("item_" + i));
-            }
-
-            var array = await queue.ToArrayAsync();
-
-            var j = 0;
-            foreach (var item in array)
-            {
-                Assert.That(item, Is.EqualTo("item_" + j++));
-            }
-
-            array = await queue.ToArrayAsync(new string[2]);
-            Assert.That(array.Length, Is.EqualTo(5)); // array was too small
-
-            j = 0;
-            foreach (var item in array)
-            {
-                Assert.That(item, Is.EqualTo("item_" + j++));
-            }
         }
     }
 }
