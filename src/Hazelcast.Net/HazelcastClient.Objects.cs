@@ -29,13 +29,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)
         {
-            await _distributedObjectFactory.DestroyAsync(o.ServiceName, o.Name).CAF();
-        }
-
-        /// <inheritdoc />
-        public async ValueTask DestroyAsync(string serviceName, string name)
-        {
-            await _distributedObjectFactory.DestroyAsync(serviceName, name).CAF();
+            await _distributedObjectFactory.DestroyAsync(o).CAF();
         }
 
         /// <inheritdoc />

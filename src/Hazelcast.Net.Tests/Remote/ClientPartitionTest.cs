@@ -97,7 +97,7 @@ namespace Hazelcast.Tests.Remote
                 {
                     Assert.That(GetPartitionOwnerCount(cluster.Partitioner), Is.EqualTo(1));
                 },
-                4000, 500);
+                20000, 500);
         }
     }
 }

@@ -20,7 +20,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Examples.WebSite
 {
-    public class IdentifiedEntryProcessor : IEntryProcessor, IIdentifiedDataSerializable
+    public class IdentifiedEntryProcessor : IEntryProcessor<string>, IIdentifiedDataSerializable
     {
         public const int FactoryIdConst = 66; // Id of EntryProcessorDataSerializableFactory
         public const int ClassIdConst = 1; // corresponds to hazelcast-test.jar com.hazelcast.client.test.IdentifiedEntryProcessor

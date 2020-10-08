@@ -27,10 +27,8 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HDictionary<TKey, TValue> // Events
     {
-        private async Task<Guid> SubscribeAsync(bool includeValues, IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<DictionaryEventHandlers<TKey, TValue>> events, CancellationToken cancellationToken)
+        private async Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, Maybe<TKey> key, IPredicate predicate, bool includeValues, CancellationToken cancellationToken)
         {
-            if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
-            if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new DictionaryEventHandlers<TKey, TValue>();
@@ -44,14 +42,15 @@ namespace Hazelcast.DistributedObjects.Impl
             // 1: entryKey, no predicate
             // 2: no entryKey, predicate
             // 3: entryKey, predicate
-            var mode = (hasKey ? 1 : 0) + (hasPredicate ? 2 : 0);
+            var mode = key.Match(1, 0) + (predicate != null ? 2 : 0);
+            var keyv = key.ValueOrDefault();
 
             var subscribeRequest = mode switch
             {
                 0 => MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int) flags, Cluster.IsSmartRouting),
-                1 => MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(key), includeValues, (int) flags, Cluster.IsSmartRouting),
+                1 => MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(keyv), includeValues, (int) flags, Cluster.IsSmartRouting),
                 2 => MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
-                3 => MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(key), ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
+                3 => MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(keyv), ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
                 _ => throw new NotSupportedException()
             };
 
@@ -69,16 +68,16 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true)
-            => SubscribeAsync(includeValues, default, false, default, false, events, CancellationToken.None);
+            => SubscribeAsync(events, Maybe.None, null, includeValues, CancellationToken.None);
 
         public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true)
-            => SubscribeAsync(includeValues, default, false, key, true, events, CancellationToken.None);
+            => SubscribeAsync(events, Maybe.Some(key), null, includeValues, CancellationToken.None);
 
         public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true)
-            => SubscribeAsync(includeValues, predicate, true, default, false, events, CancellationToken.None);
+            => SubscribeAsync(events, Maybe.None, predicate, includeValues, CancellationToken.None);
 
         public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true)
-            => SubscribeAsync(includeValues, predicate, true, key, true, events, CancellationToken.None);
+            => SubscribeAsync(events, Maybe.Some(key), predicate, includeValues, CancellationToken.None);
 
         private class MapSubscriptionState : SubscriptionState<DictionaryEventHandlers<TKey, TValue>>
         {
@@ -105,6 +104,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 var value = LazyArg<TValue>(valueData);
                 var oldValue = LazyArg<TValue>(oldValueData);
                 var mergingValue = LazyArg<TValue>(mergingValueData);
+
+                HConsole.WriteLine(this, "HANDLE " + eventType);
 
                 // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                 foreach (var handler in sstate.Handlers)

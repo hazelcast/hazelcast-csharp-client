@@ -146,10 +146,8 @@ namespace Hazelcast.DistributedObjects.Impl
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
-        private async Task<Guid> SubscribeAsync(IPredicate predicate, bool hasPredicate, TKey key, bool hasKey, Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events)
+        private async Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, Maybe<TKey> key, IPredicate predicate)
         {
-            if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
-            if (hasPredicate && predicate == null) throw new ArgumentNullException(nameof(predicate));
             if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new ReplicatedDictionaryEventHandlers<TKey, TValue>();
@@ -159,14 +157,15 @@ namespace Hazelcast.DistributedObjects.Impl
             // 1: entryKey, no predicate
             // 2: no entryKey, predicate
             // 3: entryKey, predicate
-            var mode = (hasKey ? 1 : 0) + (hasPredicate ? 2 : 0);
+            var mode = key.Match(1, 0) + (predicate != null ? 2 : 0);
+            var keyv = key.ValueOrDefault();
 
             var subscribeRequest = mode switch
             {
                 0 => ReplicatedMapAddEntryListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),
-                1 => ReplicatedMapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(key), Cluster.IsSmartRouting),
+                1 => ReplicatedMapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(keyv), Cluster.IsSmartRouting),
                 2 => ReplicatedMapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), Cluster.IsSmartRouting),
-                3 => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(key), ToData(predicate), Cluster.IsSmartRouting),
+                3 => ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(keyv), ToData(predicate), Cluster.IsSmartRouting),
                 _ => throw new NotSupportedException()
             };
 
@@ -176,7 +175,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 CreateUnsubscribeRequest,
                 ReadUnsubscribeResponse,
                 HandleEventAsync,
-                new MapSubscriptionState(mode, Name, handlers));
+                new SubscriptionState(mode, Name, handlers));
 
             await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
 
@@ -184,20 +183,20 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events)
-            => SubscribeAsync(default, false, default, false, events);
+            => SubscribeAsync(events, Maybe.None, null);
 
         public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key)
-            => SubscribeAsync(default, false, key, true, events);
+            => SubscribeAsync(events, Maybe.Some(key), null);
 
         public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate)
-            => SubscribeAsync(predicate, true, default, false, events);
+            => SubscribeAsync(events, Maybe.None, predicate);
 
         public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate)
-            => SubscribeAsync(predicate, true, key, true, events);
+            => SubscribeAsync(events, Maybe.Some(key), predicate);
 
-        private class MapSubscriptionState : SubscriptionState<ReplicatedDictionaryEventHandlers<TKey, TValue>>
+        private class SubscriptionState : SubscriptionState<ReplicatedDictionaryEventHandlers<TKey, TValue>>
         {
-            public MapSubscriptionState(int mode, string name, ReplicatedDictionaryEventHandlers<TKey, TValue> handlers)
+            public SubscriptionState(int mode, string name, ReplicatedDictionaryEventHandlers<TKey, TValue> handlers)
                 : base(name, handlers)
             {
                 Mode = mode;
@@ -208,7 +207,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
-            var sstate = ToSafeState<MapSubscriptionState>(state);
+            var sstate = ToSafeState<SubscriptionState>(state);
 
             async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
@@ -249,13 +248,13 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
         {
-            var sstate = ToSafeState<MapSubscriptionState>(state);
+            var sstate = ToSafeState<SubscriptionState>(state);
             return ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(sstate.Name, subscriptionId);
         }
 
         private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
         {
-            var sstate = ToSafeState<MapSubscriptionState>(state);
+            var sstate = ToSafeState<SubscriptionState>(state);
 
             return sstate.Mode switch
             {

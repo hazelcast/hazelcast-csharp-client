@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <c>IHMultiDictionary</c> can be configured on Server side to allow duplicate values or not for its values collection 
+    /// <c>IHMultiDictionary</c> can be configured on Server side to allow duplicate values or not for its values collection
     /// </para>
     /// </remarks>
     public interface IHMultiDictionary<TKey, TValue> : IDistributedObject, IKeyLockable<TKey>, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
@@ -133,7 +133,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">the key of the entries to remove</param>
         /// <returns>the collection of removed values associated with the given key</returns>
         Task<IReadOnlyCollection<TValue>> GetAndRemoveAsync(TKey key);
-        
+
         /// <summary>
         /// Removes all the entries with the given key.
         /// </summary>

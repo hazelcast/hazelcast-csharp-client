@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.NearCaching;
@@ -28,6 +29,7 @@ using Hazelcast.Networking;
 using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Configuration
@@ -35,6 +37,23 @@ namespace Hazelcast.Tests.Configuration
     [TestFixture]
     public class HazelcastOptionsTests
     {
+        [Test]
+        public void BuildExceptions()
+        {
+            Action<IConfigurationBuilder> setup = null;
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(setup));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(setup, null, "key"));
+        }
+
+        [Test]
+        public void ServiceProvider()
+        {
+            var services = new ServiceCollection();
+            var serviceProvider = services.BuildServiceProvider();
+            var options = new HazelcastOptions { ServiceProvider = serviceProvider };
+            Assert.That(options.ServiceProvider, Is.SameAs(serviceProvider));
+        }
+
         [Test]
         public void EmptyOptionsFile()
         {
@@ -167,6 +186,9 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
             Console.WriteLine(sslOptions.ToString());
 
+            Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Ssl2);
+            Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Default);
+
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);
             Assert.AreEqual("token", cloudOptions.DiscoveryToken);
@@ -214,6 +236,33 @@ namespace Hazelcast.Tests.Configuration
 
             var loadBalancer = options.LoadBalancer.Service;
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
+        }
+
+        [Test]
+        public void Clone()
+        {
+            var options = ReadResource(Resources.HazelcastOptions);
+            var clone = options.Clone();
+
+            Assert.That(clone.Core.Clock.OffsetMilliseconds, Is.EqualTo(options.Core.Clock.OffsetMilliseconds));
+        }
+
+        [Test]
+        public void AddSubscriber()
+        {
+            var options = new HazelcastOptions();
+
+            options.AddSubscriber(new TestSubscriber());
+            options.AddSubscriber("TestSubscriber");
+            options.AddSubscriber(typeof (TestSubscriber));
+            options.AddSubscriber<TestSubscriber>();
+            options.AddSubscriber(x => x.ClientStateChanged((sender, args) => { }));
+
+            Assert.That(options.Subscribers.Count, Is.EqualTo(5));
+
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((Type) null));
+            Assert.Throws<ArgumentException>(() => options.AddSubscriber((string) null));
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((IHazelcastClientEventSubscriber) null));
         }
 
         public class TestSubscriber : IHazelcastClientEventSubscriber
@@ -343,6 +392,67 @@ namespace Hazelcast.Tests.Configuration
             }
 
             public int TypeId => throw new NotSupportedException();
+        }
+
+        [Test]
+        public void AltKey()
+        {
+            const string json1 = @"{
+    ""hazelcast"": {
+        ""clientName"": ""client"",
+        ""clusterName"": ""cluster"",
+        ""networking"": {
+            ""addresses"": [
+                ""127.0.0.1""
+            ]
+        }
+    }
+}";
+
+            const string json2 = @"{
+    ""alt"": {
+        ""clientName"": ""altClient"",
+        ""networking"": {
+            ""addresses"": [
+                ""127.0.0.2""
+            ]
+        }
+    }
+}";
+
+            var stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json1));
+            var stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream1);
+            builder.AddJsonStream(stream2);
+            var configuration = builder.Build();
+
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind("alt", options);
+
+            Assert.AreEqual("altClient", options.ClientName);
+            Assert.AreEqual("cluster", options.ClusterName);
+
+            Assert.That(options.Networking.Addresses.Count, Is.EqualTo(2));
+            Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.1"));
+            Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.2"));
+
+            // or, more simply (only in tests):
+
+            stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json1));
+            stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
+
+            options = HazelcastOptions.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
+                null, "alt");
+
+            Assert.AreEqual("altClient", options.ClientName);
+            Assert.AreEqual("cluster", options.ClusterName);
+
+            Assert.That(options.Networking.Addresses.Count, Is.EqualTo(2));
+            Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.1"));
+            Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.2"));
         }
     }
 }

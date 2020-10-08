@@ -100,17 +100,6 @@ namespace Hazelcast
         ValueTask DestroyAsync(IDistributedObject o);
 
         /// <summary>
-        /// Destroys a distributed object.
-        /// </summary>
-        /// <param name="serviceName">The service name of the object to destroy.</param>
-        /// <param name="name">The name of the object to destroy.</param>
-        /// <returns>A task that will complete when the object has been destroyed.</returns>
-        /// <remarks>
-        /// <para>Destroying a distributed object completely deletes the object on the cluster.</para>
-        /// </remarks>
-        ValueTask DestroyAsync(string serviceName, string name);
-
-        /// <summary>
         /// Gets an <see cref="IHDictionary{TKey,TValue}"/> distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>

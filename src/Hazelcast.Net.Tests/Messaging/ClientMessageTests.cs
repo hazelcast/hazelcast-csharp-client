@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Codecs;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Messaging
@@ -142,6 +144,25 @@ namespace Hazelcast.Tests.Messaging
                 while (!e.Current.IsBeginStruct) e.MoveNext();
                 e.MoveNext();
                 e.SkipToStructEnd();
+                Assert.That(e.Current, Is.SameAs(frames[6]));
+            }
+
+            using (var e = m.GetEnumerator())
+            {
+                Assert.That(e.Current, Is.Null);
+                Assert.That(!e.NextIsNotTheEnd());
+
+                e.MoveNext();
+                while (!e.Current.IsBeginStruct) e.MoveNext();
+                // at 2
+                Assert.That(e.NextIsNotTheEnd());
+                e.MoveNext(); // to 3
+                Assert.That(e.NextIsNotTheEnd());
+                e.MoveNext(); // to 4
+                Assert.That(!e.NextIsNotTheEnd()); // next is 5 which is EndStruct
+                e.MoveNext(); // to 5
+                Assert.That(!e.NextIsNotTheEnd()); // current is 5 which is EndStruct
+                e.MoveNext(); // to 6
                 Assert.That(e.Current, Is.SameAs(frames[6]));
             }
 
@@ -312,6 +333,24 @@ namespace Hazelcast.Tests.Messaging
             Assert.Throws<ArgumentNullException>(() => _ = m.AppendFragment(null, null));
             Assert.Throws<ArgumentNullException>(() => _ = m.AppendFragment(new Frame(), null));
             Assert.Throws<ArgumentException>(() => _ = m.AppendFragment(new Frame(), new Frame()));
+        }
+
+        [Test]
+        public void MessageTypeName()
+        {
+            var name1 = CodecConstants.GetMessageTypeName(MapAddEntryListenerCodec.RequestMessageType);
+            var name2 = CodecConstants.GetMessageTypeName(MapAddEntryListenerCodec.ResponseMessageType);
+            var name3 = CodecConstants.GetMessageTypeName(0x011902 /*MapAddEntryListenerCodec.EventEntryMessageType*/);
+
+#if DEBUG
+            Assert.That(name1, Is.EqualTo("MapAddEntryListener.Request"));
+            Assert.That(name2, Is.EqualTo("MapAddEntryListener.Response"));
+            Assert.That(name3, Is.EqualTo("MapAddEntryListener.Entry"));
+#else
+            Assert.That(name1, Is.EqualTo(""));
+            Assert.That(name2, Is.EqualTo(""));
+            Assert.That(name3, Is.EqualTo(""));
+#endif
         }
     }
 }

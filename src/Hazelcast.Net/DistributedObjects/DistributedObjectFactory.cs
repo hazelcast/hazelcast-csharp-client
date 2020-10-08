@@ -16,9 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
+using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -30,8 +32,8 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     internal class DistributedObjectFactory : IAsyncDisposable
     {
-        private readonly ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase> _objects
-            = new ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase>();
+        private readonly ConcurrentAsyncDictionary<DistributedObjectKey, DistributedObjectBase> _objects
+            = new ConcurrentAsyncDictionary<DistributedObjectKey, DistributedObjectBase>();
 
         private readonly Cluster _cluster;
         private readonly ISerializationService _serializationService;
@@ -75,9 +77,9 @@ namespace Hazelcast.DistributedObjects
             if (_disposed == 1) throw new ObjectDisposedException("DistributedObjectFactory");
             await _cluster.ThrowIfNotConnected().CAF();
 
-            var k = new DistributedObjectInfo(serviceName, name);
+            var k = new DistributedObjectKey(serviceName, name, typeof(T));
 
-            async ValueTask<DistributedObjectBase> CreateAsync(DistributedObjectInfo info, CancellationToken token)
+            async ValueTask<DistributedObjectBase> CreateAsync(DistributedObjectKey key, CancellationToken token)
             {
                 var x = factory(name, this, _cluster, _serializationService, _loggerFactory);
                 x.OnDispose = ObjectDisposed; // this is why is has to be DistributedObjectBase
@@ -90,7 +92,7 @@ namespace Hazelcast.DistributedObjects
                 }
 
                 x.OnInitialized();
-                _logger.LogDebug("Initialized '{ServiceName}/{Name}' distributed object.", info.ServiceName, info.Name);
+                _logger.LogDebug("Initialized ({Object}) distributed object.", key);
                 return x;
             }
 
@@ -108,12 +110,12 @@ namespace Hazelcast.DistributedObjects
                 throw new ObjectDisposedException("DistributedObjectFactory");
             }
 
+            // that *has* to be true since the factory creates a TImpl which is a T,
+            // and T is part of the key - but C# cannot know it - so use an 'is'
+            // expression + panic in case the error that cannot happen, happens.
             if (o is T t) return t;
 
-            // if the object that was retrieved is not of the right type, it's a problem
-            // preserve the existing object, but throw
-            throw new InvalidCastException("A distributed object with the specified service name and name, but "
-                                           + "with a different type, has already been created.");
+            throw new HazelcastException($"Internal error: expected {typeof(T).ToCsString()}, got {o.GetType().ToCsString()}, and that should not be possible.");
         }
 
         /// <summary>
@@ -140,7 +142,7 @@ namespace Hazelcast.DistributedObjects
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, $"Failed to create distributed object '{key.ServiceName}/{key.Name}' on new cluster.");
+                    _logger.LogError(e, $"Failed to create ({key}) distributed object on new cluster.");
                 }
             }
         }
@@ -152,30 +154,30 @@ namespace Hazelcast.DistributedObjects
         private void ObjectDisposed(DistributedObjectBase o)
         {
             // simply disposing the distributed object removes it from the list
-            var k = new DistributedObjectInfo(o.ServiceName, o.Name);
+            var k = new DistributedObjectKey(o.ServiceName, o.Name, o.GetType());
             _objects.TryRemove(k);
         }
 
         /// <summary>
         /// Destroys a distributed object.
         /// </summary>
-        /// <param name="serviceName">The service name.</param>
-        /// <param name="name">The unique object name.</param>
+        /// <param name="o">The distributed object.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        public async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken = default)
+        public async ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken = default)
         {
             // try to get the object - and then, dispose it
 
-            var info = new DistributedObjectInfo(serviceName, name);
+            var info = new DistributedObjectKey(o);
             var attempt = await _objects.TryGetAndRemoveAsync(info).CAF();
             if (attempt)
-                await TryDispose(info, attempt.Value).CAF();
+                await TryDispose(attempt.Value).CAF();
 
             // regardless of whether the object was known locally, destroy on server
-            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
+            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(o.Name, o.ServiceName);
             var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CAF();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }
+
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
@@ -186,13 +188,13 @@ namespace Hazelcast.DistributedObjects
             // there is a potential race-cond here, if an item is added to _objects after
             // we enumerate (capture) values, but it is taken care of in GetOrCreateAsync
 
-            await foreach (var (info, value) in _objects)
+            await foreach (var (_, value) in _objects)
             {
-                await TryDispose(info, value).CAF();
+                await TryDispose(value).CAF();
             }
         }
 
-        private async ValueTask TryDispose(DistributedObjectInfo info, IAsyncDisposable o)
+        private async ValueTask TryDispose(IDistributedObject o)
         {
             try
             {
@@ -200,7 +202,7 @@ namespace Hazelcast.DistributedObjects
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, $"Failed to dispose distributed object '{info.ServiceName}/{info.Name}'.");
+                _logger.LogWarning(e, $"Failed to dispose ({o}) distributed object.", o);
             }
         }
     }

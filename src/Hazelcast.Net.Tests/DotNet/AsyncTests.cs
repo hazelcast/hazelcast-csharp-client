@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -120,7 +119,11 @@ namespace Hazelcast.Tests.DotNet
                 new TaskCompletionSource<object>(),
             };
 
-            var wait = Task.Run(async () => await Task.WhenAll(sources.Select(x => x.Task)).CAF());
+            var wait = Task.Run(async () =>
+            {
+
+                return await Task.WhenAll(sources.Select(x => x.Task)).CAF();
+            });
 
             static void Throw(int j)
                 => throw new Exception("bang_" + j);
@@ -330,7 +333,7 @@ namespace Hazelcast.Tests.DotNet
 
             long c1 = 0, c2 = 0, c4 = 0;
 
-            var cx = await TaskEx.WithNewContext(async () =>
+            var cx = await TaskEx.RunWithNewContext(async () =>
             {
                 return await AsyncContextWhenAsyncSub("c1").ContinueWith(async x =>
                 {
@@ -345,12 +348,12 @@ namespace Hazelcast.Tests.DotNet
             Console.WriteLine("--");
 
             Task<long> task = null;
-            await TaskEx.WithNewContext(() => task = AsyncContextWhenAsyncSub("c3"));
+            await TaskEx.RunWithNewContext(() => task = AsyncContextWhenAsyncSub("c3"));
 
             Console.WriteLine("--");
             var c3 = await task;
 
-            _ = TaskEx.WithNewContext(async () =>
+            _ = TaskEx.RunWithNewContext(async () =>
             {
                 await Task.Delay(100);
                 c4 = await AsyncContextWhenAsyncSub("c4");
