@@ -50,12 +50,17 @@ namespace Hazelcast.Data
         /// <param name="version">The version of the server running the member.</param>
         /// <param name="isLite">Whether the member is a "lite" member.</param>
         /// <param name="attributes">Attributes of the member.</param>
+        /// <param name="addressMapExists">Whether the address map exists.</param>
+        /// <param name="addressMap">The address map.</param>
         /// <remarks>
         /// <para>That overload of the constructor is required by generated codecs.</para>
         /// </remarks>
         internal MemberInfo(NetworkAddress address, Guid id, IDictionary<string, string> attributes, bool isLite, MemberVersion version, bool addressMapExists, IDictionary<EndpointQualifier, NetworkAddress> addressMap)
             : this(id, address, version, isLite, attributes)
         {
+            // yes, this constructor could be simplified, but at the moment
+            // it is what codecs expect, so don't simplify it!
+
             if (addressMapExists) AddressMap = addressMap;
         }
 

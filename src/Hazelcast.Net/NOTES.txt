@@ -41,6 +41,30 @@ References
 https://particular.net/blog/async-await-tips-and-tricks
 https://github.com/Fody/Fody/
 
+#### NOTES ABOUT OPTIMIZING ASYNC
+
+A method that does:
+public async Method1() => await Method2();
+
+Can be optimized as:
+public Method1() => Method2();
+
+And that removes the cost of 1 state machine. However, it means that the causality
+of the calls (see explanations in S. Cleary blog post) is lost. And, all methods to
+restore some causality info in case of an exception do have a cost. So, we work
+with the OPTIMIZE_ASYNC defined symbol, to make the async/await pair optional, idea
+being it's removed in Release and preserved in Debug. Unfortunately, because there
+is no pre-processor in C#, this clutters our code ;( Still looking for a better
+idea.
+
+References
+https://docs.microsoft.com/en-us/uwp/api/windows.foundation.diagnostics.causalityrelation?view=winrt-19041
+https://github.com/benaadams/Ben.Demystifier
+https://github.com/dotnet/runtime/issues/4996
+https://github.com/StephenCleary/AsyncDiagnostics
+https://blog.stephencleary.com/2013/05/announcement-async-diagnostics.html
+https://particular.net/blog/async-await-tips-and-tricks
+
 #### NOTES ABOUT FILE NAMING
 
 Class Foo goes into file Foo.cs
