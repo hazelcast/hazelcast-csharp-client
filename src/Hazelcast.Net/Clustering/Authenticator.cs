@@ -40,8 +40,7 @@ namespace Hazelcast.Clustering
         public Authenticator(AuthenticationOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(4).SetPrefix("AUTH")));
+            HConsole.Configure(this, config => config.SetIndent(4).SetPrefix("AUTH"));
         }
 
         /// <inheritdoc />

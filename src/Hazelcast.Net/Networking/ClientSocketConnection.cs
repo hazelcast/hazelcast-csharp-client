@@ -53,9 +53,7 @@ namespace Hazelcast.Networking
             _socketOptions = options ?? throw new ArgumentNullException(nameof(options));
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]")));
+            HConsole.Configure(this, config => config.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]"));
         }
 
         /// <summary>
@@ -71,8 +69,7 @@ namespace Hazelcast.Networking
         {
             HConsole.WriteLine(this, "Open");
 
-            if (OnReceiveMessageBytes == null)
-                throw new InvalidOperationException("No message bytes handler has been configured.");
+            EnsureCanOpenPipe();
 
             // create the socket
             var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);

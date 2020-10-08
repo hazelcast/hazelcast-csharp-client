@@ -40,6 +40,7 @@ namespace Hazelcast.Networking
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
         private Socket _socket;
         private Stream _stream;
+        private Pipe _pipe;
         private int _isActive;
         private int _isShutdown;
         private int _prefixLength;
@@ -163,6 +164,30 @@ namespace Hazelcast.Networking
         public IPEndPoint LocalEndPoint => _socket?.LocalEndPoint as IPEndPoint;
 
         /// <summary>
+        /// Gets the pipe - for unit tests exclusively.
+        /// </summary>
+        // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
+        protected Pipe Pipe => _pipe;
+
+        /// <summary>
+        /// Gets the stream read cancellation token source - for unit tests exclusively.
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        protected CancellationTokenSource StreamReadCancellationTokenSource => _streamReadCancellationTokenSource;
+
+        /// <summary>
+        /// Ensures that the socket can open the pipe.
+        /// </summary>
+        protected void EnsureCanOpenPipe()
+        {
+            // _onShutdown is not mandatory, but validate _onReceiveMessageBytes
+            if (_onReceiveMessageBytes == null)
+                throw new InvalidOperationException("Missing message bytes handler.");
+            if (_prefixLength > 0 && _onReceivePrefixBytes == null)
+                throw new InvalidOperationException("Missing prefix bytes handler.");
+        }
+
+        /// <summary>
         /// Opens the pipe.
         /// </summary>
         /// <remarks>
@@ -173,21 +198,17 @@ namespace Hazelcast.Networking
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
-            // _onShutdown is not mandatory, but validate _onReceiveMessageBytes
-            if (_onReceiveMessageBytes == null)
-                throw new InvalidOperationException("Missing message bytes handler.");
-            if (_prefixLength > 0 && _onReceivePrefixBytes == null)
-                throw new InvalidOperationException("Missing prefix bytes handler.");
+            EnsureCanOpenPipe();
 
             Interlocked.Exchange(ref _isActive, 1);
 
             CreateTime = DateTime.Now;
 
             // wire the pipe
-            var pipe = new Pipe();
-            _pipeWriting = WritePipeAsync(_stream, pipe.Writer);
+            _pipe = new Pipe();
+            _pipeWriting = WritePipeAsync(_stream, _pipe.Writer);
             _pipeWritingThenShutdown = _pipeWriting.ContinueWith(ShutdownInternal, TaskScheduler.Current);
-            _pipeReading = ReadPipeAsync(pipe.Reader);
+            _pipeReading = ReadPipeAsync(_pipe.Reader);
             _pipeReadingThenShutdown = _pipeReading.ContinueWith(ShutdownInternal, TaskScheduler.Current);
         }
 
@@ -202,7 +223,12 @@ namespace Hazelcast.Networking
             if (Interlocked.CompareExchange(ref _isShutdown, 1, 0) == 1)
                 return;
 
+            HConsole.WriteLine(this, "Bringing connection down");
+
             Interlocked.Exchange(ref _isActive, 0);
+
+            // ensure the pipe writing task aborts
+            _streamReadCancellationTokenSource.Cancel();
 
             // ensure everything is down by awaiting the other task
             await (task == _pipeReading ? _pipeWriting : _pipeReading).CAF();
@@ -229,7 +255,8 @@ namespace Hazelcast.Networking
         /// <param name="length">The number of bytes to send.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the message bytes have been sent.</returns>
-        public async ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
+        // virtual for tests
+        public virtual async ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
         {
             if (_isActive == 0)
                 return false;
@@ -254,6 +281,16 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
+        /// Flushes the connection.
+        /// </summary>
+        /// <returns>A task that will complete when the connection is flushed.</returns>
+        // virtual for tests
+        public virtual async ValueTask FlushAsync()
+        {
+            await _stream.FlushAsync().CAF();
+        }
+
+        /// <summary>
         /// Reads from network, and writes to the pipe.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to read from.</param>
@@ -274,6 +311,7 @@ namespace Hazelcast.Networking
                 int bytesRead;
                 try
                 {
+                    HConsole.WriteLine(this, "Pipe writer waiting for data");
                     bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token).CAF();
 
                     if (bytesRead == 0)
@@ -299,6 +337,7 @@ namespace Hazelcast.Networking
                 }
 
                 // tell the PipeWriter how much was read from the network
+                HConsole.WriteLine(this, $"Pipe writer received {bytesRead} bytes");
                 writer.Advance(bytesRead);
 
                 // make the data available to the PipeReader
@@ -338,7 +377,6 @@ namespace Hazelcast.Networking
                     // TODO what shall we do with the exception?
                     HConsole.WriteLine(this, "ERROR " + state.Exception.SourceException);
                 }
-
             }
 
             // mark the PipeReader as complete
@@ -470,11 +508,9 @@ namespace Hazelcast.Networking
                 _socket.Dispose();
             }
             catch { /* ignore */ }
-            try
-            {
-                _streamReadCancellationTokenSource.Dispose();
-            }
-            catch { /* ignore */ }
+
+            // ok to dispose again
+            _streamReadCancellationTokenSource.Dispose();
         }
     }
 }

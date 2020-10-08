@@ -43,7 +43,7 @@ namespace Hazelcast.Networking
 
             var sslStream = new SslStream(stream, false, ValidateCertificate, null);
 
-            var clientCertificates = GetClientCertificatesOrDefault(_options);
+            var clientCertificates = GetClientCertificatesOrDefault();
 
             var targetHost = _options.CertificateName ?? ""; // TODO: uh?!
 
@@ -61,7 +61,8 @@ namespace Hazelcast.Networking
             return sslStream;
         }
 
-        private X509Certificate2Collection GetClientCertificatesOrDefault(SslOptions options)
+        // internal for tests
+        internal X509Certificate2Collection GetClientCertificatesOrDefault()
         {
             if (_options.CertificatePath == null)
                 return null;
@@ -69,7 +70,7 @@ namespace Hazelcast.Networking
             var clientCertificates = new X509Certificate2Collection();
             try
             {
-                clientCertificates.Import(_options.CertificatePath, options.CertificatePassword, X509KeyStorageFlags.DefaultKeySet);
+                clientCertificates.Import(_options.CertificatePath, _options.CertificatePassword, X509KeyStorageFlags.DefaultKeySet);
             }
             catch (Exception e)
             {
@@ -80,7 +81,8 @@ namespace Hazelcast.Networking
             return clientCertificates;
         }
 
-        private bool ValidateCertificate(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyErrors)
+        // internal for tests
+        internal bool ValidateCertificate(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyErrors)
         {
             if (policyErrors == SslPolicyErrors.None)
                 return true;
@@ -105,7 +107,7 @@ namespace Hazelcast.Networking
             {
                 if (_options.ValidateCertificateName)
                 {
-                    _logger.LogWarning($"SSL Certificate error: {policyErrors}.");
+                    _logger.LogWarning($"SSL certificate error: {policyErrors}.");
                     validation = false;
                 }
                 else
