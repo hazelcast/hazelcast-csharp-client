@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="index">index index of the element to replace</param>
         /// <param name="item">element to be stored at the specified position</param>
         /// <returns>The element previously at the specified position</returns>
-        Task<T> SetAsync(int index, T item);
+        Task<T> GetAndSetAsync(int index, T item);
 
         //Getting
         /// <summary>
@@ -109,7 +109,7 @@ namespace Hazelcast.DistributedObjects
         /// If this list does not contain the element, it is unchanged.
         /// </summary>
         /// <param name="index">element to be removed from this list, if present</param>
-        /// <returns><c>true</c> if this list contained the specified element</returns>
-        Task<T> RemoveAtAsync(int index);
+        /// <returns>the element previously at the specified position</returns>
+        Task<T> GetAndRemoveAtAsync(int index);
     }
 }

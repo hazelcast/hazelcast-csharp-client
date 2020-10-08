@@ -21,7 +21,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class ClientQueueTest : ClientBaseCollectionTest
+    public class ClientQueueTest : ClientCollectionTestBase
     {
         // important to stick with this name as it is configured in hazelcast.xml
         // with a corresponding queue max size of 6 items
@@ -30,7 +30,7 @@ namespace Hazelcast.Tests.Remote
         protected override async Task<IHCollection<string>> GetHCollectionAsync(string baseName = default, bool isUnique = true)
         {
             return await Client.GetQueueAsync<string>(
-                baseName == default ? QueueNameBase : baseName + (isUnique?CreateUniqueName():""));
+                baseName == default ? QueueNameBase : baseName + (isUnique ? CreateUniqueName() : ""));
         }
 
         [Test]

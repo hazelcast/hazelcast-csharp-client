@@ -22,7 +22,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
 {
-    public abstract class ClientBaseCollectionTest : SingleMemberClientRemoteTestBase
+    public abstract class ClientCollectionTestBase : SingleMemberClientRemoteTestBase
     {
         protected abstract Task<IHCollection<string>> GetHCollectionAsync(string baseName = default, bool isUnique = true);
 

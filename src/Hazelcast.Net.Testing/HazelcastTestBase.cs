@@ -92,7 +92,7 @@ namespace Hazelcast.Testing
         /// <para>The unique name is unique across all tests within a run, and to
         /// a certain extend also unique across all runs.</para>
         /// </remarks>
-        protected static string CreateUniqueName() => UniqueNamePrefix + UniqueNameSequence.GetNext();
+        protected string CreateUniqueName() => UniqueNamePrefix + UniqueNameSequence.GetNext();
 
         /// <summary>
         /// Creates a logger factory.

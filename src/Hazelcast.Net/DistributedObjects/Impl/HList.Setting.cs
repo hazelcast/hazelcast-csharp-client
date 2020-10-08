@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HList<T> // Setting
     {
         /// <inheritdoc />
-        public async Task<T> SetAsync(int index, T item)
+        public async Task<T> GetAndSetAsync(int index, T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListSetCodec.EncodeRequest(Name, index, itemData);

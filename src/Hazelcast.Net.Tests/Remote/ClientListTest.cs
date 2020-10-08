@@ -19,14 +19,14 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class ClientListTest : ClientBaseCollectionTest
+    public class ClientListTest : ClientCollectionTestBase
     {
         private const string ListNameBase = "List";
 
         protected override async Task<IHCollection<string>> GetHCollectionAsync(string baseName = default, bool isUnique = true)
         {
             return await Client.GetListAsync<string>(
-                baseName == default ? ListNameBase : baseName + (isUnique?CreateUniqueName():""));
+                baseName == default ? ListNameBase : baseName + (isUnique ? CreateUniqueName() : ""));
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(list, 5);
 
-            await list.SetAsync(3, "item3Mod");
+            await list.GetAndSetAsync(3, "item3Mod");
             Assert.AreEqual("item3Mod", await list.GetAsync(3));
         }
 

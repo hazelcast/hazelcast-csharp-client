@@ -19,7 +19,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class ClientSetTest : ClientBaseCollectionTest
+    public class ClientSetTest : ClientCollectionTestBase
     {
         private const string SetNameBase = "Set";
 
