@@ -233,6 +233,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($version)) {
 # set versions and configure
 $hzVersion = $server
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
+#$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 $hzLocalBuild = $false # $true to skip downloading dependencies
 $hzToolsCache = 12 #days
 $hzVsMajor = 16 # force VS major version, default to 16 (VS2019) for now
@@ -614,6 +615,7 @@ if ($doNuget) {
 if ($doRc) {
     Write-Output "Remote Controller"
     Write-Output "  Server version : $server"
+    Write-Output "  RC Version     : $hzRCVersion"
     Write-Output "  Enterprise     : $enterprise"
     Write-Output "  Logging to     : $tmpDir/rc"
     Write-Output ""

@@ -77,7 +77,8 @@ namespace Hazelcast.Clustering
             _heartbeat = new Heartbeat(_clusterState, Members, Messaging, options.Heartbeat, loggerFactory);
             _heartbeat.Start();
 
-            HConsole.Configure(this, config => config.SetIndent(2).SetPrefix("CLUSTER"));
+            HConsole.Configure(x => x
+                .Set(this, xx => xx.SetIndent(2).SetPrefix("CLUSTER")));
         }
 
         /// <summary>

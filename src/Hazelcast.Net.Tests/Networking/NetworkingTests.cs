@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -183,7 +183,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -233,7 +233,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -280,7 +280,7 @@ namespace Hazelcast.Tests.Networking
 
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -335,7 +335,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11000");
 
-            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -379,7 +379,7 @@ namespace Hazelcast.Tests.Networking
             //var address = NetworkAddress.Parse("sgay-l4");
             var address = NetworkAddress.Parse("localhost");
 
-            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start client ");
@@ -421,7 +421,7 @@ namespace Hazelcast.Tests.Networking
         {
             // this test expects a server
 
-            HConsole.Configure(this, config => config.SetIndent(0).SetPrefix("TEST"));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Cluster?");
