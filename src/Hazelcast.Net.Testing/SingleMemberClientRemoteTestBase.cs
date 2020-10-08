@@ -25,6 +25,8 @@ namespace Hazelcast.Testing
         [OneTimeSetUp]
         public async Task ClientOneTimeSetUp()
         {
+            // note: if this fails, teardown will not run,
+            // and there is no way we can render HConsole :(
             Client = await CreateAndStartClientAsync().CAF();
         }
 

@@ -198,7 +198,7 @@ namespace Hazelcast.NearCaching
         public void Handle(IEnumerable<IData> keys, IEnumerable<Guid> sourceClusterClientIds, IEnumerable<Guid> partitionUuids,
             IEnumerable<long> sequences)
         {
-            foreach (var (key, sourceClusterClientId, partitionUuid, sequence) in EnumerableExtensions.Combine(keys, sourceClusterClientIds, partitionUuids, sequences))
+            foreach (var (key, sourceClusterClientId, partitionUuid, sequence) in (keys, sourceClusterClientIds, partitionUuids, sequences).Combine())
                 Handle(key, sourceClusterClientId, partitionUuid, sequence);
         }
 

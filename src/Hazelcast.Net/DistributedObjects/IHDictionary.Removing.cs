@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Predicates;
 
@@ -27,12 +26,13 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="timeToWait">The time to wait for a lock on the key.</param>
-        /// <returns>true if the entry was removed; otherwise false.</returns>
+        /// <returns><c>true</c> if the entry was removed; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>
-        /// If the key is already locked by another thread and/or member,
-        /// then this operation will wait the time to wait amount for acquiring the lock.
-        /// </para>
+        /// <para>If the key is already locked by another thread and/or member, then this operation
+        /// will wait for the <paramref name="timeToWait"/> for acquiring the lock. If the key
+        /// is still locked, this operation returns <c>false</c>.</para>
+        /// <para>The operation also returns <c>false</c> when no entry with the specified
+        /// <paramref name="key"/> exists.</para>
         /// </remarks>
         Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait);
 
@@ -41,10 +41,14 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        /// <returns><c>true</c> if an entry with the specified key and value was removed; otherwise <c>false</c>.</returns>
+        /// <returns><c>true</c> if an entry with the specified key and value was removed;
+        /// otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>This method removes an entry if the key and the value both match the
         /// specified key and value.</para>
+        /// <para>This method does not consider the removed value at all, which breaks the events
+        /// contract: any event that would be filtered on the value (for instance via a predicate),
+        /// would not trigger here.</para>
         /// </remarks>
         Task<bool> RemoveAsync(TKey key, TValue value);
 
@@ -55,6 +59,11 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>For performance reasons, this method does not return the removed value. Prefer
         /// <see cref="IHDictionaryBase{TKey,TValue}.GetAndRemoveAsync"/> if the value is required.</para>
+        /// <para>However, note that <see cref="IHDictionaryBase{TKey,TValue}.GetAndRemoveAsync"/> may
+        /// breaks the events contract: this method does not consider the removed value at all, which
+        /// means that any event that would be filtered on the value (for instance via a predicate),
+        /// and would trigger with <see cref="IHDictionaryBase{TKey,TValue}.GetAndRemoveAsync"/>,
+        /// will not trigger here.</para>
         /// </remarks>
         Task RemoveAsync(TKey key);
 
@@ -63,6 +72,11 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="predicate">A predicate used to select entries to be removed.</param>
         /// <returns>A task that will complete when entries have been removed.</returns>
+        /// <remarks>
+        /// <para>This method does not consider the removed value at all, which breaks the events
+        /// contract: any event that would be filtered on the value (for instance via a predicate),
+        /// would not trigger here.</para>
+        /// </remarks>
         Task RemoveAsync(IPredicate predicate);
     }
 }

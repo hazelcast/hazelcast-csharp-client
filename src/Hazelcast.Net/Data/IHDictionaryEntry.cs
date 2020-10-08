@@ -16,104 +16,47 @@ using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Data
 {
-    /// <summary>Represents an entry in an <see cref="IHDictionary{TKey,TValue}"/>.</summary>
-    public interface IHDictionaryEntry<TKey, TValue>
+    /// <summary>Represents statistics for an entry in an <see cref="IHDictionary{TKey,TValue}"/>.</summary>
+    public interface IHDictionaryEntryStats<out TKey, out TValue>
     {
-        /// <summary>Returns the cost (in bytes) of the entry.</summary>
-        /// <remarks>
-        ///     Returns the cost (in bytes) of the entry.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns -1 if statistics is not enabled.
-        ///     </p>
-        /// </remarks>
-        /// <returns>cost in bytes</returns>
-        long Cost { get; }
-
-        /// <summary>Returns the creation time of the entry.</summary>
-        /// <remarks>
-        ///     Returns the creation time of the entry.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns -1 if statistics is not enabled.
-        ///     </p>
-        /// </remarks>
-        /// <returns>creation time</returns>
-        long CreationTime { get; }
-
-        /// <summary>Returns the expiration time of the entry.</summary>
-        /// <remarks>Returns the expiration time of the entry.</remarks>
-        /// <returns>expiration time</returns>
-        long ExpirationTime { get; }
-
-        /// <summary>Returns number of hits of the entry.</summary>
-        /// <remarks>
-        ///     Returns number of hits of the entry.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns -1 if statistics is not enabled.
-        ///     </p>
-        /// </remarks>
-        /// <returns>hits</returns>
-        long Hits { get; }
-
-        /// <summary>Returns the key of the entry.</summary>
-        /// <remarks>Returns the key of the entry.</remarks>
-        /// <returns>key</returns>
+        /// <summary>Gets the key of the entry.</summary>
+        /// <returns>The key of the entry.</returns>
         TKey Key { get; }
 
-        /// <summary>Returns the last access time to the entry.</summary>
-        /// <remarks>
-        ///     Returns the last access time to the entry.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns -1 if statistics is not enabled.
-        ///     </p>
-        /// </remarks>
-        /// <returns>last access time</returns>
-        long LastAccessTime { get; }
-
-        /// <summary>Returns the last time value is flushed to mapstore.</summary>
-        /// <remarks>
-        ///     Returns the last time value is flushed to mapstore.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns -1 if statistics is not enabled.
-        ///     </p>
-        /// </remarks>
-        /// <returns>last store time</returns>
-        long LastStoredTime { get; }
-
-        /// <summary>Returns the last time value is updated.</summary>
-        /// <remarks>
-        ///     Returns the last time value is updated.
-        ///     <p>
-        ///         <b>Warning:</b>
-        ///     </p>
-        ///     <p>
-        ///         This method returns -1 if statistics is not enabled.
-        ///     </p>
-        /// </remarks>
-        /// <returns>last update time</returns>
-        long LastUpdateTime { get; }
-
-        /// <summary>Returns the value of the entry.</summary>
-        /// <remarks>Returns the value of the entry.</remarks>
-        /// <returns>value</returns>
+        /// <summary>Gets the value of the entry.</summary>
+        /// <returns>The value of the entry.</returns>
         TValue Value { get; }
 
-        /// <summary>Returns the version of the entry</summary>
-        /// <returns>version</returns>
+        /// <summary>Gets the cost in bytes of the entry.</summary>
+        /// <returns>The cost in bytes, if statistics are enabled; otherwise <c>-1</c>.</returns>
+        long Cost { get; }
+
+        /// <summary>Gets the creation epoch time of the entry.</summary>
+        /// <returns>The creation epoch time of the entry, if statistics are enabled; otherwise <c>-1</c>.</returns>
+        long CreationTime { get; }
+
+        /// <summary>Gets the expiration epoch time of the entry.</summary>
+        /// <returns>The expiration epoch time of the entry, if statistics are enabled; otherwise <c>-1</c>.</returns>
+        long ExpirationTime { get; }
+
+        /// <summary>Gets number of hits of the entry.</summary>
+        /// <returns>The number of hits of the entry, if statistics are enabled; otherwise <c>-1</c>.</returns>
+        long Hits { get; }
+
+        /// <summary>Gets the last access epoch time to the entry.</summary>
+        /// <returns>The last access epoch time of the entry, if statistics are enabled; otherwise <c>-1</c>.</returns>
+        long LastAccessTime { get; }
+
+        /// <summary>Gets the last epoch time the value was flushed to MapStore.</summary>
+        /// <returns>The last epoch time the value was flushed to MapStore, if statistics are enabled; otherwise <c>-1</c>.</returns>
+        long LastStoredTime { get; }
+
+        /// <summary>Gets the last epoch time the value was updated.</summary>
+        /// <returns>The last epoch time the value was updated, if statistics are enabled; otherwise <c>-1</c>.</returns>
+        long LastUpdateTime { get; }
+
+        /// <summary>Gets the version of the entry.</summary>
+        /// <returns>The version of the entry.</returns>
         long Version { get; }
     }
 }

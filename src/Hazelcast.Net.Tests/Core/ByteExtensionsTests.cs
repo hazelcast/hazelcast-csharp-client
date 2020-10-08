@@ -305,6 +305,21 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
+        public void ReadUShort()
+        {
+            var bytes = new byte[] { 0, 0, 48, 57, 0, 0, 0 };
+
+            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadUShort(2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadUShort(-1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadUShort(7));
+
+            Assert.That(bytes.ReadUShort(2), Is.EqualTo(12345));
+
+            bytes = new byte[] { 0, 0, 57, 48, 0, 0, 0 };
+            Assert.That(bytes.ReadUShort(2, Endianness.LittleEndian), Is.EqualTo(12345));
+        }
+
+        [Test]
         public void ReadUShortSequence()
         {
             var bytes = new byte[] { 0 };
@@ -387,6 +402,68 @@ namespace Hazelcast.Tests.Core
             bytes = new byte[] { 0, 0, 63, 226, 1, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             Assert.That(bytes.ReadLong(2, Endianness.LittleEndian), Is.EqualTo((long)int.MaxValue + 123456));
             Assert.That(bytes.ReadLongL(2), Is.EqualTo((long)int.MaxValue + 123456));
+        }
+
+        [Test]
+        public void WriteFloat()
+        {
+            var bytes = new byte[16];
+
+            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteFloat(2, (float) 0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteFloat(-1, (float)0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteFloat(14, (float)0.0));
+
+            bytes.WriteFloat(2, (float)int.MaxValue + 123456);
+            AssertBytes(bytes, 0, 0, 79, 0, 1, 226, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+            bytes.WriteFloat(2, (float)int.MaxValue + 123456, Endianness.LittleEndian);
+            AssertBytes(bytes, 0, 0, 226, 1, 0, 79, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        }
+
+        [Test]
+        public void ReadFloat()
+        {
+            var bytes = new byte[] { 0, 0, 79, 0, 1, 226, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadFloat(2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadFloat(-1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadFloat(14));
+
+            Assert.That(bytes.ReadFloat(2), Is.EqualTo((float)int.MaxValue + 123456));
+
+            bytes = new byte[] { 0, 0, 226, 1, 0, 79, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            Assert.That(bytes.ReadFloat(2, Endianness.LittleEndian), Is.EqualTo((float)int.MaxValue + 123456));
+        }
+
+        [Test]
+        public void WriteDouble()
+        {
+            var bytes = new byte[16];
+
+            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteDouble(2, (float)0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteDouble(-1, (float)0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteDouble(14, (float)0.0));
+
+            bytes.WriteDouble(2, (double)int.MaxValue + 123456);
+            AssertBytes(bytes, 0, 0, 65, 224, 0, 60, 71, 224, 0, 0, 0, 0, 0, 0, 0, 0);
+
+            bytes.WriteDouble(2, (double)int.MaxValue + 123456, Endianness.LittleEndian);
+            AssertBytes(bytes, 0, 0, 0, 0, 224, 71, 60, 0, 224, 65, 0, 0, 0, 0, 0, 0);
+        }
+
+        [Test]
+        public void ReadDouble()
+        {
+            var bytes = new byte[] { 0, 0, 65, 224, 0, 60, 71, 224, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadDouble(2));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadDouble(-1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadDouble(14));
+
+            Assert.That(bytes.ReadDouble(2), Is.EqualTo((double)int.MaxValue + 123456));
+
+            bytes = new byte[] { 0, 0, 0, 0, 224, 71, 60, 0, 224, 65, 0, 0, 0, 0, 0, 0 };
+            Assert.That(bytes.ReadDouble(2, Endianness.LittleEndian), Is.EqualTo((double)int.MaxValue + 123456));
         }
 
         [Test]

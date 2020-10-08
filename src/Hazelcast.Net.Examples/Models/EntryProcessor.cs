@@ -23,7 +23,7 @@ namespace Hazelcast.Examples.Models
     /// Hazezelcast-test.jar has the same EntryProcessor to be used on server side
     ///  named <c>com.hazelcast.client.test.IdentifiedEntryProcessor</c>
     /// </summary>
-    public class UpdateEntryProcessor : IEntryProcessor, IIdentifiedDataSerializable
+    public class UpdateEntryProcessor : IEntryProcessor<string>, IIdentifiedDataSerializable
     {
         public const int ClassIdConst = 1;
 

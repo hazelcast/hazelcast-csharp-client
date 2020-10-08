@@ -116,6 +116,14 @@ namespace Hazelcast.Tests.Core
             Assert.Throws<ArgumentException>(() => ServiceFactory.CreateInstanceInternal("   ", null));
         }
 
+        [Test]
+        public void AsT()
+        {
+            Assert.That(ServiceFactory.As<int>(33), Is.EqualTo(33));
+            Assert.Throws<ArgumentNullException>(() => ServiceFactory.As<object>(null));
+            Assert.Throws<InvalidCastException>(() => ServiceFactory.As<int>("string"));
+        }
+
         private interface IThing1
         { }
 

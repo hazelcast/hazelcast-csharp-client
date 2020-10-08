@@ -83,9 +83,9 @@ namespace Hazelcast.Tests.Core
             Assert.That(AsyncContext.CurrentContext.Id, Is.EqualTo(1));
 
             var id1 = await Task.Run(() => AsyncContext.CurrentContext.Id);
-            var id2 = await TaskEx.WithNewContext(() => Task.FromResult(AsyncContext.CurrentContext.Id));
-            var id3 = await TaskEx.WithNewContext(() => Task.Run(() => AsyncContext.CurrentContext.Id));
-            var id4 = await TaskEx.WithNewContext(token => Task.Run(() => AsyncContext.CurrentContext.Id, token), CancellationToken.None);
+            var id2 = await TaskEx.RunWithNewContext(() => Task.FromResult(AsyncContext.CurrentContext.Id));
+            var id3 = await TaskEx.RunWithNewContext(() => Task.Run(() => AsyncContext.CurrentContext.Id));
+            var id4 = await TaskEx.RunWithNewContext(token => Task.Run(() => AsyncContext.CurrentContext.Id, token), CancellationToken.None);
             var id5 = await Task.Run(() => AsyncContext.CurrentContext.Id);
 
             Assert.That(id1, Is.EqualTo(1));
@@ -100,8 +100,8 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void WithNewContextExceptions()
         {
-            Assert.ThrowsAsync<ArgumentNullException>(() => TaskEx.WithNewContext(null));
-            Assert.ThrowsAsync<ArgumentNullException>(() => TaskEx.WithNewContext(null, default));
+            Assert.ThrowsAsync<ArgumentNullException>(() => TaskEx.RunWithNewContext(null));
+            Assert.ThrowsAsync<ArgumentNullException>(() => TaskEx.RunWithNewContext(null, default));
         }
 
         [Test]

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Core;
 using NUnit.Framework;
@@ -54,7 +55,7 @@ namespace Hazelcast.Tests.Core
             var items3 = new[] { 4, 5, 6 };
             var items4 = new[] { 'x', 'y', 'z', 't' };
 
-            var items = EnumerableExtensions.Combine(items1, items2, items3, items4).ToArray();
+            var items = (items1, items2, items3, items4).Combine().ToArray();
 
             Assert.That(items.Length, Is.EqualTo(3));
 
@@ -64,14 +65,47 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
+        public void TuplesToToDictionary()
+        {
+            var dictionary = new[]
+            {
+                (1, 2),
+                (3, 4)
+            }.ToDictionary();
+
+            Assert.That(dictionary, Is.InstanceOf<IDictionary<int, int>>());
+            Assert.That(dictionary.Count, Is.EqualTo(2));
+            Assert.That(dictionary[1], Is.EqualTo(2));
+            Assert.That(dictionary[3], Is.EqualTo(4));
+        }
+
+        [Test]
+        public void KeyValuePairsToToDictionary()
+        {
+            var dictionary = new[]
+            {
+                new KeyValuePair<int, int>(1, 2),
+                new KeyValuePair<int, int>(3, 4)
+            }.ToDictionary();
+
+            Assert.That(dictionary, Is.InstanceOf<IDictionary<int, int>>());
+            Assert.That(dictionary.Count, Is.EqualTo(2));
+            Assert.That(dictionary[1], Is.EqualTo(2));
+            Assert.That(dictionary[3], Is.EqualTo(4));
+        }
+
+        [Test]
         public void ArgumentExceptions()
         {
-            var items = Array.Empty<int>();
+            // beware that one must .First() to trigger the enumerable, and hence the exception
 
-            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine(items, items, items, (int[]) null).ToArray());
-            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine(items, items, (int[]) null, items).ToArray());
-            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine(items, (int[]) null, items, items).ToArray());
-            Assert.Throws<ArgumentNullException>(() => _ = EnumerableExtensions.Combine((int[]) null, items, items, items).ToArray());
+            Assert.Throws<ArgumentException>(() => _ = ((IEnumerable<int>) null, "meh").Combine().First());
+            Assert.Throws<ArgumentException>(() => _ = ("meh", (IEnumerable<int>) null).Combine().First());
+
+            Assert.Throws<ArgumentException>(() => _ = ((IEnumerable<int>) null, "meh", "meh", "meh").Combine().First());
+            Assert.Throws<ArgumentException>(() => _ = ("meh", (IEnumerable<int>) null, "meh", "meh").Combine().First());
+            Assert.Throws<ArgumentException>(() => _ = ("meh", "meh", (IEnumerable<int>) null, "meh").Combine().First());
+            Assert.Throws<ArgumentException>(() => _ = ("meh", "meh", "meh", (IEnumerable<int>) null).Combine().First());
         }
     }
 }

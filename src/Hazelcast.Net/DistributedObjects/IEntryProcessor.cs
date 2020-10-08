@@ -17,11 +17,14 @@ namespace Hazelcast.DistributedObjects
     /// <summary>
     /// Defines a processor that can process the entries of an <see cref="IHDictionary{TKey,TValue}"/> on the server.
     /// </summary>
+    /// <typeparam name="TResult">The type of the results produced by the processor.</typeparam>
     /// <remarks>
-    /// <para>Client-side <see cref="IEntryProcessor"/> implementations do not have any processing logic,
+    /// <para>Client-side <see cref="IEntryProcessor{TResult}"/> implementations do not have any processing logic,
     /// they must be backed by a corresponding processor registered on the server and containing the
     /// actual implementation.</para>
     /// </remarks>
-    public interface IEntryProcessor
-    { }
+    // ReSharper disable once UnusedTypeParameter - yes we want it
+    // so that ExecuteAsync<TResult>(IEntryProcessor<TResult> processor) can guess TResult
+    public interface IEntryProcessor<TResult>
+    {}
 }

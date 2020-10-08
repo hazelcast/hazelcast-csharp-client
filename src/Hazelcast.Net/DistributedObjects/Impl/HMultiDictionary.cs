@@ -94,7 +94,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
             {
-                var eventType = (HDictionaryEventTypes)eventTypeData;
+                var eventType = (HDictionaryEventTypes) eventTypeData;
                 if (eventType == HDictionaryEventTypes.Nothing) return;
 
                 var member = Cluster.Members.GetMember(memberId);
@@ -102,6 +102,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 var value = LazyArg<TValue>(valueData);
                 var oldValue = LazyArg<TValue>(oldValueData);
                 var mergingValue = LazyArg<TValue>(mergingValueData);
+
+                HConsole.WriteLine(this, $"EVENT {eventType} on {key.Value}");
 
                 // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
                 foreach (var handler in sstate.Handlers)
@@ -149,11 +151,11 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             return MultiMapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
         }
-        
+
         /// <inheritdoc />
         public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId)
             => UnsubscribeBaseAsync(subscriptionId);
-        
+
         /// <inheritdoc />
         public async Task<bool> TryAddAsync(TKey key, TValue value)
         {
@@ -174,7 +176,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync() 
+        public Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync()
              => GetEntrySetAsync(CancellationToken.None);
 
         private async Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync(CancellationToken cancellationToken)
@@ -182,7 +184,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MultiMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
             var response = MultiMapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<KeyValuePair<TKey, TValue>>(SerializationService);
+            return new ReadOnlyLazyKeyValuePairs<TKey, TValue>(response, SerializationService);
         }
 
         /// <inheritdoc />
@@ -286,11 +288,11 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task LockAsync(TKey key) 
+        public Task LockAsync(TKey key)
             => LockAsync(key, Timeout.InfiniteTimeSpan);
 
         /// <inheritdoc />
-        public Task<bool> TryLockAsync(TKey key) 
+        public Task<bool> TryLockAsync(TKey key)
             => TryLockAsync(key, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
 
         /// <inheritdoc />

@@ -36,7 +36,7 @@ namespace Hazelcast.Testing
             Logger.LogInformation($"Setup {GetType()}");
 
             // start fresh
-            HConsole.Reset();
+            HConsole.ClearConfiguration();
 
             // top-level overrides
             HazelcastTestBaseOneTimeSetUp();
@@ -44,6 +44,13 @@ namespace Hazelcast.Testing
 
         public virtual void HazelcastTestBaseOneTimeSetUp()
         { }
+
+        [OneTimeTearDown]
+        public void HazelcastTestBaseOneTimeRootTearDown()
+        {
+            // write console output & clear
+            HConsole.WriteAndClear();
+        }
 
         [SetUp]
         public void HazelcastTestBaseSetUp()
@@ -60,7 +67,7 @@ namespace Hazelcast.Testing
             // (after each test)
             Clock.Reset();
 
-            // same for console
+            // write console output & clear
             HConsole.WriteAndClear();
         }
 

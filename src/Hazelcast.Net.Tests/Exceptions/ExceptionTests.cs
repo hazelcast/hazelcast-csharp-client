@@ -116,5 +116,23 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
         }
+
+        [Test]
+        public void TaskTimeoutExceptionConstructors()
+        {
+            _ = new TaskTimeoutException();
+            _ = new TaskTimeoutException("exception");
+            var e = new TaskTimeoutException("exception", new Exception("bang"));
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+
+            e = e.SerializeAndDeSerialize();
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+        }
     }
 }

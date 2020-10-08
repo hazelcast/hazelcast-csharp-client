@@ -44,6 +44,11 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <returns>The unique identifier of the subscription.</returns>
+        /// <remarks>
+        /// <para>Note that some methods such as <see cref="RemoveAsync(TKey)"/> may break the
+        /// events contract in some situations, such as when the predicate refers to the
+        /// entry value. Refer to the documentation for these methods for more details.</para>
+        /// </remarks>
         Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true);
 
         /// <summary>
@@ -54,6 +59,11 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <returns>The unique identifier of the subscription.</returns>
+        /// <remarks>
+        /// <para>Note that some methods such as <see cref="RemoveAsync(TKey)"/> may break the
+        /// events contract in some situations, such as when the predicate refers to the
+        /// entry value. Refer to the documentation for these methods for more details.</para>
+        /// </remarks>
         Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true);
 
         /// <summary>

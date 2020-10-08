@@ -50,7 +50,7 @@ namespace Hazelcast.Examples.DistributedObjects
             // note: hazelcast-test.jar has the same UpdateEntryProcessor,
             // named com.hazelcast.client.test.IdentifiedEntryProcessor, so
             // this works
-            var result = await map.ExecuteAsync<string>(
+            var result = await map.ExecuteAsync(
                 new UpdateEntryProcessor("value-UPDATED"),
                 Predicates.Predicate.Sql("this==value5"));
 

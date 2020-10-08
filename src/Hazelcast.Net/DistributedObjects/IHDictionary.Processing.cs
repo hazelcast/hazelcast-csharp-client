@@ -22,19 +22,19 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHDictionary<TKey, TValue> // Processing
     {
         /// <summary>
-        /// Applies the user defined <c>IEntryProcessor</c> to the all entries in the dictionary.
+        /// Processes all entries.
         /// </summary>
+        /// <typeparam name="TResult">The type of the results produced by the processor.</typeparam>
         /// <param name="processor">An entry processor.</param>
         /// <returns>The result of the processing of all entries.</returns>
         /// <remarks>
-        /// <para>
-        /// The operation is not lock-aware. The <c>IEntryProcessor</c> will process the entries
+        /// <para>The operation is not lock-aware. The <paramref name="processor"/> will process the entries
         /// no matter if the keys are locked or not.</para>
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// <para>
         /// <p>
-        /// <b>Interactions with the map store</b>
+        /// <b>Interactions with the map store:</b>
         /// </p>
         /// <p>For each entry not found in memory <c>MapLoader.load(Object)</c> is invoked to load the value from 
         /// the <c>MapStore</c> backing the dictionary.
@@ -60,11 +60,12 @@ namespace Hazelcast.DistributedObjects
         /// </p>
         /// </para>
         /// </remarks>
-        Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor);
+        Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor);
 
         /// <summary>
-        /// Applies the user defined <c>IEntryProcessor</c> to the entry mapped by the key.
+        /// Processes an entry.
         /// </summary>
+        /// <typeparam name="TResult">The type of the results produced by the processor.</typeparam>
         /// <param name="key">The key.</param>
         /// <param name="processor">An entry processor.</param>
         /// <returns>The result of the process.</returns>
@@ -72,11 +73,12 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<TResult> ExecuteAsync<TResult>(IEntryProcessor processor, TKey key);
+        Task<TResult> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, TKey key);
 
         /// <summary>
         /// Processes entries.
         /// </summary>
+        /// <typeparam name="TResult">The type of the results produced by the processor.</typeparam>
         /// <param name="keys">The keys.</param>
         /// <param name="processor">An entry processor.</param>
         /// <returns>The result of the processing of each entry.</returns>
@@ -84,11 +86,12 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IEnumerable<TKey> keys);
+        Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, IEnumerable<TKey> keys);
 
         /// <summary>
         /// Process entries.
         /// </summary>
+        /// <typeparam name="TResult">The type of the results produced by the processor.</typeparam>
         /// <param name="processor">An entry processor.</param>
         /// <param name="predicate">A predicate to select entries.</param>
         /// <returns>The result of the processing of selected entries.</returns>
@@ -96,6 +99,6 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="processor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IPredicate predicate);
+        Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, IPredicate predicate);
     }
 }

@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Core
             var id = AsyncContext.CurrentContext.Id;
 
             long idx = -1;
-            await TaskEx.WithNewContext(() =>
+            await TaskEx.RunWithNewContext(() =>
             {
                 idx = AsyncContext.CurrentContext.Id;
                 return Task.CompletedTask;
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Core
             AsyncContext.Ensure();
             var id = AsyncContext.CurrentContext.Id;
 
-            var idx = await TaskEx.WithNewContext(() =>
+            var idx = await TaskEx.RunWithNewContext(() =>
                 Task.FromResult(AsyncContext.CurrentContext.Id));
 
             Assert.That(idx, Is.Not.EqualTo(id));
@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.Core
             var id = AsyncContext.CurrentContext.Id;
 
             long idx = -1;
-            await TaskEx.WithNewContext(token =>
+            await TaskEx.RunWithNewContext(token =>
             {
                 idx = AsyncContext.CurrentContext.Id;
                 return Task.CompletedTask;
@@ -82,7 +82,7 @@ namespace Hazelcast.Tests.Core
             AsyncContext.Ensure();
             var id = AsyncContext.CurrentContext.Id;
 
-            var idx = await TaskEx.WithNewContext(token =>
+            var idx = await TaskEx.RunWithNewContext(token =>
                 Task.FromResult(AsyncContext.CurrentContext.Id), CancellationToken.None);
 
             Assert.That(idx, Is.Not.EqualTo(id));
@@ -205,6 +205,21 @@ namespace Hazelcast.Tests.Core
 
                 e.ObserveException();
             }
+        }
+
+        [Test]
+        public async Task AwaitCanceled()
+        {
+            // ok to pass null
+            await TaskEx.AwaitCanceled(null);
+
+            // normal task = normal
+            await TaskEx.AwaitCanceled(Task.CompletedTask);
+
+            // canceled task = ok too
+            var completionSource = new TaskCompletionSource<int>();
+            completionSource.TrySetCanceled();
+            await TaskEx.AwaitCanceled(completionSource.Task);
         }
 
         private static Task Delay(CancellationToken cancellationToken)
