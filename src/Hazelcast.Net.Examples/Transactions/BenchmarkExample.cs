@@ -28,8 +28,7 @@ namespace Hazelcast.Examples.Transactions
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync();
+            await using var client = await HazelcastClientFactory.StartClientAsync(options);
 
             var map1 = await client.GetDictionaryAsync<int, string>("test1");
             var map2 = await client.GetDictionaryAsync<int, string>("test2");

@@ -37,8 +37,7 @@ namespace Hazelcast.Examples.Client
             //options.Networking.Ssl.CertificateName = "CERTIFICATE CN OR SAN VALUE HERE";
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync();
+            await using var client = await HazelcastClientFactory.StartClientAsync(options);
 
             // use a map
             await using var map = await client.GetDictionaryAsync<string, string>("ssl-example");

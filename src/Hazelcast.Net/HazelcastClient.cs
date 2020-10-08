@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Exceptions;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -95,7 +96,15 @@ namespace Hazelcast
         /// </summary>
         public ISerializationService SerializationService { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Starts the client by connecting to the remote cluster.
+        /// </summary>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns>A task that will complete when the client is connected.</returns>
+        /// <exception cref="TaskTimeoutException">Failed to connect within the specified timeout.</exception>
+        /// <remarks>
+        /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
+        /// </remarks>
         public
 #if !HZ_OPTIMIZE_ASYNC
         async
@@ -117,7 +126,11 @@ namespace Hazelcast
 #endif
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Starts the client by connecting to the remote cluster.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the client is connected.</returns>
         public
 #if !HZ_OPTIMIZE_ASYNC
         async

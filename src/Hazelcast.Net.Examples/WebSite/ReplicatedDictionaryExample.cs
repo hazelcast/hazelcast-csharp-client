@@ -23,8 +23,7 @@ namespace Hazelcast.Examples.WebSite
         public static async Task Run(string[] args)
         {
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = HazelcastClientFactory.CreateClient(BuildExampleOptions(args));
-            await client.StartAsync();
+            await using var client = await HazelcastClientFactory.StartClientAsync(BuildExampleOptions(args));
 
             // Get a Replicated Map called "my-replicated-map"
             await using var map = await client.GetReplicatedDictionaryAsync<string, string>("my-replicated-map");

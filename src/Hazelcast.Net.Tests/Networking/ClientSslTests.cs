@@ -14,7 +14,9 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Testing;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 
 namespace Hazelcast.Tests.Networking
 {
@@ -25,7 +27,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task Test_NoSSL()
         {
-            await using var client = await Setup(Hazelcast.Testing.Remote.Resources.hazelcast,
+            await using var client = await StartClientAsync(Hazelcast.Testing.Remote.Resources.hazelcast,
                 false,
                 true,
                 true,
@@ -33,14 +35,12 @@ namespace Hazelcast.Tests.Networking
                 ValidCertNameSigned,
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_validateName_validName()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                 true,
                 true,
                 true,
@@ -48,30 +48,29 @@ namespace Hazelcast.Tests.Networking
                 ValidCertNameSigned,
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_validateName_invalidName()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl_Signed,
-                true,
-                true,
-                true,
-                null,
-                "Invalid Cert Name",
-                null,
-                null,
-                true);
-
-            Assert.ThrowsAsync<InvalidOperationException>(() => client.StartAsync());
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+                    true,
+                    true,
+                    true,
+                    null,
+                    "Invalid Cert Name",
+                    null,
+                    null,
+                    true);
+            });
         }
 
         [Test]
         public async Task TestSSLEnabled_validateChain_DoNotValidateName_invalidName()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                 true,
                 true,
                 false,
@@ -79,14 +78,12 @@ namespace Hazelcast.Tests.Networking
                 "Invalid Cert Name",
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_DoNotValidateChain_DoNotValidateName_invalidName()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                 true,
                 false,
                 false,
@@ -94,14 +91,12 @@ namespace Hazelcast.Tests.Networking
                 "Invalid Cert Name",
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLDisabled()
         {
-            await using var client = await Setup(Resources.Cluster_Default,
+            await using var client = await StartClientAsync(Resources.Cluster_Default,
                 false,
                 null,
                 null,
@@ -109,30 +104,29 @@ namespace Hazelcast.Tests.Networking
                 null,
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_self_signed_remote_cert()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl,
-                true,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                true);
-
-            Assert.ThrowsAsync<InvalidOperationException>(() => client.StartAsync());
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await using var client = await StartClientAsync(Resources.Cluster_Ssl,
+                    true,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    true);
+            });
         }
 
         [Test]
         public async Task TestSSLEnabled_signed_remote_cert()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                 true,
                 null,
                 null,
@@ -140,14 +134,12 @@ namespace Hazelcast.Tests.Networking
                 null,
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_validateChain_validateName_validName()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                 true,
                 null,
                 true,
@@ -155,8 +147,6 @@ namespace Hazelcast.Tests.Networking
                 ValidCertNameSigned,
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
     }
 }

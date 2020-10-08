@@ -23,8 +23,7 @@ namespace Hazelcast.Examples.WebSite
         public static async Task Run(string[] args)
         {
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = HazelcastClientFactory.CreateClient(BuildExampleOptions(args));
-            await client.StartAsync();
+            await using var client = await HazelcastClientFactory.StartClientAsync(BuildExampleOptions(args));
 
             // Get the Distributed List from Cluster.
             await using var list = await client.GetListAsync<string>("my-distributed-list");

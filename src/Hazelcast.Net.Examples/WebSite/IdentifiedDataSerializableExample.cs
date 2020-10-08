@@ -60,8 +60,7 @@ namespace Hazelcast.Examples.WebSite
             // create an Hazelcast client and connect to a server running on localhost
             var options = BuildExampleOptions(args);
             options.Serialization.AddDataSerializableFactory(SampleDataSerializableFactory.FactoryId, new SampleDataSerializableFactory());
-            await using var client = HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync();
+            await using var client = await HazelcastClientFactory.StartClientAsync(options);
         }
     }
 }

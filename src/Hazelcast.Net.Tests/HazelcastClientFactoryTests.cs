@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests
@@ -21,26 +23,13 @@ namespace Hazelcast.Tests
     public class HazelcastClientFactoryTests
     {
         [Test]
-        public void CreateClient()
+        public async Task Exceptions()
         {
-            var client = HazelcastClientFactory.CreateClient();
-            Assert.That(client, Is.Not.Null);
-
-            client = HazelcastClientFactory.CreateClient(options =>
-            {
-                options.ClientName = "clientName";
-            });
-            Assert.That(client, Is.Not.Null);
-
-            client = HazelcastClientFactory.CreateClient(new HazelcastOptions());
-            Assert.That(client, Is.Not.Null);
-        }
-
-        [Test]
-        public void Exceptions()
-        {
-            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.CreateClient((HazelcastOptions) null));
-            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.CreateClient((Action<HazelcastOptions>)null));
+            await AssertEx.ThrowsAsync<ArgumentNullException>(async () 
+                => await HazelcastClientFactory.StartClientAsync((HazelcastOptions) null));
+            
+            await AssertEx.ThrowsAsync<ArgumentNullException>(async () => 
+                await HazelcastClientFactory.StartClientAsync((Action<HazelcastOptions>) null));
         }
     }
 }

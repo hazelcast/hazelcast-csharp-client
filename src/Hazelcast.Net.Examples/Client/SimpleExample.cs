@@ -71,7 +71,7 @@ namespace Hazelcast.Examples.Client
 
             // create a logger, a client factory and a client
             var logger = loggerFactory.CreateLogger<Worker>();
-            await using var client = HazelcastClientFactory.CreateClient(options); // disposed when method exits
+            await using var client = await HazelcastClientFactory.StartClientAsync(options); // disposed when method exits
 
             // create the worker, and run
             var worker = new Worker(client, logger);
@@ -94,12 +94,6 @@ namespace Hazelcast.Examples.Client
                 _logger.LogDebug("debug");
                 _logger.LogInformation("debug");
                 _logger.LogWarning("debug");
-
-                // this is just an example - practically, connecting the client
-                // would be managed elsewhere - and the class would expect to
-                // receive a connected client - and, that 'elsewhere' would also
-                // dispose the client, etc.
-                await _client.StartAsync();
 
                 await using var map = await _client.GetDictionaryAsync<string, int>("test-map");
 

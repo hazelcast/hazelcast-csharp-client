@@ -70,8 +70,7 @@ namespace Hazelcast.Testing
         {
             Logger.LogInformation("Create new client");
 
-            var client = HazelcastClientFactory.CreateClient(CreateHazelcastOptions());
-            await client.StartAsync(CreateAndStartClientTimeout).CAF();
+            var client = await HazelcastClientFactory.StartClientAsync(CreateHazelcastOptions(), CreateAndStartClientTimeout).CAF();
             return client;
         }
 
@@ -85,8 +84,7 @@ namespace Hazelcast.Testing
 
             var options = CreateHazelcastOptions();
             configure(options);
-            var client = HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync(CreateAndStartClientTimeout).CAF();
+            var client = await HazelcastClientFactory.StartClientAsync(options, CreateAndStartClientTimeout).CAF();
             return client;
         }
 
