@@ -23,8 +23,8 @@ namespace Hazelcast.DistributedObjects
         private readonly Lazy<TValue> _oldValue;
         private readonly Lazy<TValue> _mergeValue;
 
-        public DictionaryEntryMergedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue)
-            : base(member, key)
+        public DictionaryEntryMergedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, object state)
+            : base(member, key, state)
         {
             _value = value;
             _oldValue = oldValue;

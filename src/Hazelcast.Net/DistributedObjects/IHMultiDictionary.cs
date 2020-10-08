@@ -35,8 +35,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true);
+        Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -44,8 +45,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="key">A key to filter events.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true);
+        Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Unsubscribe from events.

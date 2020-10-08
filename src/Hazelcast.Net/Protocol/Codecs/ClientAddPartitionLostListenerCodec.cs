@@ -143,7 +143,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandlePartitionLostEventAsync handlePartitionLostEventAsync, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<int, int, Guid, object, ValueTask> handlePartitionLostEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
@@ -153,12 +153,10 @@ namespace Hazelcast.Protocol.Codecs
                 var partitionId =  initialFrame.Bytes.ReadIntL(EventPartitionLostPartitionIdFieldOffset);
                 var lostBackupCount =  initialFrame.Bytes.ReadIntL(EventPartitionLostLostBackupCountFieldOffset);
                 var source =  initialFrame.Bytes.ReadGuidL(EventPartitionLostSourceFieldOffset);
-                return handlePartitionLostEventAsync(partitionId, lostBackupCount, source);
+                return handlePartitionLostEventAsync(partitionId, lostBackupCount, source, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
-
-        public delegate ValueTask HandlePartitionLostEventAsync(int partitionId, int lostBackupCount, Guid source);
     }
 }

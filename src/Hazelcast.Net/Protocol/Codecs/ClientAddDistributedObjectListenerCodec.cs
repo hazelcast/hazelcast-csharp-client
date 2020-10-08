@@ -143,7 +143,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleDistributedObjectEventAsync handleDistributedObjectEventAsync, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<string, string, string, Guid, object, ValueTask> handleDistributedObjectEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
@@ -154,12 +154,10 @@ namespace Hazelcast.Protocol.Codecs
                 var name = StringCodec.Decode(iterator);
                 var serviceName = StringCodec.Decode(iterator);
                 var eventType = StringCodec.Decode(iterator);
-                return handleDistributedObjectEventAsync(name, serviceName, eventType, source);
+                return handleDistributedObjectEventAsync(name, serviceName, eventType, source, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
-
-        public delegate ValueTask HandleDistributedObjectEventAsync(string name, string serviceName, string eventType, Guid source);
     }
 }

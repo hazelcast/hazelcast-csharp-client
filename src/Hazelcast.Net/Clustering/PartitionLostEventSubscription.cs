@@ -38,12 +38,12 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddPartitionLostListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemovePartitionLostListenerCodec.EncodeRequest(id),
                 (message, state) => ClientRemovePartitionLostListenerCodec.DecodeResponse(message).Response,
-                (message, state) => ClientAddPartitionLostListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory));
+                (message, state) => ClientAddPartitionLostListenerCodec.HandleEventAsync(message, HandleCodecEvent, null, LoggerFactory));
         }
 
         internal Func<PartitionLostEventArgs, ValueTask> Handle { get; set; }
 
-        private ValueTask HandleInternal(int partitionId, int lostBackupCount, Guid memberId)
+        private ValueTask HandleCodecEvent(int partitionId, int lostBackupCount, Guid memberId, object state)
         {
             if (Handle == null) return default;
 

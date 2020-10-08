@@ -21,7 +21,7 @@ namespace Hazelcast.DistributedObjects
     /// Represents event data for the <see cref="CollectionItemEventTypes"/> events.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
-    public sealed class CollectionItemEventArgs<T>
+    public sealed class CollectionItemEventArgs<T> : EventArgsBase
     {
         private readonly Lazy<T> _item;
 
@@ -30,7 +30,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="member">The member.</param>
         /// <param name="item">The item.</param>
-        public CollectionItemEventArgs(MemberInfo member, Lazy<T> item)
+        /// <param name="state">A state object.</param>
+        public CollectionItemEventArgs(MemberInfo member, Lazy<T> item, object state)
+            : base(state)
         {
             Member = member;
             _item = item;

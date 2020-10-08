@@ -19,8 +19,8 @@ namespace Hazelcast.DistributedObjects
 {
     public sealed class DictionaryEntryInvalidatedEventArgs<TKey, TValue> : DictionaryEntryEventArgsBase<TKey>
     {
-        public DictionaryEntryInvalidatedEventArgs(MemberInfo member, Lazy<TKey> key)
-            : base(member, key)
+        public DictionaryEntryInvalidatedEventArgs(MemberInfo member, Lazy<TKey> key, object state)
+            : base(member, key, state)
         { }
     }
 }

@@ -37,9 +37,9 @@ namespace Hazelcast.DistributedObjects
 
         public HDictionaryEventTypes EventType { get; }
 
-        public ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries)
-            => _handler(sender, CreateEventArgs(member, numberOfAffectedEntries));
+        public ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries, object state)
+            => _handler(sender, CreateEventArgs(member, numberOfAffectedEntries, state));
 
-        protected abstract TArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries);
+        protected abstract TArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries, object state);
     }
 }

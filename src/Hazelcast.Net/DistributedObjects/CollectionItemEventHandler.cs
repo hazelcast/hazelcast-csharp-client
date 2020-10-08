@@ -41,16 +41,17 @@ namespace Hazelcast.DistributedObjects
         public CollectionItemEventTypes EventType { get; }
 
         /// <inheritdoc />
-        public ValueTask HandleAsync(IHCollection<T> sender, MemberInfo member, Lazy<T> item)
-            => _handler(sender, CreateEventArgs(member, item));
+        public ValueTask HandleAsync(IHCollection<T> sender, MemberInfo member, Lazy<T> item, object state)
+            => _handler(sender, CreateEventArgs(member, item, state));
 
         /// <summary>
         /// Creates event arguments.
         /// </summary>
         /// <param name="member">The member.</param>
         /// <param name="item">The item.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>Event arguments.</returns>
-        private static CollectionItemEventArgs<T> CreateEventArgs(MemberInfo member, Lazy<T> item)
-            => new CollectionItemEventArgs<T>(member, item);
+        private static CollectionItemEventArgs<T> CreateEventArgs(MemberInfo member, Lazy<T> item, object state)
+            => new CollectionItemEventArgs<T>(member, item, state);
     }
 }

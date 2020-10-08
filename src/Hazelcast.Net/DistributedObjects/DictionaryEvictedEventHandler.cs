@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects
             : base(HDictionaryEventTypes.AllEvicted, handler)
         { }
 
-        protected override DictionaryEvictedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries)
-            => new DictionaryEvictedEventArgs(member, numberOfAffectedEntries);
+        protected override DictionaryEvictedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries, object state)
+            => new DictionaryEvictedEventArgs(member, numberOfAffectedEntries, state);
     }
 }

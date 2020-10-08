@@ -118,8 +118,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="includeValue">Whether to include values in event arguments.</param>
+        /// <param name="state">A state object that will be passed to handlers.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> events, bool includeValue = true);
+        Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> events, bool includeValue = true, object state = null);
 
         /// <summary>
         /// Unsubscribe from events.

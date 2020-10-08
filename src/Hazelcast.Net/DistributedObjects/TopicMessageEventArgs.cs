@@ -34,7 +34,7 @@ namespace Hazelcast.DistributedObjects
     /// Represents event data for the <see cref="TopicEventTypes.Message"/> event.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
-    public sealed class TopicMessageEventArgs<T>
+    public sealed class TopicMessageEventArgs<T> : EventArgsBase
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicMessageEventArgs{T}"/> class.
@@ -42,7 +42,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="member">The member.</param>
         /// <param name="publishTime">The publish time.</param>
         /// <param name="payload">The object.</param>
-        public TopicMessageEventArgs(MemberInfo member, long publishTime, T payload)
+        /// <param name="state">A state object</param>
+        public TopicMessageEventArgs(MemberInfo member, long publishTime, T payload, object state)
+            : base(state)
         {
             Member = member;
             PublishTime = publishTime;

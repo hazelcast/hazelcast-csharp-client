@@ -138,7 +138,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleMembersViewEventAsync handleMembersViewEventAsync, HandlePartitionsViewEventAsync handlePartitionsViewEventAsync, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<int, IList<Hazelcast.Data.MemberInfo>, object, ValueTask> handleMembersViewEventAsync, Func<int, IList<KeyValuePair<Guid, IList<int>>>, object, ValueTask> handlePartitionsViewEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
@@ -147,21 +147,17 @@ namespace Hazelcast.Protocol.Codecs
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadIntL(EventMembersViewVersionFieldOffset);
                 var memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
-                return handleMembersViewEventAsync(version, memberInfos);
+                return handleMembersViewEventAsync(version, memberInfos, state);
             }
             if (messageType == EventPartitionsViewMessageType)
             {
                 var initialFrame = iterator.Take();
                 var version =  initialFrame.Bytes.ReadIntL(EventPartitionsViewVersionFieldOffset);
                 var partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
-                return handlePartitionsViewEventAsync(version, partitions);
+                return handlePartitionsViewEventAsync(version, partitions, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
-
-        public delegate ValueTask HandleMembersViewEventAsync(int version, IList<Hazelcast.Data.MemberInfo> memberInfos);
-
-        public delegate ValueTask HandlePartitionsViewEventAsync(int version, IList<KeyValuePair<Guid, IList<int>>> partitions);
     }
 }

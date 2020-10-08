@@ -35,6 +35,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="sender">The <see cref="IHCollection{T}"/> that triggered the event.</param>
         /// <param name="member">The member.</param>
         /// <param name="item">The item.</param>
-        ValueTask HandleAsync(IHCollection<T> sender, MemberInfo member, Lazy<T> item);
+        /// <param name="state">A state object.</param>
+        ValueTask HandleAsync(IHCollection<T> sender, MemberInfo member, Lazy<T> item, object state);
     }
 }

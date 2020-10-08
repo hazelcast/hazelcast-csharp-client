@@ -35,10 +35,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected override bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState<CollectionItemEventHandlers<T>> state)
             => SetRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
 
-        protected override ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, ValueTask> f, ILoggerFactory loggerFactory)
-            => SetAddListenerCodec.HandleEventAsync(
-                eventMessage,
-                (itemData, memberId, eventTypeData) => f(itemData, memberId, eventTypeData),
-                loggerFactory);
+        protected override ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, object, ValueTask> handler, object state, ILoggerFactory loggerFactory)
+            => SetAddListenerCodec.HandleEventAsync(eventMessage, handler, state, loggerFactory);
     }
 }

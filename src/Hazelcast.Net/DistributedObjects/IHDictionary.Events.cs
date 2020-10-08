@@ -25,8 +25,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -34,8 +35,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="key">A key to filter events.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -43,13 +45,14 @@ namespace Hazelcast.DistributedObjects
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
         /// <remarks>
         /// <para>Note that some methods such as <see cref="RemoveAsync(TKey)"/> may break the
         /// events contract in some situations, such as when the predicate refers to the
         /// entry value. Refer to the documentation for these methods for more details.</para>
         /// </remarks>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -58,13 +61,14 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key to filter events.</param>
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="includeValues">Whether to include values in event arguments.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
         /// <remarks>
         /// <para>Note that some methods such as <see cref="RemoveAsync(TKey)"/> may break the
         /// events contract in some situations, such as when the predicate refers to the
         /// entry value. Refer to the documentation for these methods for more details.</para>
         /// </remarks>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true);
+        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Unsubscribe from events.
@@ -76,7 +80,7 @@ namespace Hazelcast.DistributedObjects
         /// Member side event subscriptions will eventually be removed.
         /// </para>
         /// </remarks>
-        /// <returns><c>true</c> if subscription is removed successfully, <c>false</c> if there is no such subscription</returns>
+        /// <returns><c>true</c> if a subscription with the specified identifier was removed successfully; otherwise, if no subscription was found with the specified identifier, <c>false</c>.</returns>
         ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
     }
 }

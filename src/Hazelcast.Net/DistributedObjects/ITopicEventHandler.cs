@@ -35,6 +35,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="member">The member.</param>
         /// <param name="publishTime">The publish time.</param>
         /// <param name="payload">The topic object carried by the message.</param>
-        ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload);
+        /// <param name="state">A state object.</param>
+        ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload, object state);
     }
 }

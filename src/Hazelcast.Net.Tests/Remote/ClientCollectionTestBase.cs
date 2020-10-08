@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -283,6 +283,37 @@ namespace Hazelcast.Tests.Remote
 
             //check if all items match and no items left
             Assert.AreEqual(items.Count, 0);
+        }
+
+        private static void HandleItemAdded(IHCollection<string> sender, CollectionItemEventArgs<string> args)
+        {
+            var state = (EventState)args.State;
+            Interlocked.Increment(ref state.EventsCount);
+        }
+
+        [Test]
+        public async Task TestCollectionSubscribeWithState()
+        {
+            var list = await GetHCollectionAsync();
+            await using var _ = DestroyAndDispose(list);
+
+            var eventState = new EventState();
+            var sid = await list.SubscribeAsync(handle => handle
+                    .ItemAdded(HandleItemAdded), // thanks to state, can be anything without capture
+                state: eventState);
+
+            for (var i = 0; i < 5; i++)
+                await list.AddAsync("item" + i);
+            await list.AddAsync("done");
+
+            await AssertEx.SucceedsEventually(() => Assert.That(eventState.EventsCount, Is.EqualTo(6)), 4000, 500);
+
+            await list.UnsubscribeAsync(sid);
+        }
+
+        private class EventState
+        {
+            public int EventsCount;
         }
     }
 }

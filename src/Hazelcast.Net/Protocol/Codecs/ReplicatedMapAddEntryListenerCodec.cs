@@ -153,7 +153,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleEntryEventAsync handleEntryEventAsync, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<IData, IData, IData, IData, int, Guid, int, object, ValueTask> handleEntryEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
@@ -167,12 +167,10 @@ namespace Hazelcast.Protocol.Codecs
                 var @value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var oldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
                 var mergingValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                return handleEntryEventAsync(key, @value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries);
+                return handleEntryEventAsync(key, @value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
-
-        public delegate ValueTask HandleEntryEventAsync(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries);
     }
 }

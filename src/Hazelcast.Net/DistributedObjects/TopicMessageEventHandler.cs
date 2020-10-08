@@ -52,8 +52,8 @@ namespace Hazelcast.DistributedObjects
         public TopicEventTypes EventType => TopicEventTypes.Message;
 
         /// <inheritdoc />
-        public ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload)
-            => _handler(sender, CreateEventArgs(member, publishTime, payload));
+        public ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload, object state)
+            => _handler(sender, CreateEventArgs(member, publishTime, payload, state));
 
         /// <summary>
         /// Creates event arguments.
@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="publishTime">The publish time.</param>
         /// <param name="payload">The topic object carried by the message.</param>
         /// <returns>Event arguments.</returns>
-        private static TopicMessageEventArgs<T> CreateEventArgs(MemberInfo member, long publishTime, T payload)
-            => new TopicMessageEventArgs<T>(member, publishTime, payload);
+        private static TopicMessageEventArgs<T> CreateEventArgs(MemberInfo member, long publishTime, T payload, object state)
+            => new TopicMessageEventArgs<T>(member, publishTime, payload, state);
     }
 }
