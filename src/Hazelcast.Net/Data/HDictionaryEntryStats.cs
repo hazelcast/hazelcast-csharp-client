@@ -14,7 +14,7 @@
 
 namespace Hazelcast.Data
 {
-    internal class HDictionaryEntry<TKey, TValue> : IHDictionaryEntry<TKey, TValue>
+    internal class HDictionaryEntryStats<TKey, TValue> : IHDictionaryEntryStats<TKey, TValue>
     {
         public long Cost { get; set; }
         public long CreationTime { get; set; }

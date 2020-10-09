@@ -38,11 +38,11 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             }
         }
 
-        public static HDictionaryEntry<IData, IData> CreateSimpleEntryView(IData key, IData value, long cost, long creationTime,
+        public static HDictionaryEntryStats<IData, IData> CreateSimpleEntryView(IData key, IData value, long cost, long creationTime,
             long expirationTime, long hits, long lastAccessTime, long lastStoredTime, long lastUpdateTime, long version, long ttl,
             long maxIdle)
         {
-            return new HDictionaryEntry<IData, IData>
+            return new HDictionaryEntryStats<IData, IData>
             {
                 Key = key,
                 Value = value,

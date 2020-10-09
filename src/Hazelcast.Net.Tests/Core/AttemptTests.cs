@@ -63,6 +63,26 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
+        public void If()
+        {
+            var (success, value) = Attempt.If(true, 12);
+            Assert.That(success);
+            Assert.That(value, Is.EqualTo(12));
+
+            (success, value) = Attempt.If(false, 12);
+            Assert.That(success, Is.False);
+            Assert.That(value, Is.EqualTo(0));
+
+            (success, value) = Attempt.If(true, 12, 42);
+            Assert.That(success);
+            Assert.That(value, Is.EqualTo(12));
+
+            (success, value) = Attempt.If(false, 12, 42);
+            Assert.That(success, Is.False);
+            Assert.That(value, Is.EqualTo(42));
+        }
+
+        [Test]
         public void ImplicitConversions()
         {
             var a1 = (Attempt<int>) 1;
