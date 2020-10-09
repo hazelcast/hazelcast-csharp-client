@@ -25,7 +25,8 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Represents the state of the reading loop.
         /// </summary>
-        private sealed class ReadPipeState : IBufferReference<ReadOnlySequence<byte>>
+        // internal for tests exclusively
+        internal sealed class ReadPipeState : IBufferReference<ReadOnlySequence<byte>>
         {
             /// <summary>
             /// Gets or sets the pipe reader.
@@ -54,11 +55,11 @@ namespace Hazelcast.Networking
             public void CaptureExceptionAndFail(Exception e)
             {
                 // this should never happen, and we cannot do much about it
-                if (Exception != null)
-                    return;
+                // (has already failed... should not be notified again)
+                if (Exception != null) return;
 
                 Failed = true;
-                Exception = ExceptionDispatchInfo.Capture(e);
+                if (e != null) Exception = ExceptionDispatchInfo.Capture(e);
             }
         }
     }

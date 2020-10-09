@@ -34,7 +34,7 @@ namespace Hazelcast.Messaging
     {
         private readonly Dictionary<long, ClientMessage> _messages = new Dictionary<long, ClientMessage>();
         private readonly SocketConnectionBase _connection;
-        private readonly SemaphoreSlim _writer;
+        private readonly IHSemaphore _writer;
         private readonly ILogger _logger;
 
         private Action<ClientMessageConnection, ClientMessage> _onReceiveMessage;
@@ -47,7 +47,18 @@ namespace Hazelcast.Messaging
         /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class.
         /// </summary>
         /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
         public ClientMessageConnection(SocketConnectionBase connection, ILoggerFactory loggerFactory)
+            : this(connection, new HSemaphore(1, 1), loggerFactory)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class, for tests exclusively.
+        /// </summary>
+        /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
+        /// <param name="writerSemaphore">A writer-controlling semaphore.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
+        internal ClientMessageConnection(SocketConnectionBase connection, IHSemaphore writerSemaphore, ILoggerFactory loggerFactory)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _connection.OnReceiveMessageBytes = ReceiveMessageBytesAsync;
@@ -57,7 +68,7 @@ namespace Hazelcast.Messaging
 
             // TODO: threading control here could be an option
             // (in case threading control is performed elsewhere)
-            _writer = new SemaphoreSlim(1, 1);
+            _writer = writerSemaphore;
         }
 
         /// <summary>
@@ -81,12 +92,12 @@ namespace Hazelcast.Messaging
 
         private bool ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference<ReadOnlySequence<byte>> bufferReference)
         {
-            HConsole.WriteLine(this, $"Received {bufferReference.Buffer.Length} bytes");
             var bytes = bufferReference.Buffer;
+            HConsole.WriteLine(this, $"Received {bytes.Length} bytes");
 
             if (_bytesLength < 0)
             {
-                if (bufferReference.Buffer.Length < FrameFields.SizeOf.LengthAndFlags)
+                if (bytes.Length < FrameFields.SizeOf.LengthAndFlags)
                     return false;
 
                 var frameLength = Frame.ReadLength(ref bytes);
@@ -115,14 +126,20 @@ namespace Hazelcast.Messaging
                 }
             }
 
+            // update the reference
             bufferReference.Buffer = bytes;
 
             // TODO: consider buffering here
             // at the moment we are buffering in the pipe, but we have already
             // created the byte array, so ... might be nicer to copy now
-            if (bufferReference.Buffer.Length < _bytesLength)
+            if (bytes.Length < _bytesLength)
+            {
+                // update the reference, exit
+                bufferReference.Buffer = bytes;
                 return false;
+            }
 
+            // else, fill, and update the reference
             bytes.Fill(_currentFrame.Bytes);
             bufferReference.Buffer = bytes;
 
@@ -233,6 +250,7 @@ namespace Hazelcast.Messaging
             // and then pass those bytes to the socket connection
 
             if (message == null) throw new ArgumentNullException(nameof(message));
+            if (message.FirstFrame == null) throw new ArgumentException("Message has no frames.", nameof(message));
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -269,27 +287,10 @@ namespace Hazelcast.Messaging
                 // last chance - after this line, we will send the full message
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var frame = message.FirstFrame;
-                do
-                {
-                    HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
+                var sentFrames = await SendFramesAsync(message, cancellationToken).CAF();
+                if (!sentFrames) return false;
 
-                    // notes:
-                    // - SendFrameAsync does *not* throw but return true/false
-                    // - passing CancellationToken here, we do *not* propagate cancellation
-                    //   any further, we want to send the full message, all frames, all bytes,
-                    //   no matter what
-
-                    if (!await SendFrameAsync(frame, CancellationToken.None).CAF())
-                        return false;
-
-                    // now if we have sent some frames, and then stop because we cannot send
-                    // frames anymore... we have to assume that the server will recover, but
-                    // quite probably the connection is dead or dying - we do nothing about
-                    // it here, because the situation will be managed further up
-
-                    frame = frame.Next;
-                } while (frame != null);
+                await _connection.FlushAsync().CAF(); // make sure the message goes out
             }
             finally
             {
@@ -299,21 +300,90 @@ namespace Hazelcast.Messaging
             return true;
         }
 
+        private async ValueTask<bool> SendFramesAsync(ClientMessage message, CancellationToken cancellationToken)
+        {
+            byte[] buffer = null;
+            var length = 0;
+
+            const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
+
+            // the default array pool allocates buckets of arrays of sizes:
+            //   int maxSize = 16 << binIndex;
+            // so 0 => 16 bytes, 1 => 32 bytes, 2 => 64 bytes etc. and therefore
+            // the most efficient limit should be 16, 32, 64... ie 2^n
+            // best size could probably only be picked via benchmarking?
+            // trade-off between in-memory copy vs network traffic
+            const int minLength = 1024;
+
+            var frame = message.FirstFrame;
+
+            do
+            {
+                if (frame.Length > minLength)
+                {
+                    // frame wont fit in buffer at all
+                    // flush buffer
+                    if (length > 0)
+                    {
+                        var sent = await _connection.SendAsync(buffer, length, default).CAF();
+                        if (!sent) break;
+                        length = 0;
+                    }
+
+                    // send this frame only
+                    HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
+                    var sentFrame = await SendFrameAsync(frame, default).CAF();
+                    if (!sentFrame) break;
+                }
+                else
+                {
+                    // going to use a buffer
+                    buffer ??= ArrayPool<byte>.Shared.Rent(minLength);
+
+                    // if it won't fit in the buffer, flush the buffer
+                    if (length + frame.Length > buffer.Length)
+                    {
+                        var sent = await _connection.SendAsync(buffer, length, default).CAF();
+                        if (!sent) break;
+                        length = 0;
+                    }
+
+                    // copy frame to buffer
+                    HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
+                    frame.WriteLengthAndFlags(buffer, length);
+                    if (frame.Length > sizeofHeader)
+                        frame.Bytes.CopyTo(buffer, length + sizeofHeader);
+                    length += frame.Length;
+                }
+
+                frame = frame.Next;
+            } while (frame != null);
+
+            var allSent = frame == null;
+            if (allSent && length > 0)
+                allSent &= await _connection.SendAsync(buffer, length, default).CAF();
+
+            if (buffer != null)
+                ArrayPool<byte>.Shared.Return(buffer);
+
+            return allSent;
+        }
+
+        // this is only for large frames
         private async ValueTask<bool> SendFrameAsync(Frame frame, CancellationToken cancellationToken)
         {
             const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
 
-            // note: SocketConnectionBase.SendAsync does *not* throw but returns true/false
-            // so this method also does not throw but returns true/false
-
             var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
             frame.WriteLengthAndFlags(header);
+
             var sentHeader = await _connection.SendAsync(header, sizeofHeader, cancellationToken).CAF();
             ArrayPool<byte>.Shared.Return(header);
 
-            return sentHeader &&
-                   (frame.Length <= sizeofHeader ||
-                    await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF());
+            if (!sentHeader) return false;
+            //if (frame.Length <= sizeofHeader) return true;
+
+            return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF();
         }
 
         /// <inheritdoc />

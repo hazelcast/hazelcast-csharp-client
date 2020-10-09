@@ -87,10 +87,11 @@ namespace Hazelcast.Messaging
         /// Writes the length and flags of the frame to an array of bytes.
         /// </summary>
         /// <param name="bytes">An array of bytes.</param>
-        public void WriteLengthAndFlags(byte[] bytes)
+        /// <param name="position">The position.</param>
+        public void WriteLengthAndFlags(byte[] bytes, int position = 0)
         {
-            bytes.WriteInt(0, Length, Endianness.LittleEndian);
-            bytes.WriteUShort(FrameFields.SizeOf.Length, (ushort) Flags, Endianness.LittleEndian);
+            bytes.WriteInt(position, Length, Endianness.LittleEndian);
+            bytes.WriteUShort(position + FrameFields.SizeOf.Length, (ushort) Flags, Endianness.LittleEndian);
         }
 
         /// <summary>
