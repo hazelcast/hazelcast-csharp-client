@@ -17,8 +17,6 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Data
 {
-    // FIXME PROTOCOL TYPE MATCH?!
-
     public class EndpointQualifier : IIdentifiedDataSerializable, IEquatable<EndpointQualifier>
     {
         public EndpointQualifier(ProtocolType type, string identifier)

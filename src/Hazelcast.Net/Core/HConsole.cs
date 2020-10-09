@@ -104,7 +104,7 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Resets the console.
+        /// Gets a disposable that, when disposed, will write and clear the console.
         /// </summary>
         [Conditional("HZ_CONSOLE")]
         public static void Reset()
