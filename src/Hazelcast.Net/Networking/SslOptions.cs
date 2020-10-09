@@ -89,15 +89,19 @@ namespace Hazelcast.Networking
             get => _sslProtocol;
             set
             {
-                _sslProtocol = value switch
+                // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
+                switch (value)
                 {
 #pragma warning disable CA5397 // Do not use deprecated SslProtocols values - TODO: consider removing them?
-                    SslProtocols.Tls => value,
-                    SslProtocols.Tls11 => value,
+                    case SslProtocols.Tls:
+                    case SslProtocols.Tls11:
 #pragma warning restore CA5397
-                    SslProtocols.Tls12 => value,
-                    _ => throw new ConfigurationException("Invalid value. Value must be Tls, Tls11 or Tls12.")
-                };
+                    case SslProtocols.Tls12:
+                        _sslProtocol = value;
+                        break;
+                    default:
+                        throw new ConfigurationException("Invalid value. Value must be Tls, Tls11 or Tls12.");
+                }
             }
         }
 
