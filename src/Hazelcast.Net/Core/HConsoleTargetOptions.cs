@@ -24,25 +24,37 @@ using System.Threading;
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Represents a logging configuration.
+    /// Represents the options for a target.
     /// </summary>
-    internal sealed class HConsoleConfiguration
+    internal sealed class HConsoleTargetOptions
     {
 #if HZ_CONSOLE
         private bool _hasIndent;
         private bool _hasPrefix;
-        private bool _hasMaxLevel;
+        private bool _hasLevel;
 #endif
 
 #if HZ_CONSOLE
-       public HConsoleConfiguration Clone()
+        /// <summary>
+        /// Clones these options.
+        /// </summary>
+        /// <returns>A clone of these options.</returns>
+        public HConsoleTargetOptions Clone()
        {
-           var clone = new HConsoleConfiguration();
+           var clone = new HConsoleTargetOptions();
            if (_hasIndent) clone.SetIndent(Indent);
            if (_hasPrefix) clone.SetPrefix(Prefix);
-           if (_hasMaxLevel) clone.SetMaxLevel(MaxLevel);
+           if (_hasLevel) clone.SetLevel(Level);
            return clone;
        }
+
+        /// <summary>
+        /// Gets the default options.
+        /// </summary>
+        public static HConsoleTargetOptions Default { get; } = new HConsoleTargetOptions()
+           .SetPrefix(default)
+           .SetLevel(-1)
+           .SetIndent(0);
 #endif
 
         /// <summary>
@@ -51,7 +63,7 @@ namespace Hazelcast.Core
         /// <param name="indent">The indentation level.</param>
         /// <returns>This configuration object.</returns>
 
-        public HConsoleConfiguration SetIndent(int indent)
+        public HConsoleTargetOptions SetIndent(int indent)
         {
 #if HZ_CONSOLE
             Indent = indent;
@@ -64,7 +76,7 @@ namespace Hazelcast.Core
         /// Clears the indentation level.
         /// </summary>
         /// <returns>This configuration object.</returns>
-        public HConsoleConfiguration ClearIndent()
+        public HConsoleTargetOptions ClearIndent()
         {
 #if HZ_CONSOLE
             Indent = default;
@@ -78,7 +90,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="prefix">The prefix.</param>
         /// <returns>This configuration object.</returns>
-        public HConsoleConfiguration SetPrefix(string prefix)
+        public HConsoleTargetOptions SetPrefix(string prefix)
         {
 #if HZ_CONSOLE
             Prefix = prefix;
@@ -91,7 +103,7 @@ namespace Hazelcast.Core
         /// Clears the prefix.
         /// </summary>
         /// <returns>This configuration object.</returns>
-        public HConsoleConfiguration ClearPrefix()
+        public HConsoleTargetOptions ClearPrefix()
         {
 #if HZ_CONSOLE
             Prefix = default;
@@ -101,28 +113,28 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Sets the maximal log level.
+        /// Sets the log level.
         /// </summary>
-        /// <param name="maxLevel">The maximal log level.</param>
+        /// <param name="maxLevel">The log level.</param>
         /// <returns>This configuration object.</returns>
-        public HConsoleConfiguration SetMaxLevel(int maxLevel)
+        public HConsoleTargetOptions SetLevel(int maxLevel)
         {
 #if HZ_CONSOLE
-            MaxLevel = maxLevel;
-            _hasMaxLevel = true;
+            Level = maxLevel;
+            _hasLevel = true;
 #endif
             return this;
         }
 
         /// <summary>
-        /// Clears the maximal log level.
+        /// Clears the log level.
         /// </summary>
         /// <returns>This configuration object.</returns>
-        public HConsoleConfiguration ClearMaxLevel()
+        public HConsoleTargetOptions ClearLevel()
         {
 #if HZ_CONSOLE
-            MaxLevel = default;
-            _hasMaxLevel = false;
+            Level = default;
+            _hasLevel = false;
 #endif
             return this;
         }
@@ -131,11 +143,11 @@ namespace Hazelcast.Core
         /// Sets the log level to -1 (never writes).
         /// </summary>
         /// <returns>This configuration object.</returns>
-        public HConsoleConfiguration SetQuiet()
+        public HConsoleTargetOptions Quiet()
         {
 #if HZ_CONSOLE
-            MaxLevel = -1;
-            _hasMaxLevel = true;
+            Level = -1;
+            _hasLevel = true;
 #endif
             return this;
         }
@@ -144,11 +156,11 @@ namespace Hazelcast.Core
         /// Sets the log level to int.MaxValue (always writes).
         /// </summary>
         /// <returns>This configuration object.</returns>
-        public HConsoleConfiguration SetVerbose()
+        public HConsoleTargetOptions Verbose()
         {
 #if HZ_CONSOLE
-            MaxLevel = int.MaxValue;
-            _hasMaxLevel = true;
+            Level = int.MaxValue;
+            _hasLevel = true;
 #endif
             return this;
         }
@@ -157,25 +169,25 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the indentation level.
         /// </summary>
-        internal int Indent { get; private set; }
+        public int Indent { get; private set; }
 
         /// <summary>
         /// Gets the prefix.
         /// </summary>
-        internal string Prefix { get; private set; }
+        public string Prefix { get; private set; }
 
         /// <summary>
-        /// Gets the maximal log level.
+        /// Gets the log level.
         /// </summary>
-        internal int MaxLevel { get; private set; }
+        public int Level { get; private set; }
 #endif
 
         /// <summary>
         /// Determines whether this configuration has an indentation level, a prefix and a maximal log level.
         /// </summary>
-        internal bool IsComplete
+        public bool IsComplete
 #if HZ_CONSOLE
-            => _hasIndent && _hasPrefix && _hasMaxLevel;
+            => _hasIndent && _hasPrefix && _hasLevel;
 #else
             => true;
 #endif
@@ -186,12 +198,12 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="config">The other configuration.</param>
         /// <returns>This configuration.</returns>
-        public HConsoleConfiguration Merge(HConsoleConfiguration config)
+        public HConsoleTargetOptions Merge(HConsoleTargetOptions config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             if (!_hasIndent && config._hasIndent) SetIndent(config.Indent);
             if (!_hasPrefix && config._hasPrefix) SetPrefix(config.Prefix);
-            if (!_hasMaxLevel && config._hasMaxLevel) SetMaxLevel(config.MaxLevel);
+            if (!_hasLevel && config._hasLevel) SetLevel(config.Level);
             return this;
         }
 #endif
@@ -213,7 +225,7 @@ namespace Hazelcast.Core
         /// <returns>true if the level should be ignored; otherwise false.</returns>
         public bool Ignore(int level)
 #if HZ_CONSOLE
-            => level > MaxLevel;
+            => level > Level;
 #else
             => true;
 #endif
@@ -221,7 +233,7 @@ namespace Hazelcast.Core
         /// <inheritdoc />
         public override string ToString()
 #if HZ_CONSOLE
-            => $"indent = {(_hasIndent ? Indent.ToString(CultureInfo.InvariantCulture) : "?")}, prefix = {(_hasPrefix ? ("\"" + Prefix + "\"") : "?")}, maxLevel = {(_hasMaxLevel ? MaxLevel.ToString(CultureInfo.InvariantCulture) : "?")}";
+            => $"indent = {(_hasIndent ? Indent.ToString(CultureInfo.InvariantCulture) : "?")}, prefix = {(_hasPrefix ? ("\"" + Prefix + "\"") : "?")}, level = {(_hasLevel ? Level.ToString(CultureInfo.InvariantCulture) : "?")}";
 #else
             => "";
 #endif

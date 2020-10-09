@@ -107,7 +107,8 @@ namespace Hazelcast.Clustering
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
 
-            HConsole.Configure(this, config => config.SetIndent(4).SetPrefix("CLIENT"));
+            HConsole.Configure(x => x
+                .Set(this, xx => xx.SetIndent(4).SetPrefix("CLIENT")));
         }
 
         /// <summary>
@@ -221,7 +222,9 @@ namespace Hazelcast.Clustering
 
             _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _socketOptions, _sslOptions, _loggerFactory) { OnShutdown = SocketShutdown };
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-            HConsole.Configure(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
+
+            HConsole.Configure(x => x
+                .Set(_messageConnection, xx => xx.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]")));
 
             try
             {

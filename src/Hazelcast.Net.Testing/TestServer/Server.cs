@@ -63,7 +63,8 @@ namespace Hazelcast.Testing.TestServer
             _clusterId = Guid.NewGuid();
             _memberId = Guid.NewGuid();
 
-            HConsole.Configure(this, config => config.SetIndent(20).SetPrefix("SERVER"));
+            HConsole.Configure(x => x
+                .Set(this, xx => xx.SetIndent(20).SetPrefix("SERVER")));
         }
 
         /// <summary>
@@ -75,7 +76,8 @@ namespace Hazelcast.Testing.TestServer
             HConsole.WriteLine(this, $"Start server at {_endpoint}");
 
             _listener = new ServerSocketListener(_endpoint) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
-            HConsole.Configure(_listener, config => config.SetIndent(24).SetPrefix("LISTENER"));
+            HConsole.Configure(x => x
+                .Set(_listener, xx => xx.SetIndent(24).SetPrefix("LISTENER")));
             _open = true;
             await _listener.StartAsync().CAF();
 
@@ -138,7 +140,8 @@ namespace Hazelcast.Testing.TestServer
                 if (!_open) throw new InvalidOperationException("Cannot accept connections (closed).");
 
                 var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-                HConsole.Configure(messageConnection, config => config.SetIndent(28).SetPrefix("MSG.SERVER"));
+                HConsole.Configure(x => x
+                    .Set(messageConnection, xx => xx.SetIndent(28).SetPrefix("MSG.SERVER")));
                 serverConnection.OnShutdown = SocketShutdown;
                 serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
                 serverConnection.Accept();

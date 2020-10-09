@@ -29,8 +29,10 @@ namespace Hazelcast.Tests.Remote
         
         protected override async Task<IHCollection<string>> GetHCollectionAsync(string baseName = default, bool isUnique = true)
         {
-            return await Client.GetQueueAsync<string>(
-                baseName == default ? QueueNameBase : baseName + (isUnique ? CreateUniqueName() : ""));
+            var name = baseName ?? QueueNameBase;
+            if (isUnique) name += "_" + CreateUniqueName();
+
+            return await Client.GetQueueAsync<string>(name);
         }
 
         [Test]

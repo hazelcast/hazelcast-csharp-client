@@ -223,7 +223,7 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.SucceedsEventually(() =>
                     Assert.AreEqual(eventsCount, testItemCount * testItemCount),
-                4000, 500);
+                66000, 100); // can take a *lot* of time
 
             // foreach (var sid in sids)
             //     await collection.UnsubscribeAsync(sid);
