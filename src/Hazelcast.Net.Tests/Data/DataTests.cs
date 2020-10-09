@@ -167,7 +167,7 @@ namespace Hazelcast.Tests.Data
         [Test]
         public void MapEntryTest()
         {
-            var x = new HDictionaryEntry<string, string>();
+            var x = new HDictionaryEntryStats<string, string>();
 
             x.Cost = 12;
             Assert.That(x.Cost, Is.EqualTo(12));

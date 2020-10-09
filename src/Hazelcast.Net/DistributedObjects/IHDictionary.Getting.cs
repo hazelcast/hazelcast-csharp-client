@@ -96,8 +96,8 @@ namespace Hazelcast.DistributedObjects
         /// Gets an entry with statistics for a key, or <c>null</c> if the dictionary does not contain an entry with this key.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <returns>An <see cref="IHDictionaryEntry{TKey,TValue}"/> for the specified key,
+        /// <returns>An <see cref="IHDictionaryEntryStats{TKey,TValue}"/> for the specified key,
         /// or <c>null</c> if the dictionary does not contain an entry with this key.</returns>
-        Task<IHDictionaryEntry<TKey, TValue>> GetEntryStatsAsync(TKey key);
+        Task<IHDictionaryEntryStats<TKey, TValue>> GetEntryStatsAsync(TKey key);
     }
 }

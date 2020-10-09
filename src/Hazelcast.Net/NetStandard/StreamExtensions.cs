@@ -18,10 +18,11 @@
 // See the LICENSE file in the project root for more information.
 
 #if NET462 || NETSTANDARD2_0
-using System;
 using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 // ReSharper disable once CheckNamespace
 namespace System.IO
@@ -47,41 +48,53 @@ namespace System.IO
             if (stream == null) throw new ArgumentNullException(nameof(stream));
             if (memory.Length == 0) throw new ArgumentException("Empty memory.", nameof(memory));
 
-            byte[] bytes = null;
+            // this is based upon what 2.1 does
+
+            if (MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> array))
+            {
+                //return await stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken).CAF();
+
+                // see below, cancellation issue
+                var reading = stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken);
+                var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken)).ConfigureAwait(false);
+
+                if (completed != reading)
+                {
+                    _ = reading.ObserveException();
+                    throw new TaskCanceledException();
+                }
+
+                var result = await reading.CAF();
+                return result;
+            }
+
+            var bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
             try
             {
-                // TODO: optimize
-                // of course this is sub-optimal :(
-                bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
+                //var result = await stream.ReadAsync(bytes, 0, memory.Length, cancellationToken).CAF();
 
                 // stream.ReadAsync for network streams *ignores* the cancellation token
                 // see https://github.com/dotnet/runtime/issues/24093
                 // hence this... workaround
                 //
                 var reading = stream.ReadAsync(bytes, 0, memory.Length, cancellationToken);
-
                 var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken)).ConfigureAwait(false);
 
                 if (completed != reading)
                 {
-                    reading = reading.ObserveException();
+                    _ = reading.ObserveException();
                     throw new TaskCanceledException();
                 }
 
-                var count = await reading.ConfigureAwait(false);
+                var result = await reading.CAF();
 
-                new ReadOnlySpan<byte>(bytes).Slice(0, count).CopyTo(memory.Span);
-                return count;
+                new Span<byte>(bytes, 0, result).CopyTo(memory.Span);
+                return result;
             }
             finally
             {
-                if (bytes != null)
-                    ArrayPool<byte>.Shared.Return(bytes);
+                ArrayPool<byte>.Shared.Return(bytes);
             }
-
-            // see https://stackoverflow.com/questions/50078640/spant-and-streams
-            // but... memory.GetUnderlyingArray().Array is for readonly memory only
-            // cannot work in our case?
         }
     }
 }

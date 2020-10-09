@@ -152,6 +152,29 @@ namespace Hazelcast.Tests.Exceptions
             }
         }
 
+        [Test]
+        public void Catching()
+        {
+            var count1 = 0;
+            var count2 = 0;
+
+            try
+            {
+                ThrowRemoteException(RemoteError.MemberLeft);
+            }
+            catch (RemoteException e) when (e.Error == RemoteError.MemberLeft)
+            {
+                count1++;
+            }
+            catch
+            {
+                count2++;
+            }
+
+            Assert.That(count1, Is.EqualTo(1));
+            Assert.That(count2, Is.Zero);
+        }
+
         private static void ThrowRemoteException(RemoteError error)
         {
             var stackTraceElements = new List<StackTraceElement>();

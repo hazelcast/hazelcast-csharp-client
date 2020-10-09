@@ -35,7 +35,7 @@ namespace Hazelcast.Tests.DotNet
             var source = new CancellationTokenSource();
             //source.CancelAfter(2000);
 
-            // wtf is this non-blocking?!
+            // note: a memory stream is non blocking!
             var count = await stream.ReadAsync(memory, source.Token).CAF();
             Console.WriteLine(count);
 

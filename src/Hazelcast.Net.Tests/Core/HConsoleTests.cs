@@ -312,7 +312,7 @@ ccc";
             HConsole.WriteLine(this, "meh");
             using (capture.Output())
             {
-                using (HConsole.Mshva()) { }
+                using (HConsole.Capture()) { }
             }
 
             Assert.That(HConsole.Text.Length, Is.Zero);

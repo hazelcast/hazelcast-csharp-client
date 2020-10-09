@@ -138,10 +138,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IHDictionaryEntry<TKey, TValue>> GetEntryStatsAsync(TKey key)
+        public Task<IHDictionaryEntryStats<TKey, TValue>> GetEntryStatsAsync(TKey key)
             => GetEntryStatsAsync(key, CancellationToken.None);
 
-        private async Task<IHDictionaryEntry<TKey, TValue>> GetEntryStatsAsync(TKey key, CancellationToken cancellationToken)
+        private async Task<IHDictionaryEntryStats<TKey, TValue>> GetEntryStatsAsync(TKey key, CancellationToken cancellationToken)
         {
             var keyData = ToSafeData(key);
 
@@ -151,7 +151,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             if (response == null) return null;
 
-            return new HDictionaryEntry<TKey, TValue>
+            return new HDictionaryEntryStats<TKey, TValue>
             {
                 Key = ToObject<TKey>(response.Key),
                 Value = ToObject<TValue>(response.Value),

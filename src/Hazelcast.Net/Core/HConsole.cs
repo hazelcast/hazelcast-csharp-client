@@ -20,6 +20,10 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
+#if HZ_CONSOLE
+using System.Globalization;
+#endif
+
 namespace Hazelcast.Core
 {
     /// <summary>
@@ -127,6 +131,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets a disposable that, when disposed, will write and clear the console.
         /// </summary>
+        /// <param name="configure">An optional action to configure the options.</param>
         /// <returns>A disposable that, when disposed, will write and clear the console.</returns>
         // cannot be [Conditional] when return type is not void
         public static IDisposable Capture(Action<HConsoleOptions> configure = null)
