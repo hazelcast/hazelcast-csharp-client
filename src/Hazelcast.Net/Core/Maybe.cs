@@ -12,19 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Buffers;
+using System;
 
 namespace Hazelcast.Core
 {
-    /// <summary>
-    /// References a buffer.
-    /// </summary>
-    /// <typeparam name="T">The type of the buffer.</typeparam>
-    internal interface IBufferReference<T>
+    internal static class Maybe
     {
-        /// <summary>
-        /// Gets or sets the buffer.
-        /// </summary>
-        T Buffer { get; set; }
+        //public class MaybeNone { }
+
+        //public static MaybeNone None { get; } = new MaybeNone();
+        public static MaybeNone None => default;
+
+        public static Maybe<T> Some<T>(T value)
+        {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            return value;
+        }
     }
 }

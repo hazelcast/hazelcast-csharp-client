@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 using Hazelcast.Core;
 using NUnit.Framework;
@@ -22,7 +23,7 @@ namespace Hazelcast.Tests.Core
     public class CancellationTokenSourceExtensionsTests
     {
         [Test]
-        public void Test1()
+        public void LinkedWith1()
         {
             var cancellation1 = new CancellationTokenSource();
             var cancellation2 = new CancellationTokenSource();
@@ -41,7 +42,7 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void Test2()
+        public void LinkedWith2()
         {
             var cancellation1 = new CancellationTokenSource();
             var cancellation2 = new CancellationTokenSource();
@@ -57,6 +58,18 @@ namespace Hazelcast.Tests.Core
 
             Assert.That(cancellation1.IsCancellationRequested, Is.False);
             Assert.That(cancellation2.IsCancellationRequested, Is.True);
+        }
+
+        [Test]
+        public void ThrowIfCancellationRequested()
+        {
+            var cancellation = new CancellationTokenSource();
+
+            cancellation.ThrowIfCancellationRequested();
+
+            cancellation.Cancel();
+
+            Assert.Throws<OperationCanceledException>(() => cancellation.ThrowIfCancellationRequested());
         }
     }
 }
