@@ -36,9 +36,13 @@ namespace Hazelcast.Configuration
             var directory = Path.GetDirectoryName(fullpath);
             fullpath = Path.Combine(directory, Path.GetFileNameWithoutExtension(fullpath));
 
+            // JSON files are reloadOnChange:false because we do not track configuration changes,
+            // and we try to mitigate issues with running apps in Docker containers.
+            // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
+
             configurationBuilder
-                .AddJsonFile(fullpath + extension, true)
-                .AddJsonFile(fullpath + '.' + DetermineEnvironment(environmentName) + extension, true);
+                .AddJsonFile(fullpath + extension, true, false)
+                .AddJsonFile(fullpath + '.' + DetermineEnvironment(environmentName) + extension, true, false);
 
             return configurationBuilder;
         }
@@ -140,9 +144,13 @@ namespace Hazelcast.Configuration
         /// </remarks>
         public static IConfigurationBuilder AddDefaults(this IConfigurationBuilder configurationBuilder, string[] args, string environmentName = null)
         {
+            // JSON files are reloadOnChange:false because we do not track configuration changes,
+            // and we try to mitigate issues with running apps in Docker containers.
+            // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
+
             configurationBuilder
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{DetermineEnvironment(environmentName)}.json", optional: true, reloadOnChange: true);
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .AddJsonFile($"appsettings.{DetermineEnvironment(environmentName)}.json", optional: true, reloadOnChange: false);
 
             configurationBuilder.AddEnvironmentVariables();
 
