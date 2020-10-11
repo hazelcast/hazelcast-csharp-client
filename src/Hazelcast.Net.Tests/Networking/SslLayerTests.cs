@@ -107,7 +107,7 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public void GetClientCertificateOrDefault()
+        public void GetClientCertificateOrDefault1()
         {
             var text = new StringBuilder();
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
@@ -126,25 +126,54 @@ namespace Hazelcast.Tests.Networking
             var ssl = new SslLayer(options, loggerFactory);
             var certs = ssl.GetClientCertificatesOrDefault();
             Assert.That(certs, Is.Null);
+        }
 
-            options = new SslOptions
+        [Test]
+        public void GetClientCertificateOrDefault2()
+        {
+            var text = new StringBuilder();
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
+
+            var path = Environment.CurrentDirectory;
+            while (Path.GetFileName(path) != "src")
+                path = Path.GetDirectoryName(path);
+
+            path = Path.GetFullPath(path + "/Hazelcast.Net.Tests/Resources/Certificates/");
+            Console.WriteLine("Path: " + path);
+
+            var options = new SslOptions
             {
                 CertificateName = "cert1",
                 CertificatePath = Path.Combine(path, "client1.pfx"),
                 CertificatePassword = "password"
             };
-            ssl = new SslLayer(options, loggerFactory);
-            certs = ssl.GetClientCertificatesOrDefault();
+            var ssl = new SslLayer(options, loggerFactory);
+            var certs = ssl.GetClientCertificatesOrDefault();
             Assert.That(certs, Is.Not.Null);
             Assert.That(certs.Count, Is.EqualTo(1));
+        }
 
-            options = new SslOptions
+        [Test]
+        public void GetClientCertificateOrDefault3()
+        {
+            var text = new StringBuilder();
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
+
+            var path = Environment.CurrentDirectory;
+            while (Path.GetFileName(path) != "src")
+                path = Path.GetDirectoryName(path);
+
+            path = Path.GetFullPath(path + "/Hazelcast.Net.Tests/Resources/Certificates/");
+            Console.WriteLine("Path: " + path);
+
+            var options = new SslOptions
             {
                 CertificateName = "cert-not",
                 CertificatePath = Path.Combine(path, "client-not.pfx"),
                 CertificatePassword = "password"
             };
-            ssl = new SslLayer(options, loggerFactory);
+            var ssl = new SslLayer(options, loggerFactory);
+            X509Certificate2Collection certs = null;
             try
             {
                 certs = ssl.GetClientCertificatesOrDefault();
