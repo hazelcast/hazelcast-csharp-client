@@ -40,7 +40,6 @@ namespace Hazelcast.Serialization
         private readonly Dictionary<Type, ISerializerAdapter> _constantTypesMap =
             new Dictionary<Type, ISerializerAdapter>(ConstantSerializersSize);
 
-        private readonly BufferPoolThreadLocal _bufferPoolThreadLocal;
         private readonly ISerializerAdapter _dataSerializerAdapter;
         private volatile ISerializerAdapter _global;
 
@@ -75,7 +74,6 @@ namespace Hazelcast.Serialization
             _inputOutputFactory = inputOutputFactory;
             GlobalPartitioningStrategy = partitioningStrategy;
             _outputBufferSize = initialOutputBufferSize;
-            _bufferPoolThreadLocal = new BufferPoolThreadLocal(this);
             _portableContext = new PortableContext(this, version);
 
             // create data serializer (will be added as constant)
@@ -113,16 +111,6 @@ namespace Hazelcast.Serialization
 
         #region DataOutput / DataInput
 
-        private IBufferObjectDataOutput GetDataOutput() => _bufferPoolThreadLocal.Get().TakeOutputBuffer();
-
-        private void ReturnDataOutput(IBufferObjectDataOutput output) => _bufferPoolThreadLocal.Get().ReturnOutputBuffer(output);
-
-        private IBufferObjectDataInput GetDataInput(IData data) => _bufferPoolThreadLocal.Get().TakeInputBuffer(data);
-
-        private void ReturnDataInput(IBufferObjectDataInput input) => _bufferPoolThreadLocal.Get().ReturnInputBuffer(input);
-
-        // for debugging purposes it may be interesting to entirely disable our (weirdish) pooling
-        /*
         private IBufferObjectDataOutput GetDataOutput() => new ByteArrayObjectDataOutput(0, this, Endianness);
 
         private void ReturnDataOutput(IBufferObjectDataOutput output) { }
@@ -130,7 +118,6 @@ namespace Hazelcast.Serialization
         private IBufferObjectDataInput GetDataInput(IData data) => new ByteArrayObjectDataInput(data.ToByteArray(), HeapData.DataOffset, this, Endianness);
 
         private void ReturnDataInput(IBufferObjectDataInput input) { }
-        */
 
         #endregion
 
@@ -561,7 +548,6 @@ namespace Hazelcast.Serialization
             _idMap.Clear();
             Interlocked.Exchange(ref _global, null);
             _constantTypesMap.Clear();
-            _bufferPoolThreadLocal.Dispose();
         }
 
         protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
@@ -661,12 +647,6 @@ namespace Hazelcast.Serialization
             return serializer;
         }
 
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            _bufferPoolThreadLocal.Dispose();
-        }
-
         private sealed class EmptyPartitioningStrategy : IPartitioningStrategy
         {
             public object GetPartitionKey(object key)
@@ -674,5 +654,8 @@ namespace Hazelcast.Serialization
                 return null;
             }
         }
+
+        public void Dispose()
+        { }
     }
 }
