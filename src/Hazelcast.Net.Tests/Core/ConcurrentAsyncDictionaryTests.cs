@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Core
 
     public class ConcurrentAsyncDictionaryTests
     {
-
+        [Test]
         public async Task Test()
         {
             var d = new ConcurrentAsyncDictionary<string, ValueItem<int>>();
@@ -40,11 +40,11 @@ namespace Hazelcast.Tests.Core
 
             var v = await d.GetOrAddAsync("a", Factory);
 
-            Assert.AreEqual(2, v);
+            Assert.AreEqual(2, v.Value);
             Assert.AreEqual(1, i);
 
             v = await d.GetOrAddAsync("a", Factory);
-            Assert.AreEqual(2, v);
+            Assert.AreEqual(2, v.Value);
             Assert.AreEqual(1, i);
 
             var entries = new List<string>();
@@ -58,7 +58,7 @@ namespace Hazelcast.Tests.Core
 
             var (hasValue, gotValue) = await d.TryGetAsync("a");
             Assert.IsTrue(hasValue);
-            Assert.AreEqual(2, gotValue);
+            Assert.AreEqual(2, gotValue.Value);
 
             Assert.IsTrue(d.TryRemove("a"));
             Assert.IsFalse(d.TryRemove("a"));
@@ -100,13 +100,11 @@ namespace Hazelcast.Tests.Core
 
             (hasValue, _) = await d.TryGetAsync("a");
             Assert.IsFalse(hasValue);
-            /*
-            Assert.IsTrue(d.TryAdd("a", _ => new ValueTask<int>(2)));
-            Assert.IsTrue(d.TryAdd("b", _ => new ValueTask<int>(3)));
-            Assert.IsTrue(d.TryAdd("c", _ => new ValueTask<int>(4)));
 
-            Assert.IsFalse(d.TryAdd("c", _ => new ValueTask<int>(4)));
-            */
+            await d.GetOrAddAsync("a", (_, __) => new ValueTask<ValueItem<int>>(new ValueItem<int>(2)));
+            await d.GetOrAddAsync("b", (_, __) => new ValueTask<ValueItem<int>>(new ValueItem<int>(3)));
+            await d.GetOrAddAsync("c", (_, __) => new ValueTask<ValueItem<int>>(new ValueItem<int>(4)));
+
             entries = new List<string>();
             await foreach (var (key, value) in d)
             {
@@ -367,6 +365,22 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
+        public async Task TryAddNull()
+        {
+            var d = new ConcurrentAsyncDictionary<string, string>();
+
+            static ValueTask<string> CreateValueItem(string key, CancellationToken _)
+            {
+                return new ValueTask<string>((string) null);
+            }
+
+            await d.TryAddAsync("key", CreateValueItem);
+
+            var attempt = await d.TryGetAsync("key");
+            Assert.That(attempt.Success, Is.False);
+        }
+
+        [Test]
         public async Task GetOrAddBogus()
         {
             var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
@@ -385,6 +399,23 @@ namespace Hazelcast.Tests.Core
             {
                 Assert.That(e.Message, Is.EqualTo("bogus"));
             }
+        }
+
+        [Test]
+        public async Task GetOrAddNull()
+        {
+            var d = new ConcurrentAsyncDictionary<string, string>();
+
+            static ValueTask<string> CreateValueItem(string key, CancellationToken _)
+            {
+                return new ValueTask<string>((string) null);
+            }
+
+            var value = await d.GetOrAddAsync("key", CreateValueItem);
+            Assert.That(value, Is.Null);
+
+            var attempt = await d.TryGetAsync("key");
+            Assert.That(attempt.Success, Is.False);
         }
 
         [Test]
@@ -732,6 +763,63 @@ namespace Hazelcast.Tests.Core
             var v2 = await entry.GetValue((x, _) => new ValueTask<ValueItem<int>>(new ValueItem<int>(x)));
 
             Assert.That(v1, Is.EqualTo(v2));
+
+            var entry2 = new ConcurrentAsyncDictionary<int, string>.Entry(42, true, "hello");
+            var value = await entry2.GetValue();
+            Assert.That(value, Is.EqualTo("hello"));
+
+            entry2 = new ConcurrentAsyncDictionary<int, string>.Entry(42, false, creating: Task.FromResult("hello"));
+            value = await entry2.GetValue();
+            Assert.That(value, Is.EqualTo("hello"));
+        }
+
+        [Test]
+        public async Task TryGetEntryValueTests()
+        {
+            // create an entry with a value
+            var entry = new ConcurrentAsyncDictionary<int, string>.Entry(42, true, "hello");
+
+            // value is returned
+            var attempt = await ConcurrentAsyncDictionary<int, string>.TryGetEntryValueAsync(entry);
+            Assert.That(attempt.Success);
+            Assert.That(attempt.Value, Is.EqualTo("hello"));
+
+            // create an entry with a null value
+            entry = new ConcurrentAsyncDictionary<int, string>.Entry(42, true);
+
+            // entry with a null value is not returned
+            attempt = await ConcurrentAsyncDictionary<int, string>.TryGetEntryValueAsync(entry);
+            Assert.That(attempt.Success, Is.False);
+
+            // put that entry in a dictionary
+            var d = new ConcurrentAsyncDictionary<int, string>();
+            d.AddEntry(42, new ConcurrentAsyncDictionary<int, string>.Entry(42, true));
+
+            // entry with a null value is not enumerated
+            var entries = new List<string>();
+            await foreach (var (k, v) in d)
+                entries.Add(v);
+
+            Assert.That(entries.Count, Is.Zero);
+
+            // create an entry which creates a null value
+            entry = new ConcurrentAsyncDictionary<int, string>.Entry(42, false, creating: Task.FromResult((string) null));
+
+            // entry with a null value is not returned
+            attempt = await ConcurrentAsyncDictionary<int, string>.TryGetEntryValueAsync(entry);
+            Assert.That(attempt.Success, Is.False);
+
+            // create an entry which throws when creating its value
+            static async Task<string> CreateValue()
+            {
+                await Task.Yield();
+                throw new Exception("bang");
+            }
+            entry = new ConcurrentAsyncDictionary<int, string>.Entry(42, false, creating: CreateValue());
+
+            // entry which throws is not returned
+            attempt = await ConcurrentAsyncDictionary<int, string>.TryGetEntryValueAsync(entry);
+            Assert.That(attempt.Success, Is.False);
         }
 
         private class ValueItem<T>

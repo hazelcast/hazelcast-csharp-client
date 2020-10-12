@@ -329,7 +329,7 @@ namespace Hazelcast.Serialization
 
             var length = value.Length;
             Validate(_position, BytesExtensions.SizeOfInt + length * BytesExtensions.SizeOfChar);
-            
+
             _data.WriteInt(_position, length, endianness);
 
             _position += BytesExtensions.SizeOfInt;
@@ -344,9 +344,9 @@ namespace Hazelcast.Serialization
         public void WriteAsBytes(string s)
         {
             var length = s.Length;
-            
+
             Validate(_position, length * BytesExtensions.SizeOfByte);
-            
+
             for (var i = 0; i < length; i++)
             {
                 var b = unchecked((byte) s[i]); // TODO: losing data here?!

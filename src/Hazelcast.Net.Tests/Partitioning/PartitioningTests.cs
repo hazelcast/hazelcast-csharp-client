@@ -133,6 +133,8 @@ namespace Hazelcast.Tests.Partitioning
             Assert.That(random, Is.GreaterThanOrEqualTo(0));
             Assert.That(random, Is.LessThan(3));
 
+            Assert.That(partitioner.GetPartitionHashOwner(1), Is.EqualTo(map[1]));
+
             var newMap = new Dictionary<int, Guid>
             {
                 { 1, Guid.NewGuid() },

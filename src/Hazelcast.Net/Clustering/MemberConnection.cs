@@ -23,6 +23,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol;
+using Hazelcast.Protocol.BuiltInCodecs;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering

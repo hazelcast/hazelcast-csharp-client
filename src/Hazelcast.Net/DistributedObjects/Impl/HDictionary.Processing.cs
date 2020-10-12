@@ -28,14 +28,14 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionary<TKey, TValue> // Processing
     {
         /// <inheritdoc />
-        public Task<TResult> ExecuteAsync<TResult>(IEntryProcessor processor, TKey key)
+        public Task<TResult> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, TKey key)
             => ExecuteAsync<TResult>(processor, key, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<TResult> ExecuteAsync<TResult>(IEntryProcessor processor, TKey key, CancellationToken cancellationToken)
+        Task<TResult> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, TKey key, CancellationToken cancellationToken)
         {
             var (keyData, processorData) = ToSafeData(key, processor);
             var task = ExecuteAsync<TResult>(processorData, keyData, cancellationToken);
@@ -66,10 +66,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IEnumerable<TKey> keys)
+        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, IEnumerable<TKey> keys)
             => ExecuteAsync<TResult>(processor, keys, CancellationToken.None);
 
-        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IEnumerable<TKey> keys, CancellationToken cancellationToken)
+        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, IEnumerable<TKey> keys, CancellationToken cancellationToken)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
 
@@ -93,10 +93,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor)
+        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor)
             => ExecuteAsync<TResult>(processor, CancellationToken.None);
 
-        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, CancellationToken cancellationToken)
+        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, CancellationToken cancellationToken)
         {
             var processorData = ToSafeData(processor);
 
@@ -112,10 +112,10 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IPredicate predicate)
+        public Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, IPredicate predicate)
             => ExecuteAsync<TResult>(processor, predicate, CancellationToken.None);
 
-        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor processor, IPredicate predicate, CancellationToken cancellationToken)
+        private async Task<IDictionary<TKey, TResult>> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, IPredicate predicate, CancellationToken cancellationToken)
         {
             var (processorData, predicateData) = ToSafeData(processor, predicate);
 

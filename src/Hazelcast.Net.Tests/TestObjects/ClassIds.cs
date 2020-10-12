@@ -12,22 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using Hazelcast.Messaging;
-using Hazelcast.Protocol.BuiltInCodecs;
-using Hazelcast.Protocol.CustomCodecs;
-using Hazelcast.Protocol.Data;
-
-namespace Hazelcast.Protocol
+namespace Hazelcast.Tests.TestObjects
 {
-    internal static class ErrorsCodec
+    public static class ClassIds
     {
-        public static List<ErrorHolder> Decode(ClientMessage clientMessage)
-        {
-            using var iterator = clientMessage.GetEnumerator();
-            //initial frame
-            iterator.Take();
-            return ListMultiFrameCodec.Decode(iterator, ErrorHolderCodec.Decode);
-        }
+        public const int Factory = 1;
+        public const int Handle = 2;
+        public const int Header = 3;
+        public const int Item = 4;
     }
 }

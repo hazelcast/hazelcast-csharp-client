@@ -131,7 +131,7 @@ namespace Hazelcast.DistributedObjects
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync()
-            => await _factory.DestroyAsync(ServiceName, Name).CAF();
+            => await _factory.DestroyAsync(this).CAF();
 
         /// <summary>
         /// Serializes an object to <see cref="IData"/>.
@@ -324,5 +324,10 @@ namespace Hazelcast.DistributedObjects
         /// Disposes resources.
         /// </summary>
         protected virtual ValueTask DisposeAsyncCore() => default;
+
+        public override string ToString()
+        {
+            return $"ServiceName = '{ServiceName}', Name = '{Name}', Type = '{GetType().ToCsString()}'";
+        }
     }
 }

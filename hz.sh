@@ -20,7 +20,7 @@ fi
 c=()
 for i in "$@"
 do
-	if [[ "$OS" == "Windows_NT" ]] && [[ "$i" =~ " " ]];
+	if [[ "$OS" == "Windows_NT" ]] && [[ "$i" =~ " " ]] && [[ "$POWERSHELL" == "powershell" ]];
 	then
     	c+=("\"$i\"")
 	else

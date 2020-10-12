@@ -17,8 +17,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Testing;
 using Hazelcast.Testing.Networking;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -163,6 +165,163 @@ namespace Hazelcast.Tests.Messaging
             {
                 await m.SendAsync(new ClientMessage(new Frame(new byte[64], (FrameFlags) ClientMessageFlags.Unfragmented)), cancellation.Token);
             });
+        }
+
+        [Test]
+        public async Task SendTrue()
+        {
+            var socket = new TestSocketConnection(0);
+            var m = new ClientMessageConnection(socket, new NullLoggerFactory());
+
+            // cannot send a message with no frames
+            await AssertEx.ThrowsAsync<ArgumentException>(async () => await m.SendAsync(new ClientMessage()));
+
+            // can send a message with frames
+            var message = new ClientMessage(new Frame(new byte[16]));
+            socket.Count = 10;
+            Assert.That(await m.SendAsync(message));
+            Assert.That(socket.Count, Is.EqualTo(9));
+
+            // can buffer frames
+            message = new ClientMessage(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[16]));
+            socket.Count = 10;
+            Assert.That(await m.SendAsync(message));
+            Assert.That(socket.Count, Is.EqualTo(9));
+
+            // can send a message with a large frame
+            message = new ClientMessage(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
+            message.Append(new Frame(new byte[16]));
+            socket.Count = 10;
+            Assert.That(await m.SendAsync(message));
+            Assert.That(socket.Count, Is.EqualTo(6));
+
+            // can send a message with frames
+            message = new ClientMessage(new Frame(new byte[768]));
+            message.Append(new Frame(new byte[256]));
+            socket.Count = 10;
+            Assert.That(await m.SendAsync(message));
+            Assert.That(socket.Count, Is.EqualTo(8));
+        }
+
+        [Test]
+        public async Task SendFalse()
+        {
+            var socket = new TestSocketConnection(0);
+            var m = new ClientMessageConnection(socket, new NullLoggerFactory());
+
+            // send a message with frames
+            var message = new ClientMessage(new Frame(new byte[16]));
+            socket.Count = 0;
+            Assert.That(await m.SendAsync(message), Is.False);
+
+            // send a message with a large frame
+            message = new ClientMessage(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
+            socket.Count = 0; // fail while flushing the buffer
+            Assert.That(await m.SendAsync(message), Is.False);
+
+            // send a message with a large frame
+            message = new ClientMessage(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
+            socket.Count = 1; // failing while writing big frame header
+            Assert.That(await m.SendAsync(message), Is.False);
+
+            // send a message with a large frame
+            message = new ClientMessage(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[4096])); // will be sent as header, then body
+            socket.Count = 1; // failing while writing big frame body
+            Assert.That(await m.SendAsync(message), Is.False);
+
+            // send a message with frames
+            message = new ClientMessage(new Frame(new byte[768]));
+            message.Append(new Frame(new byte[256]));
+            socket.Count = 0; // failing while flushing the buffer
+            Assert.That(await m.SendAsync(message), Is.False);
+
+            // send a message with frames
+            message = new ClientMessage(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[16]));
+            message.Append(new Frame(new byte[16]));
+            socket.Count = 0; // failing while flushing the buffer
+            Assert.That(await m.SendAsync(message), Is.False);
+        }
+
+        [Test]
+        public async Task SendExceptions()
+        {
+            var socket = new TestSocketConnection(0);
+            socket.Count = int.MaxValue;
+
+            var message = new ClientMessage(new Frame(new byte[16]));
+
+            var s = new TestSemaphore(() => throw new ObjectDisposedException("semaphore"));
+            var m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
+
+            Assert.That(await m.SendAsync(message), Is.False);
+
+            s = new TestSemaphore(() => throw new NullReferenceException());
+            m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
+
+            await AssertEx.ThrowsAsync<NullReferenceException>(async () => await m.SendAsync(message));
+
+            var c = new CancellationTokenSource();
+            s = new TestSemaphore(() =>
+            {
+                c.Cancel();
+                throw new NullReferenceException();
+            });
+            m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
+
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await m.SendAsync(message, c.Token));
+
+            s = new TestSemaphore(() => throw new OperationCanceledException());
+            m = new ClientMessageConnection(socket, s, new NullLoggerFactory());
+
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await m.SendAsync(message));
+        }
+
+        private class TestSemaphore : IHSemaphore
+        {
+            private readonly Action _waitAsync;
+
+            public TestSemaphore(Action waitAsync)
+            {
+                _waitAsync = waitAsync;
+            }
+
+            public void Dispose()
+            { }
+
+            public Task WaitAsync(CancellationToken cancellationToken)
+            {
+                _waitAsync();
+                return Task.CompletedTask;
+            }
+
+            public void Release()
+            { }
+        }
+
+        private class TestSocketConnection : SocketConnectionBase
+        {
+            public TestSocketConnection(int id, int prefixLength = 0)
+                : base(id, prefixLength)
+            { }
+
+            public int Count { get; set; }
+
+            public override ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
+            {
+                return new ValueTask<bool>(Count-- > 0);
+            }
+
+            public override ValueTask FlushAsync()
+            {
+                return new ValueTask();
+            }
         }
     }
 }

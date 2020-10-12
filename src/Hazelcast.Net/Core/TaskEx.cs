@@ -34,7 +34,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function();</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static Task WithNewContext(Func<Task> function)
+        public static Task RunWithNewContext(Func<Task> function)
             => AsyncContext.WithNewContextInternal(function);
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function(cancellationToken);</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static Task WithNewContext(Func<CancellationToken, Task> function, CancellationToken cancellationToken)
+        public static Task RunWithNewContext(Func<CancellationToken, Task> function, CancellationToken cancellationToken)
             => AsyncContext.WithNewContextInternal(function, cancellationToken);
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function();</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static Task<TResult> WithNewContext<TResult>(Func<Task<TResult>> function)
+        public static Task<TResult> RunWithNewContext<TResult>(Func<Task<TResult>> function)
             => AsyncContext.WithNewContextInternal(function);
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function(cancellationToken);</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static Task<TResult> WithNewContext<TResult>(Func<CancellationToken, Task<TResult>> function, CancellationToken cancellationToken)
+        public static Task<TResult> RunWithNewContext<TResult>(Func<CancellationToken, Task<TResult>> function, CancellationToken cancellationToken)
             => AsyncContext.WithNewContextInternal(function, cancellationToken);
 
         /// <summary>

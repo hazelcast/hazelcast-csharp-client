@@ -40,9 +40,7 @@ namespace Hazelcast.Testing.TestServer
             : base(id)
         {
             _acceptingSocket = socket ?? throw new ArgumentNullException(nameof(socket));
-
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]")));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(32).SetPrefix($"CONN.SERVER [{id}]")));
         }
 
         /// <summary>
@@ -56,8 +54,7 @@ namespace Hazelcast.Testing.TestServer
         {
             HConsole.WriteLine(this, "Connect");
 
-            if (OnReceiveMessageBytes == null)
-                throw new InvalidOperationException("No message bytes handler has been configured.");
+            EnsureCanOpenPipe();
 
             // use a stream, because we may use SSL and require an SslStream
             // TODO implement SSL or provide a Func<Stream, Stream>

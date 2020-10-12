@@ -222,7 +222,7 @@ namespace Hazelcast.Clustering
             using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 if (!_subscriptions.TryGetValue(subscriptionId, out subscription))
-                    return true;
+                    return false;
             }
 
             return await RemoveSubscriptionAsync(subscription, false, cancellationToken).CAF();

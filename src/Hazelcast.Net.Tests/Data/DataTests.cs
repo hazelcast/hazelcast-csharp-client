@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Networking;
+using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -112,6 +114,11 @@ namespace Hazelcast.Tests.Data
                 new MemberInfo(memberId, x.Address, x.Version, x.IsLite, attributes),
                 new MemberInfo(Guid.NewGuid(), x.Address, x.Version, x.IsLite, attributes)
             ));
+
+            var y = new MemberInfo(address, memberId, attributes, true, version, false, null);
+
+            var map = new Dictionary<EndpointQualifier, NetworkAddress>();
+            var z = new MemberInfo(address, memberId, attributes, true, version, true, map);
         }
 
         [Test]
@@ -161,7 +168,31 @@ namespace Hazelcast.Tests.Data
             Assert.That(x, Resolves.Equatable(
                 new DistributedObjectInfo("serviceName", "name"),
                 new DistributedObjectInfo("serviceName", "other"),
-                new DistributedObjectInfo("other", "other")));
+                new DistributedObjectInfo("other", "name")));
+
+            var hash = x.GetHashCode();
+            Assert.That(hash, Is.Not.Zero);
+        }
+
+        [Test]
+        public void DistributedObjectKeyTest()
+        {
+            var x = new DistributedObjectKey("serviceName", "name", typeof(object));
+
+            Console.WriteLine(x);
+
+            Assert.That(x.ServiceName, Is.EqualTo("serviceName"));
+            Assert.That(x.Name, Is.EqualTo("name"));
+            Assert.That(x.Type, Is.EqualTo(typeof(object)));
+
+            Assert.That(x, Resolves.Equatable(
+                new DistributedObjectKey("serviceName", "name", typeof(object)),
+                new DistributedObjectKey("serviceName", "other", typeof(object)),
+                new DistributedObjectKey("other", "name", typeof(object)),
+                new DistributedObjectKey("serviceName", "name", typeof(string))));
+
+            var hash = x.GetHashCode();
+            Assert.That(hash, Is.Not.Zero);
         }
 
         [Test]
@@ -207,6 +238,35 @@ namespace Hazelcast.Tests.Data
 
             x.Value = "value";
             Assert.That(x.Value, Is.EqualTo("value"));
+        }
+
+        [Test]
+        public void EndpointQualifierTest()
+        {
+            var q = new EndpointQualifier(ProtocolType.Client, "identifier");
+
+            Assert.That(q.Type, Is.EqualTo(ProtocolType.Client));
+            Assert.That(q.Identifier, Is.EqualTo("identifier"));
+            Assert.That(q.FactoryId, Is.EqualTo(0));
+            Assert.That(q.ClassId, Is.EqualTo(17));
+
+            Assert.That(q, Resolves.Equatable(
+                new EndpointQualifier(ProtocolType.Client, "identifier"),
+                new EndpointQualifier(ProtocolType.MemCache, "identifier"),
+                new EndpointQualifier(ProtocolType.Client, "other")));
+
+            Assert.That(q.GetHashCode(), Is.Not.Zero);
+
+            Assert.Throws<ArgumentNullException>(() => q.WriteData(null));
+            Assert.Throws<ArgumentNullException>(() => q.ReadData(null));
+
+            var output = new ByteArrayObjectDataOutput(1024, null, Endianness.Unspecified);
+            q.WriteData(output);
+            var input = new ByteArrayObjectDataInput(output.ToByteArray(), null, Endianness.Unspecified);
+            var r = new EndpointQualifier(ProtocolType.Wan, "meh");
+            r.ReadData(input);
+
+            Assert.That(q, Is.EqualTo(r));
         }
     }
 }
