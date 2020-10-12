@@ -54,6 +54,12 @@ param (
     [string]
     $testFilter,
 
+    # Test selector
+    # Is a simplified version of $testFilter which ends up adding a test filter as
+    # "name == /$framework.$test/"
+    [string]
+    $test,
+
     [Alias("cf")]
     [string]
     $coverageFilter,
@@ -165,6 +171,7 @@ foreach ($t in $commands) {
             Write-Output "  -configuration <configuration> : the build configuration (default is Release, alias: -c)"
             Write-Output "  -testFilter <filter>           : a test filter (default is all, alias: -tf)"
             Write-Output "  -coverageFilter <filter>       : a coverage filter (default is all, alias: -cf)"
+            Write-Output "  -test <name>                   : a simplified test filter"
             Write-Output "  -version <version>             : the version to build"
             Write-Output ""
             Write-Output "Server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or"
@@ -307,6 +314,13 @@ if(!($enterprise)) {
     if (-not [System.String]::IsNullOrWhiteSpace($testFilter)) { $testFilter += " && " } else { $testFilter = "" }
     $testFilter += "cat != enterprise"
 }
+if (-not [System.String]::IsNullOrWhiteSpace($test)) {
+    if (-not [System.String]::IsNullOrWhiteSpace($testFilter)) { $testFilter += " && " } else { $testFilter = "" }
+    $testFilter += "name == /<FRAMEWORK>.$test/"
+}
+
+# determine tests name
+$testName = "<FRAMEWORK>.{C}.{m}{a}"
 
  # do not cover tests themselves, nor the testing plumbing
 if (-not [System.String]::IsNullOrWhiteSpace($coverageFilter)) { $coverageFilter += ";" }
@@ -548,8 +562,6 @@ function ensureJar($jar, $repo, $artifact) {
         Write-Output "Detected $jar"
     } else {
         Write-Output "Downloading $jar ..."
-        #Write-Output "mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
-        #&"mvn" -q "dependency:get" "-DrepoUrl=$repo" "-Dartifact=$artifact" "-Ddest=$tmpDir/lib/$jar"
 
         $parts = $artifact.Split(':')
         $group = $parts[0].Replace('.', '/')
@@ -594,6 +606,7 @@ if ($doTests) {
     Write-Output "  Server version : $server"
     Write-Output "  Enterprise     : $enterprise"
     Write-Output "  Filter         : $testFilter"
+    Write-Output "  Test Name      : $testName"
     Write-Output "  Results        : $tmpDir/tests/results"
     Write-Output ""
 }
@@ -858,11 +871,11 @@ if ($doDocs) {
 }
 
 function getJavaKerberosArgs() {
-    return @( `
-        "-Djava.util.logging.config.file=krb5/logging.properties", `
-        "-Djava.security.krb5.realm=HZ.LOCAL", `
-        "-Djava.security.krb5.kdc=SERVER19.HZ.LOCAL", `
-        "-Djava.security.krb5.conf=krb5/krb5.conf" `
+    return @(
+        "-Djava.util.logging.config.file=krb5/logging.properties",
+        "-Djava.security.krb5.realm=HZ.LOCAL",
+        "-Djava.security.krb5.kdc=SERVER19.HZ.LOCAL",
+        "-Djava.security.krb5.conf=krb5/krb5.conf"
     )
 }
 
@@ -874,10 +887,10 @@ function StartRemoteController() {
     Write-Output "Starting Remote Controller..."
 
     # start the remote controller
-    $args = @( `
-        "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
-        "-cp", "$script:classpath", `
-        "com.hazelcast.remotecontroller.Main" `
+    $args = @(
+        "-Dhazelcast.enterprise.license.key=$enterpriseKey",
+        "-cp", "$script:classpath",
+        "com.hazelcast.remotecontroller.Main"
     )
 
     $args = $args + $javaFix
@@ -918,12 +931,12 @@ function StartServer() {
     }
 
     # start the server
-    $args = @( `
-        "-Dhazelcast.enterprise.license.key=$enterpriseKey", `
-        "-cp", "$script:classpath", `
-        "-Dhazelcast.config=$buildDir/hazelcast-$hzVersion.xml", `
-        "-server", "-Xms2g", "-Xmx2g", "-Dhazelcast.multicast.group=224.206.1.1", "-Djava.net.preferIPv4Stack=true", `
-        "$mainClass" `
+    $args = @(
+        "-Dhazelcast.enterprise.license.key=$enterpriseKey",
+        "-cp", "$script:classpath",
+        "-Dhazelcast.config=$buildDir/hazelcast-$hzVersion.xml",
+        "-server", "-Xms2g", "-Xmx2g", "-Dhazelcast.multicast.group=224.206.1.1", "-Djava.net.preferIPv4Stack=true",
+        "$mainClass"
     )
 
     $args = $args + $javaFix
@@ -990,31 +1003,38 @@ function RunDotNetCoreTests($f) {
     #    --logger:"nunit;LogFilePath=$tmpDir/tests/results/tests-$f.xml"
     # instead: http://blog.prokrams.com/2019/12/16/nunit3-filter-dotnet/
     #
+
+    # see https://docs.nunit.org/articles/vs-test-adapter/Tips-And-Tricks.html
+    # for available options and names here
+    $nunitArgs = @(
+        "NUnit.WorkDirectory=`"$tmpDir/tests/results`"",
+        "NUnit.TestOutputXml=`".`"",
+        "NUnit.Labels=Before",
+        "NUnit.DefaultTestNamePattern=`"$($testName.Replace("<FRAMEWORK>", $f))`""
+    )
+
+    if ($testFilter -ne "") { $nunitArgs += "NUnit.Where=`"$($testFilter.Replace("<FRAMEWORK>", $f))`"" }
+
     if ($cover) {
         $coveragePath = "$tmpDir/tests/cover/cover-$f"
         if (!(test-path $coveragePath)) {
             mkdir $coveragePath > $null
         }
 
-        $dotCoverArgs = @( "test", `
-            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj", `
-            "-c", "$configuration", `
-            "--no-restore", `
-            "-f", "$f", `
-            "-v", "normal", `
-            `
-            "--dotCoverFilters=$coverageFilter", `
-            "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute", `
-            "--dotCoverOutput=$coveragePath/index.html", `
-            "--dotCoverReportType=HTML", `
-            `
-            "--", `
-            `
-            "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
-            "NUnit.TestOutputXml=`".`"", `
-            "NUnit.Labels=Before" )
+        $dotCoverArgs = @(
+            "test",
+            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj",
+            "-c", "$configuration",
+            "--no-restore",
+            "-f", "$f",
+            "-v", "normal",
 
-        if ($testFilter -ne "") { $dotCoverArgs += "NUnit.Where=`"$testFilter`"" }
+            "--dotCoverFilters=$coverageFilter",
+            "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
+            "--dotCoverOutput=$coveragePath/index.html",
+            "--dotCoverReportType=HTML",
+            "--"
+        ) + $nunitArgs
 
         Write-Output "exec: dotnet dotcover $dotCoverArgs"
         pushd "$srcDir/Hazelcast.Net.Tests"
@@ -1022,20 +1042,14 @@ function RunDotNetCoreTests($f) {
         popd
     }
     else {
-        $dotnetArgs = @( `
-            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj", `
-            "-c", "$configuration", `
-            "--no-restore", `
-            "-f", "$f", `
-            "-v", "normal", `
-            `
-            "--", `
-            `
-            "NUnit.WorkDirectory=`"$tmpDir/tests/results`"", `
-            "NUnit.TestOutputXml=`".`"", `
-            "NUnit.Labels=Before" )
-
-        if ($testFilter -ne "") { $dotnetArgs += "NUnit.Where=`"$testFilter`"" }
+        $dotnetArgs = @(
+            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj",
+            "-c", "$configuration",
+            "--no-restore",
+            "-f", "$f",
+            "-v", "normal",
+            "--"
+        ) + $nunitArgs
 
         Write-Output "exec: dotnet $dotnetArgs"
         &dotnet test $dotnetArgs
@@ -1063,9 +1077,15 @@ function RunDotNetFrameworkTests($f) {
 
     $v = $nunitVersion
     $nunit = "$userHome/.nuget/packages/nunit.consolerunner/$v/tools/nunit3-console.exe"
-    $nunitArgs=@("`"${testDLL}`"", "--labels=Before", "--result=`"$tmpDir/tests/results/results-$f.xml`"", "--framework=$nuf")
+    $nunitArgs = @(
+        "`"${testDLL}`"",
+        "--labels=Before",
+        "--result=`"$tmpDir/tests/results/results-$f.xml`"",
+        "--framework=$nuf",
+        "--test-name-format=`"$($testName.Replace("<FRAMEWORK>", $f))`""
+    )
 
-    if ($testFilter -ne "") { $nunitArgs += @("--where=`"${testFilter}`"") }
+    if ($testFilter -ne "") { $nunitArgs += @("--where=`"$($testFilter.Replace("<FRAMEWORK>", $f))`"") }
 
     if ($cover) {
 
@@ -1078,14 +1098,16 @@ function RunDotNetFrameworkTests($f) {
         $dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools/$v/tools/dotCover.exe"
 
         # note: separate attributes filters with ';'
-        $dotCoverArgs = @( "cover", `
-            "--Filters=$coverageFilter", `
-            "--AttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute", `
-            "--TargetWorkingDir=.", `
-            "--Output=$coveragePath/index.html", `
-            "--ReportType=HTML", `
-            "--TargetExecutable=${nunit}", `
-            "--") + $nunitArgs
+        $dotCoverArgs = @(
+            "cover",
+            "--Filters=$coverageFilter",
+            "--AttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
+            "--TargetWorkingDir=.",
+            "--Output=$coveragePath/index.html",
+            "--ReportType=HTML",
+            "--TargetExecutable=${nunit}",
+            "--"
+        ) + $nunitArgs
 
         Write-Output "exec: $dotCover $dotCoverArgs"
         &$dotCover $dotCoverArgs

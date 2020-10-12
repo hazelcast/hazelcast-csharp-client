@@ -15,6 +15,7 @@
 using System;
 using System.IO;
 using System.Net.Security;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -106,17 +107,29 @@ namespace Hazelcast.Tests.Networking
             text.Clear();
         }
 
+        private string GetCertificatesPath()
+        {
+            // don't do this, won't work in all cases
+            //var path = Environment.CurrentDirectory;
+            //var path = Directory.GetCurrentDirectory();
+
+            var path = Assembly.GetExecutingAssembly().Location;
+            if (!path.Contains("src")) throw new Exception($"Cannot find 'src' in path: {path}");
+
+            while (Path.GetFileName(path) != "src")
+                path = Path.GetDirectoryName(path);
+
+            path = Path.GetFullPath(path + "/Hazelcast.Net.Tests/Resources/Certificates/");
+            return path;
+        }
+
         [Test]
         public void GetClientCertificateOrDefault1()
         {
             var text = new StringBuilder();
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
 
-            var path = Environment.CurrentDirectory;
-            while (Path.GetFileName(path) != "src")
-                path = Path.GetDirectoryName(path);
-
-            path = Path.GetFullPath(path + "/Hazelcast.Net.Tests/Resources/Certificates/");
+            var path = GetCertificatesPath();
             Console.WriteLine("Path: " + path);
 
             var options = new SslOptions
@@ -134,11 +147,7 @@ namespace Hazelcast.Tests.Networking
             var text = new StringBuilder();
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
 
-            var path = Environment.CurrentDirectory;
-            while (Path.GetFileName(path) != "src")
-                path = Path.GetDirectoryName(path);
-
-            path = Path.GetFullPath(path + "/Hazelcast.Net.Tests/Resources/Certificates/");
+            var path = GetCertificatesPath();
             Console.WriteLine("Path: " + path);
 
             var options = new SslOptions
@@ -159,11 +168,7 @@ namespace Hazelcast.Tests.Networking
             var text = new StringBuilder();
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
 
-            var path = Environment.CurrentDirectory;
-            while (Path.GetFileName(path) != "src")
-                path = Path.GetDirectoryName(path);
-
-            path = Path.GetFullPath(path + "/Hazelcast.Net.Tests/Resources/Certificates/");
+            var path = GetCertificatesPath();
             Console.WriteLine("Path: " + path);
 
             var options = new SslOptions
