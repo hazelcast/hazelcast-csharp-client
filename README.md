@@ -11,9 +11,10 @@ The Hazelcast .NET solution is Open Source, released under the [Apache License 2
 
 ## Updates
 
-The Hazelcast .NET Client stable version is currently version 3. See [this branch](https://github.com/hazelcast/hazelcast-csharp-client/tree/3.12.z) for more information about version 4 of the client.
+The Hazelcast .NET Client stable version is currently version 3. See [this branch](https://github.com/hazelcast/hazelcast-csharp-client/tree/3.12.z) for more information about version 3 of the client.
 
-The `master` branch is the development branch for the upcoming version 4 of the client. Version 4 is currently in *alpha* stage, which means that
+The `master` branch is the development branch for the upcoming version 4 of the client. Version 4 is currently in *alpha* stage, which means that there is a high likelyhood of bugs. We do not recommend for production use. If you are interested in code samples, please check [here](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples).
+
 
 * CODE IN THIS BRANCH IS IN NO WAY SUPPORTED FOR ANY PRODUCTION USE
 * API IN THIS BRANCH CAN CHANGE IN BREAKING WAYS AT ANY TIME
