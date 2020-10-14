@@ -40,6 +40,8 @@ namespace Hazelcast.Clustering
         private readonly ILogger _logger;
         private readonly DistributedEventScheduler _scheduler;
 
+        private readonly object _ghostLock = new object();
+
         private Func<ValueTask> _onPartitionsUpdated;
         private Func<MemberLifecycleEventType, MemberLifecycleEventArgs, ValueTask> _onMemberLifecycleEvent;
 
@@ -47,6 +49,7 @@ namespace Hazelcast.Clustering
         private MemberConnection _clusterEventsConnection; // the client which handles 'cluster events'
         private long _clusterEventsCorrelationId; // the correlation id of the 'cluster events'
         private Task _clusterEventsTask; // the task that ensures there is a client to handle 'cluster events'
+        private Task _ghostTask; // the task that clears ghost subscriptions
 
         // subscription id -> subscription
         // the master subscriptions list
@@ -57,6 +60,10 @@ namespace Hazelcast.Clustering
         // each client has its own correlation id, so there can be many entries per cluster subscription
         private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions = new ConcurrentDictionary<long, ClusterSubscription>();
 
+        // ghost subscriptions
+        // subscriptions that have failed to properly unsubscribe and now we need to take care of them
+        private readonly HashSet<ClusterSubscription> _ghostSubscriptions = new HashSet<ClusterSubscription>();
+
         public ClusterEvents(ClusterState clusterState, ClusterMessaging clusterMessaging, ClusterMembers clusterMembers)
         {
             _clusterState = clusterState;
@@ -64,7 +71,7 @@ namespace Hazelcast.Clustering
             _clusterMembers = clusterMembers;
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterEvents>();
-            _scheduler = new DistributedEventScheduler(OnOrphan, _clusterState.LoggerFactory);
+            _scheduler = new DistributedEventScheduler(_clusterState.LoggerFactory);
         }
 
         /// <summary>
@@ -76,6 +83,11 @@ namespace Hazelcast.Clustering
         /// (for tests only) Gets the correlated subscriptions.
         /// </summary>
         internal ConcurrentDictionary<long, ClusterSubscription> CorrelatedSubscriptions => _correlatedSubscriptions;
+
+        /// <summary>
+        /// (for tests only) Gets the ghost subscriptions.
+        /// </summary>
+        internal HashSet<ClusterSubscription> GhostSubscriptions => _ghostSubscriptions;
 
         /// <summary>
         /// Installs a subscription on the cluster, i.e. on each member.
@@ -248,6 +260,26 @@ namespace Hazelcast.Clustering
             // even if we receive more event messages from the servers
             subscription.Deactivate();
 
+            var allRemoved = await RemoveMemberSubscriptionsAsync(subscription, cancellationToken).CAF();
+
+            // remove the subscription, but if some member-level subscriptions could not
+            // be removed, adds the subscription to the list of ghost subscriptions.
+            using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
+            {
+                _subscriptions.TryRemove(subscription.Id, out _);
+            }
+
+            if (allRemoved) return;
+
+            lock (_ghostLock)
+            {
+                _ghostSubscriptions.Add(subscription);
+                _ghostTask ??= CollectSubscriptionsAsync(_clusterState.CancellationToken);
+            }
+        }
+
+        private async ValueTask<bool> RemoveMemberSubscriptionsAsync(ClusterSubscription subscription, CancellationToken cancellationToken = default)
+        {
             List<Exception> exceptions = null;
             var allRemoved = true;
 
@@ -261,14 +293,15 @@ namespace Hazelcast.Clustering
                     // this does
                     // - remove the correlated subscription
                     // - tries to properly unsubscribe from the server
-                    var removed = await RemoveSubscriptionAsync(memberSubscription, cancellationToken).CAF();
-                    if (removed) 
+                    var removed = await RemoveMemberSubscriptionAsync(memberSubscription, cancellationToken).CAF();
+                    if (removed)
                         removedMemberSubscriptions.Add(memberSubscription);
-                    else 
+                    else
                         allRemoved = false;
                 }
                 catch (Exception e)
                 {
+                    // FIXME what shall we do with the exceptions?
                     exceptions ??= new List<Exception>();
                     exceptions.Add(e);
                     allRemoved = false;
@@ -279,14 +312,7 @@ namespace Hazelcast.Clustering
             foreach (var memberSubscription in removedMemberSubscriptions)
                 subscription.Remove(memberSubscription);
 
-            // remove the subscription, but if some member-level subscriptions could not
-            // be removed, mark the subscription (which is still correlated) as orphan,
-            // so we can take care of it later on
-            using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
-            {
-                _subscriptions.TryRemove(subscription.Id, out _);
-                if (!allRemoved) subscription.SetOrphaned();
-            }
+            return allRemoved;
         }
 
         /// <summary>
@@ -301,18 +327,89 @@ namespace Hazelcast.Clustering
         /// properly remove the subscription, no events for that subscription will be triggered anymore
         /// because the client will ignore these events when the server sends them.</para>
         /// </remarks>
-        private async ValueTask<bool> RemoveSubscriptionAsync(MemberSubscription memberSubscription, CancellationToken cancellationToken = default)
+        private async ValueTask<bool> RemoveMemberSubscriptionAsync(MemberSubscription memberSubscription, CancellationToken cancellationToken = default)
         {
+            // always remove the correlated subscription
+            _correlatedSubscriptions.TryRemove(memberSubscription.CorrelationId, out _);
+
             // trigger the server-side un-subscribe
             var unsubscribeRequest = memberSubscription.ClusterSubscription.CreateUnsubscribeRequest(memberSubscription.ServerSubscriptionId);
             var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, memberSubscription.Connection, cancellationToken).CAF();
             var removed = memberSubscription.ClusterSubscription.ReadUnsubscribeResponse(responseMessage);
 
-            // remove the correlated subscription
-            if (removed)
-                _correlatedSubscriptions.TryRemove(memberSubscription.CorrelationId, out _);
-
             return removed;
+        }
+
+        private async Task CollectSubscriptionsAsync(CancellationToken cancellationToken)
+        {
+            List<ClusterSubscription> gone = null;
+
+            HConsole.WriteLine(this, "CollectSubscription starting");
+
+            // if canceled, will be awaited properly
+            await Task.Delay(_clusterState.Options.Events.SubscriptionCollectDelay, cancellationToken).CAF();
+
+            while (true)
+            {
+                // capture ghosts subscriptions
+                List<ClusterSubscription> ghosts;
+                lock (_ghostLock)
+                {
+                    ghosts = _ghostSubscriptions.ToList();
+                }
+
+                HConsole.WriteLine(this, $"CollectSubscription loop for {ghosts.Count} subscriptions");
+
+                // try to remove captures subscriptions
+                // if canceled, will be awaited properly
+                gone?.Clear();
+                var timeLimit = DateTime.Now - _clusterState.Options.Events.SubscriptionCollectTimeout;
+                foreach (var subscription in ghosts)
+                {
+                    HConsole.WriteLine(this, "CollectSubscription collects");
+
+                    try
+                    {
+                        var allRemoved = await RemoveMemberSubscriptionsAsync(subscription, cancellationToken).CAF();
+                        if (allRemoved || subscription.DeactivateTime < timeLimit)
+                            (gone ??= new List<ClusterSubscription>()).Add(subscription);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return; // cancelled - stop everything
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "An error occurred while collecting subscriptions.");
+                    }
+                }
+
+                HConsole.WriteLine(this, $"CollectSubscription collected {gone?.Count??0} subscriptions");
+
+                // update ghost subscriptions
+                // none remaining = exit the task
+                lock (_ghostLock)
+                {
+                    if (gone != null)
+                    {
+                        foreach (var subscription in gone)
+                            _ghostSubscriptions.Remove(subscription);
+                    }
+
+                    if (_ghostSubscriptions.Count == 0)
+                    {
+                        HConsole.WriteLine(this, "CollectSubscription exits");
+                        _ghostTask = null;
+                        return;
+                    }
+                }
+
+                HConsole.WriteLine(this, "CollectSubscription waits");
+
+                // else, wait + loop / try again
+                // if canceled, will be awaited properly
+                await Task.Delay(_clusterState.Options.Events.SubscriptionCollectPeriod, cancellationToken).CAF();
+            }
         }
 
 
@@ -406,49 +503,6 @@ namespace Hazelcast.Clustering
 
             // schedule the event - will run async, but serialized per-partition
             _scheduler.Add(subscription, message);
-        }
-
-
-
-        /// <summary>
-        /// Handles events received for an orphaned subscription.
-        /// </summary>
-        /// <param name="subscription">The subscription.</param>
-        /// <param name="memberId">The identifier of the member which sent the event.</param>
-        /// <param name="correlationId">The correlation identifier.</param>
-        /// <returns>A task that will complete when the event has been handled.</returns>
-        public async ValueTask OnOrphan(ClusterSubscription subscription, Guid memberId, long correlationId)
-        {
-            // the subscription was orphaned when the event was scheduled
-            // we are *not* going to handle the event, but we try to unsubscribe (again)
-
-            try
-            {
-                HConsole.WriteLine(this, $"Got event for orphaned subscription [{correlationId}], unsubscribe again.");
-
-                var memberSubscription = subscription.FirstOrDefault(x => x.Connection.MemberId == memberId);
-                if (memberSubscription == null) return; // weird, but hey...
-
-                var requestMessage = subscription.CreateUnsubscribeRequest(memberSubscription.ServerSubscriptionId);
-                var responseMessage = await _clusterMessaging.SendToMemberAsync(requestMessage, memberSubscription.Connection).CAF();
-                var removed = memberSubscription.ClusterSubscription.ReadUnsubscribeResponse(responseMessage);
-
-                if (removed)
-                {
-                    // remove that member subscription
-                    subscription.Remove(memberSubscription);
-                    if (subscription.Count == 0)
-                    {
-                        // at last we can fully remove the subscription
-                        _correlatedSubscriptions.TryRemove(correlationId, out _);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                HConsole.WriteLine(this, $"Failed to unsubscribe an orphaned subscription [{correlationId}], will try again.");
-                _logger.LogWarning(e, $"Failed to unsubscribe an orphaned subscription [{correlationId}], will try again.");
-            }
         }
 
 
@@ -686,6 +740,7 @@ namespace Hazelcast.Clustering
             await _scheduler.DisposeAsync().CAF();
 
             await TaskEx.AwaitCanceled(_clusterEventsTask).CAF();
+            await TaskEx.AwaitCanceled(_ghostTask).CAF();
 
             // connection is going down
             // it will be disposed as well as all other connections

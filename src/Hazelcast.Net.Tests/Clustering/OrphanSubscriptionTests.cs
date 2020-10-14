@@ -35,7 +35,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Clustering
 {
     [TestFixture]
-    public class OrphanSubscriptionTests
+    public class SubscriptionCollectTests
     {
         private IDisposable HConsoleForTest()
 
@@ -47,7 +47,7 @@ namespace Hazelcast.Tests.Clustering
                 .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
 
         [Test]
-        public async Task OrphanSubscriptionIsEventuallyRemoved()
+        public async Task SubscriptionIsCollected()
         {
             var address0 = NetworkAddress.Parse("127.0.0.1:11001");
             var address1 = NetworkAddress.Parse("127.0.0.1:11002");
@@ -99,6 +99,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
                 options.Networking.Addresses.Add("127.0.0.1:11002");
+                options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4); // don't go too fast
             });
             await using var client = (HazelcastClient)HazelcastClientFactory.CreateClient(options);
             await client.StartAsync().CAF();
@@ -128,12 +129,9 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(subscription.Active);
             }, 4000, 200);
 
-            // get a key that targets server 0
-            var key = GetKey(0, 2, client.SerializationService);
+            HConsole.WriteLine(this, "Set");
 
-            HConsole.WriteLine(this, "Set key=" + key);
-
-            await dictionary.SetAsync(key, "value");
+            await dictionary.SetAsync("key", "value");
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.That(count, Is.EqualTo(1)); // event triggered
@@ -144,16 +142,19 @@ namespace Hazelcast.Tests.Clustering
             var unsubscribed = await dictionary.UnsubscribeAsync(sid);
             Assert.That(unsubscribed);
 
+            // we have a 4 sec delay before the collect task actually collects
+
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.That(subscription.Active, Is.False);
                 Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(0)); // is gone
-                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(2)); // only 1 is gone
+                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1)); // are gone
                 Assert.That(subscription.Count, Is.EqualTo(1)); // 1 remains
+                Assert.That(clusterEvents.GhostSubscriptions.Count, Is.EqualTo(1)); // is ghost
             }, 4000, 200);
 
-            // get a key that targets server 1 - important, else we don't get the event
-            key = GetKey(1, 2, client.SerializationService);
+            // get a key that targets server 1 - the one that's going to send the event
+            var key = GetKey(1, 2, client.SerializationService);
 
             HConsole.WriteLine(this, "Set key=" + key);
 
@@ -163,10 +164,9 @@ namespace Hazelcast.Tests.Clustering
 
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(0)); // still gone
-                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1)); // now 2 are gone
                 Assert.That(subscription.Count, Is.EqualTo(0)); // 0 remains
-            }, 4000, 200);
+                Assert.That(clusterEvents.GhostSubscriptions.Count, Is.EqualTo(0)); // is gone
+            }, 8000, 200);
         }
 
         private static string GetKey(int partitionId, int partitionCount, ISerializationService serializationService)

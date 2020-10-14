@@ -105,21 +105,6 @@ namespace Hazelcast.Clustering
         public bool Active => _active;
 
         /// <summary>
-        /// Gets a value indicating whether the subscription is orphaned.
-        /// </summary>
-        /// <remarks>
-        /// <para>An orphaned subscription means that it is not active anymore,
-        /// and the unsubscribe method return, but some members which failed to
-        /// unsubscribe were left over.</para>
-        /// </remarks>
-        public bool Orphaned { get; private set; }
-
-        /// <summary>
-        /// Sets the subscription as orphaned.
-        /// </summary>
-        public void SetOrphaned() => Orphaned = true;
-
-        /// <summary>
         /// Gets the state object.
         /// </summary>
         public object State { get; }
@@ -137,8 +122,14 @@ namespace Hazelcast.Clustering
             lock (_activeLock)
             {
                 _active = false;
+                DeactivateTime = DateTime.Now;
             }
         }
+
+        /// <summary>
+        /// Gets the time the subscription was de-activated.
+        /// </summary>
+        public DateTime DeactivateTime { get; private set; }
 
         /// <summary>
         /// Tries to add a client subscription.
