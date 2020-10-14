@@ -15,7 +15,7 @@
 using System;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Tests.Testing;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Messaging

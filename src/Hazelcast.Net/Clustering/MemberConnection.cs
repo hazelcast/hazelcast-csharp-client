@@ -22,7 +22,6 @@ using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Protocol;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Microsoft.Extensions.Logging;
 
@@ -68,19 +67,6 @@ namespace Hazelcast.Clustering
         private CancellationTokenSource _bgCancellation;
         private CancellationTokenSource _bgTaskCancellation;
         private Task _bgTask;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MemberConnection"/> class.
-        /// </summary>
-        /// <param name="address">The network address.</param>
-        /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="socketOptions">Socket options.</param>
-        /// <param name="sslOptions">SSL options.</param>
-        /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
-        /// <param name="loggerFactory">A logger factory.</param>
-        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
-            : this(address, messagingOptions, socketOptions, sslOptions, new Int32Sequence(), correlationIdSequence, loggerFactory)
-        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnection"/> class.
