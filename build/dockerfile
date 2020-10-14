@@ -1,0 +1,92 @@
+#
+# Hazelcast Jenkins dotnet Environment
+#
+# build with:
+# > docker build -t hazelcast/jenkins-dotnet-client -f dockerfile .
+# tag with:
+# > docker tag hazelcast/jenkins-dotnet-client hazelcast/jenkins-dotnet-client:3.1.42
+# where 3.1 is the .NET Core version and 42 is a sequence number that increments
+# push to hazelcast Docker hub repository with:
+# > docker push hazelcast/jenkins-dotnet-client:3.1.42
+#
+# and ensure that Jenkins is configured to use that image
+
+# from OpenJDK Docker image for Debian Buster
+# https://hub.docker.com/_/openjdk
+# versions: https://github.com/docker-library/repo-info/tree/master/repos/openjdk/local
+FROM openjdk:14-jdk-buster
+
+# environment
+ENV \
+    # Enable detection of running in a container
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    # Enable correct mode for dotnet watch (only mode supported in a container)
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    # Skip extraction of XML docs - generally not useful within an image/container - helps performance
+    NUGET_XMLDOC_MODE=skip
+    
+    # PowerShell telemetry for docker image usage
+    #POWERSHELL_DISTRIBUTION_CHANNEL=PSDocker-DotnetCoreSDK-Debian-10
+
+# powershell package source
+# use instructions at https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-linux
+RUN wget https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb
+    
+# update
+RUN apt-get update
+
+# install dependencies + powershell
+# listed at https://docs.microsoft.com/en-us/dotnet/core/install/dependencies
+RUN apt-get install -y --no-install-recommends \
+        libc6 \
+        libgcc1 \
+        libgssapi-krb5-2 \
+        libicu63 \
+        libssl1.1 \
+        libstdc++6 \
+        zlib1g \
+        liblttng-ust0 \
+        maven \
+        powershell \
+    && rm -rf /var/lib/apt/lists/*
+
+# install dotnet
+# pick versions at https://dotnet.microsoft.com/download/dotnet-core
+#
+# note: the installer complains about missing zlib, because the following returns nothing
+# > ldconfig -NXv | grep zlib
+# but we have libz on Debian... and things seem to work nevertheless
+# so, this warning can probably be safely ignored
+
+# use the script provided by Microsoft
+# at  https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script
+RUN curl -SL --output dotnet-install.sh https://dot.net/v1/dotnet-install.sh \
+    && chmod u+x dotnet-install.sh \
+    && mkdir -p /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+
+# install latest 2.x
+# (required to target 2.x in builds)
+RUN ./dotnet-install.sh \
+        #--channel LTS  --version latest \
+        --version 2.1.810 \
+        --install-dir /usr/share/dotnet \
+        --architecture '<auto>'
+
+# install latest 3.x
+RUN ./dotnet-install.sh \
+        #--channel LTS  --version latest \
+        --version 3.1.402 \
+        --install-dir /usr/share/dotnet \
+        --architecture '<auto>'
+
+# cleanup and report
+RUN rm dotnet-install.sh \
+    && dotnet --info
+    
+# create Jenkins group & user
+RUN groupadd -g 1031 jenkins
+RUN useradd -m -d /home/jenkins -s /bin/bash -u 1030 -g 1031 jenkins
+
+# eof
