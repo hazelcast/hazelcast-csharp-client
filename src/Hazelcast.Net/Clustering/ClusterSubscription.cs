@@ -122,8 +122,14 @@ namespace Hazelcast.Clustering
             lock (_activeLock)
             {
                 _active = false;
+                DeactivateTime = DateTime.Now;
             }
         }
+
+        /// <summary>
+        /// Gets the time the subscription was de-activated.
+        /// </summary>
+        public DateTime DeactivateTime { get; private set; }
 
         /// <summary>
         /// Tries to add a client subscription.
@@ -140,7 +146,7 @@ namespace Hazelcast.Clustering
             {
                 active = _active;
                 if (active)
-                    _clientSubscriptions[client] = new MemberSubscription(this, serverSubscriptionId, SubscribeRequest.CorrelationId, client);
+                    _clientSubscriptions[client] = new MemberSubscription(this, serverSubscriptionId, message.CorrelationId, client);
             }
 
             return (active, serverSubscriptionId);
@@ -186,6 +192,11 @@ namespace Hazelcast.Clustering
         /// <returns>Whether the operation was successful.</returns>
         public bool ReadUnsubscribeResponse(ClientMessage message)
             => _unsubscribeResponseReader(message, State);
+
+        /// <summary>
+        /// Gets the number of member subscriptions.
+        /// </summary>
+        public int Count => _clientSubscriptions.Count;
 
         /// <inheritdoc />
         public IEnumerator<MemberSubscription> GetEnumerator()

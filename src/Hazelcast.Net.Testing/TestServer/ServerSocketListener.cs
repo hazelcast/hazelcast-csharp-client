@@ -30,6 +30,7 @@ namespace Hazelcast.Testing.TestServer
         private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
 
         private readonly IPEndPoint _endpoint;
+        private readonly string _hcname;
 
         private Socket _socket;
         private CancellationTokenSource _cancellationTokenSource;
@@ -43,10 +44,23 @@ namespace Hazelcast.Testing.TestServer
         /// Initializes a new instance of the <see cref="ServerSocketListener"/> class.
         /// </summary>
         /// <param name="endpoint">The socket endpoint.</param>
-        public ServerSocketListener(IPEndPoint endpoint)
+        /// <param name="hcname">An HConsole name complement.</param>
+        public ServerSocketListener(IPEndPoint endpoint, string hcname)
         {
             _endpoint = endpoint;
+            _hcname = hcname;
+
+            HConsole.Configure(x => x
+                .Set(this, xx => xx.SetIndent(24).SetPrefix("LISTENER".Dot(hcname))));
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServerSocketListener"/> class.
+        /// </summary>
+        /// <param name="endpoint">The socket endpoint.</param>
+        public ServerSocketListener(IPEndPoint endpoint)
+            : this(endpoint, string.Empty)
+        { }
 
         /// <summary>
         /// Gets or sets the function that accepts connections.
@@ -221,7 +235,7 @@ namespace Hazelcast.Testing.TestServer
             try
             {
                 // we now have a connection
-                _serverConnection = new ServerSocketConnection(_connectionIdSequence.GetNext(), handler);
+                _serverConnection = new ServerSocketConnection(_connectionIdSequence.GetNext(), handler, _hcname);
                 _onAcceptConnection(_serverConnection);
             }
             catch (Exception e)
@@ -252,7 +266,8 @@ namespace Hazelcast.Testing.TestServer
 
             try
             {
-                await _serverConnection.DisposeAsync().CAF();
+                if (_serverConnection != null)
+                    await _serverConnection.DisposeAsync().CAF();
             }
             catch { /* ignore */ }
 
