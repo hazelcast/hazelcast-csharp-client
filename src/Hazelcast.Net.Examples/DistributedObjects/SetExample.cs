@@ -26,7 +26,7 @@ namespace Hazelcast.Examples.DistributedObjects
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = await HazelcastClientFactory.StartClientAsync(options);
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed set from the cluster
             await using var set = await client.GetSetAsync<string>("set-example");

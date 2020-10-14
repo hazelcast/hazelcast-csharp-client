@@ -121,7 +121,7 @@ namespace Hazelcast.Tests.Networking
                 if (certPassword != null) sslOptions.CertificatePassword = certPassword;
             }
 
-            return await HazelcastClientFactory.StartClientAsync(options);
+            return await HazelcastClientFactory.StartNewClientAsync(options);
         }
 
         private static string CreateTmpFile(byte[] cert)

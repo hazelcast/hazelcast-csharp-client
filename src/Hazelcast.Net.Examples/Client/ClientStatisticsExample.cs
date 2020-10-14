@@ -39,7 +39,7 @@ namespace Hazelcast.Examples.Client
                 EvictionPolicy = EvictionPolicy.Lru,
                 InMemoryFormat = InMemoryFormat.Binary
             };
-            var hz = await HazelcastClientFactory.StartClientAsync(options);
+            var hz = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get a map
             var map = await hz.GetDictionaryAsync<string, string>("myMap");

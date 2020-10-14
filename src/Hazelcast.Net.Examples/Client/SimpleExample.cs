@@ -71,7 +71,7 @@ namespace Hazelcast.Examples.Client
 
             // create a logger, a client factory and a client
             var logger = loggerFactory.CreateLogger<Worker>();
-            await using var client = await HazelcastClientFactory.StartClientAsync(options); // disposed when method exits
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options); // disposed when method exits
 
             // create the worker, and run
             var worker = new Worker(client, logger);

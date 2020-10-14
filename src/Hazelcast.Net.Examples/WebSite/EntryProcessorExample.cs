@@ -58,7 +58,7 @@ namespace Hazelcast.Examples.WebSite
                 EntryProcessorDataSerializableFactory.FactoryId,
                 new EntryProcessorDataSerializableFactory());
 
-            await using var client = await HazelcastClientFactory.StartClientAsync(options);
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // Get the Distributed Map from Cluster.
             await using var map = await client.GetDictionaryAsync<string, string>("my-distributed-map");

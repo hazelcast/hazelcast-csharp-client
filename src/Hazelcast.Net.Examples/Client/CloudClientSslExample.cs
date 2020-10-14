@@ -33,7 +33,7 @@ namespace Hazelcast.Examples.Client
             //ssl.ValidateCertificateChain = false;
             ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH"; // downloaded from CLoud console
 
-            await using var client = await HazelcastClientFactory.StartClientAsync(options);
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // use a map
             await using var map = await client.GetDictionaryAsync<string, string>("ssl-example");

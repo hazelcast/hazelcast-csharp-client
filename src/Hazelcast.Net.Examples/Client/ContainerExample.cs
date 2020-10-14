@@ -112,7 +112,7 @@ namespace Hazelcast.Examples.Client
             }
 
             public ValueTask<IHazelcastClient> StartClientAsync()
-                => HazelcastClientFactory.StartClientAsync(_options);
+                => HazelcastClientFactory.StartNewClientAsync(_options);
         }
 
         public class Worker

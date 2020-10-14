@@ -27,7 +27,7 @@ namespace Hazelcast.Examples.Transactions
             var options = BuildExampleOptions(args);
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = await HazelcastClientFactory.StartClientAsync(options);
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // begin a transaction
             await using (var transactionContext = await client.BeginTransactionAsync(

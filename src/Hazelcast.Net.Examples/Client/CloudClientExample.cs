@@ -26,7 +26,7 @@ namespace Hazelcast.Examples.Client
             var options = HazelcastOptions.Build();
             options.Networking.Cloud.Enabled = true;
             options.Networking.Cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
-            await using var client = await HazelcastClientFactory.StartClientAsync(options);
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // use a map
             await using var map = await client.GetDictionaryAsync<string, string>("ssl-example");

@@ -44,8 +44,8 @@ namespace Hazelcast
         /// <remarks>
         /// <para>Options are built via HazelcastOptions.Build method.</para>
         /// </remarks>
-        public static ValueTask<IHazelcastClient> StartClientAsync(CancellationToken cancellationToken)
-            => StartClientAsync(HazelcastOptions.Build(), cancellationToken);
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(CancellationToken cancellationToken)
+            => StartNewClientAsync(HazelcastOptions.Build(), cancellationToken);
 
         /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with the automatic options.
@@ -57,8 +57,8 @@ namespace Hazelcast
         /// <para>Options are built via HazelcastOptions.Build method.</para>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>
-        public static ValueTask<IHazelcastClient> StartClientAsync(TimeSpan timeout = default)
-            => StartClientAsync(HazelcastOptions.Build(), timeout);
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(TimeSpan timeout = default)
+            => StartNewClientAsync(HazelcastOptions.Build(), timeout);
 
         /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with configured options.
@@ -70,8 +70,8 @@ namespace Hazelcast
         /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], IEnumerable{KeyValuePair{string, string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
         /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
         /// </remarks>
-        public static ValueTask<IHazelcastClient> StartClientAsync(Action<HazelcastOptions> configure, CancellationToken cancellationToken)
-            => StartClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastOptions> configure, CancellationToken cancellationToken)
+            => StartNewClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
 
         /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with configured options.
@@ -85,8 +85,8 @@ namespace Hazelcast
         /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>
-        public static ValueTask <IHazelcastClient> StartClientAsync(Action<HazelcastOptions> configure, TimeSpan timeout = default)
-            => StartClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), timeout);
+        public static ValueTask <IHazelcastClient> StartNewClientAsync(Action<HazelcastOptions> configure, TimeSpan timeout = default)
+            => StartNewClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), timeout);
 
         /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with options.
@@ -94,7 +94,7 @@ namespace Hazelcast
         /// <param name="options">Options.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        public static async ValueTask<IHazelcastClient> StartClientAsync(HazelcastOptions options, CancellationToken cancellationToken)
+        public static async ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -113,7 +113,7 @@ namespace Hazelcast
         /// <remarks>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>
-        public static async ValueTask<IHazelcastClient> StartClientAsync(HazelcastOptions options, TimeSpan timeout = default)
+        public static async ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, TimeSpan timeout = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

@@ -26,10 +26,10 @@ namespace Hazelcast.Tests
         public async Task Exceptions()
         {
             await AssertEx.ThrowsAsync<ArgumentNullException>(async () 
-                => await HazelcastClientFactory.StartClientAsync((HazelcastOptions) null));
+                => await HazelcastClientFactory.StartNewClientAsync((HazelcastOptions) null));
             
             await AssertEx.ThrowsAsync<ArgumentNullException>(async () => 
-                await HazelcastClientFactory.StartClientAsync((Action<HazelcastOptions>) null));
+                await HazelcastClientFactory.StartNewClientAsync((Action<HazelcastOptions>) null));
         }
     }
 }

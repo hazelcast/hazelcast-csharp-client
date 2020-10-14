@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Clustering
                 options.Networking.Addresses.Add("127.0.0.1:11002");
                 options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4); // don't go too fast
             });
-            await using var client = (HazelcastClient) await HazelcastClientFactory.StartClientAsync(options);
+            await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Get dictionary");
 
