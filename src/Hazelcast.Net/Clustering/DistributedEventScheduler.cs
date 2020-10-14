@@ -38,7 +38,6 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedEventScheduler"/> class.
         /// </summary>
-        /// <param name="onOrphan">A method to handle orphan events.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public DistributedEventScheduler(ILoggerFactory loggerFactory)
         {

@@ -245,8 +245,6 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the message has been handled.</returns>
         private void ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
-            message.Sender = MemberId;
-
             if (message.IsEvent)
             {
                 HConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +

@@ -40,12 +40,12 @@ namespace Hazelcast.Events
         /// <summary>
         /// Gets or sets the delay before collecting subscriptions starts.
         /// </summary>
-        public TimeSpan SubscriptionCollectDelay { get; set; } = TimeSpan.FromSeconds(1);
+        public TimeSpan SubscriptionCollectDelay { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Gets or sets the period of the subscription collection.
         /// </summary>
-        public TimeSpan SubscriptionCollectPeriod { get; set; } = TimeSpan.FromSeconds(1);
+        public TimeSpan SubscriptionCollectPeriod { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Gets or sets the subscription collection timeout, after which a subscription is considered dead and removed.
