@@ -36,12 +36,12 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddDistributedObjectListenerCodec.DecodeResponse(message).Response,
                 (id, state) => ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id),
                 (message, state) => ClientRemoveDistributedObjectListenerCodec.DecodeResponse(message).Response,
-                (message, state) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleInternal, LoggerFactory));
+                (message, state) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleCodecEvent, null, LoggerFactory));
         }
 
         internal Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, ValueTask> Handle { get; set; }
 
-        private ValueTask HandleInternal(string name, string serviceName, string eventTypeName, Guid memberId)
+        private ValueTask HandleCodecEvent(string name, string serviceName, string eventTypeName, Guid memberId, object state)
         {
             if (Handle == null) return default;
 

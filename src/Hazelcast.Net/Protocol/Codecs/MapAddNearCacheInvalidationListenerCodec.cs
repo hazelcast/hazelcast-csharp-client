@@ -174,7 +174,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleIMapInvalidationEventAsync handleIMapInvalidationEventAsync, HandleIMapBatchInvalidationEventAsync handleIMapBatchInvalidationEventAsync, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<IData, Guid, Guid, long, object, ValueTask> handleIMapInvalidationEventAsync, Func<IList<IData>, IList<Guid>, IList<Guid>, IList<long>, object, ValueTask> handleIMapBatchInvalidationEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
@@ -185,7 +185,7 @@ namespace Hazelcast.Protocol.Codecs
                 var partitionUuid =  initialFrame.Bytes.ReadGuidL(EventIMapInvalidationPartitionUuidFieldOffset);
                 var sequence =  initialFrame.Bytes.ReadLongL(EventIMapInvalidationSequenceFieldOffset);
                 var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                return handleIMapInvalidationEventAsync(key, sourceUuid, partitionUuid, sequence);
+                return handleIMapInvalidationEventAsync(key, sourceUuid, partitionUuid, sequence, state);
             }
             if (messageType == EventIMapBatchInvalidationMessageType)
             {
@@ -194,14 +194,10 @@ namespace Hazelcast.Protocol.Codecs
                 var sourceUuids = ListUUIDCodec.Decode(iterator);
                 var partitionUuids = ListUUIDCodec.Decode(iterator);
                 var sequences = ListLongCodec.Decode(iterator);
-                return handleIMapBatchInvalidationEventAsync(keys, sourceUuids, partitionUuids, sequences);
+                return handleIMapBatchInvalidationEventAsync(keys, sourceUuids, partitionUuids, sequences, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
-
-        public delegate ValueTask HandleIMapInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence);
-
-        public delegate ValueTask HandleIMapBatchInvalidationEventAsync(IList<IData> keys, IList<Guid> sourceUuids, IList<Guid> partitionUuids, IList<long> sequences);
     }
 }

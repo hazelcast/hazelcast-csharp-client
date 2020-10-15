@@ -26,10 +26,12 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="member">The member.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        protected DictionaryEventArgsBase(MemberInfo member, int numberOfAffectedEntries)
+        /// <param name="state">A state object.</param>
+        protected DictionaryEventArgsBase(MemberInfo member, int numberOfAffectedEntries, object state)
         {
             Member = member;
             NumberOfAffectedEntries = numberOfAffectedEntries;
+            State = state;
         }
 
         /// <summary>
@@ -41,5 +43,10 @@ namespace Hazelcast.DistributedObjects
         /// Gets the number of affected entries.
         /// </summary>
         public int NumberOfAffectedEntries { get; }
+
+        /// <summary>
+        /// Gets the state object.
+        /// </summary>
+        public object State { get; }
     }
 }

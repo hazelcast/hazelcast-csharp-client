@@ -149,7 +149,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, HandleTopicEventAsync handleTopicEventAsync, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<IData, long, Guid, object, ValueTask> handleTopicEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
@@ -159,12 +159,10 @@ namespace Hazelcast.Protocol.Codecs
                 var publishTime =  initialFrame.Bytes.ReadLongL(EventTopicPublishTimeFieldOffset);
                 var uuid =  initialFrame.Bytes.ReadGuidL(EventTopicUuidFieldOffset);
                 var item = DataCodec.Decode(iterator);
-                return handleTopicEventAsync(item, publishTime, uuid);
+                return handleTopicEventAsync(item, publishTime, uuid, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug("Unknown message type received on event handler :" + messageType);
             return default;
         }
-
-        public delegate ValueTask HandleTopicEventAsync(IData item, long publishTime, Guid uuid);
     }
 }

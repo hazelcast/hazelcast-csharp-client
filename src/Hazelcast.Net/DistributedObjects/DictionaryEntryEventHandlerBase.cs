@@ -37,9 +37,9 @@ namespace Hazelcast.DistributedObjects
 
         public HDictionaryEventTypes EventType { get; }
 
-        public ValueTask HandleAsync(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries)
-            => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergeValue, eventType, numberOfAffectedEntries));
+        public ValueTask HandleAsync(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries, object state)
+            => _handler(sender, CreateEventArgs(member, key, value, oldValue, mergeValue, eventType, numberOfAffectedEntries, state));
 
-        protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries);
+        protected abstract TArgs CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries, object state);
     }
 }

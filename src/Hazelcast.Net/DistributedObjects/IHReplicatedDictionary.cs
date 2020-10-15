@@ -37,24 +37,27 @@ namespace Hazelcast.DistributedObjects
         /// Subscribes to events.
         /// </summary>
         /// <param name="events">An event handlers collection builder.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events);
+        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, object state = null);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="key">A key to filter events.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key);
+        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, object state = null);
 
         /// <summary>
         /// Subscribes to events.
         /// </summary>
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate);
+        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -62,8 +65,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="key">A key to filter events.</param>
         /// <param name="predicate">A predicate to filter events.</param>
+        /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate);
+        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, object state = null);
 
         /// <summary>
         /// Unsubscribe from events.

@@ -38,16 +38,15 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true)
-            => SubscribeAsync(includeValues, default, false, events);
+        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null)
+            => SubscribeAsync(events, Maybe.None, includeValues, state);
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true)
-            => SubscribeAsync(includeValues, key, true, events);
+        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null)
+            => SubscribeAsync(events, Maybe.Some(key), includeValues, state);
 
-        private async Task<Guid> SubscribeAsync(bool includeValues, TKey key, bool hasKey, Action<MultiDictionaryEventHandlers<TKey, TValue>> events)
+        private async Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, Maybe<TKey> key, bool includeValues, object state)
         {
-            if (hasKey && key == null) throw new ArgumentNullException(nameof(key));
             if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new MultiDictionaryEventHandlers<TKey, TValue>();
@@ -55,12 +54,13 @@ namespace Hazelcast.DistributedObjects.Impl
 
             // 0: no entryKey
             // 1: entryKey
-            var mode = hasKey ? 1 : 0;
+            var mode = key.Match(1, 0);
+            var keyv = key.ValueOrDefault();
 
             var subscribeRequest = mode switch
             {
                 0 => MultiMapAddEntryListenerCodec.EncodeRequest(Name, includeValues, Cluster.IsSmartRouting),
-                1 => MultiMapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(key), includeValues, Cluster.IsSmartRouting),
+                1 => MultiMapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(keyv), includeValues, Cluster.IsSmartRouting),
                 _ => throw new NotSupportedException()
             };
 
@@ -70,7 +70,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 CreateUnsubscribeRequest,
                 ReadUnsubscribeResponse,
                 HandleEventAsync,
-                new MapSubscriptionState(mode, Name, handlers));
+                new MapSubscriptionState(mode, Name, handlers, state));
 
             await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
 
@@ -79,8 +79,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private class MapSubscriptionState : SubscriptionState<MultiDictionaryEventHandlers<TKey, TValue>>
         {
-            public MapSubscriptionState(int mode, string name, MultiDictionaryEventHandlers<TKey, TValue> handlers)
-                : base(name, handlers)
+            public MapSubscriptionState(int mode, string name, MultiDictionaryEventHandlers<TKey, TValue> handlers, object state)
+                : base(name, handlers, state)
             {
                 Mode = mode;
             }
@@ -92,41 +92,41 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var sstate = ToSafeState<MapSubscriptionState>(state);
 
-            async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries)
-            {
-                var eventType = (HDictionaryEventTypes) eventTypeData;
-                if (eventType == HDictionaryEventTypes.Nothing) return;
-
-                var member = Cluster.Members.GetMember(memberId);
-                var key = LazyArg<TKey>(keyData);
-                var value = LazyArg<TValue>(valueData);
-                var oldValue = LazyArg<TValue>(oldValueData);
-                var mergingValue = LazyArg<TValue>(mergingValueData);
-
-                HConsole.WriteLine(this, $"EVENT {eventType} on {key.Value}");
-
-                // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-                foreach (var handler in sstate.Handlers)
-                {
-                    if (handler.EventType.HasAll(eventType))
-                    {
-                        var task = handler switch
-                        {
-                            IDictionaryEntryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries),
-                            IDictionaryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries),
-                            _ => throw new NotSupportedException()
-                        };
-                        await task.CAF();
-                    }
-                }
-            }
-
             return sstate.Mode switch
             {
-                0 => MultiMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
-                1 => MultiMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, LoggerFactory),
+                0 => MultiMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, state, LoggerFactory),
+                1 => MultiMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, state, LoggerFactory),
                 _ => throw new NotSupportedException()
             };
+        }
+
+        private async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, object state)
+        {
+            var eventType = (HDictionaryEventTypes) eventTypeData;
+            if (eventType == HDictionaryEventTypes.Nothing) return;
+
+            var member = Cluster.Members.GetMember(memberId);
+            var key = LazyArg<TKey>(keyData);
+            var value = LazyArg<TValue>(valueData);
+            var oldValue = LazyArg<TValue>(oldValueData);
+            var mergingValue = LazyArg<TValue>(mergingValueData);
+
+            var sstate = ToSafeState<MapSubscriptionState>(state);
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var handler in sstate.Handlers)
+            {
+                if (handler.EventType.HasAll(eventType))
+                {
+                    var task = handler switch
+                    {
+                        IDictionaryEntryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
+                        IDictionaryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
+                        _ => throw new NotSupportedException()
+                    };
+                    await task.CAF();
+                }
+            }
         }
 
         private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)

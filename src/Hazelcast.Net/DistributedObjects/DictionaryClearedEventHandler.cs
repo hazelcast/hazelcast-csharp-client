@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects
             : base(HDictionaryEventTypes.AllCleared, handler)
         { }
 
-        protected override DictionaryClearedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries)
-            => new DictionaryClearedEventArgs(member, numberOfAffectedEntries);
+        protected override DictionaryClearedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries, object state)
+            => new DictionaryClearedEventArgs(member, numberOfAffectedEntries, state);
     }
 }

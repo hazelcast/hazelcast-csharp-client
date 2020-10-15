@@ -37,6 +37,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="mergeValue">The merged value.</param>
         /// <param name="eventType">The event type.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        ValueTask HandleAsync(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries);
+        /// <param name="state">A state object.</param>
+        ValueTask HandleAsync(TSender sender, MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries, object state);
     }
 }

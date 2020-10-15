@@ -44,6 +44,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="serviceName">the name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
+        /// <param name="factory">The distributed object factory.</param>
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
@@ -242,10 +243,12 @@ namespace Hazelcast.DistributedObjects
             /// </summary>
             /// <param name="name">The unique name of the distributed object.</param>
             /// <param name="handlers">The event handlers.</param>
-            public SubscriptionState(string name, TEventHandlers handlers)
+            /// <param name="handlerState">A state object which is passed to handlers.</param>
+            public SubscriptionState(string name, TEventHandlers handlers, object handlerState)
             {
                 Name = name;
                 Handlers = handlers;
+                HandlerState = handlerState;
             }
 
             /// <summary>
@@ -257,6 +260,11 @@ namespace Hazelcast.DistributedObjects
             /// Gets the event handlers.
             /// </summary>
             public TEventHandlers Handlers { get; }
+
+            /// <summary>
+            /// Gets the handler state.
+            /// </summary>
+            public object HandlerState { get; }
         }
 
         /// <summary>

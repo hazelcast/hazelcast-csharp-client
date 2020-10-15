@@ -22,8 +22,8 @@ namespace Hazelcast.DistributedObjects
         private readonly Lazy<TValue> _value;
         private readonly Lazy<TValue> _oldValue;
 
-        public DictionaryEntryLoadedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue)
-            : base(member, key)
+        public DictionaryEntryLoadedEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, object state)
+            : base(member, key, state)
         {
             _value = value;
             _oldValue = oldValue;

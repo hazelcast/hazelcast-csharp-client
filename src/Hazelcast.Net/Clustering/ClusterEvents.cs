@@ -603,8 +603,9 @@ namespace Hazelcast.Clustering
             // handles the event
             ValueTask HandleEventAsync(ClientMessage message, object _)
                 => ClientAddClusterViewListenerCodec.HandleEventAsync(message,
-                    HandleMemberViewEvent,
-                    (version, partitions) => HandlePartitionViewEvent(connection.Id, version, partitions),
+                    HandleCodecMemberViewEvent,
+                    HandleCodecPartitionViewEvent,
+                    connection.Id,
                     _clusterState.LoggerFactory);
 
             try
@@ -628,13 +629,35 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="version">The version.</param>
         /// <param name="members">The members.</param>
-        private async ValueTask HandleMemberViewEvent(int version, ICollection<MemberInfo> members)
+        /// <param name="state">A state object.</param>
+        private async ValueTask HandleCodecMemberViewEvent(int version, ICollection<MemberInfo> members, object state)
         {
             var eventArgs = await _clusterMembers.HandleMemberViewEvent(version, members).CAF();
 
             // raise events (On... does not throw)
             foreach (var (eventType, args) in eventArgs)
                 await _onMemberLifecycleEvent(eventType, args).CAF();
+        }
+
+        /// <summary>
+        /// Handles the 'partitions view' event.
+        /// </summary>
+        /// <param name="version">The version.</param>
+        /// <param name="partitions">The partitions.</param>
+        /// <param name="state">A state object.</param>
+        private async ValueTask HandleCodecPartitionViewEvent(int version, IList<KeyValuePair<Guid, IList<int>>> partitions, object state)
+        {
+            var clientId = (Guid) state;
+
+            _clusterState.Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
+
+            // signal once
+            //if (Interlocked.CompareExchange(ref _firstPartitionsViewed, 1, 0) == 0)
+            //    _firstPartitionsView.Release();
+
+            // raise event
+            // On... does not throw
+            await _onPartitionsUpdated().CAF();
         }
 
         /// <summary>
@@ -648,25 +671,6 @@ namespace Hazelcast.Clustering
                 _clusterState.ThrowIfReadOnlyProperties();
                 _onMemberLifecycleEvent = value;
             }
-        }
-
-        /// <summary>
-        /// Handles the 'partitions view' event.
-        /// </summary>
-        /// <param name="clientId">The unique identifier of the client.</param>
-        /// <param name="version">The version.</param>
-        /// <param name="partitions">The partitions.</param>
-        private async ValueTask HandlePartitionViewEvent(Guid clientId, int version, IEnumerable<KeyValuePair<Guid, IList<int>>> partitions)
-        {
-            _clusterState.Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
-
-            // signal once
-            //if (Interlocked.CompareExchange(ref _firstPartitionsViewed, 1, 0) == 0)
-            //    _firstPartitionsView.Release();
-
-            // raise event
-            // On... does not throw
-            await _onPartitionsUpdated().CAF();
         }
 
         /// <summary>

@@ -18,8 +18,8 @@ namespace Hazelcast.DistributedObjects
 {
     public sealed class DictionaryEvictedEventArgs : DictionaryEventArgsBase
     {
-        public DictionaryEvictedEventArgs(MemberInfo member, int numberOfAffectedEntries)
-            : base(member, numberOfAffectedEntries)
+        public DictionaryEvictedEventArgs(MemberInfo member, int numberOfAffectedEntries, object state)
+            : base(member, numberOfAffectedEntries, state)
         { }
     }
 }
