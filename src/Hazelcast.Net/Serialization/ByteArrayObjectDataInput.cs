@@ -87,7 +87,10 @@ namespace Hazelcast.Serialization
                 throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
         }
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets the data buffer.
+        /// </summary>
         internal byte[] Data => _data;
 
         /// <inheritdoc />

@@ -29,7 +29,10 @@ namespace Hazelcast.Configuration
             : base(FilterSource(source))
         { }
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Filters a configuration source.
+        /// </summary>
         internal static MemoryConfigurationSource FilterSource(HazelcastMemoryConfigurationSource source)
         {
             static KeyValuePair<string, string> Filter(KeyValuePair<string, string> kvp)

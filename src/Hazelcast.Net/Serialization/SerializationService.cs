@@ -396,7 +396,10 @@ namespace Hazelcast.Serialization
 
         #region Get serializers
 
-        // internal for tests only
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets the portable serializer.
+        /// </summary>
         internal PortableSerializer PortableSerializer => _portableSerializer;
 
         private ISerializerAdapter SerializerFor(object obj)

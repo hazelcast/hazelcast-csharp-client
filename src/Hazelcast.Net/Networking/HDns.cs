@@ -24,18 +24,16 @@ namespace Hazelcast.Networking
     /// <para>This class is just a wrapper around <see cref="Dns"/> with entry
     /// points that allow for altering its behavior for tests (exclusively).</para>
     /// </remarks>
-    public static class HDns
+    internal static class HDns
     {
         private static IDns _implementation = new SystemNetDns();
 
         /// <summary>
+        /// (internal for tests only)
         /// Overrides the default static implementation with a temporary alternate implementation.
         /// </summary>
         /// <param name="dns">The alternate <see cref="IDns"/> implementation.</param>
         /// <returns>An object that must be disposed in order to restore the original static implementation.</returns>
-        /// <remarks>
-        /// <para>This is for tests exclusively.</para>
-        /// </remarks>
         internal static IDisposable Override(IDns dns)
         {
             var od = new OverrideDisposable();

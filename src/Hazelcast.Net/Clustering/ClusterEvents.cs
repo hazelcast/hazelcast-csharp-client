@@ -75,17 +75,20 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// (for tests only) Gets the subscriptions.
+        /// (internal for tests only)
+        /// Gets the subscriptions.
         /// </summary>
         internal ConcurrentDictionary<Guid, ClusterSubscription> Subscriptions => _subscriptions;
 
         /// <summary>
-        /// (for tests only) Gets the correlated subscriptions.
+        /// (internal for tests only)
+        /// Gets the correlated subscriptions.
         /// </summary>
         internal ConcurrentDictionary<long, ClusterSubscription> CorrelatedSubscriptions => _correlatedSubscriptions;
 
         /// <summary>
-        /// (for tests only) Gets the ghost subscriptions.
+        /// (internal for tests only)
+        /// Gets the ghost subscriptions.
         /// </summary>
         internal HashSet<ClusterSubscription> GhostSubscriptions => _ghostSubscriptions;
 

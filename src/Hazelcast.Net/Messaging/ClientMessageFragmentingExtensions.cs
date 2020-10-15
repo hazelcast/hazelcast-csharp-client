@@ -33,7 +33,11 @@ namespace Hazelcast.Messaging
     {
         // we can use one single static sequence of fragment identifiers
         // Java uses a static CallIdSequenceWithoutBackPressure
-        // internal for tests
+
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets the fragment identifiers sequence.
+        /// </summary>
         internal static ISequence<long> FragmentIdSequence = new Int64Sequence();
 
         /// <summary>

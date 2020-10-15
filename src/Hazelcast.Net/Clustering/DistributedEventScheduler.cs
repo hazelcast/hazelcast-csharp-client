@@ -48,7 +48,10 @@ namespace Hazelcast.Clustering
             _removeAfterUse = RemoveAfterUse;
         }
 
-        // for tests only
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets the partition tasks count.
+        /// </summary>
         internal int PartitionTasksCount => _partitionTasks.Count;
 
         /// <summary>

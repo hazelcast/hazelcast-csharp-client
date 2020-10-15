@@ -23,9 +23,9 @@ namespace Hazelcast.Networking
     internal abstract partial class SocketConnectionBase
     {
         /// <summary>
+        /// (internal for tests only)
         /// Represents the state of the reading loop.
         /// </summary>
-        // internal for tests exclusively
         internal sealed class ReadPipeState : IBufferReference<ReadOnlySequence<byte>>
         {
             /// <summary>

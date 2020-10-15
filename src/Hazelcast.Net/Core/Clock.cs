@@ -47,7 +47,8 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Resets the clock. This method is provided for tests only.
+        /// (internal for tests only)
+        /// Resets the clock.
         /// </summary>
         internal static void Reset()
         {

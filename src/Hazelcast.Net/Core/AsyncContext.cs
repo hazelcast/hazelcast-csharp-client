@@ -73,7 +73,8 @@ namespace Hazelcast.Core
         internal static bool HasCurrent => Current.Value != null;
 
         /// <summary>
-        /// Resets the sequence of unique identifiers. This method is provided for tests only.
+        /// (internal for tests only)
+        /// Resets the sequence of unique identifiers.
         /// </summary>
         internal static void ResetSequence()
         {
@@ -89,7 +90,8 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Ensures that a context exists. This method is provided for tests only.
+        /// (internal for tests only)
+        /// Ensures that a context exists.
         /// </summary>
         internal static void EnsureNew()
         {

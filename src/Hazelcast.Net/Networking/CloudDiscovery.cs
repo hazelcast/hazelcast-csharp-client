@@ -50,7 +50,10 @@ namespace Hazelcast.Networking
             _logger = loggerFactory?.CreateLogger<CloudDiscovery>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
-        // provided for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Sets the response.
+        /// </summary>
         internal static void SetResponse(string response)
         {
             _response = response;

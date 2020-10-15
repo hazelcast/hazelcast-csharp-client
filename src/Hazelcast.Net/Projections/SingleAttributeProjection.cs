@@ -39,7 +39,10 @@ namespace Hazelcast.Projections
             AttributePath = attributePath;
         }
 
-        // for tests only.
+        /// <summary>
+        /// (internal for tests only)
+        /// Get the attribute path.
+        /// </summary>
         internal string AttributePath { get; private set; }
 
         /// <inheritdoc />
