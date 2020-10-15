@@ -36,8 +36,7 @@ namespace Hazelcast.Examples.Client
             });
 
             // create an Hazelcast client and connect to a server running on localhost
-            var hz = HazelcastClientFactory.CreateClient(options);
-            await hz.StartAsync();
+            var hz = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // wait for the event
             await memberAdded.WaitAsync();

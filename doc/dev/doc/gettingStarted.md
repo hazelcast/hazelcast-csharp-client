@@ -2,13 +2,12 @@
 
 ## Hazelcast client
 
-The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static @Hazelcast.HazelcastClientFactory. Before it can be used, it needs to be started via the @Hazelcast.IHazelcastClient.StartAsync* method. After it has been used, it needs to be disposed in order to properly release its resources.
+The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static @Hazelcast.HazelcastClientFactory. After it has been used, it needs to be disposed in order to properly release its resources.
 
 For example:
 
 ```csharp
-var client = HazelcastClientFactory.CreateClient();
-await client.StartAsync();
+var client = await HazelcastClientFactory.StartClientAsync();
 // ... use the client ...
 await client.DisposeAsync();
 ```
@@ -20,7 +19,7 @@ client. In fact, the above example is equivalent to:
 
 ```csharp
 var options = HazelcastOptions.Build();
-var client = HazelcastClientFactory.CreateClient(options);
+var client = await HazelcastClientFactory.StartClientAsync(options);
 // ...
 ```
 
@@ -84,7 +83,7 @@ The client exposes client-level events.
 For example:
 
 ```csharp
-var subscriptionId = await client.SubscribeAsync(handle => handle
+var subscriptionId = await client.SubscribeAsync(events => events
     .ClientStateChanged((sender, args) => {
         Console.WriteLine($"Client state changed to: {args.State}.")
     })
@@ -104,7 +103,7 @@ Each distributed object also exposes events in the same way.
 For example:
 
 ```csharp
-var subscriptionId = await dict.SubscribeAsync(handle => handle
+var subscriptionId = await dict.SubscribeAsync(events => events
     .EntryAdded((sender, args) => {
         // ...
     })

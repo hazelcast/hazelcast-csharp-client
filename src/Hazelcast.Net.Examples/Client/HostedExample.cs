@@ -116,8 +116,7 @@ namespace Hazelcast.Examples.Client
                 _logger.LogInformation("Starting...");
 
                 // open a client
-                var client = HazelcastClientFactory.CreateClient();
-                await client.StartAsync(cancellationToken);
+                var client = await HazelcastClientFactory.StartNewClientAsync(cancellationToken);
 
                 // start the running task
                 _cancel = new CancellationTokenSource();

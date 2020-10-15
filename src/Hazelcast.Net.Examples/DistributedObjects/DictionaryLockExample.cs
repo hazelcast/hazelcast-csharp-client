@@ -46,8 +46,7 @@ namespace Hazelcast.Examples.DistributedObjects
             using var used = options.Logging.LoggerFactory;
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync();
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
             await using var map = await client.GetDictionaryAsync<string, string>("map-lock-example");

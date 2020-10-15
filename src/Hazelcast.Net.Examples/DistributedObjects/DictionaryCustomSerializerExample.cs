@@ -36,8 +36,7 @@ namespace Hazelcast.Examples.DistributedObjects
             });
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync();
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
             await using var mapCustomers = await client.GetDictionaryAsync<string, Person>("persons");
