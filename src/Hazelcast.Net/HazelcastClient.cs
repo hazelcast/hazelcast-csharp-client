@@ -155,7 +155,7 @@ namespace Hazelcast
             // order is important,
             // don't dispose the cluster before the rest!
 
-            // FIXME - understand
+            // FIXME - refactor IHazelcastClient shutdown in DisposeAsync
             // when is the client ACTIVE vs CONNECTED ?
             // we should "lock" the cluster here (even before dispose) eg Cluster.PrepareForDispose()
 

@@ -168,7 +168,10 @@ namespace Hazelcast.Serialization
             if (!(o is IData data))
                 return o;
 
-            var input = GetDataInput(data); // FIXME why is this disposable in the first place?
+            // TODO: but, if returned, why is it disposable in the first place?
+#pragma warning disable CA2000 // Dispose objects before losing scope - is returned
+            var input = GetDataInput(data);
+#pragma warning restore CA2000
 
             try
             {
@@ -540,7 +543,8 @@ namespace Hazelcast.Serialization
             return _portableSerializer.CreateReader(input);
         }
 
-        public virtual void Destroy() // FIXME make this disposable
+        // TODO: the service should be disposable instead!
+        public virtual void Destroy()
         {
             _isActive = false;
             foreach (var serializer in _typeMap.Values)

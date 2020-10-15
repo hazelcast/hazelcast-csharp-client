@@ -283,7 +283,6 @@ namespace Hazelcast.Clustering
 
         private async ValueTask<bool> RemoveMemberSubscriptionsAsync(ClusterSubscription subscription, CancellationToken cancellationToken = default)
         {
-            List<Exception> exceptions = null;
             var allRemoved = true;
 
             // un-subscribe each client
@@ -304,9 +303,7 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception e)
                 {
-                    // FIXME what shall we do with the exceptions?
-                    exceptions ??= new List<Exception>();
-                    exceptions.Add(e);
+                    _logger.LogError(e, "Caught an exception while unsubscribing to events.");
                     allRemoved = false;
                 }
             }

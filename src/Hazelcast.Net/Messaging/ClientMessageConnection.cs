@@ -261,10 +261,6 @@ namespace Hazelcast.Messaging
 
             // send message, serialize sending via semaphore
             // throws OperationCanceledException if canceled (and semaphore is not acquired)
-            // FIXME _writer != null but disposed? race condition somewhere?
-            // at least it happens on Linux when... we try to subscribe long after everything went down?
-            // and then, on Linux, event this throws = cancellation is *not* requested?!
-            //  _writer is disposed when this is disposed
             if (_writer != null)
             {
                 try
@@ -273,6 +269,7 @@ namespace Hazelcast.Messaging
                 }
                 catch (ObjectDisposedException)
                 {
+                    // _writer can be non-null but disposed
                     return false;
                 }
                 catch (Exception e) when (!(e is OperationCanceledException))
