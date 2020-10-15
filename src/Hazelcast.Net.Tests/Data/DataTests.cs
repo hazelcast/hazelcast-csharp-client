@@ -175,27 +175,6 @@ namespace Hazelcast.Tests.Data
         }
 
         [Test]
-        public void DistributedObjectKeyTest()
-        {
-            var x = new DistributedObjectKey("serviceName", "name", typeof(object));
-
-            Console.WriteLine(x);
-
-            Assert.That(x.ServiceName, Is.EqualTo("serviceName"));
-            Assert.That(x.Name, Is.EqualTo("name"));
-            Assert.That(x.Type, Is.EqualTo(typeof(object)));
-
-            Assert.That(x, Resolves.Equatable(
-                new DistributedObjectKey("serviceName", "name", typeof(object)),
-                new DistributedObjectKey("serviceName", "other", typeof(object)),
-                new DistributedObjectKey("other", "name", typeof(object)),
-                new DistributedObjectKey("serviceName", "name", typeof(string))));
-
-            var hash = x.GetHashCode();
-            Assert.That(hash, Is.Not.Zero);
-        }
-
-        [Test]
         public void MapEntryTest()
         {
             var x = new HDictionaryEntryStats<string, string>();

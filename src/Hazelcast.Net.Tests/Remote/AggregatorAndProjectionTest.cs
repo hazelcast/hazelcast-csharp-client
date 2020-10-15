@@ -97,14 +97,15 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task Test_NumberAvg()
         {
+            // .NET does not have a 'number' type, so we have to use 'object'
+
             var dictionary = await Client.GetDictionaryAsync<string, object>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            await using var floatDictionary = await Client.GetDictionaryAsync<string, float>(dictionary.Name);
-            await using var doubleDictionary = await Client.GetDictionaryAsync<string, double>(dictionary.Name);
-
-            await Fill(floatDictionary, i => i);
-            await Fill(doubleDictionary, i => i);
+            await Fill(dictionary, i => (float) i);
+            await Fill(dictionary, i => (double) i);
+            await Fill(dictionary, i => (int) i);
+            await Fill(dictionary, i => (long) i);
 
             Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.NumberAvg()));
             Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.NumberAvg("this")));
@@ -183,19 +184,38 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-        public async Task Test_FixedPointSum()
+        public async Task Test_FixedPointSum_MixedGeneric()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, object>(CreateUniqueName());
-            await using var _ = DestroyAndDispose(dictionary);
+            var name = CreateUniqueName();
 
-            await using var floatDictionary = await Client.GetDictionaryAsync<string, float>(dictionary.Name);
-            await using var doubleDictionary = await Client.GetDictionaryAsync<string, double>(dictionary.Name);
+            await using (var dictionary = await Client.GetDictionaryAsync<string, int>(name))
+            {
+                await Fill(dictionary, i => i);
+            }
 
-            await Fill(floatDictionary, i => i);
-            await Fill(doubleDictionary, i => i);
+            await using (var dictionary = await Client.GetDictionaryAsync<string, long>(name))
+            {
+                await Fill(dictionary, i => i);
+            }
 
-            Assert.AreEqual(90, await floatDictionary.AggregateAsync(Aggregator.FixedPointSum()));
-            Assert.AreEqual(90, await floatDictionary.AggregateAsync(Aggregator.FixedPointSum("this")));
+            await using var d = await Client.GetDictionaryAsync<string, int>(name);
+
+            Assert.AreEqual(90, await d.AggregateAsync(Aggregator.FixedPointSum()));
+            Assert.AreEqual(90, await d.AggregateAsync(Aggregator.FixedPointSum("this")));
+        }
+
+        [Test]
+        public async Task Test_FixedPointSum_MixedObject()
+        {
+            var name = CreateUniqueName();
+
+            await using var dictionary = await Client.GetDictionaryAsync<string, object>(name);
+
+            await Fill(dictionary, i => (int) i);
+            await Fill(dictionary, i => (long) i);
+
+            Assert.AreEqual(90, await dictionary.AggregateAsync(Aggregator.FixedPointSum()));
+            Assert.AreEqual(90, await dictionary.AggregateAsync(Aggregator.FixedPointSum("this")));
         }
 
         [Test]
@@ -208,6 +228,19 @@ namespace Hazelcast.Tests.Remote
 
             Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum()));
             Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum("this")));
+        }
+
+        [Test]
+        public async Task Test_FloatingPointSum_MixedObject()
+        {
+            var dictionary = await Client.GetDictionaryAsync<string, object>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(dictionary);
+
+            await Fill(dictionary, i => (float) i);
+            await Fill(dictionary, i => (double) i);
+
+            Assert.AreEqual(90d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum()));
+            Assert.AreEqual(90d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum("this")));
         }
 
         [Test]
