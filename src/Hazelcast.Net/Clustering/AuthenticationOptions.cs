@@ -89,7 +89,7 @@ namespace Hazelcast.Clustering
         /// <param name="username">Username.</param>
         /// <param name="password">Password.</param>
         /// <returns>The security options.</returns>
-        private AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
+        public AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
         {
             var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
             CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
@@ -101,7 +101,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="credentials">Credentials.</param>
         /// <returns>The security options.</returns>
-        private AuthenticationOptions ConfigureCredentials(ICredentials credentials)
+        public AuthenticationOptions ConfigureCredentials(ICredentials credentials)
         {
             CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
             return this;
@@ -112,7 +112,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="token">A token.</param>
         /// <returns>The security configuration.</returns>
-        private AuthenticationOptions ConfigureTokenCredentials(byte[] token)
+        public AuthenticationOptions ConfigureTokenCredentials(byte[] token)
         {
             return ConfigureCredentials(new TokenCredentials(token));
         }

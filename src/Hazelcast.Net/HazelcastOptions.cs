@@ -68,7 +68,7 @@ namespace Hazelcast
         /// <summary>
         /// Gets the core options.
         /// </summary>
-        public CoreOptions Core { get; } = new CoreOptions();
+        internal CoreOptions Core { get; } = new CoreOptions();
 
         /// <summary>
         /// Clones the options.

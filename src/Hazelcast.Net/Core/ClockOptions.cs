@@ -31,7 +31,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents the clock options.
     /// </summary>
-    public class ClockOptions
+    internal sealed class ClockOptions
     {
         /// <summary>
         /// Gets or sets the clock offset.
