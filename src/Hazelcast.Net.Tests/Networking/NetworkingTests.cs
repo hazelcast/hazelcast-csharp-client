@@ -491,8 +491,6 @@ namespace Hazelcast.Tests.Networking
 
             //options.Networking.Addresses.Add("sgay-l4");
             options.Networking.Addresses.Add("localhost");
-            options.Authentication.Authenticator.Creator = ()
-                => new Authenticator(options.Authentication);
 
             var cluster = new Cluster(options, serializationService, new NullLoggerFactory());
             await cluster.Connections.ConnectAsync(CancellationToken.None).CAF();

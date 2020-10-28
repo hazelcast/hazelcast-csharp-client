@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 
@@ -22,12 +23,15 @@ namespace Hazelcast.Clustering.LoadBalancing
     /// </summary>
     public class LoadBalancingOptions
     {
+        private LoadBalancingMode _mode;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LoadBalancingOptions"/> class.
         /// </summary>
         public LoadBalancingOptions()
         {
-            LoadBalancer = new SingletonServiceFactory<ILoadBalancer>();
+            LoadBalancer = new SingletonServiceFactory<ILoadBalancer> { Creator = () => new RandomLoadBalancer() };
+            _mode = LoadBalancingMode.Random;
         }
 
         /// <summary>
@@ -36,6 +40,36 @@ namespace Hazelcast.Clustering.LoadBalancing
         private LoadBalancingOptions(LoadBalancingOptions other)
         {
             LoadBalancer = other.LoadBalancer.Clone();
+            _mode = other._mode;
+        }
+
+        /// <summary>
+        /// Gets or sets the load balancing mode.
+        /// </summary>
+        public LoadBalancingMode Mode
+        {
+            get => _mode;
+            set
+            {
+                // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
+                switch (_mode = value)
+                {
+                    case LoadBalancingMode.Random:
+                        LoadBalancer.Creator = () => new RandomLoadBalancer();
+                        break;
+
+                    case LoadBalancingMode.RoundRobin:
+                        LoadBalancer.Creator = () => new RoundRobinLoadBalancer();
+                        break;
+
+                    case LoadBalancingMode.Custom:
+                        LoadBalancer.Creator = null;
+                        break;
+
+                    default:
+                        throw new ConfigurationException($"Invalid load balancing mode \"{value}\".");
+                }
+            }
         }
 
         /// <summary>
@@ -52,7 +86,11 @@ namespace Hazelcast.Clustering.LoadBalancing
 #pragma warning restore IDE0051 // Remove unused private members
         {
             get => default;
-            set => LoadBalancer.Creator = () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args);
+            set
+            {
+                _mode = LoadBalancingMode.Custom;
+                LoadBalancer.Creator = () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args);
+            }
         }
 
         /// <summary>
