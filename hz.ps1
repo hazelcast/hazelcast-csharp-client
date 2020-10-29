@@ -185,7 +185,7 @@ foreach ($t in $commands) {
             Write-Output ""
             Write-Output "Configuration is Release by default but can be forced to Debug."
             Write-Output ""
-            Write-Output "Signing assemblies requires the privage signing key in build/hazelcast.snk file."
+            Write-Output "Signing assemblies requires the private signing key in build/hazelcast.snk file."
             Write-Output ""
             Write-Output "Running enterprise tests require an enterprise key, which can be supplied either"
             Write-Output "via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key"

@@ -22,7 +22,9 @@
         "files": [ "**/*.yml" ]
       },
       {
-        "files": [ "*.md", "toc.yml", "dev/api/index.md", "dev/toc.yml", "dev/doc/**.md" ]
+        "src": "dev",
+        "dest": "meh",
+        "files": [ "api/index.md", "toc.yml", "doc/**.md" ]
       }
     ],
     "resource": [ { "files": [ "images/**" ] } ],
