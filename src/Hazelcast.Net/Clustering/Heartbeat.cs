@@ -122,7 +122,7 @@ namespace Hazelcast.Clustering
         {
             _logger.LogDebug("Run heartbeat");
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now; // now, or utcNow, but *must* be same as what is used in socket connection base!
             var connections = _clusterMembers.SnapshotConnections(true);
 
             // start one task per member
@@ -139,19 +139,26 @@ namespace Hazelcast.Clustering
         {
             // must ensure that timeout > interval ?!
 
+            var readElapsed = now - connection.LastReadTime;
+            var writeElapsed = now - connection.LastWriteTime;
+
+            HConsole.WriteLine(this, $"Heartbeat on {connection.Id.ToString("N").Substring(0, 5)}, written {(long)(now - connection.LastWriteTime).TotalMilliseconds}ms ago, read {(long)(now - connection.LastReadTime).TotalMilliseconds}ms ago");
+
             // make sure we read from the client at least every 'timeout',
             // which is greater than the interval, so we *should* have
             // read from the last ping, if nothing else, so no read means
             // that the client not responsive - terminate it
-            if (now - connection.LastReadTime > _timeout)
+
+            if (readElapsed > _timeout && writeElapsed < _period)
             {
+                _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}.", connection.Id);
                 await TerminateConnection(connection).CAF();
                 return;
             }
 
             // make sure we write to the client at least every 'interval',
             // this should trigger a read when we receive the response
-            if (now - connection.LastWriteTime > _period)
+            if (writeElapsed > _period)
             {
                 _logger.LogDebug("Ping client {ClientId}", connection.Id);
 
@@ -171,6 +178,7 @@ namespace Hazelcast.Clustering
                 }
                 catch (TaskTimeoutException)
                 {
+                    _logger.LogWarning("Heartbeat ping timeout for connection {ConnectionId}.", connection.Id);
                     await TerminateConnection(connection).CAF();
                 }
                 catch (Exception e)
@@ -187,11 +195,10 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async Task TerminateConnection(MemberConnection connection)
+        private static async Task TerminateConnection(MemberConnection connection)
         {
             if (!connection.Active) return;
 
-            _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}, terminating.", connection.Id);
             await connection.TerminateAsync().CAF(); // does not throw
 
             // TODO: original code has reasons for closing connections

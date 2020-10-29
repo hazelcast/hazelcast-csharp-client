@@ -13,23 +13,20 @@
 // limitations under the License.
 
 using System.Collections.Concurrent;
-using System.Text;
+using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.Logging
 {
-    public class StringBuilderLoggerProvider : ITestingLoggerProvider
+    public class HConsoleLoggerProvider : ITestingLoggerProvider
     {
         private readonly ConcurrentDictionary<string, ILogger> _loggers = new ConcurrentDictionary<string, ILogger>();
-        private readonly object _textLock = new object();
-        private readonly StringBuilder _text;
         private readonly TestingLoggerOptions _options;
 
         private IExternalScopeProvider _scopeProvider;
 
-        public StringBuilderLoggerProvider(StringBuilder text, TestingLoggerOptions options = null)
+        public HConsoleLoggerProvider(TestingLoggerOptions options = null)
         {
-            _text = text;
             _options = options ?? new TestingLoggerOptions();
         }
 
@@ -41,12 +38,7 @@ namespace Hazelcast.Testing.Logging
 
         public void WriteLog(LogMessageEntry entry)
         {
-            lock (_textLock)
-            {
-                _text.Append(entry.TimeStamp);
-                _text.Append(entry.LevelString);
-                _text.Append(entry.Message);
-            }
+            HConsole.WriteLine(this, $"{entry.TimeStamp}{entry.LevelString}{entry.Message}");
         }
 
         public void Dispose()
