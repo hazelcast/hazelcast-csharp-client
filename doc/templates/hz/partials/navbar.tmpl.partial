@@ -20,3 +20,5 @@
     </div>
   </div>
 </nav>
+<div id="devwarn">This page documents a development version of the Hazelcast .NET client.
+Its content is not final and remains subject to changes.</div>

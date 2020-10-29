@@ -13,7 +13,7 @@ Although the solution builds in Visual Studio or Rider, a complete build require
 For a complete build, start a Powershell console and build with:
 
 ```powershell
-PS> ./hz.ps1 <options> <targets>
+PS> ./hz.ps1 <options> <commands>
 ```
 
 See the build script section below for details and arguments.
@@ -43,7 +43,7 @@ apt-get install openjdk-11-jre
 From a shell console, build with:
 
 ```sh
-$ ./hz.sh <options> <targets>
+$ ./hz.sh <options> <commands>
 ```
 
 See the build script section below for details and arguments.
@@ -56,7 +56,11 @@ On Linux, `hz.sh` is just a proxy to `hz.ps1`. The actual build is always perfor
 * `-server <version>` the server version to use for tests
 * `-framework <version>` the framework version to build (default: all)
 * `-configuration <Release|Debug>` the configuration to build (default: `Release`)
+* `-version` version to build (overrides `src/Directory.Build.props`)
+* `-sign` whether to sign the assemblies
 * `-testFilter <filter>` filter for tests
+* `-test <test>` filter for tests
+* `-cover` whether to cover the tests
 * `-coverageFilter <filter>` filter for tests coverage
 
 Server `<version>` must match a released Hazelcast IMDG server version, e.g. `4.0` or `4.1-SNAPSHOT`. Server JARs are automatically downloaded for tests.
@@ -64,16 +68,18 @@ Server `<version>` must match a released Hazelcast IMDG server version, e.g. `4.
 Framework `<version>` must match a valid .NET target framework moniker, e.g. `net462` or `netcoreapp3.1`. Check the project files (`.csproj`) for supported versions.
 
 
-Build targets is a comma-separated list of values. Order is not important. Supported values are:
+Build commands is a comma-separated list of values. Order is not important. Supported values are:
 * `clean` cleans the solution (removes all bin, obj, and temporary directories)
 * `build` builds the solution
 * `docs` builds the documentation
 * `docsIf` builds the documentation if the platform supports it
+* `docsServe` serves the documentation site (alias: `ds`)
 * `tests` runs the tests
 * `cover` when running the tests, also perform code coverage analysis
 * `nuget` builds the NuGet package(s)
+* `nupush` pushes the NuGet package(s)
 * `rc` runs the remote controller for tests
-* `docsServe` serves the documentation site (alias: `ds`)
+* `server` runs the server for tests
 * `failedTests` outputs extra details about failed tests (alias: `ft`)
 
 When no target is specified, the script runs `clean`, `build`, `docsIf` and `tests`.
@@ -84,7 +90,11 @@ For example, after a complete build, one can rebuild and serve the documentation
 PS> ./hz.ps1 docs,docsServe
 ```
 
-When the `-enterprise` option is set, in order to test the enterprise features, the `HAZELCAST_ENTERPRISE_KEY` environment variable must contain a valid Hazelcast Enterprise key.
+When the `-enterprise` option is set, in order to test the enterprise features, the `HAZELCAST_ENTERPRISE_KEY` environment variable must contain a valid Hazelcast Enterprise key. Alternatively, the key can be stored in the `build/enterprise.key` file.
+
+When the `-sign` option is set, in order to sign the assemblies, Hazelcast's private signing key must be available in the `build/hazelcast.snk` file.
+
+When the `nupush` command is executed, in order to push the packages to NuGet, the `NUGET_API_KEY` must contain Hazelcast's NuGet API key.
 
 ## SDK Selection
 

@@ -34,6 +34,11 @@
       "_enableSearch": true,
       "_disableContribution": true
     },
+    "fileMetadata":{
+      "devwarn": {
+        "dev/**/*": true
+      }
+    },
     "dest": "../temp/docfx.site",
     "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ],
     "disableGitFeatures": true
