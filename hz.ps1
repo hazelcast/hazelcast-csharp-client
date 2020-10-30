@@ -149,13 +149,14 @@ foreach ($t in $commands) {
             Write-Output "  build       : builds the solution"
             Write-Output "  docs        : builds the documentation"
             Write-Output "  docsIf      : builds the documentation if supported by platform"
+            Write-Output "  docsServe   : serves the documentation (alias: ds)"
+            Write-Output "  docsRelease : builds the documentation release"
             Write-Output "  tests       : runs the tests"
             Write-Output "  cover       : when running tests, also perform code coverage analysis"
             Write-Output "  nuget       : builds the NuGet package(s)"
             Write-Output "  nupush      : pushes the NuGet package(s)"
             Write-Output "  rc          : runs the remote controller for tests"
             Write-Output "  server      : runs a server for tests"
-            Write-Output "  docsServe   : serves the documentation (alias: ds)"
             Write-Output "  failedTests : details failed tests (alias: ft)"
             Write-Output ""
             Write-Output "When no command is specified, the script does 'clean,build,docsIf,tests'. Note that"
@@ -209,6 +210,7 @@ foreach ($t in $commands) {
         "build"       { $doBuild = $true }
         "docs"        { $doDocs = $true }
         "docsIf"      { $doDocs = $isWindows }
+        "docsRelease" { $doDocsRelease = $true }
         "tests"       { $doTests = $true }
         "nuget"       { $doNuget = $true }
         "nupush"      { $doNupush = $true }
@@ -293,11 +295,12 @@ $isPreRelease = -not [System.String]::IsNullOrWhiteSpace($versionSuffix)
 # get doc destination according to version
 if ($isPreRelease) {
     $docDstDir = "dev"
+    $docMessage = "Update dev documentation ($version)"
 }
 else {
     $docDstDir = $versionPrefix
+    $docMessage = "Version $version documentation"
 }
-
 
 # validate enterprise key
 $enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
@@ -670,13 +673,21 @@ if ($doDocs) {
     Write-Output "Build Documentation"
     Write-Output "  Version        : $version"
     Write-Output "  Version Path   : $docDstDir ($r)"
-    Write-Output "  Path           : $tmpdir/docfx.site"
+    Write-Output "  Path           : $tmpdir/docfx.out"
     Write-Output ""
 }
 
 if ($doDocsServe) {
     Write-Output "Documentation Server"
-    Write-Output "  Path           : $tmpdir/docfx.site"
+    Write-Output "  Path           : $tmpdir/docfx.out"
+    Write-Output ""
+}
+
+if ($doDocsRelease) {
+    Write-Output "Release Documentation"
+    Write-Output "  Source         : $tmpdir/docfx.out"
+    Write-Output "  Pages repo     : $tmpdir/gh-pages"
+    Write-Output "  Message        : $docMessage"
     Write-Output ""
 }
 
@@ -718,9 +729,9 @@ if ($doClean) {
     }
 
     # clears docs
-    if (test-path "$tmpDir/docfx.site") {
-        Write-Output "  $tmpDir/docfx.site"
-        remove-item "$tmpDir/docfx.site" -force -recurse
+    if (test-path "$tmpDir/docfx.out") {
+        Write-Output "  $tmpDir/docfx.out"
+        remove-item "$tmpDir/docfx.out" -force -recurse
     }
 
     Write-Output ""
@@ -795,6 +806,11 @@ if ($doBuild -and $sign) {
 if ($doDocs -or $doDocsServe) {
     ensureDocFx
     ensureMemberPage
+}
+
+# ensure we have git
+if ($doDocsRelease) {
+    ensureCommand "git"
 }
 
 # ensure Java and Maven for tests
@@ -890,8 +906,8 @@ if ($doDocs) {
     Write-Output "Build documentation..."
 
     # clear target
-    if (test-path "$tmpDir/docfx.site") {
-        remove-item -recurse -force "$tmpDir/docfx.site"
+    if (test-path "$tmpDir/docfx.out") {
+        remove-item -recurse -force "$tmpDir/docfx.out"
     }
 
     # clear temp
@@ -910,6 +926,44 @@ if ($doDocs) {
     # build
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
     &$docfx build "$docDir/docfx.json" --template $template
+}
+
+# release documentation
+if ($doDocsRelease) {
+    Write-Output ""
+    Write-Output "Release documentation"
+
+    $pages = "$tmpDir/gh-pages"
+    $docs = "$tmpDir/docfx.out"
+
+    if (-not (test-path "$docs/$docDstDir")) {
+        Die "Could not find $docs/$docDstDir. Maybe you should build the docs first?"
+    }
+
+    if (test-path "$pages") {
+        remove-item -recurse -force "$pages"
+    }
+
+    &git clone . "$pages"
+    &git -C "$pages" remote set-url origin https://github.com/hazelcast/hazelcast-csharp-client.git
+    &git -C "$pages" fetch origin gh-pages
+    &git -C "$pages" checkout gh-pages
+
+    if (test-path "$pages/$docDstDir") {
+        remove-item -recurse -force "$pages/$docDstDir"
+    }
+
+    copy-item "$docs/$docDstDir" "$pages" -recurse
+
+    cp "$docs/*.html" "$pages"
+    cp "$docs/*.json" "$pages"
+    cp "$docs/*.yml" "$pages"
+
+    &git -C "$pages" add -A
+    &git -C "$pages" commit -m "$docMessage"
+
+    Write-Host "Doc release is ready, but NOT pushed."
+    Write-Host "Review $pages commit and push."
 }
 
 function getJavaKerberosArgs() {
@@ -1284,14 +1338,14 @@ if ($doServer) {
 }
 
 if ($doDocsServe) {
-    if (-not (test-path "$tmpDir\docfx.site")) {
+    if (-not (test-path "$tmpDir\docfx.out")) {
         Die "Missing documentation directory."
     }
 
     Write-Output ""
     Write-Output "Documentation server is running..."
     Write-Output "Press ENTER to stop"
-    &$docfx serve "$tmpDir\docfx.site"
+    &$docfx serve "$tmpDir\docfx.out"
 }
 
 if ($doNuget -and -not $testsSuccess) {

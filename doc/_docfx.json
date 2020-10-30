@@ -44,7 +44,7 @@
         "dev/**/*": true
       }
     },
-    "dest": "../temp/docfx.site",
+    "dest": "../temp/docfx.out",
     "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ],
     "disableGitFeatures": true
   }
