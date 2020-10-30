@@ -337,6 +337,8 @@ namespace Hazelcast.Clustering
             try
             {
                 HConsole.WriteLine(this, $"Complete invocation [{message.CorrelationId}].");
+
+                // returns immediately, releases the invocation task
                 invocation.TrySetResult(message);
             }
             catch (Exception e)
