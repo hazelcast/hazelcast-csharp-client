@@ -18,12 +18,15 @@
     "content": [
       {
         "src": "obj/dev/api",
-        "dest": "dev/api",
+        "dest": "__DEST__/api",
         "files": [ "**/*.yml" ]
       },
       {
+        "files": [ "*.md", "toc.yml" ]
+      },
+      {
         "src": "dev",
-        "dest": "meh",
+        "dest": "__DEST__",
         "files": [ "api/index.md", "toc.yml", "doc/**.md" ]
       }
     ],

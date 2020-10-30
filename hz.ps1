@@ -277,6 +277,28 @@ if ($doDocs -and -not $isWindows) {
     Die "DocFX is not supported on platform '$platform', cannot build documentation."
 }
 
+# update version
+if (-not $hasVersion)
+{
+    $xml = [xml] (gc "$srcDir/Directory.Build.props")
+    $versionPrefix = $xml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+    $versionSuffix = $xml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+    $version = $versionPrefix.Trim()
+    if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix)) {
+        $version += "-$($versionSuffix.Trim())"
+    }
+}
+$isPreRelease = -not [System.String]::IsNullOrWhiteSpace($versionSuffix)
+
+# get doc destination according to version
+if ($isPreRelease) {
+    $docDstDir = "dev"
+}
+else {
+    $docDstDir = $versionPrefix
+}
+
+
 # validate enterprise key
 $enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
 if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
@@ -595,9 +617,7 @@ if ($doBuild) {
     Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $sign"
-    if ($hasVersion) {
-        Write-Output "  Version        : $version"
-    }
+    Write-Output "  Version        : $version"
     Write-Output ""
 }
 
@@ -621,6 +641,7 @@ if ($doTests -and $cover) {
 if ($doNuget) {
     Write-Output "Nuget Package"
     Write-Output "  Configuration  : $configuration"
+    Write-Output "  Version        : $version"
     Write-Output "  To             : $tmpDir/output"
     Write-Output ""
 }
@@ -640,6 +661,16 @@ if ($doServer) {
     Write-Output "  Enterprise     : $enterprise"
     Write-Output "  Configuration  : $buildDir/hazelcast-$hzVersion.xml"
     Write-Output "  Logging to     : $tmpDir/server"
+    Write-Output ""
+}
+
+if ($doDocs) {
+    $r = "release"
+    if ($isPreRelease) { $r = "pre-$r" }
+    Write-Output "Build Documentation"
+    Write-Output "  Version        : $version"
+    Write-Output "  Version Path   : $docDstDir ($r)"
+    Write-Output "  Path           : $tmpdir/docfx.site"
     Write-Output ""
 }
 
@@ -863,9 +894,20 @@ if ($doDocs) {
         remove-item -recurse -force "$tmpDir/docfx.site"
     }
 
-    $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
-    Write-Output $template
+    # clear temp
+    if (test-path "$docDir/obj") {
+        remove-item -recurse -force "$docDir/obj"
+    }
 
+    # prepare templates
+    $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
+
+    # prepare docfx.json
+    get-content "$docDir/_docfx.json" |
+        foreach-object { $_ -replace "__DEST__", $docDstDir } |
+        set-content "$docDir/docfx.json"
+
+    # build
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
     &$docfx build "$docDir/docfx.json" --template $template
 }
@@ -1290,17 +1332,6 @@ if ($doNupush -and -not $testsSuccess) {
 if ($doNupush) {
     Write-Output ""
     Write-Output "Push NuGet packages..."
-
-    if (-not $hasVersion)
-    {
-        $xml = [xml] (gc "$srcDir/Directory.Build.props")
-        $versionPrefix = $xml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
-        $versionSuffix = $xml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
-        $version = $versionPrefix.Trim()
-        if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix)) {
-            $version += "-$($versionSuffix.Trim())"
-        }
-    }
 
     &$nuget push "$tmpDir\output\Hazelcast.Net.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
 }

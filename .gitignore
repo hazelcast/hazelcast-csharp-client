@@ -10,6 +10,7 @@ bin/
 *.snk
 
 /doc/templates/default/
+/doc/docfx.json
 
 _UpgradeReport_Files/
 Backup*/
