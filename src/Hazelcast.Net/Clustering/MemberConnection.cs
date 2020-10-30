@@ -358,7 +358,23 @@ namespace Hazelcast.Clustering
         /// <param name="message">The message.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+        /// <remarks>
+        /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
+        /// </remarks>
+        public Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+            => SendAsync(message, _messagingOptions.DefaultOperationTimeoutMilliseconds, cancellationToken);
+
+        /// <summary>
+        /// Sends a message.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="timeoutMilliseconds">A timeout, in milliseconds.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+        /// <remarks>
+        /// <para>The operation must complete within the specified operation timeout.</para>
+        /// </remarks>
+        public async Task<ClientMessage> SendAsync(ClientMessage message, int timeoutMilliseconds, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -368,9 +384,9 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            var invocation = new Invocation(message, _messagingOptions, this, cancellationToken);
+            using var invocation = new Invocation(message, _messagingOptions, this, cancellationToken);
 
-            return await SendAsync(invocation, cancellationToken).CAF();
+            return await SendAsync(invocation, timeoutMilliseconds, cancellationToken).CAF();
         }
 
         /// <summary>
@@ -379,7 +395,26 @@ namespace Hazelcast.Clustering
         /// <param name="invocation">The invocation.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        public async Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken)
+        /// <remarks>
+        /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
+        /// </remarks>
+        public Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken)
+            => SendAsync(invocation, _messagingOptions.DefaultOperationTimeoutMilliseconds, cancellationToken);
+
+        /// <summary>
+        /// Sends an invocation message.
+        /// </summary>
+        /// <param name="invocation">The invocation.</param>
+        /// <param name="timeoutMilliseconds">A timeout, in milliseconds.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+        /// <remarks>
+        /// <para>The operation must complete within the specified operation timeout.</para>
+        /// </remarks>
+        public Task<ClientMessage> SendAsync(Invocation invocation, int timeoutMilliseconds, CancellationToken cancellationToken)
+            => TaskEx.RunWithTimeout(SendAsync2, invocation, timeoutMilliseconds, cancellationToken);
+
+        private async Task<ClientMessage> SendAsync2(Invocation invocation, CancellationToken cancellationToken)
         {
             if (invocation == null) throw new ArgumentNullException(nameof(invocation));
 
@@ -427,6 +462,7 @@ namespace Hazelcast.Clustering
             {
                 // in case it times out, there's not point cancelling invocation.Task as
                 // it is not a real task but just a task continuation source's task
+                // OTOH it can be cancelled if cancellationToken is cancelled
                 return await invocation.Task.CAF();
             }
             catch

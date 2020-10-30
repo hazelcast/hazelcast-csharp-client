@@ -89,44 +89,46 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public async Task TimeoutAfter()
+        public async Task WithTimeout()
         {
-            // null task = arg exception
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await ((Task)null).TimeoutAfter(Timeout.InfiniteTimeSpan));
+            // arg exception
+            await AssertEx.ThrowsAsync<ArgumentNullException>(async () =>
+            {
+                await TaskEx.RunWithTimeout(null, 0);
+            });
 
             // completes before timeout = ok
             // (and, no unobserved exception)
-            await Task.CompletedTask.TimeoutAfter(Timeout.InfiniteTimeSpan);
-            await Task.CompletedTask.TimeoutAfter(TimeSpan.FromSeconds(60));
+            await TaskEx.RunWithTimeout(t => Task.CompletedTask, Timeout.InfiniteTimeSpan);
+            await TaskEx.RunWithTimeout(t => Task.CompletedTask, TimeSpan.FromSeconds(60));
 
             // timeout before end of task = timeout exception
-            Assert.ThrowsAsync<TaskTimeoutException>(async () =>
+            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
             {
-                await Delay(default).TimeoutAfter(TimeSpan.FromMilliseconds(1));
+                await TaskEx.RunWithTimeout(t => Delay(default), TimeSpan.FromMilliseconds(1));
             });
 
             // throws before timeout = get the thrown exception
-            Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await AssertEx.ThrowsAsync<NotSupportedException>(async () =>
             {
-                await Throw().TimeoutAfter(Timeout.InfiniteTimeSpan);
+                await TaskEx.RunWithTimeout(t => Throw(), Timeout.InfiniteTimeSpan);
             });
 
             // canceled before timeout = canceled exception
-            Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            await AssertEx.ThrowsAsync<TaskCanceledException>(async () =>
             {
-                await CancelTask().TimeoutAfter(Timeout.InfiniteTimeSpan);
+                await TaskEx.RunWithTimeout(t => CancelTask(), Timeout.InfiniteTimeSpan);
             });
 
             // canceled before timeout = canceled exception
-            Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                await CancelOperation().TimeoutAfter(Timeout.InfiniteTimeSpan);
+                await TaskEx.RunWithTimeout(t => CancelOperation(), Timeout.InfiniteTimeSpan);
             });
         }
 
         [Test]
-        public async Task TimeoutAfterThenCancel()
+        public async Task WithTimeoutThenCancel()
         {
             static async Task Run(CancellationToken token)
             {
@@ -138,7 +140,7 @@ namespace Hazelcast.Tests.Core
             var cancellation = new CancellationTokenSource();
             try
             {
-                await Run(cancellation.Token).TimeoutAfter(TimeSpan.FromMilliseconds(1));
+                await TaskEx.RunWithTimeout(Run, TimeSpan.FromMilliseconds(1), cancellation.Token);
             }
             catch (TaskTimeoutException)
             {
@@ -166,7 +168,7 @@ namespace Hazelcast.Tests.Core
             cancellation = new CancellationTokenSource();
             try
             {
-                await Run(cancellation.Token).TimeoutAfter(TimeSpan.FromMilliseconds(1));
+                await TaskEx.RunWithTimeout(Run, TimeSpan.FromMilliseconds(1), cancellation.Token);
             }
             catch (TaskTimeoutException e)
             {
@@ -193,7 +195,7 @@ namespace Hazelcast.Tests.Core
 
             try
             {
-                await Run(default).TimeoutAfter(TimeSpan.FromMilliseconds(1));
+                await TaskEx.RunWithTimeout(Run, TimeSpan.FromMilliseconds(1), default);
             }
             catch (TaskTimeoutException e)
             {

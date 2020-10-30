@@ -60,10 +60,7 @@
       "periodMilliseconds": 1000,
 
       // heartbeat timeout - how long before we consider a client has died
-      "timeoutMilliseconds": 1001,
-
-      // ping timeout - how long to wait when pinging a client
-      "pingTimeoutMilliseconds": 1002
+      "timeoutMilliseconds": 1001
     },
 
     // networking options

@@ -32,7 +32,6 @@ namespace Hazelcast.Clustering
         {
             PeriodMilliseconds = other.PeriodMilliseconds;
             TimeoutMilliseconds = other.TimeoutMilliseconds;
-            PingTimeoutMilliseconds = other.PingTimeoutMilliseconds;
         }
 
         /// <summary>
@@ -53,14 +52,6 @@ namespace Hazelcast.Clustering
         /// <para>The timeout should be longer than the period.</para>
         /// </remarks>
         public int TimeoutMilliseconds { get; set; } = 60_000;
-
-        /// <summary>
-        /// Gets or sets the ping timeout (how long to wait when pinging a member).
-        /// </summary>
-        /// <remarks>
-        /// <para>The timeout should be shorter that the period.</para>
-        /// </remarks>
-        public int PingTimeoutMilliseconds { get; set; } = 8_000;
 
         /// <summary>
         /// Clones the options.

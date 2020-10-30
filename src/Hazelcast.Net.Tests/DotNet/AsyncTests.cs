@@ -718,5 +718,40 @@ namespace Hazelcast.Tests.DotNet
             await Task.Delay(100);
             await task;
         }
+
+        [Test]
+        public void CancellationTokenSourceTest()
+        {
+            // it is OK to reference the cancellation token of a disposed source
+
+            var source = new CancellationTokenSource();
+            var token = source.Token;
+            source.Dispose();
+            Assert.That(token.IsCancellationRequested, Is.False);
+
+            source = new CancellationTokenSource();
+            token = source.Token;
+            source.Cancel();
+            source.Dispose();
+            Assert.That(token.IsCancellationRequested, Is.True);
+        }
+
+        [Test]
+        public void RegisterOrderTest()
+        {
+            var source = new CancellationTokenSource();
+            var token = source.Token;
+            var i = 0;
+            token.Register(() => i++);
+            source.Cancel();
+            Assert.That(i, Is.EqualTo(1));
+
+            source = new CancellationTokenSource();
+            token = source.Token;
+            i = 0;
+            source.Cancel();
+            token.Register(() => i++);
+            Assert.That(i, Is.EqualTo(1));
+        }
     }
 }

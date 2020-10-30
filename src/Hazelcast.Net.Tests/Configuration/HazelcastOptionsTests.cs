@@ -156,7 +156,6 @@ namespace Hazelcast.Tests.Configuration
 
             Assert.AreEqual(1000, options.PeriodMilliseconds);
             Assert.AreEqual(1001, options.TimeoutMilliseconds);
-            Assert.AreEqual(1002, options.PingTimeoutMilliseconds);
         }
 
         [Test]

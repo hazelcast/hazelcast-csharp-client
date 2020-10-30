@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
@@ -89,6 +90,182 @@ namespace Hazelcast.Core
                 await task.CAF();
             }
             catch (OperationCanceledException) { /* expected */ }
+        }
+
+        public static Task RunWithTimeout(Func<CancellationToken, Task> taskAction, TimeSpan timeout, CancellationToken cancellationToken = default)
+        {
+            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            return RunWithTimeout(taskAction, timeoutMs, cancellationToken);
+        }
+
+        public static async Task RunWithTimeout(Func<CancellationToken, Task> taskAction, int timeoutMilliseconds, CancellationToken cancellationToken = default)
+        {
+            if (taskAction == null) throw new ArgumentNullException(nameof(taskAction));
+
+            if (timeoutMilliseconds < 0) // infinite
+            {
+                await taskAction(cancellationToken).CAF();
+                return;
+            }
+
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var task = taskAction(cancellation.Token);
+            using var delayCancel = new CancellationTokenSource();
+            var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
+
+            await Task.WhenAny(task, delay).CAF();
+
+            // if the delay is not completed, cancel it & observe the corresponding exception
+            if (!delay.IsCompleted)
+            {
+                delayCancel.Cancel();
+                _ = delay.ObserveException();
+            }
+
+            // if the task is completed, return
+            if (task.IsCompleted)
+            {
+                await task.CAF(); // might have thrown
+                return;
+            }
+
+            // else, this is a timeout
+            // signal the task & observe any exception it may throw
+            cancellation.Cancel();
+            _ = task.ObserveException(); // should we do this?
+
+            throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
+        }
+
+        public static Task RunWithTimeout<TArg>(Func<TArg, CancellationToken, Task> taskAction, TArg arg, TimeSpan timeout, CancellationToken cancellationToken = default)
+        {
+            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            return RunWithTimeout(taskAction, arg, timeoutMs, cancellationToken);
+        }
+
+        public static async Task RunWithTimeout<TArg>(Func<TArg, CancellationToken, Task> taskAction, TArg arg, int timeoutMilliseconds, CancellationToken cancellationToken = default)
+        {
+            if (taskAction == null) throw new ArgumentNullException(nameof(taskAction));
+
+            if (timeoutMilliseconds < 0) // infinite
+            {
+                await taskAction(arg, cancellationToken).CAF();
+                return;
+            }
+
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var task = taskAction(arg, cancellation.Token);
+            using var delayCancel = new CancellationTokenSource();
+            var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
+
+            await Task.WhenAny(task, delay).CAF();
+
+            // if the delay is not completed, cancel it & observe the corresponding exception
+            if (!delay.IsCompleted)
+            {
+                delayCancel.Cancel();
+                _ = delay.ObserveException();
+            }
+
+            // if the task is completed, return
+            if (task.IsCompleted)
+            {
+                await task.CAF(); // might have thrown
+                return;
+            }
+
+            // else, this is a timeout
+            // signal the task & observe any exception it may throw
+            cancellation.Cancel();
+            _ = task.ObserveException(); // should we do this?
+
+            throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
+        }
+
+        public static Task<TResult> RunWithTimeout<TResult>(Func<CancellationToken, Task<TResult>> taskAction, TimeSpan timeout, CancellationToken cancellationToken = default)
+        {
+            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            return RunWithTimeout(taskAction, timeoutMs, cancellationToken);
+        }
+
+        public static async Task<TResult> RunWithTimeout<TResult>(Func<CancellationToken, Task<TResult>> taskAction, int timeoutMilliseconds, CancellationToken cancellationToken = default)
+        {
+            if (taskAction == null) throw new ArgumentNullException(nameof(taskAction));
+
+            if (timeoutMilliseconds < 0) // infinite
+            {
+                return await taskAction(cancellationToken).CAF();
+            }
+
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var task = taskAction(cancellation.Token);
+            using var delayCancel = new CancellationTokenSource();
+            var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
+
+            await Task.WhenAny(task, delay).CAF();
+
+            // if the delay is not completed, cancel it & observe the corresponding exception
+            if (!delay.IsCompleted)
+            {
+                delayCancel.Cancel();
+                _ = delay.ObserveException();
+            }
+
+            // if the task is completed, return
+            if (task.IsCompleted)
+            {
+                return await task.CAF(); // might have thrown
+            }
+
+            // else, this is a timeout
+            // signal the task & observe any exception it may throw
+            cancellation.Cancel();
+            _ = task.ObserveException(); // should we do this?
+
+            throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
+        }
+
+        public static Task<TResult> RunWithTimeout<TArg, TResult>(Func<TArg, CancellationToken, Task<TResult>> taskAction, TArg arg, TimeSpan timeout, CancellationToken cancellationToken = default)
+        {
+            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            return RunWithTimeout(taskAction, arg, timeoutMs, cancellationToken);
+        }
+
+        public static async Task<TResult> RunWithTimeout<TResult, TArg>(Func<TArg, CancellationToken, Task<TResult>> taskAction, TArg arg, int timeoutMilliseconds, CancellationToken cancellationToken = default)
+        {
+            if (taskAction == null) throw new ArgumentNullException(nameof(taskAction));
+
+            if (timeoutMilliseconds < 0) // infinite
+            {
+                return await taskAction(arg, cancellationToken).CAF();
+            }
+
+            using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var task = taskAction(arg, cancellation.Token);
+            using var delayCancel = new CancellationTokenSource();
+            var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
+
+            await Task.WhenAny(task, delay).CAF();
+
+            // if the delay is not completed, cancel it & observe the corresponding exception
+            if (!delay.IsCompleted)
+            {
+                delayCancel.Cancel();
+                _ = delay.ObserveException();
+            }
+
+            // if the task is completed, return
+            if (task.IsCompleted)
+            {
+                return await task.CAF(); // might have thrown
+            }
+
+            // else, this is a timeout
+            // signal the task & observe any exception it may throw
+            cancellation.Cancel();
+            _ = task.ObserveException(); // should we do this?
+
+            throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
         }
     }
 }

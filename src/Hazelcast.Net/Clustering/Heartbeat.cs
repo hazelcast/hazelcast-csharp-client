@@ -27,7 +27,6 @@ namespace Hazelcast.Clustering
     {
         private readonly TimeSpan _period;
         private readonly TimeSpan _timeout;
-        private readonly int _pingTimeout;
 
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
@@ -47,7 +46,6 @@ namespace Hazelcast.Clustering
 
             _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
             _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
-            _pingTimeout = options.PingTimeoutMilliseconds;
 
             // sanity checks
             if (_timeout <= _period)
@@ -56,14 +54,6 @@ namespace Hazelcast.Clustering
                 _logger.LogWarning("Heartbeat timeout {Timeout}ms is <= period {Period}ms, falling back to a {Value}ms timeout.",
                     _timeout, _period.TotalMilliseconds, timeout);
                 _timeout = timeout;
-            }
-
-            if (_pingTimeout >= _period.TotalMilliseconds)
-            {
-                var pingTimeout = (int) _period.TotalMilliseconds / 2;
-                _logger.LogWarning("Ping timeout {Timeout}ms is >= period {Period}ms, falling back to a {Value}ms timeout.",
-                    _pingTimeout, _period.TotalMilliseconds, pingTimeout);
-                _pingTimeout = pingTimeout;
             }
         }
 
@@ -163,14 +153,12 @@ namespace Hazelcast.Clustering
                 _logger.LogDebug("Ping client {ClientId}", connection.Id);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
-                var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
                 try
                 {
-                    // cannot wait forever on a ping
+                    // ping should complete within the default invocation timeout
                     var responseMessage = await _clusterMessaging
-                        .SendToMemberAsync(requestMessage, connection, cancellation.Token)
-                        .TimeoutAfter(_pingTimeout, cancellation, true)
+                        .SendToMemberAsync(requestMessage, connection, cancellationToken)
                         .CAF();
 
                     // just to be sure everything is ok
@@ -185,12 +173,6 @@ namespace Hazelcast.Clustering
                 {
                     // unexpected
                     _logger.LogWarning(e, "Heartbeat has thrown an exception.");
-                }
-                finally
-                {
-                    // if .SendToClientAsync() throws before awaiting, .TimeoutAfter() is never invoked
-                    // and therefore cannot dispose the cancellation = better take care of it
-                    cancellation.Dispose();
                 }
             }
         }
