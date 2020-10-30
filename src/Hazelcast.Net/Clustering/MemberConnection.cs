@@ -364,7 +364,7 @@ namespace Hazelcast.Clustering
         /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
         /// </remarks>
         public Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
-            => SendAsync(message, _messagingOptions.DefaultOperationTimeoutMilliseconds, cancellationToken);
+            => SendAsync(message, _messagingOptions.OperationTimeoutMilliseconds, cancellationToken);
 
         /// <summary>
         /// Sends a message.
@@ -401,7 +401,7 @@ namespace Hazelcast.Clustering
         /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
         /// </remarks>
         public Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken)
-            => SendAsync(invocation, _messagingOptions.DefaultOperationTimeoutMilliseconds, cancellationToken);
+            => SendAsync(invocation, _messagingOptions.OperationTimeoutMilliseconds, cancellationToken);
 
         /// <summary>
         /// Sends an invocation message.

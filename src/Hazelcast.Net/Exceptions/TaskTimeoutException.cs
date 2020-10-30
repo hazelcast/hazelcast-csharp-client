@@ -41,14 +41,6 @@ namespace Hazelcast.Exceptions
         public Task Task { get; }
 
         /// <summary>
-        /// Observes the exceptions of the task that timed out.
-        /// </summary>
-        public void ObserveException()
-        {
-            Task.ObserveException();
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="TaskTimeoutException"/>.
         /// </summary>
         /// <remarks>

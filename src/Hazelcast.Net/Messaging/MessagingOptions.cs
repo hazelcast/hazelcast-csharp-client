@@ -32,7 +32,7 @@ namespace Hazelcast.Messaging
         {
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
-            DefaultOperationTimeoutMilliseconds = other.DefaultOperationTimeoutMilliseconds;
+            OperationTimeoutMilliseconds = other.OperationTimeoutMilliseconds;
         }
 
         /// <summary>
@@ -46,17 +46,9 @@ namespace Hazelcast.Messaging
         public int MinRetryDelayMilliseconds { get; set; } = 1_000;
 
         /// <summary>
-        /// Gets or sets the default operation timeout.
+        /// Gets or sets the operation timeout.
         /// </summary>
-        /// <remarks>
-        /// <para>The default operation timeout is the timeout for an operation (a complete
-        /// roundtrip to the server, for instance adding an item into a map) when no timeout
-        /// is specified, and no cancellation token is provided. If a timeout is specified then
-        /// it becomes the timeout for the operation. If a cancellation token is provided, then
-        /// that token is supposed to handle the life of the operation and no timeout is
-        /// involved.</para>
-        /// </remarks>
-        public int DefaultOperationTimeoutMilliseconds { get; set; } = 120_000;
+        public int OperationTimeoutMilliseconds { get; set; } = 120_000;
 
         /// <summary>
         /// Clones the options.
