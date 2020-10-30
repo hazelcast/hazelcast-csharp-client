@@ -21,7 +21,7 @@ namespace Hazelcast.DistributedObjects
     /// Represents event data for map entry events.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
-    public abstract class DictionaryEntryEventArgsBase<TKey>
+    public abstract class DictionaryEntryEventArgsBase<TKey> : EventArgsBase
     {
         private readonly Lazy<TKey> _key;
 
@@ -30,7 +30,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="member">The member.</param>
         /// <param name="key">The key.</param>
-        protected DictionaryEntryEventArgsBase(MemberInfo member, Lazy<TKey> key)
+        /// <param name="state">A state object.</param>
+        protected DictionaryEntryEventArgsBase(MemberInfo member, Lazy<TKey> key, object state)
+            : base(state)
         {
             Member = member;
             _key = key;

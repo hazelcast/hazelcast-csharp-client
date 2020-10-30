@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects
             : base(HDictionaryEventTypes.Invalidated, handler)
         { }
 
-        protected override DictionaryEntryInvalidatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries)
-            => new DictionaryEntryInvalidatedEventArgs<TKey, TValue>(member, key);
+        protected override DictionaryEntryInvalidatedEventArgs<TKey, TValue> CreateEventArgs(MemberInfo member, Lazy<TKey> key, Lazy<TValue> value, Lazy<TValue> oldValue, Lazy<TValue> mergeValue, HDictionaryEventTypes eventType, int numberOfAffectedEntries, object state)
+            => new DictionaryEntryInvalidatedEventArgs<TKey, TValue>(member, key, state);
     }
 }

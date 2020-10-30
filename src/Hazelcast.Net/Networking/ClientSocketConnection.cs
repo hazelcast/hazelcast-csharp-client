@@ -53,7 +53,9 @@ namespace Hazelcast.Networking
             _socketOptions = options ?? throw new ArgumentNullException(nameof(options));
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]")));
+
+            HConsole.Configure(x => x
+                .Set(this, xx => xx.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]")));
         }
 
         /// <summary>

@@ -22,7 +22,6 @@ using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Protocol;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Microsoft.Extensions.Logging;
 
@@ -76,19 +75,6 @@ namespace Hazelcast.Clustering
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="socketOptions">Socket options.</param>
         /// <param name="sslOptions">SSL options.</param>
-        /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
-        /// <param name="loggerFactory">A logger factory.</param>
-        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
-            : this(address, messagingOptions, socketOptions, sslOptions, new Int32Sequence(), correlationIdSequence, loggerFactory)
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MemberConnection"/> class.
-        /// </summary>
-        /// <param name="address">The network address.</param>
-        /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="socketOptions">Socket options.</param>
-        /// <param name="sslOptions">SSL options.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
@@ -108,8 +94,7 @@ namespace Hazelcast.Clustering
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
 
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(4).SetPrefix("CLIENT")));
+            HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("CLIENT")));
         }
 
         /// <summary>
@@ -223,9 +208,7 @@ namespace Hazelcast.Clustering
 
             _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _socketOptions, _sslOptions, _loggerFactory) { OnShutdown = SocketShutdown };
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-
-            HConsole.Configure(x => x
-                .Set(_messageConnection, xx => xx.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]")));
+            HConsole.Configure(x => x.Set(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]")));
 
             try
             {

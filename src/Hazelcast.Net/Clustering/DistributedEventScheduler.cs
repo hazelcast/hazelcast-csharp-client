@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -28,13 +29,12 @@ namespace Hazelcast.Clustering
     internal class DistributedEventScheduler : IAsyncDisposable
     {
         private readonly Dictionary<int, Task> _partitionTasks = new Dictionary<int, Task>();
-        //private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+        private readonly Func<Task, object, Task> _continueWithHandler;
+        private readonly Action<Task, object> _removeAfterUse;
         private readonly object _mutex = new object();
         private readonly ILogger _logger;
         private bool _disposed;
         private int _exceptionCount, _unhandledExceptionCount;
-        private readonly Func<Task, object, Task> _continueWithHandler;
-        private readonly Action<Task, object> _removeAfterUse;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedEventScheduler"/> class.

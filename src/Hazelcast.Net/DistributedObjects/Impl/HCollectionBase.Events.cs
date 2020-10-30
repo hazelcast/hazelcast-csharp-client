@@ -18,7 +18,6 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Messaging;
-using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -27,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HCollectionBase<T> // Events
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> events, bool includeValue = true)
+        public async Task<Guid> SubscribeAsync(Action<CollectionItemEventHandlers<T>> events, bool includeValue = true, object state = null)
         {
             if (events == null) throw new ArgumentNullException(nameof(events));
 
@@ -37,7 +36,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var subscription = new ClusterSubscription(
                 CreateSubscribeRequest(includeValue, Cluster.IsSmartRouting),
                 ReadSubscribeResponse, CreateUnsubscribeRequest, ReadUnsubscribeResponse, HandleEventAsync,
-                new SubscriptionState<CollectionItemEventHandlers<T>>(Name, handlers));
+                new SubscriptionState<CollectionItemEventHandlers<T>>(Name, handlers, state));
 
             await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
 
@@ -46,30 +45,30 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
-            var sstate = ToSafeState<SubscriptionState<CollectionItemEventHandlers<T>>>(state);
-
-            async ValueTask HandleItemEventAsync(IData itemData, Guid memberId, int eventTypeData)
-            {
-                var eventType = (CollectionItemEventTypes) eventTypeData;
-                if (eventType == CollectionItemEventTypes.Nothing) return;
-
-                var member = Cluster.Members.GetMember(memberId);
-                var item = LazyArg<T>(itemData);
-
-                // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-                foreach (var handler in sstate.Handlers)
-                {
-                    if (handler.EventType.HasAll(eventType))
-                    {
-                        await handler.HandleAsync(this, member, item).CAF();
-                    }
-                }
-            }
-
-            return CodecHandleEventAsync(eventMessage, HandleItemEventAsync, LoggerFactory);
+            return CodecHandleEventAsync(eventMessage, HandleCodecEventAsync, state, LoggerFactory);
         }
 
-        protected abstract ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, ValueTask> f, ILoggerFactory loggerFactory);
+        private async ValueTask HandleCodecEventAsync(IData itemData, Guid memberId, int eventTypeData, object state)
+        {
+            var sstate = ToSafeState<SubscriptionState<CollectionItemEventHandlers<T>>>(state);
+
+            var eventType = (CollectionItemEventTypes) eventTypeData;
+            if (eventType == CollectionItemEventTypes.Nothing) return;
+
+            var member = Cluster.Members.GetMember(memberId);
+            var item = LazyArg<T>(itemData);
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var handler in sstate.Handlers)
+            {
+                if (handler.EventType.HasAll(eventType))
+                {
+                    await handler.HandleAsync(this, member, item, sstate.HandlerState).CAF();
+                }
+            }
+        }
+
+        protected abstract ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func<IData, Guid, int, object, ValueTask> handler, object state, ILoggerFactory loggerFactory);
 
         protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);
 

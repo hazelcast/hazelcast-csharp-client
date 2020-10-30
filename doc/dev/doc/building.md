@@ -13,7 +13,7 @@ Although the solution builds in Visual Studio or Rider, a complete build require
 For a complete build, start a Powershell console and build with:
 
 ```powershell
-PS> build/build.ps1 <options> <targets>
+PS> ./hz.ps1 <options> <targets>
 ```
 
 See the build script section below for details and arguments.
@@ -31,18 +31,11 @@ At the moment it is not possible to build the documentation on Linux, as DocFX d
 Powershell must be installed (see [Installing Powershell Core on Linux](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-linux)
 for instructions).
 
-In order to run tests, Java and Maven are required. For Debian:
+In order to run tests, Java is required. For Debian:
 
 ```sh
 apt-get update
 apt-get install openjdk-11-jre
-apt-get install maven
-```
-
-If Maven gives warnings about "WARNING: An illegal reflective access operation has occurred", you may have to define the following environment variable before building (this is defined automatically in the build script):
-
-```sh
-export MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true --add-opens java.base/java.lang=ALL-UNNAMED"
 ```
 
 ### Building
@@ -50,14 +43,14 @@ export MAVEN_OPTS="-Dcom.google.inject.internal.cglib.\$experimental_asm7=true -
 From a shell console, build with:
 
 ```sh
-$ pwsh build/build.sh <options> <targets>
+$ ./hz.sh <options> <targets>
 ```
 
 See the build script section below for details and arguments.
 
 ## Build Script
 
-On Linux, `build.sh` is just a proxy to `build.ps1`. The actual build is always performed by `build.ps1`, which is common to Windows and Linux. It accepts the following options:
+On Linux, `hz.sh` is just a proxy to `hz.ps1`. The actual build is always performed by `hz.ps1`, which is common to Windows and Linux. It accepts the following options:
 
 * `-enterprise` test enterprise features
 * `-server <version>` the server version to use for tests
@@ -88,7 +81,7 @@ When no target is specified, the script runs `clean`, `build`, `docsIf` and `tes
 For example, after a complete build, one can rebuild and serve the documentation with:
 
 ```powershell
-PS> build/build.ps1 docs,docsServe
+PS> ./hz.ps1 docs,docsServe
 ```
 
 When the `-enterprise` option is set, in order to test the enterprise features, the `HAZELCAST_ENTERPRISE_KEY` environment variable must contain a valid Hazelcast Enterprise key.

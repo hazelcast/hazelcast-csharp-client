@@ -129,7 +129,7 @@ namespace Hazelcast.NearCaching
                 (message, state) => MapAddNearCacheInvalidationListenerCodec.DecodeResponse(message).Response,
                 (id, state) => MapRemoveEntryListenerCodec.EncodeRequest(((EventState) state).Name, id),
                 (message, state) => MapRemoveEntryListenerCodec.DecodeResponse(message).Response,
-                (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleInvalidationEventAsync, HandleBatchInvalidationEventAsync, LoggerFactory),
+                (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleCodecSingleEvent, HandleCodecBatchEvent, null, LoggerFactory),
                 new EventState { Name = Name });
 
             await Cluster.Events.InstallSubscriptionAsync(subscription, CancellationToken.None).CAF();
@@ -151,7 +151,7 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceuuids"></param>
         /// <param name="partitionuuids"></param>
         /// <param name="sequences"></param>
-        private ValueTask HandleBatchInvalidationEventAsync(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences)
+        private ValueTask HandleCodecBatchEvent(IEnumerable<IData> keys, IEnumerable<Guid> sourceuuids, IEnumerable<Guid> partitionuuids, IEnumerable<long> sequences, object state)
         {
             RepairingHandler.Handle(keys, sourceuuids, partitionuuids, sequences);
             return default;
@@ -164,7 +164,7 @@ namespace Hazelcast.NearCaching
         /// <param name="sourceUuid"></param>
         /// <param name="partitionUuid"></param>
         /// <param name="sequence"></param>
-        private ValueTask HandleInvalidationEventAsync(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
+        private ValueTask HandleCodecSingleEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence, object state)
         {
             RepairingHandler.Handle(key, sourceUuid, partitionUuid, sequence);
             return default;

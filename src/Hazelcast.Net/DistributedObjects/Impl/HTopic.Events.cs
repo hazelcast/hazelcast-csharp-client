@@ -25,12 +25,12 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HTopic<T> // Events
     {
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> handle)
+        public async Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> events, object state = null)
         {
-            if (handle == null) throw new ArgumentNullException(nameof(handle));
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new TopicEventHandlers<T>();
-            handle(handlers);
+            events(handlers);
 
             var subscription = new ClusterSubscription(
                 TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),
@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 CreateUnsubscribeRequest,
                 ReadUnsubscribeResponse,
                 HandleEventAsync,
-                new SubscriptionState<TopicEventHandlers<T>>(Name, handlers));
+                new SubscriptionState<TopicEventHandlers<T>>(Name, handlers, state));
 
             await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
 
@@ -47,24 +47,24 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
+            return TopicAddMessageListenerCodec.HandleEventAsync(eventMessage, HandleTopicEventAsync, state, LoggerFactory);
+        }
+
+        private async ValueTask HandleTopicEventAsync(IData itemData, long publishTime, Guid memberId, object state)
+        {
             var sstate = ToSafeState<SubscriptionState<TopicEventHandlers<T>>>(state);
 
-            async ValueTask HandleEventAsync(IData itemData, long publishTime, Guid memberId)
+            var member = Cluster.Members.GetMember(memberId);
+
+            // that one is not lazy...
+            var item = ToObject<T>(itemData);
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var handler in sstate.Handlers)
             {
-                var member = Cluster.Members.GetMember(memberId);
-
-                // that one is not lazy...
-                var item = ToObject<T>(itemData);
-
-                // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-                foreach (var handler in sstate.Handlers)
-                {
-                    // there is only one event type...
-                    await handler.HandleAsync(this, member, publishTime, item).CAF();
-                }
+                // there is only one event type...
+                await handler.HandleAsync(this, member, publishTime, item, state).CAF();
             }
-
-            return TopicAddMessageListenerCodec.HandleEventAsync(eventMessage, HandleEventAsync, LoggerFactory);
         }
 
         private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)

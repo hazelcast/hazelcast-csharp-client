@@ -71,15 +71,14 @@ namespace Hazelcast.Examples.Client
                 .Build();
 
             // add hazelcast to services
-            // this adds the options + the client factory
-            // this also wires logging to get a logger from the container
+            // this adds the options, and also wires logging to get a logger from the container
             services.AddHazelcast(configuration);
 
             // add logging to the container, the normal way
             services.AddLogging(builder => builder.AddConfiguration(configuration.GetSection("logging")).AddConsole());
 
-            // add Hazelcast client to the container
-            services.AddTransient(provider => HazelcastClientFactory.CreateClient(provider.GetRequiredService<IOptions<HazelcastOptions>>().Value));
+            // add Hazelcast client custom factory to the container
+            services.AddSingleton<Factory>();
 
             // configure hazelcast (can do it multiple times..)
             services.Configure<HazelcastOptions>(options =>
@@ -87,7 +86,7 @@ namespace Hazelcast.Examples.Client
                 options.Networking.ConnectionTimeoutMilliseconds = 45_000;
             });
 
-            // add the worker
+            // add the worker - which uses the factory to get a client (async)
             services.AddTransient<Worker>();
 
             // create the service provider
@@ -100,14 +99,30 @@ namespace Hazelcast.Examples.Client
             await a.RunAsync();
         }
 
+        public class Factory
+        {
+            // in real-life scenario we may want to cache the client
+            // instead of creating a new one all the time...
+
+            private readonly HazelcastOptions _options;
+
+            public Factory(IOptions<HazelcastOptions> options)
+            {
+                _options = options.Value;
+            }
+
+            public ValueTask<IHazelcastClient> StartClientAsync()
+                => HazelcastClientFactory.StartNewClientAsync(_options);
+        }
+
         public class Worker
         {
-            private readonly IHazelcastClient _client;
+            private readonly Factory _clientFactory;
             private readonly ILogger<Worker> _logger;
 
-            public Worker(IHazelcastClient client, ILogger<Worker> logger)
+            public Worker(Factory clientFactory, ILogger<Worker> logger)
             {
-                _client = client;
+                _clientFactory = clientFactory;
                 _logger = logger;
             }
 
@@ -117,13 +132,9 @@ namespace Hazelcast.Examples.Client
                 _logger.LogInformation("debug");
                 _logger.LogWarning("debug");
 
-                // this is just an example - practically, connecting the client
-                // would be managed elsewhere - and the class would expect to
-                // receive a connected client - and, that 'elsewhere' would also
-                // dispose the client, etc.
-                await _client.StartAsync();
+                await using var client = await _clientFactory.StartClientAsync();
 
-                await using var map = await _client.GetDictionaryAsync<string, int>("test-map");
+                await using var map = await client.GetDictionaryAsync<string, int>("test-map");
 
                 await map.SetAsync("key", 42);
                 var value = await map.GetAsync("key");
@@ -132,7 +143,7 @@ namespace Hazelcast.Examples.Client
                 Console.WriteLine("It worked.");
 
                 // destroy the map
-                await _client.DestroyAsync(map);
+                await client.DestroyAsync(map);
             }
         }
     }

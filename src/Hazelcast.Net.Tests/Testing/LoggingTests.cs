@@ -14,6 +14,7 @@
 
 using System;
 using System.Text;
+using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;

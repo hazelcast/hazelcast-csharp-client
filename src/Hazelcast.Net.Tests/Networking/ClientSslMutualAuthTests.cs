@@ -27,7 +27,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1()
         {
-            await using var client = await Setup(Resources.Cluster_MA_Required,
+            await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
                 true,
                 true,
                 null,
@@ -35,14 +35,14 @@ namespace Hazelcast.Tests.Networking
                 null,
                 Resources.Cert_Client1,
                 Password);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1_clientDoesNotProvideCerts()
         {
-            await using var client = await Setup(Resources.Cluster_MA_Required,
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
                 true,
                 true,
                 null,
@@ -51,30 +51,30 @@ namespace Hazelcast.Tests.Networking
                 null,
                 null,
                 true);
-
-            Assert.ThrowsAsync<InvalidOperationException>(() => client.StartAsync());
+            });
         }
 
         [Test]
         public async Task TestSSLEnabled_mutualAuthRequired_Server1NotKnowsClient2()
         {
-            await using var client = await Setup(Resources.Cluster_MA_Required,
-                true,
-                true,
-                null,
-                null,
-                null,
-                Resources.Cert_Client2,
-                Password,
-                true);
-
-            Assert.ThrowsAsync<InvalidOperationException>(() => client.StartAsync());
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
+                    true,
+                    true,
+                    null,
+                    null,
+                    null,
+                    Resources.Cert_Client2,
+                    Password,
+                    true);
+            });
         }
 
         [Test]
         public async Task TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1()
         {
-            await using var client = await Setup(Resources.Cluster_MA_Optional,
+            await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
                 true,
                 true,
                 null,
@@ -82,14 +82,12 @@ namespace Hazelcast.Tests.Networking
                 null,
                 Resources.Cert_Client1,
                 Password);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1_clientDoesNotProvideCerts()
         {
-            await using var client = await Setup(Resources.Cluster_MA_Optional,
+            await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
                 true,
                 true,
                 null,
@@ -97,30 +95,29 @@ namespace Hazelcast.Tests.Networking
                 null,
                 null,
                 null);
-
-            await client.StartAsync(); // succeeds
         }
 
         [Test]
         public async Task TestSSLEnabled_mutualAuthOptional_Server1NotKnowsClient2()
         {
-            await using var client = await Setup(Resources.Cluster_MA_Optional,
-                true,
-                true,
-                null,
-                null,
-                null,
-                Resources.Cert_Client2,
-                Password,
-                true);
-
-            Assert.ThrowsAsync<InvalidOperationException>(() => client.StartAsync());
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
+                    true,
+                    true,
+                    null,
+                    null,
+                    null,
+                    Resources.Cert_Client2,
+                    Password,
+                    true);
+            });
         }
 
         [Test]
         public async Task TestSSLEnabled_mutualAuthDisabled_Client1()
         {
-            await using var client = await Setup(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                 true,
                 true,
                 null,
@@ -128,8 +125,6 @@ namespace Hazelcast.Tests.Networking
                 null,
                 Resources.Cert_Client1,
                 Password);
-
-            await client.StartAsync(); // succeeds
         }
     }
 }

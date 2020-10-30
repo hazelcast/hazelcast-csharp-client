@@ -31,6 +31,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="sender">The sender (map) that triggered the event.</param>
         /// <param name="member">The member.</param>
         /// <param name="numberOfAffectedEntries">The number of affected entries.</param>
-        ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries);
+        /// <param name="state">A state object.</param>
+        ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries, object state);
     }
 }

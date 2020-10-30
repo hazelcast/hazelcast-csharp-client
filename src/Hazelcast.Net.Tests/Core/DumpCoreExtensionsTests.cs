@@ -16,7 +16,7 @@ using System;
 using System.Buffers;
 using System.Text;
 using Hazelcast.Core;
-using Hazelcast.Tests.Testing;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Core

@@ -39,8 +39,7 @@ namespace Hazelcast.Examples.DistributedObjects
             */
 
             // create an Hazelcast client and connect to a server running on localhost
-            await using var hz = HazelcastClientFactory.CreateClient(options);
-            await hz.StartAsync();
+            await using var hz = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
             await using var map = await hz.GetDictionaryAsync<int, Customer>("portable-example");

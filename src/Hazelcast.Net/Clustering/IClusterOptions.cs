@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Events;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 
@@ -68,5 +69,10 @@ namespace Hazelcast.Clustering
         /// Gets the networking options.
         /// </summary>
         NetworkingOptions Networking { get; }
+
+        /// <summary>
+        /// Gets the events options.
+        /// </summary>
+        EventsOptions Events { get; }
     }
 }

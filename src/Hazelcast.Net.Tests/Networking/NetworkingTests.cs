@@ -52,6 +52,64 @@ namespace Hazelcast.Tests.Networking
         private string GetText(ClientMessage message)
             => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
 
+        private async Task HandleAsync(Server server, ClientMessageConnection connection, ClientMessage requestMessage,
+            Func<Server, ClientMessageConnection, ClientMessage, ValueTask> handler)
+        {
+            var correlationId = requestMessage.CorrelationId;
+
+            async Task SendResponseAsync(ClientMessage response)
+            {
+                response.CorrelationId = requestMessage.CorrelationId;
+                response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                await connection.SendAsync(response).CAF();
+            }
+
+            async Task SendEventAsync(ClientMessage eventMessage, long correlationId)
+            {
+                eventMessage.CorrelationId = correlationId;
+                eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                await connection.SendAsync(eventMessage).CAF();
+            }
+
+            switch (requestMessage.MessageType)
+            {
+                // handle authentication
+                case ClientAuthenticationServerCodec.RequestMessageType:
+                    {
+                        var request = ClientAuthenticationServerCodec.DecodeRequest(requestMessage);
+                        var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
+                            0, server.Address, server.MemberId, SerializationService.SerializerVersion,
+                            "4.0", 1, server.ClusterId, false);
+                        await SendResponseAsync(responseMessage).CAF();
+                        break;
+                    }
+
+                // handle events
+                case ClientAddClusterViewListenerServerCodec.RequestMessageType:
+                    {
+                        var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
+                        var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                        await SendResponseAsync(responseMessage).CAF();
+
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(500).CAF();
+                            var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
+                            {
+                            new MemberInfo(server.MemberId, server.Address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
+                        });
+                            await SendEventAsync(eventMessage, correlationId).CAF();
+                        });
+                        break;
+                    }
+
+                // handle others
+                default:
+                    await handler(server, connection, requestMessage).CAF();
+                    break;
+            }
+        }
+
         private async ValueTask ReceiveMessage(Server server, ClientMessageConnection connection, ClientMessage message)
         {
             HConsole.WriteLine(this, "Respond");
@@ -105,58 +163,59 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
-            await using var server = new Server(address, async (svr, conn, msg) =>
-            {
-                async Task ResponseAsync(ClientMessage response)
+            await using var server = new Server(address, async (xsvr, xconn, xmsg)
+                => await HandleAsync(xsvr, xconn, xmsg, async (svr, conn, msg) =>
                 {
-                    response.CorrelationId = msg.CorrelationId;
-                    response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                    await conn.SendAsync(response).CAF();
-                }
+                    async Task ResponseAsync(ClientMessage response)
+                    {
+                        response.CorrelationId = msg.CorrelationId;
+                        response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                        await conn.SendAsync(response).CAF();
+                    }
 
-                async Task EventAsync(ClientMessage eventMessage)
-                {
-                    eventMessage.CorrelationId = msg.CorrelationId;
-                    eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                    await conn.SendAsync(eventMessage).CAF();
-                }
+                    async Task EventAsync(ClientMessage eventMessage)
+                    {
+                        eventMessage.CorrelationId = msg.CorrelationId;
+                        eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                        await conn.SendAsync(eventMessage).CAF();
+                    }
 
-                switch (msg.MessageType)
-                {
-                    // must handle auth
-                    case ClientAuthenticationServerCodec.RequestMessageType:
-                        var authRequest = ClientAuthenticationServerCodec.DecodeRequest(msg);
-                        var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
-                            0, address, Guid.NewGuid(), SerializationService.SerializerVersion,
-                            "4.0", 1, Guid.NewGuid(), false);
-                        await ResponseAsync(authResponse).CAF();
-                        break;
+                    switch (msg.MessageType)
+                    {
+                        // must handle auth
+                        case ClientAuthenticationServerCodec.RequestMessageType:
+                            var authRequest = ClientAuthenticationServerCodec.DecodeRequest(msg);
+                            var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
+                                0, address, Guid.NewGuid(), SerializationService.SerializerVersion,
+                                "4.0", 1, Guid.NewGuid(), false);
+                            await ResponseAsync(authResponse).CAF();
+                            break;
 
-                    // must handle events
-                    case ClientAddClusterViewListenerServerCodec.RequestMessageType:
-                        var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(msg);
-                        var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await ResponseAsync(addResponse).CAF();
+                        // must handle events
+                        case ClientAddClusterViewListenerServerCodec.RequestMessageType:
+                            var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(msg);
+                            var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                            await ResponseAsync(addResponse).CAF();
 
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(500).CAF();
-                            var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
+                            _ = Task.Run(async () =>
                             {
-                                new MemberInfo(Guid.NewGuid(), address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
+                                await Task.Delay(500).CAF();
+                                var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
+                                {
+                                    new MemberInfo(Guid.NewGuid(), address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
+                                });
+                                await EventAsync(eventMessage).CAF();
                             });
-                            await EventAsync(eventMessage).CAF();
-                        });
 
-                        break;
+                            break;
 
-                    default:
-                        HConsole.WriteLine(svr, "Respond with error.");
-                        var response = CreateErrorMessage(RemoteError.RetryableHazelcast);
-                        await ResponseAsync(response).CAF();
-                        break;
-                }
-            }, LoggerFactory);
+                        default:
+                            HConsole.WriteLine(svr, "Respond with error.");
+                            var response = CreateErrorMessage(RemoteError.RetryableHazelcast);
+                            await ResponseAsync(response).CAF();
+                            break;
+                    }
+                }), LoggerFactory);
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
@@ -164,8 +223,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            await using var client = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync().CAF();
+            await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
@@ -188,24 +246,25 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Start server");
             var count = 0;
-            await using var server = new Server(address, async (svr, conn, msg) =>
-            {
-                HConsole.WriteLine(svr, "Handle request.");
-                ClientMessage response;
-                if (++count > 3)
+            await using var server = new Server(address, async (xsvr, xconn, xmsg)
+                => await HandleAsync(xsvr, xconn, xmsg, async (svr, conn, msg) =>
                 {
-                    HConsole.WriteLine(svr, "Respond with success.");
-                    response = ClientPingServerCodec.EncodeResponse();
-                }
-                else
-                {
-                    HConsole.WriteLine(svr, "Respond with error.");
-                    response = CreateErrorMessage(RemoteError.RetryableHazelcast);
-                    response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                }
-                response.CorrelationId = msg.CorrelationId;
-                await conn.SendAsync(response).CAF();
-            }, LoggerFactory);
+                    HConsole.WriteLine(svr, "Handle request.");
+                    ClientMessage response;
+                    if (++count > 3)
+                    {
+                        HConsole.WriteLine(svr, "Respond with success.");
+                        response = ClientPingServerCodec.EncodeResponse();
+                    }
+                    else
+                    {
+                        HConsole.WriteLine(svr, "Respond with error.");
+                        response = CreateErrorMessage(RemoteError.RetryableHazelcast);
+                        response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                    }
+                    response.CorrelationId = msg.CorrelationId;
+                    await conn.SendAsync(response).CAF();
+                }), LoggerFactory);
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
@@ -213,8 +272,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            await using var client = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync().CAF();
+            await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
@@ -237,16 +295,17 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
-            await using var server = new Server(address, async (svr, conn, msg) =>
-            {
-                HConsole.WriteLine(svr, "Handle request (slowww...)");
-                await Task.Delay(10_000).CAF();
+            await using var server = new Server(address, async (xsvr, xconn, xmsg)
+                => await HandleAsync(xsvr, xconn, xmsg, async (svr, conn, msg) =>
+                {
+                    HConsole.WriteLine(svr, "Handle request (slowww...)");
+                    await Task.Delay(10_000).CAF();
 
-                HConsole.WriteLine(svr, "Respond with success.");
-                var response = ClientPingServerCodec.EncodeResponse();
-                response.CorrelationId = msg.CorrelationId;
-                await conn.SendAsync(response).CAF();
-            }, LoggerFactory);
+                    HConsole.WriteLine(svr, "Respond with success.");
+                    var response = ClientPingServerCodec.EncodeResponse();
+                    response.CorrelationId = msg.CorrelationId;
+                    await conn.SendAsync(response).CAF();
+                }), LoggerFactory);
             await server.StartAsync().CAF();
 
             HConsole.WriteLine(this, "Start client");
@@ -254,8 +313,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
             });
-            await using var client = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
-            await client.StartAsync().CAF();
+            await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
@@ -284,7 +342,8 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
-            var server = new Server(address, ReceiveMessage, LoggerFactory);
+            var server = new Server(address, async (xsvr, xconn, xmsg)
+                => await HandleAsync(xsvr, xconn, xmsg, ReceiveMessage), LoggerFactory);
             await server.StartAsync().CAF();
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
@@ -293,8 +352,7 @@ namespace Hazelcast.Tests.Networking
             });
 
             HConsole.WriteLine(this, "Start client 1");
-            await using var client1 = (HazelcastClient)HazelcastClientFactory.CreateClient(options);
-            await client1.StartAsync().CAF();
+            await using var client1 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
@@ -303,8 +361,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Got response: " + GetText(response));
 
             HConsole.WriteLine(this, "Start client 2");
-            await using var client2 = (HazelcastClient)HazelcastClientFactory.CreateClient(options);
-            await client2.StartAsync().CAF();
+            await using var client2 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message 1 to client 2");
             message = CreateMessage("a");
@@ -339,7 +396,8 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
-            await using var server = new Server(address, ReceiveMessage, LoggerFactory);
+            await using var server = new Server(address, async (xsvr, xconn, xmsg)
+                => await HandleAsync(xsvr, xconn, xmsg, ReceiveMessage), LoggerFactory);
             await server.StartAsync().CAF();
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
@@ -348,8 +406,7 @@ namespace Hazelcast.Tests.Networking
             });
 
             HConsole.WriteLine(this, "Start client 1");
-            await using var client1 = (HazelcastClient) HazelcastClientFactory.CreateClient(options);
-            await client1.StartAsync().CAF();
+            await using var client1 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
@@ -383,7 +440,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start client ");
-            var client1 = new MemberConnection(address, new MessagingOptions(), new SocketOptions(), new SslOptions(), new Int64Sequence(), new NullLoggerFactory());
+            var client1 = new MemberConnection(address, new MessagingOptions(), new SocketOptions(), new SslOptions(), new Int32Sequence(), new Int64Sequence(), new NullLoggerFactory());
             await client1.ConnectAsync(CancellationToken.None).CAF();
 
             // RC assigns a GUID but the default cluster name is 'dev'

@@ -87,7 +87,7 @@ namespace Hazelcast.Tests.Networking
             }
         }
 
-        protected async Task<IHazelcastClient> Setup(string serverXml, bool enableSsl, bool? validateCertificateChain,
+        protected async ValueTask<IHazelcastClient> StartClientAsync(string serverXml, bool enableSsl, bool? validateCertificateChain,
             bool? validateCertificateName, bool? checkCertificateRevocation, string certSubjectName, byte[] clientCertificate,
             string certPassword, bool failFast = false)
         {
@@ -121,7 +121,7 @@ namespace Hazelcast.Tests.Networking
                 if (certPassword != null) sslOptions.CertificatePassword = certPassword;
             }
 
-            return HazelcastClientFactory.CreateClient(options);
+            return await HazelcastClientFactory.StartNewClientAsync(options);
         }
 
         private static string CreateTmpFile(byte[] cert)
