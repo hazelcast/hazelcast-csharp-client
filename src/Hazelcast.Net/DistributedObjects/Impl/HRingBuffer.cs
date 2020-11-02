@@ -64,8 +64,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy)
-            where TAdding : TItem
+        public async Task<long> AddRangeAsync(ICollection<TItem> items, OverflowPolicy overflowPolicy)
         {
             if (items.Count == 0) throw new ArgumentException("Cannot add zero items.", nameof(items));
             var itemsData = ToSafeData(items);
@@ -94,7 +93,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<TItem>> GetAsync(long startSequence, int minCount, int maxCount)
+        public async Task<IReadOnlyList<TItem>> GetRangeAsync(long startSequence, int minCount, int maxCount)
         {
             if (startSequence < 0) throw new ArgumentOutOfRangeException(nameof(startSequence));
             if (minCount < 0) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be equal to, or greater than, zero.");

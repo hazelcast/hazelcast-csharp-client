@@ -100,7 +100,7 @@ namespace Hazelcast.DistributedObjects
         /// or if overflowPolicy is null
         /// </exception>
         /// <exception cref="System.ArgumentException">if collection is empty</exception>
-        Task<long> AddAsync<TAdding>(ICollection<TAdding> items, OverflowPolicy overflowPolicy) where TAdding : TItem;
+        Task<long> AddRangeAsync(ICollection<TItem> items, OverflowPolicy overflowPolicy);
 
         /// <summary>
         /// Asynchronously writes an item with a configurable
@@ -171,7 +171,7 @@ namespace Hazelcast.DistributedObjects
         /// or if maxCount larger than the capacity of the ringbuffer
         /// or if maxCount larger than 1000 (to prevent overload)
         /// </exception>
-        Task<IReadOnlyList<TItem>> GetAsync(long startSequence, int minCount, int maxCount);
+        Task<IReadOnlyList<TItem>> GetRangeAsync(long startSequence, int minCount, int maxCount);
 
         /// <summary>Reads one item from the Ringbuffer.</summary>
         /// <remarks>
