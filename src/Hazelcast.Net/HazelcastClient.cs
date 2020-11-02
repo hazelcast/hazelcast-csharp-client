@@ -86,6 +86,15 @@ namespace Hazelcast
         public Cluster Cluster { get; }
 
         /// <inheritdoc />
+        public string Name => Cluster.ClientName;
+
+        /// <inheritdoc />
+        public Guid Id => Cluster.ClientId;
+
+        /// <inheritdoc />
+        public string ClusterName => Cluster.Name;
+
+        /// <inheritdoc />
         public bool IsActive => Cluster.IsActive;
 
         /// <inheritdoc />
