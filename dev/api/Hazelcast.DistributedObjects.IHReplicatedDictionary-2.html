@@ -90,10 +90,49 @@
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IHReplicatedDictionary&lt;TKey, TValue&gt; : IDistributedObject, IAsyncDisposable</code></pre>
+    <pre><code class="lang-csharp hljs">public interface IHReplicatedDictionary&lt;TKey, TValue&gt; : IHDictionaryBase&lt;TKey, TValue&gt;, IDistributedObject, IAsyncDisposable, IAsyncEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</code></pre>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetAsync__0_">IHDictionaryBase&lt;TKey, TValue&gt;.GetAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetKeysAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetKeysAsync">IHDictionaryBase&lt;TKey, TValue&gt;.GetKeysAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetValuesAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetValuesAsync">IHDictionaryBase&lt;TKey, TValue&gt;.GetValuesAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetEntriesAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetEntriesAsync">IHDictionaryBase&lt;TKey, TValue&gt;.GetEntriesAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.CountAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_CountAsync">IHDictionaryBase&lt;TKey, TValue&gt;.CountAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_IsEmptyAsync">IHDictionaryBase&lt;TKey, TValue&gt;.IsEmptyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.ContainsKeyAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_ContainsKeyAsync__0_">IHDictionaryBase&lt;TKey, TValue&gt;.ContainsKeyAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.ContainsValueAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_ContainsValueAsync__1_">IHDictionaryBase&lt;TKey, TValue&gt;.ContainsValueAsync(TValue)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndSetAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetAndSetAsync__0__1_">IHDictionaryBase&lt;TKey, TValue&gt;.GetAndSetAsync(TKey, TValue)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndSetAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetAndSetAsync__0__1_System_TimeSpan_">IHDictionaryBase&lt;TKey, TValue&gt;.GetAndSetAsync(TKey, TValue, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.SetAllAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_SetAllAsync_System_Collections_Generic_IDictionary__0__1__">IHDictionaryBase&lt;TKey, TValue&gt;.SetAllAsync(IDictionary&lt;TKey, TValue&gt;)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.ClearAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_ClearAsync">IHDictionaryBase&lt;TKey, TValue&gt;.ClearAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndRemoveAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetAndRemoveAsync__0_">IHDictionaryBase&lt;TKey, TValue&gt;.GetAndRemoveAsync(TKey)</a>
+    </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
     </div>
@@ -108,6 +147,9 @@
     </div>
     <div>
       <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#System_IAsyncDisposable_DisposeAsync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1.getasyncenumerator#System_Collections_Generic_IAsyncEnumerable_1_GetAsyncEnumerator_System_Threading_CancellationToken_">IAsyncEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;.GetAsyncEnumerator(CancellationToken)</a>
     </div>
   </div>
   <h5 class="typeParameters">Type Parameters</h5>
@@ -138,124 +180,29 @@ the new value.</p>
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ClearAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.ClearAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ClearAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ClearAsync">ClearAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>The clear operation wipes data out of the replicated maps.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsAsync__1_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.ContainsAsync(`1)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ContainsAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsAsync__1_">ContainsAsync(TValue)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Determines whether this map contains one or more keys to the specified value</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsKeyAsync__0_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.ContainsKeyAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ContainsKeyAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_ContainsKeyAsync__0_">ContainsKeyAsync(TKey)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Determines whether this map contains an entry for the specified key.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_CountAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.CountAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.CountAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_CountAsync">CountAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns the number of entries in this map.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync">GetAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns a <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iset-1">ISet&lt;T&gt;</a> clone of the mappings contained in this map.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync__0_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetAsync__0_">GetAsync(TKey)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns the value for the specified key, or <code>null</code> if this map does not contain this key.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetKeysAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetKeysAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetKeysAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetKeysAsync">GetKeysAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns a set clone of the keys contained in this map.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetValuesAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.GetValuesAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetValuesAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_GetValuesAsync">GetValuesAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns a collection clone of the values contained in this map.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_IsEmptyAsync" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.IsEmptyAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_IsEmptyAsync">IsEmptyAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns <code>true</code> if this map contains no entries.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_RemoveAsync__0_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.RemoveAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.RemoveAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_RemoveAsync__0_">RemoveAsync(TKey)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Removes the mapping for a key from this map if it is present.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SetAsync(`0,`1)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_">SetAsync(TKey, TValue)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Associates the specified value with the specified key in this map
-If the map previously contained a mapping for
-the key, the old value is replaced by the specified value.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SetAsync(`0,`1,System.TimeSpan)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync__0__1_System_TimeSpan_">SetAsync(TKey, TValue, TimeSpan)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Associates a given value to the specified key and replicates it to the
-cluster. If there is an old value, it will be replaced by the specified
-one and returned from the call.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync_System_Collections_Generic_IDictionary__0__1__" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SetAsync(System.Collections.Generic.IDictionary{`0,`1})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SetAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SetAsync_System_Collections_Generic_IDictionary__0__1__">SetAsync(IDictionary&lt;TKey, TValue&gt;)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Copies all of the mappings from the specified map to this map</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(`0,Hazelcast.Predicates.IPredicate,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(TKey, IPredicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1____0_Hazelcast_Predicates_IPredicate_System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},`0,Hazelcast.Predicates.IPredicate,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1____0_Hazelcast_Predicates_IPredicate_System_Object_">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, IPredicate, Object)</a>
         </td>
         <td class="markdown level1 summary"><p>Subscribes to events.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(`0,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(TKey, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1____0_System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},`0,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1____0_System_Object_">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, Object)</a>
         </td>
         <td class="markdown level1 summary"><p>Subscribes to events.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(Hazelcast.Predicates.IPredicate,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(IPredicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___Hazelcast_Predicates_IPredicate_System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},Hazelcast.Predicates.IPredicate,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___Hazelcast_Predicates_IPredicate_System_Object_">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, IPredicate, Object)</a>
         </td>
         <td class="markdown level1 summary"><p>Subscribes to events.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        <td id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___System_Object_">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, Object)</a>
         </td>
         <td class="markdown level1 summary"><p>Subscribes to events.</p>
 </td>

@@ -86,22 +86,31 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.DistributedObjects.html">Hazelcast.DistributedObjects</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"><p>Concurrent, distributed implementation of ISet</p>
+  <div class="markdown level0 summary"><p>Defines a concurrent, distributed, non-partitioned and listenable set</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IHSet&lt;T&gt; : IHCollection&lt;T&gt;, IDistributedObject, IAsyncDisposable</code></pre>
+    <pre><code class="lang-csharp hljs">public interface IHSet&lt;T&gt; : IHCollection&lt;T&gt;, IDistributedObject, IAsyncDisposable, IAsyncEnumerable&lt;T&gt;</code></pre>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CountAsync">IHCollection&lt;T&gt;.CountAsync()</a>
-    </div>
-    <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddAsync__0_">IHCollection&lt;T&gt;.AddAsync(T)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ClearAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ClearAsync">IHCollection&lt;T&gt;.ClearAsync()</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddRangeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddRangeAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddRangeAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAllAsync">IHCollection&lt;T&gt;.GetAllAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CountAsync">IHCollection&lt;T&gt;.CountAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHCollection_1_IsEmptyAsync">IHCollection&lt;T&gt;.IsEmptyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ContainsAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ContainsAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.ContainsAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ContainsAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ContainsAsync__0_">IHCollection&lt;T&gt;.ContainsAsync(T)</a>
@@ -110,34 +119,19 @@
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.RemoveAsync.html#Hazelcast_DistributedObjects_IHCollection_1_RemoveAsync__0_">IHCollection&lt;T&gt;.RemoveAsync(T)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CopyToAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CopyToAsync__0___System_Int32_">IHCollection&lt;T&gt;.CopyToAsync(T[], Int32)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAsync">IHCollection&lt;T&gt;.GetAsync()</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddRangeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddRangeAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddRangeAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ContainsAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ContainsAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.ContainsAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHCollection_1_IsEmptyAsync">IHCollection&lt;T&gt;.IsEmptyAsync()</a>
-    </div>
-    <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.RemoveAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_RemoveAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.RemoveAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.RetainAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_RetainAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.RetainAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ToArrayAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync">IHCollection&lt;T&gt;.ToArrayAsync()</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ClearAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ClearAsync">IHCollection&lt;T&gt;.ClearAsync()</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ToArrayAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync__1___0___">IHCollection&lt;T&gt;.ToArrayAsync&lt;TItem&gt;(TItem[])</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.SubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___System_Boolean_System_Object_">IHCollection&lt;T&gt;.SubscribeAsync(Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;, Boolean, Object)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.SubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___">IHCollection&lt;T&gt;.SubscribeAsync(Boolean, Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;)</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.UnsubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_UnsubscribeAsync_System_Guid_">IHCollection&lt;T&gt;.UnsubscribeAsync(Guid)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
@@ -154,6 +148,9 @@
     <div>
       <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#System_IAsyncDisposable_DisposeAsync">IAsyncDisposable.DisposeAsync()</a>
     </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1.getasyncenumerator#System_Collections_Generic_IAsyncEnumerable_1_GetAsyncEnumerator_System_Threading_CancellationToken_">IAsyncEnumerable&lt;T&gt;.GetAsyncEnumerator(CancellationToken)</a>
+    </div>
   </div>
   <h5 class="typeParameters">Type Parameters</h5>
   <table class="table table-bordered table-striped table-condensed">
@@ -165,12 +162,11 @@
     </tbody>
   </table>
   <h5 id="Hazelcast_DistributedObjects_IHSet_1_remarks"><strong>Remarks</strong></h5>
-  <div class="markdown level0 remarks"><p><strong>
-    This class is <em>not</em> a general-purpose <tt>ISet</tt> implementation! While this class implements
-    the <tt>Set</tt> interface, it intentionally violates <tt>Set&apos;s</tt> general contract, which mandates the
-    use of the <tt>Equals</tt> method when comparing objects. Instead of the equals method this implementation
-    compares the serialized byte version of the objects.
-</strong></p>
+  <div class="markdown level0 remarks"><p>
+The Hazelcast <code>IHSet</code> is not a partitioned data-structure. Entire contents
+of an <code>IHSet</code> is stored on a single machine (and in the backup). The <code>IHSet</code>
+will not scale by adding more members to the cluster.
+</p>
 </div>
   </div>
 </article>

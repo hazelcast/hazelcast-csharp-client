@@ -86,11 +86,11 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.DistributedObjects.html">Hazelcast.DistributedObjects</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"><p>Concurrent, distributed, partitioned, listenable collection.</p>
+  <div class="markdown level0 summary"><p>Defines a concurrent, distributed, and listenable collection.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IHCollection&lt;T&gt; : IDistributedObject, IAsyncDisposable</code></pre>
+    <pre><code class="lang-csharp hljs">public interface IHCollection&lt;T&gt; : IDistributedObject, IAsyncDisposable, IAsyncEnumerable&lt;T&gt;</code></pre>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
@@ -109,18 +109,25 @@
     <div>
       <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#System_IAsyncDisposable_DisposeAsync">IAsyncDisposable.DisposeAsync()</a>
     </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1.getasyncenumerator#System_Collections_Generic_IAsyncEnumerable_1_GetAsyncEnumerator_System_Threading_CancellationToken_">IAsyncEnumerable&lt;T&gt;.GetAsyncEnumerator(CancellationToken)</a>
+    </div>
   </div>
   <h5 class="typeParameters">Type Parameters</h5>
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
         <td class="hz-one-third"><span class="parametername">T</span></td>
-        <td></td>
+        <td><p>The type of the items in the collection</p>
+</td>
       </tr>
     </tbody>
   </table>
   <h5 id="Hazelcast_DistributedObjects_IHCollection_1_remarks"><strong>Remarks</strong></h5>
-  <div class="markdown level0 remarks"><p>Concurrent, distributed, partitioned, listenable collection.</p>
+  <div class="markdown level0 remarks"><p>This is not a partitioned data-structure. Entire contents
+is stored on a single machine (and in the backup). It will not
+scale by adding more members to the cluster.
+</p>
 </div>
   </div>
   <h3 id="methods">Methods
@@ -163,13 +170,6 @@
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHCollection_1_CopyToAsync__0___System_Int32_" data-uid="Hazelcast.DistributedObjects.IHCollection`1.CopyToAsync(`0[],System.Int32)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CopyToAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CopyToAsync__0___System_Int32_">CopyToAsync(T[], Int32)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Copies the collection items into an array.</p>
-</td>
-      </tr>
-      <tr>
         <td id="Hazelcast_DistributedObjects_IHCollection_1_CountAsync" data-uid="Hazelcast.DistributedObjects.IHCollection`1.CountAsync" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CountAsync">CountAsync()</a>
         </td>
@@ -177,8 +177,8 @@
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHCollection_1_GetAsync" data-uid="Hazelcast.DistributedObjects.IHCollection`1.GetAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAsync">GetAsync()</a>
+        <td id="Hazelcast_DistributedObjects_IHCollection_1_GetAllAsync" data-uid="Hazelcast.DistributedObjects.IHCollection`1.GetAllAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAllAsync">GetAllAsync()</a>
         </td>
         <td class="markdown level1 summary"><p>Gets the collection items.</p>
 </td>
@@ -208,28 +208,21 @@
         <td id="Hazelcast_DistributedObjects_IHCollection_1_RetainAllAsync__1_System_Collections_Generic_ICollection___0__" data-uid="Hazelcast.DistributedObjects.IHCollection`1.RetainAllAsync``1(System.Collections.Generic.ICollection{``0})" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.RetainAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_RetainAllAsync__1_System_Collections_Generic_ICollection___0__">RetainAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
         </td>
-        <td class="markdown level1 summary"><p>Retains only the elements in this collection that are contained in the specified collection (optional operation).</p>
+        <td class="markdown level1 summary"><p>Retains only the elements in this collection that are contained in the specified collection.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___" data-uid="Hazelcast.DistributedObjects.IHCollection`1.SubscribeAsync(System.Boolean,System.Action{Hazelcast.DistributedObjects.CollectionItemEventHandlers{`0}})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.SubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___">SubscribeAsync(Boolean, Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;)</a>
+        <td id="Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHCollection`1.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.CollectionItemEventHandlers{`0}},System.Boolean,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.SubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___System_Boolean_System_Object_">SubscribeAsync(Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;, Boolean, Object)</a>
         </td>
-        <td class="markdown level1 summary"></td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync" data-uid="Hazelcast.DistributedObjects.IHCollection`1.ToArrayAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ToArrayAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync">ToArrayAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns an array containing all of the elements in this collection.</p>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync__1___0___" data-uid="Hazelcast.DistributedObjects.IHCollection`1.ToArrayAsync``1(``0[])" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ToArrayAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync__1___0___">ToArrayAsync&lt;TItem&gt;(TItem[])</a>
+        <td id="Hazelcast_DistributedObjects_IHCollection_1_UnsubscribeAsync_System_Guid_" data-uid="Hazelcast.DistributedObjects.IHCollection`1.UnsubscribeAsync(System.Guid)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.UnsubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_UnsubscribeAsync_System_Guid_">UnsubscribeAsync(Guid)</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns an array containing all of the elements in this collection
-the runtime type of the returned array is that of the specified array</p>
+        <td class="markdown level1 summary"><p>Unsubscribe from events.</p>
 </td>
       </tr>
     </tbody>

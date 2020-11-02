@@ -156,38 +156,8 @@
           <td></td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.HDictionary.html">HDictionary</a></td>
-          <td><p>Provides constants for the map type.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.HList.html">HList</a></td>
-          <td><p>Provides constants for the <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.html">IHList&lt;T&gt;</a> implementation.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.HMultiDictionary.html">HMultiDictionary</a></td>
-          <td><p>Provides constants for the multi map type.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.HQueue.html">HQueue</a></td>
-          <td><p>Provides constants for the queue type.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.HReplicatedDictionary.html">HReplicatedDictionary</a></td>
-          <td><p>Provides constants for the replicated map type.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.HSet.html">HSet</a></td>
-          <td><p>Provides constants for the set type.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.HTopic.html">HTopic</a></td>
-          <td><p>Provides constants for the topic type.</p>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.EventArgsBase.html">EventArgsBase</a></td>
+          <td><p>Provides a base class for all event arguments.</p>
 </td>
         </tr>
         <tr>
@@ -254,7 +224,8 @@
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IDictionaryInterceptor.html">IDictionaryInterceptor</a></td>
-          <td></td>
+          <td><p>A place holder interface for <code>com.hazelcast.map.MapInterceptor</code> on server side.</p>
+</td>
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.html">IDistributedObject</a></td>
@@ -262,7 +233,7 @@
 </td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor.html">IEntryProcessor</a></td>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor&lt;TResult&gt;</a></td>
           <td><p>Defines a processor that can process the entries of an <a class="xref" href="Hazelcast.DistributedObjects.IHDictionary-2.html">IHDictionary&lt;TKey, TValue&gt;</a> on the server.</p>
 </td>
         </tr>
@@ -286,7 +257,7 @@ executing a tasks on multiple members and listening execution result using a cal
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.html">IHCollection&lt;T&gt;</a></td>
-          <td><p>Concurrent, distributed, partitioned, listenable collection.</p>
+          <td><p>Defines a concurrent, distributed, and listenable collection.</p>
 </td>
         </tr>
         <tr>
@@ -295,8 +266,13 @@ executing a tasks on multiple members and listening execution result using a cal
 </td>
         </tr>
         <tr>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.html">IHDictionaryBase&lt;TKey, TValue&gt;</a></td>
+          <td><p>Defines the base interface for various Hazelcast distributed dictionaries.</p>
+</td>
+        </tr>
+        <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IHList-1.html">IHList&lt;T&gt;</a></td>
-          <td><p>Concurrent, distributed implementation of <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ilist-1">IList&lt;T&gt;</a>IList</p>
+          <td><p>Defines a concurrent, distributed, non-partitioned and listenable list</p>
 </td>
         </tr>
         <tr>
@@ -311,7 +287,7 @@ executing a tasks on multiple members and listening execution result using a cal
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.html">IHQueue&lt;T&gt;</a></td>
-          <td><p>Concurrent, blocking, distributed, observable queue.</p>
+          <td><p>Defines a concurrent, blocking, distributed, non-partitioned and observable queue.</p>
 </td>
         </tr>
         <tr>
@@ -326,7 +302,7 @@ executing a tasks on multiple members and listening execution result using a cal
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IHSet-1.html">IHSet&lt;T&gt;</a></td>
-          <td><p>Concurrent, distributed implementation of ISet</p>
+          <td><p>Defines a concurrent, distributed, non-partitioned and listenable set</p>
 </td>
         </tr>
         <tr>
@@ -360,6 +336,10 @@ which is also known as publish/subscribe (pub/sub) messaging model.</p>
 <a class="xref" href="Hazelcast.DistributedObjects.IHSet-1.html">IHSet&lt;T&gt;</a>
 .</p>
 </td>
+        </tr>
+        <tr>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.html">IKeyLockable&lt;TKey&gt;</a></td>
+          <td></td>
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.DistributedObjects.IPNCounter.html">IPNCounter</a></td>

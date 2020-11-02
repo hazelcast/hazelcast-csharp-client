@@ -87,17 +87,23 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Boolean,System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}})">SubscribeAsync(Boolean, Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}},System.Boolean,System.Object)">SubscribeAsync(Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, Boolean, Object)</h4>
 <div class="markdown level1 summary"><p>Subscribes to events.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(bool includeValues, Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; events, bool includeValues = true, object state = null)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.MultiDictionaryEventHandlers-2.html">MultiDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
+      <td><span class="parametername">events</span></td>
+      <td><p>An event handlers collection builder.</p>
+</td>
+    </tr>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
       <td><span class="parametername">includeValues</span></td>
@@ -105,9 +111,9 @@
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.MultiDictionaryEventHandlers-2.html">MultiDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
-      <td><p>An event handlers collection builder.</p>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
 </td>
     </tr>
   </tbody>
@@ -123,21 +129,21 @@
   </tbody>
 </table>
 <a id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Boolean__0_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Boolean,`0,System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}})">SubscribeAsync(Boolean, TKey, Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1____0_System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}},`0,System.Boolean,System.Object)">SubscribeAsync(Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, Boolean, Object)</h4>
 <div class="markdown level1 summary"><p>Subscribes to events.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(bool includeValues, TKey key, Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, bool includeValues = true, object state = null)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
-      <td><span class="parametername">includeValues</span></td>
-      <td><p>Whether to include values in event arguments.</p>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.MultiDictionaryEventHandlers-2.html">MultiDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
+      <td><span class="parametername">events</span></td>
+      <td><p>An event handlers collection builder.</p>
 </td>
     </tr>
     <tr>
@@ -147,9 +153,15 @@
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.MultiDictionaryEventHandlers-2.html">MultiDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
-      <td><p>An event handlers collection builder.</p>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
+      <td><span class="parametername">includeValues</span></td>
+      <td><p>Whether to include values in event arguments.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
 </td>
     </tr>
   </tbody>

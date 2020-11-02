@@ -88,20 +88,19 @@
 
 <a id="Hazelcast_DistributedObjects_IHMultiDictionary_2_GetKeysAsync_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.GetKeysAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_GetKeysAsync" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.GetKeysAsync">GetKeysAsync()</h4>
-<div class="markdown level1 summary"><p>Returns the set of keys in the multimap.</p>
+<div class="markdown level1 summary"><p>Returns the set of keys in the multi-dictionary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;IReadOnlyList&lt;TKey&gt;&gt; GetKeysAsync()</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;IReadOnlyCollection&lt;TKey&gt;&gt; GetKeysAsync()</code></pre>
 </div>
 <h5 class="returns">Returns</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1">IReadOnlyList</a>&lt;TKey&gt;&gt;</td>
-      <td><p>the set of keys in the multimap. Returned set might be modifiable
-but it has no effect on the multimap</p>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1">IReadOnlyCollection</a>&lt;TKey&gt;&gt;</td>
+      <td><p>the collection of keys in the multi-dictionary.</p>
 </td>
     </tr>
   </tbody>

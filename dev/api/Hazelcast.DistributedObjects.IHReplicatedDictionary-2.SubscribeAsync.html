@@ -87,21 +87,27 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},System.Object)">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, Object)</h4>
 <div class="markdown level1 summary"><p>Subscribes to events.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; events, object state = null)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers-2.html">ReplicatedDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
+      <td><span class="parametername">events</span></td>
       <td><p>An event handlers collection builder.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
 </td>
     </tr>
   </tbody>
@@ -117,17 +123,23 @@
   </tbody>
 </table>
 <a id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(`0,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})">SubscribeAsync(TKey, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1____0_System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},`0,System.Object)">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, Object)</h4>
 <div class="markdown level1 summary"><p>Subscribes to events.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(TKey key, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, object state = null)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers-2.html">ReplicatedDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
+      <td><span class="parametername">events</span></td>
+      <td><p>An event handlers collection builder.</p>
+</td>
+    </tr>
     <tr>
       <td class="hz-one-fourth"><span class="xref">TKey</span></td>
       <td><span class="parametername">key</span></td>
@@ -135,9 +147,9 @@
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers-2.html">ReplicatedDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
-      <td><p>An event handlers collection builder.</p>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
 </td>
     </tr>
   </tbody>
@@ -153,57 +165,21 @@
   </tbody>
 </table>
 <a id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(Hazelcast.Predicates.IPredicate,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})">SubscribeAsync(IPredicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___Hazelcast_Predicates_IPredicate_System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},Hazelcast.Predicates.IPredicate,System.Object)">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, IPredicate, Object)</h4>
 <div class="markdown level1 summary"><p>Subscribes to events.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(IPredicate predicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; events, IPredicate predicate, object state = null)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.Predicates.IPredicate.html">IPredicate</a></td>
-      <td><span class="parametername">predicate</span></td>
-      <td><p>A predicate to filter events.</p>
-</td>
-    </tr>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers-2.html">ReplicatedDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
+      <td><span class="parametername">events</span></td>
       <td><p>An event handlers collection builder.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.guid">Guid</a>&gt;</td>
-      <td><p>The unique identifier of the subscription.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<a id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync__0_Hazelcast_Predicates_IPredicate_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(`0,Hazelcast.Predicates.IPredicate,System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}})">SubscribeAsync(TKey, IPredicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</h4>
-<div class="markdown level1 summary"><p>Subscribes to events.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(TKey key, IPredicate predicate, Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; handle)</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-fourth"><span class="xref">TKey</span></td>
-      <td><span class="parametername">key</span></td>
-      <td><p>A key to filter events.</p>
 </td>
     </tr>
     <tr>
@@ -213,9 +189,57 @@
 </td>
     </tr>
     <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.guid">Guid</a>&gt;</td>
+      <td><p>The unique identifier of the subscription.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<a id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_ReplicatedDictionaryEventHandlers__0__1____0_Hazelcast_Predicates_IPredicate_System_Object_" data-uid="Hazelcast.DistributedObjects.IHReplicatedDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers{`0,`1}},`0,Hazelcast.Predicates.IPredicate,System.Object)">SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, IPredicate, Object)</h4>
+<div class="markdown level1 summary"><p>Subscribes to events.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="decalaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedDictionaryEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, IPredicate predicate, object state = null)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.ReplicatedDictionaryEventHandlers-2.html">ReplicatedDictionaryEventHandlers</a>&lt;TKey, TValue&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
+      <td><span class="parametername">events</span></td>
       <td><p>An event handlers collection builder.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><span class="xref">TKey</span></td>
+      <td><span class="parametername">key</span></td>
+      <td><p>A key to filter events.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.Predicates.IPredicate.html">IPredicate</a></td>
+      <td><span class="parametername">predicate</span></td>
+      <td><p>A predicate to filter events.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
 </td>
     </tr>
   </tbody>

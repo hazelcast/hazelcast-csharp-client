@@ -87,30 +87,6 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_IHQueue_1_TryDequeueAsync_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TryDequeueAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHQueue_1_TryDequeueAsync" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TryDequeueAsync">TryDequeueAsync()</h4>
-<div class="markdown level1 summary"><p>Retrieves and removes the head of this queue,
-or returns <code>null</code> if this queue is empty.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;T&gt; TryDequeueAsync()</code></pre>
-</div>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;T&gt;</td>
-      <td><p>the head of this queue, or <code>null</code> if this queue is empty</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 id="Hazelcast_DistributedObjects_IHQueue_1_TryDequeueAsync_remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>Retrieves and removes the head of this queue,
-or returns <code>null</code> if this queue is empty.</p>
-</div>
-<a id="Hazelcast_DistributedObjects_IHQueue_1_TryDequeueAsync_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TryDequeueAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHQueue_1_TryDequeueAsync_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TryDequeueAsync(System.TimeSpan)">TryDequeueAsync(TimeSpan)</h4>
 <div class="markdown level1 summary"><p>Retrieves and removes the head of this queue, waiting up to the
 specified wait time if necessary for an element to become available.</p>
@@ -118,7 +94,7 @@ specified wait time if necessary for an element to become available.</p>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;T&gt; TryDequeueAsync(TimeSpan timeToWait)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;T&gt; TryDequeueAsync(TimeSpan timeToWait = default(TimeSpan))</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -126,7 +102,8 @@ specified wait time if necessary for an element to become available.</p>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
       <td><span class="parametername">timeToWait</span></td>
-      <td></td>
+      <td><p>how long to wait before giving up</p>
+</td>
     </tr>
   </tbody>
 </table>

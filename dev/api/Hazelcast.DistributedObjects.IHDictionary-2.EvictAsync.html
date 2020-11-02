@@ -88,7 +88,7 @@
 
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_EvictAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.EvictAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHDictionary_2_EvictAsync__0_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.EvictAsync(`0)">EvictAsync(TKey)</h4>
-<div class="markdown level1 summary"><p>Evicts an entry from the cache.</p>
+<div class="markdown level1 summary"><p>Evicts the specified key from the dictionary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -117,10 +117,18 @@
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHDictionary_2_EvictAsync__0__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>Locked entries are not evicted (TODO: true?)</p>
-<p>Evicts the entry from the in-memory cache. The entry is not removed from
-the map. If a <see cref="!:MapStore"></see> is defined for this map, The entry is
-not evicted from the map store.</p>
+<div class="markdown level1 remarks"><p>
+If a <code>MapStore</code> on server is defined for this dictionary,
+then the entry is not deleted from the underlying <code>MapStore</code>,
+evict only removes the entry from the memory.
+Use <a class="xref" href="Hazelcast.DistributedObjects.IHDictionary-2.RemoveAsync.html#Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync__0_">RemoveAsync(TKey)</a> or <see cref="!:GetAndRemoveAsync(TKey)"></see>
+if <code>MapStore.delete(object)</code> needs to be called.
+</p>
+<p>
+This method uses <code>GetHashCode</code> and <code>Equals</code> of binary form of
+the <code>key</code>, not the actual implementations of <code>GetHashCode</code> and <code>Equals</code>
+defined in <code>key</code>&apos;s class.
+</p>
 </div>
 </article>
           </div>

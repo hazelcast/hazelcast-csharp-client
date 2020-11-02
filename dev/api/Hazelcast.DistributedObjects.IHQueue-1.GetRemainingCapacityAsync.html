@@ -90,13 +90,8 @@
 <h4 id="Hazelcast_DistributedObjects_IHQueue_1_GetRemainingCapacityAsync" data-uid="Hazelcast.DistributedObjects.IHQueue`1.GetRemainingCapacityAsync">GetRemainingCapacityAsync()</h4>
 <div class="markdown level1 summary"><p>Returns the number of additional elements that this queue can ideally
 (in the absence of memory or resource constraints) accept without
-blocking, or <code>Int64.MaxValue</code> if there is no intrinsic
+blocking, or <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.int32.maxvalue">MaxValue</a> if there is no intrinsic
 limit.</p>
-<p>Note that you <em>cannot</em> always tell if an attempt to insert
-an element will succeed by inspecting <code>remainingCapacity</code>
-because it may be the case that another thread is about to
-insert or remove an element.
-</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -113,6 +108,13 @@ insert or remove an element.
     </tr>
   </tbody>
 </table>
+<h5 id="Hazelcast_DistributedObjects_IHQueue_1_GetRemainingCapacityAsync_remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>Note that you <em>cannot</em> always tell if an attempt to insert
+an element will succeed by inspecting <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.GetRemainingCapacityAsync.html#Hazelcast_DistributedObjects_IHQueue_1_GetRemainingCapacityAsync">GetRemainingCapacityAsync()</a>
+because it may be the case that another thread is about to
+insert or remove an element.
+</p>
+</div>
 </article>
           </div>
           

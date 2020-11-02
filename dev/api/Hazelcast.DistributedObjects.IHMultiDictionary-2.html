@@ -90,7 +90,7 @@
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IHMultiDictionary&lt;TKey, TValue&gt; : IDistributedObject, IAsyncDisposable</code></pre>
+    <pre><code class="lang-csharp hljs">public interface IHMultiDictionary&lt;TKey, TValue&gt; : IDistributedObject, IAsyncDisposable, IKeyLockable&lt;TKey&gt;, IAsyncEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;</code></pre>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
@@ -109,6 +109,33 @@
     <div>
       <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#System_IAsyncDisposable_DisposeAsync">IAsyncDisposable.DisposeAsync()</a>
     </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.LockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync__0_">IKeyLockable&lt;TKey&gt;.LockAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.LockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync__0_System_TimeSpan_">IKeyLockable&lt;TKey&gt;.LockAsync(TKey, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.TryLockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_">IKeyLockable&lt;TKey&gt;.TryLockAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.TryLockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_">IKeyLockable&lt;TKey&gt;.TryLockAsync(TKey, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.TryLockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_System_TimeSpan_">IKeyLockable&lt;TKey&gt;.TryLockAsync(TKey, TimeSpan, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.IsLockedAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_IsLockedAsync__0_">IKeyLockable&lt;TKey&gt;.IsLockedAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.UnlockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_UnlockAsync__0_">IKeyLockable&lt;TKey&gt;.UnlockAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.ForceUnlockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_ForceUnlockAsync__0_">IKeyLockable&lt;TKey&gt;.ForceUnlockAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1.getasyncenumerator#System_Collections_Generic_IAsyncEnumerable_1_GetAsyncEnumerator_System_Threading_CancellationToken_">IAsyncEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;.GetAsyncEnumerator(CancellationToken)</a>
+    </div>
   </div>
   <h5 class="typeParameters">Type Parameters</h5>
   <table class="table table-bordered table-striped table-condensed">
@@ -123,6 +150,11 @@
       </tr>
     </tbody>
   </table>
+  <h5 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>
+<code>IHMultiDictionary</code> can be configured on Server side to allow duplicate values or not for its values collection
+</p>
+</div>
   </div>
   <h3 id="methods">Methods
   </h3>
@@ -132,56 +164,49 @@
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_ClearAsync" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.ClearAsync" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ClearAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_ClearAsync">ClearAsync()</a>
         </td>
-        <td class="markdown level1 summary"><p>Clears the multimap.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsAsync__1_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.ContainsAsync(`1)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsAsync__1_">ContainsAsync(TValue)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns whether the multimap contains an entry with the value.</p>
+        <td class="markdown level1 summary"><p>Clears the multi-dictionary. Removes all key-value pairs.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsEntryAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.ContainsEntryAsync(`0,`1)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsEntryAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsEntryAsync__0__1_">ContainsEntryAsync(TKey, TValue)</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns whether the multimap contains the given key-value pair.</p>
+        <td class="markdown level1 summary"><p>Returns whether the multi-dictionary contains the given key-value pair.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsKeyAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.ContainsKeyAsync(`0)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsKeyAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsKeyAsync__0_">ContainsKeyAsync(TKey)</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns whether the multimap contains an entry with the key.</p>
+        <td class="markdown level1 summary"><p>Returns whether the multi-dictionary contains an entry with the key.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsValueAsync__1_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.ContainsValueAsync(`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsValueAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_ContainsValueAsync__1_">ContainsValueAsync(TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns whether the multi-dictionary contains an entry with the value.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_CountAsync" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.CountAsync" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.CountAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_CountAsync">CountAsync()</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns the number of key-value pairs in the multimap.</p>
+        <td class="markdown level1 summary"><p>Returns the number of key-value pairs in the multi-dictionary.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_CountValuesAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.CountValuesAsync(`0)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.CountValuesAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_CountValuesAsync__0_">CountValuesAsync(TKey)</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns number of values matching to given key in the multimap.</p>
+        <td class="markdown level1 summary"><p>Returns number of values matching to given key in the multi-dictionary.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_ForceUnlockAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.ForceUnlockAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ForceUnlockAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_ForceUnlockAsync__0_">ForceUnlockAsync(TKey)</a>
+        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_GetAndRemoveAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.GetAndRemoveAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetAndRemoveAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_GetAndRemoveAsync__0_">GetAndRemoveAsync(TKey)</a>
         </td>
-        <td class="markdown level1 summary"><p>Releases the lock for the specified key regardless of the lock owner.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_GetAsync" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.GetAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_GetAsync">GetAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Returns the set of key-value pairs in the multimap.</p>
+        <td class="markdown level1 summary"><p>Removes all the entries with the given key.</p>
 </td>
       </tr>
       <tr>
@@ -192,38 +217,24 @@
 </td>
       </tr>
       <tr>
+        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_GetEntrySetAsync" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.GetEntrySetAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetEntrySetAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_GetEntrySetAsync">GetEntrySetAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the set of key-value pairs in the multi-dictionary.</p>
+</td>
+      </tr>
+      <tr>
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_GetKeysAsync" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.GetKeysAsync" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetKeysAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_GetKeysAsync">GetKeysAsync()</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns the set of keys in the multimap.</p>
+        <td class="markdown level1 summary"><p>Returns the set of keys in the multi-dictionary.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_GetValuesAsync" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.GetValuesAsync" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetValuesAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_GetValuesAsync">GetValuesAsync()</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns the collection of values in the multimap.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_IsLockedAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.IsLockedAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.IsLockedAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_IsLockedAsync__0_">IsLockedAsync(TKey)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Checks the lock for the specified key.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_LockAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.LockAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.LockAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_LockAsync__0_">LockAsync(TKey)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Acquires the lock for the specified key.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_LockForAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.LockForAsync(`0,System.TimeSpan)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.LockForAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_LockForAsync__0_System_TimeSpan_">LockForAsync(TKey, TimeSpan)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Acquires the lock for the specified key for the specified lease time.</p>
+        <td class="markdown level1 summary"><p>Returns the collection of values in the multi-dictionary.</p>
 </td>
       </tr>
       <tr>
@@ -237,19 +248,19 @@
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_RemoveAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.RemoveAsync(`0,`1)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.RemoveAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_RemoveAsync__0__1_">RemoveAsync(TKey, TValue)</a>
         </td>
-        <td class="markdown level1 summary"><p>Removes the given key value pair from the multimap.</p>
+        <td class="markdown level1 summary"><p>Removes the given key value pair from the multi-dictionary.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Boolean__0_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Boolean,`0,System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Boolean__0_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___">SubscribeAsync(Boolean, TKey, Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1____0_System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}},`0,System.Boolean,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1____0_System_Boolean_System_Object_">SubscribeAsync(Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, Boolean, Object)</a>
         </td>
         <td class="markdown level1 summary"><p>Subscribes to events.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Boolean,System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___">SubscribeAsync(Boolean, Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;)</a>
+        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MultiDictionaryEventHandlers{`0,`1}},System.Boolean,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MultiDictionaryEventHandlers__0__1___System_Boolean_System_Object_">SubscribeAsync(Action&lt;MultiDictionaryEventHandlers&lt;TKey, TValue&gt;&gt;, Boolean, Object)</a>
         </td>
         <td class="markdown level1 summary"><p>Subscribes to events.</p>
 </td>
@@ -258,35 +269,14 @@
         <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_TryAddAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.TryAddAsync(`0,`1)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryAddAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_TryAddAsync__0__1_">TryAddAsync(TKey, TValue)</a>
         </td>
-        <td class="markdown level1 summary"><p>Stores a key-value pair in the multimap.</p>
+        <td class="markdown level1 summary"><p>Stores a key-value pair in the multi-dictionary.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_TryLockAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.TryLockAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryLockAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_TryLockAsync__0_">TryLockAsync(TKey)</a>
+        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_UnsubscribeAsync_System_Guid_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.UnsubscribeAsync(System.Guid)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.UnsubscribeAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_UnsubscribeAsync_System_Guid_">UnsubscribeAsync(Guid)</a>
         </td>
-        <td class="markdown level1 summary"><p>Tries to acquire the lock for the specified key.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_TryWaitLockAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.TryWaitLockAsync(`0,System.TimeSpan)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryWaitLockAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_TryWaitLockAsync__0_System_TimeSpan_">TryWaitLockAsync(TKey, TimeSpan)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Tries to acquire the lock for the specified key.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_TryWaitLockForAsync__0_System_TimeSpan_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.TryWaitLockForAsync(`0,System.TimeSpan,System.TimeSpan)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryWaitLockForAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_TryWaitLockForAsync__0_System_TimeSpan_System_TimeSpan_">TryWaitLockForAsync(TKey, TimeSpan, TimeSpan)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Tries to acquire the lock for the specified key for the specified lease time.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHMultiDictionary_2_UnlockAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.UnlockAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.UnlockAsync.html#Hazelcast_DistributedObjects_IHMultiDictionary_2_UnlockAsync__0_">UnlockAsync(TKey)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Releases the lock for the specified key.</p>
+        <td class="markdown level1 summary"><p>Unsubscribe from events.</p>
 </td>
       </tr>
     </tbody>

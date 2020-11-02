@@ -87,13 +87,13 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_DictionaryEntryEventArgsBase_1__ctor_" data-uid="Hazelcast.DistributedObjects.DictionaryEntryEventArgsBase`1.#ctor*"></a>
-<h4 id="Hazelcast_DistributedObjects_DictionaryEntryEventArgsBase_1__ctor_Hazelcast_Data_MemberInfo_System_Lazy__0__" data-uid="Hazelcast.DistributedObjects.DictionaryEntryEventArgsBase`1.#ctor(Hazelcast.Data.MemberInfo,System.Lazy{`0})">DictionaryEntryEventArgsBase(MemberInfo, Lazy&lt;TKey&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_DictionaryEntryEventArgsBase_1__ctor_Hazelcast_Data_MemberInfo_System_Lazy__0__System_Object_" data-uid="Hazelcast.DistributedObjects.DictionaryEntryEventArgsBase`1.#ctor(Hazelcast.Data.MemberInfo,System.Lazy{`0},System.Object)">DictionaryEntryEventArgsBase(MemberInfo, Lazy&lt;TKey&gt;, Object)</h4>
 <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.DistributedObjects.DictionaryEntryEventArgsBase-1.html">DictionaryEntryEventArgsBase&lt;TKey&gt;</a> class.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">protected DictionaryEntryEventArgsBase(MemberInfo member, Lazy&lt;TKey&gt; key)</code></pre>
+  <pre><code class="lang-csharp hljs">protected DictionaryEntryEventArgsBase(MemberInfo member, Lazy&lt;TKey&gt; key, object state)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -108,6 +108,12 @@
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.lazy-1">Lazy</a>&lt;TKey&gt;</td>
       <td><span class="parametername">key</span></td>
       <td><p>The key.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
 </td>
     </tr>
   </tbody>

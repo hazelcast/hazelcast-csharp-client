@@ -21,7 +21,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -48,7 +48,8 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client.
+        Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -88,11 +89,8 @@
 <p>Configuration file:</p>
 <pre><code class="lang-json">&quot;hazelcast&quot;: {
     &quot;authentication&quot;: {
-        &quot;credentialsFactory&quot;: {
-            &quot;typeName&quot;: &quot;Hazelcast.Security.KerberosCredentialsFactory, Hazelcast.Net.Win32&quot;,
-            &quot;args&quot;: {
-                &quot;spn&quot;: &quot;hz/cluster1234&quot;
-            }
+        &quot;kerberos&quot;: {
+            &quot;spn&quot;: &quot;hz/cluster1234&quot;
         }
     }
 }
@@ -102,7 +100,6 @@
 });
 </code></pre><h2 id="server-configuration">Server Configuration</h2>
 <p>Until there is a 4.1 release, see <a href="https://docs.hazelcast.org/docs/latest-dev/manual/html-single/index.html#kerberos-authentication-type">this page</a> for documentation.</p>
-<p>(to be completed)</p>
 </article>
           </div>
           

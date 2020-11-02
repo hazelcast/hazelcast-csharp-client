@@ -87,21 +87,27 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_IHTopic_1_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHTopic`1.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHTopic_1_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_TopicEventHandlers__0___" data-uid="Hazelcast.DistributedObjects.IHTopic`1.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.TopicEventHandlers{`0}})">SubscribeAsync(Action&lt;TopicEventHandlers&lt;T&gt;&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHTopic_1_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_TopicEventHandlers__0___System_Object_" data-uid="Hazelcast.DistributedObjects.IHTopic`1.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.TopicEventHandlers{`0}},System.Object)">SubscribeAsync(Action&lt;TopicEventHandlers&lt;T&gt;&gt;, Object)</h4>
 <div class="markdown level1 summary"><p>Subscribes to this topic.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;TopicEventHandlers&lt;T&gt;&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;TopicEventHandlers&lt;T&gt;&gt; events, object state = null)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.TopicEventHandlers-1.html">TopicEventHandlers</a>&lt;T&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
+      <td><span class="parametername">events</span></td>
       <td></td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
+</td>
     </tr>
   </tbody>
 </table>

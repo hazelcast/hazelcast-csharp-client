@@ -21,7 +21,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -48,7 +48,8 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client.
+        Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -80,6 +81,11 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="distributed-objects">Distributed Objects</h1>
 
+<p>Distributed objects are managed by an Hazelcast cluster, and accessed via the Hazelcast .NET client. Currently, the client supports the following distributed objects:</p>
+<ul>
+<li><a href="hdictionary.md">HDictionary</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.org/docs/latest/manual/html-single/#map">Map</a></li>
+<li><a href="hlist.md">HList</a> - a distributed list store corresponding to a cluster-side <a href="https://docs.hazelcast.org/docs/latest/manual/html-single/#list">List</a></li>
+</ul>
 <p>(to be completed)</p>
 </article>
           </div>

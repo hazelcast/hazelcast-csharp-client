@@ -87,39 +87,66 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_Core_EnumerableExtensions_Combine_" data-uid="Hazelcast.Core.EnumerableExtensions.Combine*"></a>
-<h4 id="Hazelcast_Core_EnumerableExtensions_Combine__4_System_Collections_Generic_IEnumerable___0__System_Collections_Generic_IEnumerable___1__System_Collections_Generic_IEnumerable___2__System_Collections_Generic_IEnumerable___3__" data-uid="Hazelcast.Core.EnumerableExtensions.Combine``4(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1},System.Collections.Generic.IEnumerable{``2},System.Collections.Generic.IEnumerable{``3})">Combine&lt;T1, T2, T3, T4&gt;(IEnumerable&lt;T1&gt;, IEnumerable&lt;T2&gt;, IEnumerable&lt;T3&gt;, IEnumerable&lt;T4&gt;)</h4>
-<div class="markdown level1 summary"><p>Combine <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a>.</p>
+<h4 id="Hazelcast_Core_EnumerableExtensions_Combine__2_System_ValueTuple_System_Collections_Generic_IEnumerable___0__System_Collections_Generic_IEnumerable___1___" data-uid="Hazelcast.Core.EnumerableExtensions.Combine``2(System.ValueTuple{System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1}})">Combine&lt;T1, T2&gt;((IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2))</h4>
+<div class="markdown level1 summary"><p>Combine multiple <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a> instances.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static IEnumerable&lt;(T1, T2, T3, T4)&gt; Combine&lt;T1, T2, T3, T4&gt;(IEnumerable&lt;T1&gt; t1, IEnumerable&lt;T2&gt; t2, IEnumerable&lt;T3&gt; t3, IEnumerable&lt;T4&gt; t4)</code></pre>
+  <pre><code class="lang-csharp hljs">public static IEnumerable&lt;(T1, T2)&gt; Combine&lt;T1, T2&gt;(this (IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2) source)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T1&gt;</td>
-      <td><span class="parametername">t1</span></td>
-      <td><p>The first <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a>.</p>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.valuetuple-2">ValueTuple</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T1&gt;, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T2&gt;&gt;</td>
+      <td><span class="parametername">source</span></td>
+      <td><p>The instances to combine.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.valuetuple-2">ValueTuple</a>&lt;T1, T2&gt;&gt;</td>
+      <td><p>One single <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a> combining the multiple instances.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">T1</span></td>
+      <td><p>The first enumerated type.</p>
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T2&gt;</td>
-      <td><span class="parametername">t2</span></td>
-      <td><p>The second <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a>.</p>
+      <td class="hz-one-third"><span class="parametername">T2</span></td>
+      <td><p>The second enumerated type.</p>
 </td>
     </tr>
+  </tbody>
+</table>
+<a id="Hazelcast_Core_EnumerableExtensions_Combine_" data-uid="Hazelcast.Core.EnumerableExtensions.Combine*"></a>
+<h4 id="Hazelcast_Core_EnumerableExtensions_Combine__4_System_ValueTuple_System_Collections_Generic_IEnumerable___0__System_Collections_Generic_IEnumerable___1__System_Collections_Generic_IEnumerable___2__System_Collections_Generic_IEnumerable___3___" data-uid="Hazelcast.Core.EnumerableExtensions.Combine``4(System.ValueTuple{System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1},System.Collections.Generic.IEnumerable{``2},System.Collections.Generic.IEnumerable{``3}})">Combine&lt;T1, T2, T3, T4&gt;((IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2, IEnumerable&lt;T3&gt; Source3, IEnumerable&lt;T4&gt; Source4))</h4>
+<div class="markdown level1 summary"><p>Combine <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a>.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="decalaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public static IEnumerable&lt;(T1, T2, T3, T4)&gt; Combine&lt;T1, T2, T3, T4&gt;(this (IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2, IEnumerable&lt;T3&gt; Source3, IEnumerable&lt;T4&gt; Source4) source)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T3&gt;</td>
-      <td><span class="parametername">t3</span></td>
-      <td><p>The third <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a>.</p>
-</td>
-    </tr>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T4&gt;</td>
-      <td><span class="parametername">t4</span></td>
-      <td><p>The fourth <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a>.</p>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.valuetuple-4">ValueTuple</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T1&gt;, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T2&gt;, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T3&gt;, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;T4&gt;&gt;</td>
+      <td><span class="parametername">source</span></td>
+      <td><p>The instances to combine.</p>
 </td>
     </tr>
   </tbody>
@@ -129,7 +156,8 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.valuetuple-4">ValueTuple</a>&lt;T1, T2, T3, T4&gt;&gt;</td>
-      <td></td>
+      <td><p>One single <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable&lt;T&gt;</a> combining the multiple instances.</p>
+</td>
     </tr>
   </tbody>
 </table>

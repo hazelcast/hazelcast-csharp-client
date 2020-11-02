@@ -88,7 +88,8 @@
 
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_TryRemoveAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.TryRemoveAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHDictionary_2_TryRemoveAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.TryRemoveAsync(`0,System.TimeSpan)">TryRemoveAsync(TKey, TimeSpan)</h4>
-<div class="markdown level1 summary"><p>Tries to remove an entry.</p>
+<div class="markdown level1 summary"><p>Tries to remove the entry with the given key from this dictionary
+within the specified time to wait value.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -117,17 +118,17 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a>&gt;</td>
-      <td><p>true if the entry was removed; otherwise false.</p>
+      <td><p><code>true</code> if the entry was removed; otherwise <code>false</code>.</p>
 </td>
     </tr>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHDictionary_2_TryRemoveAsync__0_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>This method returns false when no lock on the key could be
-acquired within the timeout.</p>
-TODO or when there was no value with that key?
-<p>If the operation is cancelled, there is no guarantee on what is actually performed,
-i.e. on whether an entry is removed on the servers or not.</p>
+<div class="markdown level1 remarks"><p>If the key is already locked by another thread and/or member, then this operation
+will wait for the <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> for acquiring the lock. If the key
+is still locked, this operation returns <code>false</code>.</p>
+<p>The operation also returns <code>false</code> when no entry with the specified
+<code data-dev-comment-type="paramref" class="paramref">key</code> exists.</p>
 </div>
 </article>
           </div>

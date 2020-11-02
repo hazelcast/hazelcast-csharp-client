@@ -88,7 +88,7 @@
 
 <a id="Hazelcast_DistributedObjects_IHMultiDictionary_2_TryAddAsync_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.TryAddAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_TryAddAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.TryAddAsync(`0,`1)">TryAddAsync(TKey, TValue)</h4>
-<div class="markdown level1 summary"><p>Stores a key-value pair in the multimap.</p>
+<div class="markdown level1 summary"><p>Stores a key-value pair in the multi-dictionary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -117,12 +117,18 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a>&gt;</td>
-      <td><p>true if size of the multimap is increased, false if the multimap
-already contains the key-value pair.</p>
+      <td><p><code>true</code> if size of the multi-dictionary is increased, <code>false</code> otherwise.</p>
 </td>
     </tr>
   </tbody>
 </table>
+<h5 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_TryAddAsync__0__1__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>
+This method uses <code>GetHashCode</code> and <code>Equals</code> of binary form of
+the <code>key</code>, not the actual implementations of <code>GetHashCode</code> and <code>Equals</code>
+defined in <code>key</code>&apos;s class.
+</p>
+</div>
 </article>
           </div>
           

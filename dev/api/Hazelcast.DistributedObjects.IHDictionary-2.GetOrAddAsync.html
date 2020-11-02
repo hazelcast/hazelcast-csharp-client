@@ -170,7 +170,12 @@ already exists, or the new value if the no entry with the key already existed.</
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHDictionary_2_GetOrAddAsync__0__1_System_TimeSpan__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>The value is automatically expired, evicted and removed after the <code data-dev-comment-type="paramref" class="paramref">timeToLive</code> has elapsed.</p>
-<p>If the <code data-dev-comment-type="paramref" class="paramref">timeToLive</code> is <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.timeout.infinitetimespan">InfiniteTimeSpan</a>, the entry lives forever.</p>
+<p>
+If the <code data-dev-comment-type="paramref" class="paramref">timeToLive</code> is <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.timeout.infinitetimespan">InfiniteTimeSpan</a>, the entry lives as much as
+the default value configured on server map configuration.</p>
+<p>
+If the <code data-dev-comment-type="paramref" class="paramref">timeToLive</code> is <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.timespan.maxvalue">MaxValue</a>, the entry lives forever.
+</p>
 </div>
 </article>
           </div>

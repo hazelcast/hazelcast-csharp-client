@@ -87,19 +87,92 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor__0_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync(Hazelcast.DistributedObjects.IEntryProcessor,`0)">ExecuteAsync(IEntryProcessor, TKey)</h4>
-<div class="markdown level1 summary"><p>Processes an entry.</p>
+<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0})">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;)</h4>
+<div class="markdown level1 summary"><p>Processes all entries.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;object&gt; ExecuteAsync(IEntryProcessor processor, TKey key)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, TResult&gt;&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor.html">IEntryProcessor</a></td>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
+      <td><span class="parametername">processor</span></td>
+      <td><p>An entry processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, TResult&gt;&gt;</td>
+      <td><p>The result of the processing of all entries.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The operation is not lock-aware. The <code data-dev-comment-type="paramref" class="paramref">processor</code> will process the entries
+no matter if the keys are locked or not.</p>
+<p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
+and have a counterpart on the server.</p>
+<p>
+<p>
+<strong>Interactions with the map store:</strong>
+</p>
+<p>For each entry not found in memory <code>MapLoader.load(Object)</code> is invoked to load the value from 
+the <code>MapStore</code> backing the dictionary.
+</p>
+<p>If the entryProcessor updates the entry and write-through
+persistence mode is configured, before the value is stored
+in memory, <code>MapStore.store(Object, Object)</code> is called to
+write the value into the map store.
+</p>
+<p>If the entryProcessor updates the entry&apos;s value to null value and
+write-through persistence mode is configured, before the value is
+removed from the memory, <code>MapStore.delete(Object)</code> is
+called to delete the value from the <code>MapStore</code>.
+</p>
+<p>Any exceptions thrown by the <code>MapStore</code> fail the operation and are
+propagated to the caller. If an exception happened, the operation might
+already succeeded on some of the keys.</p>
+<p>
+If write-behind persistence mode is configured with
+write-coalescing turned off, <code>ReachedMaxSizeException</code> may be thrown
+if the write-behind queue has reached its per-node maximum
+capacity.
+</p>
+</p>
+</div>
+<a id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___0_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},`0)">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, TKey)</h4>
+<div class="markdown level1 summary"><p>Processes an entry.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="decalaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">Task&lt;TResult&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor, TKey key)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
       <td><span class="parametername">processor</span></td>
       <td><p>An entry processor.</p>
 </td>
@@ -116,30 +189,40 @@
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a>&gt;</td>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;TResult&gt;</td>
       <td><p>The result of the process.</p>
 </td>
     </tr>
   </tbody>
 </table>
-<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor__0__remarks">Remarks</h5>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___0__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
 and have a counterpart on the server.</p>
 </div>
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor_System_Collections_Generic_IEnumerable__0__" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync(Hazelcast.DistributedObjects.IEntryProcessor,System.Collections.Generic.IEnumerable{`0})">ExecuteAsync(IEntryProcessor, IEnumerable&lt;TKey&gt;)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__System_Collections_Generic_IEnumerable__0__" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},System.Collections.Generic.IEnumerable{`0})">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, IEnumerable&lt;TKey&gt;)</h4>
 <div class="markdown level1 summary"><p>Processes entries.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, object&gt;&gt; ExecuteAsync(IEntryProcessor processor, IEnumerable&lt;TKey&gt; keys)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, TResult&gt;&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor, IEnumerable&lt;TKey&gt; keys)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor.html">IEntryProcessor</a></td>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
       <td><span class="parametername">processor</span></td>
       <td><p>An entry processor.</p>
 </td>
@@ -156,64 +239,40 @@ and have a counterpart on the server.</p>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a>&gt;&gt;</td>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, TResult&gt;&gt;</td>
       <td><p>The result of the processing of each entry.</p>
 </td>
     </tr>
   </tbody>
 </table>
-<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor_System_Collections_Generic_IEnumerable__0___remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
-and have a counterpart on the server.</p>
-</div>
-<a id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync(Hazelcast.DistributedObjects.IEntryProcessor)">ExecuteAsync(IEntryProcessor)</h4>
-<div class="markdown level1 summary"><p>Process all entries.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, object&gt;&gt; ExecuteAsync(IEntryProcessor processor)</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
+<h5 class="typeParameters">Type Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor.html">IEntryProcessor</a></td>
-      <td><span class="parametername">processor</span></td>
-      <td><p>An entry processor.</p>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
 </td>
     </tr>
   </tbody>
 </table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a>&gt;&gt;</td>
-      <td><p>The result of the processing of all entries.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor__remarks">Remarks</h5>
+<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__System_Collections_Generic_IEnumerable__0___remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
 and have a counterpart on the server.</p>
 </div>
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor_Hazelcast_Predicates_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync(Hazelcast.DistributedObjects.IEntryProcessor,Hazelcast.Predicates.IPredicate)">ExecuteAsync(IEntryProcessor, IPredicate)</h4>
+<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__Hazelcast_Predicates_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},Hazelcast.Predicates.IPredicate)">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, IPredicate)</h4>
 <div class="markdown level1 summary"><p>Process entries.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, object&gt;&gt; ExecuteAsync(IEntryProcessor processor, IPredicate predicate)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, TResult&gt;&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor, IPredicate predicate)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor.html">IEntryProcessor</a></td>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
       <td><span class="parametername">processor</span></td>
       <td><p>An entry processor.</p>
 </td>
@@ -230,13 +289,23 @@ and have a counterpart on the server.</p>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a>&gt;&gt;</td>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, TResult&gt;&gt;</td>
       <td><p>The result of the processing of selected entries.</p>
 </td>
     </tr>
   </tbody>
 </table>
-<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync_Hazelcast_DistributedObjects_IEntryProcessor_Hazelcast_Predicates_IPredicate__remarks">Remarks</h5>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__Hazelcast_Predicates_IPredicate__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
 and have a counterpart on the server.</p>
 </div>

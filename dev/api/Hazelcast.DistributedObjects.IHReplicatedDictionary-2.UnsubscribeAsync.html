@@ -111,19 +111,16 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1">ValueTask</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a>&gt;</td>
-      <td><p>Whether the operation was successful.</p>
+      <td><p><code>true</code> if subscription is removed successfully, <code>false</code> if there is no such subscription</p>
 </td>
     </tr>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHReplicatedDictionary_2_UnsubscribeAsync_System_Guid__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>Once this method has been invoked, and whatever its result, the subscription is
-de-activated, which means that no events will trigger anymore, even if the client
-receives event messages from the servers.</p>
-<p>If this method returns <code>false</code>, then one or more client connection has not
-been able to get its server to remove the subscription. Even though no events will
-trigger anymore, the server may keep sending (ignored) event messages. It is therefore
-recommended to retry unsubscribing until it is successful.</p>
+<div class="markdown level1 remarks"><p>
+When this method completes, handler will stop receiving events immediately.
+Member side event subscriptions will eventually be removed.
+</p>
 </div>
 </article>
           </div>

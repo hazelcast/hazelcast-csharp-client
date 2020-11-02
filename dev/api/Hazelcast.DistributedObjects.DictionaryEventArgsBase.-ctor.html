@@ -87,13 +87,13 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_DictionaryEventArgsBase__ctor_" data-uid="Hazelcast.DistributedObjects.DictionaryEventArgsBase.#ctor*"></a>
-<h4 id="Hazelcast_DistributedObjects_DictionaryEventArgsBase__ctor_Hazelcast_Data_MemberInfo_System_Int32_" data-uid="Hazelcast.DistributedObjects.DictionaryEventArgsBase.#ctor(Hazelcast.Data.MemberInfo,System.Int32)">DictionaryEventArgsBase(MemberInfo, Int32)</h4>
+<h4 id="Hazelcast_DistributedObjects_DictionaryEventArgsBase__ctor_Hazelcast_Data_MemberInfo_System_Int32_System_Object_" data-uid="Hazelcast.DistributedObjects.DictionaryEventArgsBase.#ctor(Hazelcast.Data.MemberInfo,System.Int32,System.Object)">DictionaryEventArgsBase(MemberInfo, Int32, Object)</h4>
 <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.DistributedObjects.DictionaryEventArgsBase.html">DictionaryEventArgsBase</a> class.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">protected DictionaryEventArgsBase(MemberInfo member, int numberOfAffectedEntries)</code></pre>
+  <pre><code class="lang-csharp hljs">protected DictionaryEventArgsBase(MemberInfo member, int numberOfAffectedEntries, object state)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -108,6 +108,12 @@
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.int32">Int32</a></td>
       <td><span class="parametername">numberOfAffectedEntries</span></td>
       <td><p>The number of affected entries.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object.</p>
 </td>
     </tr>
   </tbody>

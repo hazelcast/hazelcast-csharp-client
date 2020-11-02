@@ -88,7 +88,7 @@
 
 <a id="Hazelcast_DistributedObjects_IHMultiDictionary_2_RemoveAsync_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.RemoveAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHMultiDictionary_2_RemoveAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMultiDictionary`2.RemoveAsync(`0,`1)">RemoveAsync(TKey, TValue)</h4>
-<div class="markdown level1 summary"><p>Removes the given key value pair from the multimap.</p>
+<div class="markdown level1 summary"><p>Removes the given key value pair from the multi-dictionary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -117,7 +117,7 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a>&gt;</td>
-      <td><p>true if the size of the multimap changed after the remove operation, false otherwise.</p>
+      <td><p>true if the size of the multi-dictionary changed after the remove operation, false otherwise.</p>
 </td>
     </tr>
   </tbody>
@@ -129,7 +129,7 @@
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;IReadOnlyList&lt;TValue&gt;&gt; RemoveAsync(TKey key)</code></pre>
+  <pre><code class="lang-csharp hljs">Task RemoveAsync(TKey key)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -146,10 +146,8 @@
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1">IReadOnlyList</a>&lt;TValue&gt;&gt;</td>
-      <td><p>the collection of removed values associated with the given key. Returned collection
-might be modifiable but it has no effect on the multimap</p>
-</td>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
+      <td></td>
     </tr>
   </tbody>
 </table>

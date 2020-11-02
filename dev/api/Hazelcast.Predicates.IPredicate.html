@@ -86,26 +86,21 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.Predicates.html">Hazelcast.Predicates</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 summary"><p>A place holder interface for <code>com.hazelcast.query.Predicate</code> on server side.</p>
+</div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IPredicate : IIdentifiedDataSerializable</code></pre>
+    <pre><code class="lang-csharp hljs">public interface IPredicate</code></pre>
   </div>
-  <div class="inheritedMembers">
-    <h5>Inherited Members</h5>
-    <div>
-      <a class="xref" href="Hazelcast.Serialization.IIdentifiedDataSerializable.ReadData.html#Hazelcast_Serialization_IIdentifiedDataSerializable_ReadData_Hazelcast_Serialization_IObjectDataInput_">IIdentifiedDataSerializable.ReadData(IObjectDataInput)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.Serialization.IIdentifiedDataSerializable.WriteData.html#Hazelcast_Serialization_IIdentifiedDataSerializable_WriteData_Hazelcast_Serialization_IObjectDataOutput_">IIdentifiedDataSerializable.WriteData(IObjectDataOutput)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.Serialization.IIdentifiedDataSerializable.FactoryId.html#Hazelcast_Serialization_IIdentifiedDataSerializable_FactoryId">IIdentifiedDataSerializable.FactoryId</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.Serialization.IIdentifiedDataSerializable.ClassId.html#Hazelcast_Serialization_IIdentifiedDataSerializable_ClassId">IIdentifiedDataSerializable.ClassId</a>
-    </div>
-  </div>
+  <h5 id="Hazelcast_Predicates_IPredicate_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>
+All builtin predicates can be accessed via <a class="xref" href="Hazelcast.Predicates.Predicate.html">Predicate</a> static class.
+</p>
+<p>
+A custom predicate must be serializable via Hazelcast serialization,
+and have a counterpart on the server.
+</p>
+</div>
   </div>
   <h3 id="extensionmethods">Extension Methods</h3>
   <div>

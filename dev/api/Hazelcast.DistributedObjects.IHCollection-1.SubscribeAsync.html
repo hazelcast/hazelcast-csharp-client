@@ -87,25 +87,34 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_" data-uid="Hazelcast.DistributedObjects.IHCollection`1.SubscribeAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___" data-uid="Hazelcast.DistributedObjects.IHCollection`1.SubscribeAsync(System.Boolean,System.Action{Hazelcast.DistributedObjects.CollectionItemEventHandlers{`0}})">SubscribeAsync(Boolean, Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;)</h4>
-<div class="markdown level1 summary"></div>
+<h4 id="Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHCollection`1.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.CollectionItemEventHandlers{`0}},System.Boolean,System.Object)">SubscribeAsync(Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;, Boolean, Object)</h4>
+<div class="markdown level1 summary"><p>Subscribes to events.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(bool includeValue, Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt; events, bool includeValue = true, object state = null)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
-      <td><span class="parametername">includeValue</span></td>
-      <td></td>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.CollectionItemEventHandlers-1.html">CollectionItemEventHandlers</a>&lt;T&gt;&gt;</td>
+      <td><span class="parametername">events</span></td>
+      <td><p>An event handlers collection builder.</p>
+</td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.DistributedObjects.CollectionItemEventHandlers-1.html">CollectionItemEventHandlers</a>&lt;T&gt;&gt;</td>
-      <td><span class="parametername">handle</span></td>
-      <td></td>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a></td>
+      <td><span class="parametername">includeValue</span></td>
+      <td><p>Whether to include values in event arguments.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></td>
+      <td><span class="parametername">state</span></td>
+      <td><p>A state object that will be passed to handlers.</p>
+</td>
     </tr>
   </tbody>
 </table>
@@ -114,7 +123,8 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.guid">Guid</a>&gt;</td>
-      <td></td>
+      <td><p>The unique identifier of the subscription.</p>
+</td>
     </tr>
   </tbody>
 </table>

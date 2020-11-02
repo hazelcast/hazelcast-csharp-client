@@ -88,7 +88,7 @@
 
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_AddInterceptorAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.AddInterceptorAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHDictionary_2_AddInterceptorAsync_Hazelcast_DistributedObjects_IDictionaryInterceptor_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.AddInterceptorAsync(Hazelcast.DistributedObjects.IDictionaryInterceptor)">AddInterceptorAsync(IDictionaryInterceptor)</h4>
-<div class="markdown level1 summary"><p>Adds an interceptor.</p>
+<div class="markdown level1 summary"><p>Adds an interceptor on the server side.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -116,6 +116,10 @@
     </tr>
   </tbody>
 </table>
+<h5 id="Hazelcast_DistributedObjects_IHDictionary_2_AddInterceptorAsync_Hazelcast_DistributedObjects_IDictionaryInterceptor__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">interceptor</code> must be serializable via Hazelcast serialization,
+and have a counterpart on the server.</p>
+</div>
 </article>
           </div>
           

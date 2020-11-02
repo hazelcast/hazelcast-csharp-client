@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Obtaining Hazelcast | Hazelcast .NET Documentation </title>
+    <title>Obtaining Hazelcast .NET | Hazelcast .NET Documentation </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Obtaining Hazelcast | Hazelcast .NET Documentation ">
+    <meta name="title" content="Obtaining Hazelcast .NET | Hazelcast .NET Documentation ">
     <meta name="generator" content="docfx 2.55.0.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
@@ -21,7 +21,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -48,7 +48,8 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client.
+        Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -78,10 +79,18 @@
         <div class="article row grid-right">
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="obtaining-hazelcast">Obtaining Hazelcast</h1>
+<h1 id="obtaining-hazelcast-net">Obtaining Hazelcast .NET</h1>
 
 <p>Hazelcast is composed of two parts: the server, and the client.</p>
 <p>Browse to <a href="https://hazelcast.org/imdg/">Hazelcast IMDG</a> to find out how to obtain and run the server part.</p>
+<h2 id="requirements">Requirements</h2>
+<p>The Hazelcast .NET client is distributed as a NuGet package which targets <a href="https://docs.microsoft.com/en-us/dotnet/standard/net-standard">.NET Standard</a> versions 2.0 and 2.1. It can therefore be used in any application targetting .NET versions that support these .NET Standard versions:</p>
+<ul>
+<li>.NET Framework 4.6.2 and above, on Windows</li>
+<li>.NET Core 2.1 and 3.1, on Windows, Linux and MacOS</li>
+</ul>
+<p>The upcoming <a href="https://devblogs.microsoft.com/dotnet/introducing-net-5/">.NET 5</a> version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.</p>
+<h2 id="getting-the-client">Getting the client</h2>
 <p>The .NET client is distributed via NuGet as a package named <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.NET</a>. 
 It can be installed like any other NuGet package, either via the Visual Studio GUI, or via the package manager:</p>
 <pre><code>PM&gt; Install-Package Hazelcast.NET

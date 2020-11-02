@@ -69,7 +69,7 @@
                                         
                                         <ul class="nav level4">
                                               <li>
-                                                  <a href="Hazelcast.HazelcastClientFactory.CreateClient.html" name="" title="CreateClient">CreateClient</a>
+                                                  <a href="Hazelcast.HazelcastClientFactory.StartNewClientAsync.html" name="" title="StartNewClientAsync">StartNewClientAsync</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -125,6 +125,9 @@
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.HazelcastOptions.Core.html" name="" title="Core">Core</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.HazelcastOptions.Events.html" name="" title="Events">Events</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.HazelcastOptions.Heartbeat.html" name="" title="Heartbeat">Heartbeat</a>
@@ -212,7 +215,7 @@
                                                   <a href="Hazelcast.IHazelcastClient.GetListAsync.html" name="" title="GetListAsync">GetListAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.IHazelcastClient.GetMultiMapAsync.html" name="" title="GetMultiMapAsync">GetMultiMapAsync</a>
+                                                  <a href="Hazelcast.IHazelcastClient.GetMultiDictionaryAsync.html" name="" title="GetMultiDictionaryAsync">GetMultiDictionaryAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.IHazelcastClient.GetQueueAsync.html" name="" title="GetQueueAsync">GetQueueAsync</a>
@@ -228,9 +231,6 @@
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.IHazelcastClient.GetTopicAsync.html" name="" title="GetTopicAsync">GetTopicAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.IHazelcastClient.StartAsync.html" name="" title="StartAsync">StartAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.IHazelcastClient.SubscribeAsync.html" name="" title="SubscribeAsync">SubscribeAsync</a>
@@ -1047,6 +1047,9 @@
                                                   <a href="Hazelcast.Clustering.IClusterOptions.ClusterName.html" name="" title="ClusterName">ClusterName</a>
                                               </li>
                                               <li>
+                                                  <a href="Hazelcast.Clustering.IClusterOptions.Events.html" name="" title="Events">Events</a>
+                                              </li>
+                                              <li>
                                                   <a href="Hazelcast.Clustering.IClusterOptions.Heartbeat.html" name="" title="Heartbeat">Heartbeat</a>
                                               </li>
                                               <li>
@@ -1771,6 +1774,9 @@
                                               <li>
                                                   <a href="Hazelcast.Core.EnumerableExtensions.Shuffle.html" name="" title="Shuffle">Shuffle</a>
                                               </li>
+                                              <li>
+                                                  <a href="Hazelcast.Core.EnumerableExtensions.ToDictionary.html" name="" title="ToDictionary">ToDictionary</a>
+                                              </li>
                                         </ul>
                                     </li>
                               </ul>
@@ -1964,6 +1970,9 @@
                                         </ul>
                                     </li>
                               </ul>
+                          </li>
+                          <li>
+                              <a href="Hazelcast.Core.MaybeNone.html" name="" title="MaybeNone">MaybeNone</a>
                           </li>
                           <li>
                               <span class="expand-stub"></span>
@@ -2214,27 +2223,7 @@
                                                   <a href="Hazelcast.Core.TaskEx.AwaitCanceled.html" name="" title="AwaitCanceled">AwaitCanceled</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Core.TaskEx.WithNewContext.html" name="" title="WithNewContext">WithNewContext</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.Core.TimeSpanExtensions.html" name="" title="TimeSpanExtensions">TimeSpanExtensions</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Methods</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.Core.TimeSpanExtensions.CodecMilliseconds.html" name="" title="CodecMilliseconds">CodecMilliseconds</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.Core.TimeSpanExtensions.TimeoutMilliseconds.html" name="" title="TimeoutMilliseconds">TimeoutMilliseconds</a>
+                                                  <a href="Hazelcast.Core.TaskEx.RunWithNewContext.html" name="" title="RunWithNewContext">RunWithNewContext</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -2275,23 +2264,6 @@
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.Core.TimeToWait.Zero.html" name="" title="Zero">Zero</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.Core.TypeExtensions.html" name="" title="TypeExtensions">TypeExtensions</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Methods</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.Core.TypeExtensions.IsNullableType.html" name="" title="IsNullableType">IsNullableType</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -2462,7 +2434,7 @@
                           </li>
                           <li>
                               <span class="expand-stub"></span>
-                              <a href="Hazelcast.Data.IHDictionaryEntry-2.html" name="" title="IHDictionaryEntry&lt;TKey, TValue&gt;">IHDictionaryEntry&lt;TKey, TValue&gt;</a>
+                              <a href="Hazelcast.Data.IHDictionaryEntryStats-2.html" name="" title="IHDictionaryEntryStats&lt;TKey, TValue&gt;">IHDictionaryEntryStats&lt;TKey, TValue&gt;</a>
                               
                               <ul class="nav level3">
                                     <li>
@@ -2471,34 +2443,34 @@
                                         
                                         <ul class="nav level4">
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.Cost.html" name="" title="Cost">Cost</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.Cost.html" name="" title="Cost">Cost</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.CreationTime.html" name="" title="CreationTime">CreationTime</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.CreationTime.html" name="" title="CreationTime">CreationTime</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.ExpirationTime.html" name="" title="ExpirationTime">ExpirationTime</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.ExpirationTime.html" name="" title="ExpirationTime">ExpirationTime</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.Hits.html" name="" title="Hits">Hits</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.Hits.html" name="" title="Hits">Hits</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.Key.html" name="" title="Key">Key</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.Key.html" name="" title="Key">Key</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.LastAccessTime.html" name="" title="LastAccessTime">LastAccessTime</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.LastAccessTime.html" name="" title="LastAccessTime">LastAccessTime</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.LastStoredTime.html" name="" title="LastStoredTime">LastStoredTime</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.LastStoredTime.html" name="" title="LastStoredTime">LastStoredTime</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.LastUpdateTime.html" name="" title="LastUpdateTime">LastUpdateTime</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.LastUpdateTime.html" name="" title="LastUpdateTime">LastUpdateTime</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.Value.html" name="" title="Value">Value</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.Value.html" name="" title="Value">Value</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Data.IHDictionaryEntry-2.Version.html" name="" title="Version">Version</a>
+                                                  <a href="Hazelcast.Data.IHDictionaryEntryStats-2.Version.html" name="" title="Version">Version</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -2555,6 +2527,9 @@
                                         <ul class="nav level4">
                                               <li>
                                                   <a href="Hazelcast.Data.IndexConfig.AddAttribute.html" name="" title="AddAttribute">AddAttribute</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.Data.IndexConfig.AddAttributes.html" name="" title="AddAttributes">AddAttributes</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.Data.IndexConfig.ToString.html" name="" title="ToString">ToString</a>
@@ -3040,6 +3015,9 @@
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.DictionaryEventArgsBase.NumberOfAffectedEntries.html" name="" title="NumberOfAffectedEntries">NumberOfAffectedEntries</a>
                                               </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.DictionaryEventArgsBase.State.html" name="" title="State">State</a>
+                                              </li>
                                         </ul>
                                     </li>
                               </ul>
@@ -3107,6 +3085,33 @@
                           </li>
                           <li>
                               <span class="expand-stub"></span>
+                              <a href="Hazelcast.DistributedObjects.EventArgsBase.html" name="" title="EventArgsBase">EventArgsBase</a>
+                              
+                              <ul class="nav level3">
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Constructors</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.EventArgsBase.-ctor.html" name="" title="EventArgsBase">EventArgsBase</a>
+                                              </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Properties</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.EventArgsBase.State.html" name="" title="State">State</a>
+                                              </li>
+                                        </ul>
+                                    </li>
+                              </ul>
+                          </li>
+                          <li>
+                              <span class="expand-stub"></span>
                               <a href="Hazelcast.DistributedObjects.ExecutionResult-1.html" name="" title="ExecutionResult&lt;TResult&gt;">ExecutionResult&lt;TResult&gt;</a>
                               
                               <ul class="nav level3">
@@ -3130,125 +3135,6 @@
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.ExecutionResult-1.Result.html" name="" title="Result">Result</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.DistributedObjects.HDictionary.html" name="" title="HDictionary">HDictionary</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Fields</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.HDictionary.ServiceName.html" name="" title="ServiceName">ServiceName</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.DistributedObjects.HList.html" name="" title="HList">HList</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Fields</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.HList.ServiceName.html" name="" title="ServiceName">ServiceName</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.DistributedObjects.HMultiDictionary.html" name="" title="HMultiDictionary">HMultiDictionary</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Fields</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.HMultiDictionary.ServiceName.html" name="" title="ServiceName">ServiceName</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.DistributedObjects.HQueue.html" name="" title="HQueue">HQueue</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Fields</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.HQueue.ServiceName.html" name="" title="ServiceName">ServiceName</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.DistributedObjects.HReplicatedDictionary.html" name="" title="HReplicatedDictionary">HReplicatedDictionary</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Fields</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.HReplicatedDictionary.ServiceName.html" name="" title="ServiceName">ServiceName</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.DistributedObjects.HSet.html" name="" title="HSet">HSet</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Fields</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.HSet.ServiceName.html" name="" title="ServiceName">ServiceName</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
-                          </li>
-                          <li>
-                              <span class="expand-stub"></span>
-                              <a href="Hazelcast.DistributedObjects.HTopic.html" name="" title="HTopic">HTopic</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Fields</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.HTopic.ServiceName.html" name="" title="ServiceName">ServiceName</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -3333,36 +3219,7 @@
                               </ul>
                           </li>
                           <li>
-                              <span class="expand-stub"></span>
                               <a href="Hazelcast.DistributedObjects.IDictionaryInterceptor.html" name="" title="IDictionaryInterceptor">IDictionaryInterceptor</a>
-                              
-                              <ul class="nav level3">
-                                    <li>
-                                        <span class="expand-stub"></span>
-                                        <a>Methods</a>
-                                        
-                                        <ul class="nav level4">
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IDictionaryInterceptor.AfterGet.html" name="" title="AfterGet">AfterGet</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IDictionaryInterceptor.AfterPut.html" name="" title="AfterPut">AfterPut</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IDictionaryInterceptor.AfterRemove.html" name="" title="AfterRemove">AfterRemove</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IDictionaryInterceptor.InterceptGet.html" name="" title="InterceptGet">InterceptGet</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IDictionaryInterceptor.InterceptPut.html" name="" title="InterceptPut">InterceptPut</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IDictionaryInterceptor.InterceptRemove.html" name="" title="InterceptRemove">InterceptRemove</a>
-                                              </li>
-                                        </ul>
-                                    </li>
-                              </ul>
                           </li>
                           <li>
                               <span class="expand-stub"></span>
@@ -3398,7 +3255,7 @@
                               </ul>
                           </li>
                           <li>
-                              <a href="Hazelcast.DistributedObjects.IEntryProcessor.html" name="" title="IEntryProcessor">IEntryProcessor</a>
+                              <a href="Hazelcast.DistributedObjects.IEntryProcessor-1.html" name="" title="IEntryProcessor&lt;TResult&gt;">IEntryProcessor&lt;TResult&gt;</a>
                           </li>
                           <li>
                               <span class="expand-stub"></span>
@@ -3480,13 +3337,10 @@
                                                   <a href="Hazelcast.DistributedObjects.IHCollection-1.ContainsAsync.html" name="" title="ContainsAsync">ContainsAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHCollection-1.CopyToAsync.html" name="" title="CopyToAsync">CopyToAsync</a>
-                                              </li>
-                                              <li>
                                                   <a href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html" name="" title="CountAsync">CountAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHCollection-1.GetAsync.html" name="" title="GetAsync">GetAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHCollection-1.GetAllAsync.html" name="" title="GetAllAsync">GetAllAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHCollection-1.IsEmptyAsync.html" name="" title="IsEmptyAsync">IsEmptyAsync</a>
@@ -3504,7 +3358,7 @@
                                                   <a href="Hazelcast.DistributedObjects.IHCollection-1.SubscribeAsync.html" name="" title="SubscribeAsync">SubscribeAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHCollection-1.ToArrayAsync.html" name="" title="ToArrayAsync">ToArrayAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHCollection-1.UnsubscribeAsync.html" name="" title="UnsubscribeAsync">UnsubscribeAsync</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -3530,21 +3384,6 @@
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.AggregateAsync.html" name="" title="AggregateAsync">AggregateAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.ApplyAsync.html" name="" title="ApplyAsync">ApplyAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.ClearAsync.html" name="" title="ClearAsync">ClearAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.ContainsAsync.html" name="" title="ContainsAsync">ContainsAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.ContainsKeyAsync.html" name="" title="ContainsKeyAsync">ContainsKeyAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.CountAsync.html" name="" title="CountAsync">CountAsync</a>
-                                              </li>
-                                              <li>
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.EvictAllAsync.html" name="" title="EvictAllAsync">EvictAllAsync</a>
                                               </li>
                                               <li>
@@ -3557,19 +3396,13 @@
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.FlushAsync.html" name="" title="FlushAsync">FlushAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.ForceUnlockAsync.html" name="" title="ForceUnlockAsync">ForceUnlockAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetAllAsync.html" name="" title="GetAllAsync">GetAllAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetAndRemoveAsync.html" name="" title="GetAndRemoveAsync">GetAndRemoveAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetEntriesAsync.html" name="" title="GetEntriesAsync">GetEntriesAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetAndSetAsync.html" name="" title="GetAndSetAsync">GetAndSetAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetAsync.html" name="" title="GetAsync">GetAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetEntryAsync.html" name="" title="GetEntryAsync">GetEntryAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetEntryStatsAsync.html" name="" title="GetEntryStatsAsync">GetEntryStatsAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetKeysAsync.html" name="" title="GetKeysAsync">GetKeysAsync</a>
@@ -3581,13 +3414,7 @@
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.GetValuesAsync.html" name="" title="GetValuesAsync">GetValuesAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.IsEmptyAsync.html" name="" title="IsEmptyAsync">IsEmptyAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.IsLockedAsync.html" name="" title="IsLockedAsync">IsLockedAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.LockAsync.html" name="" title="LockAsync">LockAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.LoadAllAsync.html" name="" title="LoadAllAsync">LoadAllAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.ProjectAsync.html" name="" title="ProjectAsync">ProjectAsync</a>
@@ -3608,9 +3435,6 @@
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.SubscribeAsync.html" name="" title="SubscribeAsync">SubscribeAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.TryLockAsync.html" name="" title="TryLockAsync">TryLockAsync</a>
-                                              </li>
-                                              <li>
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.TryRemoveAsync.html" name="" title="TryRemoveAsync">TryRemoveAsync</a>
                                               </li>
                                               <li>
@@ -3620,10 +3444,60 @@
                                                   <a href="Hazelcast.DistributedObjects.IHDictionary-2.TryUpdateAsync.html" name="" title="TryUpdateAsync">TryUpdateAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.UnlockAsync.html" name="" title="UnlockAsync">UnlockAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.UnsubscribeAsync.html" name="" title="UnsubscribeAsync">UnsubscribeAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.UnsubscribeAsync.html" name="" title="UnsubscribeAsync">UnsubscribeAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionary-2.UpdateTimeToLive.html" name="" title="UpdateTimeToLive">UpdateTimeToLive</a>
+                                              </li>
+                                        </ul>
+                                    </li>
+                              </ul>
+                          </li>
+                          <li>
+                              <span class="expand-stub"></span>
+                              <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.html" name="" title="IHDictionaryBase&lt;TKey, TValue&gt;">IHDictionaryBase&lt;TKey, TValue&gt;</a>
+                              
+                              <ul class="nav level3">
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Methods</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.ClearAsync.html" name="" title="ClearAsync">ClearAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.ContainsKeyAsync.html" name="" title="ContainsKeyAsync">ContainsKeyAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.ContainsValueAsync.html" name="" title="ContainsValueAsync">ContainsValueAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.CountAsync.html" name="" title="CountAsync">CountAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndRemoveAsync.html" name="" title="GetAndRemoveAsync">GetAndRemoveAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndSetAsync.html" name="" title="GetAndSetAsync">GetAndSetAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAsync.html" name="" title="GetAsync">GetAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetEntriesAsync.html" name="" title="GetEntriesAsync">GetEntriesAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetKeysAsync.html" name="" title="GetKeysAsync">GetKeysAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetValuesAsync.html" name="" title="GetValuesAsync">GetValuesAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.IsEmptyAsync.html" name="" title="IsEmptyAsync">IsEmptyAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHDictionaryBase-2.SetAllAsync.html" name="" title="SetAllAsync">SetAllAsync</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -3639,6 +3513,12 @@
                                         <a>Methods</a>
                                         
                                         <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHList-1.GetAndRemoveAtAsync.html" name="" title="GetAndRemoveAtAsync">GetAndRemoveAtAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHList-1.GetAndSetAsync.html" name="" title="GetAndSetAsync">GetAndSetAsync</a>
+                                              </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHList-1.GetAsync.html" name="" title="GetAsync">GetAsync</a>
                                               </li>
@@ -3656,12 +3536,6 @@
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHList-1.LastIndexOfAsync.html" name="" title="LastIndexOfAsync">LastIndexOfAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHList-1.RemoveAtAsync.html" name="" title="RemoveAtAsync">RemoveAtAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHList-1.SetAsync.html" name="" title="SetAsync">SetAsync</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -3719,13 +3593,13 @@
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ClearAsync.html" name="" title="ClearAsync">ClearAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsAsync.html" name="" title="ContainsAsync">ContainsAsync</a>
-                                              </li>
-                                              <li>
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsEntryAsync.html" name="" title="ContainsEntryAsync">ContainsEntryAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsKeyAsync.html" name="" title="ContainsKeyAsync">ContainsKeyAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ContainsValueAsync.html" name="" title="ContainsValueAsync">ContainsValueAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.CountAsync.html" name="" title="CountAsync">CountAsync</a>
@@ -3734,25 +3608,19 @@
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.CountValuesAsync.html" name="" title="CountValuesAsync">CountValuesAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.ForceUnlockAsync.html" name="" title="ForceUnlockAsync">ForceUnlockAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetAndRemoveAsync.html" name="" title="GetAndRemoveAsync">GetAndRemoveAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetAsync.html" name="" title="GetAsync">GetAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetEntrySetAsync.html" name="" title="GetEntrySetAsync">GetEntrySetAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetKeysAsync.html" name="" title="GetKeysAsync">GetKeysAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.GetValuesAsync.html" name="" title="GetValuesAsync">GetValuesAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.IsLockedAsync.html" name="" title="IsLockedAsync">IsLockedAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.LockAsync.html" name="" title="LockAsync">LockAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.LockForAsync.html" name="" title="LockForAsync">LockForAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.RemoveAsync.html" name="" title="RemoveAsync">RemoveAsync</a>
@@ -3764,16 +3632,7 @@
                                                   <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryAddAsync.html" name="" title="TryAddAsync">TryAddAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryLockAsync.html" name="" title="TryLockAsync">TryLockAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryWaitLockAsync.html" name="" title="TryWaitLockAsync">TryWaitLockAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.TryWaitLockForAsync.html" name="" title="TryWaitLockForAsync">TryWaitLockForAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.UnlockAsync.html" name="" title="UnlockAsync">UnlockAsync</a>
+                                                  <a href="Hazelcast.DistributedObjects.IHMultiDictionary-2.UnsubscribeAsync.html" name="" title="UnsubscribeAsync">UnsubscribeAsync</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -3802,9 +3661,6 @@
                                                   <a href="Hazelcast.DistributedObjects.IHQueue-1.GetRemainingCapacityAsync.html" name="" title="GetRemainingCapacityAsync">GetRemainingCapacityAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHQueue-1.PeekAsync.html" name="" title="PeekAsync">PeekAsync</a>
-                                              </li>
-                                              <li>
                                                   <a href="Hazelcast.DistributedObjects.IHQueue-1.TryDequeueAsync.html" name="" title="TryDequeueAsync">TryDequeueAsync</a>
                                               </li>
                                               <li>
@@ -3828,36 +3684,6 @@
                                         
                                         <ul class="nav level4">
                                               <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ClearAsync.html" name="" title="ClearAsync">ClearAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ContainsAsync.html" name="" title="ContainsAsync">ContainsAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.ContainsKeyAsync.html" name="" title="ContainsKeyAsync">ContainsKeyAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.CountAsync.html" name="" title="CountAsync">CountAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetAsync.html" name="" title="GetAsync">GetAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetKeysAsync.html" name="" title="GetKeysAsync">GetKeysAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.GetValuesAsync.html" name="" title="GetValuesAsync">GetValuesAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.IsEmptyAsync.html" name="" title="IsEmptyAsync">IsEmptyAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.RemoveAsync.html" name="" title="RemoveAsync">RemoveAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SetAsync.html" name="" title="SetAsync">SetAsync</a>
-                                              </li>
-                                              <li>
                                                   <a href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.SubscribeAsync.html" name="" title="SubscribeAsync">SubscribeAsync</a>
                                               </li>
                                               <li>
@@ -3872,6 +3698,16 @@
                               <a href="Hazelcast.DistributedObjects.IHRingBuffer-1.html" name="" title="IHRingBuffer&lt;TItem&gt;">IHRingBuffer&lt;TItem&gt;</a>
                               
                               <ul class="nav level3">
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Properties</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IHRingBuffer-1.MaxBatchSize.html" name="" title="MaxBatchSize">MaxBatchSize</a>
+                                              </li>
+                                        </ul>
+                                    </li>
                                     <li>
                                         <span class="expand-stub"></span>
                                         <a>Methods</a>
@@ -4083,6 +3919,35 @@
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.DistributedObjects.IHTxSet-1.RemoveAsync.html" name="" title="RemoveAsync">RemoveAsync</a>
+                                              </li>
+                                        </ul>
+                                    </li>
+                              </ul>
+                          </li>
+                          <li>
+                              <span class="expand-stub"></span>
+                              <a href="Hazelcast.DistributedObjects.IKeyLockable-1.html" name="" title="IKeyLockable&lt;TKey&gt;">IKeyLockable&lt;TKey&gt;</a>
+                              
+                              <ul class="nav level3">
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Methods</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IKeyLockable-1.ForceUnlockAsync.html" name="" title="ForceUnlockAsync">ForceUnlockAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IKeyLockable-1.IsLockedAsync.html" name="" title="IsLockedAsync">IsLockedAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IKeyLockable-1.LockAsync.html" name="" title="LockAsync">LockAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IKeyLockable-1.TryLockAsync.html" name="" title="TryLockAsync">TryLockAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.DistributedObjects.IKeyLockable-1.UnlockAsync.html" name="" title="UnlockAsync">UnlockAsync</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -4396,6 +4261,39 @@
                           </li>
                           <li>
                               <a href="Hazelcast.Events.DistributedObjectLifecycleEventType.html" name="" title="DistributedObjectLifecycleEventType">DistributedObjectLifecycleEventType</a>
+                          </li>
+                          <li>
+                              <span class="expand-stub"></span>
+                              <a href="Hazelcast.Events.EventsOptions.html" name="" title="EventsOptions">EventsOptions</a>
+                              
+                              <ul class="nav level3">
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Constructors</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.Events.EventsOptions.-ctor.html" name="" title="EventsOptions">EventsOptions</a>
+                                              </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Properties</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.Events.EventsOptions.SubscriptionCollectDelay.html" name="" title="SubscriptionCollectDelay">SubscriptionCollectDelay</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.Events.EventsOptions.SubscriptionCollectPeriod.html" name="" title="SubscriptionCollectPeriod">SubscriptionCollectPeriod</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.Events.EventsOptions.SubscriptionCollectTimeout.html" name="" title="SubscriptionCollectTimeout">SubscriptionCollectTimeout</a>
+                                              </li>
+                                        </ul>
+                                    </li>
+                              </ul>
                           </li>
                           <li>
                               <span class="expand-stub"></span>
@@ -6341,7 +6239,24 @@
                     <ul class="nav level2">
                           <li>
                               <span class="expand-stub"></span>
-                              <a href="Hazelcast.Protocol.ClientProtocolException.html" name="" title="ClientProtocolException">ClientProtocolException</a>
+                              <a href="Hazelcast.Protocol.CodecConstants.html" name="" title="CodecConstants">CodecConstants</a>
+                              
+                              <ul class="nav level3">
+                                    <li>
+                                        <span class="expand-stub"></span>
+                                        <a>Methods</a>
+                                        
+                                        <ul class="nav level4">
+                                              <li>
+                                                  <a href="Hazelcast.Protocol.CodecConstants.GetMessageTypeName.html" name="" title="GetMessageTypeName">GetMessageTypeName</a>
+                                              </li>
+                                        </ul>
+                                    </li>
+                              </ul>
+                          </li>
+                          <li>
+                              <span class="expand-stub"></span>
+                              <a href="Hazelcast.Protocol.RemoteException.html" name="" title="RemoteException">RemoteException</a>
                               
                               <ul class="nav level3">
                                     <li>
@@ -6350,7 +6265,7 @@
                                         
                                         <ul class="nav level4">
                                               <li>
-                                                  <a href="Hazelcast.Protocol.ClientProtocolException.-ctor.html" name="" title="ClientProtocolException">ClientProtocolException</a>
+                                                  <a href="Hazelcast.Protocol.RemoteException.-ctor.html" name="" title="RemoteException">RemoteException</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -6360,10 +6275,10 @@
                                         
                                         <ul class="nav level4">
                                               <li>
-                                                  <a href="Hazelcast.Protocol.ClientProtocolException.Error.html" name="" title="Error">Error</a>
+                                                  <a href="Hazelcast.Protocol.RemoteException.Error.html" name="" title="Error">Error</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Protocol.ClientProtocolException.Retryable.html" name="" title="Retryable">Retryable</a>
+                                                  <a href="Hazelcast.Protocol.RemoteException.Retryable.html" name="" title="Retryable">Retryable</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -6373,10 +6288,10 @@
                                         
                                         <ul class="nav level4">
                                               <li>
-                                                  <a href="Hazelcast.Protocol.ClientProtocolException.GetObjectData.html" name="" title="GetObjectData">GetObjectData</a>
+                                                  <a href="Hazelcast.Protocol.RemoteException.GetObjectData.html" name="" title="GetObjectData">GetObjectData</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Protocol.ClientProtocolException.ToString.html" name="" title="ToString">ToString</a>
+                                                  <a href="Hazelcast.Protocol.RemoteException.ToString.html" name="" title="ToString">ToString</a>
                                               </li>
                                         </ul>
                                     </li>
@@ -6390,7 +6305,7 @@
                     
                     <ul class="nav level2">
                           <li>
-                              <a href="Hazelcast.Protocol.Data.ClientProtocolError.html" name="" title="ClientProtocolError">ClientProtocolError</a>
+                              <a href="Hazelcast.Protocol.Data.RemoteError.html" name="" title="RemoteError">RemoteError</a>
                           </li>
                     </ul>
                 </li>
@@ -7944,19 +7859,22 @@
                                                   <a href="Hazelcast.Transactions.ITransactionContext.CommitAsync.html" name="" title="CommitAsync">CommitAsync</a>
                                               </li>
                                               <li>
+                                                  <a href="Hazelcast.Transactions.ITransactionContext.GetDictionaryAsync.html" name="" title="GetDictionaryAsync">GetDictionaryAsync</a>
+                                              </li>
+                                              <li>
                                                   <a href="Hazelcast.Transactions.ITransactionContext.GetListAsync.html" name="" title="GetListAsync">GetListAsync</a>
                                               </li>
                                               <li>
-                                                  <a href="Hazelcast.Transactions.ITransactionContext.GetMapAsync.html" name="" title="GetMapAsync">GetMapAsync</a>
-                                              </li>
-                                              <li>
-                                                  <a href="Hazelcast.Transactions.ITransactionContext.GetMultiMapAsync.html" name="" title="GetMultiMapAsync">GetMultiMapAsync</a>
+                                                  <a href="Hazelcast.Transactions.ITransactionContext.GetMultiDictionaryAsync.html" name="" title="GetMultiDictionaryAsync">GetMultiDictionaryAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.Transactions.ITransactionContext.GetQueueAsync.html" name="" title="GetQueueAsync">GetQueueAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.Transactions.ITransactionContext.GetSetAsync.html" name="" title="GetSetAsync">GetSetAsync</a>
+                                              </li>
+                                              <li>
+                                                  <a href="Hazelcast.Transactions.ITransactionContext.GetTransactionalAsync.html" name="" title="GetTransactionalAsync">GetTransactionalAsync</a>
                                               </li>
                                               <li>
                                                   <a href="Hazelcast.Transactions.ITransactionContext.RollbackAsync.html" name="" title="RollbackAsync">RollbackAsync</a>

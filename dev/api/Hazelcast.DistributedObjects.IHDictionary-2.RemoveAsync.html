@@ -117,7 +117,8 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a>&gt;</td>
-      <td><p><code>true</code> if an entry with the specified key and value was removed; otherwise <code>false</code>.</p>
+      <td><p><code>true</code> if an entry with the specified key and value was removed;
+    otherwise <code>false</code>.</p>
 </td>
     </tr>
   </tbody>
@@ -125,6 +126,9 @@
 <h5 id="Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync__0__1__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>This method removes an entry if the key and the value both match the
 specified key and value.</p>
+<p>This method does not consider the removed value at all, which breaks the events
+contract: any event that would be filtered on the value (for instance via a predicate),
+would not trigger here.</p>
 </div>
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.RemoveAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync__0_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.RemoveAsync(`0)">RemoveAsync(TKey)</h4>
@@ -157,13 +161,16 @@ specified key and value.</p>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync__0__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>For performance reasons, this method does not return the removed value. Prefer
-<a class="xref" href="Hazelcast.DistributedObjects.IHDictionary-2.GetAndRemoveAsync.html#Hazelcast_DistributedObjects_IHDictionary_2_GetAndRemoveAsync__0_">GetAndRemoveAsync(TKey)</a> if the value is required.</p>
-<p>If the operation is cancelled, there is no guarantee on what is actually performed,
-i.e. on whether an entry is removed on the servers or not.</p>
+<a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndRemoveAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetAndRemoveAsync__0_">GetAndRemoveAsync(TKey)</a> if the value is required.</p>
+<p>However, note that <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndRemoveAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetAndRemoveAsync__0_">GetAndRemoveAsync(TKey)</a> may
+breaks the events contract: this method does not consider the removed value at all, which
+means that any event that would be filtered on the value (for instance via a predicate),
+and would trigger with <a class="xref" href="Hazelcast.DistributedObjects.IHDictionaryBase-2.GetAndRemoveAsync.html#Hazelcast_DistributedObjects_IHDictionaryBase_2_GetAndRemoveAsync__0_">GetAndRemoveAsync(TKey)</a>,
+will not trigger here.</p>
 </div>
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.RemoveAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync_Hazelcast_Predicates_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.RemoveAsync(Hazelcast.Predicates.IPredicate)">RemoveAsync(IPredicate)</h4>
-<div class="markdown level1 summary"><p>Removes entries.</p>
+<div class="markdown level1 summary"><p>Removes all entries which match with the supplied predicate.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -192,10 +199,9 @@ i.e. on whether an entry is removed on the servers or not.</p>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHDictionary_2_RemoveAsync_Hazelcast_Predicates_IPredicate__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the operation is cancelled, there is no guarantee on what is actually performed,
-i.e. on whether entries were removed on the servers or not. On the other hand, either the
-specified entries have been removed, or not. The operation cannot be cancelled while only
-some entries have been removed.</p>
+<div class="markdown level1 remarks"><p>This method does not consider the removed value at all, which breaks the events
+contract: any event that would be filtered on the value (for instance via a predicate),
+would not trigger here.</p>
 </div>
 </article>
           </div>

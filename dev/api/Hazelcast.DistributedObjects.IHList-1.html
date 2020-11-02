@@ -86,22 +86,31 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.DistributedObjects.html">Hazelcast.DistributedObjects</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"><p>Concurrent, distributed implementation of <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ilist-1">IList&lt;T&gt;</a>IList</p>
+  <div class="markdown level0 summary"><p>Defines a concurrent, distributed, non-partitioned and listenable list</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IHList&lt;T&gt; : IHCollection&lt;T&gt;, IDistributedObject, IAsyncDisposable</code></pre>
+    <pre><code class="lang-csharp hljs">public interface IHList&lt;T&gt; : IHCollection&lt;T&gt;, IDistributedObject, IAsyncDisposable, IAsyncEnumerable&lt;T&gt;</code></pre>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CountAsync">IHCollection&lt;T&gt;.CountAsync()</a>
-    </div>
-    <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddAsync__0_">IHCollection&lt;T&gt;.AddAsync(T)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ClearAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ClearAsync">IHCollection&lt;T&gt;.ClearAsync()</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddRangeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddRangeAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddRangeAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAllAsync">IHCollection&lt;T&gt;.GetAllAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CountAsync">IHCollection&lt;T&gt;.CountAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHCollection_1_IsEmptyAsync">IHCollection&lt;T&gt;.IsEmptyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ContainsAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ContainsAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.ContainsAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ContainsAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ContainsAsync__0_">IHCollection&lt;T&gt;.ContainsAsync(T)</a>
@@ -110,34 +119,19 @@
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.RemoveAsync.html#Hazelcast_DistributedObjects_IHCollection_1_RemoveAsync__0_">IHCollection&lt;T&gt;.RemoveAsync(T)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CopyToAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CopyToAsync__0___System_Int32_">IHCollection&lt;T&gt;.CopyToAsync(T[], Int32)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAsync">IHCollection&lt;T&gt;.GetAsync()</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddRangeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddRangeAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddRangeAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ContainsAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ContainsAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.ContainsAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
-    </div>
-    <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHCollection_1_IsEmptyAsync">IHCollection&lt;T&gt;.IsEmptyAsync()</a>
-    </div>
-    <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.RemoveAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_RemoveAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.RemoveAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.RetainAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_RetainAllAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.RetainAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ToArrayAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync">IHCollection&lt;T&gt;.ToArrayAsync()</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ClearAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ClearAsync">IHCollection&lt;T&gt;.ClearAsync()</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.ToArrayAsync.html#Hazelcast_DistributedObjects_IHCollection_1_ToArrayAsync__1___0___">IHCollection&lt;T&gt;.ToArrayAsync&lt;TItem&gt;(TItem[])</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.SubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___System_Boolean_System_Object_">IHCollection&lt;T&gt;.SubscribeAsync(Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;, Boolean, Object)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.SubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_SubscribeAsync_System_Boolean_System_Action_Hazelcast_DistributedObjects_CollectionItemEventHandlers__0___">IHCollection&lt;T&gt;.SubscribeAsync(Boolean, Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt;)</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.UnsubscribeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_UnsubscribeAsync_System_Guid_">IHCollection&lt;T&gt;.UnsubscribeAsync(Guid)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
@@ -154,6 +148,9 @@
     <div>
       <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#System_IAsyncDisposable_DisposeAsync">IAsyncDisposable.DisposeAsync()</a>
     </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1.getasyncenumerator#System_Collections_Generic_IAsyncEnumerable_1_GetAsyncEnumerator_System_Threading_CancellationToken_">IAsyncEnumerable&lt;T&gt;.GetAsyncEnumerator(CancellationToken)</a>
+    </div>
   </div>
   <h5 class="typeParameters">Type Parameters</h5>
   <table class="table table-bordered table-striped table-condensed">
@@ -164,11 +161,33 @@
       </tr>
     </tbody>
   </table>
+  <h5 id="Hazelcast_DistributedObjects_IHList_1_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>
+The Hazelcast <code>IHList</code> is not a partitioned data-structure. Entire contents
+of an <code>IHList</code> is stored on a single machine (and in the backup). The <code>IHList</code>
+will not scale by adding more members to the cluster.
+</p>
+</div>
   </div>
   <h3 id="methods">Methods
   </h3>
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHList_1_GetAndRemoveAtAsync_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHList`1.GetAndRemoveAtAsync(System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetAndRemoveAtAsync.html#Hazelcast_DistributedObjects_IHList_1_GetAndRemoveAtAsync_System_Int32_">GetAndRemoveAtAsync(Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes the first occurrence of the specified element from this list, if it is present.
+If this list does not contain the element, it is unchanged.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHList_1_GetAndSetAsync_System_Int32__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.GetAndSetAsync(System.Int32,`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetAndSetAsync.html#Hazelcast_DistributedObjects_IHList_1_GetAndSetAsync_System_Int32__0_">GetAndSetAsync(Int32, T)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Replaces the element at the specified position in this list with the specified element.</p>
+</td>
+      </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHList_1_GetAsync_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHList`1.GetAsync(System.Int32)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetAsync.html#Hazelcast_DistributedObjects_IHList_1_GetAsync_System_Int32_">GetAsync(Int32)</a>
@@ -181,16 +200,15 @@
           <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetRangeAsync.html#Hazelcast_DistributedObjects_IHList_1_GetRangeAsync_System_Int32_System_Int32_">GetRangeAsync(Int32, Int32)</a>
         </td>
         <td class="markdown level1 summary"><p>Returns a view of the portion of this list between the specified
-<tt>fromIndex</tt>, inclusive, and <tt>toIndex</tt>, exclusive.  (If
-<tt>fromIndex</tt> and <tt>toIndex</tt> are equal, the returned list is
-empty.)</p>
+<code>fromIndex</code>, inclusive, and <code>toIndex</code>, exclusive.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHList_1_IndexOfAsync__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.IndexOfAsync(`0)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.IndexOfAsync.html#Hazelcast_DistributedObjects_IHList_1_IndexOfAsync__0_">IndexOfAsync(T)</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Returns the zero-based index of the first occurrence of a specific item in this list.</p>
+</td>
       </tr>
       <tr>
         <td id="Hazelcast_DistributedObjects_IHList_1_InsertAsync_System_Int32__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.InsertAsync(System.Int32,`0)" class="hz-one-third">
@@ -207,14 +225,7 @@ indices).</p>
           <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.InsertRangeAsync.html#Hazelcast_DistributedObjects_IHList_1_InsertRangeAsync__1_System_Int32_System_Collections_Generic_ICollection___0__">InsertRangeAsync&lt;TItem&gt;(Int32, ICollection&lt;TItem&gt;)</a>
         </td>
         <td class="markdown level1 summary"><p>Inserts all of the elements in the specified collection into this
-list at the specified position (optional operation).  Shifts the
-element currently at that position (if any) and any subsequent
-elements to the right (increases their indices).  The new elements
-will appear in this list in the order that they are returned by the
-specified collection&apos;s iterator.  The behavior of this operation is
-undefined if the specified collection is modified while the
-operation is in progress.  (Note that this will occur if the specified
-collection is this list, and it&apos;s nonempty.)</p>
+list at the specified position.</p>
 </td>
       </tr>
       <tr>
@@ -222,32 +233,7 @@ collection is this list, and it&apos;s nonempty.)</p>
           <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.LastIndexOfAsync.html#Hazelcast_DistributedObjects_IHList_1_LastIndexOfAsync__0_">LastIndexOfAsync(T)</a>
         </td>
         <td class="markdown level1 summary"><p>Returns the index of the last occurrence of the specified element
-in this list, or -1 if this list does not contain the element.
-More formally, returns the highest index <tt>i</tt> such that
-<tt>(o == null ? get(i) == null : o.equals(get(i)))</tt>
-or -1 if there is no such index.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHList_1_RemoveAtAsync_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHList`1.RemoveAtAsync(System.Int32)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.RemoveAtAsync.html#Hazelcast_DistributedObjects_IHList_1_RemoveAtAsync_System_Int32_">RemoveAtAsync(Int32)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Removes the first occurrence of the specified element from this list,
-if it is present (optional operation).  If this list does not contain
-the element, it is unchanged.  More formally, removes the element with
-the lowest index <tt>i</tt> such that
-<tt>(o==null ? get(i)==null : o.equals(get(i)))</tt>
-(if such an element exists).  Returns <tt>true</tt> if this list
-contained the specified element (or equivalently, if this list changed
-as a result of the call).</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHList_1_SetAsync_System_Int32__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.SetAsync(System.Int32,`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.SetAsync.html#Hazelcast_DistributedObjects_IHList_1_SetAsync_System_Int32__0_">SetAsync(Int32, T)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Replaces the element at the specified position in this list with the
-specified element.</p>
+in this list, or -1 if this list does not contain the element.</p>
 </td>
       </tr>
     </tbody>

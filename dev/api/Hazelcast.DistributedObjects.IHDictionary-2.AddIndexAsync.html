@@ -88,7 +88,8 @@
 
 <a id="Hazelcast_DistributedObjects_IHDictionary_2_AddIndexAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.AddIndexAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHDictionary_2_AddIndexAsync_Hazelcast_Data_IndexConfig_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.AddIndexAsync(Hazelcast.Data.IndexConfig)">AddIndexAsync(IndexConfig)</h4>
-<div class="markdown level1 summary"></div>
+<div class="markdown level1 summary"><p>Adds an index to this dictionary for the specified entries so that queries can run faster.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
@@ -100,7 +101,8 @@
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="Hazelcast.Data.IndexConfig.html">IndexConfig</a></td>
       <td><span class="parametername">indexConfig</span></td>
-      <td></td>
+      <td><p>Index configuration.</p>
+</td>
     </tr>
   </tbody>
 </table>
@@ -109,7 +111,45 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
-      <td></td>
+      <td><p>A task that will complete when the index added.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<a id="Hazelcast_DistributedObjects_IHDictionary_2_AddIndexAsync_" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.AddIndexAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHDictionary_2_AddIndexAsync_Hazelcast_Data_IndexType_System_String___" data-uid="Hazelcast.DistributedObjects.IHDictionary`2.AddIndexAsync(Hazelcast.Data.IndexType,System.String[])">AddIndexAsync(IndexType, String[])</h4>
+<div class="markdown level1 summary"><p>Convenient method to add an index to this dictionary with the given type and attributes.
+Attributes are indexed in ascending order.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="decalaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">Task AddIndexAsync(IndexType type, params string[] attributes)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.Data.IndexType.html">IndexType</a></td>
+      <td><span class="parametername">type</span></td>
+      <td><p>Index type.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.string">String</a>[]</td>
+      <td><span class="parametername">attributes</span></td>
+      <td><p>Attributes to be indexed.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
+      <td><p>A task that will complete when the index added.</p>
+</td>
     </tr>
   </tbody>
 </table>
