@@ -952,8 +952,10 @@ if ($doDocsRelease) {
     if (test-path "$pages/$docDstDir") {
         remove-item -recurse -force "$pages/$docDstDir"
     }
-
     copy-item "$docs/$docDstDir" "$pages" -recurse
+
+    cp "$docs/styles/*" "$pages/styles/"
+    cp "$docs/images/*" "$pages/images/"
 
     cp "$docs/*.html" "$pages"
     cp "$docs/*.json" "$pages"
