@@ -1110,3 +1110,15 @@ article h5{
 .level0.conceptual{
     margin-bottom: 2em;    
 }
+
+.devwarn .article{
+  margin-top: 130px;
+}
+
+.devwarn .sidefilter{
+  top: 140px;
+}
+
+.devwarn .sidetoc{
+  top: 200px;
+}
