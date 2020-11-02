@@ -13,10 +13,12 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Data;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
 using Hazelcast.NearCaching;
@@ -93,6 +95,9 @@ namespace Hazelcast
 
         /// <inheritdoc />
         public string ClusterName => Cluster.Name;
+
+        /// <inheritdoc />
+        public IEnumerable<MemberInfo> Members => Cluster.Members.SnapshotMembers();
 
         /// <inheritdoc />
         public bool IsActive => Cluster.IsActive;

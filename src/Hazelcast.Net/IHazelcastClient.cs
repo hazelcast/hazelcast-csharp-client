@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.Data;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Transactions;
 
@@ -82,6 +84,11 @@ namespace Hazelcast
         bool IsConnected { get; }
 
         /// <summary>
+        /// Gets a snapshot of the members this client is currently connected to.
+        /// </summary>
+        IEnumerable<MemberInfo> Members { get; }
+
+        /// <summary>
         /// Begins a new transaction.
         /// </summary>
         /// <returns>A new transaction context.</returns>
@@ -97,9 +104,9 @@ namespace Hazelcast
         /// <summary>
         /// Subscribes to events.
         /// </summary>
-        /// <param name="handle">An event handlers collection builder.</param>
+        /// <param name="events">An event handlers collection builder.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle);
+        Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> events);
 
         /// <summary>
         /// Unsubscribe from events.
