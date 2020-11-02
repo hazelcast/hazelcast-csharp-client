@@ -1531,14 +1531,9 @@ blockquote {
 }
 
 #devwarn {
-    display: none;
     text-align: center;
     background: beige;
     border-bottom: 1px solid #e3e3e3;
     padding: 4px 0;
     min-height: 30px;
-}
-
-.devwarn #devwarn {
-    display: block;
 }

@@ -74,7 +74,11 @@ param (
 
     # Version to build
     [string]
-    $version # defaults to what's in src/Directory.Build.props
+    $version, # defaults to what's in src/Directory.Build.props
+
+    [alias("nr")]
+    [switch]
+    $noRestore # don't restore NuGet packages (assume they are there already)
 )
 
 # die - PowerShell display of errors is a pain
@@ -765,13 +769,19 @@ if ($doBuild -or -$doTests) {
 }
 
 # use NuGet to ensure we have the required packages for building and testing
-Write-Output ""
-Write-Output "Restore NuGet packages for building and testing..."
-if ($isWindows) {
-    &$nuget restore "$buildDir/build.proj" -Verbosity Quiet
+if ($noRestore) {
+    Write-Output ""
+    Write-Output "Skip NuGet packages restore (assume we have them already)"
 }
 else {
-    dotnet restore "$buildDir/build.proj"
+    Write-Output ""
+    Write-Output "Restore NuGet packages for building and testing..."
+    if ($isWindows) {
+        &$nuget restore "$buildDir/build.proj" -Verbosity Quiet
+    }
+    else {
+        dotnet restore "$buildDir/build.proj"
+    }
 }
 
 # get the required packages version (as specified in build.proj)
@@ -926,6 +936,26 @@ if ($doDocs) {
     # build
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
     &$docfx build "$docDir/docfx.json" --template $template
+
+    # post-process
+    if ($docDstDir -eq "dev") {
+        $devwarnMessage = "<div id=`"devwarn`">This page documents a development version of the Hazelcast .NET client. " +
+                          "Its content is not final and remains subject to changes.</div>"
+        $devwarnClass = "devwarn"
+    }
+    else {
+        $devwarnMessage = ""
+        $devwarnClass = ""
+    }
+
+    get-childitem -recurse -path "$tmpDir/docfx.out/dev" -filter *.html |
+        foreach-object {
+            $text = get-content -path $_
+            $text = $text `
+                -replace "<!-- DEVWARN -->", $devwarnMessage `
+                -replace "DEVWARN", $devwarnClass
+            set-content -path $_ -value $text
+        }
 }
 
 # release documentation
