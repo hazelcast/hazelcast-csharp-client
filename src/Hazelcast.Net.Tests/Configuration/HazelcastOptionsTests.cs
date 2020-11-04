@@ -199,11 +199,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(1001, socketOptions.LingerSeconds);
             Assert.IsTrue(socketOptions.TcpNoDelay);
 
-            var interceptorOptions = options.SocketInterception;
-            Assert.IsTrue(interceptorOptions.Enabled);
-            Assert.IsInstanceOf<TestSocketInterceptor>(interceptorOptions.Interceptor.Service);
-            Console.WriteLine(interceptorOptions.ToString());
-
             var retryOptions = options.ConnectionRetry;
             Assert.AreEqual(1000, retryOptions.InitialBackoffMilliseconds);
             Assert.AreEqual(1001, retryOptions.MaxBackoffMilliseconds);
@@ -337,13 +332,6 @@ namespace Hazelcast.Tests.Configuration
                 return Task.CompletedTask;
             }
         }
-
-        public class TestSocketInterceptor : ISocketInterceptor
-        {
-            public TestSocketInterceptor()
-            { }
-        }
-
         public class TestCredentialsFactory : ICredentialsFactory
         {
             public TestCredentialsFactory(string arg1, int arg2)

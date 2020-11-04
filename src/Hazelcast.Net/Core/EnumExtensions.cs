@@ -19,7 +19,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods for <see cref="Enum"/>.
     /// </summary>
-    public static class EnumExtensions
+    internal static class EnumExtensions
     {
         /// <summary>
         /// Determines whether one or more bit fields are set in the current instance.

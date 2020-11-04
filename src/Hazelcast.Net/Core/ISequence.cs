@@ -18,7 +18,7 @@ namespace Hazelcast.Core
     /// Defines a sequence of elements.
     /// </summary>
     /// <typeparam name="T">The type of the sequence.</typeparam>
-    public interface ISequence<out T>
+    internal interface ISequence<out T>
     {
         /// <summary>
         /// Gets the next element of the sequence.

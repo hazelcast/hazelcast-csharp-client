@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Hazelcast.Protocol
 {
-    public static class CodecConstants
+    internal static class CodecConstants
     {
 #if DEBUG
         private static readonly Dictionary<int, string> MessageNames = new Dictionary<int, string>();

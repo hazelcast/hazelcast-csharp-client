@@ -17,7 +17,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Defines the possible states if the cluster connection.
     /// </summary>
-    public enum ClusterConnectionState
+    internal enum ClusterConnectionState
     {
         /// <summary>
         /// Unknown (default).

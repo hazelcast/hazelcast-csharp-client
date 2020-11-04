@@ -128,7 +128,7 @@ namespace Hazelcast.Core
         /// which would create an entirely new singleton.</para>
         /// </remarks>
         /// <returns>A clone of the service factory.</returns>
-        public SingletonServiceFactory<TService> Clone(bool shallow = true) => new SingletonServiceFactory<TService>(this, shallow);
+        internal SingletonServiceFactory<TService> Clone(bool shallow = true) => new SingletonServiceFactory<TService>(this, shallow);
 
         /// <inheritdoc cref="IDisposable.Dispose"/>
         public void Dispose()

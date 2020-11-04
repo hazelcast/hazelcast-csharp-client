@@ -21,7 +21,7 @@ namespace Hazelcast.Clustering
     // this is in-progress, the idea being that the cluster should provide some
     // basic instrumentation regarding abnormal situations, etc.
 
-    public class ClusterInstrumentation
+    internal class ClusterInstrumentation
     {
         private int _missedEventsCount;
         private int _exceptionsInEventHandlersCount;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Core
 {
-    public static class CollectionExtensions
+    internal static class CollectionExtensions
     {
         /// <summary>
         /// Removes the first occurrence of a specific key-value pair from a collection of key-value pairs.

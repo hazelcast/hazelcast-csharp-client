@@ -21,7 +21,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods to the <see cref="IEnumerable{T}"/> interface.
     /// </summary>
-    public static class EnumerableExtensions
+    internal static class EnumerableExtensions
     {
         /// <summary>
         /// Shuffles an enumerable.
