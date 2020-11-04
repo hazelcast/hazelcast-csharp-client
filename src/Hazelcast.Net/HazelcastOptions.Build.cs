@@ -22,6 +22,10 @@ namespace Hazelcast
 {
     public partial class HazelcastOptions // Build
     {
+        /// <summary>
+        /// Gets the Hazelcast configuration section name, which is <c>"hazelcast"</c>.
+        /// </summary>
+        /// <returns>The Hazelcast configuration section name, which is <c>"hazelcast"</c>.</returns>
         public const string Hazelcast = "hazelcast";
 
         /// <summary>

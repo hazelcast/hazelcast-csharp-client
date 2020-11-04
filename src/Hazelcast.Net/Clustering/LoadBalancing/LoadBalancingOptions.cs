@@ -21,6 +21,12 @@ namespace Hazelcast.Clustering.LoadBalancing
     /// <summary>
     /// Represents the load balancing options.
     /// </summary>
+    /// <remarks>
+    /// <para>Load balancing determines how the Hazelcast client selects the member
+    /// to talk to, when it could talk to any member. By default it is random (see <see cref="RandomLoadBalancer"/>),
+    /// but it can also be round-robin (see <see cref="RoundRobinLoadBalancer"/>) or static
+    /// (see <see cref="StaticLoadBalancer"/>).</para>
+    /// </remarks>
     public class LoadBalancingOptions
     {
         private LoadBalancingMode _mode;
@@ -75,6 +81,14 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Gets the service factory for <see cref="ILoadBalancer"/>.
         /// </summary>
+        /// <returns>The service factory for <see cref="ILoadBalancer"/>.</returns>
+        /// <remarks>
+        /// <para>A service factory is initialized with a creator function, that creates an
+        /// instance of the service. For instance:
+        /// <code>
+        /// options.LoadBalancer.Creator = () => new RandomLoadBalancer();
+        /// </code></para>
+        /// </remarks>
         [BinderIgnore]
         public SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
 

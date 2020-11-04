@@ -62,19 +62,23 @@ namespace Hazelcast
         /// </summary>
         /// <remarks>
         /// <para>In dependency-injection scenario the service provider may be available,
-        /// so that service factories can return injected services.</para>
+        /// so that service factories can return injected services. In non-dependency-injection
+        /// scenario, this returns <c>null</c>.</para>
         /// </remarks>
+        /// <returns>The service provider.</returns>
         public IServiceProvider ServiceProvider { get; internal set; }
 
         /// <summary>
         /// Gets the core options.
         /// </summary>
+        /// <returns>The core options.</returns>
         [BinderIgnore(false)]
         internal CoreOptions Core { get; } = new CoreOptions();
 
         /// <summary>
         /// Clones the options.
         /// </summary>
+        /// <returns>A deep clone of the options.</returns>
         internal HazelcastOptions Clone() => new HazelcastOptions(this);
     }
 }

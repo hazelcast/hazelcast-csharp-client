@@ -10,6 +10,7 @@ bin/
 *.snk
 
 /doc/templates/default/
+/doc/templates/hz/Plugins/
 /doc/docfx.json
 
 _UpgradeReport_Files/

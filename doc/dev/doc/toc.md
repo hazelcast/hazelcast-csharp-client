@@ -2,6 +2,7 @@
 # [Migrating From v3](migratingFrom3.md)
 # [Getting Started](gettingStarted.md)
 # [Configuration](configuration.md)
+# [Options](options.md)
 # [Distributed Objects](distributedObjects.md)
 ## [HDictionary](hdictionary.md)
 ## [HList](hlist.md)

@@ -24,23 +24,27 @@ namespace Hazelcast
     public partial class HazelcastOptions : IClusterOptions // ClusterName, Subscribers
     {
         /// <summary>
-        /// Gets the default cluster name.
+        /// Gets the default cluster name, which is <c>"dev"</c>.
         /// </summary>
+        /// <returns>The default cluster name, which is <c>"dev"</c>.</returns>
         public const string DefaultClusterName = "dev";
 
         /// <summary>
-        /// Gets the default client name prefix.
+        /// Gets the default client name prefix, which is <c>"hz.client_"</c>.
         /// </summary>
+        /// <returns>The default client name prefix, which is <c>"hz.client_"</c>.</returns>
         public const string DefaultClientNamePrefix = "hz.client_";
 
         /// <summary>
         /// Gets or sets the cluster name.
         /// </summary>
+        /// <returns>The cluster name.</returns>
         public string ClusterName { get; set; } = DefaultClusterName;
 
         /// <summary>
-        /// Gets the client name.
+        /// Gets or sets the client name.
         /// </summary>
+        /// <returns>The client name.</returns>
         /// <remarks>
         /// <para>When <c>null</c>, the client name is derived from <see cref="ClientNamePrefix"/>.</para>
         /// </remarks>
@@ -49,6 +53,7 @@ namespace Hazelcast
         /// <summary>
         /// Gets or sets the client name prefix.
         /// </summary>
+        /// <returns>The client name prefix.</returns>
         public string ClientNamePrefix
         {
             get => string.IsNullOrWhiteSpace(_clientNamePrefix) ? DefaultClientNamePrefix : _clientNamePrefix;
@@ -58,36 +63,43 @@ namespace Hazelcast
         /// <summary>
         /// Gets the client labels.
         /// </summary>
+        /// <returns>The client labels.</returns>
         public ISet<string> Labels { get; } = new HashSet<string>();
 
         /// <summary>
         /// Gets the authentication options.
         /// </summary>
+        /// <returns>The authentication options.</returns>
         public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
 
         /// <summary>
         /// Gets the load balancing options.
         /// </summary>
+        /// <returns>The load balancing options.</returns>
         public LoadBalancingOptions LoadBalancing { get; } = new LoadBalancingOptions();
 
         /// <summary>
         /// Gets the heartbeat options.
         /// </summary>
+        /// <returns>The heartbeat options.</returns>
         public HeartbeatOptions Heartbeat { get; } = new HeartbeatOptions();
 
         /// <summary>
         /// Gets the messaging options.
         /// </summary>
+        /// <returns>The messaging options.</returns>
         public MessagingOptions Messaging { get; } = new MessagingOptions();
 
         /// <summary>
         /// Gets the networking options.
         /// </summary>
+        /// <returns>The networking options.</returns>
         public NetworkingOptions Networking { get; } = new NetworkingOptions();
 
         /// <summary>
         /// Gets the events options.
         /// </summary>
+        /// <returns>The events options.</returns>
         public EventsOptions Events { get; } = new EventsOptions();
     }
 }

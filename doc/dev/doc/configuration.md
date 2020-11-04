@@ -7,7 +7,9 @@ class contains the default options:
 var options = new HazelcastOptions();
 ```
 
-For anything more realistic though, different approaches are available.
+For anything more realistic though, different approaches are available, as detailed below.
+
+To get an overview of all the different configuration options, refer to the [Options](options.md) page.
 
 ### Simple Environment
 

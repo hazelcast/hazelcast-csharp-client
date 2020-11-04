@@ -29,6 +29,7 @@ namespace Hazelcast
         /// <summary>
         /// Gets the service factory for <see cref="ILoggerFactory"/>.
         /// </summary>
+        /// <returns>The service factory for <see cref="ILoggerFactory"/>.</returns>
         /// <remarks>
         /// <para>The only option available for logging is the <see cref="ILoggerFactory"/> creator, which can only
         /// be set programmatically. All other logging options (level, etc.) are configured via the
@@ -42,11 +43,13 @@ namespace Hazelcast
         /// <summary>
         /// Gets the serialization options.
         /// </summary>
+        /// <returns>The serialization options.</returns>
         public SerializationOptions Serialization { get; } = new SerializationOptions();
 
         /// <summary>
         /// Gets the general Near Caching options.
         /// </summary>
+        /// <returns>The general Near Caching options.</returns>
         public NearCachingOptions NearCaching { get; } = new NearCachingOptions();
     }
 }

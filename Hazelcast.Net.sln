@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{25300DF5
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Win32", "src\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj", "{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.DocAsCode", "src\Hazelcast.Net.DocAsCode\Hazelcast.Net.DocAsCode.csproj", "{FE505BEF-9319-4F93-A9D2-16CB721DBE44}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,10 @@ Global
 		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

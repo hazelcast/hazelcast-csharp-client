@@ -39,6 +39,11 @@
       "_enableSearch": true,
       "_disableContribution": true
     },
+    "fileMetadata": {
+      "build-options": {
+        "dev/doc/options.md": true
+      }
+    },
     "dest": "../temp/docfx.out",
     "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ],
     "disableGitFeatures": true

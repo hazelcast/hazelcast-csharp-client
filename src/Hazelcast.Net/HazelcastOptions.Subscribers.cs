@@ -24,13 +24,17 @@ namespace Hazelcast
         /// <summary>
         /// Gets the subscribers.
         /// </summary>
+        /// <returns>The subscribers.</returns>
         [BinderIgnore]
         public IList<IHazelcastClientEventSubscriber> Subscribers { get; }
 
         // used for configuration binding
         [BinderName("subscribers")]
         [BinderIgnore(false)]
-        private CollectionBinder<InjectionOptions> SubscribersBinder { get; set; }
+#pragma warning disable IDE0052 // Remove unread private members
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
+        private CollectionBinder<InjectionOptions> SubscribersBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
 
         /// <summary>
         /// Adds a subscriber.

@@ -1537,3 +1537,8 @@ blockquote {
     padding: 4px 0;
     min-height: 30px;
 }
+
+div.xoptions thead { display: none; }
+
+div.xoptions tr td:first-of-type { width: 30%; }
+div.xoptions pre { border: none; padding: 3px; margin: 3px 0; font-size: 80%; }

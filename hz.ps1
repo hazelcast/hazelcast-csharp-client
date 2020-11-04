@@ -719,9 +719,9 @@ if ($doClean) {
     }
 
     # clears tests (results, cover...)
-    if (test-path "$tmpDir/tests") {
-        Write-Output "  $tmpDir/tests"
-        remove-item "$tmpDir/tests" -force -recurse
+    if (test-path "$tmpDir\tests") {
+        Write-Output "  $tmpDir\tests"
+        remove-item "$tmpDir\tests" -force -recurse
     }
 
     # clears logs (server, rc...)
@@ -733,9 +733,13 @@ if ($doClean) {
     }
 
     # clears docs
-    if (test-path "$tmpDir/docfx.out") {
-        Write-Output "  $tmpDir/docfx.out"
-        remove-item "$tmpDir/docfx.out" -force -recurse
+    if (test-path "$tmpDir\docfx.out") {
+        Write-Output "  $tmpDir\docfx.out"
+        remove-item "$tmpDir\docfx.out" -force -recurse
+    }
+    if (test-path "$docDir\templates\hz\Plugins") {
+        Write-Output "  $docDir\templates\hz\Plugins"
+        remove-item "$docDir\templates\hz\Plugins" -force -recurse
     }
 
     Write-Output ""
@@ -928,6 +932,18 @@ if ($doDocs) {
     # prepare templates
     $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
 
+    if (test-path "$docDir/templates/hz/Plugins") {
+        remove-item -recurse -force "$docDir/templates/hz/Plugins"
+    }
+    mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
+
+    $target = "net48"
+    $pluginDll = "$srcDir/Hazelcast.Net.DocAsCode/bin/$configuration/$target/Hazelcast.Net.DocAsCode.dll"
+    if (-not (test-path $pluginDll)) {
+        Die "Could not find Hazelcast.Net.DocAsCode.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.Net.DocAsCode/bin/$configuration/$target"
+    }
+    cp $pluginDll "$docDir/templates/hz/Plugins/"
+
     # prepare docfx.json
     get-content "$docDir/_docfx.json" |
         foreach-object { $_ -replace "__DEST__", $docDstDir } |
@@ -935,7 +951,9 @@ if ($doDocs) {
 
     # build
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
+    if ($LASTEXITCODE) { Die "Error." }
     &$docfx build "$docDir/docfx.json" --template $template
+    if ($LASTEXITCODE) { Die "Error." }
 
     # post-process
     if ($docDstDir -eq "dev") {
@@ -948,7 +966,7 @@ if ($doDocs) {
         $devwarnClass = ""
     }
 
-    get-childitem -recurse -path "$tmpDir/docfx.out/dev" -filter *.html |
+    get-childitem -recurse -path "$tmpDir/docfx.out/$docDstDir" -filter *.html |
         foreach-object {
             $text = get-content -path $_
             $text = $text `
