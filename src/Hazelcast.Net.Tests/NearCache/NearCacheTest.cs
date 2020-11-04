@@ -57,9 +57,9 @@ namespace Hazelcast.Tests.NearCache
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            var nearCacheOptions = options.NearCache;
+            var nearCacheOptions = options.NearCaching;
 
-            nearCacheOptions.Configurations["nc*"] = new NearCacheNamedOptions
+            nearCacheOptions.NearCacheOptions["nc*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.None,
                 InvalidateOnChange = false,
@@ -67,32 +67,32 @@ namespace Hazelcast.Tests.NearCache
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.Configurations["nc-invalidate*"] = new NearCacheNamedOptions
+            nearCacheOptions.NearCacheOptions["nc-invalidate*"] = new NearCacheOptions
             {
                 InvalidateOnChange = true
             };
 
-            nearCacheOptions.Configurations["nc-lru*"] = new NearCacheNamedOptions
+            nearCacheOptions.NearCacheOptions["nc-lru*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.Lru,
                 InvalidateOnChange = false,
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.Configurations["nc-lfu*"] = new NearCacheNamedOptions
+            nearCacheOptions.NearCacheOptions["nc-lfu*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.Lfu,
                 InvalidateOnChange = false,
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.Configurations["nc-ttl*"] = new NearCacheNamedOptions
+            nearCacheOptions.NearCacheOptions["nc-ttl*"] = new NearCacheOptions
             {
                 TimeToLiveSeconds = 1,
                 InvalidateOnChange = false
             };
 
-            nearCacheOptions.Configurations["nc-idle*"] = new NearCacheNamedOptions
+            nearCacheOptions.NearCacheOptions["nc-idle*"] = new NearCacheOptions
             {
                 MaxIdleSeconds = 1,
                 CleanupPeriodSeconds = 2,

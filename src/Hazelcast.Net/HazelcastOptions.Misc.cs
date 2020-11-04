@@ -45,8 +45,8 @@ namespace Hazelcast
         public SerializationOptions Serialization { get; } = new SerializationOptions();
 
         /// <summary>
-        /// Gets  the NearCache options.
+        /// Gets the general Near Caching options.
         /// </summary>
-        public NearCacheOptions NearCache { get; } = new NearCacheOptions();
+        public NearCachingOptions NearCaching { get; } = new NearCachingOptions();
     }
 }

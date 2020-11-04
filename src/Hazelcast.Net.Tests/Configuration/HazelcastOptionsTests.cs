@@ -377,11 +377,11 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void NearCacheOptionsFile()
         {
-            var options = ReadResource(Resources.HazelcastOptions).NearCache;
+            var options = ReadResource(Resources.HazelcastOptions).NearCaching;
 
-            Assert.AreEqual(2, options.Configurations.Count);
+            Assert.AreEqual(2, options.NearCacheOptions.Count);
 
-            Assert.IsTrue(options.Configurations.TryGetValue("default", out var defaultNearCache));
+            Assert.IsTrue(options.NearCacheOptions.TryGetValue("default", out var defaultNearCache));
             Assert.AreEqual(EvictionPolicy.Lru, defaultNearCache.EvictionPolicy);
             Assert.AreEqual(InMemoryFormat.Binary, defaultNearCache.InMemoryFormat);
             Assert.AreEqual(1000, defaultNearCache.MaxIdleSeconds);
@@ -389,7 +389,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(1002, defaultNearCache.TimeToLiveSeconds);
             Assert.IsTrue(defaultNearCache.InvalidateOnChange);
 
-            Assert.IsTrue(options.Configurations.TryGetValue("other", out var otherNearCache));
+            Assert.IsTrue(options.NearCacheOptions.TryGetValue("other", out var otherNearCache));
             Assert.AreEqual(EvictionPolicy.Lfu, otherNearCache.EvictionPolicy);
             Assert.AreEqual(InMemoryFormat.Object, otherNearCache.InMemoryFormat);
             Assert.AreEqual(2000, otherNearCache.MaxIdleSeconds);

@@ -50,29 +50,29 @@ namespace Hazelcast.NearCaching
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The localization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        /// <param name="nearCacheNamedOptions">NearCache options.</param>
-        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheNamedOptions nearCacheNamedOptions)
+        /// <param name="nearCacheOptions">NearCache options.</param>
+        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheOptions nearCacheOptions)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
             Name = name;
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-            Options = nearCacheNamedOptions ?? throw new ArgumentNullException(nameof(nearCacheNamedOptions));
+            Options = nearCacheOptions ?? throw new ArgumentNullException(nameof(nearCacheOptions));
 
             _entries = new ConcurrentAsyncDictionary<IData, NearCacheEntry>();
             Statistics = new NearCacheStatistics();
 
             _lastExpire = Clock.Never;
 
-            _maxSize = nearCacheNamedOptions.MaxSize;
-            _maxIdleMilliseconds = nearCacheNamedOptions.MaxIdleSeconds * 1000;
-            InMemoryFormat = nearCacheNamedOptions.InMemoryFormat;
-            _timeToLive = nearCacheNamedOptions.TimeToLiveSeconds * 1000;
-            _evictionPolicy = nearCacheNamedOptions.EvictionPolicy;
+            _maxSize = nearCacheOptions.MaxSize;
+            _maxIdleMilliseconds = nearCacheOptions.MaxIdleSeconds * 1000;
+            InMemoryFormat = nearCacheOptions.InMemoryFormat;
+            _timeToLive = nearCacheOptions.TimeToLiveSeconds * 1000;
+            _evictionPolicy = nearCacheOptions.EvictionPolicy;
             _evictionComparer = GetEvictionComparer(_evictionPolicy);
-            _evictionPercentage = nearCacheNamedOptions.EvictionPercentage;
-            _cleanupInterval = nearCacheNamedOptions.CleanupPeriodSeconds * 1000;
+            _evictionPercentage = nearCacheOptions.EvictionPercentage;
+            _cleanupInterval = nearCacheOptions.CleanupPeriodSeconds * 1000;
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Gets the options for this cache.
         /// </summary>
-        protected NearCacheNamedOptions Options { get; }
+        protected NearCacheOptions Options { get; }
 
         /// <summary>
         /// Gets the cluster.

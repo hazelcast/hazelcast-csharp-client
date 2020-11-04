@@ -23,7 +23,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents cluster-level options.
     /// </summary>
-    public interface IClusterOptions
+    internal interface IClusterOptions
     {
         /// <summary>
         /// Gets the cluster name.
