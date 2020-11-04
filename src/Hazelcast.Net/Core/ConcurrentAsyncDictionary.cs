@@ -33,7 +33,10 @@ namespace Hazelcast.Core
 
         private readonly ConcurrentDictionary<TKey, Entry> _dictionary = new ConcurrentDictionary<TKey, Entry>();
 
-        // for tests exclusively
+        /// <summary>
+        /// (internal for tests only)
+        /// Adds an entry.
+        /// </summary>
         internal bool AddEntry(TKey key, Entry entry)
         {
             return _dictionary.TryAdd(key, entry);
@@ -255,7 +258,10 @@ namespace Hazelcast.Core
             }
         }
 
-        // internal for tests only
+        /// <summary>
+        /// (internal for tests only)
+        /// Represents a dictionary entry.
+        /// </summary>
         internal class Entry
         {
             private readonly object _lock = new object();
@@ -268,7 +274,10 @@ namespace Hazelcast.Core
                 _key = key;
             }
 
-            // for tests exclusively
+            /// <summary>
+            /// (internal for tests only)
+            /// Initializes a new instance of the <see cref="Entry"/> class.
+            /// </summary>
             internal Entry(TKey key, bool hasValue, TValue value = default, Task<TValue> creating = default)
             {
                 _key = key;

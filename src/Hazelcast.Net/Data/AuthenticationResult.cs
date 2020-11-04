@@ -20,7 +20,7 @@ namespace Hazelcast.Data
     /// <summary>
     /// Represents the result of the client authentication.
     /// </summary>
-    public class AuthenticationResult
+    internal sealed class AuthenticationResult
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationResult"/> class.

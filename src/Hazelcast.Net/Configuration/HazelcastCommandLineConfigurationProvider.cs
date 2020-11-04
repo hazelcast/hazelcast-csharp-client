@@ -36,7 +36,10 @@ namespace Hazelcast.Configuration
             : base(FilterArgs(args), switchMappings)
         { }
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Filters arguments.
+        /// </summary>
         internal static IEnumerable<string> FilterArgs(IEnumerable<string> args)
         {
             using var enumerator = args.GetEnumerator();

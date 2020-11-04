@@ -61,7 +61,10 @@ namespace Hazelcast.Networking
             return sslStream;
         }
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets the client certificate, or a default certificate.
+        /// </summary>
         internal X509Certificate2Collection GetClientCertificatesOrDefault()
         {
             if (_options.CertificatePath == null)
@@ -81,7 +84,10 @@ namespace Hazelcast.Networking
             return clientCertificates;
         }
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Validates a certificate.
+        /// </summary>
         internal bool ValidateCertificate(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyErrors)
         {
             if (policyErrors == SslPolicyErrors.None)

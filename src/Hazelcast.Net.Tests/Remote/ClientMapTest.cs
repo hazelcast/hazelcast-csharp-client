@@ -252,7 +252,6 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key2", "value2");
             await dictionary.SetAsync("key3", "value3");
 
-            // FIXME GetAllAsync or GetManyAsync! = OK
             var tempDict = await dictionary.GetEntriesAsync(new SqlPredicate("this == value1"));
             Assert.AreEqual(1, tempDict.Count);
 
@@ -535,12 +534,13 @@ namespace Hazelcast.Tests.Remote
                 mm.Add(itemIndex.ToString(), itemIndex.ToString());
             }
 
-            await dictionary.SetAllAsync(mm); // FIXME why SetAll? not Set? - no, too many overrides
+            await dictionary.SetAllAsync(mm);
             Assert.AreEqual(keycount, await dictionary.CountAsync());
 
+            // FIXME - move to documentation + validate names
             // getEntries = query engine
             //  -> queryEntries
-            // getAll = multiple get
+            // getAll = multiple get from store
             //
             // getAll -> retrieves from store
             // queryAll -> retrieves from memory
@@ -552,7 +552,7 @@ namespace Hazelcast.Tests.Remote
             //
             // iterating = runs on a QUERY (not on the store)
 
-            var all = await dictionary.GetAllAsync(mm.Keys); // FIXME GetEntriesAsync?
+            var all = await dictionary.GetAllAsync(mm.Keys);
             // Assert.AreEqual(keycount, dictionary.Count);
             // foreach (var pair in dictionary)
             // {
@@ -591,7 +591,7 @@ namespace Hazelcast.Tests.Remote
             }
             var ss = new HashSet<int> {1, 3};
 
-            var m2 = await dictionary.GetAllAsync(ss); // FIXME GetMany? = SAME
+            var m2 = await dictionary.GetAllAsync(ss);
             Assert.AreEqual(m2.Count, 2);
 
             int gv;

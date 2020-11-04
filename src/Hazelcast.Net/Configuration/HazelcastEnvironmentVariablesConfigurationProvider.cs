@@ -32,7 +32,10 @@ namespace Hazelcast.Configuration
         public override void Load()
             => Load(Environment.GetEnvironmentVariables());
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Loads environment variables.
+        /// </summary>
         internal void Load(IDictionary envVariables)
         {
             Data = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

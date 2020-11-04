@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hazelcast.Configuration;
 using Hazelcast.Security;
 using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
@@ -82,7 +83,7 @@ namespace Hazelcast.Tests.Security
         public void Token1()
         {
             var token = new byte[16];
-            
+
             using var factory = new TokenCredentialsFactory(token);
 
             var credentials = factory.NewCredentials();
@@ -112,7 +113,7 @@ namespace Hazelcast.Tests.Security
         {
             using var factory = new TokenCredentialsFactory(new Dictionary<string, string>
             {
-                { "token", "token" }
+                { "data", "token" }
             });
 
             var credentials = factory.NewCredentials();
@@ -124,12 +125,59 @@ namespace Hazelcast.Tests.Security
         }
 
         [Test]
+        public void Token4()
+        {
+            using var factory = new TokenCredentialsFactory(new Dictionary<string, string>
+            {
+                { "data", "token" },
+                { "encoding", "none" }
+            });
+
+            var credentials = factory.NewCredentials();
+            Assert.That(credentials.Name, Is.EqualTo("<token>"));
+            Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
+
+            var typed = (TokenCredentials)credentials;
+            Assert.That(typed.GetToken(), Is.EqualTo(Encoding.UTF8.GetBytes("token")));
+        }
+
+        [Test]
+        public void Token5()
+        {
+            using var factory = new TokenCredentialsFactory(new Dictionary<string, string>
+            {
+                { "data", Convert.ToBase64String(Encoding.UTF8.GetBytes("token")) },
+                { "encoding", "BASE64" }
+            });
+
+            var credentials = factory.NewCredentials();
+            Assert.That(credentials.Name, Is.EqualTo("<token>"));
+            Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
+
+            var typed = (TokenCredentials)credentials;
+            Assert.That(typed.GetToken(), Is.EqualTo(Encoding.UTF8.GetBytes("token")));
+        }
+
+        [Test]
+        public void Token6()
+        {
+            Assert.Throws<ConfigurationException>(() =>
+            {
+                var factory = new TokenCredentialsFactory(new Dictionary<string, string>
+                {
+                    { "data", "token" },
+                    { "encoding", "invalid" }
+                });
+            });
+        }
+
+        [Test]
         [Category("enterprise")] // Kerberos is an Enterprise feature
         [Explicit("Requires KDC and domain + configuration.")]
         [ServerCondition("[4.1,)")]
         public void Kerberos()
         {
-            Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory(null));
+            Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory((string) null));
             Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory(null, "u", "p", "d"));
             Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory("spn", null, "p", "d"));
             Assert.Throws<ArgumentException>(() => _ = new KerberosCredentialsFactory("spn", "u", null, "d"));

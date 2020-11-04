@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
         private readonly ClusterEvents _clusterEvents;
         private readonly ClusterClusterEvents _clusterClusterEvents;
         private readonly ClusterMembers _clusterMembers;
-        private readonly IAuthenticator _authenticator;
+        private readonly Authenticator _authenticator;
         private readonly ISerializationService _serializationService;
 
         private readonly Func<ValueTask> _terminateAsync;
@@ -62,8 +62,7 @@ namespace Hazelcast.Clustering
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterConnections>();
 
-            _authenticator = _clusterState.Options.Authentication.Authenticator.Service ??
-                             new Authenticator(_clusterState.Options.Authentication);
+            _authenticator = new Authenticator(_clusterState.Options.Authentication);
         }
 
         /// <summary>

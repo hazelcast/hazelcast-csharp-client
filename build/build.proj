@@ -29,14 +29,14 @@
 
     <!-- non-Windows does not build for Framework and does not need this, Windows does -->
     <!-- version is detected by hz.ps1 automatically from this project file -->
-    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2020.2.2" Condition=" '$(OS)' == 'Windows_NT' ">
+    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2020.2.3" Condition=" '$(OS)' == 'Windows_NT' ">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
     <!-- all platforms need this, but it is not compatible with net462, hence the condition -->
     <!-- BEWARE, version must align with Hazelcast.Net.Tests csproj! -->
-    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2020.2.2" Condition=" '$(TargetFramework)' != 'net462' ">
+    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2020.2.3" Condition=" '$(TargetFramework)' != 'net462' ">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

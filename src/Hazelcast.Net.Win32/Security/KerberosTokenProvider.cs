@@ -16,7 +16,10 @@ using Hazelcast.Security.Win32;
 
 namespace Hazelcast.Security
 {
-    public static class KerberosTokenProvider
+    /// <summary>
+    /// Implements <see cref="IKerberosTokenProvider"/> for Windows.
+    /// </summary>
+    public class KerberosTokenProvider : IKerberosTokenProvider
     {
         // https://github.com/SteveSyfuhs/Kerberos.NET/issues/89
         //
@@ -27,7 +30,7 @@ namespace Hazelcast.Security
         //
         // and that same code works both for .NET Framework and .NET Core
 
-        public static byte[] GetToken(string spn, string username, string password, string domain)
+        public byte[] GetToken(string spn, string username, string password, string domain)
         {
             SspiContext context;
             if (username == null)

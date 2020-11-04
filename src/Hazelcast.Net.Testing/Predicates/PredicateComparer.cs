@@ -93,7 +93,10 @@ namespace Hazelcast.Testing.Predicates
             return Compare((KeyValuePair<object, object>)x, (KeyValuePair<object, object>)y);
         }
 
-        // for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Compares predicates.
+        /// </summary>
         internal int Compare((object, object) x, (object, object) y)
         {
             return Compare((object)new KeyValuePair<object, object>(x.Item1, x.Item2), (object)new KeyValuePair<object, object>(y.Item1, y.Item2));

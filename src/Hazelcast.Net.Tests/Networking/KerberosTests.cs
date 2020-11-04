@@ -27,7 +27,14 @@ namespace Hazelcast.Tests.Networking
     // via a DNS query, meaning that the DNS *has* to be the AD DC somehow
     //
     // requires 4.1 server, as Kerberos is not supported on 4.0, so at least:
-    // > build/build.sh -enterprise -server 4.1-SNAPSHOT rc
+    // > hz.sh -enterprise -server 4.1-SNAPSHOT rc
+    //
+    // or
+    // > hz.sh -enterprise -server 4.1-SNAPSHOT -test Hazelcast.Tests.Networking.KerberosTests.KerberosCredentials tests
+    //
+    // This test also requires that a Kerberos Token Provider can be located.
+    // Currently, this is only supported on Windows through the Hazelcast.Net.Win32
+    // NuGet package, which must be installed for the test to succeed.
 
     [TestFixture]
     [Category("enterprise")] // Kerberos is an Enterprise feature
@@ -50,13 +57,26 @@ namespace Hazelcast.Tests.Networking
 
             // configure Kerberos - 3 ways
 
-            // 1.
+            // 1a.
+            // configure Kerberos credentials via the config file, simplified version
+            // using the default Hazelcast.Security.KerberosCredentialsFactory
+            //
+            // "hazelcast": {
+            //   "authentication": {
+            //     "kerberos": {
+            //       "spn": "hz/cluster1234"
+            //     }
+            //   }
+            // }
+
+            // 1b.
             // configure Kerberos credentials via the config file
+            // specifying a credentials factory
             //
             // "hazelcast": {
             //   "authentication": {
             //     "credentialsFactory": {
-            //       "typeName": "Hazelcast.Security.KerberosCredentialsFactory, Hazelcast.Net.Win32",
+            //       "typeName": "Hazelcast.Security.KerberosCredentialsFactory, Hazelcast.Net",
             //       "args": {
             //         "spn": "hz/cluster1234"
             //       }
@@ -66,13 +86,15 @@ namespace Hazelcast.Tests.Networking
 
             // 2.
             // configure Kerberos credentials via code, with the current Windows principal
-            // (requires that the tests run as part of the domain)
+            // using the default Hazelcast.Security.KerberosCredentialsFactory
+            // (when running as part of the domain)
             //
             //options.Authentication.ConfigureKerberosCredentials("hz/cluster1234");
 
             // 3.
-            // configure Kerberos credentials via code, manually with the specified user
-            // (when tests do not run as part of the domain)
+            // configure Kerberos credentials via code, manually, with the specified user
+            // and specifying a credentials factory
+            // (this is for tests when they do not run as part of the domain)
             //
             //options.Authentication.CredentialsFactory.Creator = ()
             //    => new KerberosCredentialsFactory("hz/cluster1234", "hzclient", "pAssw0rd", "hz.local");
@@ -85,7 +107,7 @@ namespace Hazelcast.Tests.Networking
              *   "hazelcast-tests-kerberos": {
              *     "authentication": {
              *       "credentialsFactory": {
-             *         "typeName": "Hazelcast.Security.KerberosCredentialsFactory, Hazelcast.Net.Win32",
+             *         "typeName": "Hazelcast.Security.KerberosCredentialsFactory, Hazelcast.Net",
              *         "args": {
              *           "spn": "hz/cluster1234",
              *           "username": "hzclient",
