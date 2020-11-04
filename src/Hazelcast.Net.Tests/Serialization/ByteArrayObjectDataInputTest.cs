@@ -85,13 +85,6 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-        public virtual void TestRead()
-        {
-            var read = _input.TryReadByte();
-            Assert.That(read.Success);
-        }
-
-        [Test]
         public virtual void TestReadBool()
         {
             var read1 = _input.ReadBool();
@@ -520,13 +513,6 @@ namespace Hazelcast.Tests.Serialization
             var readLong = _input.ReadLong(2);
             var longB = BytesExtensions.ReadLong(InitData, 2, Endianness.BigEndian);
             Assert.AreEqual(longB, readLong);
-        }
-
-        [Test]
-        public virtual void TestReadPosition()
-        {
-            var read = _input.TryReadByte(1);
-            Assert.That(read.Success);
         }
 
         [Test]

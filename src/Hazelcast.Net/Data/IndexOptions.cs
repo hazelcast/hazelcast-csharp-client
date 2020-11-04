@@ -30,20 +30,20 @@ namespace Hazelcast.Data
     /// Index could be created on one or more attributes.
     /// </remarks>
     /// <seealso cref="IndexType"/>
-    public class IndexConfig
+    public class IndexOptions
     {
         public static readonly IndexType DefaultType = IndexType.Sorted;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IndexConfig"/> class.
+        /// Initializes a new instance of the <see cref="IndexOptions"/> class.
         /// </summary>
-        public IndexConfig()
+        public IndexOptions()
         {}
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IndexConfig"/> class.
+        /// Initializes a new instance of the <see cref="IndexOptions"/> class.
         /// </summary>
-        public IndexConfig(IEnumerable<string> attributes)
+        public IndexOptions(IEnumerable<string> attributes)
         {
             Attributes = attributes.ToList();
         }
@@ -70,14 +70,14 @@ namespace Hazelcast.Data
         /// </summary>
         /// <param name="attribute">Attribute name.</param>
         /// <returns>This instance for chaining.</returns>
-        public IndexConfig AddAttribute(string attribute)
+        public IndexOptions AddAttribute(string attribute)
         {
             ValidateAttribute(this, attribute);
             Attributes.Add(attribute);
             return this;
         }
 
-        public IndexConfig AddAttributes(params string[] attributes)
+        public IndexOptions AddAttributes(params string[] attributes)
         {
             foreach (var attribute in attributes)
             {
@@ -90,15 +90,15 @@ namespace Hazelcast.Data
             return this;
         }
 
-        public static void ValidateAttribute(IndexConfig config, string attributeName)
+        public static void ValidateAttribute(IndexOptions options, string attributeName)
         {
             if (attributeName == null)
-                throw new ArgumentNullException(nameof(attributeName), $"Attribute name cannot be null: {config}");
+                throw new ArgumentNullException(nameof(attributeName), $"Attribute name cannot be null: {options}");
 
             attributeName = attributeName.Trim();
 
             if (attributeName.Length == 0)
-                throw new ArgumentException($"Attribute name cannot be empty: {config}", nameof(attributeName));
+                throw new ArgumentException($"Attribute name cannot be empty: {options}", nameof(attributeName));
 
             if (attributeName.EndsWith(".", StringComparison.Ordinal))
                 throw new ArgumentException($"Attribute name cannot end with dot: {attributeName}", nameof(attributeName));

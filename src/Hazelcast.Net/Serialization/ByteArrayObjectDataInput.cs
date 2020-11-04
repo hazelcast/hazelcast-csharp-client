@@ -102,20 +102,6 @@ namespace Hazelcast.Serialization
         }
 
         /// <inheritdoc />
-        public Attempt<byte> TryReadByte()
-        {
-            var attempt = TryReadByte(_position);
-            if (attempt) _position += BytesExtensions.SizeOfByte;
-            return attempt;
-        }
-
-        /// <inheritdoc />
-        public Attempt<byte> TryReadByte(int position)
-        {
-            return Attempt.If(_length - position >= BytesExtensions.SizeOfByte, _data.ReadByte(_position));
-        }
-
-        /// <inheritdoc />
         public byte[] ReadByteArray(Endianness endianness = Endianness.Unspecified)
         {
             var length = ReadInt(endianness);

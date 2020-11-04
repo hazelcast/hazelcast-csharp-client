@@ -28,7 +28,7 @@ namespace Hazelcast.Core
     /// carries a <typeparamref name="TResult"/> result, and an exception.</para>
     /// </remarks>
 #pragma warning disable CA1815 // Override equals and operator equals on value types - not meant to be compared
-    public readonly struct Attempt<TResult>
+    internal readonly struct Attempt<TResult>
 #pragma warning restore CA1815
     {
         /// <summary>

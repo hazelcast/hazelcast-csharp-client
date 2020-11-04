@@ -30,12 +30,6 @@ namespace Hazelcast.Serialization
         byte ReadByte();
 
         /// <summary>
-        /// Tries to read a <see cref="byte"/> value.
-        /// </summary>
-        /// <returns>An attempt at reading a byte value, which may fail if the end of the buffer has been reached.</returns>
-        Attempt<byte> TryReadByte();
-
-        /// <summary>
         /// Reads an array of <see cref="byte"/> items.
         /// </summary>
         /// <param name="endianness">The endianness.</param>

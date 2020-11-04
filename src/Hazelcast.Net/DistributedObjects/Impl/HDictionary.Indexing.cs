@@ -26,12 +26,12 @@ namespace Hazelcast.DistributedObjects.Impl
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
-        public Task AddIndexAsync(IndexConfig indexConfig)
-            => AddIndexAsync(indexConfig, CancellationToken.None);
+        public Task AddIndexAsync(IndexOptions indexOptions)
+            => AddIndexAsync(indexOptions, CancellationToken.None);
 
         public Task AddIndexAsync(IndexType indexType, params string[] attributes)
         {
-            var indexConfig = new IndexConfig {Type = indexType};
+            var indexConfig = new IndexOptions {Type = indexType};
             indexConfig.AddAttributes(attributes);
             return AddIndexAsync(indexConfig, CancellationToken.None);
         }
@@ -40,11 +40,11 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task AddIndexAsync(IndexConfig indexConfig, CancellationToken cancellationToken)
+        Task AddIndexAsync(IndexOptions indexOptions, CancellationToken cancellationToken)
         {
-            if (indexConfig == null) throw new ArgumentNullException(nameof(indexConfig));
+            if (indexOptions == null) throw new ArgumentNullException(nameof(indexOptions));
 
-            var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexConfig.ValidateAndNormalize(Name));
+            var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexOptions.ValidateAndNormalize(Name));
             var task = Cluster.Messaging.SendAsync(requestMessage, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC

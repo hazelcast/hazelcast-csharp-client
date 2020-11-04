@@ -35,16 +35,6 @@ namespace Hazelcast.Serialization
         byte ReadByte(int position);
 
         /// <summary>
-        /// Tries to read a <see cref="byte"/> value at a given position.
-        /// </summary>
-        /// <param name="position">The position.</param>
-        /// <returns>An attempt at reading a byte value, which may fail if the end of the buffer has been reached.</returns>
-        /// <remarks>
-        /// <para>This method does not alter the current position of the buffer.</para>
-        /// </remarks>
-        Attempt<byte> TryReadByte(int position);
-
-        /// <summary>
         /// Reads a <see cref="short"/> value at a given position.
         /// </summary>
         /// <param name="position">The position.</param>
