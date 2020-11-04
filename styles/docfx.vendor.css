@@ -1531,7 +1531,6 @@ blockquote {
 }
 
 #devwarn {
-    display: none;
     text-align: center;
     background: beige;
     border-bottom: 1px solid #e3e3e3;
@@ -1539,6 +1538,7 @@ blockquote {
     min-height: 30px;
 }
 
-.devwarn #devwarn {
-    display: block;
-}
+div.xoptions thead { display: none; }
+
+div.xoptions tr td:first-of-type { width: 30%; }
+div.xoptions pre { border: none; padding: 3px; margin: 3px 0; font-size: 80%; }

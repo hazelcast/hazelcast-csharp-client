@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -204,8 +204,8 @@ sleepMs = Math.Min(5000, sleepMs * 2);
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_AddAsync__1_System_Collections_Generic_ICollection___0__Hazelcast_DistributedObjects_OverflowPolicy_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.AddAsync``1(System.Collections.Generic.ICollection{``0},Hazelcast.DistributedObjects.OverflowPolicy)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.AddAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_AddAsync__1_System_Collections_Generic_ICollection___0__Hazelcast_DistributedObjects_OverflowPolicy_">AddAsync&lt;TAdding&gt;(ICollection&lt;TAdding&gt;, OverflowPolicy)</a>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_AddRangeAsync_System_Collections_Generic_ICollection__0__Hazelcast_DistributedObjects_OverflowPolicy_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.AddRangeAsync(System.Collections.Generic.ICollection{`0},Hazelcast.DistributedObjects.OverflowPolicy)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.AddRangeAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_AddRangeAsync_System_Collections_Generic_ICollection__0__Hazelcast_DistributedObjects_OverflowPolicy_">AddRangeAsync(ICollection&lt;TItem&gt;, OverflowPolicy)</a>
         </td>
         <td class="markdown level1 summary"><p>Adds all the items of a collection to the tail of the Ringbuffer.</p>
 </td>
@@ -225,13 +225,6 @@ sleepMs = Math.Min(5000, sleepMs * 2);
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetAsync_System_Int64_System_Int32_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetAsync(System.Int64,System.Int32,System.Int32)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetAsync_System_Int64_System_Int32_System_Int32_">GetAsync(Int64, Int32, Int32)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Reads a batch of items from the Ringbuffer.</p>
-</td>
-      </tr>
-      <tr>
         <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetCapacityAsync" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetCapacityAsync" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetCapacityAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetCapacityAsync">GetCapacityAsync()</a>
         </td>
@@ -243,6 +236,13 @@ sleepMs = Math.Min(5000, sleepMs * 2);
           <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetHeadSequenceAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetHeadSequenceAsync">GetHeadSequenceAsync()</a>
         </td>
         <td class="markdown level1 summary"><p>Returns the sequence of the head.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetRangeAsync_System_Int64_System_Int32_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetRangeAsync(System.Int64,System.Int32,System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetRangeAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetRangeAsync_System_Int64_System_Int32_System_Int32_">GetRangeAsync(Int64, Int32, Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a batch of items from the Ringbuffer.</p>
 </td>
       </tr>
       <tr>

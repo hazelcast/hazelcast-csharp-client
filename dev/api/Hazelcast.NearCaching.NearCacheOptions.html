@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -86,7 +86,7 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.NearCaching.html">Hazelcast.NearCaching</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"><p>Represents the Near Cache options.</p>
+  <div class="markdown level0 summary"><p>Represents the options for one Near Cache.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
@@ -117,9 +117,6 @@
     <div>
       <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.referenceequals#System_Object_ReferenceEquals_System_Object_System_Object_">Object.ReferenceEquals(Object, Object)</a>
     </div>
-    <div>
-      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.tostring#System_Object_ToString">Object.ToString()</a>
-    </div>
   </div>
   </div>
   <h3 id="constructors">Constructors
@@ -140,38 +137,59 @@
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
-        <td id="Hazelcast_NearCaching_NearCacheOptions_Configurations" data-uid="Hazelcast.NearCaching.NearCacheOptions.Configurations" class="hz-one-third">
-          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.Configurations.html#Hazelcast_NearCaching_NearCacheOptions_Configurations">Configurations</a>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_CleanupPeriodSeconds" data-uid="Hazelcast.NearCaching.NearCacheOptions.CleanupPeriodSeconds" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.CleanupPeriodSeconds.html#Hazelcast_NearCaching_NearCacheOptions_CleanupPeriodSeconds">CleanupPeriodSeconds</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the configurations.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the period of the cleanup.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_NearCaching_NearCacheOptions_MaxToleratedMissCount" data-uid="Hazelcast.NearCaching.NearCacheOptions.MaxToleratedMissCount" class="hz-one-third">
-          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.MaxToleratedMissCount.html#Hazelcast_NearCaching_NearCacheOptions_MaxToleratedMissCount">MaxToleratedMissCount</a>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_EvictionPercentage" data-uid="Hazelcast.NearCaching.NearCacheOptions.EvictionPercentage" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.EvictionPercentage.html#Hazelcast_NearCaching_NearCacheOptions_EvictionPercentage">EvictionPercentage</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the maximum tolerated miss count.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the eviction percentage.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_NearCaching_NearCacheOptions_MinReconciliationIntervalSeconds" data-uid="Hazelcast.NearCaching.NearCacheOptions.MinReconciliationIntervalSeconds" class="hz-one-third">
-          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.MinReconciliationIntervalSeconds.html#Hazelcast_NearCaching_NearCacheOptions_MinReconciliationIntervalSeconds">MinReconciliationIntervalSeconds</a>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_EvictionPolicy" data-uid="Hazelcast.NearCaching.NearCacheOptions.EvictionPolicy" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.EvictionPolicy.html#Hazelcast_NearCaching_NearCacheOptions_EvictionPolicy">EvictionPolicy</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the minimum reconciliation interval.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the eviction policy.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_NearCaching_NearCacheOptions_PatternMatcher" data-uid="Hazelcast.NearCaching.NearCacheOptions.PatternMatcher" class="hz-one-third">
-          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.PatternMatcher.html#Hazelcast_NearCaching_NearCacheOptions_PatternMatcher">PatternMatcher</a>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_InMemoryFormat" data-uid="Hazelcast.NearCaching.NearCacheOptions.InMemoryFormat" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.InMemoryFormat.html#Hazelcast_NearCaching_NearCacheOptions_InMemoryFormat">InMemoryFormat</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the NearCache configuration pattern matcher.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the in-memory format.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_NearCaching_NearCacheOptions_ReconciliationIntervalSeconds" data-uid="Hazelcast.NearCaching.NearCacheOptions.ReconciliationIntervalSeconds" class="hz-one-third">
-          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.ReconciliationIntervalSeconds.html#Hazelcast_NearCaching_NearCacheOptions_ReconciliationIntervalSeconds">ReconciliationIntervalSeconds</a>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_InvalidateOnChange" data-uid="Hazelcast.NearCaching.NearCacheOptions.InvalidateOnChange" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.InvalidateOnChange.html#Hazelcast_NearCaching_NearCacheOptions_InvalidateOnChange">InvalidateOnChange</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the reconciliation interval.</p>
+        <td class="markdown level1 summary"><p>Whether to invalidate entries when entries in the backing data structure are changed.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_MaxIdleSeconds" data-uid="Hazelcast.NearCaching.NearCacheOptions.MaxIdleSeconds" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.MaxIdleSeconds.html#Hazelcast_NearCaching_NearCacheOptions_MaxIdleSeconds">MaxIdleSeconds</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the maximum number of seconds an entry can stay in the cache untouched before being evicted.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_MaxSize" data-uid="Hazelcast.NearCaching.NearCacheOptions.MaxSize" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.MaxSize.html#Hazelcast_NearCaching_NearCacheOptions_MaxSize">MaxSize</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the maximum size of the cache before entries get evicted.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_TimeToLiveSeconds" data-uid="Hazelcast.NearCaching.NearCacheOptions.TimeToLiveSeconds" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.TimeToLiveSeconds.html#Hazelcast_NearCaching_NearCacheOptions_TimeToLiveSeconds">TimeToLiveSeconds</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the number of seconds entries stay in the cache before being evicted.</p>
 </td>
       </tr>
     </tbody>
@@ -181,11 +199,10 @@
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
-        <td id="Hazelcast_NearCaching_NearCacheOptions_GetConfig_System_String_" data-uid="Hazelcast.NearCaching.NearCacheOptions.GetConfig(System.String)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.GetConfig.html#Hazelcast_NearCaching_NearCacheOptions_GetConfig_System_String_">GetConfig(String)</a>
+        <td id="Hazelcast_NearCaching_NearCacheOptions_ToString" data-uid="Hazelcast.NearCaching.NearCacheOptions.ToString" class="hz-one-third">
+          <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.ToString.html#Hazelcast_NearCaching_NearCacheOptions_ToString">ToString()</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets a configuration.</p>
-</td>
+        <td class="markdown level1 summary"></td>
       </tr>
     </tbody>
   </table>

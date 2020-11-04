@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Hazelcast Options | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Hazelcast Options | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.55.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="devwarn">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="hazelcast-options">Hazelcast Options</h1>
+
+<p>This page lists the complete set of options available to configure the Hazelcast .NET client. For more details regarding configuration itself, please refer to the <a href="configuration.html">Configuration</a> page.</p>
+<div class="xoptions"><p>See <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> for full documentation of the class.</p>
+<p> <br><br><br></p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.HazelcastOptions.ClusterName.html#Hazelcast_HazelcastOptions_ClusterName">ClusterName</a></td>
+<td>Gets or sets the cluster name.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.HazelcastOptions.ClientName.html#Hazelcast_HazelcastOptions_ClientName">ClientName</a></td>
+<td>Gets or sets the client name.<br> <p>When <code>null</code>, the client name is derived from <a class="xref" href="../api/Hazelcast.HazelcastOptions.ClientNamePrefix.html#Hazelcast_HazelcastOptions_ClientNamePrefix">ClientNamePrefix</a>.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.HazelcastOptions.ClientNamePrefix.html#Hazelcast_HazelcastOptions_ClientNamePrefix">ClientNamePrefix</a></td>
+<td>Gets or sets the client name prefix.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.HazelcastOptions.Labels.html#Hazelcast_HazelcastOptions_Labels">Labels</a></td>
+<td>Gets the client labels.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.HazelcastOptions.ServiceProvider.html#Hazelcast_HazelcastOptions_ServiceProvider">ServiceProvider</a></td>
+<td>Gets the service provider.<br> <p>In dependency-injection scenario the service provider may be available, so that service factories can return injected services. In non-dependency-injection scenario, this returns <code>null</code>.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.HazelcastOptions.LoggerFactory.html#Hazelcast_HazelcastOptions_LoggerFactory">LoggerFactory</a></td>
+<td>Gets the service factory for <a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerfactory">ILoggerFactory</a>.<br> <p>The only option available for logging is the <a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerfactory">ILoggerFactory</a> creator, which can only be set programmatically. All other logging options (level, etc.) are configured via the default Microsoft configuration system. See <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging</a> for details and documentation.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.HazelcastOptions.Subscribers.html#Hazelcast_HazelcastOptions_Subscribers">Subscribers</a></td>
+<td>Gets the subscribers.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="authentication">Authentication</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.Clustering.AuthenticationOptions.html">AuthenticationOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.Authentication.html#Hazelcast_HazelcastOptions_Authentication">Authentication</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Clustering.AuthenticationOptions.CredentialsFactory.html#Hazelcast_Clustering_AuthenticationOptions_CredentialsFactory">CredentialsFactory</a></td>
+<td>Gets the credentials factory service factory.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="loadbalancing">LoadBalancing</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.Clustering.LoadBalancing.LoadBalancingOptions.html">LoadBalancingOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.LoadBalancing.html#Hazelcast_HazelcastOptions_LoadBalancing">LoadBalancing</a>.</p>
+ <p>Load balancing determines how the Hazelcast client selects the member to talk to, when it could talk to any member. By default it is random (see <a class="xref" href="../api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.html">RandomLoadBalancer</a>), but it can also be round-robin (see <a class="xref" href="../api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.html">RoundRobinLoadBalancer</a>) or static (see <a class="xref" href="../api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.html">StaticLoadBalancer</a>).</p> 
+
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Clustering.LoadBalancing.LoadBalancingOptions.Mode.html#Hazelcast_Clustering_LoadBalancing_LoadBalancingOptions_Mode">Mode</a></td>
+<td>Gets or sets the load balancing mode.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Clustering.LoadBalancing.LoadBalancingOptions.LoadBalancer.html#Hazelcast_Clustering_LoadBalancing_LoadBalancingOptions_LoadBalancer">LoadBalancer</a></td>
+<td>Gets the service factory for <a class="xref" href="../api/Hazelcast.Clustering.LoadBalancing.ILoadBalancer.html">ILoadBalancer</a>.<br> <p>A service factory is initialized with a creator function, that creates an instance of the service. For instance: <pre><code>options.LoadBalancer.Creator = () => new RandomLoadBalancer();</code></pre></p></td>
+</tr>
+</tbody>
+</table>
+<h2 id="heartbeat">Heartbeat</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.Clustering.HeartbeatOptions.html">HeartbeatOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.Heartbeat.html#Hazelcast_HazelcastOptions_Heartbeat">Heartbeat</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Clustering.HeartbeatOptions.PeriodMilliseconds.html#Hazelcast_Clustering_HeartbeatOptions_PeriodMilliseconds">PeriodMilliseconds</a></td>
+<td>Gets or sets the heartbeat period.<br> <p>Heartbeat will run periodically, and send a ping request to connections that have not been written to over the previous period.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Clustering.HeartbeatOptions.TimeoutMilliseconds.html#Hazelcast_Clustering_HeartbeatOptions_TimeoutMilliseconds">TimeoutMilliseconds</a></td>
+<td>Gets or sets the timeout (how long to wait before declaring a connection down).<br> <p>Heartbeat will consider that connections that have not received data for the timeout duration, although they should have been pinged, are down.</p> <p>The timeout should be longer than the period.</p></td>
+</tr>
+</tbody>
+</table>
+<h2 id="messaging">Messaging</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.Messaging.MessagingOptions.html">MessagingOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.Messaging.html#Hazelcast_HazelcastOptions_Messaging">Messaging</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Messaging.MessagingOptions.MaxFastInvocationCount.html#Hazelcast_Messaging_MessagingOptions_MaxFastInvocationCount">MaxFastInvocationCount</a></td>
+<td>Gets or sets the max fast invocation count.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.html#Hazelcast_Messaging_MessagingOptions_MinRetryDelayMilliseconds">MinRetryDelayMilliseconds</a></td>
+<td>Gets or sets the min retry delay.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Messaging.MessagingOptions.OperationTimeoutMilliseconds.html#Hazelcast_Messaging_MessagingOptions_OperationTimeoutMilliseconds">OperationTimeoutMilliseconds</a></td>
+<td>Gets or sets the operation timeout.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="networking">Networking</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.html">NetworkingOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.Networking.html#Hazelcast_HazelcastOptions_Networking">Networking</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.Addresses.html#Hazelcast_Networking_NetworkingOptions_Addresses">Addresses</a></td>
+<td>Gets or sets the list initial addresses.<br> <p>The client uses this list to find a running member and connect to it. This initial member will then send the list of other members to the client.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ShuffleAddresses.html#Hazelcast_Networking_NetworkingOptions_ShuffleAddresses">ShuffleAddresses</a></td>
+<td>Whether to shuffle addresses when attempting to connect to the cluster.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.SmartRouting.html#Hazelcast_Networking_NetworkingOptions_SmartRouting">SmartRouting</a></td>
+<td>Whether smart routing is enabled.<br> <p>If true (default), client will route the key based operations to owner of the key at the best effort.</p> <p>Note that it however does not guarantee that the operation will always be executed on the owner, as the member table is only updated every 10 seconds.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.RetryOnTargetDisconnected.html#Hazelcast_Networking_NetworkingOptions_RetryOnTargetDisconnected">RetryOnTargetDisconnected</a></td>
+<td>Whether to redo operations.<br> <p>If true, the client will redo the operations that were executing on the server and the client lost the connection. This can happen because of network, or simply because the member died.</p> <p>Note that it is not clear whether the operation is performed or not. For idempotent operations this is harmless, but for non idempotent ones retrying can cause undesirable effects. Also note that the redo can perform on any member.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.html#Hazelcast_Networking_NetworkingOptions_ConnectionTimeoutMilliseconds">ConnectionTimeoutMilliseconds</a></td>
+<td>Gets or sets the connection timeout.<br> <p>Specifies the Hazelcast client connection timeout, i.e. the maximum amount of time the Hazelcast can spend trying to establish a connection to the cluster. See <a class="xref" href="../api/Hazelcast.Networking.SocketOptions.html">SocketOptions</a> for specifying the individual socket connection timeout.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ReconnectMode.html#Hazelcast_Networking_NetworkingOptions_ReconnectMode">ReconnectMode</a></td>
+<td>Gets or sets the reconnection mode in case the client is disconnected.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.WaitForClientMilliseconds.html#Hazelcast_Networking_NetworkingOptions_WaitForClientMilliseconds">WaitForClientMilliseconds</a></td>
+<td>Gets or sets the delay to pause for when looking for a client to handle cluster view events and no client is available.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ssl">Ssl</h3>
+<p>Access <a class="xref" href="../api/Hazelcast.Networking.SslOptions.html">SslOptions</a> via options.Networking.<a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.Ssl.html#Hazelcast_Networking_NetworkingOptions_Ssl">Ssl</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.Enabled.html#Hazelcast_Networking_SslOptions_Enabled">Enabled</a></td>
+<td>Whether to enable SSL.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.ValidateCertificateChain.html#Hazelcast_Networking_SslOptions_ValidateCertificateChain">ValidateCertificateChain</a></td>
+<td>Whether to validate the certificate chain.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.ValidateCertificateName.html#Hazelcast_Networking_SslOptions_ValidateCertificateName">ValidateCertificateName</a></td>
+<td>Whether to validate the certificate name.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.CheckCertificateRevocation.html#Hazelcast_Networking_SslOptions_CheckCertificateRevocation">CheckCertificateRevocation</a></td>
+<td>Whether to check for certificate revocation.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.CertificateName.html#Hazelcast_Networking_SslOptions_CertificateName">CertificateName</a></td>
+<td>Gets or sets the name of the certificate.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.CertificatePath.html#Hazelcast_Networking_SslOptions_CertificatePath">CertificatePath</a></td>
+<td>Gets or sets the full path to the certificate file.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.CertificatePassword.html#Hazelcast_Networking_SslOptions_CertificatePassword">CertificatePassword</a></td>
+<td>Gets or sets the password for the certificate file.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SslOptions.Protocol.html#Hazelcast_Networking_SslOptions_Protocol">Protocol</a></td>
+<td>Gets or sets the SSL protocol.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cloud">Cloud</h3>
+<p>Access <a class="xref" href="../api/Hazelcast.Networking.CloudOptions.html">CloudOptions</a> via options.Networking.<a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.Cloud.html#Hazelcast_Networking_NetworkingOptions_Cloud">Cloud</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.CloudOptions.Enabled.html#Hazelcast_Networking_CloudOptions_Enabled">Enabled</a></td>
+<td>Whether Hazelcast Cloud is enabled.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.CloudOptions.DiscoveryToken.html#Hazelcast_Networking_CloudOptions_DiscoveryToken">DiscoveryToken</a></td>
+<td>Gets or sets the discovery token of the cluster.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.CloudOptions.UrlBase.html#Hazelcast_Networking_CloudOptions_UrlBase">UrlBase</a></td>
+<td>Gets or sets the cloud url base.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="socket">Socket</h3>
+<p>Access <a class="xref" href="../api/Hazelcast.Networking.SocketOptions.html">SocketOptions</a> via options.Networking.<a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.Socket.html#Hazelcast_Networking_NetworkingOptions_Socket">Socket</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SocketOptions.BufferSizeKiB.html#Hazelcast_Networking_SocketOptions_BufferSizeKiB">BufferSizeKiB</a></td>
+<td>The buffer size.<br> <p>The buffer size is expressed in Kibibytes, ie units of 1024 bytes.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SocketOptions.KeepAlive.html#Hazelcast_Networking_SocketOptions_KeepAlive">KeepAlive</a></td>
+<td>Whether to keep the socket alive.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SocketOptions.LingerSeconds.html#Hazelcast_Networking_SocketOptions_LingerSeconds">LingerSeconds</a></td>
+<td>The number of seconds to remain connected after the socket Close() method is called, or zero to disconnect immediately.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SocketOptions.TcpNoDelay.html#Hazelcast_Networking_SocketOptions_TcpNoDelay">TcpNoDelay</a></td>
+<td>Whether the socket is using the Nagle algorithm.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.SocketOptions.ConnectionTimeoutMilliseconds.html#Hazelcast_Networking_SocketOptions_ConnectionTimeoutMilliseconds">ConnectionTimeoutMilliseconds</a></td>
+<td>The socket connection timeout.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="connectionretry">ConnectionRetry</h3>
+<p>Access <a class="xref" href="../api/Hazelcast.Core.RetryOptions.html">RetryOptions</a> via options.Networking.<a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ConnectionRetry.html#Hazelcast_Networking_NetworkingOptions_ConnectionRetry">ConnectionRetry</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.InitialBackoffMilliseconds.html#Hazelcast_Core_RetryOptions_InitialBackoffMilliseconds">InitialBackoffMilliseconds</a></td>
+<td>Gets or sets the back-off time in milliseconds.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.MaxBackoffMilliseconds.html#Hazelcast_Core_RetryOptions_MaxBackoffMilliseconds">MaxBackoffMilliseconds</a></td>
+<td>Gets or sets the maximum back-off time in milliseconds.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.Multiplier.html#Hazelcast_Core_RetryOptions_Multiplier">Multiplier</a></td>
+<td>Gets or sets the multiplier.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.ClusterConnectionTimeoutMilliseconds.html#Hazelcast_Core_RetryOptions_ClusterConnectionTimeoutMilliseconds">ClusterConnectionTimeoutMilliseconds</a></td>
+<td>Gets or sets the cluster connection timeout in milliseconds.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.Jitter.html#Hazelcast_Core_RetryOptions_Jitter">Jitter</a></td>
+<td>Gets or sets the jitter.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="events">Events</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.Events.EventsOptions.html">EventsOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.Events.html#Hazelcast_HazelcastOptions_Events">Events</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Events.EventsOptions.SubscriptionCollectDelay.html#Hazelcast_Events_EventsOptions_SubscriptionCollectDelay">SubscriptionCollectDelay</a></td>
+<td>Gets or sets the delay before collecting subscriptions starts.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Events.EventsOptions.SubscriptionCollectPeriod.html#Hazelcast_Events_EventsOptions_SubscriptionCollectPeriod">SubscriptionCollectPeriod</a></td>
+<td>Gets or sets the period of the subscription collection.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Events.EventsOptions.SubscriptionCollectTimeout.html#Hazelcast_Events_EventsOptions_SubscriptionCollectTimeout">SubscriptionCollectTimeout</a></td>
+<td>Gets or sets the subscription collection timeout, after which a subscription is considered dead and removed.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="serialization">Serialization</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.html">SerializationOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.Serialization.html#Hazelcast_HazelcastOptions_Serialization">Serialization</a>.</p>
+<p> <a class="xref" href="../api/Hazelcast.Serialization.IIdentifiedDataSerializable.html">IIdentifiedDataSerializable</a>, <a class="xref" href="../api/Hazelcast.Serialization.IPortable.html">IPortable</a>, custom serializers, and global serializer can be configured using this config. </p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.Endianness.html#Hazelcast_Serialization_SerializationOptions_Endianness">Endianness</a></td>
+<td>Gets or sets the <a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.Endianness.html#Hazelcast_Serialization_SerializationOptions_Endianness">Endianness</a>.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.ValidateClassDefinitions.html#Hazelcast_Serialization_SerializationOptions_ValidateClassDefinitions">ValidateClassDefinitions</a></td>
+<td>Whether to check for class definition errors at start, and throw an Serialization Exception with error definition.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.PortableVersion.html#Hazelcast_Serialization_SerializationOptions_PortableVersion">PortableVersion</a></td>
+<td>Gets or sets the portable version.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.ClassDefinitions.html#Hazelcast_Serialization_SerializationOptions_ClassDefinitions">ClassDefinitions</a></td>
+<td></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.PortableFactories.html#Hazelcast_Serialization_SerializationOptions_PortableFactories">PortableFactories</a></td>
+<td>Gets the portable factories.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.DataSerializableFactories.html#Hazelcast_Serialization_SerializationOptions_DataSerializableFactories">DataSerializableFactories</a></td>
+<td></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.Serializers.html#Hazelcast_Serialization_SerializationOptions_Serializers">Serializers</a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="defaultserializer">DefaultSerializer</h3>
+<p>Access <a class="xref" href="../api/Hazelcast.Serialization.SerializerOptions.html">SerializerOptions</a> via options.Serialization.<a class="xref" href="../api/Hazelcast.Serialization.SerializationOptions.DefaultSerializer.html#Hazelcast_Serialization_SerializationOptions_DefaultSerializer">DefaultSerializer</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializerOptions.SerializedType.html#Hazelcast_Serialization_SerializerOptions_SerializedType">SerializedType</a></td>
+<td>Gets or sets the type being serialized.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Serialization.SerializerOptions.OverrideClr.html#Hazelcast_Serialization_SerializerOptions_OverrideClr">OverrideClr</a></td>
+<td>Whether to fully override (and ignore) the native CLR serialization.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="nearcaching">NearCaching</h2>
+<p>Access <a class="xref" href="../api/Hazelcast.NearCaching.NearCachingOptions.html">NearCachingOptions</a> via options.<a class="xref" href="../api/Hazelcast.HazelcastOptions.NearCaching.html#Hazelcast_HazelcastOptions_NearCaching">NearCaching</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.NearCaching.NearCachingOptions.ReconciliationIntervalSeconds.html#Hazelcast_NearCaching_NearCachingOptions_ReconciliationIntervalSeconds">ReconciliationIntervalSeconds</a></td>
+<td>Gets or sets the reconciliation interval.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.NearCaching.NearCachingOptions.MinReconciliationIntervalSeconds.html#Hazelcast_NearCaching_NearCachingOptions_MinReconciliationIntervalSeconds">MinReconciliationIntervalSeconds</a></td>
+<td>Gets or sets the minimum reconciliation interval.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.NearCaching.NearCachingOptions.MaxToleratedMissCount.html#Hazelcast_NearCaching_NearCachingOptions_MaxToleratedMissCount">MaxToleratedMissCount</a></td>
+<td>Gets or sets the maximum tolerated miss count.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.NearCaching.NearCachingOptions.NearCacheOptions.html#Hazelcast_NearCaching_NearCachingOptions_NearCacheOptions">NearCacheOptions</a></td>
+<td>Gets options for Near Caches.</td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.NearCaching.NearCachingOptions.PatternMatcher.html#Hazelcast_NearCaching_NearCachingOptions_PatternMatcher">PatternMatcher</a></td>
+<td>Gets or sets the NearCache configuration pattern matcher.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2020 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

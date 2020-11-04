@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -137,28 +137,84 @@
         <td id="Hazelcast_Core_TaskEx_RunWithNewContext_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task__System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithNewContext(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Threading.CancellationToken)" class="hz-one-third">
           <a class="xref" href="Hazelcast.Core.TaskEx.RunWithNewContext.html#Hazelcast_Core_TaskEx_RunWithNewContext_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task__System_Threading_CancellationToken_">RunWithNewContext(Func&lt;CancellationToken, Task&gt;, CancellationToken)</a>
         </td>
-        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <a class="xref" href="Hazelcast.Core.AsyncContext.html">AsyncContext</a>.</p>
+        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <span class="xref">Hazelcast.Core.AsyncContext</span>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_Core_TaskEx_RunWithNewContext_System_Func_System_Threading_Tasks_Task__" data-uid="Hazelcast.Core.TaskEx.RunWithNewContext(System.Func{System.Threading.Tasks.Task})" class="hz-one-third">
           <a class="xref" href="Hazelcast.Core.TaskEx.RunWithNewContext.html#Hazelcast_Core_TaskEx_RunWithNewContext_System_Func_System_Threading_Tasks_Task__">RunWithNewContext(Func&lt;Task&gt;)</a>
         </td>
-        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <a class="xref" href="Hazelcast.Core.AsyncContext.html">AsyncContext</a>.</p>
+        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <span class="xref">Hazelcast.Core.AsyncContext</span>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_Core_TaskEx_RunWithNewContext__1_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task___0___System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithNewContext``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)" class="hz-one-third">
           <a class="xref" href="Hazelcast.Core.TaskEx.RunWithNewContext.html#Hazelcast_Core_TaskEx_RunWithNewContext__1_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task___0___System_Threading_CancellationToken_">RunWithNewContext&lt;TResult&gt;(Func&lt;CancellationToken, Task&lt;TResult&gt;&gt;, CancellationToken)</a>
         </td>
-        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <a class="xref" href="Hazelcast.Core.AsyncContext.html">AsyncContext</a>.</p>
+        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <span class="xref">Hazelcast.Core.AsyncContext</span>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_Core_TaskEx_RunWithNewContext__1_System_Func_System_Threading_Tasks_Task___0___" data-uid="Hazelcast.Core.TaskEx.RunWithNewContext``1(System.Func{System.Threading.Tasks.Task{``0}})" class="hz-one-third">
           <a class="xref" href="Hazelcast.Core.TaskEx.RunWithNewContext.html#Hazelcast_Core_TaskEx_RunWithNewContext__1_System_Func_System_Threading_Tasks_Task___0___">RunWithNewContext&lt;TResult&gt;(Func&lt;Task&lt;TResult&gt;&gt;)</a>
         </td>
-        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <a class="xref" href="Hazelcast.Core.AsyncContext.html">AsyncContext</a>.</p>
+        <td class="markdown level1 summary"><p>Starts an asynchronous task with a new <span class="xref">Hazelcast.Core.AsyncContext</span>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task__System_Int32_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Int32,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task__System_Int32_System_Threading_CancellationToken_">RunWithTimeout(Func&lt;CancellationToken, Task&gt;, Int32, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task__System_TimeSpan_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task},System.TimeSpan,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task__System_TimeSpan_System_Threading_CancellationToken_">RunWithTimeout(Func&lt;CancellationToken, Task&gt;, TimeSpan, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func___0_System_Threading_CancellationToken_System_Threading_Tasks_Task____0_System_Int32_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout``1(System.Func{``0,System.Threading.CancellationToken,System.Threading.Tasks.Task},``0,System.Int32,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func___0_System_Threading_CancellationToken_System_Threading_Tasks_Task____0_System_Int32_System_Threading_CancellationToken_">RunWithTimeout&lt;TArg&gt;(Func&lt;TArg, CancellationToken, Task&gt;, TArg, Int32, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func___0_System_Threading_CancellationToken_System_Threading_Tasks_Task____0_System_TimeSpan_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout``1(System.Func{``0,System.Threading.CancellationToken,System.Threading.Tasks.Task},``0,System.TimeSpan,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func___0_System_Threading_CancellationToken_System_Threading_Tasks_Task____0_System_TimeSpan_System_Threading_CancellationToken_">RunWithTimeout&lt;TArg&gt;(Func&lt;TArg, CancellationToken, Task&gt;, TArg, TimeSpan, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task___0___System_Int32_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.Int32,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task___0___System_Int32_System_Threading_CancellationToken_">RunWithTimeout&lt;TResult&gt;(Func&lt;CancellationToken, Task&lt;TResult&gt;&gt;, Int32, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task___0___System_TimeSpan_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout``1(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.TimeSpan,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout__1_System_Func_System_Threading_CancellationToken_System_Threading_Tasks_Task___0___System_TimeSpan_System_Threading_CancellationToken_">RunWithTimeout&lt;TResult&gt;(Func&lt;CancellationToken, Task&lt;TResult&gt;&gt;, TimeSpan, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout__2_System_Func___0_System_Threading_CancellationToken_System_Threading_Tasks_Task___1_____0_System_TimeSpan_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout``2(System.Func{``0,System.Threading.CancellationToken,System.Threading.Tasks.Task{``1}},``0,System.TimeSpan,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout__2_System_Func___0_System_Threading_CancellationToken_System_Threading_Tasks_Task___1_____0_System_TimeSpan_System_Threading_CancellationToken_">RunWithTimeout&lt;TArg, TResult&gt;(Func&lt;TArg, CancellationToken, Task&lt;TResult&gt;&gt;, TArg, TimeSpan, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_TaskEx_RunWithTimeout__2_System_Func___1_System_Threading_CancellationToken_System_Threading_Tasks_Task___0_____1_System_Int32_System_Threading_CancellationToken_" data-uid="Hazelcast.Core.TaskEx.RunWithTimeout``2(System.Func{``1,System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},``1,System.Int32,System.Threading.CancellationToken)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.TaskEx.RunWithTimeout.html#Hazelcast_Core_TaskEx_RunWithTimeout__2_System_Func___1_System_Threading_CancellationToken_System_Threading_Tasks_Task___0_____1_System_Int32_System_Threading_CancellationToken_">RunWithTimeout&lt;TResult, TArg&gt;(Func&lt;TArg, CancellationToken, Task&lt;TResult&gt;&gt;, TArg, Int32, CancellationToken)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Runs a task with a timeout.</p>
 </td>
       </tr>
     </tbody>

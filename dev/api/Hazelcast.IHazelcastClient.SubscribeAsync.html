@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -93,14 +93,14 @@
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;HazelcastClientEventHandlers&gt; handle)</code></pre>
+  <pre><code class="lang-csharp hljs">Task&lt;Guid&gt; SubscribeAsync(Action&lt;HazelcastClientEventHandlers&gt; events)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.HazelcastClientEventHandlers.html">HazelcastClientEventHandlers</a>&gt;</td>
-      <td><span class="parametername">handle</span></td>
+      <td><span class="parametername">events</span></td>
       <td><p>An event handlers collection builder.</p>
 </td>
     </tr>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -100,10 +100,16 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.html">SingletonServiceFactory</a>&lt;<a class="xref" href="Hazelcast.Clustering.LoadBalancing.ILoadBalancer.html">ILoadBalancer</a>&gt;</td>
-      <td></td>
+      <td><p>The service factory for <a class="xref" href="Hazelcast.Clustering.LoadBalancing.ILoadBalancer.html">ILoadBalancer</a>.</p>
+</td>
     </tr>
   </tbody>
 </table>
+<h5 id="Hazelcast_Clustering_LoadBalancing_LoadBalancingOptions_LoadBalancer_remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>A service factory is initialized with a creator function, that creates an
+instance of the service. For instance:
+<pre><code>options.LoadBalancer.Creator = () => new RandomLoadBalancer();</code></pre></p>
+</div>
 </article>
           </div>
           

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -88,8 +88,7 @@
   <h6>Assembly: Hazelcast.Net.dll</h6>
   <div class="markdown level0 summary"><p>Represents the Hazelcast client options.</p>
 </div>
-  <div class="markdown level0 conceptual"><p>TODO: document</p>
-</div>
+  <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">public sealed class HazelcastOptions : IClusterOptions</code></pre>
   </div>
@@ -97,10 +96,6 @@
     <h5>Inheritance</h5>
     <div class="level0"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></div>
     <div class="level1"><span class="xref">HazelcastOptions</span></div>
-  </div>
-  <div classs="implements">
-    <h5>Implements</h5>
-    <div><a class="xref" href="Hazelcast.Clustering.IClusterOptions.html">IClusterOptions</a></div>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
@@ -148,21 +143,22 @@
         <td id="Hazelcast_HazelcastOptions_DefaultClientNamePrefix" data-uid="Hazelcast.HazelcastOptions.DefaultClientNamePrefix" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.DefaultClientNamePrefix.html">DefaultClientNamePrefix</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the default client name prefix.</p>
+        <td class="markdown level1 summary"><p>Gets the default client name prefix, which is <code>&quot;hz.client_&quot;</code>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_DefaultClusterName" data-uid="Hazelcast.HazelcastOptions.DefaultClusterName" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.DefaultClusterName.html">DefaultClusterName</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the default cluster name.</p>
+        <td class="markdown level1 summary"><p>Gets the default cluster name, which is <code>&quot;dev&quot;</code>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Hazelcast" data-uid="Hazelcast.HazelcastOptions.Hazelcast" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Hazelcast.html">Hazelcast</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Gets the Hazelcast configuration section name, which is <code>&quot;hazelcast&quot;</code>.</p>
+</td>
       </tr>
     </tbody>
   </table>
@@ -181,7 +177,7 @@
         <td id="Hazelcast_HazelcastOptions_ClientName" data-uid="Hazelcast.HazelcastOptions.ClientName" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.ClientName.html#Hazelcast_HazelcastOptions_ClientName">ClientName</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the client name.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the client name.</p>
 </td>
       </tr>
       <tr>
@@ -196,13 +192,6 @@
           <a class="xref" href="Hazelcast.HazelcastOptions.ClusterName.html#Hazelcast_HazelcastOptions_ClusterName">ClusterName</a>
         </td>
         <td class="markdown level1 summary"><p>Gets or sets the cluster name.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_HazelcastOptions_Core" data-uid="Hazelcast.HazelcastOptions.Core" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.Core.html#Hazelcast_HazelcastOptions_Core">Core</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets the core options.</p>
 </td>
       </tr>
       <tr>
@@ -234,10 +223,10 @@
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_HazelcastOptions_Logging" data-uid="Hazelcast.HazelcastOptions.Logging" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.Logging.html#Hazelcast_HazelcastOptions_Logging">Logging</a>
+        <td id="Hazelcast_HazelcastOptions_LoggerFactory" data-uid="Hazelcast.HazelcastOptions.LoggerFactory" class="hz-one-third">
+          <a class="xref" href="Hazelcast.HazelcastOptions.LoggerFactory.html#Hazelcast_HazelcastOptions_LoggerFactory">LoggerFactory</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the logging options.</p>
+        <td class="markdown level1 summary"><p>Gets the service factory for <a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerfactory">ILoggerFactory</a>.</p>
 </td>
       </tr>
       <tr>
@@ -248,10 +237,10 @@
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_HazelcastOptions_NearCache" data-uid="Hazelcast.HazelcastOptions.NearCache" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.NearCache.html#Hazelcast_HazelcastOptions_NearCache">NearCache</a>
+        <td id="Hazelcast_HazelcastOptions_NearCaching" data-uid="Hazelcast.HazelcastOptions.NearCaching" class="hz-one-third">
+          <a class="xref" href="Hazelcast.HazelcastOptions.NearCaching.html#Hazelcast_HazelcastOptions_NearCaching">NearCaching</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets  the NearCache options.</p>
+        <td class="markdown level1 summary"><p>Gets the general Near Caching options.</p>
 </td>
       </tr>
       <tr>
@@ -342,13 +331,6 @@
           <a class="xref" href="Hazelcast.HazelcastOptions.Build.html#Hazelcast_HazelcastOptions_Build_System_String___System_Collections_Generic_IEnumerable_System_Collections_Generic_KeyValuePair_System_String_System_String___System_String_System_String_System_String_System_Action_Microsoft_Extensions_Configuration_IConfiguration_Hazelcast_HazelcastOptions__">Build(String[], IEnumerable&lt;KeyValuePair&lt;String, String&gt;&gt;, String, String, String, Action&lt;IConfiguration, HazelcastOptions&gt;)</a>
         </td>
         <td class="markdown level1 summary"><p>Builds Hazelcast options.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_HazelcastOptions_Clone" data-uid="Hazelcast.HazelcastOptions.Clone" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.Clone.html#Hazelcast_HazelcastOptions_Clone">Clone()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Clones the options.</p>
 </td>
       </tr>
     </tbody>

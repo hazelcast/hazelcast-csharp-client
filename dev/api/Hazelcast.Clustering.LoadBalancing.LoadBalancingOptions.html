@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -121,6 +121,12 @@
       <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.tostring#System_Object_ToString">Object.ToString()</a>
     </div>
   </div>
+  <h5 id="Hazelcast_Clustering_LoadBalancing_LoadBalancingOptions_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Load balancing determines how the Hazelcast client selects the member
+to talk to, when it could talk to any member. By default it is random (see <a class="xref" href="Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.html">RandomLoadBalancer</a>),
+but it can also be round-robin (see <a class="xref" href="Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.html">RoundRobinLoadBalancer</a>) or static
+(see <a class="xref" href="Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.html">StaticLoadBalancer</a>).</p>
+</div>
   </div>
   <h3 id="constructors">Constructors
   </h3>
@@ -144,6 +150,13 @@
           <a class="xref" href="Hazelcast.Clustering.LoadBalancing.LoadBalancingOptions.LoadBalancer.html#Hazelcast_Clustering_LoadBalancing_LoadBalancingOptions_LoadBalancer">LoadBalancer</a>
         </td>
         <td class="markdown level1 summary"><p>Gets the service factory for <a class="xref" href="Hazelcast.Clustering.LoadBalancing.ILoadBalancer.html">ILoadBalancer</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Clustering_LoadBalancing_LoadBalancingOptions_Mode" data-uid="Hazelcast.Clustering.LoadBalancing.LoadBalancingOptions.Mode" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Clustering.LoadBalancing.LoadBalancingOptions.Mode.html#Hazelcast_Clustering_LoadBalancing_LoadBalancingOptions_Mode">Mode</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the load balancing mode.</p>
 </td>
       </tr>
     </tbody>

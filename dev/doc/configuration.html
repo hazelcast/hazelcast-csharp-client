@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -48,8 +48,7 @@
             </div>
           </div>
         </nav>
-        <div id="devwarn">This page documents a development version of the Hazelcast .NET client.
-        Its content is not final and remains subject to changes.</div>        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -85,7 +84,8 @@
 patterns. The Hazelcast client configuration is represented by the <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> class. When simply instantiated, this
 class contains the default options:</p>
 <pre><code class="lang-csharp">var options = new HazelcastOptions();
-</code></pre><p>For anything more realistic though, different approaches are available.</p>
+</code></pre><p>For anything more realistic though, different approaches are available, as detailed below.</p>
+<p>To get an overview of all the different configuration options, refer to the <a href="options.html">Options</a> page.</p>
 <h3 id="simple-environment">Simple Environment</h3>
 <p>In a simple, non-hosted environment without dependency injection, options need to be <em>built</em> using one of the
 <a class="xref" href="../api/Hazelcast.HazelcastOptions.Build.html">Build</a> methods. </p>

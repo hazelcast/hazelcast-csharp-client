@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
   
@@ -23,7 +23,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper">
+    <div id="wrapper" class="devwarn">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -50,7 +50,7 @@
             </div>
           </div>
         </nav>
-        
+        <div id="devwarn">This page documents a development version of the Hazelcast .NET client. Its content is not final and remains subject to changes.</div>        
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -86,70 +86,6 @@
 <div class="markdown level0 summary"></div>
 <div class="markdown level0 conceptual"></div>
 
-<a id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetAsync_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetAsync*"></a>
-<h4 id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetAsync_System_Int64_System_Int32_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetAsync(System.Int64,System.Int32,System.Int32)">GetAsync(Int64, Int32, Int32)</h4>
-<div class="markdown level1 summary"><p>Reads a batch of items from the Ringbuffer.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">Task&lt;IReadOnlyList&lt;TItem&gt;&gt; GetAsync(long startSequence, int minCount, int maxCount)</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.int64">Int64</a></td>
-      <td><span class="parametername">startSequence</span></td>
-      <td><p>the startSequence of the first item to read.</p>
-</td>
-    </tr>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.int32">Int32</a></td>
-      <td><span class="parametername">minCount</span></td>
-      <td><p>the minimum number of items to read.</p>
-</td>
-    </tr>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.int32">Int32</a></td>
-      <td><span class="parametername">maxCount</span></td>
-      <td><p>the maximum number of items to read.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1">IReadOnlyList</a>&lt;TItem&gt;&gt;</td>
-      <td><p>a future containing the items read.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetAsync_System_Int64_System_Int32_System_Int32__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>Reads a batch of items from the Ringbuffer. If the number of available items after the first read item is smaller than
-the maxCount, these items are returned. So it could be the number of items read is smaller than the maxCount.
-If there are less items available than minCount, then this call blocks.
-Reading a batch of items is likely to perform better because less overhead is involved.</p>
-</div>
-<h5 class="exceptions">Exceptions</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></td>
-      <td><p>if startSequence is smaller than 0
-or if startSequence larger than
-<see cref="!:TailSequence()"></see>
-or if minCount smaller than 0
-or if minCount larger than maxCount,
-or if maxCount larger than the capacity of the ringbuffer
-or if maxCount larger than 1000 (to prevent overload)</p>
-</td>
-    </tr>
-  </tbody>
-</table>
 <a id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetAsync_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetAsync_System_Int64_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetAsync(System.Int64)">GetAsync(Int64)</h4>
 <div class="markdown level1 summary"><p>Reads one item from the Ringbuffer.</p>
