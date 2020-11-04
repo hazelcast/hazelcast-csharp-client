@@ -55,7 +55,6 @@ namespace Hazelcast.Clustering
 
             _logger = loggerFactory.CreateLogger<Cluster>();
 
-            DefaultOperationTimeoutMilliseconds = options.Messaging.DefaultOperationTimeoutMilliseconds;
             Partitioner = new Partitioner();
 
             var loadBalancer = options.LoadBalancing.LoadBalancer.Service ?? new RoundRobinLoadBalancer();
@@ -114,11 +113,6 @@ namespace Hazelcast.Clustering
         /// Gets the cluster events service.
         /// </summary>
         public ClusterEvents Events { get; }
-
-        /// <summary>
-        /// Gets the default operation timeout in milliseconds.
-        /// </summary>
-        public int DefaultOperationTimeoutMilliseconds { get; }
 
         /// <summary>
         /// Determines whether the cluster is using smart routing.

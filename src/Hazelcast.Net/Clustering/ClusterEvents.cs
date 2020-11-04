@@ -502,6 +502,7 @@ namespace Hazelcast.Clustering
             }
 
             // schedule the event - will run async, but serialized per-partition
+            // (queues the event, returns immediately, does not await on handlers)
             _scheduler.Add(subscription, message);
         }
 

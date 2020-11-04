@@ -89,44 +89,46 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public async Task TimeoutAfter()
+        public async Task WithTimeout()
         {
-            // null task = arg exception
-            Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await ((Task)null).TimeoutAfter(Timeout.InfiniteTimeSpan));
+            // arg exception
+            await AssertEx.ThrowsAsync<ArgumentNullException>(async () =>
+            {
+                await TaskEx.RunWithTimeout(null, 0);
+            });
 
             // completes before timeout = ok
             // (and, no unobserved exception)
-            await Task.CompletedTask.TimeoutAfter(Timeout.InfiniteTimeSpan);
-            await Task.CompletedTask.TimeoutAfter(TimeSpan.FromSeconds(60));
+            await TaskEx.RunWithTimeout(t => Task.CompletedTask, Timeout.InfiniteTimeSpan);
+            await TaskEx.RunWithTimeout(t => Task.CompletedTask, TimeSpan.FromSeconds(60));
 
             // timeout before end of task = timeout exception
-            Assert.ThrowsAsync<TaskTimeoutException>(async () =>
+            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
             {
-                await Delay(default).TimeoutAfter(TimeSpan.FromMilliseconds(1));
+                await TaskEx.RunWithTimeout(t => Delay(default), TimeSpan.FromMilliseconds(1));
             });
 
             // throws before timeout = get the thrown exception
-            Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await AssertEx.ThrowsAsync<NotSupportedException>(async () =>
             {
-                await Throw().TimeoutAfter(Timeout.InfiniteTimeSpan);
+                await TaskEx.RunWithTimeout(t => Throw(), Timeout.InfiniteTimeSpan);
             });
 
             // canceled before timeout = canceled exception
-            Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            await AssertEx.ThrowsAsync<TaskCanceledException>(async () =>
             {
-                await CancelTask().TimeoutAfter(Timeout.InfiniteTimeSpan);
+                await TaskEx.RunWithTimeout(t => CancelTask(), Timeout.InfiniteTimeSpan);
             });
 
             // canceled before timeout = canceled exception
-            Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                await CancelOperation().TimeoutAfter(Timeout.InfiniteTimeSpan);
+                await TaskEx.RunWithTimeout(t => CancelOperation(), Timeout.InfiniteTimeSpan);
             });
         }
 
         [Test]
-        public async Task TimeoutAfterThenCancel()
+        public async Task WithTimeoutAndObservedException()
         {
             static async Task Run(CancellationToken token)
             {
@@ -135,76 +137,13 @@ namespace Hazelcast.Tests.Core
                 throw new Exception("bang!");
             }
 
-            var cancellation = new CancellationTokenSource();
-            try
+            // timeout before end of task = timeout exception
+            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
             {
-                await Run(cancellation.Token).TimeoutAfter(TimeSpan.FromMilliseconds(1));
-            }
-            catch (TaskTimeoutException)
-            {
-                // when TimeoutAfter throws an exception, the original task keeps
-                // running... if it supports cancellation, it may be a good idea
-                // to cancel it, or deal with the situation one way or another.
+                await TaskEx.RunWithTimeout(Run, TimeSpan.FromMilliseconds(1));
+            });
 
-                cancellation.Cancel();
-                cancellation.Dispose();
-            }
-
-            // however, the task ends up being unobserved!
-            for (var i = 0; i < 40; i++)
-            {
-                if (GetUnobservedExceptions().Count > 0)
-                    break;
-                await Task.Delay(100, default);
-            }
-            Assert.That(GetUnobservedExceptions().Count, Is.GreaterThanOrEqualTo(1));
-
-            ClearUnobservedExceptions();
-
-            // so this is the proper way to do it:
-
-            cancellation = new CancellationTokenSource();
-            try
-            {
-                await Run(cancellation.Token).TimeoutAfter(TimeSpan.FromMilliseconds(1));
-            }
-            catch (TaskTimeoutException e)
-            {
-                // when TimeoutAfter throws an exception, the original task keeps
-                // running... if it supports cancellation, it may be a good idea
-                // to cancel it, or deal with the situation one way or another.
-
-                cancellation.Cancel();
-                cancellation.Dispose();
-
-                try
-                {
-                    await e.Task.CAF();
-                }
-                catch
-                {
-                    // deal with the exception, if any
-                }
-            }
-
-            // now if the task does not support being cancelled, at least the exception should be observed,
-            // either by a custom continuation that will do something about the situation, or just with
-            // the ObserveException extension method.
-
-            try
-            {
-                await Run(default).TimeoutAfter(TimeSpan.FromMilliseconds(1));
-            }
-            catch (TaskTimeoutException e)
-            {
-                // when TimeoutAfter throws an exception, the original task keeps
-                // running... if it does not support cancellation, one still needs
-                // to deal with the situation one way or another. either by awaiting
-                // the task (but then why the timeout?) or by making sure its
-                // exception is observed.
-
-                e.ObserveException();
-            }
+            // and, the test should not leak the task exception
         }
 
         [Test]

@@ -1,10 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace System
 {
-    // duplicates special methods of TaskCoreExtensions in System.*
-    // in order to avoid cross-dependency with Hazelcast.*
     internal static class TaskSystemExtensions
     {
         /// <summary>
@@ -12,7 +11,7 @@ namespace System
         /// </summary>
         /// <param name="task">The task.</param>
         /// <returns>A task with an observed exception.</returns>
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task ObserveException(this Task task)
             => task.ContinueWith(t =>
                 {
@@ -29,7 +28,7 @@ namespace System
         /// </summary>
         /// <param name="task">The task.</param>
         /// <returns>A task with an observed exception.</returns>
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<T> ObserveException<T>(this Task<T> task)
             => task.ContinueWith(t =>
                 {

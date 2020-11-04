@@ -20,15 +20,24 @@ using Microsoft.Extensions.Logging.Configuration;
 
 namespace Hazelcast.Testing.Logging
 {
-    public static class StringBuilderLoggerExtensions
+    public static class TestingLoggerExtensions
     {
-        public static ILoggingBuilder AddStringBuilder(this ILoggingBuilder builder, StringBuilder text, StringBuilderLoggerOptions options = null)
+        public static ILoggingBuilder AddStringBuilder(this ILoggingBuilder builder, StringBuilder text, TestingLoggerOptions options = null)
         {
             builder.AddConfiguration();
 
             var descriptor = ServiceDescriptor.Singleton<ILoggerProvider>(new StringBuilderLoggerProvider(text, options));
             builder.Services.TryAddEnumerable(descriptor);
             //LoggerProviderOptions.RegisterProviderOptions<ConsoleLoggerOptions, ConsoleLoggerProvider>(builder.Services);
+            return builder;
+        }
+
+        public static ILoggingBuilder AddHConsole(this ILoggingBuilder builder, TestingLoggerOptions options = null)
+        {
+            builder.AddConfiguration();
+
+            var descriptor = ServiceDescriptor.Singleton<ILoggerProvider>(new HConsoleLoggerProvider(options));
+            builder.Services.TryAddEnumerable(descriptor);
             return builder;
         }
     }

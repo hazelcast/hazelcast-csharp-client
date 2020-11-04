@@ -25,18 +25,18 @@ namespace Hazelcast.Tests.Messaging
         {
             var options = new MessagingOptions
             {
-                DefaultOperationTimeoutMilliseconds = 123,
+                OperationTimeoutMilliseconds = 123,
                 MinRetryDelayMilliseconds = 456,
                 MaxFastInvocationCount = 789
             };
 
-            Assert.That(options.DefaultOperationTimeoutMilliseconds, Is.EqualTo(123));
+            Assert.That(options.OperationTimeoutMilliseconds, Is.EqualTo(123));
             Assert.That(options.MinRetryDelayMilliseconds, Is.EqualTo(456));
             Assert.That(options.MaxFastInvocationCount, Is.EqualTo(789));
 
             var clone = options.Clone();
 
-            Assert.That(clone.DefaultOperationTimeoutMilliseconds, Is.EqualTo(123));
+            Assert.That(clone.OperationTimeoutMilliseconds, Is.EqualTo(123));
             Assert.That(clone.MinRetryDelayMilliseconds, Is.EqualTo(456));
             Assert.That(clone.MaxFastInvocationCount, Is.EqualTo(789));
         }

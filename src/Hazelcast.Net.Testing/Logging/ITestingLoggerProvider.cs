@@ -16,13 +16,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.Logging
 {
-    public class StringBuilderLoggerOptions
+    public interface ITestingLoggerProvider : ILoggerProvider, ISupportExternalScope
     {
-        public bool IncludeScopes { get; set; }
+        bool IsEnabled(LogLevel logLevel);
 
-        public LogLevel LogToStandardErrorThreshold { get; set; } = LogLevel.None;
-
-        public string TimestampFormat { get; set; }
-
+        void WriteLog(LogMessageEntry entry);
     }
 }

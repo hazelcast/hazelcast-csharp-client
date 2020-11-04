@@ -146,7 +146,7 @@ namespace Hazelcast.Tests.Configuration
 
             Assert.AreEqual(1000, options.MaxFastInvocationCount);
             Assert.AreEqual(1001, options.MinRetryDelayMilliseconds);
-            Assert.AreEqual(1003, options.DefaultOperationTimeoutMilliseconds);
+            Assert.AreEqual(1003, options.OperationTimeoutMilliseconds);
         }
 
         [Test]
@@ -156,7 +156,6 @@ namespace Hazelcast.Tests.Configuration
 
             Assert.AreEqual(1000, options.PeriodMilliseconds);
             Assert.AreEqual(1001, options.TimeoutMilliseconds);
-            Assert.AreEqual(1002, options.PingTimeoutMilliseconds);
         }
 
         [Test]

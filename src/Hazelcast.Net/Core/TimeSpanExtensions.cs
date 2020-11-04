@@ -57,5 +57,22 @@ namespace Hazelcast.Core
             var timeout = (int) timeSpan.TotalMilliseconds;
             return timeout > 0 ? timeout : timeout < 0 ? infiniteTimeout : defaultTimeout;
         }
+
+        // THIS IS TEMP - WILL BE REPLACED WHEN MERGING TIMESTAMPS
+        public static long RoundedMilliseconds(this TimeSpan timespan, int zeroMs, int infiniteMs)
+        {
+            var ms = (long) timespan.TotalMilliseconds;
+            if (ms == 0) return zeroMs;
+            if (ms < 0) return infiniteMs;
+            return ms;
+        }
+
+        // THIS IS TEMP - WILL BE REMOVED WHEN MERGING TIMESTAMPS
+        public static int ClampInt32(this long value)
+        {
+            if (value < int.MinValue) return int.MinValue;
+            if (value > int.MaxValue) return int.MaxValue;
+            return (int) value;
+        }
     }
 }
