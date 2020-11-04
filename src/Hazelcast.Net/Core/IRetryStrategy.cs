@@ -20,7 +20,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Defines a retry strategy.
     /// </summary>
-    public interface IRetryStrategy
+    internal interface IRetryStrategy
     {
         /// <summary>
         /// Waits before retrying.

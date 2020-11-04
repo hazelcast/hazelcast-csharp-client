@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects
     /// <summary>
     /// Provides extension methods to the <see cref="IndexConfig"/> class.
     /// </summary>
-    public static class IndexConfigExtensions
+    internal static class IndexConfigExtensions
     {
         // TODO: document, explain, refactor
 

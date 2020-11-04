@@ -27,7 +27,7 @@ namespace Hazelcast.Clustering
     /// <remarks>
     /// <para>Controls retries with a back-off mechanism.</para>
     /// </remarks>
-    public class RetryStrategy : IRetryStrategy
+    internal class RetryStrategy : IRetryStrategy
     {
         private readonly int _initialBackOff;
         private readonly int _maxBackOff;

@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Logging;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast
 {
@@ -25,9 +27,17 @@ namespace Hazelcast
         // as it would make little sense for our full-async code
 
         /// <summary>
-        /// Gets the logging options.
+        /// Gets the service factory for <see cref="ILoggerFactory"/>.
         /// </summary>
-        public LoggingOptions Logging { get; } = new LoggingOptions();
+        /// <remarks>
+        /// <para>The only option available for logging is the <see cref="ILoggerFactory"/> creator, which can only
+        /// be set programmatically. All other logging options (level, etc.) are configured via the
+        /// default Microsoft configuration system. See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging
+        /// for details and documentation.</para>
+        /// </remarks>
+
+        [BinderIgnore]
+        public SingletonServiceFactory<ILoggerFactory> LoggerFactory { get; } = new SingletonServiceFactory<ILoggerFactory>();
 
         /// <summary>
         /// Gets the serialization options.

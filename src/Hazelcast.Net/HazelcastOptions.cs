@@ -45,9 +45,9 @@ namespace Hazelcast
             ClusterName = other.ClusterName;
             Subscribers = new List<IHazelcastClientEventSubscriber>(other.Subscribers);
             Labels = new HashSet<string>(other.Labels);
+            LoggerFactory = other.LoggerFactory.Clone();
 
             Core = other.Core.Clone();
-            Logging = other.Logging.Clone();
             Heartbeat = other.Heartbeat.Clone();
             Networking = other.Networking.Clone();
             Authentication = other.Authentication.Clone();

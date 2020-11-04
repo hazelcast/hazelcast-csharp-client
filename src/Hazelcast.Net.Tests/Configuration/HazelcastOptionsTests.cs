@@ -124,14 +124,6 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
-        public void LoggingOptionsSection()
-        {
-            _ = ReadResource(Resources.HazelcastOptions).Logging;
-
-            // nothing is configured here
-        }
-
-        [Test]
         public void CoreOptionsSection()
         {
             var options = ReadResource(Resources.HazelcastOptions).Core;

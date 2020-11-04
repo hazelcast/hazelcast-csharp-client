@@ -139,7 +139,7 @@ namespace Hazelcast
             // TODO: make the clock non-static and pass it to the client + where it's needed
             Clock.Initialize(options.Core.Clock);
 
-            var loggerFactory = options.Logging.LoggerFactory.Service ?? new NullLoggerFactory();
+            var loggerFactory = options.LoggerFactory.Service ?? new NullLoggerFactory();
 
             // TODO: refactor serialization service entirely
             // there should not be a 'builder'
