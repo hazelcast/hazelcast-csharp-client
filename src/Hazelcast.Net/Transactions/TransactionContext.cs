@@ -33,6 +33,7 @@ namespace Hazelcast.Transactions
         private long _threadId; // the "threadId", i.e. async context, which owns the transaction
         private long _startTime; // the start time of the transaction
         private MemberConnection _connection; // the client supporting the transaction
+        private bool _completed; // whether the transaction has been completed
 
         // TODO transactions need some TLC
         // how is two-phases commit supposed to work? is it all server-side (and then, why
@@ -203,11 +204,15 @@ namespace Hazelcast.Transactions
             }
         }
 
+        /// <inheritdoc />
+        public void Complete()
+        {
+            _completed = true;
+        }
+
+        /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            // be sure to always clear this!
-            InTransaction = false;
-
             try
             {
                 await _distributedObjectFactory.DisposeAsync().CAF();
@@ -215,16 +220,11 @@ namespace Hazelcast.Transactions
             catch
             { /* ignore */ } // TODO: log?
 
-            if (State == TransactionState.Active)
+            // if still in a transaction, either commit or rollback
+            if (InTransaction)
             {
-                // abandoned transaction, roll it back
-
-                try
-                {
-                    await RollbackAsync().CAF();
-                }
-                catch
-                { /* ignore */ } // TODO: log?
+                // may throw
+                await (_completed ? CommitAsync() : RollbackAsync()).CAF();
             }
         }
 

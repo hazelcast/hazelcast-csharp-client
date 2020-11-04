@@ -14,62 +14,121 @@
 
 using System.Linq;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class TransactionTests : SingleMemberRemoteTestBase
+    public class TransactionTests : SingleMemberClientRemoteTestBase
     {
         [Test]
-        public async Task Test()
+        public async Task ExplicitCommitPattern()
         {
-            await using var client = await CreateAndStartClientAsync().CAF();
-            await using var list = await client.GetListAsync<string>(CreateUniqueName());
+            await using var list = await Client.GetListAsync<string>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(list);
             await list.AddAsync("item1");
 
-            await using (var tx = await client.BeginTransactionAsync())
+            await using (var tx = await Client.BeginTransactionAsync())
             {
                 var txList = await tx.GetTransactionalAsync(list);
 
-                NUnit.Framework.Assert.IsTrue(await txList.AddAsync("item2"));
-                NUnit.Framework.Assert.AreEqual(2, await txList.CountAsync());
-                NUnit.Framework.Assert.AreEqual(1, await list.CountAsync());
-                NUnit.Framework.Assert.IsFalse(await txList.RemoveAsync("item3"));
-                NUnit.Framework.Assert.IsTrue(await txList.RemoveAsync("item1"));
+                Assert.IsTrue(await txList.AddAsync("item2"));
+                Assert.AreEqual(2, await txList.CountAsync());
+                Assert.AreEqual(1, await list.CountAsync());
+                Assert.IsFalse(await txList.RemoveAsync("item3"));
+                Assert.IsTrue(await txList.RemoveAsync("item1"));
+                Assert.IsTrue(await txList.AddAsync("item4"));
 
-                // TODO: consider working same as System.Transaction
                 await tx.CommitAsync();
             }
 
-            NUnit.Framework.Assert.AreEqual(1, await list.CountAsync());
+            Assert.AreEqual(2, await list.CountAsync());
             var items = await list.GetAllAsync();
-            NUnit.Framework.Assert.AreEqual(1, items.Count);
-            NUnit.Framework.Assert.IsTrue(items.Contains("item2"));
+            Assert.AreEqual(2, items.Count);
+            Assert.IsTrue(items.Contains("item2"));
+            Assert.IsTrue(items.Contains("item4"));
+        }
 
-            await client.DestroyAsync(list).CAF();
+        [Test]
+        public async Task ExplicitRollbackPattern()
+        {
+            await using var list = await Client.GetListAsync<string>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(list);
+            await list.AddAsync("item1");
 
-            // but ... other than that... the test runs ok! ;)
+            await using (var tx = await Client.BeginTransactionAsync())
+            {
+                var txList = await tx.GetTransactionalAsync(list);
 
-            // original code from ClientTxnListTest.cs
-            /*
-            var name = TestSupport.RandomString();
-            list = Client.GetList<object>(name);
-            list.Add("item1");
-            var context = Client.NewTransactionContext();
-            context.BeginTransaction();
-            var listTx = context.GetList<object>(name);
-            Assert.IsTrue(listTx.Add("item2"));
-            Assert.AreEqual(2, listTx.Size());
-            Assert.AreEqual(1, list.Count);
-            Assert.IsFalse(listTx.Remove("item3"));
-            Assert.IsTrue(listTx.Remove("item1"));
-            context.CommitTransaction();
-            Assert.AreEqual(1, list.Count);
-            listTx.Destroy();
-            */
+                Assert.IsTrue(await txList.AddAsync("item2"));
+                Assert.AreEqual(2, await txList.CountAsync());
+                Assert.AreEqual(1, await list.CountAsync());
+                Assert.IsFalse(await txList.RemoveAsync("item3"));
+                Assert.IsTrue(await txList.RemoveAsync("item1"));
+                Assert.IsTrue(await txList.AddAsync("item4"));
+
+                await tx.RollbackAsync();
+            }
+
+            Assert.AreEqual(1, await list.CountAsync());
+            var items = await list.GetAllAsync();
+            Assert.AreEqual(1, items.Count);
+            Assert.IsTrue(items.Contains("item1"));
+        }
+
+        [Test]
+        public async Task ImplicitCommitPattern()
+        {
+            await using var list = await Client.GetListAsync<string>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(list);
+
+            await list.AddAsync("item1");
+
+            await using (var tx = await Client.BeginTransactionAsync())
+            {
+                var txList = await tx.GetTransactionalAsync(list);
+
+                Assert.IsTrue(await txList.AddAsync("item2"));
+                Assert.AreEqual(2, await txList.CountAsync());
+                Assert.AreEqual(1, await list.CountAsync());
+                Assert.IsFalse(await txList.RemoveAsync("item3"));
+                Assert.IsTrue(await txList.RemoveAsync("item1"));
+                Assert.IsTrue(await txList.AddAsync("item4"));
+
+                tx.Complete();
+            }
+
+            Assert.AreEqual(2, await list.CountAsync());
+            var items = await list.GetAllAsync();
+            Assert.AreEqual(2, items.Count);
+            Assert.IsTrue(items.Contains("item2"));
+            Assert.IsTrue(items.Contains("item4"));
+        }
+
+        [Test]
+        public async Task ImplicitRollbackPattern()
+        {
+            await using var list = await Client.GetListAsync<string>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(list);
+
+            await list.AddAsync("item1");
+
+            await using (var tx = await Client.BeginTransactionAsync())
+            {
+                var txList = await tx.GetTransactionalAsync(list);
+
+                Assert.IsTrue(await txList.AddAsync("item2"));
+                Assert.AreEqual(2, await txList.CountAsync());
+                Assert.AreEqual(1, await list.CountAsync());
+                Assert.IsFalse(await txList.RemoveAsync("item3"));
+                Assert.IsTrue(await txList.RemoveAsync("item1"));
+            }
+
+            Assert.AreEqual(1, await list.CountAsync());
+            var items = await list.GetAllAsync();
+            Assert.AreEqual(1, items.Count);
+            Assert.IsTrue(items.Contains("item1"));
         }
     }
 }

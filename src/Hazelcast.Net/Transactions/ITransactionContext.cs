@@ -43,6 +43,16 @@ namespace Hazelcast.Transactions
         /// </summary>
         Task RollbackAsync();
 
+        /// <summary>
+        /// Completes the transaction.
+        /// </summary>
+        /// <remarks>
+        /// <para>If the transaction has neither been committed nor rolled back when the
+        /// <see cref="ITransactionContext"/> is disposed, it will be committed if it has
+        /// been completed, else it will be rolled back.</para>
+        /// </remarks>
+        void Complete();
+
         // Objects
 
         /// <summary>
