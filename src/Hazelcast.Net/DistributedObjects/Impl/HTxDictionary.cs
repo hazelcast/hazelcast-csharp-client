@@ -47,13 +47,14 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = TransactionalMapDeleteCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> GetAsync(TKey key)
+        public async Task<Attempt<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapGetCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+
+            return ToObject<object>(response) is TValue value ? Attempt.Succeed(value): Attempt.Failed;
         }
 
         public async Task<TValue> GetForUpdateAsync(TKey key)

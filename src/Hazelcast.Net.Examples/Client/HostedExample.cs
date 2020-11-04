@@ -135,7 +135,7 @@ namespace Hazelcast.Examples.Client
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     // pretend to do some work
-                    var i = await map.GetAsync("foo");
+                    var i = (await map.GetAsync("foo")).ValueOrDefault();
                     i += 1;
                     await map.SetAsync("foo", i);
                     Console.WriteLine(i);

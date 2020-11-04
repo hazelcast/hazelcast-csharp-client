@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Predicates;
 
 namespace Hazelcast.DistributedObjects
@@ -39,7 +40,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAsync(TKey)"/>.
         /// </summary>
-        Task<TValue> GetAsync(TKey key);
+        Task<Attempt<TValue>> GetAsync(TKey key);
 
         /// <summary>Locks the key and then gets and returns the value to which the specified key is mapped.</summary>
         /// <remarks>

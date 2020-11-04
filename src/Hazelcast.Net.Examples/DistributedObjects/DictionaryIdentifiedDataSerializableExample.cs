@@ -43,8 +43,11 @@ namespace Hazelcast.Examples.DistributedObjects
             await map.SetAsync(employee.Id, employee);
 
             // retrieve employee
-            var e = await map.GetAsync(employee.Id);
-            Console.WriteLine($"Gotten employee '{e.Name}'.");
+            var attempt = await map.GetAsync(employee.Id);
+            if (attempt.Success)
+                Console.WriteLine($"Gotten employee '{attempt.Value.Name}'.");
+            else
+                Console.WriteLine("Employee not found?");
 
             // destroy the map
             await client.DestroyAsync(map);

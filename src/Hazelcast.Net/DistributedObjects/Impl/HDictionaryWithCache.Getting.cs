@@ -25,16 +25,17 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionaryWithCache<TKey, TValue> // Getting
     {
         /// <inheritdoc />
-        protected override async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected override async Task<Attempt<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
             async Task<IData> BaseGetAsync(IData kdata, CancellationToken token)
                 => await GetDataAsync(kdata, token).CAF();
 
+            // FIXME
             return (await _cache.TryGetOrAddAsync(keyData, _ => BaseGetAsync(keyData, cancellationToken)).CAF()).ValueOrDefault();
         }
 
         /// <inheritdoc />
-        protected override async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownersKeys, CancellationToken cancellationToken)
+        protected override async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAllAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownersKeys, CancellationToken cancellationToken)
         {
             // owner keys are grouped by owners (members) and partitions
 
@@ -61,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 }
             }
 
-            var entries = await base.GetAsync(ownersKeys, cancellationToken).CAF();
+            var entries = await base.GetAllAsync(ownersKeys, cancellationToken).CAF();
 
             // 'entries' is a ReadOnlyLazyDictionary that contains values that are lazily
             // deserialized - and since we just fetched the entries, none have been deserialized

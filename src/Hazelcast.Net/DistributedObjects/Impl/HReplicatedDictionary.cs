@@ -81,13 +81,14 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = ReplicatedMapClearCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> GetAsync(TKey key)
+        public async Task<Attempt<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapGetCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+
+            return ToObject<object>(response) is TValue value ? Attempt.Succeed(value) : Attempt.Failed;
         }
 
         public async Task<IReadOnlyCollection<TKey>> GetKeysAsync()
@@ -107,7 +108,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         public Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync() => GetEntriesAsync(CancellationToken.None);
-        
+
         private async Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(CancellationToken cancellationToken)
         {
             var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);

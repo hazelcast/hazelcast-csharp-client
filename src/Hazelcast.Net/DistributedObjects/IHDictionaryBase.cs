@@ -1,11 +1,11 @@
 // Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -28,6 +29,7 @@ namespace Hazelcast.DistributedObjects
     public interface IHDictionaryBase<TKey, TValue> : IDistributedObject, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
     {
         //getting
+
         /// <summary>
         /// Gets the value for the specified key, or <c>null</c> if this dictionary does not contain this key.
         /// </summary>
@@ -58,7 +60,7 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         /// <param name="key">key</param>
         /// <returns>value for the specified key or <c>null</c> if this dictionary does not contain this key</returns>
-        Task<TValue> GetAsync(TKey key);
+        Task<Attempt<TValue>> GetAsync(TKey key);
 
         /// <summary>Gets a <see cref="IReadOnlyCollection{TKey}" /> clone of the keys contained in this dictionary.</summary>
         /// <remarks>
@@ -93,11 +95,11 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Gets the number of entries contained in this dictionary.</summary>
         /// <returns>the number of entries in this dictionary</returns>
         Task<int> CountAsync();
-        
+
         /// <summary>Returns <c>true</c> if this dictionary contains no entries.</summary>
         /// <returns><c>true</c> if this dictionary contains no entries</returns>
         Task<bool> IsEmptyAsync();
-        
+
         /// <summary>
         /// Determines whether this dictionary contains an entry for the specified key.
         /// </summary>
@@ -112,7 +114,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key.</param>
         /// <returns><c>true</c> if the specified key contains key; otherwise, <c>false</c>.</returns>
         Task<bool> ContainsKeyAsync(TKey key);
-        
+
         /// <summary>
         /// Determines whether this dictionary contains one or more keys to the specified value
         /// </summary>
@@ -121,6 +123,7 @@ namespace Hazelcast.DistributedObjects
         Task<bool> ContainsValueAsync(TValue value);
 
         //setting
+
         /// <summary>
         /// Associates a given value to the specified key and replicates it to the
         /// cluster. If there is an old value, it will be replaced by the specified
@@ -130,7 +133,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">value to be associated with the specified key.</param>
         /// <returns>old value of the entry</returns>
         Task<TValue> GetAndSetAsync(TKey key, TValue value);
-        
+
         /// <summary>
         /// Associates a given value to the specified key and replicates it to the
         /// cluster. If there is an old value, it will be replaced by the specified
@@ -138,7 +141,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <remarks>
         /// <para>
-        /// In addition, you have to specify a <see cref="timeToLive"/> 
+        /// In addition, you have to specify a <see cref="timeToLive"/>
         /// to define when the value is outdated and thus should be removed from the
         /// this dictionary.
         /// </para>
@@ -148,7 +151,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="timeToLive">A positive time to live period to be associated with the specified key-value pair.</param>
         /// <returns>old value of the entry</returns>
         Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
-        
+
         /// <summary>
         /// Copies all of the entries from the specified <see cref="IHDictionary{TKey,TValue}"/> to this dictionary.
         /// </summary>
@@ -156,11 +159,12 @@ namespace Hazelcast.DistributedObjects
         Task SetAllAsync(IDictionary<TKey, TValue> entries);
 
         //removing
+
         /// <summary>
         /// Clears the dictionary and deletes the items.
         /// </summary>
         Task ClearAsync();
-        
+
         /// <summary>
         /// Removes the entry for a key from this dictionary if it is present.
         /// </summary>

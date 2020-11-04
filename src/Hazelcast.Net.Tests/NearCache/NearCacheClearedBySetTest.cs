@@ -200,7 +200,7 @@ namespace Hazelcast.Tests.NearCache
 
                 // check if we see our last update
                 var valueStr = await dictionary.GetAsync(Key).CAF();
-                if (valueStr == null) continue; // ignore nulls (?)
+                if (!valueStr.Success) continue; // not found
 
                 var valueInt = int.Parse(valueStr);
                 if (valueInt == i) continue; // match = ok

@@ -31,10 +31,10 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HDictionary<TKey, TValue> // Getting
     {
         /// <inheritdoc />
-        public Task<TValue> GetAsync(TKey key)
+        public Task<Attempt<TValue>> GetAsync(TKey key)
             => GetAsync(key, CancellationToken.None);
 
-        private async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
+        private async Task<Attempt<TValue>> GetAsync(TKey key, CancellationToken cancellationToken)
             => await GetAsync(ToSafeData(key), cancellationToken).CAF();
 
         /// <summary>
@@ -43,9 +43,11 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">The key data.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
-        protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected virtual async Task<Attempt<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            return ToObject<TValue>(await GetDataAsync(keyData, cancellationToken).CAF());
+            // TODO: avoid boxing when ToObject-ing the value
+            var valueData = await GetDataAsync(keyData, cancellationToken).CAF();
+            return ToObject<object>(valueData) is TValue value ? Attempt.Succeed(value) : Attempt.Failed;
         }
 
         /// <summary>
@@ -88,7 +90,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 list.Add(keyData);
             }
 
-            var task = GetAsync(ownerKeys, cancellationToken);
+            var task = GetAllAsync(ownerKeys, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -103,7 +105,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="ownerKeys">Keys.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The values for the specified keys.</returns>
-        protected virtual async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownerKeys, CancellationToken cancellationToken)
+        protected virtual async Task<ReadOnlyLazyDictionary<TKey, TValue>> GetAllAsync(Dictionary<Guid, Dictionary<int, List<IData>>> ownerKeys, CancellationToken cancellationToken)
         {
             // create parallel tasks to fire a request for each owner
             var tasks = new List<Task<ClientMessage>>();
