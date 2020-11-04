@@ -53,7 +53,8 @@ namespace Hazelcast.Messaging
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class, for tests exclusively.
+        /// (internal for tests only)
+        /// Initializes a new instance of the <see cref="ClientMessageConnection"/> class.
         /// </summary>
         /// <param name="connection">The underlying <see cref="SocketConnectionBase"/>.</param>
         /// <param name="writerSemaphore">A writer-controlling semaphore.</param>
@@ -86,7 +87,8 @@ namespace Hazelcast.Messaging
         }
 
         /// <summary>
-        /// Gets or sets a function that runs when sending. Provided for tests only.
+        /// (internal for tests only)
+        /// Gets or sets a function that runs when sending.
         /// </summary>
         internal Action OnSending { get; set; }
 
@@ -159,7 +161,10 @@ namespace Hazelcast.Messaging
             return true;
         }
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Receives a fragment.
+        /// </summary>
         internal void ReceiveFragmentAsync(ClientMessage fragment)
         {
             if (fragment.Flags.HasAll(ClientMessageFlags.Unfragmented))
@@ -256,10 +261,6 @@ namespace Hazelcast.Messaging
 
             // send message, serialize sending via semaphore
             // throws OperationCanceledException if canceled (and semaphore is not acquired)
-            // FIXME _writer != null but disposed? race condition somewhere?
-            // at least it happens on Linux when... we try to subscribe long after everything went down?
-            // and then, on Linux, event this throws = cancellation is *not* requested?!
-            //  _writer is disposed when this is disposed
             if (_writer != null)
             {
                 try
@@ -268,6 +269,7 @@ namespace Hazelcast.Messaging
                 }
                 catch (ObjectDisposedException)
                 {
+                    // _writer can be non-null but disposed
                     return false;
                 }
                 catch (Exception e) when (!(e is OperationCanceledException))

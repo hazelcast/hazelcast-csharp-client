@@ -45,7 +45,10 @@ namespace Hazelcast.DistributedObjects.Impl
             _cache = cache;
         }
 
-        // internal for tests only
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets the near cache.
+        /// </summary>
         internal NearCache<TValue> NearCache => _cache;
 
         // TODO: consider invalidating in a continuation?

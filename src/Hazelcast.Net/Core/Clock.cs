@@ -22,7 +22,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents the system clock.
     /// </summary>
-    public static class Clock
+    internal static class Clock
     {
         // unix epoch is 00:00:00 UTC on January 1st, 1970
         private static readonly DateTime Jan1St1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -47,7 +47,8 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Resets the clock. This method is provided for tests only.
+        /// (internal for tests only)
+        /// Resets the clock.
         /// </summary>
         internal static void Reset()
         {

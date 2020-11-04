@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 
 namespace Hazelcast
@@ -68,7 +69,8 @@ namespace Hazelcast
         /// <summary>
         /// Gets the core options.
         /// </summary>
-        public CoreOptions Core { get; } = new CoreOptions();
+        [BinderIgnore(false)]
+        internal CoreOptions Core { get; } = new CoreOptions();
 
         /// <summary>
         /// Clones the options.

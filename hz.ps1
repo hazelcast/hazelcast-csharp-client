@@ -614,7 +614,7 @@ if ($doTests) {
 if ($doTests -and $cover) {
     Write-Output "Tests Coverage"
     Write-Output "  Filter         : $coverageFilter"
-    Write-Output "  Reports        : $tmpDir/tests/cover"
+    Write-Output "  Reports & logs : $tmpDir/tests/cover"
     Write-Output ""
 }
 
@@ -1033,6 +1033,8 @@ function RunDotNetCoreTests($f) {
             "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
             "--dotCoverOutput=$coveragePath/index.html",
             "--dotCoverReportType=HTML",
+            "--dotCoverLogFile=$tmpDir/tests/cover/cover-$f.log",
+            "--dotCoverSourcesSearchPaths=$srcDir",
             "--"
         ) + $nunitArgs
 
@@ -1106,6 +1108,8 @@ function RunDotNetFrameworkTests($f) {
             "--Output=$coveragePath/index.html",
             "--ReportType=HTML",
             "--TargetExecutable=${nunit}",
+            "--LogFile=$tmpDir/tests/cover/cover-$f.log",
+            "--SourcesSearchPaths=$srcDir",
             "--"
         ) + $nunitArgs
 

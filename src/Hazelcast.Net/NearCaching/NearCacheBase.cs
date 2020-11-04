@@ -115,7 +115,10 @@ namespace Hazelcast.NearCaching
         /// </summary>
         public int Count => _entries.Count;
 
-        // for tests exclusively
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets a snapshot of the cache entries.
+        /// </summary>
         internal async Task<List<NearCacheEntry>> SnapshotEntriesAsync()
         {
             var list = new List<NearCacheEntry>();

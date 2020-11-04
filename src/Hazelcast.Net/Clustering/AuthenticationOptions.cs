@@ -28,7 +28,6 @@ namespace Hazelcast.Clustering
         /// </summary>
         public AuthenticationOptions()
         {
-            Authenticator = new SingletonServiceFactory<IAuthenticator>();
             CredentialsFactory = new SingletonServiceFactory<ICredentialsFactory>();
         }
 
@@ -37,33 +36,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         private AuthenticationOptions(AuthenticationOptions other)
         {
-            Authenticator = other.Authenticator.Clone();
             CredentialsFactory = other.CredentialsFactory.Clone();
-        }
-
-        /// <summary>
-        /// Gets the authenticator service factory.
-        /// </summary>
-        //
-        // NOTE: the Authenticator option is internal for now, we don't allow users
-        // to override authentication, as this would require exposing the whole messaging
-        // infrastructure
-        //
-        [BinderIgnore]
-        internal SingletonServiceFactory<IAuthenticator> Authenticator { get; }
-
-        [BinderName("authenticator")]
-        [BinderIgnore(false)]
-#pragma warning disable IDE0051 // Remove unused private members
-        // ReSharper disable once UnusedMember.Local
-        private InjectionOptions AuthenticatorBinder
-#pragma warning restore IDE0051 // Remove unused private members
-        {
-            get => default;
-            set
-            {
-                Authenticator.Creator = () => ServiceFactory.CreateInstance<IAuthenticator>(value.TypeName, null, this);
-            }
         }
 
         /// <summary>
@@ -83,13 +56,46 @@ namespace Hazelcast.Clustering
             set => CredentialsFactory.Creator = () => ServiceFactory.CreateInstance<ICredentialsFactory>(value.TypeName, value.Args);
         }
 
+        [BinderName("username-password")] // + "username", "password"
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions UsernamePasswordCredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get => default;
+            set => CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory(value.Args);
+        }
+
+        [BinderName("token")] // + "encoding", "data"
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions TokenCredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get => default;
+            set => CredentialsFactory.Creator = () => new TokenCredentialsFactory(value.Args);
+        }
+
+        [BinderName("kerberos")] // + "spn"
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions KerberosCredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get => default;
+            set => CredentialsFactory.Creator = () => new KerberosCredentialsFactory(value.Args);
+        }
+
         /// <summary>
         /// Configures a user name and password as the authentication mechanism.
         /// </summary>
         /// <param name="username">Username.</param>
         /// <param name="password">Password.</param>
         /// <returns>The security options.</returns>
-        private AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
+        public AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
         {
             var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
             CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
@@ -101,7 +107,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="credentials">Credentials.</param>
         /// <returns>The security options.</returns>
-        private AuthenticationOptions ConfigureCredentials(ICredentials credentials)
+        public AuthenticationOptions ConfigureCredentials(ICredentials credentials)
         {
             CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
             return this;
@@ -112,9 +118,21 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="token">A token.</param>
         /// <returns>The security configuration.</returns>
-        private AuthenticationOptions ConfigureTokenCredentials(byte[] token)
+        public AuthenticationOptions ConfigureTokenCredentials(byte[] token)
         {
             return ConfigureCredentials(new TokenCredentials(token));
+        }
+
+        /// <summary>
+        /// Configures Kerberos as the authentication mechanism.
+        /// </summary>
+        /// <param name="options">The authentication options.</param>
+        /// <param name="spn">The service principal name of the Hazelcast cluster.</param>
+        /// <returns>The authentication options.</returns>
+        public AuthenticationOptions ConfigureKerberosCredentials(string spn)
+        {
+            CredentialsFactory.Creator = () => new KerberosCredentialsFactory(spn);
+            return this;
         }
 
         /// <summary>

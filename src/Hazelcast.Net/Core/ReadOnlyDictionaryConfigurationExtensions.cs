@@ -27,12 +27,16 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="keyValues">Key-values.</param>
         /// <param name="key">The key.</param>
+        /// <param name="defaultValue">An optional value to return if the key was not found.</param>
         /// <returns>The value.</returns>
-        public static string GetStringValue(this IReadOnlyDictionary<string, string> keyValues, string key)
+        public static string GetStringValue(this IReadOnlyDictionary<string, string> keyValues, string key, string defaultValue = null)
         {
             if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
             if (!keyValues.TryGetValue(key, out var arg))
-                throw new InvalidOperationException($"Failed to get a string value for key '{key}'.");
+            {
+                arg = defaultValue ??
+                      throw new InvalidOperationException($"Failed to get a string value for key '{key}'.");
+            }
 
             return arg;
         }

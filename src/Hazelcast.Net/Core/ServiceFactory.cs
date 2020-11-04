@@ -173,7 +173,10 @@ namespace Hazelcast.Core
             }
         }
 
-        // internal for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Casts an object.
+        /// </summary>
         internal static T As<T>(object o)
         {
             // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
@@ -196,7 +199,10 @@ namespace Hazelcast.Core
             return type;
         }
 
-        // internal for tests only
+        /// <summary>
+        /// (internal for tests only)
+        /// Creates an instance.
+        /// </summary>
         internal static object CreateInstanceInternal(Type type, IDictionary<string, string> stringArgs, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
@@ -250,7 +256,10 @@ namespace Hazelcast.Core
             return Activator.CreateInstance(type);
         }
 
-        // internal for tests only
+        /// <summary>
+        /// (internal for tests only)
+        /// Creates an instance.
+        /// </summary>
         internal static object CreateInstanceInternal(string typeName, IDictionary<string, string> stringArgs, params object[] paramArgs)
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));

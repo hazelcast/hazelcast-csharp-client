@@ -27,7 +27,9 @@ namespace Hazelcast.Testing.Conditions
     /// <remarks>
     /// <para>If the server version condition is not met, i.e. if the specified range
     /// does not contain the current server version, then the test fixture or test
-    /// method is ignored.</para>
+    /// method is ignored. The server version for tests is specified by the <c>HAZELCAST_SERVER_VERSION</c>
+    /// environment variable, else by a <see cref="ServerVersionAttribute"/> set on (in this order)
+    /// the test method, else the test fixture, else the test assembly itself.</para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public sealed class ServerConditionAttribute : Attribute, IApplyToTest

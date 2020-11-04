@@ -60,12 +60,16 @@ namespace Hazelcast
             return Build(configuration, configure);
         }
 
-        // build hazelcast options, optionally binding alternate keys for tests
-        // this allows 1 json file to contain several configuration sets, and that
-        // is convenient when using the "user secrets" during tests.
-        // this is for tests, and *not* publicly exposed to users.
+        /// <summary>
+        /// (internal for tests only)
+        /// Builds Hazelcast options.
+        /// </summary>
         internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure, string altKey)
         {
+            // build hazelcast options, optionally binding alternate keys for tests
+            // this allows 1 json file to contain several configuration sets, and that
+            // is convenient when using the "user secrets" during tests.
+
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
             var builder = new ConfigurationBuilder();

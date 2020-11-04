@@ -27,9 +27,9 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Represents the default <see cref="IAuthenticator"/>.
+    /// Authenticates client connections.
     /// </summary>
-    internal class Authenticator : IAuthenticator
+    internal class Authenticator
     {
         private static string _clientVersion;
         private readonly AuthenticationOptions _options;
@@ -43,7 +43,17 @@ namespace Hazelcast.Clustering
             HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("AUTH")));
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Authenticates the client connection.
+        /// </summary>
+        /// <param name="client">The client to authenticate.</param>
+        /// <param name="clusterName">The cluster name, as assigned by the client.</param>
+        /// <param name="clusterClientId">The cluster unique identifier, as assigned by the client.</param>
+        /// <param name="clusterClientName">The cluster client name, as assigned by the client.</param>
+        /// <param name="labels">The client labels.</param>
+        /// <param name="serializationService">The serialization service.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the client is authenticated.</returns>
         public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));

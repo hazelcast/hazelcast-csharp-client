@@ -35,17 +35,20 @@ namespace Hazelcast.Serialization
             _data = new byte[size];
         }
 
-        // for tests
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets the data buffer.
+        /// </summary>
         internal byte[] Buffer => _data;
 
         public int Position => _position;
 
         /// <summary>
+        /// (internal for tests only)
         /// Validates that a number of bytes can be written at a given position.
         /// </summary>
         /// <param name="position">The position.</param>
         /// <param name="count">The number of bytes.</param>
-        // internal for tests only
         internal void Validate(int position, int count)
         {
             if (position < 0)

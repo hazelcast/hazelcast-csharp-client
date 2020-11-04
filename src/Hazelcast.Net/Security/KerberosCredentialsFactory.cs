@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Security
 {
@@ -21,6 +24,7 @@ namespace Hazelcast.Security
     /// </summary>
     public sealed class KerberosCredentialsFactory : IResettableCredentialsFactory
     {
+        private static IKerberosTokenProvider _tokenProvider;
         private readonly string _spn;
         private ICredentials _credentials;
 
@@ -67,13 +71,39 @@ namespace Hazelcast.Security
             _domain = domain;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/>.
+        /// </summary>
+        /// <param name="args">Arguments.</param>
+        public KerberosCredentialsFactory(IReadOnlyDictionary<string, string> args)
+            : this(args.GetStringValue("spn"))
+        { }
+
+        private static IKerberosTokenProvider TokenProvider
+        {
+            get
+            {
+                if (_tokenProvider != null) return _tokenProvider;
+
+                // locate the token provider - so far we only support our Win32 provider
+
+                var type = Type.GetType("Hazelcast.Security.KerberosTokenProvider, Hazelcast.Net.Win32");
+                if (type == null) throw new HazelcastException("Failed to load a Kerberos token provider." +
+                                                               " Have you installed the Hazelcast.Net.Win32 NuGet package?");
+                _tokenProvider = Activator.CreateInstance(type) as IKerberosTokenProvider;
+                if (_tokenProvider == null) throw new HazelcastException("Failed to create a Kerberos token provider.");
+
+                return _tokenProvider;
+            }
+        }
+
         /// <inheritdoc />
         public ICredentials NewCredentials()
         {
             if (_credentials != null)
                 return _credentials;
 
-            var token = KerberosTokenProvider.GetToken(_spn, _username, _password, _domain);
+            var token = TokenProvider.GetToken(_spn, _username, _password, _domain);
             return new TokenCredentials(token);
         }
 

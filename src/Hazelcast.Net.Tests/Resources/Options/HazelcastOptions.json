@@ -164,12 +164,32 @@
           "arg2": 1000
         }
       }
+
+      // alternatively
+      //"username-password": {
+      //  "username": "user",
+      //  "password": "pass"
+      //}
+
+      // alternatively
+      //"token": {
+      //  "encoding": "none|base64",
+      //  "data": "..."
+      //}
+
+      // alternatively
+      // "kerberos": {
+      //   "spn": "..."
+      //}
     },
 
     // load balancing
     "loadBalancing": {
 
-      // load balancer
+      // mode
+      "mode": "random", // random|roundRobin|custom
+
+      // load balancer - forces custom mode
       "loadBalancer": {
 
         // name of the type of the load balancer

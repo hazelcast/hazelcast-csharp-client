@@ -217,9 +217,6 @@ namespace Hazelcast.Tests.Configuration
         {
             var options = ReadResource(Resources.HazelcastOptions).Authentication;
 
-            var authenticator = options.Authenticator.Service;
-            Assert.IsInstanceOf<Authenticator>(authenticator);
-
             var credentialsFactory = options.CredentialsFactory.Service;
             Assert.IsInstanceOf<TestCredentialsFactory>(credentialsFactory);
 
@@ -235,6 +232,72 @@ namespace Hazelcast.Tests.Configuration
 
             var loadBalancer = options.LoadBalancer.Service;
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
+        }
+
+        [Test]
+        public void LoadBalancingOptions1()
+        {
+            const string json = @"{ ""hazelcast"": {
+""loadBalancing"" : {
+    ""mode"": ""random""
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var root = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, root);
+            var options = root.LoadBalancing;
+
+            Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
+        }
+
+        [Test]
+        public void LoadBalancingOptions2()
+        {
+            const string json = @"{ ""hazelcast"": {
+""loadBalancing"" : {
+    ""mode"": ""ROUNDROBIN""
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var root = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, root);
+            var options = root.LoadBalancing;
+
+            Assert.IsInstanceOf<RoundRobinLoadBalancer>(options.LoadBalancer.Service);
+        }
+
+        [Test]
+        public void LoadBalancingOptions3()
+        {
+            const string json = @"{ ""hazelcast"": {
+""loadBalancing"" : {
+    ""mode"": ""custom"",
+    ""loadBalancer"": {
+        ""typeName"": ""Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net""
+    }
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var root = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, root);
+            var options = root.LoadBalancing;
+
+            Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
         }
 
         [Test]

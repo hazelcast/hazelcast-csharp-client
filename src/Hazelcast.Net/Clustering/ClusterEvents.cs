@@ -75,17 +75,20 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// (for tests only) Gets the subscriptions.
+        /// (internal for tests only)
+        /// Gets the subscriptions.
         /// </summary>
         internal ConcurrentDictionary<Guid, ClusterSubscription> Subscriptions => _subscriptions;
 
         /// <summary>
-        /// (for tests only) Gets the correlated subscriptions.
+        /// (internal for tests only)
+        /// Gets the correlated subscriptions.
         /// </summary>
         internal ConcurrentDictionary<long, ClusterSubscription> CorrelatedSubscriptions => _correlatedSubscriptions;
 
         /// <summary>
-        /// (for tests only) Gets the ghost subscriptions.
+        /// (internal for tests only)
+        /// Gets the ghost subscriptions.
         /// </summary>
         internal HashSet<ClusterSubscription> GhostSubscriptions => _ghostSubscriptions;
 
@@ -280,7 +283,6 @@ namespace Hazelcast.Clustering
 
         private async ValueTask<bool> RemoveMemberSubscriptionsAsync(ClusterSubscription subscription, CancellationToken cancellationToken = default)
         {
-            List<Exception> exceptions = null;
             var allRemoved = true;
 
             // un-subscribe each client
@@ -301,9 +303,7 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception e)
                 {
-                    // FIXME what shall we do with the exceptions?
-                    exceptions ??= new List<Exception>();
-                    exceptions.Add(e);
+                    _logger.LogError(e, "Caught an exception while unsubscribing to events.");
                     allRemoved = false;
                 }
             }

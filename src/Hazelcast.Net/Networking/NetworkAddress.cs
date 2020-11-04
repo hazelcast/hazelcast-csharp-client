@@ -109,11 +109,11 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
+        /// (internal for tests only)
         /// Initializes a new instance of the <see cref="NetworkAddress"/>.
         /// </summary>
         /// <param name="source">The origin address.</param>
         /// <param name="port">The port.</param>
-        // internal for tests only
         internal NetworkAddress(NetworkAddress source, int port)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -393,10 +393,10 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
+        /// (internal for tests only)
         /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
         /// </summary>
         /// <returns>All scoped IP addresses corresponding to the specified address.</returns>
-        // internal for tests
         internal static IEnumerable<IPAddress> GetV6LocalAddresses()
         {
             // if the address is IP v6 local without a scope,
