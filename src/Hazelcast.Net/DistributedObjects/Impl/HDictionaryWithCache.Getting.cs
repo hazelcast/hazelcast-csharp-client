@@ -27,11 +27,8 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<Attempt<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            async Task<IData> BaseGetAsync(IData kdata, CancellationToken token)
-                => await GetDataAsync(kdata, token).CAF();
-
-            // FIXME
-            return (await _cache.TryGetOrAddAsync(keyData, _ => BaseGetAsync(keyData, cancellationToken)).CAF()).ValueOrDefault();
+            var fromCache = await _cache.TryGetOrAddAsync(keyData, _ => GetDataAsync(keyData, cancellationToken)).CAF();
+            return fromCache; // is an attempt already
         }
 
         /// <inheritdoc />

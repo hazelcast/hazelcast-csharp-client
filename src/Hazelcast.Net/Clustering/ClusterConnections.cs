@@ -129,6 +129,7 @@ namespace Hazelcast.Clustering
             catch
             {
                 await _terminateAsync().CAF();
+                _clusterState.ConnectionState = ClusterConnectionState.NotConnected;
                 throw;
             }
         }

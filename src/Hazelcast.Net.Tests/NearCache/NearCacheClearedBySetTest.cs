@@ -235,10 +235,10 @@ namespace Hazelcast.Tests.NearCache
                 n++;
 
                 // get the value
-                var valueStr = await dictionary.GetAsync(Key).CAF();
+                var (success, valueStr) = await dictionary.GetAsync(Key).CAF();
 
                 // that should never happen!
-                Assert.That(valueStr, Is.Not.Null);
+                Assert.That(success);
 
                 // parse the value (to get some CPU load)
                 var valueInt = int.Parse(valueStr);

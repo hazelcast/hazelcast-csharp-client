@@ -14,7 +14,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Exceptions;
@@ -24,57 +23,8 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides utility methods for running <see cref="Task"/>.
     /// </summary>
-    public static class TaskEx
+    internal static class TaskEx
     {
-        // TODO: consider having overloads for arguments to avoid capturing
-        // see ArgsVsCaptureAndStateMachine - it would be more efficient but requires a lot of code
-
-        /// <summary>
-        /// Starts an asynchronous task with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">A function starting and returning an asynchronous task.</param>
-        /// <returns>The asynchronous task that was started.</returns>
-        /// <remarks>
-        /// <para>This is equivalent to doing <c>return function();</c> except that the task starts with a new <see cref="AsyncContext"/></para>
-        /// </remarks>
-        public static Task RunWithNewContext(Func<Task> function)
-            => AsyncContext.WithNewContextInternal(function);
-
-        /// <summary>
-        /// Starts an asynchronous task with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">A function starting and returning an asynchronous task.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The asynchronous task that was started.</returns>
-        /// <remarks>
-        /// <para>This is equivalent to doing <c>return function(cancellationToken);</c> except that the task starts with a new <see cref="AsyncContext"/></para>
-        /// </remarks>
-        public static Task RunWithNewContext(Func<CancellationToken, Task> function, CancellationToken cancellationToken)
-            => AsyncContext.WithNewContextInternal(function, cancellationToken);
-
-        /// <summary>
-        /// Starts an asynchronous task with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">A function starting and returning an asynchronous task.</param>
-        /// <returns>The asynchronous task that was started.</returns>
-        /// <remarks>
-        /// <para>This is equivalent to doing <c>return function();</c> except that the task starts with a new <see cref="AsyncContext"/></para>
-        /// </remarks>
-        public static Task<TResult> RunWithNewContext<TResult>(Func<Task<TResult>> function)
-            => AsyncContext.WithNewContextInternal(function);
-
-        /// <summary>
-        /// Starts an asynchronous task with a new <see cref="AsyncContext"/>.
-        /// </summary>
-        /// <param name="function">A function starting and returning an asynchronous task.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The asynchronous task that was started.</returns>
-        /// <remarks>
-        /// <para>This is equivalent to doing <c>return function(cancellationToken);</c> except that the task starts with a new <see cref="AsyncContext"/></para>
-        /// </remarks>
-        public static Task<TResult> RunWithNewContext<TResult>(Func<CancellationToken, Task<TResult>> function, CancellationToken cancellationToken)
-            => AsyncContext.WithNewContextInternal(function, cancellationToken);
-
         /// <summary>
         /// Awaits a task that is expected to be canceled.
         /// </summary>

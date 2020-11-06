@@ -19,7 +19,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.DotNet
 {
     [TestFixture]
-    public class Memory
+    public class MemoryTests
     {
         // purpose:
         // understand Span<>, Memory<>, ReadOnlyMemory<>, ReadOnlySequence<> etc.

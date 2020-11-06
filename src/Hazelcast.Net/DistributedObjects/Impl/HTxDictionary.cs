@@ -101,7 +101,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (keyData, valueData) = ToSafeData(key, value);
             var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
 
-            // FIXME TIME TO LIVE??
+            // FIXME timeToLive is ignored?
             var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);

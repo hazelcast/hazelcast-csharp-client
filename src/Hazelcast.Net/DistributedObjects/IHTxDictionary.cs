@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The lock will be released at the end of the transaction (either commit or rollback).</para>
         /// </remarks>
-        Task<TValue> GetForUpdateAsync(TKey key);
+        Task<TValue> GetForUpdateAsync(TKey key); // FIXME ATTEMPT FIXME
 
         /// <summary>
         /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.IsEmptyAsync()"/>.

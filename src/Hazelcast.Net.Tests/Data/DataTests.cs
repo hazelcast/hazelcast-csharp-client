@@ -109,7 +109,7 @@ namespace Hazelcast.Tests.Data
             Assert.That(a.Count, Is.EqualTo(1));
             Assert.That(a["attribute"], Is.EqualTo("value"));
 
-            Assert.That(x, Resolves.Equatable(
+            Assert.That(x, Ish.Equatable(
                 // weird indeed, but only the ID matters
                 new MemberInfo(memberId, x.Address, x.Version, x.IsLite, attributes),
                 new MemberInfo(Guid.NewGuid(), x.Address, x.Version, x.IsLite, attributes)
@@ -165,7 +165,7 @@ namespace Hazelcast.Tests.Data
             Assert.That(x.ServiceName, Is.EqualTo("serviceName"));
             Assert.That(x.Name, Is.EqualTo("name"));
 
-            Assert.That(x, Resolves.Equatable(
+            Assert.That(x, Ish.Equatable(
                 new DistributedObjectInfo("serviceName", "name"),
                 new DistributedObjectInfo("serviceName", "other"),
                 new DistributedObjectInfo("other", "name")));
@@ -229,7 +229,7 @@ namespace Hazelcast.Tests.Data
             Assert.That(q.FactoryId, Is.EqualTo(0));
             Assert.That(q.ClassId, Is.EqualTo(17));
 
-            Assert.That(q, Resolves.Equatable(
+            Assert.That(q, Ish.Equatable(
                 new EndpointQualifier(ProtocolType.Client, "identifier"),
                 new EndpointQualifier(ProtocolType.MemCache, "identifier"),
                 new EndpointQualifier(ProtocolType.Client, "other")));

@@ -64,7 +64,7 @@ namespace Hazelcast.Examples.DistributedObjects
             // with the same context, i.e. the context that has the lock, so we need
             // to start it with a new context
             //
-            var task = TaskEx.RunWithNewContext(async () =>
+            var task = AsyncContext.RunWithNew(async () =>
             {
                 await map.SetAsync("key", "value1");
                 Console.WriteLine("Put new value");

@@ -68,7 +68,8 @@ namespace Hazelcast.Tests.Remote
 
             var result = await _dictionary.GetAsync("key-1");
 
-            Assert.AreEqual(value, result);
+            Assert.That(result.Success);
+            Assert.AreEqual(value, result.Value);
         }
 
         [Test]

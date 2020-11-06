@@ -14,40 +14,8 @@
 
 using NUnit.Framework.Constraints;
 
-namespace Hazelcast.Testing
+namespace Hazelcast.Testing.Constraints
 {
-    public static class Resolves
-    {
-        public static EquatableConstraint Equatable(object equal, params object[] different)
-            => new EquatableConstraint(equal, different);
-    }
-
-    public class EquatableResult : ConstraintResult
-    {
-        private readonly string _message;
-
-        private EquatableResult(IConstraint constraint, object actualValue)
-            : base(constraint, actualValue, true)
-        { }
-
-        private EquatableResult(IConstraint constraint, object actualValue, string message)
-            : base(constraint, actualValue, false)
-        {
-            _message = message;
-        }
-
-        public static EquatableResult Fail(IConstraint constraint, object actualValue, string message)
-            => new EquatableResult(constraint, actualValue, message);
-
-        public static EquatableResult Success(IConstraint constraint, object actualValue)
-            => new EquatableResult(constraint, actualValue);
-
-        public override void WriteMessageTo(MessageWriter writer)
-        {
-            writer.Write(_message);
-        }
-    }
-
     public class EquatableConstraint : Constraint // IResolveConstraint
     {
         private readonly object _equal;
