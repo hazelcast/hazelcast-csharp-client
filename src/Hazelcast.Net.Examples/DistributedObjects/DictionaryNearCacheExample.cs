@@ -41,7 +41,7 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetDictionaryAsync<string, string>("nearcache-map-1");
+            await using var map = await client.GetMapAsync<string, string>("nearcache-map-1");
 
             // add values
             for (var i = 0; i < 1000; i++)

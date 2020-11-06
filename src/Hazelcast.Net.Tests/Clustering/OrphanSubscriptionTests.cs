@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Clustering
 
             HConsole.WriteLine(this, "Get dictionary");
 
-            var dictionary = await client.GetDictionaryAsync<string, string>("name");
+            var dictionary = await client.GetMapAsync<string, string>("name");
             var count = 0;
 
             var clusterEvents = client.Cluster.Events;

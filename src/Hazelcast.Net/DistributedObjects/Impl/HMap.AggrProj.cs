@@ -25,7 +25,7 @@ using Hazelcast.Serialization.Collections;
 namespace Hazelcast.DistributedObjects.Impl
 {
     // ReSharper disable UnusedTypeParameter
-    internal partial class HDictionary<TKey, TValue> // Aggregations and Projections
+    internal partial class HMap<TKey, TValue> // Aggregations and Projections
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />

@@ -22,7 +22,7 @@ using Hazelcast.Protocol.Codecs;
 namespace Hazelcast.DistributedObjects.Impl
 {
     // ReSharper disable UnusedTypeParameter
-    internal partial class HDictionary<TKey, TValue> // Intercepting
+    internal partial class HMap<TKey, TValue> // Intercepting
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />

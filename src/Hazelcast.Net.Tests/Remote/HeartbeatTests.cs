@@ -117,7 +117,7 @@ namespace Hazelcast.Tests.Remote
                 var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
                 // get the distributed map from the cluster
-                var map = await client.GetDictionaryAsync<string, string>(CacheName);
+                var map = await client.GetMapAsync<string, string>(CacheName);
 
                 // get the logger
                 var logger = options.LoggerFactory.Service.CreateLogger("Demo");

@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Remote
             return options;
         }
 
-        private static async Task FillAsync(IHDictionary<string, string> dictionary)
+        private static async Task FillAsync(IHMap<string, string> dictionary)
         {
             for (var i = 0; i < 10; i++)
             {
@@ -124,7 +124,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAddInterceptor()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
             Console.WriteLine(dictionary.CountAsync());
             Assert.That(dictionary.CountAsync(), Iz.EqualTo(2));
@@ -140,7 +140,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAsyncGet()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -153,7 +153,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAsyncPut()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -167,7 +167,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAsyncPutWithTtl()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var eventsCount = 0;
@@ -192,7 +192,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAsyncRemove()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -205,7 +205,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestContains()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -219,7 +219,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestEntrySet()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -245,7 +245,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestEntrySetPredicate()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -262,7 +262,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestEntryStats()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, Item>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, Item>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var item = ItemGenerator.GenerateItem(1);
@@ -284,7 +284,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestEvict()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -299,7 +299,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestEvictAll()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -318,7 +318,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestFlush()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.FlushAsync();
@@ -327,7 +327,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestExecuteOnKey()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -342,7 +342,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestExecuteOnKey_nullKey()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -360,7 +360,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestExecuteOnKeys()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -379,7 +379,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestExecuteOnKeys_keysNotNull()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -397,7 +397,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestExecuteOnKeys_keysEmpty()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -412,7 +412,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestExecuteOnEntries()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -430,7 +430,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestExecuteOnEntriesWithPredicate()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -449,7 +449,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestSubmitToKey()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -466,7 +466,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestSubmitToKey_nullKey()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const string key = null;
@@ -482,7 +482,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestForceUnlock()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -503,7 +503,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestGet()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -518,7 +518,7 @@ namespace Hazelcast.Tests.Remote
         [Test] //, Repeat(100)]
         public async Task TestGetAllExtreme()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.AreEqual(0, await dictionary.CountAsync());
@@ -558,7 +558,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestGetAllPutAll()
         {
-            var dictionary = await Client.GetDictionaryAsync<int, int>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<int, int>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             IDictionary<int, int> mm = new Dictionary<int, int>();
@@ -588,7 +588,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestGetEntryStats()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("item0", "value0");
@@ -606,7 +606,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestIsEmpty()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsTrue(await dictionary.IsEmptyAsync());
@@ -617,7 +617,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestKeySet()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -633,7 +633,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestKeySetPredicate()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -648,7 +648,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListener()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var added1Count = 0;
@@ -691,7 +691,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListener_SingleEventListeners()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var entryAdded = 0;
@@ -745,7 +745,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListenerClearAll()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var cleared = 0;
@@ -764,7 +764,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListenerEventOrder()
         {
-            var dictionary = await Client.GetDictionaryAsync<int, int>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<int, int>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync(1, 0);
@@ -794,7 +794,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListenerExtreme()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, byte[]>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, byte[]>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const int testItemCount = 1 * 1000;
@@ -832,7 +832,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListenerPredicate()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var added1 = 0;
@@ -892,7 +892,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListenerOnRemove()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>("NAME");
+            var dictionary = await Client.GetMapAsync<string, string>("NAME");
             await using var _ = DestroyAndDispose(dictionary);
 
             var added1 = 0;
@@ -942,7 +942,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestListenerRemove()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var addedCount = 0;
@@ -960,7 +960,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestLock()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -981,7 +981,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestLockTtl()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -1004,7 +1004,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestLockTtl2()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.LockAsync("key1", TimeSpan.FromSeconds(1));
@@ -1029,7 +1029,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutBigData()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const int dataSize = 128000;
@@ -1042,7 +1042,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutIfAbsent()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsNull(await dictionary.GetOrAddAsync("key1", "value1"));
@@ -1052,7 +1052,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutIfAbsentNewValueTTL_whenKeyPresent()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const string key = "Key";
@@ -1069,7 +1069,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutIfAbsentTtl()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const string key = "Key";
@@ -1084,7 +1084,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutIfAbsentTTL_whenExpire()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const string key = "Key";
@@ -1102,7 +1102,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutIfAbsentTTL_whenKeyPresent()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const string key = "Key";
@@ -1118,7 +1118,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutIfAbsentTTL_whenKeyPresentAfterExpire()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             const string key = "Key";
@@ -1134,7 +1134,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutTransient()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.AreEqual(0, await dictionary.CountAsync());
@@ -1150,7 +1150,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutTtl()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1", TimeSpan.FromMilliseconds(100));
@@ -1165,7 +1165,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestRemoveAndDelete()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -1184,7 +1184,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestRemoveIfSame()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -1198,7 +1198,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestRemoveInterceptor()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.RemoveInterceptorAsync("interceptor");
@@ -1207,7 +1207,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestRemoveAllWithPredicate()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
@@ -1220,7 +1220,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestReplace()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsNull(await dictionary.TryUpdateAsync("key1", "value1"));
@@ -1236,7 +1236,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestSet()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -1255,7 +1255,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestTryPutRemove()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsTrue(await dictionary.TrySetAsync("key1", "value1", TimeSpan.FromSeconds(1)));
@@ -1290,7 +1290,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestUnlock()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.ForceUnlockAsync("key1");
@@ -1306,7 +1306,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestValues()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
@@ -1319,7 +1319,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestValuesPredicate()
         {
-            var dictionary = await Client.GetDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);

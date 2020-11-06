@@ -25,12 +25,12 @@ namespace Hazelcast.Tests.Remote
     [TestFixture]
     public class ClientPartitionTest : SingleMemberClientRemoteTestBase
     {
-        private IHDictionary<object, object> _dictionary;
+        private IHMap<object, object> _dictionary;
 
         [SetUp]
         public async Task Setup()
         {
-            _dictionary = await Client.GetDictionaryAsync<object, object>(CreateUniqueName());
+            _dictionary = await Client.GetMapAsync<object, object>(CreateUniqueName());
             _ = await _dictionary.GetAsync(new object());
         }
 

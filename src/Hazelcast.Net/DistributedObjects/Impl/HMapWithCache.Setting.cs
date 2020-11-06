@@ -22,7 +22,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HDictionaryWithCache<TKey, TValue> // Setting
+    internal partial class HMapWithCache<TKey, TValue> // Setting
     {
         /// <inheritdoc />
         protected override async Task SetAsync(IData keyData, IData valueData, TimeSpan timeToLive)

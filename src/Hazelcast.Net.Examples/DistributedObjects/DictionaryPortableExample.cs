@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var hz = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await hz.GetDictionaryAsync<int, Customer>("portable-example");
+            await using var map = await hz.GetMapAsync<int, Customer>("portable-example");
 
             // create an add a customer
             Console.WriteLine("Add customer 'first-customer'.");

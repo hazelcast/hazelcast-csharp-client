@@ -22,16 +22,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.DistributedObjects.Impl
 {
     /// <summary>
-    /// Implements a caching version of <see cref="IHDictionary{TKey,TValue}"/>.
+    /// Implements a caching version of <see cref="IHMap{TKey,TValue}"/>.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    internal partial class HDictionaryWithCache<TKey, TValue> : HDictionary<TKey, TValue>
+    internal partial class HMapWithCache<TKey, TValue> : HMap<TKey, TValue>
     {
         private readonly NearCache<TValue> _cache;
 
         /// <summary>
-        /// Initializes a new version of the <see cref="HDictionaryWithCache{TKey,TValue}"/> class.
+        /// Initializes a new version of the <see cref="HMapWithCache{TKey,TValue}"/> class.
         /// </summary>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="cluster">A cluster.</param>
@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HDictionaryWithCache(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory)
+        public HMapWithCache(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory)
             : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
         {
             _cache = cache;

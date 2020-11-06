@@ -22,7 +22,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HDictionary<TKey, TValue> // Removing
+    internal partial class HMap<TKey, TValue> // Removing
     {
         /// <inheritdoc />
         public Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait)

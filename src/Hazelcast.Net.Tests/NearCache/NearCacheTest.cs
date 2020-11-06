@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCache() // CacheIsPopulatedByReads
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<object, object>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -140,7 +140,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheContains() // CacheIsUsedForContainsKey
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<object, object>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             //var cache = GetNearCache(dictionary);
 
@@ -160,7 +160,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheGet() // CacheIsPopulatedByRead
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<object, object>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -180,7 +180,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheGetAll() // CacheIsPopulatedByReadMany
         {
-            var dictionary = await _client.GetDictionaryAsync<string, string>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<string, string>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -203,7 +203,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheGetAsync() // EntryIsHit
         {
-            var dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<object, object>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -237,7 +237,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheIdleEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-idle-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<int, int>("nc-idle-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -311,7 +311,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheInvalidationOnRemoveAllPredicate()
         {
-            var dictionary = await _client.GetDictionaryAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -337,7 +337,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheLfuEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-lfu-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<int, int>("nc-lfu-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -390,7 +390,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheLocalInvalidations()
         {
-            var dictionary = await _client.GetDictionaryAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -411,7 +411,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheLruEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-lru-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<int, int>("nc-lru-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -449,7 +449,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheNoEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<int, int>("nc-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -469,7 +469,7 @@ namespace Hazelcast.Tests.NearCache
         [Timeout(20000)]
         public async Task TestNearCacheTtlEviction()
         {
-            var dictionary = await _client.GetDictionaryAsync<int, int>("nc-ttl-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<int, int>("nc-ttl-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -493,9 +493,9 @@ namespace Hazelcast.Tests.NearCache
             }, 8000, 1000);
         }
 
-        private async Task TestInvalidateAsync(Func<IHDictionary<string, string>, string, Task> invalidatingAction)
+        private async Task TestInvalidateAsync(Func<IHMap<string, string>, string, Task> invalidatingAction)
         {
-            var dictionary = await _client.GetDictionaryAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
+            var dictionary = await _client.GetMapAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 
@@ -510,7 +510,7 @@ namespace Hazelcast.Tests.NearCache
 
             await using (var client = await CreateAndStartClientAsync())
             {
-                await invalidatingAction(await client.GetDictionaryAsync<string, string>(dictionary.Name), "key");
+                await invalidatingAction(await client.GetMapAsync<string, string>(dictionary.Name), "key");
             }
 
             var keyData = ToData("key");

@@ -35,7 +35,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HDictionaryWithCache<TKey, TValue> // Removing
+    internal partial class HMapWithCache<TKey, TValue> // Removing
     {
         /// <inheritdoc />
         protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)

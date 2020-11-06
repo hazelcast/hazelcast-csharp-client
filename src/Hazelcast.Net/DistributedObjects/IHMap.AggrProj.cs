@@ -21,7 +21,7 @@ using Hazelcast.Projections;
 namespace Hazelcast.DistributedObjects
 {
     // ReSharper disable UnusedTypeParameter
-    public partial interface IHDictionary<TKey, TValue> // Aggregating and projecting
+    public partial interface IHMap<TKey, TValue> // Aggregating and projecting
     // ReSharper restore UnusedTypeParameter
     {
         /// <summary>

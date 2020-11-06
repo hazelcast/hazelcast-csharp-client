@@ -20,16 +20,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.DistributedObjects.Impl
 {
     /// <summary>
-    /// Implements <see cref="IHDictionary{TKey,TValue}"/>.
+    /// Implements <see cref="IHMap{TKey,TValue}"/>.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    internal partial class HDictionary<TKey, TValue> : DistributedObjectBase, IHDictionary<TKey, TValue>
+    internal partial class HMap<TKey, TValue> : DistributedObjectBase, IHMap<TKey, TValue>
     {
         private readonly ISequence<long> _lockReferenceIdSequence;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HDictionary{TKey,TValue}"/> class.
+        /// Initializes a new instance of the <see cref="HMap{TKey,TValue}"/> class.
         /// </summary>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="factory">The factory owning this object.</param>
@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="logggerFactory">A logger factory.</param>
-        public HDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
+        public HMap(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
             : base(ServiceNames.Dictionary, name, factory, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;

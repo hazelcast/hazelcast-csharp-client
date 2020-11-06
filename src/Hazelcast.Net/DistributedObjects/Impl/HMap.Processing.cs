@@ -25,7 +25,7 @@ using Hazelcast.Serialization;
 namespace Hazelcast.DistributedObjects.Impl
 {
     // ReSharper disable once UnusedTypeParameter
-    internal partial class HDictionary<TKey, TValue> // Processing
+    internal partial class HMap<TKey, TValue> // Processing
     {
         /// <inheritdoc />
         public Task<TResult> ExecuteAsync<TResult>(IEntryProcessor<TResult> processor, TKey key)

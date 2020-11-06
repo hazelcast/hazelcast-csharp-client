@@ -21,24 +21,24 @@ using Hazelcast.Predicates;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a transactional distributed dictionary.
+    /// Represents a transactional distributed map.
     /// </summary>
     /// <typeparam name="TKey">key type</typeparam>
     /// <typeparam name="TValue">Value type</typeparam>
-    public interface IHTxDictionary<TKey, TValue> : ITransactionalObject
+    public interface IHTxMap<TKey, TValue> : ITransactionalObject
     {
         /// <summary>
-        /// Transactional implementation of<see cref="IHDictionary{TKey,TValue}.ContainsKeyAsync(TKey)"/>.
+        /// Transactional implementation of<see cref="IHMap{TKey,TValue}.ContainsKeyAsync(TKey)"/>.
         /// </summary>
         Task<bool> ContainsKeyAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.RemoveAsync(TKey)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.RemoveAsync(TKey)"/>.
         /// </summary>
         Task RemoveAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAsync(TKey)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAsync(TKey)"/>.
         /// </summary>
         Task<Attempt<TValue>> GetAsync(TKey key);
 
@@ -49,26 +49,26 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> GetForUpdateAsync(TKey key); // FIXME ATTEMPT FIXME
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.IsEmptyAsync()"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.IsEmptyAsync()"/>.
         /// </summary>
         /// <returns><c>true</c> if the map does not contain entries; otherwise <c>false</c>.</returns>
         Task<bool> IsEmptyAsync();
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetKeysAsync()"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetKeysAsync()"/>.
         /// </summary>
         /// <returns>All keys.</returns>
         Task<IReadOnlyList<TKey>> GetKeysAsync();
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetKeysAsync(IPredicate)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetKeysAsync(IPredicate)"/>.
         /// </summary>
         /// <param name="predicate">An predicate to filter the entries with.</param>
         /// <returns>All keys matching the predicate.</returns>
         Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.SetAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.SetAsync(TKey, TValue)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -78,7 +78,7 @@ namespace Hazelcast.DistributedObjects
         Task SetAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAndSetAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAndSetAsync(TKey, TValue)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -88,7 +88,7 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> GetAndSetAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.SetAsync(TKey, TValue, TimeSpan)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.SetAsync(TKey, TValue, TimeSpan)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -99,7 +99,7 @@ namespace Hazelcast.DistributedObjects
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAndSetAsync(TKey, TValue, TimeSpan)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAndSetAsync(TKey, TValue, TimeSpan)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -110,7 +110,7 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetOrAddAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetOrAddAsync(TKey, TValue)"/>.
         /// </summary>
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
@@ -118,7 +118,7 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> GetOrAddAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetAndRemoveAsync(TKey)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAndRemoveAsync(TKey)"/>.
         /// </summary>
         /// <remarks>
         /// <para>The removed entry wil be removed only in the current transaction context, until the transaction is committed.</para>
@@ -126,7 +126,7 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> GetAndRemoveAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.RemoveAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.RemoveAsync(TKey, TValue)"/>.
         /// </summary>
         /// <remarks>
         /// <para>The removed entry wil be removed only in the current transaction context, until the transaction is committed.</para>
@@ -134,7 +134,7 @@ namespace Hazelcast.DistributedObjects
         Task<bool> RemoveAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.TryUpdateAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.TryUpdateAsync(TKey, TValue)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="newValue">The new value.</param>
@@ -144,7 +144,7 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.TryUpdateAsync(TKey, TValue, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.TryUpdateAsync(TKey, TValue, TValue)"/>.
         /// </summary>
         /// <remarks>
         /// <para>The updated entry wil be visible only in the current transaction context, until the transaction is committed.</para>
@@ -152,17 +152,17 @@ namespace Hazelcast.DistributedObjects
         Task<bool> TryUpdateAsync(TKey key, TValue oldValue, TValue newValue);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.CountAsync()"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.CountAsync()"/>.
         /// </summary>
         Task<int> CountAsync();
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetValuesAsync()"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetValuesAsync()"/>.
         /// </summary>
         Task<IReadOnlyList<TValue>> GetValuesAsync();
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHDictionary{TKey,TValue}.GetValuesAsync(IPredicate)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetValuesAsync(IPredicate)"/>.
         /// </summary>
         Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate);
     }

@@ -16,7 +16,7 @@ using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Data
 {
-    /// <summary>Represents statistics for an entry in an <see cref="IHDictionary{TKey,TValue}"/>.</summary>
+    /// <summary>Represents statistics for an entry in an <see cref="IHMap{TKey,TValue}"/>.</summary>
     public interface IHDictionaryEntryStats<out TKey, out TValue>
     {
         /// <summary>Gets the key of the entry.</summary>

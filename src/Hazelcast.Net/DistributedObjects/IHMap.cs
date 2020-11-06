@@ -15,7 +15,7 @@
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a distributed dictionary.
+    /// Represents a distributed map.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
@@ -26,8 +26,7 @@ namespace Hazelcast.DistributedObjects
     /// changes visible to all nodes.</para>
     /// </remarks>
     // ReSharper disable UnusedTypeParameter
-    public partial interface IHDictionary<TKey, TValue> : IHDictionaryBase<TKey, TValue>, IKeyLockable<TKey>
+    public partial interface IHMap<TKey, TValue> : IHDictionaryBase<TKey, TValue>, IKeyLockable<TKey>
     // ReSharper restore UnusedTypeParameter
-    {
-    }
+    { }
 }

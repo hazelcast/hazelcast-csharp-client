@@ -28,9 +28,9 @@ namespace Hazelcast.Tests.NearCache
     {
         protected ISerializationService SerializationService { get; set; }
 
-        internal NearCacheBase GetNearCache<TKey, TValue>(IHDictionary<TKey, TValue> dictionary)
+        internal NearCacheBase GetNearCache<TKey, TValue>(IHMap<TKey, TValue> dictionary)
         {
-            return dictionary is HDictionaryWithCache<TKey, TValue> cachedDictionary ? cachedDictionary.NearCache.InnerCache : null;
+            return dictionary is HMapWithCache<TKey, TValue> cachedDictionary ? cachedDictionary.NearCache.InnerCache : null;
         }
 
         internal IData ToData(object o) => SerializationService.ToData(o);

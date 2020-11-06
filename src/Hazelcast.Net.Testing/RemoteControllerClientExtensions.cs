@@ -103,7 +103,7 @@ namespace Hazelcast.Testing
             await added.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
 
             // trigger the partition table creation
-            var map = await client.GetDictionaryAsync<object, object>("default").CAF();
+            var map = await client.GetMapAsync<object, object>("default").CAF();
             _ = map.GetAsync(new object());
 
             await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CAF();

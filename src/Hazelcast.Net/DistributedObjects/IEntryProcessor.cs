@@ -15,7 +15,7 @@
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Defines a processor that can process the entries of an <see cref="IHDictionary{TKey,TValue}"/> on the server.
+    /// Defines a processor that can process the entries of an <see cref="IHMap{TKey,TValue}"/> on the server.
     /// </summary>
     /// <typeparam name="TResult">The type of the results produced by the processor.</typeparam>
     /// <remarks>

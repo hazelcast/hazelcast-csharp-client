@@ -25,7 +25,7 @@ namespace Hazelcast.Examples.WebSite
             await using var client = await HazelcastClientFactory.StartNewClientAsync(BuildExampleOptions(args));
 
             // get distributed map from cluster
-            await using var map = await client.GetDictionaryAsync<string, string>("my-distributed-map");
+            await using var map = await client.GetMapAsync<string, string>("my-distributed-map");
 
             // set/get
             await map.SetAsync("key", "value");

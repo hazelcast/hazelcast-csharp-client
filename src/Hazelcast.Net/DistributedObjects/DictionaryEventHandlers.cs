@@ -28,9 +28,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> Cleared(Action<IHDictionary<TKey, TValue>, DictionaryClearedEventArgs> handler)
+        public DictionaryEventHandlers<TKey, TValue> Cleared(Action<IHMap<TKey, TValue>, DictionaryClearedEventArgs> handler)
         {
-            Add(new DictionaryClearedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryClearedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -39,9 +39,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> Cleared(Func<IHDictionary<TKey, TValue>, DictionaryClearedEventArgs, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> Cleared(Func<IHMap<TKey, TValue>, DictionaryClearedEventArgs, ValueTask> handler)
         {
-            Add(new DictionaryClearedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryClearedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -50,9 +50,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> Evicted(Action<IHDictionary<TKey, TValue>, DictionaryEvictedEventArgs> handler)
+        public DictionaryEventHandlers<TKey, TValue> Evicted(Action<IHMap<TKey, TValue>, DictionaryEvictedEventArgs> handler)
         {
-            Add(new DictionaryEvictedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEvictedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -61,9 +61,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> Evicted(Func<IHDictionary<TKey, TValue>, DictionaryEvictedEventArgs, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> Evicted(Func<IHMap<TKey, TValue>, DictionaryEvictedEventArgs, ValueTask> handler)
         {
-            Add(new DictionaryEvictedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEvictedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -72,9 +72,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryUpdated(Action<IHDictionary<TKey, TValue>, DictionaryEntryUpdatedEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryUpdated(Action<IHMap<TKey, TValue>, DictionaryEntryUpdatedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryUpdatedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryUpdatedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -83,9 +83,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryUpdated(Func<IHDictionary<TKey, TValue>, DictionaryEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryUpdated(Func<IHMap<TKey, TValue>, DictionaryEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryUpdatedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryUpdatedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -94,9 +94,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryRemoved(Action<IHDictionary<TKey, TValue>, DictionaryEntryRemovedEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryRemoved(Action<IHMap<TKey, TValue>, DictionaryEntryRemovedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryRemovedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryRemovedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -105,9 +105,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryRemoved(Func<IHDictionary<TKey, TValue>, DictionaryEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryRemoved(Func<IHMap<TKey, TValue>, DictionaryEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryRemovedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryRemovedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -116,9 +116,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryAdded(Action<IHDictionary<TKey, TValue>, DictionaryEntryAddedEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryAdded(Action<IHMap<TKey, TValue>, DictionaryEntryAddedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryAddedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryAddedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -127,9 +127,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryAdded(Func<IHDictionary<TKey, TValue>, DictionaryEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryAdded(Func<IHMap<TKey, TValue>, DictionaryEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryAddedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryAddedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -138,9 +138,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryEvicted(Action<IHDictionary<TKey, TValue>, DictionaryEntryEvictedEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryEvicted(Action<IHMap<TKey, TValue>, DictionaryEntryEvictedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryEvictedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryEvictedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -149,9 +149,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryEvicted(Func<IHDictionary<TKey, TValue>, DictionaryEntryEvictedEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryEvicted(Func<IHMap<TKey, TValue>, DictionaryEntryEvictedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryEvictedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryEvictedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -160,9 +160,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryExpired(Action<IHDictionary<TKey, TValue>, DictionaryEntryExpiredEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryExpired(Action<IHMap<TKey, TValue>, DictionaryEntryExpiredEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryExpiredEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryExpiredEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -171,9 +171,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryExpired(Func<IHDictionary<TKey, TValue>, DictionaryEntryExpiredEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryExpired(Func<IHMap<TKey, TValue>, DictionaryEntryExpiredEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryExpiredEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryExpiredEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -182,9 +182,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryInvalidated(Action<IHDictionary<TKey, TValue>, DictionaryEntryInvalidatedEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryInvalidated(Action<IHMap<TKey, TValue>, DictionaryEntryInvalidatedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryInvalidatedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryInvalidatedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -193,9 +193,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryInvalidated(Func<IHDictionary<TKey, TValue>, DictionaryEntryInvalidatedEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryInvalidated(Func<IHMap<TKey, TValue>, DictionaryEntryInvalidatedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryInvalidatedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryInvalidatedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -204,9 +204,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryLoaded(Action<IHDictionary<TKey, TValue>, DictionaryEntryLoadedEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryLoaded(Action<IHMap<TKey, TValue>, DictionaryEntryLoadedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryLoadedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryLoadedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -215,9 +215,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryLoaded(Func<IHDictionary<TKey, TValue>, DictionaryEntryLoadedEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryLoaded(Func<IHMap<TKey, TValue>, DictionaryEntryLoadedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryLoadedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryLoadedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -226,9 +226,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryMerged(Action<IHDictionary<TKey, TValue>, DictionaryEntryMergedEventArgs<TKey, TValue>> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryMerged(Action<IHMap<TKey, TValue>, DictionaryEntryMergedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryMergedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new DictionaryEntryMergedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -237,9 +237,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public DictionaryEventHandlers<TKey, TValue> EntryMerged(Func<IHDictionary<TKey, TValue>, DictionaryEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
+        public DictionaryEventHandlers<TKey, TValue> EntryMerged(Func<IHMap<TKey, TValue>, DictionaryEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryMergedEventHandler<TKey, TValue, IHDictionary<TKey, TValue>>(handler));
+            Add(new DictionaryEntryMergedEventHandler<TKey, TValue, IHMap<TKey, TValue>>(handler));
             return this;
         }
     }

@@ -77,7 +77,7 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task NearCacheTracksRemoteChanges()
         {
-            var dictionary = await _client.GetDictionaryAsync<int, int>(_name);
+            var dictionary = await _client.GetMapAsync<int, int>(_name);
             await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
             var cache = GetNearCache(dictionary);
 

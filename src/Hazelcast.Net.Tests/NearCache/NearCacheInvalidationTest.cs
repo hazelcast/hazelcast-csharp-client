@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.NearCache
     public class NearCacheInvalidationTest : NearCacheTestBase
     {
         private IHazelcastClient _client;
-        private IHDictionary<object, object> _dictionary;
+        private IHMap<object, object> _dictionary;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
@@ -49,7 +49,7 @@ namespace Hazelcast.Tests.NearCache
             Assert.That(client, Is.Not.Null);
             SerializationService = client.SerializationService;
 
-            _dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            _dictionary = await _client.GetMapAsync<object, object>("nc-" + TestUtils.RandomString());
 
             var nearCache = GetNearCache(_dictionary);
             Assert.That(nearCache, Is.InstanceOf<NearCaching.NearCache>());

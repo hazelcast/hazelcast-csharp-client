@@ -25,7 +25,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HDictionary<TKey, TValue> // Events
+    internal partial class HMap<TKey, TValue> // Events
     {
         private async Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, Maybe<TKey> key, IPredicate predicate, bool includeValues, object state, CancellationToken cancellationToken)
         {
@@ -124,8 +124,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     var task = handler switch
                     {
-                        IDictionaryEntryEventHandler<TKey, TValue, IHDictionary<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, state),
-                        IDictionaryEventHandler<TKey, TValue, IHDictionary<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, state),
+                        IDictionaryEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, state),
+                        IDictionaryEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, state),
                         _ => throw new NotSupportedException()
                     };
                     await task.CAF();

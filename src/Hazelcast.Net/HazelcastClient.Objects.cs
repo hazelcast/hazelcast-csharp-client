@@ -33,7 +33,7 @@ namespace Hazelcast
         }
 
         /// <inheritdoc />
-        public async Task<IHDictionary<TKey, TValue>> GetDictionaryAsync<TKey, TValue>(string name)
+        public async Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
             // lookup a cache configuration for the specified map
             var nearCacheOptions = _options.NearCache.GetCacheOptions(name);
@@ -41,12 +41,12 @@ namespace Hazelcast
                 ? null
                 : await _nearCacheManager.GetOrCreateNearCacheAsync<TValue>(name, nearCacheOptions).CAF();
 
-            HDictionary<TKey, TValue> CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            HMap<TKey, TValue> CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
                 => nearCacheOptions == null
-                    ? new HDictionary<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
-                    : new HDictionaryWithCache<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
+                    ? new HMap<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
+                    : new HMapWithCache<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
-            return await _distributedObjectFactory.GetOrCreateAsync<IHDictionary<TKey, TValue>, HDictionary<TKey, TValue>>(ServiceNames.Dictionary, name, true, CreateMap).CAF();
+            return await _distributedObjectFactory.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(ServiceNames.Dictionary, name, true, CreateMap).CAF();
         }
 
         /// <inheritdoc />

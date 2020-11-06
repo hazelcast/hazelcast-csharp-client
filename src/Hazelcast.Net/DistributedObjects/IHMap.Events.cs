@@ -18,7 +18,7 @@ using Hazelcast.Predicates;
 
 namespace Hazelcast.DistributedObjects
 {
-    public partial interface IHDictionary<TKey, TValue> // Events
+    public partial interface IHMap<TKey, TValue> // Events
     {
         /// <summary>
         /// Subscribes to events.

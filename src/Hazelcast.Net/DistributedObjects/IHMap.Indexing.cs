@@ -13,29 +13,29 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Data;
 
 namespace Hazelcast.DistributedObjects
 {
     // ReSharper disable UnusedTypeParameter
-    public partial interface IHDictionary<TKey, TValue> // Interception
+    public partial interface IHMap<TKey, TValue> // Indexing
     // ReSharper restore NonReadonlyMemberInGetHashCode
     {
-        /// <summary>
-        /// Adds an interceptor on the server side.
-        /// </summary>
-        /// <param name="interceptor">The interceptor.</param>
-        /// <returns>The interceptor unique identifier.</returns>
-        /// <remarks>
-        /// <para>The <paramref name="interceptor"/> must be serializable via Hazelcast serialization,
-        /// and have a counterpart on the server.</para>
-        /// </remarks>
-        Task<string> AddInterceptorAsync(IDictionaryInterceptor interceptor);
 
         /// <summary>
-        /// Removes the interceptor that identified by id.
+        /// Adds an index to this dictionary for the specified entries so that queries can run faster.
         /// </summary>
-        /// <param name="id">The identifier of the interceptor.</param>
-        /// <returns><c>true</c> if registration is removed, <c>false</c> otherwise</returns>
-        Task<bool> RemoveInterceptorAsync(string id);
+        /// <param name="indexConfig">Index options.</param>
+        /// <returns>A task that will complete when the index added.</returns>
+        Task AddIndexAsync(IndexOptions indexOptions);
+
+        /// <summary>
+        /// Convenient method to add an index to this dictionary with the given type and attributes.
+        /// Attributes are indexed in ascending order.
+        /// </summary>
+        /// <param name="type">Index type.</param>
+        /// <param name="attributes">Attributes to be indexed.</param>
+        /// <returns>A task that will complete when the index added.</returns>
+        Task AddIndexAsync(IndexType type, params string[] attributes);
     }
 }

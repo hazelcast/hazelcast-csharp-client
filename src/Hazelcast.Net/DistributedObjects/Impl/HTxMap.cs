@@ -25,9 +25,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal class HTxDictionary<TKey, TValue> : TransactionalDistributedObjectBase, IHTxDictionary<TKey, TValue>
+    internal class HTxMap<TKey, TValue> : TransactionalDistributedObjectBase, IHTxMap<TKey, TValue>
     {
-        public HTxDictionary(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxMap(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
             : base(ServiceNames.Dictionary, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 

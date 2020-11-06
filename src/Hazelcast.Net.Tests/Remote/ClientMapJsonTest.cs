@@ -24,12 +24,12 @@ namespace Hazelcast.Tests.Remote
     [TestFixture]
     public class ClientMapJsonTest : SingleMemberClientRemoteTestBase
     {
-        private IHDictionary<string, HazelcastJsonValue> _dictionary;
+        private IHMap<string, HazelcastJsonValue> _dictionary;
 
         [OneTimeSetUp]
         public async Task SetUp()
         {
-            _dictionary = await Client.GetDictionaryAsync<string, HazelcastJsonValue>(CreateUniqueName());
+            _dictionary = await Client.GetMapAsync<string, HazelcastJsonValue>(CreateUniqueName());
         }
 
         [TearDown]

@@ -274,14 +274,14 @@ namespace Hazelcast.Transactions
                     => new HTxMultiDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxDictionary<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHDictionary<TKey, TValue> source)
-            => GetDictionaryAsync<TKey, TValue>(source.Name);
+        public Task<IHTxMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMap<TKey, TValue> source)
+            => GetMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxDictionary<TKey, TValue>> GetDictionaryAsync<TKey, TValue>(string name)
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxDictionary<TKey, TValue>, HTxDictionary<TKey, TValue>>(ServiceNames.Dictionary, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(ServiceNames.Dictionary, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HTxDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
+                    => new HTxMap<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
     }
 }

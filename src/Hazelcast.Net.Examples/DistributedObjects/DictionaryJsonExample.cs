@@ -30,7 +30,7 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetDictionaryAsync<string, HazelcastJsonValue>("json-example");
+            await using var map = await client.GetMapAsync<string, HazelcastJsonValue>("json-example");
 
             // add values
             Console.WriteLine("Populate map");

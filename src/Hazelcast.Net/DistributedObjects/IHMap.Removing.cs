@@ -18,7 +18,7 @@ using Hazelcast.Predicates;
 
 namespace Hazelcast.DistributedObjects
 {
-    public partial interface IHDictionary<TKey, TValue> // Removing
+    public partial interface IHMap<TKey, TValue> // Removing
     {
         /// <summary>
         /// Tries to remove the entry with the given key from this dictionary

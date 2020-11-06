@@ -19,7 +19,7 @@ using Hazelcast.Predicates;
 
 namespace Hazelcast.DistributedObjects
 {
-    public partial interface IHDictionary<TKey, TValue> // Getting
+    public partial interface IHMap<TKey, TValue> // Getting
     {
         /// <summary>
         /// Gets all entries for keys.
@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>
         /// The returned readonly dictionary is <b>NOT</b> backed by the hazelcast dictionary,
-        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHDictionary{TKey,TValue}"/>,
+        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHMap{TKey,TValue}"/>,
         /// and vice-versa.
         /// </para>
         /// </remarks>
@@ -83,7 +83,7 @@ namespace Hazelcast.DistributedObjects
         /// </para>
         /// <para>
         /// The returned readonly dictionary is <b>NOT</b> backed by the hazelcast dictionary,
-        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHDictionary{TKey,TValue}"/>,
+        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHMap{TKey,TValue}"/>,
         /// and vice-versa.
         /// </para>
         /// <para>

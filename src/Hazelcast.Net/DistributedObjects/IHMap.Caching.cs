@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     // ReSharper disable once UnusedTypeParameter
-    public partial interface IHDictionary<TKey, TValue> // Caching
+    public partial interface IHMap<TKey, TValue> // Caching
     {
         /// <summary>
         /// Evicts the specified key from the dictionary.
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects
         /// Loads all keys into the store.
         /// </summary>
         /// <param name="replaceExistingValues">
-        /// when <c>true</c>, existing values in the <see cref="IHDictionary{TKey,TValue}"/> will be replaced by those loaded from the MapLoader
+        /// when <c>true</c>, existing values in the <see cref="IHMap{TKey,TValue}"/> will be replaced by those loaded from the MapLoader
         /// </param>
         /// <returns>A task that will complete when the map store has been loaded.</returns>
         Task LoadAllAsync(bool replaceExistingValues);
@@ -78,7 +78,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="keys">keys of the values entries to load (keys inside the collection cannot be null)</param>
         /// <param name="replaceExistingValues">
-        /// when <c>true</c>, existing values in the <see cref="IHDictionary{TKey,TValue}"/> will be replaced by those loaded from the MapLoader
+        /// when <c>true</c>, existing values in the <see cref="IHMap{TKey,TValue}"/> will be replaced by those loaded from the MapLoader
         /// </param>
         /// <returns>A task that will complete when the map store has been loaded.</returns>
         Task LoadAllAsync(ICollection<TKey> keys, bool replaceExistingValues);

@@ -28,7 +28,7 @@ using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HDictionary<TKey, TValue> // Getting
+    internal partial class HMap<TKey, TValue> // Getting
     {
         /// <inheritdoc />
         public Task<Attempt<TValue>> GetAsync(TKey key)

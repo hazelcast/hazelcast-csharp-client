@@ -19,7 +19,7 @@ using Hazelcast.Predicates;
 namespace Hazelcast.DistributedObjects
 {
     // ReSharper disable once UnusedTypeParameter
-    public partial interface IHDictionary<TKey, TValue> // Processing
+    public partial interface IHMap<TKey, TValue> // Processing
     {
         /// <summary>
         /// Processes all entries.

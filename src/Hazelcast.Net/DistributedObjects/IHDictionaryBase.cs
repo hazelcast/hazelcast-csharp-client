@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
-    /// <seealso cref="IHDictionary{TKey,TValue}"/>
+    /// <seealso cref="IHMap{TKey,TValue}"/>
     /// <seealso cref="IHReplicatedDictionary{TKey,TValue}"/>
     public interface IHDictionaryBase<TKey, TValue> : IDistributedObject, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
     {
@@ -153,7 +153,7 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Copies all of the entries from the specified <see cref="IHDictionary{TKey,TValue}"/> to this dictionary.
+        /// Copies all of the entries from the specified <see cref="IHMap{TKey,TValue}"/> to this dictionary.
         /// </summary>
         /// <param name="entries">entries to be stored in this dictionary</param>
         Task SetAllAsync(IDictionary<TKey, TValue> entries);

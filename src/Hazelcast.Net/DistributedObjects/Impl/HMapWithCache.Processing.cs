@@ -19,7 +19,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HDictionaryWithCache<TKey, TValue> // Processing
+    internal partial class HMapWithCache<TKey, TValue> // Processing
     {
         protected override async Task<TResult> ExecuteAsync<TResult>(IData processorData, IData keyData, CancellationToken cancellationToken)
         {

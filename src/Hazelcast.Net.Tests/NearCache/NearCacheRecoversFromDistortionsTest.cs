@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.NearCache
             Logger.LogInformation("Populate...");
             Assert.True((await PopulateMapFromServerAsync(name, size)).Success);
 
-            var dictionary = await _client.GetDictionaryAsync<int, int>(name);
+            var dictionary = await _client.GetMapAsync<int, int>(name);
             await using var _ = new AsyncDisposable(() => dictionary?.DestroyAsync() ?? default);
             var cache = GetNearCache(dictionary);
 

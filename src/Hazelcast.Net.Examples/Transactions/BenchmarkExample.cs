@@ -30,8 +30,8 @@ namespace Hazelcast.Examples.Transactions
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
-            var map1 = await client.GetDictionaryAsync<int, string>("test1");
-            var map2 = await client.GetDictionaryAsync<int, string>("test2");
+            var map1 = await client.GetMapAsync<int, string>("test1");
+            var map2 = await client.GetMapAsync<int, string>("test2");
             await map1.ClearAsync();
             await map2.ClearAsync();
 
@@ -45,8 +45,8 @@ namespace Hazelcast.Examples.Transactions
                 await using (var transactionContext = await client.BeginTransactionAsync(
                     new TransactionOptions { Type = TransactionOptions.TransactionType.TwoPhase }))
                 {
-                    var txMap1 = await transactionContext.GetDictionaryAsync<int, string>("test1");
-                    var txMap2 = await transactionContext.GetDictionaryAsync<int, string>("test2");
+                    var txMap1 = await transactionContext.GetMapAsync<int, string>("test1");
+                    var txMap2 = await transactionContext.GetMapAsync<int, string>("test2");
 
                     await txMap1.SetAsync(i, "value");
                     await txMap2.SetAsync(i, "value");

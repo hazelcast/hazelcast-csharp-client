@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
 {
-    public partial interface IHDictionary<TKey, TValue> // Setting
+    public partial interface IHMap<TKey, TValue> // Setting
     {
         /// <summary>
         /// Sets (adds or updates) an entry.

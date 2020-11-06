@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.Client
             var hz = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get a map
-            var map = await hz.GetDictionaryAsync<string, string>("myMap");
+            var map = await hz.GetMapAsync<string, string>("myMap");
 
             // generate stats
             for (var i = 0; i < 100000; i++)

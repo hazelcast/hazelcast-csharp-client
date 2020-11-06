@@ -22,7 +22,7 @@ using Hazelcast.Protocol.Codecs;
 namespace Hazelcast.DistributedObjects.Impl
 {
     // ReSharper disable once UnusedTypeParameter
-    internal partial class HDictionary<TKey, TValue> // Caching
+    internal partial class HMap<TKey, TValue> // Caching
     {
         /// <inheritdoc />
         public Task<bool> EvictAsync(TKey key)
