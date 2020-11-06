@@ -183,18 +183,14 @@
       //}
     },
 
-    // load balancing
-    "loadBalancing": {
+    // load balancer
+    "loadBalancer": {
 
-      // mode
-      "mode": "random", // random|roundRobin|custom
+      // type
+      "typeName": "random" // random|roundRobin|<actual type>
 
-      // load balancer - forces custom mode
-      "loadBalancer": {
-
-        // name of the type of the load balancer
-        "typeName": "Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net"
-      }
+      // could be full name of the type of the load balancer:
+      //"typeName": "Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net",
     },
 
     // serialization

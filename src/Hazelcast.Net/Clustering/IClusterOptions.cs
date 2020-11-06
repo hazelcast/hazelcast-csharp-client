@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Core;
 using Hazelcast.Events;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
@@ -46,14 +47,15 @@ namespace Hazelcast.Clustering
         ISet<string> Labels { get; }
 
         /// <summary>
+        /// Gets the service factory for <see cref="ILoadBalancer"/>.
+        /// </summary>
+        /// <returns>The service factory for <see cref="ILoadBalancer"/>.</returns>
+        SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
+
+        /// <summary>
         /// Gets the authentication options.
         /// </summary>
         AuthenticationOptions Authentication { get; }
-
-        /// <summary>
-        /// Gets the load balancing options.
-        /// </summary>
-        LoadBalancingOptions LoadBalancing { get; }
 
         /// <summary>
         /// Gets the heartbeat options.

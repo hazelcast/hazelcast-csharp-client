@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
 using Hazelcast.Events;
+using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 
@@ -73,10 +77,48 @@ namespace Hazelcast
         public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
 
         /// <summary>
-        /// Gets the load balancing options.
+        /// Gets the service factory for <see cref="ILoadBalancer"/>.
         /// </summary>
-        /// <returns>The load balancing options.</returns>
-        public LoadBalancingOptions LoadBalancing { get; } = new LoadBalancingOptions();
+        /// <returns>The service factory for <see cref="ILoadBalancer"/>.</returns>
+        /// <remarks>
+        /// <para>A service factory is initialized with a creator function, that creates an
+        /// instance of the service. For instance:
+        /// <code>
+        /// options.LoadBalancer.Creator = () => new RandomLoadBalancer();
+        /// </code></para>
+        /// </remarks>
+        [BinderIgnore]
+        public SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
+            = new SingletonServiceFactory<ILoadBalancer> { Creator = () => new RandomLoadBalancer() };
+
+        [BinderName("loadBalancer")]
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions LoadBalancerBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get => default;
+            set
+            {
+                var typeName = value.TypeName;
+                if (string.IsNullOrWhiteSpace(typeName))
+                    throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(value));
+
+                switch (typeName.ToUpperInvariant())
+                {
+                    case "RANDOM":
+                        LoadBalancer.Creator = () => new RandomLoadBalancer();
+                        break;
+                    case "ROUNDROBIN":
+                        LoadBalancer.Creator = () => new RoundRobinLoadBalancer();
+                        break;
+                    default:
+                        LoadBalancer.Creator = () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args);
+                        break;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the heartbeat options.

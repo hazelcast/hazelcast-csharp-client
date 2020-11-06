@@ -51,7 +51,7 @@ namespace Hazelcast
             Heartbeat = other.Heartbeat.Clone();
             Networking = other.Networking.Clone();
             Authentication = other.Authentication.Clone();
-            LoadBalancing = other.LoadBalancing.Clone();
+            LoadBalancer = other.LoadBalancer.Clone();
             Serialization = other.Serialization.Clone();
             NearCache = other.NearCache.Clone();
             Messaging = other.Messaging.Clone();

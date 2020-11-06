@@ -57,7 +57,7 @@ namespace Hazelcast.Clustering
 
             Partitioner = new Partitioner();
 
-            var loadBalancer = options.LoadBalancing.LoadBalancer.Service ?? new RoundRobinLoadBalancer();
+            var loadBalancer = options.LoadBalancer.Service ?? new RandomLoadBalancer();
 
             var clientName = string.IsNullOrWhiteSpace(options.ClientName)
                 ? options.ClientNamePrefix + ClusterIdSequence.GetNext()
