@@ -160,7 +160,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsTrue(options.Addresses.Contains("otherhost"));
             Assert.IsFalse(options.ShuffleAddresses);
             Assert.IsFalse(options.SmartRouting);
-            Assert.IsFalse(options.RetryOnTargetDisconnected);
+            Assert.IsFalse(options.RetryOperations);
             Assert.AreEqual(1000, options.ConnectionTimeoutMilliseconds);
             Assert.AreEqual(1001, options.WaitForClientMilliseconds);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);

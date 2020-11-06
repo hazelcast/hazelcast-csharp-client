@@ -78,8 +78,8 @@
       // whether to use smart routing
       "smartRouting": false,
 
-      // whether to retry an invocation if the target is disconnected
-      "retryOnTargetDisconnected": false,
+      // whether to retry non-readonly operations
+      "retryOperations": false,
 
       // ?
       "connectionTimeoutMilliseconds": 1000,
