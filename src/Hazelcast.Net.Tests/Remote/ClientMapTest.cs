@@ -535,21 +535,6 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAllAsync(mm);
             Assert.AreEqual(keycount, await dictionary.CountAsync());
 
-            // FIXME - move to documentation + validate names
-            // getEntries = query engine
-            //  -> queryEntries
-            // getAll = multiple get from store
-            //
-            // getAll -> retrieves from store
-            // queryAll -> retrieves from memory
-            //
-            // all these are actually QUERIES and ignore mapstore
-            // getKeys() = getKeys(Predicate.True)
-            // getValues()
-            // getEntries() = getEntries(Predicate.True)
-            //
-            // iterating = runs on a QUERY (not on the store)
-
             var all = await dictionary.GetAllAsync(mm.Keys);
             // Assert.AreEqual(keycount, dictionary.Count);
             // foreach (var pair in dictionary)
