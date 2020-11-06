@@ -323,7 +323,7 @@ namespace Hazelcast.Tests.Clustering
                             HConsole.WriteLine(this, $"(server{state.Id}) Trigger event");
                             var key = setRequest.Key;
                             var value = setRequest.Value;
-                            var addedEvent = MapAddEntryListenerServerCodec.EncodeEntryEvent(key, value, value, value, (int)HDictionaryEventTypes.Added, state.SubscriptionId, 1);
+                            var addedEvent = MapAddEntryListenerServerCodec.EncodeEntryEvent(key, value, value, value, (int)MapEventTypes.Added, state.SubscriptionId, 1);
                             await SendEventAsync(addedEvent, state.SubscriptionCorrelationId).CAF();
                         }
                         break;

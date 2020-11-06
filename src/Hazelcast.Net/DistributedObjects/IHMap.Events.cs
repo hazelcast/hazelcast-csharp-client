@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null);
+        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null);
+        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects
         /// events contract in some situations, such as when the predicate refers to the
         /// entry value. Refer to the documentation for these methods for more details.</para>
         /// </remarks>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true, object state = null);
+        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects
         /// events contract in some situations, such as when the predicate refers to the
         /// entry value. Refer to the documentation for these methods for more details.</para>
         /// </remarks>
-        Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true, object state = null);
+        Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Unsubscribe from events.

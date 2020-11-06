@@ -104,10 +104,10 @@ namespace Hazelcast.Tests.Remote
         {
             using var _ = HConsoleForTest();
 
-            await new DictionarySimpleExample().Run(CreateHazelcastOptions(), 1000);
+            await new MapSimpleExample().Run(CreateHazelcastOptions(), 1000);
         }
 
-        public class DictionarySimpleExample
+        public class MapSimpleExample
         {
             public const string CacheName = "simple-example";
 

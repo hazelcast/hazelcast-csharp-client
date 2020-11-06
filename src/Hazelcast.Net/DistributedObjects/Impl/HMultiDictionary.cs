@@ -102,8 +102,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, object state)
         {
-            var eventType = (HDictionaryEventTypes) eventTypeData;
-            if (eventType == HDictionaryEventTypes.Nothing) return;
+            var eventType = (MapEventTypes) eventTypeData;
+            if (eventType == MapEventTypes.Nothing) return;
 
             var member = Cluster.Members.GetMember(memberId);
             var key = LazyArg<TKey>(keyData);
@@ -120,8 +120,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     var task = handler switch
                     {
-                        IDictionaryEntryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
-                        IDictionaryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
+                        IMapEntryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
+                        IMapEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
                         _ => throw new NotSupportedException()
                     };
                     await task.CAF();

@@ -23,16 +23,16 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    public class MultiDictionaryEventHandlers<TKey, TValue> : EventHandlersBase<IDictionaryEventHandlerBase>
+    public class MultiDictionaryEventHandlers<TKey, TValue> : EventHandlersBase<IMapEventHandlerBase>
     {
         /// <summary>
         /// Adds an handler which runs when the map is cleared.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> Cleared(Action<IHMultiDictionary<TKey, TValue>, DictionaryClearedEventArgs> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> Cleared(Action<IHMultiDictionary<TKey, TValue>, MapClearedEventArgs> handler)
         {
-            Add(new DictionaryClearedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapClearedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -41,9 +41,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> Cleared(Func<IHMultiDictionary<TKey, TValue>, DictionaryClearedEventArgs, ValueTask> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> Cleared(Func<IHMultiDictionary<TKey, TValue>, MapClearedEventArgs, ValueTask> handler)
         {
-            Add(new DictionaryClearedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
+            Add(new MapClearedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
             return this;
         }
 
@@ -52,9 +52,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryUpdated(Action<IHMultiDictionary<TKey, TValue>, DictionaryEntryUpdatedEventArgs<TKey, TValue>> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryUpdated(Action<IHMultiDictionary<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryUpdatedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -63,9 +63,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryUpdated(Func<IHMultiDictionary<TKey, TValue>, DictionaryEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryUpdated(Func<IHMultiDictionary<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryUpdatedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
             return this;
         }
 
@@ -74,9 +74,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryRemoved(Action<IHMultiDictionary<TKey, TValue>, DictionaryEntryRemovedEventArgs<TKey, TValue>> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryRemoved(Action<IHMultiDictionary<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryRemovedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -85,9 +85,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryRemoved(Func<IHMultiDictionary<TKey, TValue>, DictionaryEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryRemoved(Func<IHMultiDictionary<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryRemovedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
             return this;
         }
 
@@ -96,9 +96,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryAdded(Action<IHMultiDictionary<TKey, TValue>, DictionaryEntryAddedEventArgs<TKey, TValue>> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryAdded(Action<IHMultiDictionary<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryAddedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryAddedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -107,9 +107,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryAdded(Func<IHMultiDictionary<TKey, TValue>, DictionaryEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryAdded(Func<IHMultiDictionary<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryAddedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryAddedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
             return this;
         }
 
@@ -118,9 +118,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryMerged(Action<IHMultiDictionary<TKey, TValue>, DictionaryEntryMergedEventArgs<TKey, TValue>> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryMerged(Action<IHMultiDictionary<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
         {
-            Add(new DictionaryEntryMergedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryMergedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -129,9 +129,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public MultiDictionaryEventHandlers<TKey, TValue> EntryMerged(Func<IHMultiDictionary<TKey, TValue>, DictionaryEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiDictionaryEventHandlers<TKey, TValue> EntryMerged(Func<IHMultiDictionary<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new DictionaryEntryMergedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryMergedEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>>(handler));
             return this;
         }
     }

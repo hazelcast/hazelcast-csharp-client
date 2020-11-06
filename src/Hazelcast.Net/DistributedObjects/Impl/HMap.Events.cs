@@ -27,14 +27,14 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HMap<TKey, TValue> // Events
     {
-        private async Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, Maybe<TKey> key, IPredicate predicate, bool includeValues, object state, CancellationToken cancellationToken)
+        private async Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, Maybe<TKey> key, IPredicate predicate, bool includeValues, object state, CancellationToken cancellationToken)
         {
             if (events == null) throw new ArgumentNullException(nameof(events));
 
-            var handlers = new DictionaryEventHandlers<TKey, TValue>();
+            var handlers = new MapEventHandlers<TKey, TValue>();
             events(handlers);
 
-            var flags = HDictionaryEventTypes.Nothing;
+            var flags = MapEventTypes.Nothing;
             foreach (var handler in handlers)
                 flags |= handler.EventType;
 
@@ -67,21 +67,21 @@ namespace Hazelcast.DistributedObjects.Impl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null)
+        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null)
             => SubscribeAsync(events, Maybe.None, null, includeValues, state, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null)
+        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null)
             => SubscribeAsync(events, Maybe.Some(key), null, includeValues, state, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true, object state = null)
+        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, IPredicate predicate, bool includeValues = true, object state = null)
             => SubscribeAsync(events, Maybe.None, predicate, includeValues, state, CancellationToken.None);
 
-        public Task<Guid> SubscribeAsync(Action<DictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true, object state = null)
+        public Task<Guid> SubscribeAsync(Action<MapEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, bool includeValues = true, object state = null)
             => SubscribeAsync(events, Maybe.Some(key), predicate, includeValues, state, CancellationToken.None);
 
-        private class MapSubscriptionState : SubscriptionState<DictionaryEventHandlers<TKey, TValue>>
+        private class MapSubscriptionState : SubscriptionState<MapEventHandlers<TKey, TValue>>
         {
-            public MapSubscriptionState(int mode, string name, DictionaryEventHandlers<TKey, TValue> handlers, object state)
+            public MapSubscriptionState(int mode, string name, MapEventHandlers<TKey, TValue> handlers, object state)
                 : base(name, handlers, state)
             {
                 Mode = mode;
@@ -106,8 +106,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async ValueTask HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, object state)
         {
-            var eventType = (HDictionaryEventTypes) eventTypeData;
-            if (eventType == HDictionaryEventTypes.Nothing) return;
+            var eventType = (MapEventTypes) eventTypeData;
+            if (eventType == MapEventTypes.Nothing) return;
 
             var member = Cluster.Members.GetMember(memberId);
             var key = LazyArg<TKey>(keyData);
@@ -124,8 +124,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     var task = handler switch
                     {
-                        IDictionaryEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, state),
-                        IDictionaryEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, state),
+                        IMapEntryEventHandler<TKey, TValue, IHMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, state),
+                        IMapEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, state),
                         _ => throw new NotSupportedException()
                     };
                     await task.CAF();
