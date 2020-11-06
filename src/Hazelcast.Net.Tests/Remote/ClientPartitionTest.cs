@@ -25,19 +25,19 @@ namespace Hazelcast.Tests.Remote
     [TestFixture]
     public class ClientPartitionTest : SingleMemberClientRemoteTestBase
     {
-        private IHMap<object, object> _dictionary;
+        private IHMap<object, object> _map;
 
         [SetUp]
         public async Task Setup()
         {
-            _dictionary = await Client.GetMapAsync<object, object>(CreateUniqueName());
-            _ = await _dictionary.GetAsync(new object());
+            _map = await Client.GetMapAsync<object, object>(CreateUniqueName());
+            _ = await _map.GetAsync(new object());
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            await _dictionary.DisposeAsync();
+            await _map.DisposeAsync();
         }
 
         private static int GetPartitionOwnerCount(Partitioner partitioner)

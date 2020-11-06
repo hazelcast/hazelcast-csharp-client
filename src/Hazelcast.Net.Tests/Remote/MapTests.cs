@@ -23,7 +23,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class DictionaryTests : SingleMemberClientRemoteTestBase
+    public class MapTests : SingleMemberClientRemoteTestBase
     {
         [Test]
         [Timeout(TestTimeoutMilliseconds)]

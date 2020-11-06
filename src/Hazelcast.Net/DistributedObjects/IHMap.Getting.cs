@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The values for the specified keys.</returns>
         /// <remarks>
         /// <para>
-        /// The returned readonly dictionary is <b>NOT</b> backed by the hazelcast dictionary,
+        /// The returned readonly dictionary is <b>NOT</b> backed by the hazelcast map,
         /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHMap{TKey,TValue}"/>,
         /// and vice-versa.
         /// </para>
@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects
         Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys);
 
         /// <summary>
-        /// Queries the dictionary based on the specified predicate and returns keys matching the predicate. 
+        /// Queries the map based on the specified predicate and returns keys matching the predicate. 
         /// </summary>
         /// <param name="predicate">A predicate to filter the entries with.</param>
         /// <returns>readonly clone of all keys matching the predicate.</returns>
@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects
         Task<IReadOnlyCollection<TKey>> GetKeysAsync(IPredicate predicate);
         
         /// <summary>
-        /// Queries the dictionary based on the specified predicate and returns a readonly collection of the values of matching entries.
+        /// Queries the map based on the specified predicate and returns a readonly collection of the values of matching entries.
         /// Gets values for entries matching a predicate.
         /// </summary>
         /// <param name="predicate">A predicate to filter the entries.</param>
@@ -73,7 +73,7 @@ namespace Hazelcast.DistributedObjects
         Task<IReadOnlyCollection<TValue>> GetValuesAsync(IPredicate predicate);
 
         /// <summary>
-        /// Queries the dictionary based on the specified predicate and returns a readonly dictionary of the matching entries.
+        /// Queries the map based on the specified predicate and returns a readonly dictionary of the matching entries.
         /// </summary>
         /// <param name="predicate">A predicate to filter the entries with.</param>
         /// <returns>readonly dictionary of the matching entries.</returns>
@@ -93,11 +93,11 @@ namespace Hazelcast.DistributedObjects
         Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync(IPredicate predicate);
 
         /// <summary>
-        /// Gets an entry with statistics for a key, or <c>null</c> if the dictionary does not contain an entry with this key.
+        /// Gets an entry with statistics for a key, or <c>null</c> if the map does not contain an entry with this key.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns>An <see cref="IMapEntryStats{TKey,TValue}"/> for the specified key,
-        /// or <c>null</c> if the dictionary does not contain an entry with this key.</returns>
+        /// or <c>null</c> if the map does not contain an entry with this key.</returns>
         Task<IMapEntryStats<TKey, TValue>> GetEntryStatsAsync(TKey key);
     }
 }

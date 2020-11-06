@@ -19,7 +19,7 @@ using Hazelcast.Predicates;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a distributed dictionary with weak consistency and values locally stored on every node of the cluster.
+    /// Represents a distributed map with weak consistency and values locally stored on every node of the cluster.
     /// </summary>
     /// <remarks>
     /// <p>Whenever a value is written asynchronously, the new value will be internally

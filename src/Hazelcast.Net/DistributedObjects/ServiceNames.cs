@@ -35,9 +35,9 @@ namespace Hazelcast.DistributedObjects
         public const string List = "hz:impl:listService";
 
         /// <summary>
-        /// The name of the multi dictionary service.
+        /// The name of the multi map service.
         /// </summary>
-        public const string MultiDictionary = "hz:impl:multiMapService";
+        public const string MultiMap = "hz:impl:multiMapService";
 
         /// <summary>
         /// The name of the queue service.
@@ -45,9 +45,9 @@ namespace Hazelcast.DistributedObjects
         public const string Queue = "hz:impl:queueService";
 
         /// <summary>
-        /// The name of the replicated dictionary service.
+        /// The name of the replicated map service.
         /// </summary>
-        public const string ReplicatedDictionary = "hz:impl:replicatedMapService";
+        public const string ReplicatedMap = "hz:impl:replicatedMapService";
 
         /// <summary>
         /// The name off the ring buffer service.

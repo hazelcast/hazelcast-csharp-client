@@ -19,7 +19,7 @@ using Hazelcast.Core;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents multi distributed dictionary event handlers.
+    /// Represents multi distributed map event handlers.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>

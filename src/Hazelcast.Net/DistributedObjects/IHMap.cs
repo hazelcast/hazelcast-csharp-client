@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects
     /// <remarks>
     /// <para>Keys are identified by their own hash code and equality.</para>
     /// <para>Methods return clones of the original keys and values. Modifying these clones does not change
-    /// the actual keys and values in the dictionary. One should put the modified entries back, to make
+    /// the actual keys and values in the map. One should put the modified entries back, to make
     /// changes visible to all nodes.</para>
     /// </remarks>
     // ReSharper disable UnusedTypeParameter

@@ -21,13 +21,13 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHMap<TKey, TValue> // Caching
     {
         /// <summary>
-        /// Evicts the specified key from the dictionary.
+        /// Evicts the specified key from the map.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns><c>true</c> if the entry was evicted; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>
-        /// If a <c>MapStore</c> on server is defined for this dictionary,
+        /// If a <c>MapStore</c> on server is defined for this map,
         /// then the entry is not deleted from the underlying <c>MapStore</c>,
         /// evict only removes the entry from the memory.
         /// Use <see cref="RemoveAsync(TKey)"/> or <see cref="GetAndRemoveAsync(TKey)"/>
@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>A task that will complete when all entries have been evicted.</returns>
         /// <remarks>
         /// <para>
-        /// If a <c>MapStore</c> is defined on server for this dictionary,
+        /// If a <c>MapStore</c> is defined on server for this map,
         /// then <c>MapStore.deleteAll</c> is not called by this method,
         /// If you do want <c>MapStore.deleteAll</c> to be called use the <see cref="ClearAsync"/> method.
         /// </para>
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <returns>A task that will complete when the map store has been flushed.</returns>
         /// <remarks>
-        /// <para>If a <c>MapStore</c> is defined for this dictionary, this method flushes
+        /// <para>If a <c>MapStore</c> is defined for this map, this method flushes
         /// all dirty entries by deleting or storing them.</para>
         /// </remarks>
         Task FlushAsync();

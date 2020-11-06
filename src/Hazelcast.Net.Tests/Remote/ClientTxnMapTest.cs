@@ -22,7 +22,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class ClienttxDictionaryTest : SingleMemberClientRemoteTestBase
+    public class ClientTxMapTest : SingleMemberClientRemoteTestBase
     {
         [Test]
         public async Task TestGetForUpdate()

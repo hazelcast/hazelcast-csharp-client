@@ -269,7 +269,7 @@ namespace Hazelcast.Transactions
 
         public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(ServiceNames.MultiDictionary, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxMultiMap<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }

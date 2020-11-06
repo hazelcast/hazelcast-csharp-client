@@ -18,7 +18,7 @@ namespace Hazelcast.DistributedObjects
     /// A place holder interface for <c>com.hazelcast.map.MapInterceptor</c> on server side.
     /// </summary>
     /// <remarks>
-    /// it is used to intercept changes to the <c>IHDictionary</c>, allowing access to
+    /// it is used to intercept changes to the <c>IHMap</c>, allowing access to
     /// the values before and after adding them to it.
     /// </remarks>
     public interface IMapInterceptor

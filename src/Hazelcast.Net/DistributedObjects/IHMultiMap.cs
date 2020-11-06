@@ -19,11 +19,11 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents a distributed dictionary whose keys can be associated with multiple values.
+    /// Represents a distributed map whose keys can be associated with multiple values.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <c>IHMultiDictionary</c> can be configured on Server side to allow duplicate values or not for its values collection
+    /// <c>IHMultiMap</c> can be configured on Server side to allow duplicate values or not for its values collection
     /// </para>
     /// </remarks>
     public interface IHMultiMap<TKey, TValue> : IDistributedObject, IKeyLockable<TKey>, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
@@ -64,11 +64,11 @@ namespace Hazelcast.DistributedObjects
 
         // Setting
 
-        /// <summary>Stores a key-value pair in the multi-dictionary.</summary>
+        /// <summary>Stores a key-value pair in the multi-map.</summary>
         /// <param name="key">the key to be stored</param>
         /// <param name="value">the value to be stored</param>
         /// <returns>
-        /// <c>true</c> if size of the multi-dictionary is increased, <c>false</c> otherwise.
+        /// <c>true</c> if size of the multi-map is increased, <c>false</c> otherwise.
         /// </returns>
         /// <remarks>
         /// <para>
@@ -86,49 +86,49 @@ namespace Hazelcast.DistributedObjects
         /// <returns>the collection of the values associated with the key.</returns>
         Task<IReadOnlyCollection<TValue>> GetAsync(TKey key);
 
-        /// <summary>Returns the set of key-value pairs in the multi-dictionary.</summary>
-        /// <returns>the collection of key-value pairs in the multi-dictionary. </returns>
+        /// <summary>Returns the set of key-value pairs in the multi-map.</summary>
+        /// <returns>the collection of key-value pairs in the multi-map. </returns>
         Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync();
 
-        /// <summary>Returns the set of keys in the multi-dictionary.</summary>
-        /// <returns>the collection of keys in the multi-dictionary.</returns>
+        /// <summary>Returns the set of keys in the multi-map.</summary>
+        /// <returns>the collection of keys in the multi-map.</returns>
         Task<IReadOnlyCollection<TKey>> GetKeysAsync();
 
-        /// <summary>Returns the collection of values in the multi-dictionary.</summary>
-        /// <returns>the collection of values in the multi-dictionary.</returns>
+        /// <summary>Returns the collection of values in the multi-map.</summary>
+        /// <returns>the collection of values in the multi-map.</returns>
         Task<IReadOnlyCollection<TValue>> GetValuesAsync();
 
-        /// <summary>Returns whether the multi-dictionary contains the given key-value pair.</summary>
+        /// <summary>Returns whether the multi-map contains the given key-value pair.</summary>
         /// <param name="key">the key whose existence is checked.</param>
         /// <param name="value">the value whose existence is checked.</param>
-        /// <returns>true if the multi-dictionary contains the key-value pair, false otherwise.</returns>
+        /// <returns>true if the multi-map contains the key-value pair, false otherwise.</returns>
         Task<bool> ContainsEntryAsync(TKey key, TValue value);
 
-        /// <summary>Returns whether the multi-dictionary contains an entry with the key.</summary>
+        /// <summary>Returns whether the multi-map contains an entry with the key.</summary>
         /// <param name="key">the key whose existence is checked.</param>
-        /// <returns>true if the multi-dictionary contains an entry with the key, false otherwise.</returns>
+        /// <returns>true if the multi-map contains an entry with the key, false otherwise.</returns>
         Task<bool> ContainsKeyAsync(TKey key);
 
-        /// <summary>Returns whether the multi-dictionary contains an entry with the value.</summary>
+        /// <summary>Returns whether the multi-map contains an entry with the value.</summary>
         /// <param name="value">the value whose existence is checked.</param>
-        /// <returns>true if the multi-dictionary contains an entry with the value, false otherwise.</returns>
+        /// <returns>true if the multi-map contains an entry with the value, false otherwise.</returns>
         Task<bool> ContainsValueAsync(TValue value);
 
-        /// <summary>Returns the number of key-value pairs in the multi-dictionary.</summary>
-        /// <returns>the number of key-value pairs in the multi-dictionary.</returns>
+        /// <summary>Returns the number of key-value pairs in the multi-map.</summary>
+        /// <returns>the number of key-value pairs in the multi-map.</returns>
         Task<int> CountAsync();
 
-        /// <summary>Returns number of values matching to given key in the multi-dictionary.</summary>
+        /// <summary>Returns number of values matching to given key in the multi-map.</summary>
         /// <param name="key">the key whose values count are to be returned</param>
-        /// <returns>number of values matching to given key in the multi-dictionary.</returns>
+        /// <returns>number of values matching to given key in the multi-map.</returns>
         Task<int> CountValuesAsync(TKey key);
 
         // Removing
 
-        /// <summary>Removes the given key value pair from the multi-dictionary.</summary>
+        /// <summary>Removes the given key value pair from the multi-map.</summary>
         /// <param name="key">the key of the entry to remove</param>
         /// <param name="value">the value of the entry to remove</param>
-        /// <returns>true if the size of the multi-dictionary changed after the remove operation, false otherwise.</returns>
+        /// <returns>true if the size of the multi-map changed after the remove operation, false otherwise.</returns>
         Task<bool> RemoveAsync(TKey key, TValue value);
 
         /// <summary>Removes all the entries with the given key.</summary>
@@ -142,7 +142,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">the key of the entries to remove</param>
         Task RemoveAsync(TKey key);
 
-        /// <summary>Clears the multi-dictionary. Removes all key-value pairs.</summary>
+        /// <summary>Clears the multi-map. Removes all key-value pairs.</summary>
         Task ClearAsync();
     }
 }

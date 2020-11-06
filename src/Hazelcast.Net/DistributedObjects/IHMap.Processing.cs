@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects
         /// <b>Interactions with the map store:</b>
         /// </p>
         /// <p>For each entry not found in memory <c>MapLoader.load(Object)</c> is invoked to load the value from 
-        /// the <c>MapStore</c> backing the dictionary.
+        /// the <c>MapStore</c> backing the map.
         /// </p>
         /// <p>If the entryProcessor updates the entry and write-through
         /// persistence mode is configured, before the value is stored

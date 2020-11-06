@@ -21,7 +21,7 @@ namespace Hazelcast.DistributedObjects
     public partial interface IHMap<TKey, TValue> // Removing
     {
         /// <summary>
-        /// Tries to remove the entry with the given key from this dictionary
+        /// Tries to remove the entry with the given key from this map
         /// within the specified time to wait value.
         /// </summary>
         /// <param name="key">A key.</param>

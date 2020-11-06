@@ -58,7 +58,7 @@ namespace Hazelcast
         {
             var partitionId = Cluster.Partitioner.GetRandomPartitionId();
 
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedMap<TKey, TValue>, HReplicatedMap<TKey, TValue>>(ServiceNames.ReplicatedDictionary, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedMap<TKey, TValue>, HReplicatedMap<TKey, TValue>>(ServiceNames.ReplicatedMap, name, true,
                 (n, f, c, sr, lf)
                     => new HReplicatedMap<TKey,TValue>(n, f, c, sr, partitionId, lf));
 
@@ -76,7 +76,7 @@ namespace Hazelcast
 #endif
         Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiMap<TKey, TValue>, HMultiMap<TKey, TValue>>(ServiceNames.MultiDictionary, name, true,
+            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiMap<TKey, TValue>, HMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name, true,
                 (n, f, c, sr, lf)
                     => new HMultiMap<TKey, TValue>(n, f, c, sr, _lockReferenceIdSequence, lf));
 
