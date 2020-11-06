@@ -264,14 +264,14 @@ namespace Hazelcast.Transactions
                     => new HTxQueue<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMultiDictionary<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiDictionary<TKey, TValue> source)
-            => GetMultiDictionaryAsync<TKey, TValue>(source.Name);
+        public Task<IHTxMultiMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source)
+            => GetMultiMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name)
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiDictionary<TKey, TValue>, HTxMultiDictionary<TKey, TValue>>(ServiceNames.MultiDictionary, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(ServiceNames.MultiDictionary, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HTxMultiDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
+                    => new HTxMultiMap<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
         public Task<IHTxMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMap<TKey, TValue> source)
@@ -279,7 +279,7 @@ namespace Hazelcast.Transactions
 
         public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(ServiceNames.Dictionary, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(ServiceNames.Map, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxMap<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }

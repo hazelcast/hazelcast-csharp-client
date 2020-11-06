@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects
     /// <c>IHMultiDictionary</c> can be configured on Server side to allow duplicate values or not for its values collection
     /// </para>
     /// </remarks>
-    public interface IHMultiDictionary<TKey, TValue> : IDistributedObject, IKeyLockable<TKey>, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
+    public interface IHMultiMap<TKey, TValue> : IDistributedObject, IKeyLockable<TKey>, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
     {
         // Events
 
@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null);
+        Task<Guid> SubscribeAsync(Action<MultiMapEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="includeValues">Whether to include values in event arguments.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null);
+        Task<Guid> SubscribeAsync(Action<MultiMapEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null);
 
         /// <summary>
         /// Unsubscribe from events.

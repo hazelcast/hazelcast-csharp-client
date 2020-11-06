@@ -19,20 +19,20 @@ using Hazelcast.Core;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Represents replicated distributed dictionary event handlers.
+    /// Represents multi distributed dictionary event handlers.
     /// </summary>
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
-    public class ReplicatedDictionaryEventHandlers<TKey, TValue> : EventHandlersBase<IMapEventHandlerBase>
+    public class MultiMapEventHandlers<TKey, TValue> : EventHandlersBase<IMapEventHandlerBase>
     {
         /// <summary>
         /// Adds an handler which runs when the map is cleared.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> Cleared(Action<IHReplicatedDictionary<TKey, TValue>, MapClearedEventArgs> handler)
+        public MultiMapEventHandlers<TKey, TValue> Cleared(Action<IHMultiMap<TKey, TValue>, MapClearedEventArgs> handler)
         {
-            Add(new MapClearedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapClearedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -41,9 +41,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> Cleared(Func<IHReplicatedDictionary<TKey, TValue>, MapClearedEventArgs, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> Cleared(Func<IHMultiMap<TKey, TValue>, MapClearedEventArgs, ValueTask> handler)
         {
-            Add(new MapClearedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler));
+            Add(new MapClearedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -52,9 +52,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryUpdated(Action<IHReplicatedDictionary<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryUpdated(Action<IHMultiMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>> handler)
         {
-            Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -63,9 +63,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryUpdated(Func<IHReplicatedDictionary<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryUpdated(Func<IHMultiMap<TKey, TValue>, MapEntryUpdatedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryUpdatedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -74,9 +74,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryRemoved(Action<IHReplicatedDictionary<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryRemoved(Action<IHMultiMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>> handler)
         {
-            Add(new MapEntryRemovedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -85,9 +85,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryRemoved(Func<IHReplicatedDictionary<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryRemoved(Func<IHMultiMap<TKey, TValue>, MapEntryRemovedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new MapEntryRemovedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryRemovedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -96,9 +96,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryAdded(Action<IHReplicatedDictionary<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryAdded(Action<IHMultiMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>> handler)
         {
-            Add(new MapEntryAddedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryAddedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -107,9 +107,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryAdded(Func<IHReplicatedDictionary<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryAdded(Func<IHMultiMap<TKey, TValue>, MapEntryAddedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new MapEntryAddedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryAddedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
 
@@ -118,9 +118,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryMerged(Action<IHReplicatedDictionary<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryMerged(Action<IHMultiMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>> handler)
         {
-            Add(new MapEntryMergedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler.AsAsync()));
+            Add(new MapEntryMergedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler.AsAsync()));
             return this;
         }
 
@@ -129,9 +129,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public ReplicatedDictionaryEventHandlers<TKey, TValue> EntryMerged(Func<IHReplicatedDictionary<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
+        public MultiMapEventHandlers<TKey, TValue> EntryMerged(Func<IHMultiMap<TKey, TValue>, MapEntryMergedEventArgs<TKey, TValue>, ValueTask> handler)
         {
-            Add(new MapEntryMergedEventHandler<TKey, TValue, IHReplicatedDictionary<TKey, TValue>>(handler));
+            Add(new MapEntryMergedEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>>(handler));
             return this;
         }
     }

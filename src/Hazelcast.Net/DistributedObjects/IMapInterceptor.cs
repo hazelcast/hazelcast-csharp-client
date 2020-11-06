@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace Hazelcast.DistributedObjects
 {
-    /// <summary>Transactional implementation of MultiMap</summary>
-    public interface IHTxMultiDictionary<TKey, TValue> : ITransactionalObject
-    {
-        Task<IReadOnlyList<TValue>> GetAsync(TKey key);
-
-        Task<bool> TryAddAsync(TKey key, TValue value);
-
-        Task<bool> RemoveAsync(TKey key, TValue value);
-
-        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key);
-
-        Task<int> CountAsync();
-
-        Task<int> ValueCountAsync(TKey key);
-    }
+    /// <summary>
+    /// A place holder interface for <c>com.hazelcast.map.MapInterceptor</c> on server side.
+    /// </summary>
+    /// <remarks>
+    /// it is used to intercept changes to the <c>IHDictionary</c>, allowing access to
+    /// the values before and after adding them to it.
+    /// </remarks>
+    public interface IMapInterceptor
+    { }
 }

@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects
     /// </remarks>
     /// <typeparam name="TKey">the type of keys maintained by this map</typeparam>
     /// <typeparam name="TValue">the type of mapped values</typeparam>
-    public interface IHReplicatedDictionary<TKey, TValue> : IHDictionaryBase<TKey, TValue>
+    public interface IHReplicatedMap<TKey, TValue> : IHMapBase<TKey, TValue>
     {
         // Events
         /// <summary>
@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="events">An event handlers collection builder.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, object state = null);
+        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key to filter events.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, object state = null);
+        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, TKey key, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -57,7 +57,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, object state = null);
+        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, IPredicate predicate, object state = null);
 
         /// <summary>
         /// Subscribes to events.
@@ -67,7 +67,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="predicate">A predicate to filter events.</param>
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
-        Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, object state = null);
+        Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, object state = null);
 
         /// <summary>
         /// Unsubscribe from events.

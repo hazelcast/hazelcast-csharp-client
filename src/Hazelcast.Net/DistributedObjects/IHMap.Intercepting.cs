@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The <paramref name="interceptor"/> must be serializable via Hazelcast serialization,
         /// and have a counterpart on the server.</para>
         /// </remarks>
-        Task<string> AddInterceptorAsync(IDictionaryInterceptor interceptor);
+        Task<string> AddInterceptorAsync(IMapInterceptor interceptor);
 
         /// <summary>
         /// Removes the interceptor that identified by id.

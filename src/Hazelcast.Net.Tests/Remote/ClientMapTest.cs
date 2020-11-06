@@ -68,7 +68,7 @@ namespace Hazelcast.Tests.Remote
             }
         }
 
-        private class Interceptor : IDictionaryInterceptor, IIdentifiedDataSerializable
+        private class Interceptor : IMapInterceptor, IIdentifiedDataSerializable
         {
             public void WriteData(IObjectDataOutput output)
             {

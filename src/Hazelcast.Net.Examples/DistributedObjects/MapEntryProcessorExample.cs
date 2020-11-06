@@ -14,36 +14,47 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Examples.Models;
 
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class MultiDictionaryExample : ExampleBase
+    public class MapEntryProcessorExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);
 
+            // customize options for this example
+            options.Serialization.AddDataSerializableFactory(
+                EntryProcessorDataSerializableFactory.FactoryId,
+                new EntryProcessorDataSerializableFactory());
+
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetMultiDictionaryAsync<string, string>("multimap-example");
+            await using var map = await client.GetMapAsync<int, string>("entry-processor-example");
 
             // add values
-            await map.TryAddAsync("key", "value");
-            await map.TryAddAsync("key", "value2");
-            await map.TryAddAsync("key2", "value3");
+            Console.WriteLine("Populate map");
+            for (var i = 0; i < 10; i++)
+                await map.SetAsync(i, "value" + i);
 
-            // report
-            Console.WriteLine("Value: " + string.Join(", ", await map.GetAsync("key")));
-            Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
-            Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
+            // verify
             Console.WriteLine("Count: " + await map.CountAsync());
-            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntrySetAsync()));
-            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
-            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
+
+            // process
+            // note: hazelcast-test.jar has the same UpdateEntryProcessor,
+            // named com.hazelcast.client.test.IdentifiedEntryProcessor, so
+            // this works
+            var result = await map.ExecuteAsync(
+                new UpdateEntryProcessor("value-UPDATED"),
+                Predicates.Predicate.Sql("this==value5"));
+
+            Console.WriteLine("Updated value result: " + result[5]);
+            Console.WriteLine("The same value from  the map: " + await map.GetAsync(5));
 
             // destroy the map
             await client.DestroyAsync(map);

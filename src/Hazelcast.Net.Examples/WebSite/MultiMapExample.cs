@@ -18,20 +18,28 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.WebSite
 {
     // ReSharper disable once UnusedMember.Global
-    public class ReplicatedDictionaryExample : ExampleBase
+    public class MultiMapExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(BuildExampleOptions(args));
 
-            // Get a Replicated Map called "my-replicated-map"
-            await using var map = await client.GetReplicatedDictionaryAsync<string, string>("my-replicated-map");
-            // Put and Get a value from the Replicated Map
-            var replacedValue = await map.GetAndSetAsync("key", "value"); // key/value replicated to all members
-            Console.WriteLine("replacedValue = " + replacedValue); // Will be null as its first update
-            var value = await map.GetAsync("key"); // the value is retrieved from a random member in the cluster
-            Console.WriteLine("value for key = " + value);
+            // Get the Distributed MultiMap from Cluster.
+            await using var multiMap = await client.GetMultiMapAsync<string, string>("my-distributed-multimap");
+            // Put values in the map against the same key
+            await multiMap.TryAddAsync("my-key", "value1");
+            await multiMap.TryAddAsync("my-key", "value2");
+            await multiMap.TryAddAsync("my-key", "value3");
+            // Print out all the values for associated with key called "my-key"
+            var values = await multiMap.GetAsync("my-key");
+            foreach (var item in values)
+            {
+                Console.WriteLine(item);
+            }
+
+            // remove specific key/value pair
+            await multiMap.RemoveAsync("my-key", "value2");
         }
     }
 }

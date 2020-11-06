@@ -104,22 +104,22 @@ namespace Hazelcast.Transactions
         Task<IHTxQueue<TItem>> GetTransactionalAsync<TItem>(IHQueue<TItem> source);
 
         /// <summary>
-        /// Gets a <see cref="IHTxMultiDictionary{TKey,TValue}"/> transactional distributed object.
+        /// Gets a <see cref="IHTxMultiMap{TKey,TValue}"/> transactional distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="name">The unique name of the v.</param>
         /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name);
+        Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name);
 
         /// <summary>
-        /// Gets a <see cref="IHTxMultiDictionary{TKey,TValue}"/> transactional distributed object.
+        /// Gets a <see cref="IHTxMultiMap{TKey,TValue}"/> transactional distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
         /// <param name="source">The original, non-transactional map.</param>
         /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMultiDictionary<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiDictionary<TKey, TValue> source);
+        Task<IHTxMultiMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source);
 
         /// <summary>
         /// Gets a <see cref="IHTxMap{TKey,TValue}"/> transactional distributed object.

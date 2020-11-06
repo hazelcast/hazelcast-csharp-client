@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal class HTxMap<TKey, TValue> : TransactionalDistributedObjectBase, IHTxMap<TKey, TValue>
     {
         public HTxMap(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(ServiceNames.Dictionary, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+            : base(ServiceNames.Map, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
         public async Task<bool> ContainsKeyAsync(TKey key)

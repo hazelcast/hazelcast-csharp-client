@@ -14,11 +14,12 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Predicates;
 
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    internal class ReplicatedDictionaryExample : ExampleBase
+    public class MapPartitionPredicateExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
@@ -29,20 +30,26 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetReplicatedDictionaryAsync<string, string>("replicatedMap-example");
+            await using var map = await client.GetMapAsync<int, int>("predicate-example");
 
             // add values
-            await map.GetAndSetAsync("key", "value");
-            await map.GetAndSetAsync("key2", "value2");
+            Console.WriteLine("Populating map");
+            for (var i = 0; i < 1000; i++)
+                await map.SetAsync(i, i);
+
+            // count
+            Console.WriteLine("Map size: " + await map.CountAsync());
 
             // report
-            Console.WriteLine("Key: " + await map.GetAsync("key"));
-            Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
-            Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
-            Console.WriteLine("Count: " + await map.CountAsync());
-            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntriesAsync()));
-            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
-            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
+            const int partitionKey = 10;
+
+            // all keys on the same partition of the partitionKey will be returned
+            var partitionKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.True()));
+            Console.WriteLine("Partition keys: " + string.Join(", ", partitionKeys));
+
+            // keys less than 100 and on the same partition of the partitionKey will be returned
+            var filteredKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.IsLessThan("this",100)));
+            Console.WriteLine("Filtered keys: " + string.Join(", ", filteredKeys));
 
             // destroy the map
             await client.DestroyAsync(map);

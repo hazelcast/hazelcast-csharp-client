@@ -19,7 +19,7 @@ using Hazelcast.Examples.Models;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class DictionaryEntryProcessorExample : ExampleBase
+    public class MapIdentifiedDataSerializableExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
@@ -28,33 +28,26 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // customize options for this example
             options.Serialization.AddDataSerializableFactory(
-                EntryProcessorDataSerializableFactory.FactoryId,
-                new EntryProcessorDataSerializableFactory());
+                ExampleDataSerializableFactory.FactoryId,
+                new ExampleDataSerializableFactory());
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetMapAsync<int, string>("entry-processor-example");
+            await using var map = await client.GetMapAsync<int, Employee>("identified-data-serializable-example");
 
-            // add values
-            Console.WriteLine("Populate map");
-            for (var i = 0; i < 10; i++)
-                await map.SetAsync(i, "value" + i);
+            // create and add an employee
+            Console.WriteLine("Adding employee 'the employee'.");
+            var employee = new Employee { Id = 1, Name = "the employee" };
+            await map.SetAsync(employee.Id, employee);
 
-            // verify
-            Console.WriteLine("Count: " + await map.CountAsync());
-
-            // process
-            // note: hazelcast-test.jar has the same UpdateEntryProcessor,
-            // named com.hazelcast.client.test.IdentifiedEntryProcessor, so
-            // this works
-            var result = await map.ExecuteAsync(
-                new UpdateEntryProcessor("value-UPDATED"),
-                Predicates.Predicate.Sql("this==value5"));
-
-            Console.WriteLine("Updated value result: " + result[5]);
-            Console.WriteLine("The same value from  the map: " + await map.GetAsync(5));
+            // retrieve employee
+            var attempt = await map.GetAsync(employee.Id);
+            if (attempt.Success)
+                Console.WriteLine($"Gotten employee '{attempt.Value.Name}'.");
+            else
+                Console.WriteLine("Employee not found?");
 
             // destroy the map
             await client.DestroyAsync(map);

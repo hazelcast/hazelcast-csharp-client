@@ -58,11 +58,11 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the removed value. Prefer
-        /// <see cref="IHDictionaryBase{TKey,TValue}.GetAndRemoveAsync"/> if the value is required.</para>
-        /// <para>However, note that <see cref="IHDictionaryBase{TKey,TValue}.GetAndRemoveAsync"/> may
+        /// <see cref="IHMapBase{TKey,TValue}.GetAndRemoveAsync"/> if the value is required.</para>
+        /// <para>However, note that <see cref="IHMapBase{TKey,TValue}.GetAndRemoveAsync"/> may
         /// breaks the events contract: this method does not consider the removed value at all, which
         /// means that any event that would be filtered on the value (for instance via a predicate),
-        /// and would trigger with <see cref="IHDictionaryBase{TKey,TValue}.GetAndRemoveAsync"/>,
+        /// and would trigger with <see cref="IHMapBase{TKey,TValue}.GetAndRemoveAsync"/>,
         /// will not trigger here.</para>
         /// </remarks>
         Task RemoveAsync(TKey key);

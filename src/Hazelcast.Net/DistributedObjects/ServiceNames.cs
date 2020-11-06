@@ -20,9 +20,9 @@ namespace Hazelcast.DistributedObjects
     internal static class ServiceNames
     {
         /// <summary>
-        /// The name of the dictionary service.
+        /// The name of the map service.
         /// </summary>
-        public const string Dictionary = "hz:impl:mapService";
+        public const string Map = "hz:impl:mapService";
 
         /// <summary>
         /// The name of the topic service.

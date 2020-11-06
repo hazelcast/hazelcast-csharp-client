@@ -28,11 +28,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal class HReplicatedDictionary<TKey, TValue> : DistributedObjectBase, IHReplicatedDictionary<TKey, TValue>
+    internal class HReplicatedMap<TKey, TValue> : DistributedObjectBase, IHReplicatedMap<TKey, TValue>
     {
         private readonly int _partitionId;
 
-        public HReplicatedDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, int partitionId, ILoggerFactory loggerFactory)
+        public HReplicatedMap(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, int partitionId, ILoggerFactory loggerFactory)
             : base(ServiceNames.ReplicatedDictionary, name, factory, cluster, serializationService, loggerFactory)
         {
             _partitionId = partitionId;
@@ -147,11 +147,11 @@ namespace Hazelcast.DistributedObjects.Impl
             return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
         }
 
-        private async Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, Maybe<TKey> key, IPredicate predicate, object state)
+        private async Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, Maybe<TKey> key, IPredicate predicate, object state)
         {
             if (events == null) throw new ArgumentNullException(nameof(events));
 
-            var handlers = new ReplicatedDictionaryEventHandlers<TKey, TValue>();
+            var handlers = new ReplicatedMapEventHandlers<TKey, TValue>();
             events(handlers);
 
             // 0: no entryKey, no predicate
@@ -183,21 +183,21 @@ namespace Hazelcast.DistributedObjects.Impl
             return subscription.Id;
         }
 
-        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, object state = null)
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, object state = null)
             => SubscribeAsync(events, Maybe.None, null, state);
 
-        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, object state = null)
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, TKey key, object state = null)
             => SubscribeAsync(events, Maybe.Some(key), null, state);
 
-        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, IPredicate predicate, object state = null)
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, IPredicate predicate, object state = null)
             => SubscribeAsync(events, Maybe.None, predicate, state);
 
-        public Task<Guid> SubscribeAsync(Action<ReplicatedDictionaryEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, object state = null)
+        public Task<Guid> SubscribeAsync(Action<ReplicatedMapEventHandlers<TKey, TValue>> events, TKey key, IPredicate predicate, object state = null)
             => SubscribeAsync(events, Maybe.Some(key), predicate, state);
 
-        private class SubscriptionState : SubscriptionState<ReplicatedDictionaryEventHandlers<TKey, TValue>>
+        private class SubscriptionState : SubscriptionState<ReplicatedMapEventHandlers<TKey, TValue>>
         {
-            public SubscriptionState(int mode, string name, ReplicatedDictionaryEventHandlers<TKey, TValue> handlers, object state)
+            public SubscriptionState(int mode, string name, ReplicatedMapEventHandlers<TKey, TValue> handlers, object state)
                 : base(name, handlers, state)
             {
                 Mode = mode;
@@ -240,8 +240,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     var task = handler switch
                     {
-                        IMapEntryEventHandler<TKey, TValue, HReplicatedDictionary<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
-                        IMapEventHandler<TKey, TValue, HReplicatedDictionary<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
+                        IMapEntryEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
+                        IMapEventHandler<TKey, TValue, HReplicatedMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
                         _ => throw new NotSupportedException()
                     };
                     await task.CAF();

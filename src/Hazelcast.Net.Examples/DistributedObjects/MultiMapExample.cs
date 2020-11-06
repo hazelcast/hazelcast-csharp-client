@@ -13,52 +13,37 @@
 // limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
-using Hazelcast.Core;
-using Hazelcast.NearCaching;
 
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    internal class DictionaryNearCacheExample : ExampleBase
+    public class MultiMapExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);
 
-            // configure NearCache
-            options.NearCache.Caches["nearcache-map-*"] = new NearCacheOptions
-            {
-                MaxSize = 1000,
-                InvalidateOnChange = true,
-                EvictionPolicy = EvictionPolicy.Lru,
-                InMemoryFormat = InMemoryFormat.Binary
-            };
-
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetMapAsync<string, string>("nearcache-map-1");
+            await using var map = await client.GetMultiMapAsync<string, string>("multimap-example");
 
             // add values
-            for (var i = 0; i < 1000; i++)
-                await map.SetAsync("key" + i, "value" + i);
+            await map.TryAddAsync("key", "value");
+            await map.TryAddAsync("key", "value2");
+            await map.TryAddAsync("key2", "value3");
 
-            // get values, first pass
-            var sw = new Stopwatch();
-            sw.Start();
-            for (var i = 0; i < 1000; i++)
-                await map.GetAsync("key" + i);
-            Console.WriteLine("Got values in " + sw.ElapsedMilliseconds + " millis");
-
-            // get values, second pass
-            sw.Restart();
-            for (var i = 0; i < 1000; i++)
-                await map.GetAsync("key" + i);
-            Console.WriteLine("Got cached values in " + sw.ElapsedMilliseconds + " millis");
+            // report
+            Console.WriteLine("Value: " + string.Join(", ", await map.GetAsync("key")));
+            Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
+            Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
+            Console.WriteLine("Count: " + await map.CountAsync());
+            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntrySetAsync()));
+            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
+            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
 
             // destroy the map
             await client.DestroyAsync(map);

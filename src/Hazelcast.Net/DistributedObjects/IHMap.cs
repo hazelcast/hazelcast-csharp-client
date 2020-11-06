@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects
     /// changes visible to all nodes.</para>
     /// </remarks>
     // ReSharper disable UnusedTypeParameter
-    public partial interface IHMap<TKey, TValue> : IHDictionaryBase<TKey, TValue>, IKeyLockable<TKey>
+    public partial interface IHMap<TKey, TValue> : IHMapBase<TKey, TValue>, IKeyLockable<TKey>
     // ReSharper restore UnusedTypeParameter
     { }
 }

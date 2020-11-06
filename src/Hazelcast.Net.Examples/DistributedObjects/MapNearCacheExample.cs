@@ -13,43 +13,52 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
-using Hazelcast.Predicates;
+using Hazelcast.Core;
+using Hazelcast.NearCaching;
 
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class DictionaryPartitionPredicateExample : ExampleBase
+    internal class MapNearCacheExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);
 
+            // configure NearCache
+            options.NearCache.Caches["nearcache-map-*"] = new NearCacheOptions
+            {
+                MaxSize = 1000,
+                InvalidateOnChange = true,
+                EvictionPolicy = EvictionPolicy.Lru,
+                InMemoryFormat = InMemoryFormat.Binary
+            };
+
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetMapAsync<int, int>("predicate-example");
+            await using var map = await client.GetMapAsync<string, string>("nearcache-map-1");
 
             // add values
-            Console.WriteLine("Populating map");
             for (var i = 0; i < 1000; i++)
-                await map.SetAsync(i, i);
+                await map.SetAsync("key" + i, "value" + i);
 
-            // count
-            Console.WriteLine("Map size: " + await map.CountAsync());
+            // get values, first pass
+            var sw = new Stopwatch();
+            sw.Start();
+            for (var i = 0; i < 1000; i++)
+                await map.GetAsync("key" + i);
+            Console.WriteLine("Got values in " + sw.ElapsedMilliseconds + " millis");
 
-            // report
-            const int partitionKey = 10;
-
-            // all keys on the same partition of the partitionKey will be returned
-            var partitionKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.True()));
-            Console.WriteLine("Partition keys: " + string.Join(", ", partitionKeys));
-
-            // keys less than 100 and on the same partition of the partitionKey will be returned
-            var filteredKeys = await map.GetKeysAsync(new PartitionPredicate(partitionKey, Predicate.IsLessThan("this",100)));
-            Console.WriteLine("Filtered keys: " + string.Join(", ", filteredKeys));
+            // get values, second pass
+            sw.Restart();
+            for (var i = 0; i < 1000; i++)
+                await map.GetAsync("key" + i);
+            Console.WriteLine("Got cached values in " + sw.ElapsedMilliseconds + " millis");
 
             // destroy the map
             await client.DestroyAsync(map);

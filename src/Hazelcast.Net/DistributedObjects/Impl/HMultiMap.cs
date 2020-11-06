@@ -27,29 +27,29 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal class HMultiDictionary<TKey, TValue> : DistributedObjectBase, IHMultiDictionary<TKey, TValue>
+    internal class HMultiMap<TKey, TValue> : DistributedObjectBase, IHMultiMap<TKey, TValue>
     {
         private readonly ISequence<long> _lockReferenceIdSequence;
 
-        public HMultiDictionary(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory loggerFactory)
+        public HMultiMap(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory loggerFactory)
             : base(ServiceNames.MultiDictionary, name, factory, cluster, serializationService, loggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
         }
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null)
+        public Task<Guid> SubscribeAsync(Action<MultiMapEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null)
             => SubscribeAsync(events, Maybe.None, includeValues, state);
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null)
+        public Task<Guid> SubscribeAsync(Action<MultiMapEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null)
             => SubscribeAsync(events, Maybe.Some(key), includeValues, state);
 
-        private async Task<Guid> SubscribeAsync(Action<MultiDictionaryEventHandlers<TKey, TValue>> events, Maybe<TKey> key, bool includeValues, object state)
+        private async Task<Guid> SubscribeAsync(Action<MultiMapEventHandlers<TKey, TValue>> events, Maybe<TKey> key, bool includeValues, object state)
         {
             if (events == null) throw new ArgumentNullException(nameof(events));
 
-            var handlers = new MultiDictionaryEventHandlers<TKey, TValue>();
+            var handlers = new MultiMapEventHandlers<TKey, TValue>();
             events(handlers);
 
             // 0: no entryKey
@@ -77,9 +77,9 @@ namespace Hazelcast.DistributedObjects.Impl
             return subscription.Id;
         }
 
-        private class MapSubscriptionState : SubscriptionState<MultiDictionaryEventHandlers<TKey, TValue>>
+        private class MapSubscriptionState : SubscriptionState<MultiMapEventHandlers<TKey, TValue>>
         {
-            public MapSubscriptionState(int mode, string name, MultiDictionaryEventHandlers<TKey, TValue> handlers, object state)
+            public MapSubscriptionState(int mode, string name, MultiMapEventHandlers<TKey, TValue> handlers, object state)
                 : base(name, handlers, state)
             {
                 Mode = mode;
@@ -120,8 +120,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     var task = handler switch
                     {
-                        IMapEntryEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
-                        IMapEventHandler<TKey, TValue, IHMultiDictionary<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
+                        IMapEntryEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> entryHandler => entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
+                        IMapEventHandler<TKey, TValue, IHMultiMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
                         _ => throw new NotSupportedException()
                     };
                     await task.CAF();

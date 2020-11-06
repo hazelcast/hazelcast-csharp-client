@@ -14,40 +14,35 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Examples.Models;
 
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class DictionaryIdentifiedDataSerializableExample : ExampleBase
+    internal class ReplicatedMapExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);
 
-            // customize options for this example
-            options.Serialization.AddDataSerializableFactory(
-                ExampleDataSerializableFactory.FactoryId,
-                new ExampleDataSerializableFactory());
-
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the distributed map from the cluster
-            await using var map = await client.GetMapAsync<int, Employee>("identified-data-serializable-example");
+            await using var map = await client.GetReplicatedMapAsync<string, string>("replicatedMap-example");
 
-            // create and add an employee
-            Console.WriteLine("Adding employee 'the employee'.");
-            var employee = new Employee { Id = 1, Name = "the employee" };
-            await map.SetAsync(employee.Id, employee);
+            // add values
+            await map.GetAndSetAsync("key", "value");
+            await map.GetAndSetAsync("key2", "value2");
 
-            // retrieve employee
-            var attempt = await map.GetAsync(employee.Id);
-            if (attempt.Success)
-                Console.WriteLine($"Gotten employee '{attempt.Value.Name}'.");
-            else
-                Console.WriteLine("Employee not found?");
+            // report
+            Console.WriteLine("Key: " + await map.GetAsync("key"));
+            Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
+            Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
+            Console.WriteLine("Count: " + await map.CountAsync());
+            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntriesAsync()));
+            Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
+            Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
 
             // destroy the map
             await client.DestroyAsync(map);

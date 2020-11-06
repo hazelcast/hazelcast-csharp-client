@@ -25,8 +25,8 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
     /// <seealso cref="IHMap{TKey,TValue}"/>
-    /// <seealso cref="IHReplicatedDictionary{TKey,TValue}"/>
-    public interface IHDictionaryBase<TKey, TValue> : IDistributedObject, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
+    /// <seealso cref="IHReplicatedMap{TKey,TValue}"/>
+    public interface IHMapBase<TKey, TValue> : IDistributedObject, IAsyncEnumerable<KeyValuePair<TKey, TValue>>
     {
         //getting
 
@@ -86,10 +86,10 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <remarks>
         /// The returned readonly dictionary is <b>NOT</b> backed by the hazelcast dictionary,
-        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHDictionaryBase{TKey,TValue}"/>,
+        /// so changes to the returned readonly dictionary are <b>NOT</b> reflected in the <see cref="IHMapBase{TKey,TValue}"/>,
         /// and vice-versa.
         /// </remarks>
-        /// <returns>a <see cref="IReadOnlyDictionary{TKey, TValue}" /> clone of the <see cref="IHDictionaryBase{TKey,TValue}"/></returns>
+        /// <returns>a <see cref="IReadOnlyDictionary{TKey, TValue}" /> clone of the <see cref="IHMapBase{TKey,TValue}"/></returns>
         Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync();
 
         /// <summary>Gets the number of entries contained in this dictionary.</summary>

@@ -21,7 +21,7 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class DictionaryCustomSerializerExample : ExampleBase
+    public class MapCustomSerializerExample : ExampleBase
     {
         public static async Task Run(string[] args)
         {
