@@ -38,17 +38,17 @@ namespace Hazelcast.DistributedObjects.Impl
             _partitionId = partitionId;
         }
 
-        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
+        public Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value)
             => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public async Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
             var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, ttl);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapPutCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return ToObject<object>(response) is TValue result ? Maybe.Some(result) : Maybe.None;
         }
 
         public async Task SetAllAsync(IDictionary<TKey, TValue> entries)
@@ -65,13 +65,13 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> GetAndRemoveAsync(TKey key)
+        public async Task<Maybe<TValue>> GetAndRemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapRemoveCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
         }
 
         public async Task ClearAsync()
@@ -81,14 +81,14 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = ReplicatedMapClearCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<Attempt<TValue>> GetAsync(TKey key)
+        public async Task<Maybe<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapGetCodec.DecodeResponse(responseMessage).Response;
 
-            return ToObject<object>(response) is TValue value ? Attempt.Succeed(value) : Attempt.Failed;
+            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
         }
 
         public async Task<IReadOnlyCollection<TKey>> GetKeysAsync()

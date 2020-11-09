@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -31,10 +30,10 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> // Getting
     {
         /// <inheritdoc />
-        public Task<Attempt<TValue>> GetAsync(TKey key)
+        public Task<Maybe<TValue>> GetAsync(TKey key)
             => GetAsync(key, CancellationToken.None);
 
-        private async Task<Attempt<TValue>> GetAsync(TKey key, CancellationToken cancellationToken)
+        private async Task<Maybe<TValue>> GetAsync(TKey key, CancellationToken cancellationToken)
             => await GetAsync(ToSafeData(key), cancellationToken).CAF();
 
         /// <summary>
@@ -42,12 +41,12 @@ namespace Hazelcast.DistributedObjects.Impl
         /// </summary>
         /// <param name="keyData">The key data.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The value for the specified key, or null if the map does not contain an entry with this key.</returns>
-        protected virtual async Task<Attempt<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
+        /// <returns>The value for the specified key.</returns>
+        protected virtual async Task<Maybe<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
             // TODO: avoid boxing when ToObject-ing the value
             var valueData = await GetDataAsync(keyData, cancellationToken).CAF();
-            return ToObject<object>(valueData) is TValue value ? Attempt.Succeed(value) : Attempt.Failed;
+            return ToObject<object>(valueData) is TValue value ? Maybe.Some(value) : Maybe.None;
         }
 
         /// <summary>

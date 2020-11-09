@@ -68,8 +68,8 @@ namespace Hazelcast.Tests.Remote
 
             var result = await _map.GetAsync("key-1");
 
-            Assert.That(result.Success);
-            Assert.AreEqual(value, result.Value);
+            Assert.That(result.IsValue);
+            Assert.AreEqual(value, result.ValueOrDefault());
         }
 
         [Test]

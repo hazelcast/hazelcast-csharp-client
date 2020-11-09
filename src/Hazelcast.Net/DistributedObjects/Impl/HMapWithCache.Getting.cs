@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMapWithCache<TKey, TValue> // Getting
     {
         /// <inheritdoc />
-        protected override async Task<Attempt<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected override async Task<Maybe<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
             var fromCache = await _cache.TryGetOrAddAsync(keyData, _ => GetDataAsync(keyData, cancellationToken)).CAF();
             return fromCache; // is an attempt already

@@ -146,7 +146,7 @@ namespace Hazelcast.Tests.Remote
             await FillAsync(dictionary);
 
             var value = await dictionary.GetAsync("key1");
-            Assert.That(value, Ish.SuccessfulAttempt("value1"));
+            Assert.That(value.ValueOrDefault(), Is.EqualTo("value1"));
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -159,8 +159,8 @@ namespace Hazelcast.Tests.Remote
             await FillAsync(dictionary);
             var value = await dictionary.GetAndSetAsync("key3", "value");
 
-            Assert.AreEqual("value3", value);
-            Assert.That(await dictionary.GetAsync("key3"), Ish.SuccessfulAttempt("value"));
+            Assert.That(value.ValueOrDefault(), Is.EqualTo("value3"));
+            Assert.That((await dictionary.GetAsync("key3")).ValueOrDefault(), Is.EqualTo("value"));
         }
 
         /// <exception cref="System.Exception"></exception>
@@ -178,12 +178,12 @@ namespace Hazelcast.Tests.Remote
                 }));
 
             await dictionary.SetAsync("key", "value1", TimeSpan.FromSeconds(3));
-            Assert.That(await dictionary.GetAsync("key"), Ish.SuccessfulAttempt("value1"));
+            Assert.That((await dictionary.GetAsync("key")).ValueOrDefault(), Is.EqualTo("value1"));
 
             await AssertEx.SucceedsEventually(async () =>
             {
-                Assert.That(eventsCount, Ish.EqualTo(1));
-                Assert.That(await dictionary.GetAsync("key"), Ish.FailedAttempt());
+                Assert.That(eventsCount, Is.EqualTo(1));
+                Assert.That((await dictionary.GetAsync("key")).IsNone);
             }, 15000, 500);
 
             await dictionary.UnsubscribeAsync(sid);
@@ -256,7 +256,7 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(1, tempDict.Count);
 
             Assert.That(tempDict.TryGetValue("key1", out var value));
-            Assert.That(value, Ish.EqualTo("value1"));
+            Assert.That(value, Is.EqualTo("value1"));
         }
 
         [Test]
@@ -288,12 +288,12 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.SetAsync("key1", "value1");
-            Assert.That(await dictionary.GetAsync("key1"), Ish.SuccessfulAttempt("value1"));
+            Assert.That((await dictionary.GetAsync("key1")).ValueOrDefault(), Is.EqualTo("value1"));
 
             await dictionary.EvictAsync("key1");
 
             Assert.AreEqual(0, await dictionary.CountAsync());
-            Assert.That(await dictionary.GetAsync("key1"), Ish.FailedAttempt());
+            Assert.That((await dictionary.GetAsync("key1")).IsNone);
         }
 
         [Test]
@@ -312,7 +312,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.EvictAllAsync();
 
             Assert.AreEqual(1, await dictionary.CountAsync());
-            Assert.That(await dictionary.GetAsync("key3"), Ish.SuccessfulAttempt("value3"));
+            Assert.That((await dictionary.GetAsync("key3")).ValueOrDefault(), Is.EqualTo("value3"));
         }
 
         [Test]
@@ -336,7 +336,7 @@ namespace Hazelcast.Tests.Remote
             var entryProcessor = new IdentifiedEntryProcessor(value);
             var result = await dictionary.ExecuteAsync(entryProcessor, key);
             Assert.AreEqual(result, value);
-            Assert.That(await dictionary.GetAsync(key), Ish.SuccessfulAttempt(result));
+            Assert.That((await dictionary.GetAsync(key)).ValueOrDefault(), Is.EqualTo(result));
         }
 
         [Test]
@@ -372,7 +372,7 @@ namespace Hazelcast.Tests.Remote
             foreach (var resultKV in result)
             {
                 Assert.AreEqual(resultKV.Value, value);
-                Assert.That(await dictionary.GetAsync(resultKV.Key), Ish.SuccessfulAttempt(value));
+                Assert.That((await dictionary.GetAsync(resultKV.Key)).ValueOrDefault(), Is.EqualTo(value));
             }
         }
 
@@ -423,7 +423,7 @@ namespace Hazelcast.Tests.Remote
             foreach (var resultKV in result)
             {
                 Assert.AreEqual(resultKV.Value, value);
-                Assert.That(await dictionary.GetAsync(resultKV.Key), Ish.SuccessfulAttempt(value));
+                Assert.That((await dictionary.GetAsync(resultKV.Key)).ValueOrDefault(), Is.EqualTo(value));
             }
         }
 
@@ -442,7 +442,7 @@ namespace Hazelcast.Tests.Remote
             foreach (var resultKV in result)
             {
                 Assert.AreEqual(resultKV.Value, value);
-                Assert.That(await dictionary.GetAsync(resultKV.Key), Ish.SuccessfulAttempt(value));
+                Assert.That((await dictionary.GetAsync(resultKV.Key)).ValueOrDefault(), Is.EqualTo(value));
             }
         }
 
@@ -459,8 +459,8 @@ namespace Hazelcast.Tests.Remote
             var entryProcessor = new IdentifiedEntryProcessor(value);
             var result = await dictionary.ExecuteAsync(entryProcessor, key);
 
-            Assert.That(result, Ish.EqualTo(value));
-            Assert.That(await dictionary.GetAsync(key), Ish.EqualTo(value));
+            Assert.That(result, Is.EqualTo(value));
+            Assert.That(await dictionary.GetAsync(key), Is.EqualTo(value));
         }
 
         [Test]
@@ -678,10 +678,10 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(added1Count, Ish.EqualTo(5));
-                Assert.That(removed1Count, Ish.EqualTo(2));
-                Assert.That(added2Count, Ish.EqualTo(1));
-                Assert.That(removed2Count, Ish.EqualTo(1));
+                Assert.That(added1Count, Is.EqualTo(5));
+                Assert.That(removed1Count, Is.EqualTo(2));
+                Assert.That(added2Count, Is.EqualTo(1));
+                Assert.That(removed2Count, Is.EqualTo(1));
             }, 4000, 500);
 
             Assert.IsTrue(await dictionary.UnsubscribeAsync(sid1));
@@ -716,28 +716,28 @@ namespace Hazelcast.Tests.Remote
             const int delay = 10000; // ms
 
             await dictionary.SetAsync("key1", "value1");
-            await AssertEx.SucceedsEventually(() => Assert.That(entryAdded, Ish.EqualTo(1)), delay, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(entryAdded, Is.EqualTo(1)), delay, 500);
 
             await dictionary.SetAsync("key1", "value2");
-            await AssertEx.SucceedsEventually(() => Assert.That(entryUpdated, Ish.EqualTo(1)), delay, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(entryUpdated, Is.EqualTo(1)), delay, 500);
 
             await dictionary.RemoveAsync("key1");
-            await AssertEx.SucceedsEventually(() => Assert.That(entryRemoved, Ish.EqualTo(1)), delay, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(entryRemoved, Is.EqualTo(1)), delay, 500);
 
             await dictionary.SetAsync("key1", "value2");
             await dictionary.ClearAsync();
-            await AssertEx.SucceedsEventually(() => Assert.That(cleared, Ish.EqualTo(1)), delay, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(cleared, Is.EqualTo(1)), delay, 500);
 
             await dictionary.SetAsync("key1", "value2");
             await dictionary.EvictAllAsync();
-            await AssertEx.SucceedsEventually(() => Assert.That(evicted, Ish.EqualTo(1)), delay, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(evicted, Is.EqualTo(1)), delay, 500);
 
             await dictionary.SetAsync("key2", "value2");
             await dictionary.EvictAsync("key2");
-            await AssertEx.SucceedsEventually(() => Assert.That(entryEvicted, Ish.EqualTo(1)), delay, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(entryEvicted, Is.EqualTo(1)), delay, 500);
 
             await dictionary.SetAsync("key3", "value2", TimeSpan.FromSeconds(1));
-            await AssertEx.SucceedsEventually(() => Assert.That(entryExpired, Ish.EqualTo(1)), delay, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(entryExpired, Is.EqualTo(1)), delay, 500);
 
             Assert.IsTrue(await dictionary.UnsubscribeAsync(sid));
         }
@@ -758,7 +758,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key1", "value1");
             await dictionary.ClearAsync();
 
-            await AssertEx.SucceedsEventually(() => Assert.That(cleared, Ish.EqualTo(1)), 4000, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(cleared, Is.EqualTo(1)), 4000, 500);
         }
 
         [Test]
@@ -781,7 +781,7 @@ namespace Hazelcast.Tests.Remote
                 await dictionary.SetAsync(1, i);
             }
 
-            await AssertEx.SucceedsEventually(() => Assert.That(updated.Count, Ish.EqualTo(maxSize - 1)), 10000, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(updated.Count, Is.EqualTo(maxSize - 1)), 10000, 500);
 
             var oldEventData = -1;
             foreach (var eventData in updated)
@@ -821,7 +821,7 @@ namespace Hazelcast.Tests.Remote
                 await dictionary.RemoveAsync("key" + i);
             }
 
-            await AssertEx.SucceedsEventually(() => Assert.That(removed, Ish.EqualTo(removed)), 120_000, 500);
+            await AssertEx.SucceedsEventually(() => Assert.That(removed, Is.EqualTo(removed)), 120_000, 500);
 
              for (var i = 0; i < testItemCount; i++)
             {
@@ -859,7 +859,7 @@ namespace Hazelcast.Tests.Remote
                 true
             );
 
-            Assert.That(await dictionary.CountAsync(), Ish.Zero);
+            Assert.That(await dictionary.CountAsync(), Is.Zero);
 
             await dictionary.SetAsync("key1", "value1");
             await dictionary.SetAsync("key2", "value2");
@@ -867,21 +867,21 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key4", "value4");
             await dictionary.SetAsync("key5", "value5");
 
-            Assert.That(await dictionary.CountAsync(), Ish.EqualTo(5));
+            Assert.That(await dictionary.CountAsync(), Is.EqualTo(5));
 
             // do NOT turn that into RemoveAsync, see tests below!
             await dictionary.GetAndRemoveAsync("key1");
             await dictionary.GetAndRemoveAsync("key3");
 
-            Assert.That(await dictionary.CountAsync(), Ish.EqualTo(3));
+            Assert.That(await dictionary.CountAsync(), Is.EqualTo(3));
 
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(added1, Ish.EqualTo(1));
-                Assert.That(removed1, Ish.EqualTo(1));
-                Assert.That(added2, Ish.EqualTo(1));
-                Assert.That(removed2, Ish.EqualTo(1));
-                Assert.That(removed3, Ish.EqualTo(2));
+                Assert.That(added1, Is.EqualTo(1));
+                Assert.That(removed1, Is.EqualTo(1));
+                Assert.That(added2, Is.EqualTo(1));
+                Assert.That(removed2, Is.EqualTo(1));
+                Assert.That(removed3, Is.EqualTo(2));
             }, 10000, 500);
 
             await dictionary.UnsubscribeAsync(sid1);
@@ -926,14 +926,14 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(added1, Ish.EqualTo(1));
-                Assert.That(removed1, Ish.EqualTo(1));
-                Assert.That(added2, Ish.EqualTo(1));
+                Assert.That(added1, Is.EqualTo(1));
+                Assert.That(removed1, Is.EqualTo(1));
+                Assert.That(added2, Is.EqualTo(1));
             }, 10000, 1000);
 
             await Task.Delay(1000);
 
-            Assert.That(removed2, Ish.Zero);
+            Assert.That(removed2, Is.Zero);
 
             await dictionary.UnsubscribeAsync(sid1);
             await dictionary.UnsubscribeAsync(sid2);
@@ -954,7 +954,7 @@ namespace Hazelcast.Tests.Remote
 
             await dictionary.SetAsync("key1", "value1");
             await Task.Delay(2000);
-            Assert.That(addedCount, Ish.Zero);
+            Assert.That(addedCount, Is.Zero);
         }
 
         [Test]
@@ -973,7 +973,7 @@ namespace Hazelcast.Tests.Remote
                 couldSet = await dictionary.TrySetAsync("key1", "value2", TimeSpan.FromSeconds(1));
             });
 
-            Assert.That(couldSet, Ish.False);
+            Assert.That(couldSet, Is.False);
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
             await dictionary.ForceUnlockAsync("key1");
         }
@@ -1022,7 +1022,7 @@ namespace Hazelcast.Tests.Remote
                 catch { }
             });
 
-            Assert.That(count, Ish.EqualTo(2));
+            Assert.That(count, Is.EqualTo(2));
             await dictionary.ForceUnlockAsync("key1");
         }
 
@@ -1091,11 +1091,11 @@ namespace Hazelcast.Tests.Remote
             const string value = "Value";
 
             var result = await dictionary.GetOrAddAsync(key, value, TimeSpan.FromMilliseconds(100));
-            Assert.That(result, Ish.Null);
+            Assert.That(result, Is.Null);
 
             await AssertEx.SucceedsEventually(async () =>
             {
-                Assert.That((await dictionary.GetAsync(key)).Success, Ish.False);
+                Assert.That((await dictionary.GetAsync(key)).IsNone);
             }, 5000, 500);
         }
 
@@ -1143,7 +1143,7 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.SucceedsEventually(async () =>
             {
-                Assert.That(await dictionary.GetAsync("key1"), Ish.Not.EqualTo("value1"));
+                Assert.That((await dictionary.GetAsync("key1")).ValueOrDefault(), Is.Not.EqualTo("value1"));
             }, 5000, 500);
         }
 
@@ -1158,7 +1158,7 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.SucceedsEventually(async () =>
             {
-                Assert.That((await dictionary.GetAsync("key1")).Success, Ish.False);
+                Assert.That((await dictionary.GetAsync("key1")).IsNone);
             }, 5000, 500);
         }
 
@@ -1170,7 +1170,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync(dictionary);
 
-            Assert.IsNull(await dictionary.GetAndRemoveAsync("key10"));
+            Assert.That((await dictionary.GetAndRemoveAsync("key10")).IsNone);
             await dictionary.RemoveAsync("key9");
             Assert.AreEqual(9, await dictionary.CountAsync());
             for (var i = 0; i < 9; i++)
@@ -1223,7 +1223,7 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.IsNull(await dictionary.TryUpdateAsync("key1", "value1"));
+            Assert.That((await dictionary.TryUpdateAsync("key1", "value1")).IsNone);
             await dictionary.SetAsync("key1", "value1");
             Assert.AreEqual("value1", await dictionary.TryUpdateAsync("key1", "value2"));
             Assert.AreEqual("value2", await dictionary.GetAsync("key1"));
@@ -1248,7 +1248,7 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.SucceedsEventually(async () =>
             {
-                Assert.That((await dictionary.GetAsync("key1")).Success, Ish.False);
+                Assert.That((await dictionary.GetAsync("key1")).IsNone);
             }, 5000, 500);
         }
 
@@ -1279,7 +1279,7 @@ namespace Hazelcast.Tests.Remote
 
             await Task.WhenAll(task1, task2);
 
-            Assert.That(count, Ish.EqualTo(2));
+            Assert.That(count, Is.EqualTo(2));
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
             Assert.AreEqual("value2", await dictionary.GetAsync("key2"));
 

@@ -137,10 +137,10 @@ namespace Hazelcast.Tests.Networking
             var dictionary = await client.GetMapAsync<string, User>(CreateUniqueName());
             var user = new User { Name = "Mr Random" };
             await dictionary.SetAsync("x", user);
-            var attempt = await dictionary.GetAsync("x");
-            Assert.That(attempt.Success);
-            Assert.That(attempt.Value, Is.Not.Null);
-            Assert.AreEqual(user.Name, attempt.Value.Name);
+            var result = await dictionary.GetAsync("x");
+            Assert.That(result.IsValue);
+            Assert.That(result.ValueOrDefault(), Is.Not.Null);
+            Assert.AreEqual(user.Name, ((User)result).Name);
         }
 
         public class User

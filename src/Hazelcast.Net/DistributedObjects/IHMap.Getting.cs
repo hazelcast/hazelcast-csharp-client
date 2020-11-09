@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects
         Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys);
 
         /// <summary>
-        /// Queries the map based on the specified predicate and returns keys matching the predicate. 
+        /// Queries the map based on the specified predicate and returns matching keys. 
         /// </summary>
         /// <param name="predicate">A predicate to filter the entries with.</param>
         /// <returns>readonly clone of all keys matching the predicate.</returns>

@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 using Hazelcast.Examples.Models;
 
 namespace Hazelcast.Examples.DistributedObjects
@@ -50,11 +51,10 @@ namespace Hazelcast.Examples.DistributedObjects
             await map.SetAsync(customer.Id, customer);
 
             // retrieve customer
-            var attempt = await map.GetAsync(customer.Id);
-            if (attempt)
-                Console.WriteLine($"Got customer '{attempt.Value.Name}'.");
-            else
-                Console.WriteLine("Customer not found?");
+            var result = await map.GetAsync(customer.Id);
+            result.Match(
+                value => Console.WriteLine($"Got customer '{value.Name}'."),
+                () => Console.WriteLine("Customer not found?"));
 
             // destroy the map
             await hz.DestroyAsync(map);

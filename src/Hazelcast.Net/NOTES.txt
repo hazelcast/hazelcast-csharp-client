@@ -143,6 +143,13 @@ on https://stackoverflow.com/questions/8823239 for caveats.
 if (key == null) throw new ArgumentNullException(nameof(key));
 
 
+#### NOTES ABOUT RETURNING MAYBE<T> vs T?
+
+Some of our methods (see IHMapBase) return Maybe<T> and we may want them to return T? instead.
+However in C# 8 there is no way to make T nullable and at the same time accepting that T can
+be either a struct (int...) or a class (string, object...). 
+
+
 
 
 

@@ -31,138 +31,123 @@ namespace Hazelcast.DistributedObjects
         //getting
 
         /// <summary>
-        /// Gets the value for the specified key, or <c>null</c> if this map does not contain this key.
+        /// Gets the value for the specified key.
         /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The value for the specified key, if any.</returns>
         /// <remarks>
-        /// <para>
-        /// <b>Warning-1:</b><p/>
-        /// This method returns a clone of original value, modifying the returned value does not change
-        /// the actual value in the map. One should put modified value back to make changes visible to all nodes.
-        /// <code>
-        /// var value = await map.GetAsync(key);
-        /// value.UpdateSomeProperty();
-        /// await map.SetAsync(key, value);
-        /// </code>
-        /// </para>
-        /// <para>
-        /// <b>Warning-2:</b><p/>
-        /// This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        /// the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        /// defined in <c>key</c>'s class.
-        /// </para>
-        /// <para>
-        /// <b>Interactions with the <c>MapStore</c> on server</b><p/>
-        /// If value with key is not found in memory
-        /// <c>MapLoader.load(Object)</c> is invoked to load the value from
-        /// the <c>MapStore</c> backing the map. Exceptions thrown by load fail
-        /// the operation and are propagated to the caller.
-        /// </para>
+        /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
+        /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
+        /// to try to load the value from the <c>MapStore</c> backing the map, if any.</para>
         /// </remarks>
-        /// <param name="key">key</param>
-        /// <returns>value for the specified key or <c>null</c> if this map does not contain this key</returns>
-        Task<Attempt<TValue>> GetAsync(TKey key);
+        Task<Maybe<TValue>> GetAsync(TKey key);
 
-        /// <summary>Gets a <see cref="IReadOnlyCollection{TKey}" /> clone of the keys contained in this map.</summary>
-        /// <returns>a <see cref="IReadOnlyCollection{TKey}" /> clone of the keys contained in this map</returns>
+        /// <summary>
+        /// Gets a <see cref="IReadOnlyCollection{TKey}" /> of the keys contained in this map.
+        /// </summary>
+        /// <returns>A <see cref="IReadOnlyCollection{TKey}" /> of the keys contained in this map.</returns>
+        /// <remarks>
+        /// <para>This method <strong>does not interact with the server-side <c>MapStore</c></strong>.
+        /// It returns the keys found in memory, but does not look for more keys in the <c>MapStore</c>
+        /// backing the map, if any.</para>
+        /// </remarks>
         Task<IReadOnlyCollection<TKey>> GetKeysAsync();
 
         /// <summary>
-        /// Gets a <see cref="IReadOnlyCollection{TValue}" /> clone of the values contained in this map.</summary>
-        /// <returns>a collection clone of the values contained in this map</returns>
+        /// Gets a <see cref="IReadOnlyCollection{TValue}" /> of the values contained in this map.
+        /// </summary>
+        /// <returns>A <see cref="IReadOnlyCollection{TValue}" /> of the values contained in this map.</returns>
+        /// <remarks>
+        /// <para>This method <strong>does not interact with the server-side <c>MapStore</c></strong>.
+        /// It returns the values found in memory, but does not look for more values in the <c>MapStore</c>
+        /// backing the map, if any.</para>
+        /// </remarks>
         Task<IReadOnlyCollection<TValue>> GetValuesAsync();
 
         /// <summary>
-        /// Gets a <see cref="IReadOnlyDictionary{TKey, TValue}" /> clone of the entries contained in this map.
+        /// Gets a <see cref="IReadOnlyDictionary{TKey, TValue}" /> of the entries contained in this map.
         /// </summary>
-        /// <returns>a <see cref="IReadOnlyDictionary{TKey, TValue}" /> clone of the <see cref="IHMapBase{TKey,TValue}"/></returns>
+        /// <returns>A <see cref="IReadOnlyDictionary{TKey, TValue}" /> of the <see cref="IHMapBase{TKey,TValue}"/> in this map.</returns>
+        /// <remarks>
+        /// <para>This method <strong>does not interact with the server-side <c>MapStore</c></strong>.
+        /// It returns the entries found in memory, but does not look for more entries in the <c>MapStore</c>
+        /// backing the map, if any.</para>
+        /// </remarks>
         Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync();
 
         /// <summary>Gets the number of entries contained in this map.</summary>
-        /// <returns>the number of entries in this map</returns>
+        /// <returns>The number of entries contained in this map.</returns>
+        // TODO: document MapStore behavior
         Task<int> CountAsync();
 
-        /// <summary>Returns <c>true</c> if this map contains no entries.</summary>
-        /// <returns><c>true</c> if this map contains no entries</returns>
+        /// <summary>Determines whether this map contains no entries.</summary>
+        /// <returns><c>true</c> if this map contains no entries; otherwise <c>false</c>.</returns>
+        // TODO: document MapStore behavior
         Task<bool> IsEmptyAsync();
 
         /// <summary>
         /// Determines whether this map contains an entry for the specified key.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>Warning:</b>
-        /// This method uses <c>GetHashCode</c> and <c>Equals</c> of binary form of
-        /// the <c>key</c>, not the actual implementations of <c>GetHashCode</c> and <c>Equals</c>
-        /// defined in <c>key</c>'s class.
-        /// </para>
-        /// </remarks>
         /// <param name="key">The key.</param>
-        /// <returns><c>true</c> if the specified key contains key; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if the specified key contains key; otherwise <c>false</c>.</returns>
+        // TODO: document MapStore behavior
         Task<bool> ContainsKeyAsync(TKey key);
 
         /// <summary>
-        /// Determines whether this map contains one or more keys to the specified value
+        /// Determines whether this map contains one or more keys to the specified value.
         /// </summary>
         /// <param name="value">The value.</param>
-        /// <returns>Returns <c>true</c> if this map contains one or more keys to the specified value</returns>
+        /// <returns><c>true</c> if this map contains one or more keys to the specified value; otherwise <c>false</c>.</returns>
+        // TODO: document MapStore behavior
         Task<bool> ContainsValueAsync(TValue value);
 
         //setting
 
         /// <summary>
-        /// Associates a given value to the specified key and replicates it to the
-        /// cluster. If there is an old value, it will be replaced by the specified
-        /// one and returned from the call.
+        /// Sets (adds or updates) an entry, and returns the previous value, if any.
         /// </summary>
-        /// <param name="key">key with which the specified value is to be associated.</param>
-        /// <param name="value">value to be associated with the specified key.</param>
-        /// <returns>old value of the entry</returns>
-        Task<TValue> GetAndSetAsync(TKey key, TValue value);
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>The previous value for the specified key, if any.</returns>
+        // TODO: document MapStore behavior
+        Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Associates a given value to the specified key and replicates it to the
-        /// cluster. If there is an old value, it will be replaced by the specified
-        /// one and returned from the call.
+        /// Sets (adds or updates) an entry with a time-to-live, and returns the previous value, if any.
         /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="timeToLive">A time-to-live period.</param>
+        /// <returns>The previous value for the specified key, if any.</returns>
         /// <remarks>
-        /// <para>
-        /// In addition, you have to specify a <see cref="timeToLive"/>
-        /// to define when the value is outdated and thus should be removed from the
-        /// this map.
-        /// </para>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
         /// </remarks>
-        /// <param name="key">key with which the specified value is to be associated.</param>
-        /// <param name="value">value to be associated with the specified key.</param>
-        /// <param name="timeToLive">A positive time to live period to be associated with the specified key-value pair.</param>
-        /// <returns>old value of the entry</returns>
-        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
+        // TODO: document MapStore behavior
+        Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Copies all of the entries from the specified <see cref="IHMap{TKey,TValue}"/> to this map.
+        /// Sets (adds or updates) entries.
         /// </summary>
-        /// <param name="entries">entries to be stored in this map</param>
+        /// <param name="entries">The entries.</param>
+        /// <returns>A task that will complete when entries have been added or updated.</returns>
         Task SetAllAsync(IDictionary<TKey, TValue> entries);
 
         //removing
 
         /// <summary>
-        /// Clears the map and deletes the items.
+        /// Clears the map by deleting all entries.
         /// </summary>
+        /// <returns>A task that will complete when the map has been cleared.</returns>
         Task ClearAsync();
 
         /// <summary>
-        /// Removes the entry for a key from this map if it is present.
+        /// Removes an entry, and returns the removed value, if any.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The map will not contain a mapping for the specified key once the call returns.
-        /// </para>
-        /// </remarks>
-        /// <param name="key">key</param>
-        /// <returns>
-        /// previous value associated with <c>key</c> or <c>null</c>
-        /// if there was no mapping for <c>key</c> .
-        /// </returns>
-        Task<TValue> GetAndRemoveAsync(TKey key);
+        /// <param name="key">The key.</param>
+        /// <returns>The removed value, if any.</returns>
+        // TODO: document MapStore behavior
+        Task<Maybe<TValue>> GetAndRemoveAsync(TKey key);
     }
 }

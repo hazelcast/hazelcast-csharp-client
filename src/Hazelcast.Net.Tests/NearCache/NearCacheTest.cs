@@ -212,8 +212,8 @@ namespace Hazelcast.Tests.NearCache
 
             // get the value
             var result = await dictionary.GetAsync("key");
-            Assert.That(result.Success);
-            Assert.AreEqual("value", result.Value);
+            Assert.That(result.IsValue);
+            Assert.AreEqual("value", result);
 
             // validate that the cache contains a value
             Assert.AreEqual(1, cache.Count);
@@ -225,8 +225,8 @@ namespace Hazelcast.Tests.NearCache
 
             // get the value again
             result = await dictionary.GetAsync("key");
-            Assert.That(result.Success);
-            Assert.AreEqual("value", result.Value);
+            Assert.That(result.IsValue);
+            Assert.AreEqual("value", result);
 
             // validate that the entry now has one hit
             cacheEntries = await cache.SnapshotEntriesAsync();

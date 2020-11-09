@@ -26,8 +26,22 @@ namespace Hazelcast.Core
     /// <remarks>
     /// <para>An <see cref="Attempt{TResult}"/> is either successful or failed, it
     /// carries a <typeparamref name="TResult"/> result, and an exception.</para>
+    /// <para>An attempt can be used explicitly:  <code>
+    /// var attempt = await TryAsync(...);
+    /// if (attempt.Success)
+    /// {
+    ///     // use attempt.Value
+    /// }
+    /// </code> or implicitly via deconstruction: <code>
+    /// var (success, value) = await TryAsync(...);
+    /// if (success)
+    /// {
+    ///     // use value
+    /// }
+    /// </code>
+    /// </para>
     /// </remarks>
-    public readonly struct Attempt<TResult> : IEquatable<Attempt<TResult>>, IEquatable<TResult>
+    internal readonly struct Attempt<TResult> : IEquatable<Attempt<TResult>>, IEquatable<TResult>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Attempt{TResult}"/> struct.

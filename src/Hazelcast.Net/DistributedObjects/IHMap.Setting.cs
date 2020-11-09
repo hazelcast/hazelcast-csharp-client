@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -36,13 +37,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="timeToLive">A time to live.</param>
         /// <returns>A task that will complete when the entry has been added or updated.</returns>
         /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
-        /// <para>
-        /// If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives as much as
-        /// the default value configured on server map configuration.</para>
-        /// <para>
-        /// If the <paramref name="timeToLive"/> is <see cref="TimeSpan.MaxValue"/>, the entry lives forever.
-        /// </para>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
         /// </remarks>
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
@@ -51,13 +48,13 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="newValue">The new value.</param>
-        /// <returns>The updated value, or <c>default(TValue)</c> is no entry is updated.</returns>
+        /// <returns>The existing value, if any.</returns>
         /// <remarks>
         /// <para>If an existing entry with the specified key is found, then its value is
-        /// updated with the new value, and the updated value is returned. Otherwise, nothing
-        /// happens, and <c>default(TValue)</c> is returned.</para>
+        /// updated with the new value, and the existing value is returned. Otherwise, nothing
+        /// happens.</para>
         /// </remarks>
-        Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
+        Task<Maybe<TValue>> TryUpdateAsync(TKey key, TValue newValue);
 
         /// <summary>
         /// Updates an entry if it exists, and its value is equal to <paramref name="comparisonValue"/>.
@@ -100,18 +97,14 @@ namespace Hazelcast.DistributedObjects
         /// Returns the new value, or the existing value if the entry already exists.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="value">The value.</param>
-        /// <param name="timeToLive">A time to live.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time-to-live.</param>
         /// <returns>The value for the key. This will be either the existing value for the key if the entry
         /// already exists, or the new value if the no entry with the key already existed.</returns>
         /// <remarks>
-        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
-        /// <para>
-        /// If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives as much as
-        /// the default value configured on server map configuration.</para>
-        /// <para>
-        /// If the <paramref name="timeToLive"/> is <see cref="TimeSpan.MaxValue"/>, the entry lives forever.
-        /// </para>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
         /// </remarks>
         Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive);
 
@@ -119,8 +112,8 @@ namespace Hazelcast.DistributedObjects
         /// Sets (adds or updates) an entry without calling the <c>MapStore</c> on the server side, if defined.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="value">The value.</param>
-        /// <param name="timeToLive">A time to live.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time-to-live.</param>
         /// <remarks>
         /// <para>If the dictionary has a <c>MapStore</c> attached, the entry is added to the store but not persisted.
         /// Flushing the store is required to make sure that the entry is actually persisted.</para>
@@ -128,18 +121,18 @@ namespace Hazelcast.DistributedObjects
         /// <para>
         /// Time resolution for <param name="timeToLive"></param> is seconds. The given value is rounded to the next closest second value.
         /// </para>
-        /// <para>
-        /// If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives as much as
-        /// the default value configured on server map configuration.</para>
-        /// <para>
-        /// If the <paramref name="timeToLive"/> is <see cref="TimeSpan.MaxValue"/>, the entry lives forever.
-        /// </para>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
         /// </remarks>
         Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Updates the time to live value of the entry specified by <paramref name="key"/> with a new value.
+        /// Updates the time-to-live of an entry.
         /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="timeToLive">A time-to-live.</param>
+        /// <returns><c>true</c> if the entry exists and its time-to-live value is changed; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>
         /// New TTL value is valid starting from the time this operation is invoked, not since the time the entry was created.
@@ -161,9 +154,6 @@ namespace Hazelcast.DistributedObjects
         /// If the <paramref name="timeToLive"/> is <see cref="TimeSpan.MaxValue"/>, the entry lives forever.
         /// </para>
         /// </remarks>
-        /// <param name="key">A key.</param>
-        /// <param name="timeToLive">maximum time for this entry to stay in the dictionary.</param>
-        /// <returns><c>true</c> if the entry exists and its ttl value is changed, <c>false</c> otherwise</returns>
         Task<bool> UpdateTimeToLive(TKey key, TimeSpan timeToLive);
     }
 }

@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        protected override async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
+        protected override async Task<Maybe<TValue>> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             try
             {

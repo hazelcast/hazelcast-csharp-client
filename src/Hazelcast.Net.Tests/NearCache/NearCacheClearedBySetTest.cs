@@ -109,7 +109,7 @@ namespace Hazelcast.Tests.NearCache
             var lastValue = _valuePut;
             var valueStr = await dictionary.GetAsync(Key);
             Assert.That(valueStr, Is.Not.Null);
-            var valueInt = int.Parse(valueStr);
+            var valueInt = valueStr.Match(int.Parse, -1);
 
             // fail if not eventually consistent
             string msg = null;
@@ -121,7 +121,7 @@ namespace Hazelcast.Tests.NearCache
                 cache.Clear();
                 valueStr = await dictionary.GetAsync(Key);
                 Assert.That(valueStr, Is.Not.Null);
-                valueInt = int.Parse(valueStr);
+                valueInt = valueStr.Match(int.Parse, -1);
 
                 // test again
                 if (valueInt < lastValue)
@@ -200,9 +200,9 @@ namespace Hazelcast.Tests.NearCache
 
                 // check if we see our last update
                 var valueStr = await dictionary.GetAsync(Key).CAF();
-                if (!valueStr.Success) continue; // not found
+                if (valueStr.IsNone) continue; // not found
 
-                var valueInt = int.Parse(valueStr);
+                var valueInt = valueStr.Match(int.Parse, -1);
                 if (valueInt == i) continue; // match = ok
 
                 _assertionViolationCount++;
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests.NearCache
 
                 // test again and stop if really lost
                 valueStr = await dictionary.GetAsync(Key).CAF();
-                valueInt = int.Parse(valueStr);
+                valueInt = valueStr.Match(int.Parse, -1);
                 if (valueInt == i) continue; // fixed
 
                 Logger.LogWarning($"Err: still getting {valueInt} instead of {i}.");

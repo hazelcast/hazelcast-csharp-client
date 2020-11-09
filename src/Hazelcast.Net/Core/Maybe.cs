@@ -16,17 +16,71 @@ using System;
 
 namespace Hazelcast.Core
 {
-    internal static class Maybe
+    // TODO: 
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public readonly struct Maybe : IEquatable<Maybe>
     {
-        //public class MaybeNone { }
+        // note: the parameter-less constructor is always implied with structs
 
-        //public static MaybeNone None { get; } = new MaybeNone();
-        public static MaybeNone None => default;
+        #region Create
 
+        /// <summary>
+        /// Gets a <see cref="Maybe"/> with no value.
+        /// </summary>
+        public static Maybe None => default;
+
+        /// <summary>
+        /// Gets a <see cref="Maybe{T}"/> with a value.
+        /// </summary>
+        /// <typeparam name="T">The type of the value.</typeparam>
+        /// <param name="value">The value.</param>
+        /// <returns>A <see cref="Maybe{T}"/> with a value.</returns>
         public static Maybe<T> Some<T>(T value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
             return value;
         }
+
+        #endregion
+
+        #region Equality
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+            => (obj is Maybe) ||
+               (!(obj is null) && obj.Equals(this)); // deals with obj being Maybe<T>
+
+        /// <summary>
+        /// Determines whether this instance is equal to another instance.
+        /// </summary>
+        /// <param name="other">The other instance.</param>
+        /// <returns><c>true</c> if this instance is equal to the other instance; otherwise <c>false</c>.</returns>
+        public bool Equals(Maybe other) => true;
+
+        /// <summary>
+        /// Determines whether two <see cref="Maybe"/> instance are equal.
+        /// </summary>
+        /// <param name="left">The first instance.</param>
+        /// <param name="right">The second instance.</param>
+        /// <returns><c>true</c> if the two instances are equal; otherwise <c>false</c>.</returns>
+        public static bool operator ==(Maybe left, Maybe right)
+            => left.Equals(right);
+
+        /// <summary>
+        /// Determines whether two <see cref="Maybe"/> instance are different.
+        /// </summary>
+        /// <param name="left">The first instance.</param>
+        /// <param name="right">The second instance.</param>
+        /// <returns><c>true</c> if the two instances are different; otherwise <c>false</c>.</returns>
+        public static bool operator !=(Maybe left, Maybe right)
+            => !left.Equals(right);
+
+        /// <inheritdoc />
+        public override int GetHashCode() => 0;
+
+        #endregion
     }
 }

@@ -40,13 +40,13 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAsync(TKey)"/>.
         /// </summary>
-        Task<Attempt<TValue>> GetAsync(TKey key);
+        Task<Maybe<TValue>> GetAsync(TKey key);
 
         /// <summary>Locks the key and then gets and returns the value to which the specified key is mapped.</summary>
         /// <remarks>
         /// <para>The lock will be released at the end of the transaction (either commit or rollback).</para>
         /// </remarks>
-        Task<TValue> GetForUpdateAsync(TKey key); // FIXME ATTEMPT FIXME
+        Task<Maybe<TValue>> GetForUpdateAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.IsEmptyAsync()"/>.
@@ -85,7 +85,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> GetAndSetAsync(TKey key, TValue value);
+        Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.SetAsync(TKey, TValue, TimeSpan)"/>.
@@ -107,7 +107,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetOrAddAsync(TKey, TValue)"/>.
@@ -123,7 +123,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The removed entry wil be removed only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> GetAndRemoveAsync(TKey key);
+        Task<Maybe<TValue>> GetAndRemoveAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.RemoveAsync(TKey, TValue)"/>.
@@ -141,7 +141,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The updated entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
+        Task<Maybe<TValue>> TryUpdateAsync(TKey key, TValue newValue);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.TryUpdateAsync(TKey, TValue, TValue)"/>.

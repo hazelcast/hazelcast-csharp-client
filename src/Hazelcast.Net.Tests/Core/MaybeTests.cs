@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Reflection;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -90,6 +91,23 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void Equality()
         {
+            // Maybe.None is equal to...
+            Assert.That(Maybe.None.Equals(Maybe.None));
+            Assert.That(Maybe.None.Equals(Maybe<int>.None));
+
+            // Maybe.None<int> is equal to...
+            Assert.That(Maybe<int>.None.Equals(Maybe<int>.None));
+            Assert.That(Maybe<int>.None.Equals(Maybe.None));
+
+            // but not that one
+            Assert.That(Maybe<int>.None.Equals(Maybe<float>.None), Is.False);
+
+            Assert.That(Maybe.None == Maybe.None);
+
+            Assert.That(Maybe<int>.None == Maybe<int>.None);
+            Assert.That(Maybe.None == Maybe<int>.None);
+            Assert.That(Maybe<int>.None == Maybe.None);
+
             Assert.That(Maybe.Some(3).Equals(Maybe.Some(3)));
             Assert.That(!Maybe.Some(3).Equals(Maybe.Some(4)));
             Assert.That(!Maybe.Some(3).Equals(Maybe.None));
@@ -98,6 +116,27 @@ namespace Hazelcast.Tests.Core
             Assert.That(Maybe.Some(3) == Maybe.Some(3));
             Assert.That(Maybe.Some(3) != Maybe.Some(4));
             Assert.That(Maybe.Some(3) != Maybe.None);
+
+            //
+            Assert.That(3 == 3.0); // implicit int -> double
+            Assert.That(3.Equals(3.0), Is.False);
+
+            Assert.That(Maybe.Some(3) == (int) 3.0); // explicit
+            Assert.That(Maybe.Some(3.0) == (double) 3); // implicit
+
+            // does not build - not supposed to be possible
+            //Assert.That(Maybe.Some(3) == Maybe.Some(3.0));
+
+            Assert.That(Maybe.Some(3) == 3);
+            Assert.That(Maybe.Some(3) != 4);
+
+            Assert.That(Maybe.Some(3).Equals(3));
+            Assert.That(!Maybe.Some(3).Equals(4));
+
+
+            Assert.That(Maybe.Some(3).Equals(Maybe.Some(3.0)), Is.False);
+
+            Assert.That(Maybe.Some(3), Is.EqualTo(3));
 
             Assert.That(Maybe.Some(3).GetHashCode(), Is.EqualTo(3));
         }
