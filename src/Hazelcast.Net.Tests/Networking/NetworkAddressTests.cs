@@ -33,13 +33,13 @@ namespace Hazelcast.Tests.Networking
             Assert.AreEqual(5701, NetworkAddress.DefaultPort);
         }
 
-        [TestCase("127.0.0.1", true, "127.0.0.1:5701")]
+        [TestCase("127.0.0.1", true, "127.0.0.1:0")]
         [TestCase("127.0.0.1:81", true, "127.0.0.1:81")]
-        [TestCase("1", true, "0.0.0.1:5701")]
+        [TestCase("1", true, "0.0.0.1:0")]
         [TestCase(":82", false, "")]
-        [TestCase("666", true, "0.0.2.154:5701")]
-        [TestCase("::1", true, "[::1]:5701")]
-        [TestCase("::1%33", true, "[::1%33]:5701")]
+        [TestCase("666", true, "0.0.2.154:0")]
+        [TestCase("::1", true, "[::1]:0")]
+        [TestCase("::1%33", true, "[::1%33]:0")]
         [TestCase("[::1]:81", true, "[::1]:81")]
         [TestCase("[::1%33]:81", true, "[::1%33]:81")]
         [TestCase("[65535]", false, "")]
