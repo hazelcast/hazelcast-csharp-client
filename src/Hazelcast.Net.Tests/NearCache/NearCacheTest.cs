@@ -57,9 +57,9 @@ namespace Hazelcast.Tests.NearCache
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            var nearCacheOptions = options.NearCaching;
+            var nearCacheOptions = options.NearCache;
 
-            nearCacheOptions.NearCacheOptions["nc*"] = new NearCacheOptions
+            nearCacheOptions.Caches["nc*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.None,
                 InvalidateOnChange = false,
@@ -67,32 +67,32 @@ namespace Hazelcast.Tests.NearCache
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.NearCacheOptions["nc-invalidate*"] = new NearCacheOptions
+            nearCacheOptions.Caches["nc-invalidate*"] = new NearCacheOptions
             {
                 InvalidateOnChange = true
             };
 
-            nearCacheOptions.NearCacheOptions["nc-lru*"] = new NearCacheOptions
+            nearCacheOptions.Caches["nc-lru*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.Lru,
                 InvalidateOnChange = false,
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.NearCacheOptions["nc-lfu*"] = new NearCacheOptions
+            nearCacheOptions.Caches["nc-lfu*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.Lfu,
                 InvalidateOnChange = false,
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.NearCacheOptions["nc-ttl*"] = new NearCacheOptions
+            nearCacheOptions.Caches["nc-ttl*"] = new NearCacheOptions
             {
                 TimeToLiveSeconds = 1,
                 InvalidateOnChange = false
             };
 
-            nearCacheOptions.NearCacheOptions["nc-idle*"] = new NearCacheOptions
+            nearCacheOptions.Caches["nc-idle*"] = new NearCacheOptions
             {
                 MaxIdleSeconds = 1,
                 CleanupPeriodSeconds = 2,

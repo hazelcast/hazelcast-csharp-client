@@ -60,9 +60,9 @@ namespace Hazelcast.Tests.NearCache
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            var nearCacheOptions = options.NearCaching;
+            var nearCacheOptions = options.NearCache;
 
-            nearCacheOptions.NearCacheOptions["nc*"] = new NearCacheOptions
+            nearCacheOptions.Caches["nc*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.None,
                 InvalidateOnChange = true,

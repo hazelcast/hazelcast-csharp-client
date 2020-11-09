@@ -50,6 +50,6 @@ namespace Hazelcast
         /// Gets the general Near Caching options.
         /// </summary>
         /// <returns>The general Near Caching options.</returns>
-        public NearCachingOptions NearCaching { get; } = new NearCachingOptions();
+        public NearCachingOptions NearCache { get; } = new NearCachingOptions();
     }
 }

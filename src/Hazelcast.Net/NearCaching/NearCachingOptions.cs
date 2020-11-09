@@ -38,7 +38,7 @@ namespace Hazelcast.NearCaching
             ReconciliationIntervalSeconds = other.ReconciliationIntervalSeconds;
             MinReconciliationIntervalSeconds = other.MinReconciliationIntervalSeconds;
             MaxToleratedMissCount = other.ReconciliationIntervalSeconds;
-            NearCacheOptions = new Dictionary<string, NearCacheOptions>(other.NearCacheOptions.ToDictionary(
+            Caches = new Dictionary<string, NearCacheOptions>(other.Caches.ToDictionary(
                 x => x.Key,
                 x => x.Value.Clone()));
         }
@@ -61,9 +61,7 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Gets options for Near Caches.
         /// </summary>
-#pragma warning disable CA1721 // Property names should not match get methods -- yes
-        public IDictionary<string, NearCacheOptions> NearCacheOptions { get; } = new Dictionary<string, NearCacheOptions>();
-#pragma warning restore CA1721
+        public IDictionary<string, NearCacheOptions> Caches { get; } = new Dictionary<string, NearCacheOptions>();
 
         /// <summary>
         /// Gets or sets the NearCache configuration pattern matcher.
@@ -75,16 +73,16 @@ namespace Hazelcast.NearCaching
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>Options for the Near Cache matching the specified <paramref name="name"/>.</returns>
-        public NearCacheOptions GetNearCacheOptions(string name)
+        public NearCacheOptions GetCacheOptions(string name)
         {
-            if (NearCacheOptions.TryGetValue(name, out var configuration))
+            if (Caches.TryGetValue(name, out var configuration))
                 return configuration;
 
             if (PatternMatcher == null)
                 throw new InvalidOperationException("No pattern matcher has been defined.");
 
-            var key = PatternMatcher.Matches(NearCacheOptions.Keys, name);
-            return key == null ? null : NearCacheOptions[key];
+            var key = PatternMatcher.Matches(Caches.Keys, name);
+            return key == null ? null : Caches[key];
         }
 
         /// <summary>

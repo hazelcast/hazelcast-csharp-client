@@ -58,7 +58,7 @@ namespace Hazelcast
             _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             Cluster.Connections.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
 
-            _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCaching);
+            _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
 
             // wire events
             // this way, the cluster does not need to know about the hazelcast client,

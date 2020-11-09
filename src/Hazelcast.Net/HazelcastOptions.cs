@@ -53,7 +53,7 @@ namespace Hazelcast
             Authentication = other.Authentication.Clone();
             LoadBalancing = other.LoadBalancing.Clone();
             Serialization = other.Serialization.Clone();
-            NearCaching = other.NearCaching.Clone();
+            NearCache = other.NearCache.Clone();
             Messaging = other.Messaging.Clone();
         }
 

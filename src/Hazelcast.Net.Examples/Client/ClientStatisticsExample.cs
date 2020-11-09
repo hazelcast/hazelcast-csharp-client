@@ -32,7 +32,7 @@ namespace Hazelcast.Examples.Client
 
             // create an Hazelcast client and connect to a server running on localhost
             var options = HazelcastOptions.Build();
-            options.NearCaching.NearCacheOptions["myMap"] = new NearCacheOptions
+            options.NearCache.Caches["myMap"] = new NearCacheOptions
             {
                 MaxSize = 1000,
                 InvalidateOnChange = true,
