@@ -86,7 +86,7 @@ namespace Hazelcast
         /// <summary>
         /// Gets a snapshot of the members this client is currently connected to.
         /// </summary>
-        IEnumerable<MemberInfo> Members { get; }
+        IReadOnlyCollection<MemberInfo> Members { get; }
 
         /// <summary>
         /// Begins a new transaction.
