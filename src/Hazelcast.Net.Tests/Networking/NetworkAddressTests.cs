@@ -199,17 +199,5 @@ namespace Hazelcast.Tests.Networking
         {
             Assert.That(NetworkAddress.GetIPAddressByName("0.0.0.0"), Is.EqualTo(IPAddress.Any));
         }
-
-        [Test]
-        public void Lock()
-        {
-            var address = new NetworkAddress(IPAddress.Parse("127.0.0.1"));
-
-            var semaphore = address.Lock;
-            Assert.That(semaphore, Is.Not.Null);
-
-            var semaphoreAgain = address.Lock;
-            Assert.That(semaphoreAgain, Is.SameAs(semaphore));
-        }
     }
 }

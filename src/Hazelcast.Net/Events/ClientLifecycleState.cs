@@ -16,6 +16,13 @@ namespace Hazelcast.Events
 {
     public enum ClientLifecycleState
     {
+        // Active    Connecting
+        // Active    Connected
+        // NotActive Disconnecting
+        // Active    Reconnecting (?)
+        // NotActive Disconnected
+        // 
+
         Starting,
         Started,
         ShuttingDown,

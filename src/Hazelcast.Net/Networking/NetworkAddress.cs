@@ -13,21 +13,17 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace Hazelcast.Networking
 {
     /// <summary>
     /// Represents a network address.
     /// </summary>
-    public class NetworkAddress
+    public class NetworkAddress : IEquatable<NetworkAddress>
     {
-        private volatile SemaphoreSlim _lock;
-
         // NOTES
         //
         // an IP v4 address is 'x.x.x.x' where each octet 'x' is a byte (8 bits unsigned)
@@ -111,21 +107,6 @@ namespace Hazelcast.Networking
 
             IPEndPoint = new IPEndPoint(source.IPAddress, port);
             HostName = source.HostName;
-        }
-
-        /// <summary>
-        /// Gets the lock semaphore for this address.
-        /// </summary>
-        internal SemaphoreSlim Lock
-        {
-            get
-            {
-                // lazily create locks - no overhead as long as not locking
-                // may create multiple semaphores but only 1 will be used
-                if (_lock != null) return _lock;
-                Interlocked.CompareExchange(ref _lock, new SemaphoreSlim(1, 1), null);
-                return _lock;
-            }
         }
 
         /// <summary>
@@ -337,6 +318,12 @@ namespace Hazelcast.Networking
         public override bool Equals(object obj)
         {
             return obj is NetworkAddress other && Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(NetworkAddress other)
+        {
+            return Equals(this, other);
         }
 
         /// <summary>
