@@ -48,6 +48,16 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
+        /// Gets the default Hazelcast server port.
+        /// </summary>
+        public int DefaultPort { get; } = 5701;
+
+        /// <summary>
+        /// Gets the port range to scan.
+        /// </summary>
+        public int PortRange { get; } = 3;
+
+        /// <summary>
         /// Gets or sets the list initial addresses.
         /// </summary>
         /// <remarks>

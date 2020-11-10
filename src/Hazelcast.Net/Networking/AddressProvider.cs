@@ -14,6 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using Hazelcast.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -23,6 +26,7 @@ namespace Hazelcast.Networking
     {
         private readonly Func<IDictionary<NetworkAddress, NetworkAddress>> _createMap;
         private readonly IList<string> _configurationAddresses;
+        private readonly NetworkingOptions _networkingOptions;
 
         private IDictionary<NetworkAddress, NetworkAddress> _privateToPublic;
         private readonly bool _isMapping;
@@ -34,7 +38,7 @@ namespace Hazelcast.Networking
         /// <param name="loggerFactory">A logger factory.</param>
         public AddressProvider(NetworkingOptions networkingOptions, ILoggerFactory loggerFactory)
         {
-            if(networkingOptions == null) throw new ArgumentNullException(nameof(networkingOptions));
+            _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
 
             var cloudConfiguration = networkingOptions.Cloud;
@@ -51,7 +55,7 @@ namespace Hazelcast.Networking
                 var urlBase = cloudConfiguration.UrlBase;
                 var connectionTimeoutMilliseconds = networkingOptions.ConnectionTimeoutMilliseconds;
                 connectionTimeoutMilliseconds = connectionTimeoutMilliseconds == 0 ? int.MaxValue : connectionTimeoutMilliseconds;
-                var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, loggerFactory);
+                var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, networkingOptions.DefaultPort, loggerFactory);
 
                 _createMap = () => cloudScanner.Scan();
                 _isMapping = true;
@@ -101,13 +105,37 @@ namespace Hazelcast.Networking
             return _privateToPublic.TryGetValue(address, out publicAddress) ? publicAddress : null;
         }
 
-        private IDictionary<NetworkAddress, NetworkAddress> CreateMapFromConfiguration()
+        internal IDictionary<NetworkAddress, NetworkAddress> CreateMapFromConfiguration()
         {
             var addresses = new Dictionary<NetworkAddress, NetworkAddress>();
-            foreach (var configurationAddress in _configurationAddresses)
+            foreach (var configurationAddressString in _configurationAddresses)
             {
-                if (!NetworkAddress.TryParse(configurationAddress, out IEnumerable<NetworkAddress> networkAddresses))
-                    throw new FormatException($"The string \"{configurationAddress}\" does not represent a valid network address.");
+                if (!NetworkAddress.TryParse(configurationAddressString, out var configurationAddress))
+                    throw new FormatException($"The string \"{configurationAddressString}\" does not represent a valid network address.");
+
+                // got to be v6 - cannot get IPAddress to parse anything that would not be v4 or v6
+                //if (!address.IsIpV6)
+                //    throw new NotSupportedException($"Address family {address.IPAddress.AddressFamily} is not supported.");
+
+                // see https://4sysops.com/archives/ipv6-tutorial-part-6-site-local-addresses-and-link-local-addresses/
+                // loopback - is ::1 exclusively
+                // site-local - equivalent to private IP addresses in v4 = fe:c0:...
+                // link-local - hosts on the link
+                // global - globally route-able addresses
+
+                IEnumerable<NetworkAddress> networkAddresses;
+                if (configurationAddress.IsIpV4 || configurationAddress.IsIpV6GlobalOrScoped)
+                {
+                    // v4, or v6 global or has a scope = qualified, can return
+                    networkAddresses = ExpandPorts(configurationAddress);
+                }
+                else
+                {
+                    // address is v6 site-local or link-local, and has no scopeId
+                    // get localhost addresses
+                    networkAddresses = GetV6LocalAddresses()
+                        .SelectMany(x => ExpandPorts(configurationAddress, x));
+                }
 
                 foreach (var networkAddress in networkAddresses)
                     addresses.Add(networkAddress, networkAddress);
@@ -115,5 +143,44 @@ namespace Hazelcast.Networking
 
             return addresses;
         }
+
+        /// <summary>
+        /// (internal for tests only)
+        /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
+        /// </summary>
+        /// <returns>All scoped IP addresses corresponding to the specified address.</returns>
+        internal static IEnumerable<IPAddress> GetV6LocalAddresses()
+        {
+            // if the address is IP v6 local without a scope,
+            // resolve -> the local address, with all avail scopes?
+
+            var hostname = HDns.GetHostName();
+            var entry = HDns.GetHostEntry(hostname);
+            foreach (var address in entry.AddressList)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetworkV6)
+                    yield return address;
+            }
+        }
+
+        internal IEnumerable<NetworkAddress> ExpandPorts(NetworkAddress address, IPAddress ipAddress = null)
+        {
+            if (address.Port > 0)
+            {
+                // qualified with a port = can only be this address
+                yield return address;
+            }
+            else
+            {
+                // not qualified with a port = can be a port range
+                for (var port = _networkingOptions.DefaultPort;
+                    port < _networkingOptions.DefaultPort + _networkingOptions.PortRange;
+                    port++)
+                    yield return ipAddress == null
+                        ? new NetworkAddress(address, port)
+                        : new NetworkAddress(address.HostName, ipAddress, port);
+            }
+        }
+
     }
 }

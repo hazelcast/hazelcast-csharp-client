@@ -20,6 +20,7 @@ using System.Net;
 using System.Net.Sockets;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
@@ -27,12 +28,6 @@ namespace Hazelcast.Tests.Networking
     [TestFixture]
     public class NetworkAddressTests
     {
-        [Test]
-        public void PortIs5701()
-        {
-            Assert.AreEqual(5701, NetworkAddress.DefaultPort);
-        }
-
         [TestCase("127.0.0.1", true, "127.0.0.1:0")]
         [TestCase("127.0.0.1:81", true, "127.0.0.1:81")]
         [TestCase("1", true, "0.0.0.1:0")]
@@ -80,6 +75,31 @@ namespace Hazelcast.Tests.Networking
             Assert.AreEqual("b", d[new IPEndPoint(IPAddress.Parse("127.0.0.1"), 666)]);
         }
 
+        private static void AssertAddresses(IEnumerable<NetworkAddress> xx, string n, bool v6)
+        {
+            var xa = xx.ToArray();
+            foreach (var x in xa)
+                Console.WriteLine("  " + x);
+            Assert.That(xa.Length, Is.GreaterThanOrEqualTo(3));
+            for (var i = 0; i < 3; i++)
+            {
+                if (n == "*")
+                    Assert.That(xa[i].ToString().EndsWith(":570" + (i + 1)));
+                else
+                    Assert.That(xa[i].ToString(), Is.EqualTo(n + ":570" + (i + 1)));
+                Assert.That(xa[i].IsIpV6, Is.EqualTo(v6));
+            }
+        }
+
+        private static ICollection<NetworkAddress> GetAddresses(string address)
+        {
+            var options = new NetworkingOptions();
+            options.Addresses.Clear();
+            options.Addresses.Add(address);
+            var a = new AddressProvider(options, new NullLoggerFactory());
+            return a.CreateMapFromConfiguration().Values;
+        }
+
         [Test]
         public void Parse()
         {
@@ -89,29 +109,13 @@ namespace Hazelcast.Tests.Networking
             Assert.That(address.HostName, Is.EqualTo("127.0.0.1"));
             Assert.That(address.Port, Is.EqualTo(5701));
 
-            Assert.That(NetworkAddress.TryParse("712.548", out IEnumerable<NetworkAddress> _), Is.False);
+            Assert.That(NetworkAddress.TryParse("712.548", out var _), Is.False);
 
-            static void AssertAddresses(IEnumerable<NetworkAddress> xx, string n, bool v6)
-            {
-                var xa = xx.ToArray();
-                foreach (var x in xa)
-                    Console.WriteLine("  " + x);
-                Assert.That(xa.Length, Is.GreaterThanOrEqualTo(3));
-                for (var i = 0; i < 3; i++)
-                {
-                    if (n == "*")
-                        Assert.That(xa[i].ToString().EndsWith(":570" + (i + 1)));
-                    else
-                        Assert.That(xa[i].ToString(), Is.EqualTo(n + ":570" + (i + 1)));
-                    Assert.That(xa[i].IsIpV6, Is.EqualTo(v6));
-                }
-            }
-
-            Assert.That(NetworkAddress.TryParse("127.0.0.1", out IEnumerable<NetworkAddress> addresses), Is.True);
+            var addresses = GetAddresses("127.0.0.1");
             Console.WriteLine("127.0.0.1");
             AssertAddresses(addresses, "127.0.0.1", false);
 
-            Assert.That(NetworkAddress.TryParse("localhost", out addresses), Is.True);
+            addresses = GetAddresses("localhost");
             Console.WriteLine("localhost");
             AssertAddresses(addresses, "127.0.0.1", false);
 
@@ -119,13 +123,13 @@ namespace Hazelcast.Tests.Networking
             // maps to in /etc/hosts and by default on some systems (eg Debian) it can
             // be 127.0.1.1 instead of 127.0.0.1
             //
-            Assert.That(NetworkAddress.TryParse(Dns.GetHostName(), out addresses), Is.True);
+            addresses = GetAddresses(Dns.GetHostName());
             Console.Write(Dns.GetHostName());
             var n = Dns.GetHostAddresses(Dns.GetHostName()).First(x => x.AddressFamily == AddressFamily.InterNetwork).ToString();
             Console.WriteLine(" -> " + n);
             AssertAddresses(addresses, n, false);
 
-            Assert.That(NetworkAddress.TryParse("::1", out addresses), Is.True);
+            addresses = GetAddresses("::1");
             Console.WriteLine("::1");
             AssertAddresses(addresses, "[::1]", true);
 
@@ -135,7 +139,7 @@ namespace Hazelcast.Tests.Networking
             // see https://github.com/dotnet/runtime/issues/27534
             // and fixes seem to be in the 5.0 milestone = n/a yet.
 
-            Assert.That(NetworkAddress.TryParse("fe80::bd0f:a8bc:6480:238b", out addresses), Is.True);
+            addresses = GetAddresses("fe80::bd0f:a8bc:6480:238b");
             Console.WriteLine("fe80::bd0f:a8bc:6480:238b");
             if (OS.IsWindows)
             {
@@ -168,17 +172,17 @@ namespace Hazelcast.Tests.Networking
         {
             var address = new NetworkAddress(IPAddress.Parse("127.0.0.1"));
             Assert.That(address.HostName, Is.EqualTo("127.0.0.1"));
-            Assert.That(address.Port, Is.EqualTo(5701));
+            Assert.That(address.Port, Is.EqualTo(0));
 
             address = new NetworkAddress(IPAddress.Parse("127.0.0.1"), 5702);
             Assert.That(address.HostName, Is.EqualTo("127.0.0.1"));
             Assert.That(address.Port, Is.EqualTo(5702));
 
             var ipAddress = IPAddress.Parse("127.0.0.1");
-            var ipEndpoint = new IPEndPoint(ipAddress, 5701);
+            var ipEndpoint = new IPEndPoint(ipAddress, 0);
             address = new NetworkAddress(ipEndpoint);
             Assert.That(address.HostName, Is.EqualTo("127.0.0.1"));
-            Assert.That(address.Port, Is.EqualTo(5701));
+            Assert.That(address.Port, Is.EqualTo(0));
 
             Assert.Throws<ArgumentNullException>(() => _ = new NetworkAddress((IPAddress) null));
             Assert.Throws<ArgumentOutOfRangeException>(() => _ = new NetworkAddress(ipAddress, -1));
