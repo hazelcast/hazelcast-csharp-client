@@ -24,7 +24,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods for the <see cref="Socket"/> class.
     /// </summary>
-    public static class SocketExtensions
+    internal static class SocketExtensions
     {
         public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)
             => socket.ConnectAsync(endPoint, timeoutMilliseconds, default);

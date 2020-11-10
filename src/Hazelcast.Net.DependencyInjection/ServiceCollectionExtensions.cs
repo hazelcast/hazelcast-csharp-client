@@ -53,7 +53,7 @@ namespace Hazelcast.DependencyInjection
             services.Configure<HazelcastOptions>(options =>
             {
                 // assumes that the ILoggerFactory has been registered in the container
-                options.Logging.LoggerFactory.ServiceProvider = options.ServiceProvider;
+                options.LoggerFactory.ServiceProvider = options.ServiceProvider;
 
                 // we could do it for others but we cannot assume that users want all other services
                 // wired through dependency injection - so... this is just an example of how we would

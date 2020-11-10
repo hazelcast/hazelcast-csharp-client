@@ -74,7 +74,11 @@ param (
 
     # Version to build
     [string]
-    $version # defaults to what's in src/Directory.Build.props
+    $version, # defaults to what's in src/Directory.Build.props
+
+    [alias("nr")]
+    [switch]
+    $noRestore # don't restore NuGet packages (assume they are there already)
 )
 
 # die - PowerShell display of errors is a pain
@@ -149,13 +153,14 @@ foreach ($t in $commands) {
             Write-Output "  build       : builds the solution"
             Write-Output "  docs        : builds the documentation"
             Write-Output "  docsIf      : builds the documentation if supported by platform"
+            Write-Output "  docsServe   : serves the documentation (alias: ds)"
+            Write-Output "  docsRelease : builds the documentation release"
             Write-Output "  tests       : runs the tests"
             Write-Output "  cover       : when running tests, also perform code coverage analysis"
             Write-Output "  nuget       : builds the NuGet package(s)"
             Write-Output "  nupush      : pushes the NuGet package(s)"
             Write-Output "  rc          : runs the remote controller for tests"
             Write-Output "  server      : runs a server for tests"
-            Write-Output "  docsServe   : serves the documentation (alias: ds)"
             Write-Output "  failedTests : details failed tests (alias: ft)"
             Write-Output ""
             Write-Output "When no command is specified, the script does 'clean,build,docsIf,tests'. Note that"
@@ -185,7 +190,7 @@ foreach ($t in $commands) {
             Write-Output ""
             Write-Output "Configuration is Release by default but can be forced to Debug."
             Write-Output ""
-            Write-Output "Signing assemblies requires the privage signing key in build/hazelcast.snk file."
+            Write-Output "Signing assemblies requires the private signing key in build/hazelcast.snk file."
             Write-Output ""
             Write-Output "Running enterprise tests require an enterprise key, which can be supplied either"
             Write-Output "via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key"
@@ -209,6 +214,7 @@ foreach ($t in $commands) {
         "build"       { $doBuild = $true }
         "docs"        { $doDocs = $true }
         "docsIf"      { $doDocs = $isWindows }
+        "docsRelease" { $doDocsRelease = $true }
         "tests"       { $doTests = $true }
         "nuget"       { $doNuget = $true }
         "nupush"      { $doNupush = $true }
@@ -275,6 +281,29 @@ if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 # validate commands / platform
 if ($doDocs -and -not $isWindows) {
     Die "DocFX is not supported on platform '$platform', cannot build documentation."
+}
+
+# update version
+if (-not $hasVersion)
+{
+    $xml = [xml] (gc "$srcDir/Directory.Build.props")
+    $versionPrefix = $xml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+    $versionSuffix = $xml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+    $version = $versionPrefix.Trim()
+    if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix)) {
+        $version += "-$($versionSuffix.Trim())"
+    }
+}
+$isPreRelease = -not [System.String]::IsNullOrWhiteSpace($versionSuffix)
+
+# get doc destination according to version
+if ($isPreRelease) {
+    $docDstDir = "dev"
+    $docMessage = "Update dev documentation ($version)"
+}
+else {
+    $docDstDir = $versionPrefix
+    $docMessage = "Version $version documentation"
 }
 
 # validate enterprise key
@@ -595,9 +624,7 @@ if ($doBuild) {
     Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $sign"
-    if ($hasVersion) {
-        Write-Output "  Version        : $version"
-    }
+    Write-Output "  Version        : $version"
     Write-Output ""
 }
 
@@ -621,6 +648,7 @@ if ($doTests -and $cover) {
 if ($doNuget) {
     Write-Output "Nuget Package"
     Write-Output "  Configuration  : $configuration"
+    Write-Output "  Version        : $version"
     Write-Output "  To             : $tmpDir/output"
     Write-Output ""
 }
@@ -643,9 +671,27 @@ if ($doServer) {
     Write-Output ""
 }
 
+if ($doDocs) {
+    $r = "release"
+    if ($isPreRelease) { $r = "pre-$r" }
+    Write-Output "Build Documentation"
+    Write-Output "  Version        : $version"
+    Write-Output "  Version Path   : $docDstDir ($r)"
+    Write-Output "  Path           : $tmpdir/docfx.out"
+    Write-Output ""
+}
+
 if ($doDocsServe) {
     Write-Output "Documentation Server"
-    Write-Output "  Path           : $tmpdir/docfx.site"
+    Write-Output "  Path           : $tmpdir/docfx.out"
+    Write-Output ""
+}
+
+if ($doDocsRelease) {
+    Write-Output "Release Documentation"
+    Write-Output "  Source         : $tmpdir/docfx.out"
+    Write-Output "  Pages repo     : $tmpdir/gh-pages"
+    Write-Output "  Message        : $docMessage"
     Write-Output ""
 }
 
@@ -673,9 +719,9 @@ if ($doClean) {
     }
 
     # clears tests (results, cover...)
-    if (test-path "$tmpDir/tests") {
-        Write-Output "  $tmpDir/tests"
-        remove-item "$tmpDir/tests" -force -recurse
+    if (test-path "$tmpDir\tests") {
+        Write-Output "  $tmpDir\tests"
+        remove-item "$tmpDir\tests" -force -recurse
     }
 
     # clears logs (server, rc...)
@@ -687,9 +733,13 @@ if ($doClean) {
     }
 
     # clears docs
-    if (test-path "$tmpDir/docfx.site") {
-        Write-Output "  $tmpDir/docfx.site"
-        remove-item "$tmpDir/docfx.site" -force -recurse
+    if (test-path "$tmpDir\docfx.out") {
+        Write-Output "  $tmpDir\docfx.out"
+        remove-item "$tmpDir\docfx.out" -force -recurse
+    }
+    if (test-path "$docDir\templates\hz\Plugins") {
+        Write-Output "  $docDir\templates\hz\Plugins"
+        remove-item "$docDir\templates\hz\Plugins" -force -recurse
     }
 
     Write-Output ""
@@ -723,13 +773,19 @@ if ($doBuild -or -$doTests) {
 }
 
 # use NuGet to ensure we have the required packages for building and testing
-Write-Output ""
-Write-Output "Restore NuGet packages for building and testing..."
-if ($isWindows) {
-    &$nuget restore "$buildDir/build.proj" -Verbosity Quiet
+if ($noRestore) {
+    Write-Output ""
+    Write-Output "Skip NuGet packages restore (assume we have them already)"
 }
 else {
-    dotnet restore "$buildDir/build.proj"
+    Write-Output ""
+    Write-Output "Restore NuGet packages for building and testing..."
+    if ($isWindows) {
+        &$nuget restore "$buildDir/build.proj" -Verbosity Quiet
+    }
+    else {
+        dotnet restore "$buildDir/build.proj"
+    }
 }
 
 # get the required packages version (as specified in build.proj)
@@ -764,6 +820,11 @@ if ($doBuild -and $sign) {
 if ($doDocs -or $doDocsServe) {
     ensureDocFx
     ensureMemberPage
+}
+
+# ensure we have git
+if ($doDocsRelease) {
+    ensureCommand "git"
 }
 
 # ensure Java and Maven for tests
@@ -859,15 +920,100 @@ if ($doDocs) {
     Write-Output "Build documentation..."
 
     # clear target
-    if (test-path "$tmpDir/docfx.site") {
-        remove-item -recurse -force "$tmpDir/docfx.site"
+    if (test-path "$tmpDir/docfx.out") {
+        remove-item -recurse -force "$tmpDir/docfx.out"
     }
 
-    $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
-    Write-Output $template
+    # clear temp
+    if (test-path "$docDir/obj") {
+        remove-item -recurse -force "$docDir/obj"
+    }
 
+    # prepare templates
+    $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
+
+    if (test-path "$docDir/templates/hz/Plugins") {
+        remove-item -recurse -force "$docDir/templates/hz/Plugins"
+    }
+    mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
+
+    $target = "net48"
+    $pluginDll = "$srcDir/Hazelcast.Net.DocAsCode/bin/$configuration/$target/Hazelcast.Net.DocAsCode.dll"
+    if (-not (test-path $pluginDll)) {
+        Die "Could not find Hazelcast.Net.DocAsCode.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.Net.DocAsCode/bin/$configuration/$target"
+    }
+    cp $pluginDll "$docDir/templates/hz/Plugins/"
+
+    # prepare docfx.json
+    get-content "$docDir/_docfx.json" |
+        foreach-object { $_ -replace "__DEST__", $docDstDir } |
+        set-content "$docDir/docfx.json"
+
+    # build
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
+    if ($LASTEXITCODE) { Die "Error." }
     &$docfx build "$docDir/docfx.json" --template $template
+    if ($LASTEXITCODE) { Die "Error." }
+
+    # post-process
+    if ($docDstDir -eq "dev") {
+        $devwarnMessage = "<div id=`"devwarn`">This page documents a development version of the Hazelcast .NET client. " +
+                          "Its content is not final and remains subject to changes.</div>"
+        $devwarnClass = "devwarn"
+    }
+    else {
+        $devwarnMessage = ""
+        $devwarnClass = ""
+    }
+
+    get-childitem -recurse -path "$tmpDir/docfx.out/$docDstDir" -filter *.html |
+        foreach-object {
+            $text = get-content -path $_
+            $text = $text `
+                -replace "<!-- DEVWARN -->", $devwarnMessage `
+                -replace "DEVWARN", $devwarnClass
+            set-content -path $_ -value $text
+        }
+}
+
+# release documentation
+if ($doDocsRelease) {
+    Write-Output ""
+    Write-Output "Release documentation"
+
+    $pages = "$tmpDir/gh-pages"
+    $docs = "$tmpDir/docfx.out"
+
+    if (-not (test-path "$docs/$docDstDir")) {
+        Die "Could not find $docs/$docDstDir. Maybe you should build the docs first?"
+    }
+
+    if (test-path "$pages") {
+        remove-item -recurse -force "$pages"
+    }
+
+    &git clone . "$pages"
+    &git -C "$pages" remote set-url origin https://github.com/hazelcast/hazelcast-csharp-client.git
+    &git -C "$pages" fetch origin gh-pages
+    &git -C "$pages" checkout gh-pages
+
+    if (test-path "$pages/$docDstDir") {
+        remove-item -recurse -force "$pages/$docDstDir"
+    }
+    copy-item "$docs/$docDstDir" "$pages" -recurse
+
+    cp "$docs/styles/*" "$pages/styles/"
+    cp "$docs/images/*" "$pages/images/"
+
+    cp "$docs/*.html" "$pages"
+    cp "$docs/*.json" "$pages"
+    cp "$docs/*.yml" "$pages"
+
+    &git -C "$pages" add -A
+    &git -C "$pages" commit -m "$docMessage"
+
+    Write-Host "Doc release is ready, but NOT pushed."
+    Write-Host "Review $pages commit and push."
 }
 
 function getJavaKerberosArgs() {
@@ -1242,14 +1388,14 @@ if ($doServer) {
 }
 
 if ($doDocsServe) {
-    if (-not (test-path "$tmpDir\docfx.site")) {
+    if (-not (test-path "$tmpDir\docfx.out")) {
         Die "Missing documentation directory."
     }
 
     Write-Output ""
     Write-Output "Documentation server is running..."
     Write-Output "Press ENTER to stop"
-    &$docfx serve "$tmpDir\docfx.site"
+    &$docfx serve "$tmpDir\docfx.out"
 }
 
 if ($doNuget -and -not $testsSuccess) {
@@ -1290,17 +1436,6 @@ if ($doNupush -and -not $testsSuccess) {
 if ($doNupush) {
     Write-Output ""
     Write-Output "Push NuGet packages..."
-
-    if (-not $hasVersion)
-    {
-        $xml = [xml] (gc "$srcDir/Directory.Build.props")
-        $versionPrefix = $xml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
-        $versionSuffix = $xml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
-        $version = $versionPrefix.Trim()
-        if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix)) {
-            $version += "-$($versionSuffix.Trim())"
-        }
-    }
 
     &$nuget push "$tmpDir\output\Hazelcast.Net.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
 }

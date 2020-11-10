@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+    <!-- this *has* to be net48 for DocFX to be happy with it -->
+    <TargetFramework>net48</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+    <!--
+      no need to build it, but how can we ignore it? so,
+      build it for a target that is valid on non-Windows.
+    -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DocAsCode.Build.Common" Version="2.56.4" />
+    <PackageReference Include="Microsoft.DocAsCode.Build.ConceptualDocuments" Version="2.56.4" />
+    <PackageReference Include="Microsoft.DocAsCode.Build.ManagedReference" Version="2.56.4" />
+    <PackageReference Include="Microsoft.DocAsCode.Common" Version="2.56.4" />
+    <PackageReference Include="Microsoft.DocAsCode.DataContracts.ManagedReference" Version="2.56.4" />
+    <PackageReference Include="System.Composition" Version="1.0.31" />
+  </ItemGroup>
+
+</Project>

@@ -27,7 +27,7 @@ namespace Hazelcast.Examples.Client
 
             var options = BuildExampleOptions(args, configureOptions: (configuration, options) =>
             {
-                options.AddSubscriber(on => on
+                options.AddSubscriber(events => events
                     .MemberAdded((c, args) =>
                     {
                         Console.WriteLine($"Added member: {args.Member.Id}");
@@ -37,6 +37,14 @@ namespace Hazelcast.Examples.Client
 
             // create an Hazelcast client and connect to a server running on localhost
             var hz = await HazelcastClientFactory.StartNewClientAsync(options);
+
+            // no: the event may trigger too soon!
+            //await hz.SubscribeAsync(events => events
+            //    .MemberAdded((c, args) =>
+            //    {
+            //        Console.WriteLine($"Added member: {args.Member.Id}");
+            //        memberAdded.Release();
+            //    }));
 
             // wait for the event
             await memberAdded.WaitAsync();

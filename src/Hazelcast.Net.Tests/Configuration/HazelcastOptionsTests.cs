@@ -124,14 +124,6 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
-        public void LoggingOptionsSection()
-        {
-            _ = ReadResource(Resources.HazelcastOptions).Logging;
-
-            // nothing is configured here
-        }
-
-        [Test]
         public void CoreOptionsSection()
         {
             var options = ReadResource(Resources.HazelcastOptions).Core;
@@ -198,11 +190,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsFalse(socketOptions.KeepAlive);
             Assert.AreEqual(1001, socketOptions.LingerSeconds);
             Assert.IsTrue(socketOptions.TcpNoDelay);
-
-            var interceptorOptions = options.SocketInterception;
-            Assert.IsTrue(interceptorOptions.Enabled);
-            Assert.IsInstanceOf<TestSocketInterceptor>(interceptorOptions.Interceptor.Service);
-            Console.WriteLine(interceptorOptions.ToString());
 
             var retryOptions = options.ConnectionRetry;
             Assert.AreEqual(1000, retryOptions.InitialBackoffMilliseconds);
@@ -337,13 +324,6 @@ namespace Hazelcast.Tests.Configuration
                 return Task.CompletedTask;
             }
         }
-
-        public class TestSocketInterceptor : ISocketInterceptor
-        {
-            public TestSocketInterceptor()
-            { }
-        }
-
         public class TestCredentialsFactory : ICredentialsFactory
         {
             public TestCredentialsFactory(string arg1, int arg2)
@@ -399,9 +379,9 @@ namespace Hazelcast.Tests.Configuration
         {
             var options = ReadResource(Resources.HazelcastOptions).NearCache;
 
-            Assert.AreEqual(2, options.Configurations.Count);
+            Assert.AreEqual(2, options.Caches.Count);
 
-            Assert.IsTrue(options.Configurations.TryGetValue("default", out var defaultNearCache));
+            Assert.IsTrue(options.Caches.TryGetValue("default", out var defaultNearCache));
             Assert.AreEqual(EvictionPolicy.Lru, defaultNearCache.EvictionPolicy);
             Assert.AreEqual(InMemoryFormat.Binary, defaultNearCache.InMemoryFormat);
             Assert.AreEqual(1000, defaultNearCache.MaxIdleSeconds);
@@ -409,7 +389,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(1002, defaultNearCache.TimeToLiveSeconds);
             Assert.IsTrue(defaultNearCache.InvalidateOnChange);
 
-            Assert.IsTrue(options.Configurations.TryGetValue("other", out var otherNearCache));
+            Assert.IsTrue(options.Caches.TryGetValue("other", out var otherNearCache));
             Assert.AreEqual(EvictionPolicy.Lfu, otherNearCache.EvictionPolicy);
             Assert.AreEqual(InMemoryFormat.Object, otherNearCache.InMemoryFormat);
             Assert.AreEqual(2000, otherNearCache.MaxIdleSeconds);

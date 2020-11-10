@@ -26,7 +26,7 @@ namespace Hazelcast.Examples
                 { "Logging:LogLevel:Hazelcast.Examples.LoggingExample.B", "Information" }
             });
 
-            var loggerFactory = options.Logging.LoggerFactory.Service;
+            var loggerFactory = options.LoggerFactory.Service;
 
             var loggerA = loggerFactory.CreateLogger<A>();
 

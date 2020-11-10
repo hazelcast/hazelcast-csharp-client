@@ -7,7 +7,7 @@ The Hazelcast client is the entry point to all interactions with an Hazelcast cl
 For example:
 
 ```csharp
-var client = await HazelcastClientFactory.StartClientAsync();
+var client = await HazelcastClientFactory.StartNewClientAsync();
 // ... use the client ...
 await client.DisposeAsync();
 ```
@@ -19,7 +19,7 @@ client. In fact, the above example is equivalent to:
 
 ```csharp
 var options = HazelcastOptions.Build();
-var client = await HazelcastClientFactory.StartClientAsync(options);
+var client = await HazelcastClientFactory.StartNewClientAsync(options);
 // ...
 ```
 

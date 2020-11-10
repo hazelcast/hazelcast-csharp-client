@@ -21,9 +21,9 @@ using Hazelcast.Data;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
-    /// Provides extension methods to the <see cref="IndexConfig"/> class.
+    /// Provides extension methods to the <see cref="IndexOptions"/> class.
     /// </summary>
-    public static class IndexConfigExtensions
+    internal static class IndexConfigExtensions
     {
         // TODO: document, explain, refactor
 
@@ -33,25 +33,25 @@ namespace Hazelcast.DistributedObjects
         /** Regex to stripe away "this." prefix. */
         private static readonly Regex ThisPattern = new Regex("^this\\.");
 
-        public static IndexConfig ValidateAndNormalize(this IndexConfig config, string mapName)
+        public static IndexOptions ValidateAndNormalize(this IndexOptions options, string mapName)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (options == null) throw new ArgumentNullException(nameof(options));
 
             // Validate attributes.
-            var originalAttributeNames = config.Attributes;
+            var originalAttributeNames = options.Attributes;
             if (originalAttributeNames.Count == 0)
             {
-                throw new ArgumentException($"Index must have at least one attribute: {config}");
+                throw new ArgumentException($"Index must have at least one attribute: {options}");
             }
             if (originalAttributeNames.Count > MaxAttributes)
             {
-                throw new ArgumentException($"Index cannot have more than {MaxAttributes}  attributes: {config}");
+                throw new ArgumentException($"Index cannot have more than {MaxAttributes}  attributes: {options}");
             }
             var normalizedAttributeNames = new List<string>(originalAttributeNames.Count);
             foreach (var originalAttributeName in originalAttributeNames)
             {
                 var attributeName = originalAttributeName.Trim();
-                ValidateAttribute(config, attributeName);
+                ValidateAttribute(options, attributeName);
                 var normalizedAttributeName = CanonicalizeAttribute(attributeName);
                 var existingIdx = normalizedAttributeNames.IndexOf(normalizedAttributeName);
                 if (existingIdx != -1)
@@ -60,26 +60,26 @@ namespace Hazelcast.DistributedObjects
 
                     if (duplicateOriginalAttributeName == attributeName)
                     {
-                        throw new ArgumentException($"Duplicate attribute name [attributeName={attributeName}, indexConfig={config} ]");
+                        throw new ArgumentException($"Duplicate attribute name [attributeName={attributeName}, indexConfig={options} ]");
                     }
                     throw new ArgumentException(
-                        $"Duplicate attribute names [attributeName1={duplicateOriginalAttributeName}, attributeName2={attributeName}, indexConfig={config}]");
+                        $"Duplicate attribute names [attributeName1={duplicateOriginalAttributeName}, attributeName2={attributeName}, indexConfig={options}]");
                 }
                 normalizedAttributeNames.Add(normalizedAttributeName);
             }
             // Construct final index.
-            var name = config.Name;
+            var name = options.Name;
             if (name != null && name.Trim().Length == 0)
             {
                 name = null;
             }
-            return BuildNormalizedConfig(mapName, config.Type, name, normalizedAttributeNames);
+            return BuildNormalizedConfig(mapName, options.Type, name, normalizedAttributeNames);
         }
 
-        private static IndexConfig BuildNormalizedConfig(string mapName, IndexType indexType, string indexName,
+        private static IndexOptions BuildNormalizedConfig(string mapName, IndexType indexType, string indexName,
             List<string> normalizedAttributeNames)
         {
-            var newConfig = new IndexConfig { Type = indexType };
+            var newConfig = new IndexOptions { Type = indexType };
 
             var nameBuilder = indexName == null ? new StringBuilder(mapName + "_" + GetIndexTypeName(indexType)) : null;
 
@@ -96,10 +96,10 @@ namespace Hazelcast.DistributedObjects
             return newConfig;
         }
 
-        private static void ValidateAttribute(IndexConfig config, string attributeName)
+        private static void ValidateAttribute(IndexOptions options, string attributeName)
         {
             if (string.IsNullOrEmpty(attributeName) || attributeName.Trim().EndsWith(".", StringComparison.Ordinal))
-                throw new ArgumentException($"Invalid attribute '{attributeName}' in index configuration '{config.Name}'. " +
+                throw new ArgumentException($"Invalid attribute '{attributeName}' in index configuration '{options.Name}'. " +
                                             "Attributes must not be null nor empty, nor end with a dot.");
         }
 

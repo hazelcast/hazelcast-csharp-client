@@ -31,12 +31,12 @@ namespace Hazelcast
             = new ConcurrentDictionary<Guid, HazelcastClientEventHandlers>();
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> handle)
+        public async Task<Guid> SubscribeAsync(Action<HazelcastClientEventHandlers> events)
         {
-            if (handle == null) throw new ArgumentNullException(nameof(handle));
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
             var handlers = new HazelcastClientEventHandlers();
-            handle(handlers);
+            events(handlers);
 
             foreach (var handler in handlers)
             {

@@ -6,7 +6,7 @@ The source code for Hazelcast .NET is published on GitHub at [Hazelcast .NET](ht
 git clone https://github.com/hazelcast/hazelcast-csharp-client.git 
 ```
 
-(need to document branches)
+Development takes place in the `master` branch.
 
 The solution can be opened with Microsoft [Visual Studio](https://visualstudio.microsoft.com/) 2019 or JetBrain [Rider](https://www.jetbrains.com/rider/). The code targets netstandard 2.0 and 2.1, and is using C# [version](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/configure-language-version) 8.0.
 

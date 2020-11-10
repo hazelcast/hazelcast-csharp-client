@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     /// <seealso cref="IExecutionCallback{T}" />
     /// <seealso cref="IMultiExecutionCallback" />
-    public interface IExecutor
+    internal interface IExecutor
     {
         // TODO: for anything returning Task<TResult> could we want Task<ExecutionResult<TResult> instead?
 

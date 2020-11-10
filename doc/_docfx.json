@@ -18,11 +18,16 @@
     "content": [
       {
         "src": "obj/dev/api",
-        "dest": "dev/api",
+        "dest": "__DEST__/api",
         "files": [ "**/*.yml" ]
       },
       {
-        "files": [ "*.md", "toc.yml", "dev/api/index.md", "dev/toc.yml", "dev/doc/**.md" ]
+        "files": [ "*.md", "toc.yml" ]
+      },
+      {
+        "src": "dev",
+        "dest": "__DEST__",
+        "files": [ "api/index.md", "toc.yml", "doc/**.md" ]
       }
     ],
     "resource": [ { "files": [ "images/**" ] } ],
@@ -34,7 +39,12 @@
       "_enableSearch": true,
       "_disableContribution": true
     },
-    "dest": "../temp/docfx.site",
+    "fileMetadata": {
+      "build-options": {
+        "dev/doc/options.md": true
+      }
+    },
+    "dest": "../temp/docfx.out",
     "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ],
     "disableGitFeatures": true
   }

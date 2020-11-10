@@ -19,7 +19,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Implements an <see cref="ISequence{Int64}" />.
     /// </summary>
-    public class Int64Sequence : ISequence<long>
+    internal class Int64Sequence : ISequence<long>
     {
         private long _value;
 

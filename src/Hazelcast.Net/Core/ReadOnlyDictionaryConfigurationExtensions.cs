@@ -20,7 +20,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods for the <see cref="IReadOnlyDictionary{TKey,TValue}"/> interface.
     /// </summary>
-    public static class ReadOnlyDictionaryConfigurationExtensions
+    internal static class ReadOnlyDictionaryConfigurationExtensions
     {
         /// <summary>
         /// Gets a string value.

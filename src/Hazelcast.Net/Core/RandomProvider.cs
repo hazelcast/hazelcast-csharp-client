@@ -20,7 +20,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides safe random numbers.
     /// </summary>
-    public static class RandomProvider
+    internal static class RandomProvider
     {
         // Notes
         //

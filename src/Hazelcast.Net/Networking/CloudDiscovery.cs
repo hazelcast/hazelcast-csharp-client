@@ -111,7 +111,14 @@ namespace Hazelcast.Networking
                 var publicAddressStr = matchesPublic[i].Value;
 
                 var publicAddress = NetworkAddress.Parse(publicAddressStr);
-                privateToPublicAddresses.Add(new NetworkAddress(privateAddressStr, publicAddress.Port), publicAddress);
+                if (publicAddress.Port == 0)
+                    publicAddress = publicAddress.WithPort(NetworkAddress.DefaultPort);
+
+                var privateAddress = NetworkAddress.Parse(privateAddressStr);
+                if (privateAddress.Port == 0)
+                    privateAddress = privateAddress.WithPort(publicAddress.Port);
+
+                privateToPublicAddresses.Add(privateAddress, publicAddress);
             }
             return privateToPublicAddresses;
         }

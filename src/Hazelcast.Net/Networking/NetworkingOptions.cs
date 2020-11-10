@@ -44,7 +44,6 @@ namespace Hazelcast.Networking
             Ssl = other.Ssl.Clone();
             Cloud = other.Cloud.Clone();
             Socket = other.Socket.Clone();
-            SocketInterception = other.SocketInterception.Clone();
             ConnectionRetry = other.ConnectionRetry.Clone();
         }
 
@@ -123,11 +122,6 @@ namespace Hazelcast.Networking
         /// Gets the socket options.
         /// </summary>
         public SocketOptions Socket { get; } = new SocketOptions();
-
-        /// <summary>
-        /// Gets the socket interceptor options.
-        /// </summary>
-        public SocketInterceptionOptions SocketInterception { get; } = new SocketInterceptionOptions();
 
         /// <summary>
         /// Gets the connection retry options.

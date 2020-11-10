@@ -57,7 +57,7 @@ namespace Hazelcast.Tests.NearCache
 
             var nearCacheOptions = options.NearCache;
 
-            nearCacheOptions.Configurations["nc*"] = new NearCacheNamedOptions
+            nearCacheOptions.Caches["nc*"] = new NearCacheOptions
             {
                 MaxSize = int.MaxValue,
                 InvalidateOnChange = true,

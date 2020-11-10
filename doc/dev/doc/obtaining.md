@@ -1,8 +1,19 @@
-# Obtaining Hazelcast
+# Obtaining Hazelcast .NET
 
 Hazelcast is composed of two parts: the server, and the client.
 
 Browse to [Hazelcast IMDG](https://hazelcast.org/imdg/) to find out how to obtain and run the server part.
+
+## Requirements
+
+The Hazelcast .NET client is distributed as a NuGet package which targets [.NET Standard](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) versions 2.0 and 2.1. It can therefore be used in any application targetting .NET versions that support these .NET Standard versions:
+
+* .NET Framework 4.6.2 and above, on Windows
+* .NET Core 2.1 and 3.1, on Windows, Linux and MacOS
+
+The upcoming [.NET 5](https://devblogs.microsoft.com/dotnet/introducing-net-5/) version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.
+
+## Getting the client
 
 The .NET client is distributed via NuGet as a package named [Hazelcast.NET](https://www.nuget.org/packages/Hazelcast.Net/). 
 It can be installed like any other NuGet package, either via the Visual Studio GUI, or via the package manager:

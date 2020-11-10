@@ -414,9 +414,9 @@ namespace Hazelcast.Clustering
         /// <para>The operation must complete within the specified operation timeout.</para>
         /// </remarks>
         public Task<ClientMessage> SendAsync(Invocation invocation, int timeoutMilliseconds, CancellationToken cancellationToken)
-            => TaskEx.RunWithTimeout(SendAsync2, invocation, timeoutMilliseconds, cancellationToken);
+            => TaskEx.RunWithTimeout(SendAsyncInternal, invocation, timeoutMilliseconds, cancellationToken);
 
-        private async Task<ClientMessage> SendAsync2(Invocation invocation, CancellationToken cancellationToken)
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
         {
             if (invocation == null) throw new ArgumentNullException(nameof(invocation));
 

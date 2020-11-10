@@ -59,9 +59,9 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             };
         }
 
-        public static IndexConfig CreateIndexConfig(string name, int indexType, List<string> attributes, BitmapIndexOptions bitmapIndexOptions)
+        public static IndexOptions CreateIndexConfig(string name, int indexType, List<string> attributes, BitmapIndexOptions bitmapIndexOptions)
         {
-            return new IndexConfig(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndexOptions = bitmapIndexOptions };
+            return new IndexOptions(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndexOptions = bitmapIndexOptions };
         }
 
         public static BitmapIndexOptions CreateBitmapIndexOptions(string uniqueKey, int uniqueKeyTransformation)

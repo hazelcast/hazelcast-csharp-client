@@ -37,7 +37,7 @@ namespace Hazelcast.Tests.Core
             var id = AsyncContext.CurrentContext.Id;
 
             long idx = -1;
-            await ValueTaskEx.WithNewContext(() =>
+            await ValueTaskEx.RunWithNewContext(() =>
             {
                 idx = AsyncContext.CurrentContext.Id;
                 return new ValueTask();
@@ -52,7 +52,7 @@ namespace Hazelcast.Tests.Core
             AsyncContext.Ensure();
             var id = AsyncContext.CurrentContext.Id;
 
-            var idx = await ValueTaskEx.WithNewContext(() =>
+            var idx = await ValueTaskEx.RunWithNewContext(() =>
                 new ValueTask<long>(AsyncContext.CurrentContext.Id));
 
             Assert.That(idx, Is.Not.EqualTo(id));
@@ -65,7 +65,7 @@ namespace Hazelcast.Tests.Core
             var id = AsyncContext.CurrentContext.Id;
 
             long idx = -1;
-            await ValueTaskEx.WithNewContext(token =>
+            await ValueTaskEx.RunWithNewContext(token =>
             {
                 idx = AsyncContext.CurrentContext.Id;
                 return new ValueTask();
@@ -80,7 +80,7 @@ namespace Hazelcast.Tests.Core
             AsyncContext.Ensure();
             var id = AsyncContext.CurrentContext.Id;
 
-            var idx = await ValueTaskEx.WithNewContext(token =>
+            var idx = await ValueTaskEx.RunWithNewContext(token =>
                 new ValueTask<long>(AsyncContext.CurrentContext.Id), CancellationToken.None);
 
             Assert.That(idx, Is.Not.EqualTo(id));

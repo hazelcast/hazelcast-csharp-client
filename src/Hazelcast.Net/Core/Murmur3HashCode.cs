@@ -22,7 +22,7 @@ namespace Hazelcast.Core
     /// <returns>
     /// <para>This is an x86 32bits implementation.</para>
     /// </returns>
-    public static class Murmur3HashCode
+    internal static class Murmur3HashCode
     {
         // ReSharper disable once InconsistentNaming
         private const int DefaultMurmurSeed = 0x01000193;

@@ -42,8 +42,8 @@ namespace Hazelcast.Examples.DistributedObjects
             // disposing the singleton factory disposes the singleton, as long as the factory
             // owns it (true by default)
             //
-            // TODO: consider
-            using var used = options.Logging.LoggerFactory;
+            // TODO: consider disposing the options?
+            using var used = options.LoggerFactory;
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);

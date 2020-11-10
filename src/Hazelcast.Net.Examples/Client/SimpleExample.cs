@@ -67,7 +67,7 @@ namespace Hazelcast.Examples.Client
             });
 
             // and register the logger factory in the options
-            options.Logging.LoggerFactory.Creator = () => loggerFactory;
+            options.LoggerFactory.Creator = () => loggerFactory;
 
             // create a logger, a client factory and a client
             var logger = loggerFactory.CreateLogger<Worker>();

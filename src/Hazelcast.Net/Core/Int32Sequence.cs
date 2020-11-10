@@ -19,7 +19,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Implements an <see cref="ISequence{Int32}" />.
     /// </summary>
-    public class Int32Sequence : ISequence<int>
+    internal class Int32Sequence : ISequence<int>
     {
         private int _value;
 

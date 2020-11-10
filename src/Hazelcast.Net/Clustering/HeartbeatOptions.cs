@@ -41,7 +41,7 @@ namespace Hazelcast.Clustering
         /// <para>Heartbeat will run periodically, and send a ping request to connections
         /// that have not been written to over the previous period.</para>
         /// </remarks>
-        public int PeriodMilliseconds { get; set; } = 10_000;
+        public int PeriodMilliseconds { get; set; } = 5_000;
 
         /// <summary>
         /// Gets or sets the timeout (how long to wait before declaring a connection down).

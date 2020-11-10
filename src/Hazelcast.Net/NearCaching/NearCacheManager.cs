@@ -41,7 +41,7 @@ namespace Hazelcast.NearCaching
         private readonly ISerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly long _reconciliationIntervalMillis;
-        private readonly NearCacheOptions _options;
+        private readonly NearCachingOptions _options;
 
         private Task _repairing;
         private CancellationTokenSource _repairingCancellation;
@@ -49,7 +49,7 @@ namespace Hazelcast.NearCaching
         private long _lastAntiEntropyRunMillis;
         private volatile int _running;
 
-        public NearCacheManager(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheOptions options)
+        public NearCacheManager(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCachingOptions options)
         {
             _cluster = cluster;
             _serializationService = serializationService;
@@ -60,10 +60,10 @@ namespace Hazelcast.NearCaching
             _reconciliationIntervalMillis = GetReconciliationIntervalSeconds() * 1000;
         }
 
-        public async ValueTask<NearCache<TValue>> GetOrCreateNearCacheAsync<TValue>(string name, NearCacheNamedOptions options, CancellationToken cancellationToken = default)
+        public async ValueTask<NearCache<TValue>> GetOrCreateNearCacheAsync<TValue>(string name, NearCacheOptions options, CancellationToken cancellationToken = default)
             => new NearCache<TValue>(await GetOrCreateNearCacheAsync(name, options, cancellationToken).CAF());
 
-        public async ValueTask<NearCache> GetOrCreateNearCacheAsync(string name, NearCacheNamedOptions options, CancellationToken cancellationToken = default)
+        public async ValueTask<NearCache> GetOrCreateNearCacheAsync(string name, NearCacheOptions options, CancellationToken cancellationToken = default)
         {
             return await _caches.GetOrAddAsync(name, async (n, token) =>
             {

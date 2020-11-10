@@ -38,7 +38,7 @@ namespace Hazelcast.Examples
             return HazelcastOptions.Build(args, keyValues, optionsFilePath, optionsFileName, environmentName,(configuration, options) =>
             {
                 // configure logging factory and add the console provider
-                options.Logging.LoggerFactory.Creator = () =>
+                options.LoggerFactory.Creator = () =>
                     LoggerFactory.Create(builder =>
                         builder
                             .AddConfiguration(configuration.GetSection("logging"))

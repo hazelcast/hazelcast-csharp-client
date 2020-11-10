@@ -34,7 +34,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function();</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static ValueTask WithNewContext(Func<ValueTask> function)
+        public static ValueTask RunWithNewContext(Func<ValueTask> function)
             => AsyncContext.WithNewContextInternal(function);
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function(cancellationToken);</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static ValueTask WithNewContext(Func<CancellationToken, ValueTask> function, CancellationToken cancellationToken)
+        public static ValueTask RunWithNewContext(Func<CancellationToken, ValueTask> function, CancellationToken cancellationToken)
             => AsyncContext.WithNewContextInternal(function, cancellationToken);
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function();</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static ValueTask<TResult> WithNewContext<TResult>(Func<ValueTask<TResult>> function)
+        public static ValueTask<TResult> RunWithNewContext<TResult>(Func<ValueTask<TResult>> function)
             => AsyncContext.WithNewContextInternal(function);
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>This is equivalent to doing <c>return function(cancellationToken);</c> except that the task starts with a new <see cref="AsyncContext"/></para>
         /// </remarks>
-        public static ValueTask<TResult> WithNewContext<TResult>(Func<CancellationToken, ValueTask<TResult>> function, CancellationToken cancellationToken)
+        public static ValueTask<TResult> RunWithNewContext<TResult>(Func<CancellationToken, ValueTask<TResult>> function, CancellationToken cancellationToken)
             => AsyncContext.WithNewContextInternal(function, cancellationToken);
     }
 }

@@ -69,7 +69,7 @@ namespace Hazelcast.Tests.Remote
                     options.ClusterName = RcCluster?.Id ?? options.ClusterName;
 
                     // configure logging factory and add the console provider
-                    options.Logging.LoggerFactory.Creator = () =>
+                    options.LoggerFactory.Creator = () =>
                         Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
                             builder
                                 .AddConfiguration(configuration.GetSection("logging"))
@@ -120,7 +120,7 @@ namespace Hazelcast.Tests.Remote
                 var map = await client.GetDictionaryAsync<string, string>(CacheName);
 
                 // get the logger
-                var logger = options.Logging.LoggerFactory.Service.CreateLogger("Demo");
+                var logger = options.LoggerFactory.Service.CreateLogger("Demo");
 
                 // loop
                 try
@@ -172,7 +172,7 @@ namespace Hazelcast.Tests.Remote
                 logger.LogDebug("Test Completed!");
 
                 // dispose the logger factory = flush
-                options.Logging.LoggerFactory.Service.Dispose();
+                options.LoggerFactory.Service.Dispose();
             }
         }
     }

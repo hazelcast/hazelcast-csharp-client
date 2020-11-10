@@ -80,9 +80,19 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Gets the client name.
+        /// </summary>
+        public string ClientName => _clusterState.ClientName;
+
+        /// <summary>
         /// Gets the unique identifier of the cluster, as assigned by the client.
         /// </summary>
         public Guid ClientId => _clusterState.ClientId;
+
+        /// <summary>
+        /// Gets the cluster name;
+        /// </summary>
+        public string Name => _clusterState.ClusterName;
 
         /// <summary>
         /// Gets the cluster instrumentation.

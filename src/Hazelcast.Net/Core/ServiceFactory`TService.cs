@@ -41,13 +41,13 @@ namespace Hazelcast.Core
         /// Creates a new instance of the service.
         /// </summary>
         /// <returns>A new instance of the service, or null if no creator has been set.</returns>
-        public TService Create() => Creator?.Invoke();
+        internal TService Create() => Creator?.Invoke();
 
         /// <summary>
         /// Clones this service factory.
         /// </summary>
         /// <returns>A clone of the service factory.</returns>
-        public ServiceFactory<TService> Clone()
+        internal ServiceFactory<TService> Clone()
             => new ServiceFactory<TService> { Creator = Creator };
     }
 }

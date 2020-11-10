@@ -29,7 +29,7 @@ namespace Hazelcast.Examples.DistributedObjects
             var options = BuildExampleOptions(args);
 
             // configure NearCache
-            options.NearCache.Configurations["nearcache-map-*"] = new NearCacheNamedOptions
+            options.NearCache.Caches["nearcache-map-*"] = new NearCacheOptions
             {
                 MaxSize = 1000,
                 InvalidateOnChange = true,

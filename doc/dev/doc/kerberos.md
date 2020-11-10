@@ -15,11 +15,8 @@ Configuration file:
 ```json
 "hazelcast": {
     "authentication": {
-        "credentialsFactory": {
-            "typeName": "Hazelcast.Security.KerberosCredentialsFactory, Hazelcast.Net.Win32",
-            "args": {
-                "spn": "hz/cluster1234"
-            }
+        "kerberos": {
+            "spn": "hz/cluster1234"
         }
     }
 }
@@ -36,5 +33,3 @@ var client = HazelcastClientFactory.CreateClient(options => {
 ## Server Configuration
 
 Until there is a 4.1 release, see [this page](https://docs.hazelcast.org/docs/latest-dev/manual/html-single/index.html#kerberos-authentication-type) for documentation.
-
-(to be completed)

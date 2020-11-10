@@ -70,10 +70,11 @@ namespace Hazelcast.Data
         public Guid Id { get; }
 
         /// <summary>
-        /// Gets the unique identifier of the member (FOR INTERNAL USE ONLY).
+        /// (for internal use only) Gets the unique identifier of the member.
         /// </summary>
         /// <remarks>
-        /// <para>Generated codecs expect this naming of the property.</para>
+        /// <para>Generated codecs expect this naming of the property. The public version
+        /// of this is <see cref="Id"/>.</para>
         /// </remarks>
         internal Guid Uuid => Id;
 
@@ -96,11 +97,12 @@ namespace Hazelcast.Data
         public bool IsLite { get; }
 
         /// <summary>
-        /// Determines whether the member is a "lite" member (FOR INTERNAL USE ONLY).
+        /// (for internal use only) Determines whether the member is a "lite" member.
         /// </summary>
         /// <remarks>
         /// <para>Lite members do not own partitions.</para>
-        /// <para>Generated codecs expect this naming of the property.</para>
+        /// <para>Generated codecs expect this naming of the property. The public version
+        /// of this is <see cref="IsLite"/>.</para>
         /// </remarks>
         internal bool IsLiteMember => IsLite;
 
@@ -118,6 +120,12 @@ namespace Hazelcast.Data
         public override bool Equals(object obj)
             => Equals(obj as MemberInfo);
 
+        /// <summary>
+        /// Determines whether this <see cref="MemberInfo"/> instance is equal to another <see cref="MemberInfo"/> instance.
+        /// </summary>
+        /// <param name="other">The other <see cref="MemberInfo"/> instance.</param>
+        /// <returns><c>true</c> if this <see cref="MemberInfo"/> instance and the other <see cref="MemberInfo"/> instance
+        /// are considered being equal; otherwise <c>false</c>.</returns>
         public bool Equals(MemberInfo other)
         {
             if (other is null) return false;
@@ -127,9 +135,23 @@ namespace Hazelcast.Data
                 Id == other.Id;
         }
 
+        /// <summary>
+        /// Determines whether two <see cref="MemberInfo"/> instances are equal.
+        /// </summary>
+        /// <param name="left">The first <see cref="MemberInfo"/> instance.</param>
+        /// <param name="right">The second <see cref="MemberInfo"/> instance.</param>
+        /// <returns><c>true</c> if the two <see cref="MemberInfo"/> instances are considered being equal;
+        /// otherwise <c>false</c>.</returns>
         public static bool operator ==(MemberInfo left, MemberInfo right)
             => left is null ? right is null : left.Equals(right);
 
+        /// <summary>
+        /// Determines whether two <see cref="MemberInfo"/> instances are not equal.
+        /// </summary>
+        /// <param name="left">The first <see cref="MemberInfo"/> instance.</param>
+        /// <param name="right">The second <see cref="MemberInfo"/> instance.</param>
+        /// <returns><c>true</c> if the two <see cref="MemberInfo"/> instances are considered being not equal;
+        /// otherwise <c>false</c>.</returns>
         public static bool operator !=(MemberInfo left, MemberInfo right)
             => !(left == right);
 

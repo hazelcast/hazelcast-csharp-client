@@ -41,7 +41,7 @@ namespace Hazelcast.Tests.Remote
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(rb);
 
-            var s = await rb.AddAsync(new List<string> {"foo", "bar"}, OverflowPolicy.Overwrite);
+            var s = await rb.AddRangeAsync(new List<string> {"foo", "bar"}, OverflowPolicy.Overwrite);
 
             Assert.AreEqual(s, await rb.GetTailSequenceAsync());
             Assert.AreEqual("foo", await rb.GetAsync(0));
@@ -90,7 +90,7 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.ThrowsAsync<ArgumentException>(async () =>
             {
-                await rb.GetAsync(0, 0, rb.MaxBatchSize + 1);
+                await rb.GetRangeAsync(0, 0, rb.MaxBatchSize + 1);
             });
 		}
 
@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Remote
             {
                 // so with this model, the invocation task
 
-                await rb.GetAsync(0, Capacity + 1, Capacity + 1).CAF();
+                await rb.GetRangeAsync(0, Capacity + 1, Capacity + 1).CAF();
             });
         }
 
@@ -131,7 +131,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
-                await rb.GetAsync(0, 2, 1);
+                await rb.GetRangeAsync(0, 2, 1);
             });
 		}
 
@@ -157,7 +157,7 @@ namespace Hazelcast.Tests.Remote
             await rb.AddAsync("2");
             await rb.AddAsync("3");
 
-            var result = await rb.GetAsync(0, 3, 3);
+            var result = await rb.GetRangeAsync(0, 3, 3);
             Assert.That(result, Is.EquivalentTo(new[] { "1", "2", "3" }));
         }
 
@@ -175,7 +175,7 @@ namespace Hazelcast.Tests.Remote
             await rb.AddAsync("6");
 
             //surplus results should not be read
-            var result = await rb.GetAsync(0, 3, 3);
+            var result = await rb.GetRangeAsync(0, 3, 3);
             Assert.That(result, Is.EquivalentTo(new[] { "1", "2", "3" }));
         }
 

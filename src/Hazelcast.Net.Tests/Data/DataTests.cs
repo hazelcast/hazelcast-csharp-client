@@ -124,18 +124,18 @@ namespace Hazelcast.Tests.Data
         [Test]
         public void IndexConfigTest()
         {
-            var x = new IndexConfig();
+            var x = new IndexOptions();
 
             Console.WriteLine(x.ToString());
 
             x.Name = "name";
             Assert.That(x.Name, Is.EqualTo("name"));
 
-            Assert.That(x.Type, Is.EqualTo(IndexConfig.DefaultType));
+            Assert.That(x.Type, Is.EqualTo(IndexOptions.DefaultType));
             x.Type = IndexType.Hashed;
             Assert.That(x.Type, Is.EqualTo(IndexType.Hashed));
 
-            x = new IndexConfig(new []{ "aaa", "bbb" });
+            x = new IndexOptions(new []{ "aaa", "bbb" });
             Assert.That(x.Attributes.Count, Is.EqualTo(2));
             x.AddAttribute("ccc");
             Assert.That(x.Attributes.Count, Is.EqualTo(3));
@@ -148,11 +148,11 @@ namespace Hazelcast.Tests.Data
             x.BitmapIndexOptions = y;
             Assert.That(x.BitmapIndexOptions, Is.SameAs(y));
 
-            IndexConfig.ValidateAttribute(x, "flub");
+            IndexOptions.ValidateAttribute(x, "flub");
 
-            Assert.Throws<ArgumentNullException>(() => IndexConfig.ValidateAttribute(x, null));
-            Assert.Throws<ArgumentException>(() => IndexConfig.ValidateAttribute(x, ""));
-            Assert.Throws<ArgumentException>(() => IndexConfig.ValidateAttribute(x, "duh."));
+            Assert.Throws<ArgumentNullException>(() => IndexOptions.ValidateAttribute(x, null));
+            Assert.Throws<ArgumentException>(() => IndexOptions.ValidateAttribute(x, ""));
+            Assert.Throws<ArgumentException>(() => IndexOptions.ValidateAttribute(x, "duh."));
         }
 
         [Test]

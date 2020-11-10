@@ -211,10 +211,11 @@ namespace Hazelcast.Networking
         /// Parses a string into a <see cref="NetworkAddress"/>.
         /// </summary>
         /// <param name="s">The string.</param>
+        /// <param name="defaultPort">The default port to use if none is specified.</param>
         /// <returns>The network address.</returns>
-        public static NetworkAddress Parse(string s)
+        public static NetworkAddress Parse(string s, int defaultPort = 0)
         {
-            if (TryParse(s, out NetworkAddress address)) return address;
+            if (TryParse(s, out NetworkAddress address, defaultPort)) return address;
             throw new FormatException($"The string \"{s}\" does not represent a valid network address.");
         }
 
@@ -223,18 +224,9 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <param name="s">The string.</param>
         /// <param name="address">The network address.</param>
+        /// <param name="defaultPort">The default port to use if none is specified.</param>
         /// <returns>Whether the string could be parsed into an address.</returns>
-        public static bool TryParse(string s, out NetworkAddress address)
-            => TryParse(s, out address, DefaultPort);
-
-        /// <summary>
-        /// Tries to parse a string into a <see cref="NetworkAddress"/> instance.
-        /// </summary>
-        /// <param name="s">The string.</param>
-        /// <param name="address">The network address.</param>
-        /// <param name="defaultPort">The default port.</param>
-        /// <returns>Whether the string could be parsed into an address.</returns>
-        private static bool TryParse(string s, out NetworkAddress address, int defaultPort)
+        public static bool TryParse(string s, out NetworkAddress address, int defaultPort = 0)
         {
             address = null;
 
@@ -340,7 +332,7 @@ namespace Hazelcast.Networking
         /// <returns>Whether the string could be parsed into addresses.</returns>
         public static bool TryParse(string s, out IEnumerable<NetworkAddress> addresses)
         {
-            if (!TryParse(s, out var address, 0))
+            if (!TryParse(s, out NetworkAddress address))
             {
                 addresses = Enumerable.Empty<NetworkAddress>();
                 return false;
@@ -410,6 +402,13 @@ namespace Hazelcast.Networking
                     yield return address;
             }
         }
+
+        /// <summary>
+        /// Creates a new instance of the network address with the same host but a different port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <returns>A new instance of the network address with the same host but a different port.</returns>
+        public NetworkAddress WithPort(int port) => new NetworkAddress(Host, port);
 
         /// <inheritdoc />
         public override string ToString()

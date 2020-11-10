@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 using Hazelcast.Core;
 
 namespace Hazelcast.NearCaching
 {
     /// <summary>
-    /// Represents the Near Cache options.
+    /// Represents the options for one Near Cache.
     /// </summary>
     public class NearCacheOptions
     {
@@ -35,54 +33,68 @@ namespace Hazelcast.NearCaching
         /// </summary>
         private NearCacheOptions(NearCacheOptions other)
         {
-            ReconciliationIntervalSeconds = other.ReconciliationIntervalSeconds;
-            MinReconciliationIntervalSeconds = other.MinReconciliationIntervalSeconds;
-            MaxToleratedMissCount = other.ReconciliationIntervalSeconds;
-            Configurations = new Dictionary<string, NearCacheNamedOptions>(other.Configurations.ToDictionary(
-                x => x.Key,
-                x => x.Value.Clone()));
+            EvictionPolicy = other.EvictionPolicy;
+            EvictionPercentage = other.EvictionPercentage;
+            InMemoryFormat = other.InMemoryFormat;
+            MaxIdleSeconds = other.MaxIdleSeconds;
+            CleanupPeriodSeconds = other.CleanupPeriodSeconds;
+            MaxSize = other.MaxSize;
+            TimeToLiveSeconds = other.TimeToLiveSeconds;
+            InvalidateOnChange = other.InvalidateOnChange;
         }
 
         /// <summary>
-        /// Gets or sets the reconciliation interval.
+        /// Gets or sets the eviction policy.
         /// </summary>
-        public int ReconciliationIntervalSeconds { get; set; } = 60;
+        public EvictionPolicy EvictionPolicy { get; set; } = EvictionPolicy.Lru;
 
         /// <summary>
-        /// Gets or sets the minimum reconciliation interval.
+        /// Gets or sets the eviction percentage.
         /// </summary>
-        public int MinReconciliationIntervalSeconds { get; set; } = 30;
+        public int EvictionPercentage { get; set; } = 20;
 
         /// <summary>
-        /// Gets or sets the maximum tolerated miss count.
+        /// Gets or sets the in-memory format.
         /// </summary>
-        public int MaxToleratedMissCount { get; set; } = 10;
+        public InMemoryFormat InMemoryFormat { get; set; } = InMemoryFormat.Binary;
 
         /// <summary>
-        /// Gets the configurations.
+        /// Gets or sets the maximum number of seconds an entry can stay in the cache untouched before being evicted.
         /// </summary>
-        public IDictionary<string, NearCacheNamedOptions> Configurations { get; } = new Dictionary<string, NearCacheNamedOptions>();
+        /// <remarks>
+        /// <para>zero means forever.</para>
+        /// </remarks>
+        public int MaxIdleSeconds { get; set; }
 
         /// <summary>
-        /// Gets or sets the NearCache configuration pattern matcher.
+        /// Gets or sets the period of the cleanup.
         /// </summary>
-        public IPatternMatcher PatternMatcher { get; set; } = new MatchingPointPatternMatcher();
+        public int CleanupPeriodSeconds { get; set; } = 5;
 
         /// <summary>
-        /// Gets a configuration.
+        /// Gets or sets the maximum size of the cache before entries get evicted.
         /// </summary>
-        /// <param name="name">The name.</param>
-        /// <returns>A configuration matching the name.</returns>
-        public NearCacheNamedOptions GetConfig(string name)
+        public int MaxSize { get; set; } = int.MaxValue;
+
+        /// <summary>
+        /// Gets or sets the number of seconds entries stay in the cache before being evicted.
+        /// </summary>
+        public int TimeToLiveSeconds { get; set; }
+
+        /// <summary>
+        /// Whether to invalidate entries when entries in the backing data structure are changed.
+        /// </summary>
+        /// <remarks>
+        /// <para>When true, the cache listens for cluster-wide changes and invalidate entries accordingly.</para>
+        /// <para>Changes to the local Hazelcast instance always invalidate the cache immediately.</para>
+        /// </remarks>
+        public bool InvalidateOnChange { get; set; } = true;
+
+        /// <inheritdoc />
+        public override string ToString()
         {
-            if (Configurations.TryGetValue(name, out var configuration))
-                return configuration;
-
-            if (PatternMatcher == null)
-                throw new InvalidOperationException("No pattern matcher has been defined.");
-
-            var key = PatternMatcher.Matches(Configurations.Keys, name);
-            return key == null ? null : Configurations[key];
+            var text = new StringBuilder("NearCacheConfig{");
+            return text.ToString();
         }
 
         /// <summary>
