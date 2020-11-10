@@ -103,7 +103,7 @@ namespace Hazelcast.Tests.Data
             Assert.That(x.Uuid, Is.EqualTo(memberId));
             Assert.That(x.Address, Is.SameAs(address));
             Assert.That(x.Version, Is.SameAs(version));
-            Assert.That(x.IsLite, Is.True);
+            Assert.That(x.IsLiteMember, Is.True);
             Assert.That(x.IsLiteMember, Is.True);
             var a = x.Attributes;
             Assert.That(a.Count, Is.EqualTo(1));
@@ -111,8 +111,8 @@ namespace Hazelcast.Tests.Data
 
             Assert.That(x, Ish.Equatable(
                 // weird indeed, but only the ID matters
-                new MemberInfo(memberId, x.Address, x.Version, x.IsLite, attributes),
-                new MemberInfo(Guid.NewGuid(), x.Address, x.Version, x.IsLite, attributes)
+                new MemberInfo(memberId, x.Address, x.Version, x.IsLiteMember, attributes),
+                new MemberInfo(Guid.NewGuid(), x.Address, x.Version, x.IsLiteMember, attributes)
             ));
 
             var y = new MemberInfo(address, memberId, attributes, true, version, false, null);

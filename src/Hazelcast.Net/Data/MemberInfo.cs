@@ -30,14 +30,14 @@ namespace Hazelcast.Data
         /// <param name="id">The unique identifier of the member.</param>
         /// <param name="address">The network address of the member.</param>
         /// <param name="version">The version of the server running the member.</param>
-        /// <param name="isLite">Whether the member is a "lite" member.</param>
+        /// <param name="isLiteMember">Whether the member is a "lite" member.</param>
         /// <param name="attributes">Attributes of the member.</param>
-        public MemberInfo(Guid id, NetworkAddress address, MemberVersion version, bool isLite, IDictionary<string, string> attributes)
+        public MemberInfo(Guid id, NetworkAddress address, MemberVersion version, bool isLiteMember, IDictionary<string, string> attributes)
         {
             Id = id;
             Address = address;
             Version = version;
-            IsLite = isLite;
+            IsLiteMember = isLiteMember;
             Attributes = new ReadOnlyDictionary<string, string>(attributes);
             AddressMap = new Dictionary<EndpointQualifier, NetworkAddress>();
         }
@@ -48,15 +48,15 @@ namespace Hazelcast.Data
         /// <param name="id">The unique identifier of the member.</param>
         /// <param name="address">The network address of the member.</param>
         /// <param name="version">The version of the server running the member.</param>
-        /// <param name="isLite">Whether the member is a "lite" member.</param>
+        /// <param name="isLiteMember">Whether the member is a "lite" member.</param>
         /// <param name="attributes">Attributes of the member.</param>
         /// <param name="addressMapExists">Whether the address map exists.</param>
         /// <param name="addressMap">The address map.</param>
         /// <remarks>
         /// <para>That overload of the constructor is required by generated codecs.</para>
         /// </remarks>
-        internal MemberInfo(NetworkAddress address, Guid id, IDictionary<string, string> attributes, bool isLite, MemberVersion version, bool addressMapExists, IDictionary<EndpointQualifier, NetworkAddress> addressMap)
-            : this(id, address, version, isLite, attributes)
+        internal MemberInfo(NetworkAddress address, Guid id, IDictionary<string, string> attributes, bool isLiteMember, MemberVersion version, bool addressMapExists, IDictionary<EndpointQualifier, NetworkAddress> addressMap)
+            : this(id, address, version, isLiteMember, attributes)
         {
             // yes, this constructor could be simplified, but at the moment
             // it is what codecs expect, so don't simplify it!
@@ -94,17 +94,7 @@ namespace Hazelcast.Data
         /// <remarks>
         /// <para>Lite members do not own partitions.</para>
         /// </remarks>
-        public bool IsLite { get; }
-
-        /// <summary>
-        /// (for internal use only) Determines whether the member is a "lite" member.
-        /// </summary>
-        /// <remarks>
-        /// <para>Lite members do not own partitions.</para>
-        /// <para>Generated codecs expect this naming of the property. The public version
-        /// of this is <see cref="IsLite"/>.</para>
-        /// </remarks>
-        internal bool IsLiteMember => IsLite;
+        public bool IsLiteMember {get; }
 
         /// <summary>
         /// Gets the attributes of the member.
@@ -161,7 +151,7 @@ namespace Hazelcast.Data
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"Member [{Address.Host}]:{Address.Port} - {Id}{(IsLite ? " lite" : "")}";
+            return $"Member [{Address.Host}]:{Address.Port} - {Id}{(IsLiteMember ? " lite" : "")}";
         }
     }
 }

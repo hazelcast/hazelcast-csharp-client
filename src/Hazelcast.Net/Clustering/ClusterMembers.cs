@@ -229,7 +229,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the lite members.
         /// </summary>
-        public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLite);
+        public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLiteMember);
 
         /// <summary>
         /// Terminate all member connections.
