@@ -28,9 +28,9 @@ namespace Hazelcast.Examples.WebSite
             // Get the Distributed MultiMap from Cluster.
             await using var multiMap = await client.GetMultiMapAsync<string, string>("my-distributed-multimap");
             // Put values in the map against the same key
-            await multiMap.TryAddAsync("my-key", "value1");
-            await multiMap.TryAddAsync("my-key", "value2");
-            await multiMap.TryAddAsync("my-key", "value3");
+            await multiMap.PutAsync("my-key", "value1");
+            await multiMap.PutAsync("my-key", "value2");
+            await multiMap.PutAsync("my-key", "value3");
             // Print out all the values for associated with key called "my-key"
             var values = await multiMap.GetAsync("my-key");
             foreach (var item in values)

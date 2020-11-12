@@ -98,6 +98,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key.</param>
         /// <returns>An <see cref="IMapEntryStats{TKey,TValue}"/> for the specified key,
         /// or <c>null</c> if the map does not contain an entry with this key.</returns>
-        Task<IMapEntryStats<TKey, TValue>> GetEntryStatsAsync(TKey key);
+        Task<IMapEntryStats<TKey, TValue>> GetEntryView(TKey key);
     }
 }

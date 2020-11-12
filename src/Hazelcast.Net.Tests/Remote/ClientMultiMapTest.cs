@@ -33,10 +33,10 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            await dictionary.TryAddAsync("a", "b");
-            await dictionary.TryAddAsync("a", "c");
+            await dictionary.PutAsync("a", "b");
+            await dictionary.PutAsync("a", "c");
             await dictionary.ClearAsync();
-            Assert.AreEqual(0, await dictionary.CountAsync());
+            Assert.AreEqual(0, await dictionary.SizeAsync());
         }
 
         [Test]
@@ -45,11 +45,11 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value1"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value2"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value3"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key2", "value4"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key2", "value5"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value1"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value2"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value3"));
+            Assert.IsTrue(await dictionary.PutAsync("key2", "value4"));
+            Assert.IsTrue(await dictionary.PutAsync("key2", "value5"));
             Assert.IsFalse(await dictionary.ContainsKeyAsync("key3"));
             Assert.IsTrue(await dictionary.ContainsKeyAsync("key1"));
             Assert.IsFalse(await dictionary.ContainsValueAsync("value6"));
@@ -82,14 +82,14 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value1"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value2"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value3"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key2", "value1"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key2", "value2"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value1"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value2"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value3"));
+            Assert.IsTrue(await dictionary.PutAsync("key2", "value1"));
+            Assert.IsTrue(await dictionary.PutAsync("key2", "value2"));
             Assert.AreEqual(2, (await dictionary.GetKeysAsync()).Count); // distinct keys
             Assert.AreEqual(5, (await dictionary.GetValuesAsync()).Count); // all values
-            Assert.AreEqual(5, (await dictionary.GetEntrySetAsync()).Count); // all key-value pairs
+            Assert.AreEqual(5, (await dictionary.GetEntriesAsync()).Count); // all key-value pairs
         }
 
         private IDisposable HConsoleForTest()
@@ -135,16 +135,16 @@ namespace Hazelcast.Tests.Remote
                 "key4", true
             );
 
-            await dictionary.TryAddAsync("key1", "value1");
-            await dictionary.TryAddAsync("key1", "value2");
-            await dictionary.TryAddAsync("key1", "value3");
-            await dictionary.TryAddAsync("key2", "value4");
-            await dictionary.TryAddAsync("key2", "value5");
+            await dictionary.PutAsync("key1", "value1");
+            await dictionary.PutAsync("key1", "value2");
+            await dictionary.PutAsync("key1", "value3");
+            await dictionary.PutAsync("key2", "value4");
+            await dictionary.PutAsync("key2", "value5");
             await dictionary.RemoveAsync("key1", "value2");
-            await dictionary.TryAddAsync("key3", "value6");
-            await dictionary.TryAddAsync("key3", "value7");
-            await dictionary.TryAddAsync("key3", "value8");
-            await dictionary.TryAddAsync("key4", "value9");
+            await dictionary.PutAsync("key3", "value6");
+            await dictionary.PutAsync("key3", "value7");
+            await dictionary.PutAsync("key3", "value8");
+            await dictionary.PutAsync("key4", "value9");
 
             // NOTE
             // plain RemoveAsync (MultiMapDeleteCodec) does not trigger any event for the 'key3' subscription,
@@ -152,8 +152,8 @@ namespace Hazelcast.Tests.Remote
             // not filtering on predicate nor on value here - only on key
             // but, same thing happens on Java too so it is a server-side thing, not our code - just test
             // accordingly
-            await dictionary.GetAndRemoveAsync("key3");
-            await dictionary.RemoveAsync("key4");
+            await dictionary.RemoveAsync("key3");
+            await dictionary.DeleteAsync("key4");
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -214,26 +214,26 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value1"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value2"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key1", "value3"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key2", "value4"));
-            Assert.IsTrue(await dictionary.TryAddAsync("key2", "value5"));
-            Assert.AreEqual(3, await dictionary.CountValuesAsync("key1"));
-            Assert.AreEqual(2, await dictionary.CountValuesAsync("key2"));
-            Assert.AreEqual(5, await dictionary.CountAsync());
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value1"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value2"));
+            Assert.IsTrue(await dictionary.PutAsync("key1", "value3"));
+            Assert.IsTrue(await dictionary.PutAsync("key2", "value4"));
+            Assert.IsTrue(await dictionary.PutAsync("key2", "value5"));
+            Assert.AreEqual(3, await dictionary.ValueCountAsync("key1"));
+            Assert.AreEqual(2, await dictionary.ValueCountAsync("key2"));
+            Assert.AreEqual(5, await dictionary.SizeAsync());
             var coll = await dictionary.GetAsync("key1");
             Assert.AreEqual(3, coll.Count);
-            coll = await dictionary.GetAndRemoveAsync("key2");
+            coll = await dictionary.RemoveAsync("key2");
             Assert.AreEqual(2, coll.Count);
-            Assert.AreEqual(0, await dictionary.CountValuesAsync("key2"));
+            Assert.AreEqual(0, await dictionary.ValueCountAsync("key2"));
             Assert.AreEqual(0, (await dictionary.GetAsync("key2")).Count);
             Assert.IsFalse(await dictionary.RemoveAsync("key1", "value4"));
-            Assert.AreEqual(3, await dictionary.CountAsync());
+            Assert.AreEqual(3, await dictionary.SizeAsync());
             Assert.IsTrue(await dictionary.RemoveAsync("key1", "value2"));
-            Assert.AreEqual(2, await dictionary.CountAsync());
+            Assert.AreEqual(2, await dictionary.SizeAsync());
             Assert.IsTrue(await dictionary.RemoveAsync("key1", "value1"));
-            Assert.AreEqual(1, await dictionary.CountAsync());
+            Assert.AreEqual(1, await dictionary.SizeAsync());
             using var enumerator = (await dictionary.GetAsync("key1")).GetEnumerator();
             enumerator.MoveNext();
             Assert.AreEqual("value3", enumerator.Current);
@@ -251,11 +251,11 @@ namespace Hazelcast.Tests.Remote
                 .EntryRemoved((sender, args) => Interlocked.Increment(ref count))
             );
 
-            await dictionary.TryAddAsync("key1", "value1");
+            await dictionary.PutAsync("key1", "value1");
             await AssertEx.SucceedsEventually(() => Assert.That(count, Is.EqualTo(1)), 10000, 500);
 
             Assert.IsTrue(await dictionary.UnsubscribeAsync(sid));
-            await dictionary.RemoveAsync("key1");
+            await dictionary.DeleteAsync("key1");
             await Task.Delay(1000);
             Assert.That(count, Is.EqualTo(1));
         }

@@ -78,7 +78,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Gets the number of entries contained in this map.</summary>
         /// <returns>The number of entries contained in this map.</returns>
         // TODO: document MapStore behavior
-        Task<int> CountAsync();
+        Task<int> SizeAsync();
 
         /// <summary>Determines whether this map contains no entries.</summary>
         /// <returns><c>true</c> if this map contains no entries; otherwise <c>false</c>.</returns>
@@ -110,7 +110,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">The value.</param>
         /// <returns>The previous value for the specified key, if any; otherwise <c>default(TValue)</c>.</returns>
         // TODO: document MapStore behavior
-        Task<TValue> GetAndSetAsync(TKey key, TValue value);
+        Task<TValue> PutAsync(TKey key, TValue value);
 
         /// <summary>
         /// Sets (adds or updates) an entry with a time-to-live, and returns the previous value, if any.
@@ -125,7 +125,7 @@ namespace Hazelcast.DistributedObjects
         /// TODO: document zero & infinite
         /// </remarks>
         // TODO: document MapStore behavior
-        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Sets (adds or updates) entries.
@@ -148,6 +148,6 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key.</param>
         /// <returns>The removed value, if any; otherwise <c>default(TValue)</c>.</returns>
         // TODO: document MapStore behavior
-        Task<TValue> GetAndRemoveAsync(TKey key);
+        Task<TValue> RemoveAsync(TKey key);
     }
 }

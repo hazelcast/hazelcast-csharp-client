@@ -38,7 +38,7 @@ namespace Hazelcast.Examples.DistributedObjects
                 await map.SetAsync(i, i);
 
             // count
-            Console.WriteLine("Map size: " + await map.CountAsync());
+            Console.WriteLine("Map size: " + await map.SizeAsync());
 
             // report
             const int partitionKey = 10;

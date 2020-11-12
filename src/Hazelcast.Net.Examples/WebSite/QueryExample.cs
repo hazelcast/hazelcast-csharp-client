@@ -104,9 +104,9 @@ namespace Hazelcast.Examples.WebSite
 
         private static async Task GenerateUsers(IHMap<string, User> users)
         {
-            await users.GetOrAddAsync("Rod", new User("Rod", 19, true));
-            await users.GetOrAddAsync("Jane", new User("Jane", 20, true));
-            await users.GetOrAddAsync("Freddy", new User("Freddy", 23, true));
+            await users.PutIfAbsent("Rod", new User("Rod", 19, true));
+            await users.PutIfAbsent("Jane", new User("Jane", 20, true));
+            await users.PutIfAbsent("Freddy", new User("Freddy", 23, true));
         }
     }
 }

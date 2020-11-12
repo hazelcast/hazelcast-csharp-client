@@ -52,8 +52,13 @@ namespace Hazelcast.DistributedObjects
         /// <para>If an existing entry with the specified key is found, then its value is
         /// updated with the new value, and the existing value is returned. Otherwise, nothing
         /// happens.</para>
+        /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
+        /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
+        /// to try to load the value from the <c>MapStore</c> backing the map, if any.
+        /// If write-through persistence is configured, before the value is stored in memory,
+        /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
         /// </remarks>
-        Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
+        Task<TValue> ReplaceAsync(TKey key, TValue newValue);
 
         /// <summary>
         /// Updates an entry if it exists, and its value is equal to <paramref name="comparisonValue"/>.
@@ -65,8 +70,13 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>If an existing entry with the specified key and expected value is found, then its
         /// value is updated with the new value. Otherwise, nothing happens.</para>
+        /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
+        /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
+        /// to try to load the value from the <c>MapStore</c> backing the map, if any.
+        /// If write-through persistence is configured, before the value is stored in memory,
+        /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
         /// </remarks>
-        Task<bool> TryUpdateAsync(TKey key, TValue newValue, TValue comparisonValue);
+        Task<bool> ReplaceAsync(TKey key, TValue newValue, TValue comparisonValue);
 
         /// <summary>
         /// Tries to set (add or update) an entry within a server-side timeout.
@@ -79,7 +89,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>This method returns <c>false</c> when no lock on the key could be
         /// acquired within the specified server-side timeout.</para>
         /// </remarks>
-        Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout);
+        Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan serverTimeout);
 
         /// <summary>
         /// Adds an entry if no entry with the key already exists.
@@ -89,7 +99,14 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">The value.</param>
         /// <returns>The value for the key. This will be either the existing value for the key if the entry
         /// already exists, or the new value if the no entry with the key already existed.</returns>
-        Task<TValue> GetOrAddAsync(TKey key, TValue value);
+        /// <remarks>
+        /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
+        /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
+        /// to try to load the value from the <c>MapStore</c> backing the map, if any.
+        /// If write-through persistence is configured, before the value is stored in memory,
+        /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
+        /// </remarks>
+        Task<TValue> PutIfAbsent(TKey key, TValue value);
 
         /// <summary>
         /// Adds an entry with a time-to-live if no entry with the key already exists.
@@ -104,8 +121,13 @@ namespace Hazelcast.DistributedObjects
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed.</para>
         /// TODO: document zero & infinite
+        /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
+        /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
+        /// to try to load the value from the <c>MapStore</c> backing the map, if any.
+        /// If write-through persistence is configured, before the value is stored in memory,
+        /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
         /// </remarks>
-        Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> PutIfAbsent(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Sets (adds or updates) an entry without calling the <c>MapStore</c> on the server side, if defined.
@@ -124,7 +146,7 @@ namespace Hazelcast.DistributedObjects
         /// <paramref name="timeToLive"/> has elapsed.</para>
         /// TODO: document zero & infinite
         /// </remarks>
-        Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Updates the time-to-live of an entry.

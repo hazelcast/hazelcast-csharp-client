@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects
         /// If a <c>MapStore</c> on server is defined for this map,
         /// then the entry is not deleted from the underlying <c>MapStore</c>,
         /// evict only removes the entry from the memory.
-        /// Use <see cref="RemoveAsync(TKey)"/> or <see cref="GetAndRemoveAsync(TKey)"/>
+        /// Use <see cref="DeleteAsync"/> or <see cref="GetAndRemoveAsync(TKey)"/>
         /// if <c>MapStore.delete(object)</c> needs to be called.
         /// </para>
         /// <para>

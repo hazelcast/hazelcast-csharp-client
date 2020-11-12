@@ -28,7 +28,7 @@ namespace Hazelcast.Examples.WebSite
             // Get a Replicated Map called "my-replicated-map"
             await using var map = await client.GetReplicatedMapAsync<string, string>("my-replicated-map");
             // Put and Get a value from the Replicated Map
-            var replacedValue = await map.GetAndSetAsync("key", "value"); // key/value replicated to all members
+            var replacedValue = await map.PutAsync("key", "value"); // key/value replicated to all members
             Console.WriteLine("replacedValue = " + replacedValue); // Will be null as its first update
             var value = await map.GetAsync("key"); // the value is retrieved from a random member in the cluster
             Console.WriteLine("value for key = " + value);

@@ -32,16 +32,16 @@ namespace Hazelcast.Examples.DistributedObjects
             await using var map = await client.GetMultiMapAsync<string, string>("multimap-example");
 
             // add values
-            await map.TryAddAsync("key", "value");
-            await map.TryAddAsync("key", "value2");
-            await map.TryAddAsync("key2", "value3");
+            await map.PutAsync("key", "value");
+            await map.PutAsync("key", "value2");
+            await map.PutAsync("key2", "value3");
 
             // report
             Console.WriteLine("Value: " + string.Join(", ", await map.GetAsync("key")));
             Console.WriteLine("Values : " + string.Join(", ", await map.GetValuesAsync()));
             Console.WriteLine("Keys: " + string.Join(", ", await map.GetKeysAsync()));
-            Console.WriteLine("Count: " + await map.CountAsync());
-            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntrySetAsync()));
+            Console.WriteLine("Count: " + await map.SizeAsync());
+            Console.WriteLine("Entries: " + string.Join(", ", await map.GetEntriesAsync()));
             Console.WriteLine("ContainsKey: " + await map.ContainsKeyAsync("key"));
             Console.WriteLine("ContainsValue: " + await map.ContainsValueAsync("value"));
 

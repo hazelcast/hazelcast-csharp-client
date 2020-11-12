@@ -58,14 +58,14 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the removed value. Prefer
-        /// <see cref="IHMapBase{TKey,TValue}.GetAndRemoveAsync"/> if the value is required.</para>
-        /// <para>However, note that <see cref="IHMapBase{TKey,TValue}.GetAndRemoveAsync"/> may
+        /// <see cref="IHMapBase{TKey,TValue}.RemoveAsync"/> if the value is required.</para>
+        /// <para>However, note that <see cref="IHMapBase{TKey,TValue}.RemoveAsync"/> may
         /// breaks the events contract: this method does not consider the removed value at all, which
         /// means that any event that would be filtered on the value (for instance via a predicate),
-        /// and would trigger with <see cref="IHMapBase{TKey,TValue}.GetAndRemoveAsync"/>,
+        /// and would trigger with <see cref="IHMapBase{TKey,TValue}.RemoveAsync"/>,
         /// will not trigger here.</para>
         /// </remarks>
-        Task RemoveAsync(TKey key);
+        Task DeleteAsync(TKey key);
 
         /// <summary>
         /// Removes all entries which match with the supplied predicate.
@@ -77,6 +77,6 @@ namespace Hazelcast.DistributedObjects
         /// contract: any event that would be filtered on the value (for instance via a predicate),
         /// would not trigger here.</para>
         /// </remarks>
-        Task RemoveAsync(IPredicate predicate);
+        Task RemoveAllAsync(IPredicate predicate);
     }
 }

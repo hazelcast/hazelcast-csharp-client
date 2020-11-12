@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
         /// <remarks>
-        /// <para>Note that some methods such as <see cref="RemoveAsync(TKey)"/> may break the
+        /// <para>Note that some methods such as <see cref="DeleteAsync"/> may break the
         /// events contract in some situations, such as when the predicate refers to the
         /// entry value. Refer to the documentation for these methods for more details.</para>
         /// </remarks>
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="state">A state object.</param>
         /// <returns>The unique identifier of the subscription.</returns>
         /// <remarks>
-        /// <para>Note that some methods such as <see cref="RemoveAsync(TKey)"/> may break the
+        /// <para>Note that some methods such as <see cref="DeleteAsync"/> may break the
         /// events contract in some situations, such as when the predicate refers to the
         /// entry value. Refer to the documentation for these methods for more details.</para>
         /// </remarks>

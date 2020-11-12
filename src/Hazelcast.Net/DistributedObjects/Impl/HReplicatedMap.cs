@@ -38,10 +38,10 @@ namespace Hazelcast.DistributedObjects.Impl
             _partitionId = partitionId;
         }
 
-        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
-            => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
+        public Task<TValue> PutAsync(TKey key, TValue value)
+            => PutAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public async Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
@@ -65,7 +65,7 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> GetAndRemoveAsync(TKey key)
+        public async Task<TValue> RemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
@@ -117,7 +117,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
         }
 
-        public async Task<int> CountAsync()
+        public async Task<int> SizeAsync()
         {
             var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CAF();

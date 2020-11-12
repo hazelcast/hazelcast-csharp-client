@@ -126,8 +126,8 @@ namespace Hazelcast.Tests.Remote
         {
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
-            Console.WriteLine(dictionary.CountAsync());
-            Assert.That(dictionary.CountAsync(), Iz.EqualTo(2));
+            Console.WriteLine(dictionary.SizeAsync());
+            Assert.That(dictionary.SizeAsync(), Iz.EqualTo(2));
             await AssertEx.ThrowsAsync<HazelcastException>(async () =>
             {
                 //TODO: not currently possible to test this
@@ -157,7 +157,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
-            var value = await dictionary.GetAndSetAsync("key3", "value");
+            var value = await dictionary.PutAsync("key3", "value");
 
             Assert.That(value, Is.EqualTo("value3"));
             Assert.That(await dictionary.GetAsync("key3"), Is.EqualTo("value"));
@@ -196,10 +196,10 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillAsync(dictionary);
-            var value = await dictionary.GetAndRemoveAsync("key4");
+            var value = await dictionary.RemoveAsync("key4");
 
             Assert.AreEqual("value4", value);
-            Assert.AreEqual(9, await dictionary.CountAsync());
+            Assert.AreEqual(9, await dictionary.SizeAsync());
         }
 
         [Test]
@@ -270,7 +270,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.GetAsync("key1");
             await dictionary.GetAsync("key1");
 
-            var entryStats = await dictionary.GetEntryStatsAsync("key1");
+            var entryStats = await dictionary.GetEntryView("key1");
             var value = entryStats.Value as Item;
 
             Assert.AreEqual("key1", entryStats.Key);
@@ -292,7 +292,7 @@ namespace Hazelcast.Tests.Remote
 
             await dictionary.EvictAsync("key1");
 
-            Assert.AreEqual(0, await dictionary.CountAsync());
+            Assert.AreEqual(0, await dictionary.SizeAsync());
             Assert.That(await dictionary.GetAsync("key1"), Is.Null);
         }
 
@@ -306,12 +306,12 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key2", "value2");
             await dictionary.SetAsync("key3", "value3");
 
-            Assert.AreEqual(3, await dictionary.CountAsync());
+            Assert.AreEqual(3, await dictionary.SizeAsync());
 
             await dictionary.LockAsync("key3");
             await dictionary.EvictAllAsync();
 
-            Assert.AreEqual(1, await dictionary.CountAsync());
+            Assert.AreEqual(1, await dictionary.SizeAsync());
             Assert.That(await dictionary.GetAsync("key3"), Is.EqualTo("value3"));
         }
 
@@ -521,7 +521,7 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.AreEqual(0, await dictionary.CountAsync());
+            Assert.AreEqual(0, await dictionary.SizeAsync());
 
             IDictionary<string, string> mm = new Dictionary<string, string>();
             const int keycount = 1000;
@@ -533,7 +533,7 @@ namespace Hazelcast.Tests.Remote
             }
 
             await dictionary.SetAllAsync(mm);
-            Assert.AreEqual(keycount, await dictionary.CountAsync());
+            Assert.AreEqual(keycount, await dictionary.SizeAsync());
 
             var all = await dictionary.GetAllAsync(mm.Keys);
             // Assert.AreEqual(keycount, dictionary.Count);
@@ -567,7 +567,7 @@ namespace Hazelcast.Tests.Remote
                 mm.Add(i, i);
             }
             await dictionary.SetAllAsync(mm);
-            Assert.AreEqual(await dictionary.CountAsync(), 100);
+            Assert.AreEqual(await dictionary.SizeAsync(), 100);
             for (var i_1 = 0; i_1 < 100; i_1++)
             {
                 Assert.AreEqual(await dictionary.GetAsync(i_1), i_1);
@@ -595,7 +595,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("item1", "value1");
             await dictionary.SetAsync("item2", "value2");
 
-            var entryStats = await dictionary.GetEntryStatsAsync("item1");
+            var entryStats = await dictionary.GetEntryView("item1");
 
             Assert.AreEqual(0, entryStats.Hits);
 
@@ -673,8 +673,8 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key4", "value4");
             await dictionary.SetAsync("key5", "value5");
 
-            await dictionary.RemoveAsync("key1");
-            await dictionary.RemoveAsync("key3");
+            await dictionary.DeleteAsync("key1");
+            await dictionary.DeleteAsync("key3");
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -721,7 +721,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key1", "value2");
             await AssertEx.SucceedsEventually(() => Assert.That(entryUpdated, Is.EqualTo(1)), delay, 500);
 
-            await dictionary.RemoveAsync("key1");
+            await dictionary.DeleteAsync("key1");
             await AssertEx.SucceedsEventually(() => Assert.That(entryRemoved, Is.EqualTo(1)), delay, 500);
 
             await dictionary.SetAsync("key1", "value2");
@@ -804,7 +804,7 @@ namespace Hazelcast.Tests.Remote
                 await dictionary.SetAsync("key" + i, new[] { byte.MaxValue });
             }
 
-            Assert.AreEqual(await dictionary.CountAsync(), testItemCount);
+            Assert.AreEqual(await dictionary.SizeAsync(), testItemCount);
 
             var removed = 0;
             var sids = new Guid[testItemCount];
@@ -818,7 +818,7 @@ namespace Hazelcast.Tests.Remote
 
             for (var i = 0; i < testItemCount; i++)
             {
-                await dictionary.RemoveAsync("key" + i);
+                await dictionary.DeleteAsync("key" + i);
             }
 
             await AssertEx.SucceedsEventually(() => Assert.That(removed, Is.EqualTo(removed)), 120_000, 500);
@@ -859,7 +859,7 @@ namespace Hazelcast.Tests.Remote
                 true
             );
 
-            Assert.That(await dictionary.CountAsync(), Is.Zero);
+            Assert.That(await dictionary.SizeAsync(), Is.Zero);
 
             await dictionary.SetAsync("key1", "value1");
             await dictionary.SetAsync("key2", "value2");
@@ -867,13 +867,13 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key4", "value4");
             await dictionary.SetAsync("key5", "value5");
 
-            Assert.That(await dictionary.CountAsync(), Is.EqualTo(5));
+            Assert.That(await dictionary.SizeAsync(), Is.EqualTo(5));
 
             // do NOT turn that into RemoveAsync, see tests below!
-            await dictionary.GetAndRemoveAsync("key1");
-            await dictionary.GetAndRemoveAsync("key3");
+            await dictionary.RemoveAsync("key1");
+            await dictionary.RemoveAsync("key3");
 
-            Assert.That(await dictionary.CountAsync(), Is.EqualTo(3));
+            Assert.That(await dictionary.SizeAsync(), Is.EqualTo(3));
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -922,7 +922,7 @@ namespace Hazelcast.Tests.Remote
             );
 
             await dictionary.SetAsync("key1", "value1");
-            await dictionary.RemoveAsync("key1");
+            await dictionary.DeleteAsync("key1");
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -970,7 +970,7 @@ namespace Hazelcast.Tests.Remote
             var couldSet = false;
             await AsyncContext.RunWithNew(async () =>
             {
-                couldSet = await dictionary.TrySetAsync("key1", "value2", TimeSpan.FromSeconds(1));
+                couldSet = await dictionary.TryPutAsync("key1", "value2", TimeSpan.FromSeconds(1));
             });
 
             Assert.That(couldSet, Is.False);
@@ -992,7 +992,7 @@ namespace Hazelcast.Tests.Remote
             var couldSet = false;
             await AsyncContext.RunWithNew(async () =>
             {
-                couldSet = await dictionary.TrySetAsync("key1", "value2", TimeSpan.FromSeconds(2));
+                couldSet = await dictionary.TryPutAsync("key1", "value2", TimeSpan.FromSeconds(2));
             });
 
             Assert.That(couldSet);
@@ -1036,7 +1036,7 @@ namespace Hazelcast.Tests.Remote
             var largeString = string.Join(",", Enumerable.Range(0, dataSize));
 
             await dictionary.SetAsync("large_value", largeString);
-            Assert.AreEqual(await dictionary.CountAsync(), 1);
+            Assert.AreEqual(await dictionary.SizeAsync(), 1);
         }
 
         [Test]
@@ -1045,8 +1045,8 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.IsNull(await dictionary.GetOrAddAsync("key1", "value1"));
-            Assert.AreEqual("value1", await dictionary.GetOrAddAsync("key1", "value3"));
+            Assert.IsNull(await dictionary.PutIfAbsent("key1", "value1"));
+            Assert.AreEqual("value1", await dictionary.PutIfAbsent("key1", "value3"));
         }
 
         [Test]
@@ -1060,7 +1060,7 @@ namespace Hazelcast.Tests.Remote
             const string newValue = "newValue";
 
             await dictionary.SetAsync(key, value);
-            var result = await dictionary.GetOrAddAsync(key, newValue, TimeSpan.FromSeconds(5));
+            var result = await dictionary.PutIfAbsent(key, newValue, TimeSpan.FromSeconds(5));
 
             Assert.AreEqual(value, result);
             Assert.AreEqual(value, await dictionary.GetAsync(key));
@@ -1075,7 +1075,7 @@ namespace Hazelcast.Tests.Remote
             const string key = "Key";
             const string value = "Value";
 
-            var result = await dictionary.GetOrAddAsync(key, value, TimeSpan.FromSeconds(5));
+            var result = await dictionary.PutIfAbsent(key, value, TimeSpan.FromSeconds(5));
 
             Assert.AreEqual(null, result);
             Assert.AreEqual(value, await dictionary.GetAsync(key));
@@ -1090,7 +1090,7 @@ namespace Hazelcast.Tests.Remote
             const string key = "Key";
             const string value = "Value";
 
-            var result = await dictionary.GetOrAddAsync(key, value, TimeSpan.FromMilliseconds(100));
+            var result = await dictionary.PutIfAbsent(key, value, TimeSpan.FromMilliseconds(100));
             Assert.That(result, Is.Null);
 
             await AssertEx.SucceedsEventually(async () =>
@@ -1109,7 +1109,7 @@ namespace Hazelcast.Tests.Remote
             const string value = "Value";
 
             await dictionary.SetAsync(key, value);
-            var result = await dictionary.GetOrAddAsync(key, value, TimeSpan.FromMinutes(5));
+            var result = await dictionary.PutIfAbsent(key, value, TimeSpan.FromMinutes(5));
 
             Assert.AreEqual(value, result);
             Assert.AreEqual(value, await dictionary.GetAsync(key));
@@ -1125,7 +1125,7 @@ namespace Hazelcast.Tests.Remote
             const string value = "Value";
 
             await dictionary.SetAsync(key, value);
-            var result = await dictionary.GetOrAddAsync(key, value, TimeSpan.FromSeconds(1));
+            var result = await dictionary.PutIfAbsent(key, value, TimeSpan.FromSeconds(1));
 
             Assert.AreEqual(value, result);
             Assert.AreEqual(value, await dictionary.GetAsync(key));
@@ -1137,8 +1137,8 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.AreEqual(0, await dictionary.CountAsync());
-            await dictionary.SetTransientAsync("key1", "value1", TimeSpan.FromMilliseconds(100));
+            Assert.AreEqual(0, await dictionary.SizeAsync());
+            await dictionary.PutTransientAsync("key1", "value1", TimeSpan.FromMilliseconds(100));
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
 
             await AssertEx.SucceedsEventually(async () =>
@@ -1170,15 +1170,15 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync(dictionary);
 
-            Assert.That(await dictionary.GetAndRemoveAsync("key10"), Is.Null);
-            await dictionary.RemoveAsync("key9");
-            Assert.AreEqual(9, await dictionary.CountAsync());
+            Assert.That(await dictionary.RemoveAsync("key10"), Is.Null);
+            await dictionary.DeleteAsync("key9");
+            Assert.AreEqual(9, await dictionary.SizeAsync());
             for (var i = 0; i < 9; i++)
             {
-                var o = await dictionary.GetAndRemoveAsync("key" + i);
+                var o = await dictionary.RemoveAsync("key" + i);
                 Assert.AreEqual("value" + i, o);
             }
-            Assert.AreEqual(0, await dictionary.CountAsync());
+            Assert.AreEqual(0, await dictionary.SizeAsync());
         }
 
         [Test]
@@ -1190,9 +1190,9 @@ namespace Hazelcast.Tests.Remote
             await FillAsync(dictionary);
 
             Assert.IsFalse(await dictionary.RemoveAsync("key2", "value"));
-            Assert.AreEqual(10, await dictionary.CountAsync());
+            Assert.AreEqual(10, await dictionary.SizeAsync());
             Assert.IsTrue(await dictionary.RemoveAsync("key2", "value2"));
-            Assert.AreEqual(9, await dictionary.CountAsync());
+            Assert.AreEqual(9, await dictionary.SizeAsync());
         }
 
         [Test]
@@ -1212,7 +1212,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync(dictionary);
 
-            await dictionary.RemoveAsync(Predicate.Sql("this != value1"));
+            await dictionary.RemoveAllAsync(Predicate.Sql("this != value1"));
             Assert.AreEqual(1, (await dictionary.GetValuesAsync()).Count);
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
         }
@@ -1223,13 +1223,13 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.That(await dictionary.TryUpdateAsync("key1", "value1"), Is.Null);
+            Assert.That(await dictionary.ReplaceAsync("key1", "value1"), Is.Null);
             await dictionary.SetAsync("key1", "value1");
-            Assert.AreEqual("value1", await dictionary.TryUpdateAsync("key1", "value2"));
+            Assert.AreEqual("value1", await dictionary.ReplaceAsync("key1", "value2"));
             Assert.AreEqual("value2", await dictionary.GetAsync("key1"));
-            Assert.IsFalse(await dictionary.TryUpdateAsync("key1", "value1", "value3"));
+            Assert.IsFalse(await dictionary.ReplaceAsync("key1", "value1", "value3"));
             Assert.AreEqual("value2", await dictionary.GetAsync("key1"));
-            Assert.IsTrue(await dictionary.TryUpdateAsync("key1", "value2", "value3"));
+            Assert.IsTrue(await dictionary.ReplaceAsync("key1", "value2", "value3"));
             Assert.AreEqual("value3", await dictionary.GetAsync("key1"));
         }
 
@@ -1258,8 +1258,8 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            Assert.IsTrue(await dictionary.TrySetAsync("key1", "value1", TimeSpan.FromSeconds(1)));
-            Assert.IsTrue(await dictionary.TrySetAsync("key2", "value2", TimeSpan.FromSeconds(1)));
+            Assert.IsTrue(await dictionary.TryPutAsync("key1", "value1", TimeSpan.FromSeconds(1)));
+            Assert.IsTrue(await dictionary.TryPutAsync("key2", "value2", TimeSpan.FromSeconds(1)));
             await dictionary.LockAsync("key1");
             await dictionary.LockAsync("key2");
 
@@ -1267,7 +1267,7 @@ namespace Hazelcast.Tests.Remote
 
             var task1 = AsyncContext.RunWithNew(async () =>
             {
-                if (!(await dictionary.TrySetAsync("key1", "value1", TimeSpan.FromSeconds(1))))
+                if (!(await dictionary.TryPutAsync("key1", "value1", TimeSpan.FromSeconds(1))))
                     Interlocked.Increment(ref count);
             });
 

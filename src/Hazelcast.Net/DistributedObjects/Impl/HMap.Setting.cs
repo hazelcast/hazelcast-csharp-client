@@ -29,8 +29,8 @@ namespace Hazelcast.DistributedObjects.Impl
             => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
         /// <inheritdoc />
-        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
-            => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
+        public Task<TValue> PutAsync(TKey key, TValue value)
+            => PutAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
         /// <inheritdoc />
         public Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             return GetAndSetAsync(keyData, valueData, timeToLive);
@@ -143,7 +143,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<TValue> TryUpdateAsync(TKey key, TValue newValue)
+        public Task<TValue> ReplaceAsync(TKey key, TValue newValue)
             => TryUpdateAsync(key, newValue, CancellationToken.None);
 
         private async Task<TValue> TryUpdateAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
@@ -157,7 +157,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> TryUpdateAsync(TKey key, TValue comparisonValue, TValue newValue)
+        public Task<bool> ReplaceAsync(TKey key, TValue comparisonValue, TValue newValue)
             => TryUpdateAsync(key, comparisonValue, newValue, CancellationToken.None);
 
         private
@@ -193,7 +193,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout)
+        public Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan serverTimeout)
             => TrySetAsync(key, value, serverTimeout, CancellationToken.None);
 
         private
@@ -235,7 +235,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<TValue> GetOrAddAsync(TKey key, TValue value)
+        public Task<TValue> PutIfAbsent(TKey key, TValue value)
             => GetOrAddAsync(key, value, CancellationToken.None);
 
         private
@@ -254,7 +254,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<TValue> GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public Task<TValue> PutIfAbsent(TKey key, TValue value, TimeSpan timeToLive)
             => GetOrAddAsync(key, value, timeToLive, CancellationToken.None);
 
         private
@@ -296,7 +296,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
             => SetTransientAsync(key, value, timeToLive, CancellationToken.None);
 
         private

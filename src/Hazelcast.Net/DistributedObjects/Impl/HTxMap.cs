@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task RemoveAsync(TKey key)
+        public async Task DeleteAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapDeleteCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
@@ -93,8 +93,8 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task SetAsync(TKey key, TValue value)
             => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
-            => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
+        public Task<TValue> PutAsync(TKey key, TValue value)
+            => PutAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
         public async Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
@@ -107,7 +107,7 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
@@ -118,7 +118,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task<TValue> GetOrAddAsync(TKey key, TValue value)
+        public async Task<TValue> PutIfAbsent(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
@@ -128,7 +128,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task<TValue> GetAndRemoveAsync(TKey key)
+        public async Task<TValue> RemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
@@ -146,7 +146,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalMapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<TValue> TryUpdateAsync(TKey key, TValue newValue)
+        public async Task<TValue> ReplaceAsync(TKey key, TValue newValue)
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 
@@ -156,7 +156,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task<bool> TryUpdateAsync(TKey key, TValue oldValue, TValue newValue)
+        public async Task<bool> ReplaceAsync(TKey key, TValue oldValue, TValue newValue)
         {
             var (keyData, oldValueData, newValueData) = ToSafeData(key, oldValue, newValue);
 
@@ -165,14 +165,14 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalMapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<int> CountAsync()
+        public async Task<int> SizeAsync()
         {
             var requestMessage = TransactionalMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync()
+        public async Task<IReadOnlyCollection<TValue>> GetValuesAsync()
         {
             var requestMessage = TransactionalMapValuesCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
@@ -180,7 +180,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate)
+        public async Task<IReadOnlyCollection<TValue>> GetValuesAsync(IPredicate predicate)
         {
             var predicateData = ToSafeData(predicate);
             var requestMessage = TransactionalMapValuesWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);

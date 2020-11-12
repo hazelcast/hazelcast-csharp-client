@@ -33,9 +33,9 @@ namespace Hazelcast.DistributedObjects
         Task<bool> ContainsKeyAsync(TKey key);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.RemoveAsync(TKey)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.DeleteAsync"/>.
         /// </summary>
-        Task RemoveAsync(TKey key);
+        Task DeleteAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAsync(TKey)"/>.
@@ -78,14 +78,14 @@ namespace Hazelcast.DistributedObjects
         Task SetAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAndSetAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.PutAsync(TKey, TValue)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> GetAndSetAsync(TKey key, TValue value);
+        Task<TValue> PutAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.SetAsync(TKey, TValue, TimeSpan)"/>.
@@ -99,7 +99,7 @@ namespace Hazelcast.DistributedObjects
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAndSetAsync(TKey, TValue, TimeSpan)"/>.
+        /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.PutAsync(TKey,TValue, TimeSpan)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
@@ -107,23 +107,23 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetOrAddAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.PutIfAbsent(TKey, TValue)"/>.
         /// </summary>
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> GetOrAddAsync(TKey key, TValue value);
+        Task<TValue> PutIfAbsent(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetAndRemoveAsync(TKey)"/>.
+        /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.RemoveAsync"/>.
         /// </summary>
         /// <remarks>
         /// <para>The removed entry wil be removed only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> GetAndRemoveAsync(TKey key);
+        Task<TValue> RemoveAsync(TKey key);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.RemoveAsync(TKey, TValue)"/>.
@@ -134,36 +134,36 @@ namespace Hazelcast.DistributedObjects
         Task<bool> RemoveAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.TryUpdateAsync(TKey, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.ReplaceAsync(TKey,TValue)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="newValue">The new value.</param>
         /// <remarks>
         /// <para>The updated entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
+        Task<TValue> ReplaceAsync(TKey key, TValue newValue);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.TryUpdateAsync(TKey, TValue, TValue)"/>.
+        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.ReplaceAsync(TKey,TValue,TValue)"/>.
         /// </summary>
         /// <remarks>
         /// <para>The updated entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<bool> TryUpdateAsync(TKey key, TValue oldValue, TValue newValue);
+        Task<bool> ReplaceAsync(TKey key, TValue oldValue, TValue newValue);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.CountAsync()"/>.
+        /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.SizeAsync"/>.
         /// </summary>
-        Task<int> CountAsync();
+        Task<int> SizeAsync();
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetValuesAsync()"/>.
         /// </summary>
-        Task<IReadOnlyList<TValue>> GetValuesAsync();
+        Task<IReadOnlyCollection<TValue>> GetValuesAsync();
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetValuesAsync(IPredicate)"/>.
         /// </summary>
-        Task<IReadOnlyList<TValue>> GetValuesAsync(IPredicate predicate);
+        Task<IReadOnlyCollection<TValue>> GetValuesAsync(IPredicate predicate);
     }
 }
