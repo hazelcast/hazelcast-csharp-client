@@ -12,20 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-using Hazelcast.Events;
-
 namespace Hazelcast
 {
-    internal class ConnectionLifecycleEventHandler : HazelcastClientEventHandlerBase<ConnectionLifecycleEventArgs>
+    /// <summary>
+    /// Represents event data for the state changed event.
+    /// </summary>
+    public class StateChangedEventArgs
     {
-        public ConnectionLifecycleEventHandler(ConnectionLifecycleEventType eventType, Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
-            : base(handler)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StateChangedEventArgs"/> class.
+        /// </summary>
+        /// <param name="state"></param>
+        public StateChangedEventArgs(ConnectionState state)
         {
-            EventType = eventType;
+            State = state;
         }
 
-        public ConnectionLifecycleEventType EventType { get; }
+        /// <summary>
+        /// Gets the new state.
+        /// </summary>
+        public ConnectionState State { get; }
     }
 }

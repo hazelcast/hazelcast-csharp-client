@@ -391,7 +391,9 @@ namespace Hazelcast.Messaging
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await _connection.DisposeAsync().CAF();
+            // note: DisposeAsync should not throw (CA1065)
+
+            await _connection.DisposeAsync().CAF(); // does not throw
             _writer.Dispose();
         }
     }

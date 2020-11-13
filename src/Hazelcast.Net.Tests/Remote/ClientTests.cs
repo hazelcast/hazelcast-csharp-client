@@ -12,12 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Testing;
+using NUnit.Framework;
+
+namespace Hazelcast.Tests.Remote
 {
-    public enum MemberLifecycleEventType
+    [TestFixture]
+    public class ClientTests : SingleMemberRemoteTestBase
     {
-        Nothing,
-        Added,
-        Removed
+        [Test]
+        public async Task ClientCanConnect()
+        {
+            // most basic test just to ensure that a client can connect
+
+            //using var _ = HConsole.Capture(options => options
+            //    .Set(x => x.SetLevel(1)));
+
+            var client = await HazelcastClientFactory.StartNewClientAsync(CreateHazelcastOptions(), TimeSpan.FromSeconds(2));
+
+            await client.DisposeAsync();
+        }
     }
 }

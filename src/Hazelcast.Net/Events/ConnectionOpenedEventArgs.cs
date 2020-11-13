@@ -12,28 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-using Hazelcast.Events;
-
-namespace Hazelcast
+namespace Hazelcast.Events
 {
-    internal class MemberLifecycleEventHandler : HazelcastClientEventHandlerBase<MemberLifecycleEventArgs>
+    /// <summary>
+    /// Represents event data for the connection added event.
+    /// </summary>
+    internal class ConnectionOpenedEventArgs
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MemberLifecycleEventHandler"/> class.
+        /// Initializes a new instance of the <see cref="ConnectionOpenedEventArgs"/> class.
         /// </summary>
-        /// <param name="eventType">The type of the event.</param>
-        /// <param name="handler">An action to execute</param>
-        public MemberLifecycleEventHandler(MemberLifecycleEventType eventType, Func<IHazelcastClient, MemberLifecycleEventArgs, ValueTask> handler)
-            : base(handler)
+        /// <param name="isFirst">Whether the connection is the first one.</param>
+        public ConnectionOpenedEventArgs(bool isFirst)
         {
-            EventType = eventType;
+            IsFirst = isFirst;
         }
 
         /// <summary>
-        /// Gets the type of the event.
+        /// Whether the connection is the first one.
         /// </summary>
-        public MemberLifecycleEventType EventType { get; }
+        /// <returns><c>true</c> if the connection is the first one; otherwise <c>false</c>.</returns>
+        public bool IsFirst { get; }
     }
 }

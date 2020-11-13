@@ -15,8 +15,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Events;
 using Microsoft.Extensions.Logging;
@@ -26,7 +29,8 @@ namespace Hazelcast
     internal partial class HazelcastClient // Events
     {
         // subscription id -> event handlers
-        // for cluster client-level events (not wired to the server)
+        // for cluster client-level events i.e. events that do not directly correspond to an
+        // event message received from the cluster, but from things happening in the client
         private readonly ConcurrentDictionary<Guid, HazelcastClientEventHandlers> _handlers
             = new ConcurrentDictionary<Guid, HazelcastClientEventHandlers>();
 
@@ -42,7 +46,8 @@ namespace Hazelcast
             {
                 switch (handler)
                 {
-                    case DistributedObjectLifecycleEventHandler _:
+                    case DistributedObjectCreatedEventHandler _:
+                    case DistributedObjectDestroyedEventHandler _:
                         await Cluster.ClusterEvents.AddObjectLifecycleSubscription().CAF();
                         break;
 
@@ -50,10 +55,11 @@ namespace Hazelcast
                         await Cluster.ClusterEvents.AddPartitionLostSubscription().CAF();
                         break;
 
-                    case MemberLifecycleEventHandler _ :
+                    case MembersUpdatedEventHandler _ :
                     case PartitionsUpdatedEventHandler _:
-                    case ConnectionLifecycleEventHandler _:
-                    case ClientLifecycleEventHandler _:
+                    case ConnectionOpenedEventHandler _:
+                    case ConnectionClosedEventHandler _:
+                    case StateChangedEventHandler _:
                         // nothing to do (but don't throw)
                         break;
 
@@ -79,12 +85,14 @@ namespace Hazelcast
             {
                 var removed = handler switch
                 {
-                    DistributedObjectLifecycleEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CAF(),
+                    DistributedObjectCreatedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CAF(),
+                    DistributedObjectDestroyedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CAF(),
                     PartitionLostEventHandler _ => await Cluster.ClusterEvents.RemovePartitionLostSubscription().CAF(),
-                    MemberLifecycleEventHandler _ => true,
+                    MembersUpdatedEventHandler _ => true,
                     PartitionsUpdatedEventHandler _ => true,
-                    ConnectionLifecycleEventHandler _ => true,
-                    ClientLifecycleEventHandler _ => true,
+                    ConnectionOpenedEventHandler _ => true,
+                    ConnectionClosedEventHandler _ => true,
+                    StateChangedEventHandler _ => true,
                     _ => throw new NotSupportedException($"Handler of type {handler.GetType()} is not supported here.")
                 };
 
@@ -103,87 +111,108 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Triggers an object lifecycle event.
+        /// Handles an object being created.
         /// </summary>
-        /// <param name="eventType">The type of the events.</param>
         /// <param name="args">The event arguments.</param>
-        public ValueTask OnObjectLifecycleEvent(DistributedObjectLifecycleEventType eventType, DistributedObjectLifecycleEventArgs args)
+        public ValueTask OnObjectCreated(DistributedObjectCreatedEventArgs args)
         {
-            return ForEachHandler<DistributedObjectLifecycleEventHandler, DistributedObjectLifecycleEventArgs>((handler, sender, a) =>
-                    handler.EventType == eventType
-                        ? handler.HandleAsync(sender, a)
-                        : default,
-                args);
+            // triggers ObjectLifecycle event
+            return ForEachHandler<DistributedObjectCreatedEventHandler, DistributedObjectCreatedEventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), args);
         }
 
         /// <summary>
-        /// Triggers a member lifecycle event.
+        /// Handles an object being destroyed.
         /// </summary>
-        /// <param name="eventType">The event type.</param>
         /// <param name="args">The event arguments.</param>
-        public ValueTask OnMemberLifecycleEvent(MemberLifecycleEventType eventType, MemberLifecycleEventArgs args)
+        public ValueTask OnObjectDestroyed(DistributedObjectDestroyedEventArgs args)
         {
-            return ForEachHandler<MemberLifecycleEventHandler, MemberLifecycleEventArgs>((handler, sender, a) =>
-                handler.EventType == eventType
-                    ? handler.HandleAsync(sender, a)
-                    : default,
-                args);
+            // triggers ObjectLifecycle event
+            return ForEachHandler<DistributedObjectDestroyedEventHandler, DistributedObjectDestroyedEventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), args);
         }
 
         /// <summary>
-        /// Triggers a client lifecycle event.
+        /// Handles an update of the members.
+        /// </summary>
+        /// <param name="args">The event arguments.</param>
+        public ValueTask OnMembersUpdated(MembersUpdatedEventArgs args)
+        {
+            // triggers MemberLifecycle event
+            return ForEachHandler<MembersUpdatedEventHandler, MembersUpdatedEventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), args);
+        }
+
+        /// <summary>
+        /// Handles a client state change (lifecycle).
         /// </summary>
         /// <param name="state">The new state.</param>
-        public ValueTask OnClientLifecycleEvent(ClientLifecycleState state)
+        public ValueTask OnStateChanged(ConnectionState state)
         {
-            return ForEachHandler<ClientLifecycleEventHandler, ClientLifecycleEventArgs>((handler, sender, args) =>
-                handler.HandleAsync(sender, args),
-                new ClientLifecycleEventArgs(state));
+            var args = new StateChangedEventArgs(state);
+
+            // triggers StateChanged event
+            return ForEachHandler<StateChangedEventHandler, StateChangedEventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), args);
         }
 
         /// <summary>
-        /// Triggers a partitions updated event.
+        /// Handles an update of the partitions.
         /// </summary>
         public ValueTask OnPartitionsUpdated()
         {
-            return ForEachHandler<PartitionsUpdatedEventHandler, EventArgs>((handler, sender, args) =>
-                handler.HandleAsync(sender, args),
-                EventArgs.Empty);
+            // triggers PartitionsUpdated event
+            return ForEachHandler<PartitionsUpdatedEventHandler, EventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), EventArgs.Empty);
         }
 
         /// <summary>
-        /// Triggers a partition list event.
+        /// Handles a lost partition.
         /// </summary>
         /// <param name="args">The event arguments.</param>
         public ValueTask OnPartitionLost(PartitionLostEventArgs args)
         {
-            return ForEachHandler<PartitionLostEventHandler, PartitionLostEventArgs>((handler, sender, a) =>
-                handler.HandleAsync(sender, a),
-                args);
+            // triggers PartitionLost event
+            return ForEachHandler<PartitionLostEventHandler, PartitionLostEventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), args);
         }
 
         /// <summary>
-        /// Triggers a connection added event.
+        /// Handles an opened connection.
         /// </summary>
-        public ValueTask OnConnectionAdded(/*Client client*/)
+        /// <param name="connection">The connection.</param>
+        /// <param name="isFirst">Whether the connection is the first one.</param>
+        /// <param name="isNewCluster">Whether the cluster is a new/different cluster.</param>
+        public async ValueTask OnConnectionOpened(MemberConnection connection, bool isFirst, bool isNewCluster)
         {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args) =>
-                handler.EventType == ConnectionLifecycleEventType.Added
-                    ? handler.HandleAsync(sender, args)
-                    : default,
-                new ConnectionLifecycleEventArgs(/*client*/));
+            // if it is the first connection, subscribe to events according to options
+            if (isFirst)
+            {
+                // FIXME should this be cancelable?
+                var cancellationToken = CancellationToken.None;
+                foreach (var subscriber in _options.Subscribers)
+                    await subscriber.SubscribeAsync(this, cancellationToken).CAF();
+            }
+
+            var args = new ConnectionOpenedEventArgs(isFirst);
+
+            // trigger ConnectionOpened event
+            await ForEachHandler<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), args).CAF();
         }
 
         /// <summary>
-        /// Triggers a connection removed event.
+        /// Handles a closed connection.
         /// </summary>
-        public ValueTask OnConnectionRemoved(/*Client client*/)
+        /// <param name="connection">The connection.</param>
+        /// <param name="wasLast">Whether the connection was the last one.</param>
+        public ValueTask OnConnectionClosed(MemberConnection connection, bool wasLast)
         {
-            return ForEachHandler<ConnectionLifecycleEventHandler, ConnectionLifecycleEventArgs>((handler, sender, args) =>
-                    handler.EventType == ConnectionLifecycleEventType.Removed
-                        ? handler.HandleAsync(sender, args)
-                        : default,
-                new ConnectionLifecycleEventArgs(/*client*/));
+            var args = new ConnectionClosedEventArgs(wasLast);
+
+            // trigger ConnectionRemoved event
+            return ForEachHandler<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(
+                (handler, sender, a) => handler.HandleAsync(sender, a), args);
         }
 
         /// <summary>

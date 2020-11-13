@@ -1,0 +1,240 @@
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Models;
+using Hazelcast.Exceptions;
+using Hazelcast.Messaging;
+using Hazelcast.Networking;
+using Hazelcast.Partitioning;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Protocol.Models;
+using Hazelcast.Serialization;
+using Hazelcast.Testing;
+using Hazelcast.Testing.Protocol;
+using Hazelcast.Testing.TestServer;
+using Microsoft.Extensions.Logging.Abstractions;
+using NUnit.Framework;
+
+namespace Hazelcast.Tests.Clustering
+{
+    [TestFixture]
+    public class MemberConnectionTests
+    {
+        private IDisposable HConsoleForTest()
+
+            => HConsole.Capture(options => options
+                .ClearAll()
+                .Set(x => x.Verbose())
+                .Set(this, x => x.SetPrefix("TEST"))
+                .Set<AsyncContext>(x => x.Quiet())
+                .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+
+        [Test]
+        public async Task Test()
+        {
+            using var _ = HConsoleForTest();
+
+            var options = HazelcastOptions.Build();
+            var loggerFactory = new NullLoggerFactory();
+
+            var address = NetworkAddress.Parse("127.0.0.1:11000");
+
+            var state = new ServerState
+            {
+                Id = 0,
+                MemberId = Guid.NewGuid(),
+                Address = address
+            };
+
+            await using var server = new Server(address, ServerHandler, loggerFactory, state, "0")
+            {
+                MemberId = state.MemberId,
+            };
+            await server.StartAsync();
+
+            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
+            var authenticator = new Authenticator(options.Authentication, serializationService);
+
+            ISequence<int> connectionIdSequence = new Int32Sequence();
+            ISequence<long> correlationIdSequence = new Int64Sequence();
+
+            var memberConnection = new MemberConnection(address, authenticator,
+                options.Messaging, options.Networking.Socket, options.Networking.Ssl,
+                connectionIdSequence, correlationIdSequence,
+                loggerFactory);
+
+            var memberConnectionHasClosed = false;
+            memberConnection.Closed += connection =>
+            {
+                memberConnectionHasClosed = true;
+                return default;
+            };
+
+            var clusterName = "dev";
+            var clientName = "client";
+            var clusterState = new ClusterState(options,
+                clusterName, clientName,
+                new Partitioner(), loggerFactory);
+
+            await memberConnection.ConnectAsync(clusterState, CancellationToken.None);
+
+            // so far, so good
+            // now, try something that will timeout
+            //
+            // send async without a timeout uses the timeout in messagingOptions.OperationTimeoutMilliseconds
+            // the invocation is created with the timeout passed to SendAsync
+            // TODO: shall we just reuse it then to avoid confusion?
+
+            var token = new CancellationToken();
+
+            var message = ClientPingServerCodec.EncodeRequest();
+
+            // SendAsync prepares the message
+            message.CorrelationId = correlationIdSequence.GetNext();
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            // SendAsync then creates the invocation
+            var invocation = new Invocation(message, options.Messaging, token);
+            var timeout = 200; // ms
+
+            // but sending will timeout since the server does not answer to pings
+            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
+                await memberConnection.SendAsync(invocation, timeout));
+
+            // the invocation is gone now
+            Assert.That(invocation.Task.IsCompleted);
+
+            await memberConnection.DisposeAsync();
+
+            Assert.That(memberConnection.Active, Is.False);
+            Assert.That(memberConnectionHasClosed);
+        }
+
+        internal class ServerState
+        {
+            public int Id { get; set; }
+            public Guid MemberId { get; set; }
+            public NetworkAddress Address { get; set; }
+        }
+
+        private async ValueTask ServerHandler(Server s, ClientMessageConnection conn, ClientMessage msg)
+        {
+            async Task SendResponseAsync(ClientMessage response)
+            {
+                response.CorrelationId = msg.CorrelationId;
+                response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                await conn.SendAsync(response).CAF();
+            }
+
+            async Task SendEventAsync(ClientMessage eventMessage, long correlationId)
+            {
+                eventMessage.CorrelationId = correlationId;
+                eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                await conn.SendAsync(eventMessage).CAF();
+            }
+
+            async Task SendErrorAsync(RemoteError error, string message)
+            {
+                var errorHolders = new List<ErrorHolder>
+                    {
+                        new ErrorHolder(error, "?", message, Enumerable.Empty<StackTraceElement>())
+                    };
+                var response = ErrorsServerCodec.EncodeResponse(errorHolders);
+                await SendResponseAsync(response).CAF();
+            }
+
+            var state = (ServerState) s.State;
+            var address = s.Address;
+
+            const int partitionsCount = 2;
+
+            switch (msg.MessageType)
+            {
+                // must handle auth
+                case ClientAuthenticationServerCodec.RequestMessageType:
+                    {
+                        HConsole.WriteLine(this, $"(server{state.Id}) Authentication");
+                        var authRequest = ClientAuthenticationServerCodec.DecodeRequest(msg);
+                        var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
+                            0, address, s.MemberId, SerializationService.SerializerVersion,
+                            "4.0", partitionsCount, s.ClusterId, false);
+                        await SendResponseAsync(authResponse).CAF();
+                        break;
+                    }
+
+                // must handle events
+                case ClientAddClusterViewListenerServerCodec.RequestMessageType:
+                    {
+                        HConsole.WriteLine(this, $"(server{state.Id}) AddClusterViewListener");
+                        var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(msg);
+                        var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
+                        await SendResponseAsync(addResponse).CAF();
+
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(500).CAF();
+
+                            const int membersVersion = 1;
+                            var memberVersion = new MemberVersion(4, 0, 0);
+                            var memberAttributes = new Dictionary<string, string>();
+                            var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
+                            {
+                                new MemberInfo(state.MemberId, state.Address, memberVersion, false, memberAttributes)
+                            });
+                            await SendEventAsync(membersEventMessage, msg.CorrelationId).CAF();
+
+                            await Task.Delay(500).CAF();
+
+                            const int partitionsVersion = 1;
+                            var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
+                            {
+                                new KeyValuePair<Guid, IList<int>>(state.MemberId, new List<int> { 0 }),
+                                new KeyValuePair<Guid, IList<int>>(state.MemberId, new List<int> { 1 }),
+                            });
+                            await SendEventAsync(partitionsEventMessage, msg.CorrelationId).CAF();
+                        });
+
+                        break;
+                    }
+
+                // create object
+                case ClientPingServerCodec.RequestMessageType:
+                    {
+                        HConsole.WriteLine(this, $"(server{state.Id}) Ping");
+                        var pingRequest = ClientPingServerCodec.DecodeRequest(msg);
+
+                        // no response, will timeout
+
+                        break;
+                    }
+
+                // unexpected message = error
+                default:
+                    {
+                        // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
+                        var messageName = MessageTypeConstants.GetMessageTypeName(msg.MessageType);
+                        await SendErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{msg.MessageType:X}) not implemented.").CAF();
+                        break;
+                    }
+            }
+        }
+    }
+}

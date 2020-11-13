@@ -14,16 +14,24 @@
 
 namespace Hazelcast.Events
 {
-    public class ClientLifecycleEventArgs
+    /// <summary>
+    /// Represents event data for the connection removed event.
+    /// </summary>
+    public class ConnectionClosedEventArgs
     {
-        public ClientLifecycleEventArgs(ClientLifecycleState state)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionClosedEventArgs"/> class.
+        /// </summary>
+        /// <param name="wasLast">Whether the connection was the last one.</param>
+        public ConnectionClosedEventArgs(bool wasLast)
         {
-            State = state;
+            WasLast = wasLast;
         }
 
         /// <summary>
-        /// Gets the new state.
+        /// Whether the connection was the last one.
         /// </summary>
-        public ClientLifecycleState State { get; }
+        /// <returns><c>true</c> if the connection was the last one; otherwise <c>false</c>.</returns>
+        public bool WasLast { get; }
     }
 }

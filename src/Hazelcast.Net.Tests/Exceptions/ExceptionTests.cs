@@ -64,19 +64,26 @@ namespace Hazelcast.Tests.Exceptions
         public void ClientNotConnectedExceptionConstructors()
         {
             _ = new ClientNotConnectedException();
+            _ = new ClientNotConnectedException(ConnectionState.NotConnected);
             _ = new ClientNotConnectedException("exception");
+            _ = new ClientNotConnectedException("exception", ConnectionState.NotConnected);
             _ = new ClientNotConnectedException(new Exception("bang"));
-            var e = new ClientNotConnectedException("exception", new Exception("bang"));
+            _ = new ClientNotConnectedException(new Exception("bang"), ConnectionState.NotConnected);
+            _ = new ClientNotConnectedException("exception", new Exception("bang"));
+
+            var e = new ClientNotConnectedException("exception", new Exception("bang"), ConnectionState.NotConnected);
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+            Assert.That(e.State, Is.EqualTo(ConnectionState.NotConnected));
 
             e = e.SerializeAndDeSerialize();
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+            Assert.That(e.State, Is.EqualTo(ConnectionState.NotConnected));
         }
 
         [Test]

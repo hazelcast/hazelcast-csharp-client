@@ -44,6 +44,7 @@ namespace Hazelcast.Partitioning
             // and we can use whatever value it has, and references are atomic
             // ReSharper disable once ConvertIfStatementToReturnStatement
             if (_partitions == null) return default;
+            // ReSharper disable once InconsistentlySynchronizedField
             return _partitions.MapPartitionId(partitionId);
         }
 
@@ -88,7 +89,8 @@ namespace Hazelcast.Partitioning
         /// <param name="originClientId">The unique identifier of the client originating the view.</param>
         /// <param name="version">The version of the view.</param>
         /// <param name="partitionsMap">The partitions map.</param>
-        public void NotifyPartitionView(Guid originClientId, int version, Dictionary<int, Guid> partitionsMap)
+        /// <returns><c>true</c> if the new view superseded and replaced the existing one; otherwise <c>false</c>.</returns>
+        public bool NotifyPartitionView(Guid originClientId, int version, Dictionary<int, Guid> partitionsMap)
         {
             if (partitionsMap == null) throw new ArgumentNullException(nameof(partitionsMap));
 
@@ -98,11 +100,12 @@ namespace Hazelcast.Partitioning
 
             lock (_partitionsLock) // one at a time please
             {
-                if (_partitions == null || _partitions.IsSupersededBy(originClientId, version, partitionsMap))
-                {
-                    _partitions = new PartitionTable(originClientId, version, partitionsMap);
-                    Count = _partitions.Count;
-                }
+                if (_partitions != null && !_partitions.IsSupersededBy(originClientId, version, partitionsMap))
+                    return false;
+
+                _partitions = new PartitionTable(originClientId, version, partitionsMap);
+                Count = _partitions.Count;
+                return true;
             }
         }
 
@@ -110,22 +113,23 @@ namespace Hazelcast.Partitioning
         /// Notifies the partitioner of the partitions count.
         /// </summary>
         /// <param name="count">The partitions count.</param>
+        /// <remarks>
+        /// <para>The specified <paramref name="count"/> must be either the first one,
+        /// i.e. the partitioner does not know of partitions yet, or it must be equal
+        /// to the known partitions count. Otherwise, a <see cref="InvalidOperationException"/>
+        /// is thrown.</para>
+        /// </remarks>
         public void NotifyPartitionsCount(int count)
         {
             lock (_partitionsLock)
             {
-                if (_partitions != null)
+                if (_partitions == null)
                 {
-                    // TODO: should return true/false and not throw a totally unrelated exception here
-                    if (count != Count)
-                        throw new ConnectionException("Failed to open a connection because " +
-                                                      $"the partitions count announced by the member ({count}) " +
-                                                      $"is not the expected value ({Count}).");
-                }
-                else
-                {
-                    // else this is the first count
                     Count = count;
+                }
+                else if (Count != count)
+                {
+                    throw new InvalidOperationException($"Received count value {count} but expected {Count}.");
                 }
             }
         }

@@ -12,27 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Events
 {
     /// <summary>
-    /// Represents event data for connection lifecycle events.
+    /// Represents event data for a cluster object destroyed event.
     /// </summary>
-    internal class ConnectionLifecycleEventArgs
+    public sealed class DistributedObjectDestroyedEventArgs : DistributedObjectLifecycleEventArgs
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConnectionLifecycleEventArgs"/> class.
+        /// Initializes a new instance of the <see cref="DistributedObjectDestroyedEventArgs"/> class.
         /// </summary>
-        ///// <param name="client">The client.</param>
-        public ConnectionLifecycleEventArgs(/*Client client*/)
-        {
-            //Client = client;
-        }
-
-        // TODO: shall the event be internal entirely? or else?
-
-        ///// <summary>
-        ///// Gets the client.
-        ///// </summary>
-        //public Client Client { get; }
+        /// <param name="serviceName">The service unique name.</param>
+        /// <param name="name">The object unique name.</param>
+        /// <param name="sourceMemberId">The unique identifier of the source member.</param>
+        public DistributedObjectDestroyedEventArgs(string serviceName, string name, Guid sourceMemberId)
+            : base(serviceName, name, sourceMemberId)
+        { }
     }
 }

@@ -89,9 +89,9 @@ namespace Hazelcast.Testing
             var partitions = new SemaphoreSlim(0);
 
             var subscriptionId = await clientInternal.SubscribeAsync(on => on
-                    .MemberAdded((sender, args) =>
+                    .MembersUpdated((sender, args) =>
                     {
-                        added.Release();
+                        if (args.AddedMembers.Count > 0) added.Release();
                     })
                     .PartitionsUpdated((sender, args) =>
                     {
@@ -146,9 +146,9 @@ namespace Hazelcast.Testing
             var removed = new SemaphoreSlim(0);
 
             var subscriptionId = await clientInternal.SubscribeAsync(on => on
-                    .MemberRemoved((sender, args) =>
+                    .MembersUpdated((sender, args) =>
                     {
-                        removed.Release();
+                        if (args.RemovedMembers.Count > 0) removed.Release();
                     }))
                 .CAF();
 

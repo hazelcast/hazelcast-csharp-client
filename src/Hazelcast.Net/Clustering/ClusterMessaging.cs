@@ -201,7 +201,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             // fail fast
-            _clusterState.ThrowIfNotConnected();
+            _clusterState.ThrowIfNotActive();
 
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
@@ -214,16 +214,15 @@ namespace Hazelcast.Clustering
                                    targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId, cancellationToken) :
                                    new Invocation(message, _clusterState.Options.Messaging, cancellationToken);
 
-            return await SendAsyncInternal(invocation, cancellationToken).CAF();
+            return await SendAsyncInternal(invocation).CAF();
         }
 
         /// <summary>
         /// Sends an invocation request message.
         /// </summary>
         /// <param name="invocation">The invocation.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken = default)
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation)
         {
             // yield now, so the caller gets a task that can bubble up to user's code
             // immediately without waiting for more synchronous operations to take place
@@ -233,10 +232,9 @@ namespace Hazelcast.Clustering
             {
                 try
                 {
-                    var connection = GetInvocationConnection(invocation);
-                    if (connection == null) throw new ClientNotConnectedException();
+                    var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
                     var timeoutMs = _clusterState.Options.Messaging.InvocationTimeoutMilliseconds;
-                    return await connection.SendAsync(invocation, timeoutMs, cancellationToken).CAF();
+                    return await connection.SendAsync(invocation, timeoutMs).CAF();
                 }
                 catch (TaskCanceledException)
                 {
@@ -244,8 +242,9 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception exception)
                 {
-                    // if the cluster is not connected anymore, die
-                    _clusterState.ThrowIfNotConnected(exception);
+                    // if the cluster is down, die
+                    // if it's just temp disconnected, retry
+                    _clusterState.ThrowIfNotActive(exception);
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
@@ -268,6 +267,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <returns>A connection for the invocation.</returns>
+        /// <exception cref="ClientNotConnectedException">Occurs when no connection could be found.</exception>
         private MemberConnection GetInvocationConnection(Invocation invocation)
         {
             // try the target connection
@@ -289,8 +289,13 @@ namespace Hazelcast.Clustering
                     return connection;
             }
 
-            // fail over to random client
-            return _clusterMembers.GetRandomConnection(false);
+            // fall over to random client
+            connection = _clusterMembers.GetRandomConnection();
+            if (connection != null)
+                return connection;
+
+            // fail
+            throw new ClientNotConnectedException(_clusterState.ConnectionState);
         }
     }
 }

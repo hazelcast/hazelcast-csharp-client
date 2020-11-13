@@ -34,10 +34,11 @@ namespace Hazelcast
     internal partial class HazelcastClient : IHazelcastClient
     {
         private readonly HazelcastOptions _options;
-        private readonly DistributedObjectFactory _distributedObjectFactory;
-        private readonly NearCacheManager _nearCacheManager;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
+
+        private readonly DistributedObjectFactory _distributedOjects;
+        private readonly NearCacheManager _nearCacheManager;
 
         private int _disposed;
 
@@ -56,28 +57,60 @@ namespace Hazelcast
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<IHazelcastClient>();
 
-            _distributedObjectFactory = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
-            Cluster.Connections.OnConnectingToNewCluster = cancellationToken => _distributedObjectFactory.CreateAllAsync(cancellationToken);
-
+            _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
 
-            // wire events
-            // this way, the cluster does not need to know about the hazelcast client,
-            // and we don't have circular dependencies everywhere - cleaner
-            cluster.ClusterEvents.OnObjectLifecycleEvent = OnObjectLifecycleEvent;
-            cluster.ClusterEvents.OnPartitionLost = OnPartitionLost;
-            cluster.ClusterEvents.OnMemberLifecycleEvent = OnMemberLifecycleEvent;
-            cluster.ClusterEvents.OnClientLifecycleEvent = OnClientLifecycleEvent;
-            cluster.ClusterEvents.OnPartitionsUpdated = OnPartitionsUpdated;
-            cluster.ClusterEvents.OnConnectionAdded = OnConnectionAdded;
-            cluster.ClusterEvents.OnConnectionRemoved = OnConnectionRemoved;
-            cluster.ClusterEvents.OnConnectionRemoved = OnConnectionRemoved;
+            // wire events - clean
 
-            cluster.Connections.OnFirstConnection = async cancellationToken =>
-            {
-                foreach (var subscriber in options.Subscribers)
-                    await subscriber.SubscribeAsync(this, cancellationToken).CAF();
-            };
+            // NOTE: each event that is a Func<..., ValueTask> *must* be invoked
+            // through the special FuncExtensions.AwaitEach() method, see notes in
+            // FuncExtensions.cs
+
+            // when an object is created/destroyed, OnObject... triggers the user-level events
+            cluster.ClusterEvents.ObjectCreated = OnObjectCreated;
+            cluster.ClusterEvents.ObjectDestroyed = OnObjectDestroyed;
+
+            // when client/cluster state changes, OnStateChanged triggers user-level events
+            cluster.State.StateChanged += OnStateChanged;
+
+            // when partitions are updated, OnPartitionUpdated triggers the user-level event
+            cluster.Events.PartitionsUpdated += OnPartitionsUpdated;
+
+            // when a partition is lost, OnPartitionLost triggers the user-level event
+            cluster.ClusterEvents.PartitionLost = OnPartitionLost;
+
+            // when members are updated, Connections.OnMembersUpdated queues the added
+            // members so that a connection is opened to each of them.
+            cluster.Events.MembersUpdated += cluster.Connections.OnMembersUpdated;
+
+            // when members are updated, OnMembersUpdated triggers the user-level event
+            cluster.Events.MembersUpdated += OnMembersUpdated;
+
+            // when a connection is created, Events.OnConnectionCreated wires the connection
+            // ReceivedEvent event to Events.OnReceivedEvent, in order to handle events
+            cluster.Connections.ConnectionCreated += cluster.Events.OnConnectionCreated;
+
+            // when connecting to a new cluster, DistributedObjects.OnConnectingToNewCluster
+            // re-creates all the known distributed object so far on the new cluster
+            cluster.Connections.ConnectionOpened += _distributedOjects.OnConnectionOpened;
+
+            // when a connection is added, OnConnectionOpened triggers the user-level event
+            // and, if it is the first connection, subscribes to events according to the
+            // subscribers defined in options.
+            cluster.Connections.ConnectionOpened += OnConnectionOpened;
+
+            // when a connection is opened, Events.OnConnectionOpened ensures that the
+            // cluster connection (handling member/partition views) is set, and installs
+            // subscriptions on this new connection.
+            cluster.Connections.ConnectionOpened += cluster.Events.OnConnectionOpened;
+
+            // when a connection is closed, client.OnConnectionClosed triggers the user-level event
+            cluster.Connections.ConnectionClosed += OnConnectionClosed;
+
+            // when a connection is closed, Events.OnConnectionClosed clears subscriptions
+            // (cannot unsubscribe since the connection is closed) and ensures that the
+            // cluster connection (handling member/partition views) is set.
+            cluster.Connections.ConnectionClosed += cluster.Events.OnConnectionClosed;
         }
 
         /// <summary>
@@ -128,7 +161,7 @@ namespace Hazelcast
 
             if (timeoutMs == 0) timeoutMs = _options.Networking.ConnectionTimeoutMilliseconds; // default
 
-            var task = TaskEx.RunWithTimeout((c, t) => c.Connections.ConnectAsync(t), Cluster, timeoutMs);
+            var task = TaskEx.RunWithTimeout((c, t) => c.ConnectAsync(t), Cluster, timeoutMs);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -148,7 +181,7 @@ namespace Hazelcast
 #endif
         Task StartAsync(CancellationToken cancellationToken)
         {
-            var task = Cluster.Connections.ConnectAsync(cancellationToken);
+            var task = Cluster.ConnectAsync(cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -166,41 +199,6 @@ namespace Hazelcast
             // order is important, must dispose the cluster last, as it will tear down
             // connections that may be required by other things being disposed
 
-            // FIXME - cleanup shutdown & reconnect
-            // are we reconnecting correctly?
-            // what about immediately terminating the client?
-            // where and when should we lock the cluster? before dispose? prepareForDispose?
-
-            // the client is Active when the cluster is Active
-            // the cluster is Active from creation (even before it is connected) until it is disposed
-            //
-            // the client is Connected when the cluster is Connected
-            // the cluster is Connected when its ConnectionState is Connected
-            //
-            // ConnectionState diagram:
-            // creation -> NotConnected
-            // NotConnected -> ConnectAsync() -> Connecting
-            // Connecting
-            //   -> ConnectFirstAsync(), TryConnectAsync(), ConnectWithLockAsync() -> Connected
-            //   unless error -> NotConnected
-            // Connected -> HandleConnectionTermination()
-            //   ReconnectMode.DoNotReconnect -> Disconnected
-            //   ReconnectMode.ReconnectAsync (or Sync) -> Connecting
-            //
-            // and then there is ClientLifecycleState with events
-            // - Starting         Connecting
-            // - Started          n/a
-            // - ShuttingDown     Disconnecting
-            // - Shutdown
-            // - Connected        Connected
-            // - Disconnected     ReConnecting
-            //
-            // TODO
-            // - are we firing the ClientStateChanged events?
-            // - merge ClientLifecycleState and cluster ConnectionState
-            // - how is Disconnected different from NotConnected?
-            // - could we try to connect a Disconnected cluster again?
-
             try
             {
                 await _nearCacheManager.DisposeAsync().CAF();
@@ -212,7 +210,7 @@ namespace Hazelcast
 
             try
             {
-                await _distributedObjectFactory.DisposeAsync().CAF();
+                await _distributedOjects.DisposeAsync().CAF();
             }
             catch (Exception e)
             {

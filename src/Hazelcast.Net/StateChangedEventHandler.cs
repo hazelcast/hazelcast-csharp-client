@@ -12,19 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Models;
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
 
-namespace Hazelcast.Events
+namespace Hazelcast
 {
-    public class MemberLifecycleEventArgs
+    internal class StateChangedEventHandler : HazelcastClientEventHandlerBase<StateChangedEventArgs>
     {
-        public MemberLifecycleEventArgs(MemberInfo member)
-        {
-            Member = member;
-        }
-
-        public MemberInfo Member { get; }
-
-        // TODO: original event args (MembershipEvent class) also carried the complete list of members
+        public StateChangedEventHandler(Func<IHazelcastClient, StateChangedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

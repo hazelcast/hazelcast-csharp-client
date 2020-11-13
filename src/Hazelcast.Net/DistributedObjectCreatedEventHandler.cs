@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
+
+namespace Hazelcast
 {
     /// <summary>
-    /// Defines the types of object lifecycle events.
+    /// Represents a handler for a cluster object created event.
     /// </summary>
-    public enum DistributedObjectLifecycleEventType
+    internal class DistributedObjectCreatedEventHandler : HazelcastClientEventHandlerBase<DistributedObjectCreatedEventArgs>
     {
         /// <summary>
-        /// The object was created.
+        /// Initializes a new instance of the <see cref="DistributedObjectCreatedEventHandler"/> class.
         /// </summary>
-        Created = 1, // zero is for default, make sure we start at 1
-
-        /// <summary>
-        /// The object was destroyed.
-        /// </summary>
-        Destroyed
+        /// <param name="handler">An action to execute</param>
+        public DistributedObjectCreatedEventHandler(Func<IHazelcastClient, DistributedObjectCreatedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

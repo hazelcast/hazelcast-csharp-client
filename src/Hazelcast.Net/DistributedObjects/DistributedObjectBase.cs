@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects
     {
         private readonly DistributedObjectFactory _factory;
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
-        private Action<DistributedObjectBase> _onDispose;
+        private Action<DistributedObjectBase> _objectDisposed;
         private string _partitionKey;
         private IData _partitionKeyData;
         private int? _partitionId;
@@ -65,14 +65,14 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Gets or sets an action that will be executed when the object disposes.
         /// </summary>
-        public Action<DistributedObjectBase> OnDispose
+        public Action<DistributedObjectBase> ObjectDisposed
         {
-            get => _onDispose;
+            get => _objectDisposed;
             set
             {
                 if (_readonlyProperties)
                     throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
-                _onDispose = value;
+                _objectDisposed = value;
             }
         }
 
@@ -323,7 +323,7 @@ namespace Hazelcast.DistributedObjects
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return default;
 
-            _onDispose(this);
+            _objectDisposed(this);
 
             return DisposeAsyncCore();
         }
