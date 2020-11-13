@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects.Impl
             => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
         /// <inheritdoc />
-        public Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value)
+        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
             => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
         /// <inheritdoc />
@@ -47,19 +47,19 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             return GetAndSetAsync(keyData, valueData, timeToLive);
         }
 
-        protected virtual async Task<Maybe<TValue>> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected virtual async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
         {
             var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
             var requestMessage = MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = MapPutCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
+            return ToObject<TValue>(response);
         }
 
         /// <inheritdoc />
@@ -143,17 +143,17 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<Maybe<TValue>> TryUpdateAsync(TKey key, TValue newValue)
+        public Task<TValue> TryUpdateAsync(TKey key, TValue newValue)
             => TryUpdateAsync(key, newValue, CancellationToken.None);
 
-        private async Task<Maybe<TValue>> TryUpdateAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
+        private async Task<TValue> TryUpdateAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 
             var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapReplaceCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
+            return ToObject<TValue>(response);
         }
 
         /// <inheritdoc />

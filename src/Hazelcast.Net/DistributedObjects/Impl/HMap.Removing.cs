@@ -66,14 +66,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<Maybe<TValue>> GetAndRemoveAsync(TKey key)
+        public Task<TValue> GetAndRemoveAsync(TKey key)
             => GetAndRemoveAsync(key, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
         async
 #endif
-        Task<Maybe<TValue>> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken)
+        Task<TValue> GetAndRemoveAsync(TKey key, CancellationToken cancellationToken)
         {
             var task = GetAndRemoveAsync(ToSafeData(key), cancellationToken);
 
@@ -90,12 +90,12 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">The key.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value, if any, or default(TValue).</returns>
-        protected virtual async Task<Maybe<TValue>> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
+        protected virtual async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
+            return ToObject<TValue>(response);
         }
 
         /// <inheritdoc />

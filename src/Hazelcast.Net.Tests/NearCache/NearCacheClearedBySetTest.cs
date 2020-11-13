@@ -109,7 +109,7 @@ namespace Hazelcast.Tests.NearCache
             var lastValue = _valuePut;
             var valueStr = await dictionary.GetAsync(Key);
             Assert.That(valueStr, Is.Not.Null);
-            var valueInt = valueStr.Match(int.Parse, -1);
+            var valueInt = int.Parse(valueStr);
 
             // fail if not eventually consistent
             string msg = null;
@@ -121,7 +121,7 @@ namespace Hazelcast.Tests.NearCache
                 cache.Clear();
                 valueStr = await dictionary.GetAsync(Key);
                 Assert.That(valueStr, Is.Not.Null);
-                valueInt = valueStr.Match(int.Parse, -1);
+                valueInt = int.Parse(valueStr);
 
                 // test again
                 if (valueInt < lastValue)
@@ -200,9 +200,9 @@ namespace Hazelcast.Tests.NearCache
 
                 // check if we see our last update
                 var valueStr = await dictionary.GetAsync(Key).CAF();
-                if (valueStr.IsNone) continue; // not found
+                if (valueStr == null) continue; // not found
 
-                var valueInt = valueStr.Match(int.Parse, -1);
+                var valueInt = int.Parse(valueStr);
                 if (valueInt == i) continue; // match = ok
 
                 _assertionViolationCount++;
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests.NearCache
 
                 // test again and stop if really lost
                 valueStr = await dictionary.GetAsync(Key).CAF();
-                valueInt = valueStr.Match(int.Parse, -1);
+                valueInt = int.Parse(valueStr);
                 if (valueInt == i) continue; // fixed
 
                 Logger.LogWarning($"Err: still getting {valueInt} instead of {i}.");
@@ -235,10 +235,10 @@ namespace Hazelcast.Tests.NearCache
                 n++;
 
                 // get the value
-                var (success, valueStr) = await dictionary.GetAsync(Key).CAF();
+                var valueStr = await dictionary.GetAsync(Key).CAF();
 
                 // that should never happen!
-                Assert.That(success);
+                Assert.That(valueStr, Is.Not.Null);
 
                 // parse the value (to get some CPU load)
                 var valueInt = int.Parse(valueStr);

@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        protected override async Task<Maybe<TValue>> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected override async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
         {
             // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively

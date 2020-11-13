@@ -30,10 +30,10 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> // Getting
     {
         /// <inheritdoc />
-        public Task<Maybe<TValue>> GetAsync(TKey key)
+        public Task<TValue> GetAsync(TKey key)
             => GetAsync(key, CancellationToken.None);
 
-        private async Task<Maybe<TValue>> GetAsync(TKey key, CancellationToken cancellationToken)
+        private async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
             => await GetAsync(ToSafeData(key), cancellationToken).CAF();
 
         /// <summary>
@@ -42,11 +42,11 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">The key data.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value for the specified key.</returns>
-        protected virtual async Task<Maybe<TValue>> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
             // TODO: avoid boxing when ToObject-ing the value
             var valueData = await GetDataAsync(keyData, cancellationToken).CAF();
-            return ToObject<object>(valueData) is TValue value ? Maybe.Some(value) : Maybe.None;
+            return ToObject<TValue>(valueData);
         }
 
         /// <summary>

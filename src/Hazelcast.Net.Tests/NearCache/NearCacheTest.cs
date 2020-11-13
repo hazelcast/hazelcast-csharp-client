@@ -212,7 +212,7 @@ namespace Hazelcast.Tests.NearCache
 
             // get the value
             var result = await dictionary.GetAsync("key");
-            Assert.That(result.IsValue);
+            Assert.That(result != null);
             Assert.AreEqual("value", result);
 
             // validate that the cache contains a value
@@ -225,7 +225,7 @@ namespace Hazelcast.Tests.NearCache
 
             // get the value again
             result = await dictionary.GetAsync("key");
-            Assert.That(result.IsValue);
+            Assert.That(result != null);
             Assert.AreEqual("value", result);
 
             // validate that the entry now has one hit
@@ -264,9 +264,8 @@ namespace Hazelcast.Tests.NearCache
 
             await AssertEx.SucceedsEventually(async () =>
             {
-                var (succ, val) = await dictionary.GetAsync(nonIdleKey); // force ttl check
-                Assert.That(succ);
-                Assert.That(val, Is.EqualTo(100));
+                var value = await dictionary.GetAsync(nonIdleKey); // force ttl check
+                Assert.That(value, Is.EqualTo(100));
 
                 // note: ContainsKeyAsync(, false) to make sure we don't hit the entries,
                 // else they would never ever become idle of course...
@@ -396,16 +395,15 @@ namespace Hazelcast.Tests.NearCache
 
             await dictionary.SetAsync("key", "value");
 
-            var (success, value) = await dictionary.GetAsync("key");
-            Assert.That(success);
+            var value = await dictionary.GetAsync("key");
             Assert.AreEqual("value", value);
 
             Assert.AreEqual(1, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
             await dictionary.RemoveAsync("key");
-            (success, value) = await dictionary.GetAsync("key");
-            Assert.That(success, Is.False);
+            value = await dictionary.GetAsync("key");
+            Assert.That(value, Is.Null);
         }
 
         [Test]
@@ -501,8 +499,7 @@ namespace Hazelcast.Tests.NearCache
 
             await dictionary.SetAsync("key", "value");
 
-            var (success, value) = await dictionary.GetAsync("key");
-            Assert.That(success);
+            var value = await dictionary.GetAsync("key");
             Assert.AreEqual("value", value);
 
             Assert.AreEqual(1, cache.Count);

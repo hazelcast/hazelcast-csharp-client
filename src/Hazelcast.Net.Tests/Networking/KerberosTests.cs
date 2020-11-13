@@ -138,9 +138,8 @@ namespace Hazelcast.Tests.Networking
             var user = new User { Name = "Mr Random" };
             await dictionary.SetAsync("x", user);
             var result = await dictionary.GetAsync("x");
-            Assert.That(result.IsValue);
-            Assert.That(result.ValueOrDefault(), Is.Not.Null);
-            Assert.AreEqual(user.Name, ((User)result).Name);
+            Assert.That(result, Is.Not.Null);
+            Assert.AreEqual(user.Name, result.Name);
         }
 
         public class User

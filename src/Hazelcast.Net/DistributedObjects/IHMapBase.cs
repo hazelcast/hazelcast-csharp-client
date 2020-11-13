@@ -34,13 +34,13 @@ namespace Hazelcast.DistributedObjects
         /// Gets the value for the specified key.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <returns>The value for the specified key, if any.</returns>
+        /// <returns>The value for the specified key, if any; otherwise <c>default(TValue)</c>.</returns>
         /// <remarks>
         /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
         /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
         /// to try to load the value from the <c>MapStore</c> backing the map, if any.</para>
         /// </remarks>
-        Task<Maybe<TValue>> GetAsync(TKey key);
+        Task<TValue> GetAsync(TKey key);
 
         /// <summary>
         /// Gets a <see cref="IReadOnlyCollection{TKey}" /> of the keys contained in this map.
@@ -108,9 +108,9 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        /// <returns>The previous value for the specified key, if any.</returns>
+        /// <returns>The previous value for the specified key, if any; otherwise <c>default(TValue)</c>.</returns>
         // TODO: document MapStore behavior
-        Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value);
+        Task<TValue> GetAndSetAsync(TKey key, TValue value);
 
         /// <summary>
         /// Sets (adds or updates) an entry with a time-to-live, and returns the previous value, if any.
@@ -118,14 +118,14 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <param name="timeToLive">A time-to-live period.</param>
-        /// <returns>The previous value for the specified key, if any.</returns>
+        /// <returns>The previous value for the specified key, if any; otherwise <c>default(TValue)</c>.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed.</para>
         /// TODO: document zero & infinite
         /// </remarks>
         // TODO: document MapStore behavior
-        Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
         /// Sets (adds or updates) entries.
@@ -146,8 +146,8 @@ namespace Hazelcast.DistributedObjects
         /// Removes an entry, and returns the removed value, if any.
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <returns>The removed value, if any.</returns>
+        /// <returns>The removed value, if any; otherwise <c>default(TValue)</c>.</returns>
         // TODO: document MapStore behavior
-        Task<Maybe<TValue>> GetAndRemoveAsync(TKey key);
+        Task<TValue> GetAndRemoveAsync(TKey key);
     }
 }

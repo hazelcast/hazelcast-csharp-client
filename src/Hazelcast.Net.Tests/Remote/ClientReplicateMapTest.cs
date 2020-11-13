@@ -310,7 +310,7 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(value, "value1");
             await AssertEx.SucceedsEventually(async () =>
             {
-                Assert.That((await dictionary.GetAsync(1)).IsNone);
+                Assert.That(await dictionary.GetAsync(1), Is.Null);
             }, 10000, 500);
         }
 

@@ -130,7 +130,7 @@ namespace Hazelcast.Tests.NearCache
                 // 1. get all values, some should come from the cache
                 var cacheValues = new List<int>();
                 for (var i = 0; i < entryCount; i++)
-                    cacheValues.Add((await dictionary.GetAsync(i)).ValueOrDefault());
+                    cacheValues.Add(await dictionary.GetAsync(i));
 
                 // 2. get all values from server directly
                 var memberValues = await GetAllValueFromMemberAsync(entryCount, _name);

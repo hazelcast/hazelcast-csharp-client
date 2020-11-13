@@ -34,10 +34,10 @@ namespace Hazelcast.Core
     // https://habr.com/en/post/458692/
 
     /// <summary>
-    ///
+    /// Represents a value that may be missing.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public readonly struct Maybe<T> : IEquatable<Maybe<T>>, IEquatable<T>
+    /// <typeparam name="T">The type of the value.</typeparam>
+    internal readonly struct Maybe<T> : IEquatable<Maybe<T>>, IEquatable<T>
     {
         private readonly bool _hasValue;
         private readonly T _value;

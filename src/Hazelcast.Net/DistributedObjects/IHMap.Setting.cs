@@ -15,7 +15,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -48,13 +47,13 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="newValue">The new value.</param>
-        /// <returns>The existing value, if any.</returns>
+        /// <returns>The existing value, if any; otherwise <c>default(TValue)</c>.</returns>
         /// <remarks>
         /// <para>If an existing entry with the specified key is found, then its value is
         /// updated with the new value, and the existing value is returned. Otherwise, nothing
         /// happens.</para>
         /// </remarks>
-        Task<Maybe<TValue>> TryUpdateAsync(TKey key, TValue newValue);
+        Task<TValue> TryUpdateAsync(TKey key, TValue newValue);
 
         /// <summary>
         /// Updates an entry if it exists, and its value is equal to <paramref name="comparisonValue"/>.

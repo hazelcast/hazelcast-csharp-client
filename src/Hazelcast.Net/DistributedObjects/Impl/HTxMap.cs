@@ -47,23 +47,23 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = TransactionalMapDeleteCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<Maybe<TValue>> GetAsync(TKey key)
+        public async Task<TValue> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapGetCodec.DecodeResponse(responseMessage).Response;
 
-            return ToObject<object>(response) is TValue value ? Maybe.Some(value): Maybe.None;
+            return ToObject<TValue>(response);
         }
 
-        public async Task<Maybe<TValue>> GetForUpdateAsync(TKey key)
+        public async Task<TValue> GetForUpdateAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapGetForUpdateCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapGetForUpdateCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
+            return ToObject<TValue>(response);
         }
 
         public async Task<bool> IsEmptyAsync()
@@ -93,7 +93,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task SetAsync(TKey key, TValue value)
             => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
-        public Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value)
+        public Task<TValue> GetAndSetAsync(TKey key, TValue value)
             => GetAndSetAsync(key, value, TimeToLive.InfiniteTimeSpan);
 
         public async Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
@@ -107,7 +107,7 @@ namespace Hazelcast.DistributedObjects.Impl
             _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
         }
 
-        public async Task<Maybe<TValue>> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task<TValue> GetAndSetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
@@ -115,7 +115,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMilliseconds);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response) is TValue result ? Maybe.Some(result) : Maybe.None;
+            return ToObject<TValue>(response);
         }
 
         public async Task<TValue> GetOrAddAsync(TKey key, TValue value)
@@ -128,13 +128,13 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task<Maybe<TValue>> GetAndRemoveAsync(TKey key)
+        public async Task<TValue> GetAndRemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapRemoveCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
+            return ToObject<TValue>(response);
         }
 
 
@@ -146,14 +146,14 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalMapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<Maybe<TValue>> TryUpdateAsync(TKey key, TValue newValue)
+        public async Task<TValue> TryUpdateAsync(TKey key, TValue newValue)
         {
             var (keyData, valueData) = ToSafeData(key, newValue);
 
             var requestMessage = TransactionalMapReplaceCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapReplaceCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<object>(response) is TValue value ? Maybe.Some(value) : Maybe.None;
+            return ToObject<TValue>(response);
         }
 
         public async Task<bool> TryUpdateAsync(TKey key, TValue oldValue, TValue newValue)

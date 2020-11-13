@@ -16,12 +16,10 @@ using System;
 
 namespace Hazelcast.Core
 {
-    // TODO: 
-
     /// <summary>
-    /// 
+    /// Represents a value that may be missing.
     /// </summary>
-    public readonly struct Maybe : IEquatable<Maybe>
+    internal readonly struct Maybe : IEquatable<Maybe>
     {
         // note: the parameter-less constructor is always implied with structs
 

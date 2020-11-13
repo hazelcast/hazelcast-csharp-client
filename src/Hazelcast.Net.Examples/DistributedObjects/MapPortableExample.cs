@@ -52,9 +52,9 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // retrieve customer
             var result = await map.GetAsync(customer.Id);
-            result.Match(
-                value => Console.WriteLine($"Got customer '{value.Name}'."),
-                () => Console.WriteLine("Customer not found?"));
+            Console.WriteLine(result != null
+                ? $"Gotten customer '{result.Name}'."
+                : "Customer not found?");
 
             // destroy the map
             await hz.DestroyAsync(map);

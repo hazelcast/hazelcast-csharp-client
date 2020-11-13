@@ -82,14 +82,26 @@ namespace Hazelcast.Tests.Remote
             var map = await Client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CAF();
             await using var _ = DestroyAndDispose(map);
 
-            var value = await map.GetAsync("key");
-            Assert.That(value.IsNone);
+            Assert.That(await map.GetAsync("key"), Is.Zero);
 
             await map.SetAsync("key", default);
 
-            value = await map.GetAsync("key");
-            Assert.That(value.IsValue);
-            Assert.That(value, Is.EqualTo(0));
+            Assert.That(await map.GetAsync("key"), Is.Zero);
+        }
+
+        [Test]
+        [Timeout(TestTimeoutMilliseconds)]
+        public async Task GetMissingNullableValue()
+        {
+            var map = await Client.GetMapAsync<string, int?>("map_" + CreateUniqueName()).CAF();
+            await using var _ = DestroyAndDispose(map);
+
+            Assert.That(await map.GetAsync("key"), Is.Null);
+
+            await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await map.SetAsync("key", default));
+            await map.SetAsync("key", 0);
+
+            Assert.That(await map.GetAsync("key"), Is.Zero);
         }
 
         [Test]
@@ -100,13 +112,12 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(map);
 
             var value = await map.GetAsync("key");
-            Assert.That(value.IsNone);
+            Assert.That(value, Is.Null);
 
             await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await map.SetAsync("key", default));
             await map.SetAsync("key", string.Empty);
 
             value = await map.GetAsync("key");
-            Assert.That(value.IsValue);
             Assert.That(value, Is.EqualTo(string.Empty));
         }
 
@@ -121,23 +132,35 @@ namespace Hazelcast.Tests.Remote
             // and returns the existing value, or the default value
             // NOTE: no way to know if the default value existed (eg zero)?
 
-            var result1 = await map.GetAndSetAsync("key", 42).CAF();
-            Assert.That(result1.IsNone);
+            Assert.That(await map.GetAndSetAsync("key", 42), Is.Zero);
 
-            var result2 = await map.GetAndSetAsync("key", 43).CAF();
-            Assert.AreEqual(42, result2);
+            Assert.That(await map.GetAndSetAsync("key", 43), Is.EqualTo(42));
 
-            var (success, value) = await map.GetAsync("key").CAF();
-            Assert.That(success);
-            Assert.AreEqual(43, value);
+            Assert.That(await map.GetAsync("key"), Is.EqualTo(43));
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
+        }
 
-            // ok to implicitly convert to int, gets default value in case of failure
-            // (var means attempt, int means implicit)
-            var intValue = await map.GetAsync("key").CAF();
-            Assert.AreEqual(43, intValue);
+        [Test]
+        [Timeout(TestTimeoutMilliseconds)]
+        public async Task GetAndSetNullable()
+        {
+            var map = await Client.GetMapAsync<string, int?>("map_" + CreateUniqueName()).CAF();
+            await using var _ = DestroyAndDispose(map);
+
+            // AddOrReplace adds a new value, or replaces an existing value,
+            // and returns the existing value, or the default value
+            // NOTE: no way to know if the default value existed (eg zero)?
+
+            Assert.That(await map.GetAndSetAsync("key", 42), Is.Null);
+
+            Assert.That(await map.GetAndSetAsync("key", 43), Is.EqualTo(42));
+
+            Assert.That(await map.GetAsync("key"), Is.EqualTo(43));
+
+            var count = await map.CountAsync().CAF();
+            Assert.AreEqual(1, count);
         }
 
         [Test]
@@ -159,12 +182,10 @@ namespace Hazelcast.Tests.Remote
             var result2 = await map.GetOrAddAsync("key2", 43).CAF();
             Assert.That(result2, Is.EqualTo(0));
 
-            var (success1, value1) = await map.GetAsync("key1").CAF();
-            Assert.That(success1);
+            var value1 = await map.GetAsync("key1").CAF();
             Assert.AreEqual(42, value1);
 
-            var (success2, value2) = await map.GetAsync("key2").CAF();
-            Assert.That(success2);
+            var value2 = await map.GetAsync("key2").CAF();
             Assert.AreEqual(43, value2);
 
             var count = await map.CountAsync().CAF();
@@ -183,8 +204,7 @@ namespace Hazelcast.Tests.Remote
 
             await map.SetAsync("key1", 42).CAF();
 
-            var (success1, value1) = await map.GetAsync("key1").CAF();
-            Assert.That(success1);
+            var value1 = await map.GetAsync("key1").CAF();
             Assert.AreEqual(42, value1);
 
             await map.SetAllAsync(new Dictionary<string, int>
@@ -193,12 +213,10 @@ namespace Hazelcast.Tests.Remote
                 ["key2"] = 44
             });
 
-            (success1, value1) = await map.GetAsync("key1").CAF();
-            Assert.That(success1);
+            value1 = await map.GetAsync("key1").CAF();
             Assert.AreEqual(43, value1);
 
-            var (success2, value2) = await map.GetAsync("key2").CAF();
-            Assert.That(success2);
+            var value2 = await map.GetAsync("key2").CAF();
             Assert.AreEqual(44, value2);
 
             var count = await map.CountAsync().CAF();
@@ -220,8 +238,28 @@ namespace Hazelcast.Tests.Remote
             var result1 = await map.TryUpdateAsync("key1", 43).CAF();
             Assert.AreEqual(42, result1);
 
-            var result2 = await map.TryUpdateAsync("key2", 43).CAF();
-            Assert.That(result2.IsNone);
+            Assert.That(await map.TryUpdateAsync("key2", 43), Is.Zero);
+
+            var count = await map.CountAsync().CAF();
+            Assert.AreEqual(1, count);
+        }
+
+        [Test]
+        [Timeout(TestTimeoutMilliseconds)]
+        public async Task ReplaceNullableByKey()
+        {
+            var map = await Client.GetMapAsync<string, int?>("map_" + CreateUniqueName()).CAF();
+            await using var _ = DestroyAndDispose(map);
+
+            // Replace replaces an existing value, and returns the existing value,
+            // else does nothing if no value exists already (does not add)
+
+            await map.SetAsync("key1", 42).CAF();
+
+            var result1 = await map.TryUpdateAsync("key1", 43).CAF();
+            Assert.AreEqual(42, result1);
+
+            Assert.That(await map.TryUpdateAsync("key2", 43), Is.Null);
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(1, count);
@@ -266,8 +304,7 @@ namespace Hazelcast.Tests.Remote
 
             await Task.Delay(1000); // wait for 1 second
 
-            value = await map.GetAsync("key").CAF();
-            Assert.That(value.IsNone);
+            Assert.That(await map.GetAsync("key"), Is.Zero);
 
             var count = await map.CountAsync().CAF();
             Assert.AreEqual(0, count);
