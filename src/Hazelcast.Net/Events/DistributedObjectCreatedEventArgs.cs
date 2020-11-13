@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,32 +13,22 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 
-namespace Hazelcast.Clustering.LoadBalancing
+namespace Hazelcast.Events
 {
     /// <summary>
-    /// Represents a round-robin load balancer.
+    /// Represents event data for a cluster object created event.
     /// </summary>
-    /// <remarks>
-    /// <para>A round-robin load balancer returns members one after another.</para>
-    /// </remarks>
-    public class RoundRobinLoadBalancer : LoadBalancerBase
+    public sealed class DistributedObjectCreatedEventArgs : DistributedObjectLifecycleEventArgs
     {
-        private int _index;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="RoundRobinLoadBalancer"/> class.
+        /// Initializes a new instance of the <see cref="DistributedObjectCreatedEventArgs"/> class.
         /// </summary>
-        public RoundRobinLoadBalancer()
+        /// <param name="serviceName">The service unique name.</param>
+        /// <param name="name">The object unique name.</param>
+        /// <param name="sourceMemberId">The unique identifier of the source member.</param>
+        public DistributedObjectCreatedEventArgs(string serviceName, string name, Guid sourceMemberId)
+            : base(serviceName, name, sourceMemberId)
         { }
-
-        /// <inheritdoc />
-        public override Guid GetMember()
-        {
-            var members = GetMembersNonEmptySnapshot();
-            var index = Interlocked.Increment(ref _index);
-            return members[index % members.Count];
-        }
     }
 }

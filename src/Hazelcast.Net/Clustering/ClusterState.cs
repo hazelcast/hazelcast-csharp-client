@@ -14,7 +14,7 @@
 
 using System;
 using System.Threading;
-using Hazelcast.Clustering.LoadBalancing;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Partitioning;
@@ -25,20 +25,33 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents the state of the cluster.
     /// </summary>
-    internal class ClusterState : IDisposable
+    internal class ClusterState : IAsyncDisposable
     {
         private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1); // general lock
+        private readonly StateChangeQueue _stateChangeQueue;
 
-        private bool _readonlyProperties;
+        private volatile bool _readonlyProperties;
 
-        public ClusterState(IClusterOptions options, string clusterName, string clientName, Partitioner partitioner, ILoadBalancer loadBalancer, ILoggerFactory loggerFactory)
+        public ClusterState(IClusterOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             Options = options;
             ClusterName = clusterName;
             ClientName = clientName;
             Partitioner = partitioner;
-            LoadBalancer = loadBalancer;
             LoggerFactory = loggerFactory;
+
+            _stateChangeQueue = new StateChangeQueue(loggerFactory);
+        }
+
+        public Func<ConnectionState, ValueTask> StateChanged
+        {
+            get => _stateChangeQueue.StateChanged;
+            set
+            {
+                ThrowIfPropertiesAreReadOnly();
+                _stateChangeQueue.StateChanged = value ?? throw new ArgumentNullException(nameof(value));
+            }
         }
 
         /// <summary>
@@ -57,9 +70,37 @@ namespace Hazelcast.Clustering
         public string ClusterName { get; }
 
         /// <summary>
-        /// Gets or sets the connection state.
+        /// Gets the connection state.
         /// </summary>
-        public ClusterConnectionState ConnectionState { get; set; } = ClusterConnectionState.NotConnected;
+        public ConnectionState ConnectionState { get; private set; } = ConnectionState.NotConnected;
+
+        /// <summary>
+        /// Transitions to a new connection state.
+        /// </summary>
+        /// <param name="to">The new state.</param>
+        /// <param name="from">An optional expected current state.</param>
+        /// <returns>A task that will complete once the cluster has transitioned to the new state.</returns>
+        /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
+        public async ValueTask TransitionAsync(ConnectionState to, ConnectionState from = 0)
+        {
+            await _lock.WaitAsync(CancellationToken.None).CAF();
+
+            try
+            {
+                if (from != 0 && from != ConnectionState)
+                {
+                    throw new InvalidOperationException($"Cannot transition to {to} from {from} because the current state is {ConnectionState}.");
+                }
+                ConnectionState = to;
+
+                // queue will trigger events sequentially, in order, and in the background
+                _stateChangeQueue.Add(to);
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
 
         /// <summary>
         /// Gets the cluster general <see cref="CancellationToken"/>.
@@ -87,7 +128,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Whether the cluster is connected.
         /// </summary>
-        public bool IsConnected => ConnectionState == ClusterConnectionState.Connected;
+        public bool IsConnected => ConnectionState == ConnectionState.Connected;
 
         /// <summary>
         /// Gets the partitioner.
@@ -95,19 +136,20 @@ namespace Hazelcast.Clustering
         public Partitioner Partitioner { get; }
 
         /// <summary>
-        /// Gets the load balancer.
-        /// </summary>
-        public ILoadBalancer LoadBalancer { get; }
-
-        /// <summary>
         /// Gets the logger factory.
         /// </summary>
         public ILoggerFactory LoggerFactory { get; }
 
         /// <summary>
-        /// Gets the cluster general lock.
+        /// Locks the state.
         /// </summary>
-        public SemaphoreSlim ClusterLock { get; } = new SemaphoreSlim(1, 1);
+        public async ValueTask WaitAsync(CancellationToken cancellationToken = default)
+            => await _lock.WaitAsync(cancellationToken).CAF();
+
+        /// <summary>
+        /// Unlocks the state.
+        /// </summary>
+        public void Release() => _lock.Release();
 
         /// <summary>
         /// Gets the cluster instrumentation.
@@ -133,15 +175,15 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Throws an <see cref="InvalidOperationException"/> if properties (On...) are read-only.
         /// </summary>
-        public void ThrowIfReadOnlyProperties()
+        public void ThrowIfPropertiesAreReadOnly()
         {
             if (_readonlyProperties) throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
         }
 
         /// <summary>
-        /// Mark properties (On...) as read-only.
+        /// Sets properties (On...) as read-only.
         /// </summary>
-        public void MarkPropertiesReadOnly()
+        public void SetPropertiesReadOnly()
         {
             _readonlyProperties = true;
         }
@@ -160,7 +202,7 @@ namespace Hazelcast.Clustering
         /// <param name="innerException">An optional inner exception.</param>
         public void ThrowIfNotConnected(Exception innerException = null)
         {
-            if (ConnectionState != ClusterConnectionState.Connected) throw new ClientNotConnectedException(innerException);
+            if (ConnectionState != ConnectionState.Connected) throw new ClientNotConnectedException(innerException);
         }
 
         /// <summary>
@@ -200,9 +242,11 @@ namespace Hazelcast.Clustering
         }
 
         /// <inheritdoc />
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
+            await _stateChangeQueue.DisposeAsync().CAF();
             _clusterCancellation.Dispose();
+            _lock.Dispose();
         }
     }
 }

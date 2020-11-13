@@ -12,12 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
+
+namespace Hazelcast
 {
-    public enum MemberLifecycleEventType
+    internal class MembersUpdatedEventHandler : HazelcastClientEventHandlerBase<MembersUpdatedEventArgs>
     {
-        Nothing,
-        Added,
-        Removed
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MembersUpdatedEventHandler"/> class.
+        /// </summary>
+        /// <param name="handler">An action to execute</param>
+        public MembersUpdatedEventHandler(Func<IHazelcastClient, MembersUpdatedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

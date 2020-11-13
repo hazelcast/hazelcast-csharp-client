@@ -15,7 +15,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Core;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
@@ -27,9 +26,6 @@ namespace Hazelcast.Clustering
     {
         // generates unique cluster identifiers
         private static readonly ISequence<int> ClusterIdSequence = new Int32Sequence();
-
-        private readonly IClusterOptions _options;
-        private readonly ClusterState _clusterState;
 
         private readonly ILogger _logger;
         private readonly Heartbeat _heartbeat;
@@ -48,16 +44,11 @@ namespace Hazelcast.Clustering
             ISerializationService serializationService,
             ILoggerFactory loggerFactory)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-
+            if (options == null) throw new ArgumentNullException(nameof(options));
             if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
             if (loggerFactory is null) throw new ArgumentNullException(nameof(loggerFactory));
 
             _logger = loggerFactory.CreateLogger<Cluster>();
-
-            Partitioner = new Partitioner();
-
-            var loadBalancer = options.LoadBalancer.Service ?? new RandomLoadBalancer();
 
             var clientName = string.IsNullOrWhiteSpace(options.ClientName)
                 ? options.ClientNamePrefix + ClusterIdSequence.GetNext()
@@ -65,39 +56,49 @@ namespace Hazelcast.Clustering
 
             var clusterName = string.IsNullOrWhiteSpace(options.ClusterName) ? "dev" : options.ClusterName;
 
-            _clusterState = new ClusterState(options, clusterName, clientName, Partitioner, loadBalancer, loggerFactory);
+            State = new ClusterState(options, clusterName, clientName, new Partitioner(), loggerFactory);
 
-            Members = new ClusterMembers(_clusterState);
-            Messaging = new ClusterMessaging(_clusterState, Members);
-            Events = new ClusterEvents(_clusterState, Messaging, Members);
-            ClusterEvents = new ClusterClusterEvents(_clusterState, Members, Events);
-            Connections = new ClusterConnections(_clusterState, ClusterEvents, Events, Members, serializationService, TerminateAsync);
+            Members = new ClusterMembers(State);
+            Messaging = new ClusterMessaging(State, Members);
+            Events = new ClusterEvents(State, Messaging, Members);
+            ClusterEvents = new ClusterClusterEvents(State, Members, Events);
+            Connections = new ClusterConnections(State, Members, serializationService);
 
-            _heartbeat = new Heartbeat(_clusterState, Members, Messaging, options.Heartbeat, loggerFactory);
+            _heartbeat = new Heartbeat(State, Members, Messaging, options.Heartbeat, loggerFactory);
             _heartbeat.Start();
 
             HConsole.Configure(x => x.Set(this, config => config.SetIndent(2).SetPrefix("CLUSTER")));
         }
 
+        private void ThrowIfDisposed()
+        {
+            if (_disposed > 0) throw new ObjectDisposedException(nameof(Cluster));
+        }
+
+        /// <summary>
+        /// Gets the cluster state.
+        /// </summary>
+        public ClusterState State { get; }
+
         /// <summary>
         /// Gets the client name.
         /// </summary>
-        public string ClientName => _clusterState.ClientName;
+        public string ClientName => State.ClientName;
 
         /// <summary>
         /// Gets the unique identifier of the cluster, as assigned by the client.
         /// </summary>
-        public Guid ClientId => _clusterState.ClientId;
+        public Guid ClientId => State.ClientId;
 
         /// <summary>
         /// Gets the cluster name;
         /// </summary>
-        public string Name => _clusterState.ClusterName;
+        public string Name => State.ClusterName;
 
         /// <summary>
         /// Gets the cluster instrumentation.
         /// </summary>
-        public ClusterInstrumentation Instrumentation => _clusterState.Instrumentation;
+        public ClusterInstrumentation Instrumentation => State.Instrumentation;
 
         /// <summary>
         /// Gets the connections service.
@@ -136,12 +137,12 @@ namespace Hazelcast.Clustering
         /// then behaves as a gateway for the other members. Firewalls, security, or some
         /// custom networking issues can be the reason for these cases.</para>
         /// </remarks>
-        public bool IsSmartRouting => _options.Networking.SmartRouting;
+        public bool IsSmartRouting => State.IsSmartRouting;
 
         /// <summary>
         /// Whether the cluster is connected.
         /// </summary>
-        public bool IsConnected => _clusterState.IsConnected;
+        public bool IsConnected => State.IsConnected;
 
         /// <summary>
         /// Whether the cluster is active.
@@ -151,7 +152,19 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the partitioner.
         /// </summary>
-        public Partitioner Partitioner { get; }
+        public Partitioner Partitioner => State.Partitioner;
+
+        /// <summary>
+        /// Connects the cluster.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the cluster is connected.</returns>
+        public Task ConnectAsync(CancellationToken cancellationToken)
+        {
+            ThrowIfDisposed();
+
+            return Connections.ConnectAsync(cancellationToken);
+        }
 
         /// <summary>
         /// Throws if the cluster is disconnected (wait if it is connecting).
@@ -162,7 +175,7 @@ namespace Hazelcast.Clustering
             // if the cluster is (re) connecting, to block calls somehow until the
             // cluster is (re) connected.
 
-            _clusterState.ThrowIfNotConnected();
+            State.ThrowIfNotConnected();
             return default;
         }
 
@@ -192,9 +205,15 @@ namespace Hazelcast.Clustering
             // cancel operations,
             // stops background tasks
             // TODO: explain the lock
-            using (await _clusterState.ClusterLock.AcquireAsync().CAF())
+            await State.WaitAsync().CAF();
+
+            try
             {
-                _clusterState.CancelOperations();
+                State.CancelOperations();
+            }
+            finally
+            {
+                State.Release();
             }
 
             await Connections.DisposeAsync().CAF();
@@ -203,7 +222,8 @@ namespace Hazelcast.Clustering
             await Members.DisposeAsync().CAF();
             await _heartbeat.DisposeAsync().CAF();
 
-            _clusterState.Dispose();
+            // last thing to dispose
+            await State.DisposeAsync().CAF();
         }
     }
 }

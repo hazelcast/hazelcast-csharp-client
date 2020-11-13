@@ -167,6 +167,19 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Writes a line and a stack trace.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        /// <param name="text">The text to write.</param>
+        [Conditional("HZ_CONSOLE")]
+        public static void TraceLine(object source, string text)
+        {
+#if HZ_CONSOLE
+            WriteLine(source, 0, text + "\n" + Environment.StackTrace);
+#endif
+        }
+
+        /// <summary>
         /// Writes a line at a level, if the level is not ignored.
         /// </summary>
         /// <param name="source">The source object.</param>
@@ -180,6 +193,23 @@ namespace Hazelcast.Core
             var config = Options.Get(source);
             if (config.Ignore(level)) return;
             lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + text);
+#endif
+        }
+
+        /// <summary>
+        /// Writes a line and a stack trace at a level, if the level is not ignored.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        /// <param name="level">The level.</param>
+        /// <param name="text">The text to write.</param>
+        [Conditional("HZ_CONSOLE")]
+        public static void TraceLine(object source, int level, string text)
+        {
+#if HZ_CONSOLE
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var config = Options.Get(source);
+            if (config.Ignore(level)) return;
+            lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + text + "\n" + Environment.StackTrace);
 #endif
         }
 

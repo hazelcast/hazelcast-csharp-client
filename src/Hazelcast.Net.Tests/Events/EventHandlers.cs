@@ -28,12 +28,12 @@ namespace Hazelcast.Tests.Events
     public class EventHandlers
     {
         [Test]
-        public async Task ClientLifecycleEventHandler()
+        public async Task StateChangedEventHandler()
         {
             var count = 0;
             object eventSender = null, eventArgs = null;
 
-            var handler = new ClientLifecycleEventHandler((sender, args) =>
+            var handler = new StateChangedEventHandler((sender, args) =>
             {
                 eventSender = sender;
                 eventArgs = args;
@@ -42,7 +42,7 @@ namespace Hazelcast.Tests.Events
             });
 
             var client = Mock.Of<IHazelcastClient>();
-            var args = new ClientLifecycleEventArgs(ClientLifecycleState.Shutdown);
+            var args = new StateChangedEventArgs(ConnectionState.Connected);
             await handler.HandleAsync(client, args);
 
             Assert.That(count, Is.EqualTo(1));
@@ -80,7 +80,7 @@ namespace Hazelcast.Tests.Events
             var count = 0;
             object eventSender = null, eventArgs = null;
 
-            var handler = new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, (sender, args) =>
+            var handler = new ConnectionOpenedEventHandler((sender, args) =>
             {
                 eventSender = sender;
                 eventArgs = args;
@@ -88,10 +88,8 @@ namespace Hazelcast.Tests.Events
                 return new ValueTask();
             });
 
-            Assert.That(handler.EventType, Is.EqualTo(ConnectionLifecycleEventType.Added));
-
             var client = Mock.Of<IHazelcastClient>();
-            var args = new ConnectionLifecycleEventArgs();
+            var args = new ConnectionOpenedEventArgs(true);
             await handler.HandleAsync(client, args);
 
             Assert.That(count, Is.EqualTo(1));
@@ -102,22 +100,21 @@ namespace Hazelcast.Tests.Events
         [Test]
         public void HazelcastClientEventHandlers()
         {
-            var counts = new int[9];
+            var counts = new int[8];
 
             var handle = new HazelcastClientEventHandlers();
             handle
                 .ClientStateChanged((sender, args) => counts[0]++)
-                .ConnectionAdded((sender, args) => counts[1]++)
-                .ConnectionRemoved((sender, args) => counts[2]++)
-                .MemberAdded((sender, args) => counts[3]++)
-                .MemberRemoved((sender, args) => counts[4]++)
-                .ObjectCreated((sender, args) => counts[5]++)
-                .ObjectDestroyed((sender, args) => counts[6]++)
-                .PartitionLost((sender, args) => counts[7]++)
-                .PartitionsUpdated((sender, args) => counts[8]++);
+                .ConnectionOpened((sender, args) => counts[1]++)
+                .ConnectionClosed((sender, args) => counts[2]++)
+                .MembersUpdated((sender, args) => counts[3]++)
+                .ObjectCreated((sender, args) => counts[4]++)
+                .ObjectDestroyed((sender, args) => counts[5]++)
+                .PartitionLost((sender, args) => counts[6]++)
+                .PartitionsUpdated((sender, args) => counts[7]++);
 
             var handlers = handle.ToList();
-            Assert.That(handlers.Count, Is.EqualTo(9));
+            Assert.That(handlers.Count, Is.EqualTo(8));
 
             foreach (var handler in handlers)
                 handle.Remove(handler);
@@ -127,17 +124,16 @@ namespace Hazelcast.Tests.Events
 
             handle
                 .ClientStateChanged((sender, args) => { counts[0]++; return new ValueTask(); })
-                .ConnectionAdded((sender, args) => { counts[1]++; return new ValueTask(); })
-                .ConnectionRemoved((sender, args) => { counts[2]++; return new ValueTask(); })
-                .MemberAdded((sender, args) => { counts[3]++; return new ValueTask(); })
-                .MemberRemoved((sender, args) => { counts[4]++; return new ValueTask(); })
-                .ObjectCreated((sender, args) => { counts[5]++; return new ValueTask(); })
-                .ObjectDestroyed((sender, args) => { counts[6]++; return new ValueTask(); })
-                .PartitionLost((sender, args) => { counts[7]++; return new ValueTask(); })
-                .PartitionsUpdated((sender, args) => { counts[8]++; return new ValueTask(); });
+                .ConnectionOpened((sender, args) => { counts[1]++; return new ValueTask(); })
+                .ConnectionClosed((sender, args) => { counts[2]++; return new ValueTask(); })
+                .MembersUpdated((sender, args) => { counts[3]++; return new ValueTask(); })
+                .ObjectCreated((sender, args) => { counts[4]++; return new ValueTask(); })
+                .ObjectDestroyed((sender, args) => { counts[5]++; return new ValueTask(); })
+                .PartitionLost((sender, args) => { counts[6]++; return new ValueTask(); })
+                .PartitionsUpdated((sender, args) => { counts[7]++; return new ValueTask(); });
 
             handlers = handle.ToList();
-            Assert.That(handlers.Count, Is.EqualTo(9));
+            Assert.That(handlers.Count, Is.EqualTo(8));
 
             foreach (var handler in handlers)
                 handle.Remove(handler);

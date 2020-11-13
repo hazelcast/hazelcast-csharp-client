@@ -12,19 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Models;
 
 namespace Hazelcast.Events
 {
-    public class MemberLifecycleEventArgs
+    public class MembersUpdatedEventArgs
     {
-        public MemberLifecycleEventArgs(MemberInfo member)
+        public MembersUpdatedEventArgs(IReadOnlyCollection<MemberInfo> addedMembers, IReadOnlyCollection<MemberInfo> removedMembers, IReadOnlyCollection<MemberInfo> members)
         {
-            Member = member;
+            AddedMembers = addedMembers;
+            RemovedMembers = removedMembers;
+            Members = members;
         }
 
-        public MemberInfo Member { get; }
+        public IReadOnlyCollection<MemberInfo> AddedMembers { get; }
 
-        // TODO: original event args (MembershipEvent class) also carried the complete list of members
+        public IReadOnlyCollection<MemberInfo> RemovedMembers { get; }
+
+        public IReadOnlyCollection<MemberInfo> Members { get; }
     }
 }

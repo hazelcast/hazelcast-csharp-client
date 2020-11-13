@@ -29,7 +29,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)
         {
-            await _distributedObjectFactory.DestroyAsync(o).CAF();
+            await _distributedOjects.DestroyAsync(o).CAF();
         }
 
         /// <inheritdoc />
@@ -46,7 +46,7 @@ namespace Hazelcast
                     ? new HMap<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
                     : new HMapWithCache<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
-            return await _distributedObjectFactory.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(ServiceNames.Map, name, true, CreateMap).CAF();
+            return await _distributedOjects.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(ServiceNames.Map, name, true, CreateMap).CAF();
         }
 
         /// <inheritdoc />
@@ -58,7 +58,7 @@ namespace Hazelcast
         {
             var partitionId = Cluster.Partitioner.GetRandomPartitionId();
 
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHReplicatedMap<TKey, TValue>, HReplicatedMap<TKey, TValue>>(ServiceNames.ReplicatedMap, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IHReplicatedMap<TKey, TValue>, HReplicatedMap<TKey, TValue>>(ServiceNames.ReplicatedMap, name, true,
                 (n, f, c, sr, lf)
                     => new HReplicatedMap<TKey,TValue>(n, f, c, sr, partitionId, lf));
 
@@ -76,7 +76,7 @@ namespace Hazelcast
 #endif
         Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHMultiMap<TKey, TValue>, HMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IHMultiMap<TKey, TValue>, HMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name, true,
                 (n, f, c, sr, lf)
                     => new HMultiMap<TKey, TValue>(n, f, c, sr, _lockReferenceIdSequence, lf));
 
@@ -94,7 +94,7 @@ namespace Hazelcast
 #endif
         Task<IHTopic<T>> GetTopicAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(ServiceNames.Topic, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(ServiceNames.Topic, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTopic<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -112,7 +112,7 @@ namespace Hazelcast
 #endif
         Task<IHList<T>> GetListAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHList<T>, HList<T>>(ServiceNames.List, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IHList<T>, HList<T>>(ServiceNames.List, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HList<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -130,7 +130,7 @@ namespace Hazelcast
 #endif
         Task<IHSet<T>> GetSetAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHSet<T>, HSet<T>>(ServiceNames.Set, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IHSet<T>, HSet<T>>(ServiceNames.Set, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HSet<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -148,7 +148,7 @@ namespace Hazelcast
 #endif
         Task<IHQueue<T>> GetQueueAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHQueue<T>, HQueue<T>>(ServiceNames.Queue, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IHQueue<T>, HQueue<T>>(ServiceNames.Queue, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HQueue<T>(n, factory, cluster, serializationService, loggerFactory));
 
@@ -166,7 +166,7 @@ namespace Hazelcast
 #endif
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name)
         {
-            var task = _distributedObjectFactory.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(ServiceNames.RingBuffer, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(ServiceNames.RingBuffer, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HRingBuffer<T>(n, factory, cluster, serializationService, loggerFactory));
 

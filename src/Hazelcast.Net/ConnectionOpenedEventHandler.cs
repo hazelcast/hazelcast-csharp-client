@@ -12,21 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
-{
-    /// <summary>
-    /// Defines the types of object lifecycle events.
-    /// </summary>
-    public enum DistributedObjectLifecycleEventType
-    {
-        /// <summary>
-        /// The object was created.
-        /// </summary>
-        Created = 1, // zero is for default, make sure we start at 1
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
 
-        /// <summary>
-        /// The object was destroyed.
-        /// </summary>
-        Destroyed
+namespace Hazelcast
+{
+    internal class ConnectionOpenedEventHandler : HazelcastClientEventHandlerBase<ConnectionOpenedEventArgs>
+    {
+        public ConnectionOpenedEventHandler(Func<IHazelcastClient, ConnectionOpenedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

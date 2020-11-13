@@ -214,16 +214,15 @@ namespace Hazelcast.Clustering
                                    targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId, cancellationToken) :
                                    new Invocation(message, _clusterState.Options.Messaging, cancellationToken);
 
-            return await SendAsyncInternal(invocation, cancellationToken).CAF();
+            return await SendAsyncInternal(invocation).CAF();
         }
 
         /// <summary>
         /// Sends an invocation request message.
         /// </summary>
         /// <param name="invocation">The invocation.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken = default)
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation)
         {
             // yield now, so the caller gets a task that can bubble up to user's code
             // immediately without waiting for more synchronous operations to take place
@@ -236,7 +235,7 @@ namespace Hazelcast.Clustering
                     var connection = GetInvocationConnection(invocation);
                     if (connection == null) throw new ClientNotConnectedException();
                     var timeoutMs = _clusterState.Options.Messaging.InvocationTimeoutMilliseconds;
-                    return await connection.SendAsync(invocation, timeoutMs, cancellationToken).CAF();
+                    return await connection.SendAsync(invocation, timeoutMs).CAF();
                 }
                 catch (TaskCanceledException)
                 {

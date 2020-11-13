@@ -116,6 +116,11 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Gets the invocation cancellation token.
+        /// </summary>
+        public CancellationToken CancellationToken => _cancellationToken;
+
+        /// <summary>
         /// Gets the request message.
         /// </summary>
         public ClientMessage RequestMessage { get; }
@@ -150,7 +155,10 @@ namespace Hazelcast.Clustering
         /// </summary>
         public long StartTime { get; }
 
-        private void TrySetCanceled()
+        /// <summary>
+        /// Attempts to transition the task to the TaskStatus.Canceled state.
+        /// </summary>
+        public void TrySetCanceled()
         {
             _completionSource.TrySetCanceled();
         }

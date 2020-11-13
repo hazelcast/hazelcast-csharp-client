@@ -490,11 +490,12 @@ namespace Hazelcast.Tests.Remote
 
             void ConfigureClient(HazelcastOptions options)
             {
-                options.AddSubscriber(handle => handle.ObjectCreated((sender, args) =>
-                {
-                    HConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
-                    eventHandled.Release();
-                }));
+                options.AddSubscriber(events => events
+                    .ObjectCreated((sender, args) =>
+                    {
+                        HConsole.WriteLine(this, $"! created: {args.ServiceName}/{args.Name}");
+                        eventHandled.Release();
+                    }));
             }
 
             // here we have to create our own client with a different configuration

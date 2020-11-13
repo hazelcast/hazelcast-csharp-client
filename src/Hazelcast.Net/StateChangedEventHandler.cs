@@ -18,14 +18,10 @@ using Hazelcast.Events;
 
 namespace Hazelcast
 {
-    internal class ConnectionLifecycleEventHandler : HazelcastClientEventHandlerBase<ConnectionLifecycleEventArgs>
+    internal class StateChangedEventHandler : HazelcastClientEventHandlerBase<StateChangedEventArgs>
     {
-        public ConnectionLifecycleEventHandler(ConnectionLifecycleEventType eventType, Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
+        public StateChangedEventHandler(Func<IHazelcastClient, StateChangedEventArgs, ValueTask> handler)
             : base(handler)
-        {
-            EventType = eventType;
-        }
-
-        public ConnectionLifecycleEventType EventType { get; }
+        { }
     }
 }

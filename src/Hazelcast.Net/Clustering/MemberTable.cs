@@ -28,6 +28,13 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberTable"/> class.
         /// </summary>
+        public MemberTable()
+            : this(0, new Dictionary<Guid, MemberInfo>())
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MemberTable"/> class.
+        /// </summary>
         /// <param name="version">The version of the member table.</param>
         /// <param name="members">The members.</param>
         public MemberTable(int version, Dictionary<Guid, MemberInfo> members)

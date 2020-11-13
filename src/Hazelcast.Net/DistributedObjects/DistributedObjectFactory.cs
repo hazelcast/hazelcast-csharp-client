@@ -81,7 +81,7 @@ namespace Hazelcast.DistributedObjects
             async ValueTask<DistributedObjectBase> CreateAsync(DistributedObjectInfo info2, CancellationToken token)
             {
                 var x = factory(name, this, _cluster, _serializationService, _loggerFactory);
-                x.OnDispose = ObjectDisposed; // this is why is has to be DistributedObjectBase
+                x.ObjectDisposed = OnObjectDisposed; // this is why is has to be DistributedObjectBase
 
                 // initialize the object
                 if (remote)
@@ -154,7 +154,7 @@ namespace Hazelcast.DistributedObjects
         /// Deals with an object being disposed.
         /// </summary>
         /// <param name="o">The object.</param>
-        private void ObjectDisposed(DistributedObjectBase o)
+        private void OnObjectDisposed(DistributedObjectBase o)
         {
             // simply disposing the distributed object removes it from the list
             var info = new DistributedObjectInfo(o.ServiceName, o.Name);
@@ -181,6 +181,18 @@ namespace Hazelcast.DistributedObjects
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }
 
+        /// <summary>
+        /// Handles a connection to a new cluster.
+        /// </summary>
+        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirst, bool isNewCluster)
+        {
+            if (!isNewCluster) return default;
+
+            // when connecting to a new cluster, re-create the distributed objects there
+            // FIXME should these handlers be cancellable?
+            // FIXME should these handlers be allowed to throw?
+            return CreateAllAsync(default);
+        }
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()

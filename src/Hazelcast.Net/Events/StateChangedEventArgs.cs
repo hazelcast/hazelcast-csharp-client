@@ -12,36 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+using Hazelcast.Clustering;
+
+namespace Hazelcast
 {
-    /// <summary>
-    /// Defines the possible states if the cluster connection.
-    /// </summary>
-    internal enum ClusterConnectionState
+    public class StateChangedEventArgs
     {
-        /// <summary>
-        /// Unknown (default).
-        /// </summary>
-        Unknown = 0,
+        public StateChangedEventArgs(ConnectionState state)
+        {
+            State = state;
+        }
 
         /// <summary>
-        /// The cluster has not connected yet.
+        /// Gets the new state.
         /// </summary>
-        NotConnected,
-
-        /// <summary>
-        /// The cluster is connecting.
-        /// </summary>
-        Connecting,
-
-        /// <summary>
-        /// The cluster is connected.
-        /// </summary>
-        Connected,
-
-        /// <summary>
-        /// The cluster has disconnected and will not reconnect.
-        /// </summary>
-        Disconnected
+        public ConnectionState State { get; }
     }
 }

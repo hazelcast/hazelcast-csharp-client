@@ -65,6 +65,9 @@ namespace Hazelcast.Benchmarks
                 .AddJob(Job.InProcess); // run in-process (exe name 'hb' is different from csproj name)
 
             BenchmarkRunner.Run(type, config);
+
+            Console.WriteLine("Press a key to exit...");
+            Console.ReadKey(true);
         }
     }
 }

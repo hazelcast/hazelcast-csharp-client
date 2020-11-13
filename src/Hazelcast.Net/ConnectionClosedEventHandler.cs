@@ -12,21 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
-{
-    /// <summary>
-    /// Defines the types of connection lifecycle events.
-    /// </summary>
-    internal enum ConnectionLifecycleEventType
-    {
-        /// <summary>
-        /// A connection was added.
-        /// </summary>
-        Added = 1, // zero is for default, make sure we start at 1
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
 
-        /// <summary>
-        /// A connection was removed.
-        /// </summary>
-        Removed
+namespace Hazelcast
+{
+    internal class ConnectionClosedEventHandler : HazelcastClientEventHandlerBase<ConnectionClosedEventArgs>
+    {
+        public ConnectionClosedEventHandler(Func<IHazelcastClient, ConnectionClosedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

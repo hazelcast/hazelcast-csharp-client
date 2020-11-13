@@ -42,8 +42,8 @@ namespace Hazelcast.Clustering
 
         private readonly object _ghostLock = new object();
 
-        private Func<ValueTask> _onPartitionsUpdated;
-        private Func<MemberLifecycleEventType, MemberLifecycleEventArgs, ValueTask> _onMemberLifecycleEvent;
+        private Func<ValueTask> _partitionsUpdated;
+        private Func<MembersUpdatedEventArgs, ValueTask> _membersUpdated;
 
 
         private MemberConnection _clusterEventsConnection; // the client which handles 'cluster events'
@@ -104,12 +104,17 @@ namespace Hazelcast.Clustering
 
             // capture active clients, and adds the subscription - atomically.
             List<MemberConnection> connections;
-            using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
+            await _clusterState.WaitAsync().CAF();
+            try
             {
                 connections = _clusterMembers.SnapshotConnections(true);
 
                 if (!_subscriptions.TryAdd(subscription.Id, subscription))
                     throw new InvalidOperationException("A subscription with the same identifier already exists.");
+            }
+            finally
+            {
+                _clusterState.Release();
             }
 
             // from now on,
@@ -241,10 +246,15 @@ namespace Hazelcast.Clustering
         {
             // don't remove it now - will remove it only if all goes well
             ClusterSubscription subscription;
-            using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
+            await _clusterState.WaitAsync().CAF();
+            try
             {
                 if (!_subscriptions.TryGetValue(subscriptionId, out subscription))
                     return false; // unknown subscription
+            }
+            finally
+            {
+                _clusterState.Release();
             }
 
             await RemoveSubscriptionAsync(subscription, cancellationToken).CAF();
@@ -267,9 +277,14 @@ namespace Hazelcast.Clustering
 
             // remove the subscription, but if some member-level subscriptions could not
             // be removed, adds the subscription to the list of ghost subscriptions.
-            using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
+            await _clusterState.WaitAsync().CAF();
+            try
             {
                 _subscriptions.TryRemove(subscription.Id, out _);
+            }
+            finally
+            {
+                _clusterState.Release();
             }
 
             if (allRemoved) return;
@@ -424,11 +439,13 @@ namespace Hazelcast.Clustering
         private async Task InstallSubscriptionsOnNewMember(MemberConnection connection, IReadOnlyCollection<ClusterSubscription> subscriptions, CancellationToken cancellationToken)
         {
             // the client has been added to _clients, and subscriptions have been
-            // captured already, all within a _clientsLock, but the caller
+            // captured already, all within a _clientsLock, but the caller...?
 
             // install all active subscriptions
             foreach (var subscription in subscriptions)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // don't even try subscriptions that became inactive
                 if (!subscription.Active) continue;
 
@@ -446,18 +463,18 @@ namespace Hazelcast.Clustering
                         // - removed the client from _clients
                         // - dealt with its existing subscriptions
                         // nothing left to do here
-                        throw new HazelcastException("Failed to install the new client because it was removed.");
+                        throw new HazelcastException("Failed to install the new connection (removed).");
 
                     case InstallResult.ConfusedServer:
                         // same as subscription not active, but we failed to remove the subscription
                         // on the server side - the client is dirty - just kill it entirely
                         ClearMemberSubscriptions(subscriptions, connection);
-                        throw new HazelcastException("Failed to install the new client.");
+                        throw new HazelcastException("Failed to install the new connection (confused).");
 
                     case InstallResult.Failed:
                         // failed to talk to the client - nothing works - kill it entirely
                         ClearMemberSubscriptions(subscriptions, connection);
-                        throw new HazelcastException("Failed to install the new client.");
+                        throw new HazelcastException("Failed to install the new connection (failed).");
 
                     default:
                         throw new NotSupportedException();
@@ -481,29 +498,6 @@ namespace Hazelcast.Clustering
                 if (subscription.TryRemove(connection, out var clientSubscription))
                     _correlatedSubscriptions.TryRemove(clientSubscription.CorrelationId, out _);
             }
-        }
-
-
-
-        /// <summary>
-        /// Handles an event message and queues the appropriate events via the subscriptions.
-        /// </summary>
-        /// <param name="message">The event message.</param>
-        public void OnEventMessage(ClientMessage message)
-        {
-            HConsole.WriteLine(this, "Handle event message");
-
-            if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
-            {
-                _clusterState.Instrumentation.CountMissedEvent(message);
-                _logger.LogWarning($"No event handler for [{message.CorrelationId}]");
-                HConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
-                return;
-            }
-
-            // schedule the event - will run async, but serialized per-partition
-            // (queues the event, returns immediately, does not await on handlers)
-            _scheduler.Add(subscription, message);
         }
 
 
@@ -567,7 +561,8 @@ namespace Hazelcast.Clustering
                 }
 
                 // success!
-                using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
+                await _clusterState.WaitAsync().CAF();
+                try
                 {
                     _clusterEventsConnection = connection;
                     _clusterEventsCorrelationId = correlationId;
@@ -575,6 +570,10 @@ namespace Hazelcast.Clustering
                     // avoid race conditions, this task is going to end, and if the
                     // client dies we want to be sure we restart the task
                     _clusterEventsTask = null;
+                }
+                finally
+                {
+                    _clusterState.Release();
                 }
 
                 break;
@@ -591,7 +590,7 @@ namespace Hazelcast.Clustering
         private async Task<bool> SubscribeToClusterEventsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
-            HConsole.WriteLine(this, "subscribe");
+            HConsole.TraceLine(this, "subscribe");
 
             // handles the event
             ValueTask HandleEventAsync(ClientMessage message, object _)
@@ -611,6 +610,7 @@ namespace Hazelcast.Clustering
             }
             catch (Exception e)
             {
+                HConsole.WriteLine(this, "failed " + e);
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
                 _logger.LogWarning(e, "Failed to subscribe to cluster events, may retry.");
                 return false;
@@ -625,11 +625,10 @@ namespace Hazelcast.Clustering
         /// <param name="state">A state object.</param>
         private async ValueTask HandleCodecMemberViewEvent(int version, ICollection<MemberInfo> members, object state)
         {
-            var eventArgs = await _clusterMembers.HandleMemberViewEvent(version, members).CAF();
+            var eventArgs = await _clusterMembers.NotifyMembersView(version, members).CAF();
 
             // raise events (On... does not throw)
-            foreach (var (eventType, args) in eventArgs)
-                await _onMemberLifecycleEvent(eventType, args).CAF();
+            await _membersUpdated.AwaitEach(eventArgs).CAF();
         }
 
         /// <summary>
@@ -642,7 +641,8 @@ namespace Hazelcast.Clustering
         {
             var clientId = (Guid) state;
 
-            _clusterState.Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
+            var updated = _clusterState.Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
+            if (!updated) return;
 
             // signal once
             //if (Interlocked.CompareExchange(ref _firstPartitionsViewed, 1, 0) == 0)
@@ -650,33 +650,7 @@ namespace Hazelcast.Clustering
 
             // raise event
             // On... does not throw
-            await _onPartitionsUpdated().CAF();
-        }
-
-        /// <summary>
-        /// Gets or sets the function that triggers a member lifecycle event.
-        /// </summary>
-        public Func<MemberLifecycleEventType, MemberLifecycleEventArgs, ValueTask> OnMemberLifecycleEvent
-        {
-            get => _onMemberLifecycleEvent;
-            set
-            {
-                _clusterState.ThrowIfReadOnlyProperties();
-                _onMemberLifecycleEvent = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the function that triggers a partitions updated event.
-        /// </summary>
-        public Func<ValueTask> OnPartitionsUpdated
-        {
-            get => _onPartitionsUpdated;
-            set
-            {
-                _clusterState.ThrowIfReadOnlyProperties();
-                _onPartitionsUpdated = value;
-            }
+            await _partitionsUpdated.AwaitEach().CAF();
         }
 
         /// <summary>
@@ -693,30 +667,74 @@ namespace Hazelcast.Clustering
             return map;
         }
 
-
+        #region Events
 
         /// <summary>
-        /// Notifies the events service of a new connection to a member.
+        /// Gets or sets an action that will be executed when members have been updated.
         /// </summary>
-        /// <param name="connection">The new connection.</param>
-        public void NotifyConnectionEstablished(MemberConnection connection)
+        public Func<MembersUpdatedEventArgs, ValueTask> MembersUpdated
+        {
+            get => _membersUpdated;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _membersUpdated = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets an action that will be executed when partitions have been updated.
+        /// </summary>
+        public Func<ValueTask> PartitionsUpdated
+        {
+            get => _partitionsUpdated;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _partitionsUpdated = value;
+            }
+        }
+
+        #endregion
+
+        #region Event Handlers
+
+        /// <summary>
+        /// Handles a connection being created.
+        /// </summary>
+        /// <param name="connection"></param>
+        public void OnConnectionCreated(MemberConnection connection)
+        {
+            // wires reception of event messages
+            connection.ReceivedEvent += OnReceivedEvent;
+        }
+
+        /// <summary>
+        /// Handles a connection being opened.
+        /// </summary>
+        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirst, bool isNewCluster)
         {
             // if we don't have a connection for cluster events yet, start a
             // single, cluster-wide task ensuring there is one
             if (_clusterEventsConnection == null)
                 StartSetClusterEventsConnectionWithLock(connection, _clusterState.CancellationToken);
 
-            // per-client task subscribing the client to events
-            // this is entirely fire-and-forget, it anything goes wrong it will shut the client down
+            // start the background initialization of the connection, installs subscriptions on
+            // the corresponding member, this happens in the background (we do not wait on it) and
+            // should it fail, the connection would be terminated
+            // yes, it means that the connection could be used even before all subscriptions have
+            // been installed and then some events may fail to trigger - we don't offer any strict
+            // guarantee that events will trigger, anyways
             var subscriptions = _subscriptions.Values.Where(x => x.Active).ToList();
-            connection.StartBackgroundTask(token => InstallSubscriptionsOnNewMember(connection, subscriptions, token), _clusterState.CancellationToken);
+            connection.StartBackgroundTask(token => InstallSubscriptionsOnNewMember(connection, subscriptions, token));
+
+            return default;
         }
 
         /// <summary>
-        /// Notifies the events service of a terminated connection.
+        /// Handles a connection being closed.
         /// </summary>
-        /// <param name="connection"></param>
-        public void NotifyConnectionTerminated(MemberConnection connection, bool wasLast)
+        public ValueTask OnConnectionClosed(MemberConnection connection, bool wasLast)
         {
             // just clear subscriptions, cannot unsubscribes from the server since
             // the client is not connected anymore
@@ -727,9 +745,33 @@ namespace Hazelcast.Clustering
             // single, cluster-wide task ensuring there is a cluster events client
             if (ClearClusterEventsConnectionWithLock(connection) && !wasLast)
                 StartSetClusterEventsConnectionWithLock(connection, _clusterState.CancellationToken);
+
+            return default;
         }
 
+        /// <summary>
+        /// Handles an event message.
+        /// </summary>
+        /// <param name="message">The event message.</param>
+        public void OnReceivedEvent(ClientMessage message)
+        {
+            HConsole.WriteLine(this, "Handle event message");
 
+            // get the matching subscription
+            if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
+            {
+                _clusterState.Instrumentation.CountMissedEvent(message);
+                _logger.LogWarning($"No event handler for [{message.CorrelationId}]");
+                HConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
+                return;
+            }
+
+            // schedule the event - will run async, but serialized per-partition
+            // (queues the event, returns immediately, does not await on handlers)
+            _scheduler.Add(subscription, message);
+        }
+
+        #endregion
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()

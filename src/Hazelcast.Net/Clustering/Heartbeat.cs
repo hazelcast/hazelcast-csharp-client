@@ -67,6 +67,8 @@ namespace Hazelcast.Clustering
 
         public async ValueTask DisposeAsync()
         {
+            // note: DisposeAsync should not throw (CA1065)
+
             if (Interlocked.CompareExchange(ref _active, 0, 1) == 0)
                 return;
 
@@ -82,7 +84,7 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 // unexpected
-                _logger.LogWarning(e, "Heartbeat has thrown an exception.");
+                _logger.LogWarning(e, "Caught an exception while disposing Heartbeat.");
             }
         }
 
@@ -101,8 +103,8 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception e)
                 {
-                    // RunAsync should *not* throw
-                    _logger.LogWarning(e, "Heartbeat has thrown an exception.");
+                    // unexpected
+                    _logger.LogWarning(e, "Caught exception in Heartbeat.");
                 }
             }
         }

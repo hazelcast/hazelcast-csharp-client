@@ -12,22 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
+namespace Hazelcast
 {
-    public enum ClientLifecycleState
+    /// <summary>
+    /// Defines the possible states of the client connection.
+    /// </summary>
+    public enum ConnectionState
     {
-        // Active    Connecting
-        // Active    Connected
-        // NotActive Disconnecting
-        // Active    Reconnecting (?)
-        // NotActive Disconnected
-        //
+        /// <summary>
+        /// The client is not connected.
+        /// </summary>
+        NotConnected = 1, // zero is for default, make sure we start at 1
 
-        Starting,
-        Started,
-        ShuttingDown,
-        Shutdown,
+        /// <summary>
+        /// The client is connecting.
+        /// </summary>
+        Connecting,
+
+        /// <summary>
+        /// The client is connected.
+        /// </summary>
         Connected,
-        Disconnected
+
+        /// <summary>
+        /// The client has been disconnected and is reconnecting.
+        /// </summary>
+        Reconnecting
     }
 }

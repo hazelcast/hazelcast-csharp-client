@@ -37,54 +37,5 @@ namespace Hazelcast.Tests.DotNet
 
             Assert.IsFalse(taken);
         }
-
-        [Test]
-        [Timeout(10_000)]
-        public async Task AcquireSuccess()
-        {
-            var semaphore = new SemaphoreSlim(1);
-
-            var acquired = await semaphore.AcquireAsync().CAF();
-            Assert.IsTrue(acquired.Acquired);
-            acquired.Dispose();
-
-            acquired = await semaphore.AcquireAsync().CAF();
-            Assert.IsTrue(acquired.Acquired);
-            acquired.Dispose();
-        }
-
-        [Test]
-        public void AcquireFail()
-        {
-            var semaphore = new SemaphoreSlim(0);
-            var cancellation = new CancellationTokenSource(100);
-            Assert.ThrowsAsync<TaskCanceledException>(async () =>
-            {
-                using var acquired = await semaphore.AcquireAsync(cancellation.Token).CAF();
-            });
-        }
-
-        [Test]
-        [Timeout(10_000)]
-        public async Task TryAcquireSuccess()
-        {
-            var semaphore = new SemaphoreSlim(1);
-
-            var acquired = await semaphore.TryAcquireAsync().CAF();
-            Assert.IsTrue(acquired.Acquired);
-            acquired.Dispose();
-
-            acquired = await semaphore.TryAcquireAsync().CAF();
-            Assert.IsTrue(acquired.Acquired);
-            acquired.Dispose();
-        }
-
-        [Test]
-        public async Task TryAcquireFail()
-        {
-            var semaphore = new SemaphoreSlim(0);
-            using var acquired = await semaphore.TryAcquireAsync().CAF();
-            Assert.IsFalse(acquired.Acquired);
-        }
     }
 }

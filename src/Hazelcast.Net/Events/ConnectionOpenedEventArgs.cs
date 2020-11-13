@@ -12,33 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
-
-namespace Hazelcast.Clustering.LoadBalancing
+namespace Hazelcast.Events
 {
     /// <summary>
-    /// Represents a round-robin load balancer.
+    /// Represents event data for the connection added event.
     /// </summary>
-    /// <remarks>
-    /// <para>A round-robin load balancer returns members one after another.</para>
-    /// </remarks>
-    public class RoundRobinLoadBalancer : LoadBalancerBase
+    internal class ConnectionOpenedEventArgs
     {
-        private int _index;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionOpenedEventArgs"/> class.
+        /// </summary>
+        /// <param name="isFirst">Whether the connection is the first one.</param>
+        public ConnectionOpenedEventArgs(bool isFirst)
+        {
+            IsFirst = isFirst;
+        }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RoundRobinLoadBalancer"/> class.
+        /// Whether the connection is the first one.
         /// </summary>
-        public RoundRobinLoadBalancer()
-        { }
-
-        /// <inheritdoc />
-        public override Guid GetMember()
-        {
-            var members = GetMembersNonEmptySnapshot();
-            var index = Interlocked.Increment(ref _index);
-            return members[index % members.Count];
-        }
+        /// <returns><c>true</c> if the connection is the first one; otherwise <c>false</c>.</returns>
+        public bool IsFirst { get; }
     }
 }

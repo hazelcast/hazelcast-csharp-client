@@ -483,6 +483,8 @@ namespace Hazelcast.Networking
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
+            // note: DisposeAsync should not throw (CA1065)
+
             if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
                 return;
 
@@ -502,6 +504,7 @@ namespace Hazelcast.Networking
                 _stream.Dispose();
             }
             catch { /* ignore */ }
+
             try
             {
                 _socket.Shutdown(SocketShutdown.Both);

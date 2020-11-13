@@ -45,7 +45,8 @@ namespace Hazelcast.Clustering
 
             // accepted race condition, _busy can be disposed here and will throw an ObjectDisposedException
 
-            using (await _busy.AcquireAsync().CAF())
+            await _busy.WaitAsync().CAF();
+            try
             {
                 _subscriptionsCount++;
                 if (_subscriptionsCount > 1) return;
@@ -53,6 +54,10 @@ namespace Hazelcast.Clustering
                 var subscription = CreateSubscription();
                 await ClusterEvents.InstallSubscriptionAsync(subscription).CAF();
                 _subscriptionId = subscription.Id;
+            }
+            finally
+            {
+                _busy.Release();
             }
         }
 
@@ -62,7 +67,8 @@ namespace Hazelcast.Clustering
 
             // accepted race condition, _busy can be disposed here and will throw an ObjectDisposedException
 
-            using (await _busy.AcquireAsync().CAF())
+            await _busy.WaitAsync().CAF();
+            try
             {
                 if (_subscriptionsCount == 0) return true; // TODO: should we throw?
                 if (_subscriptionsCount > 1) return true;
@@ -71,6 +77,10 @@ namespace Hazelcast.Clustering
                 if (removed) _subscriptionsCount--;
                 return removed;
             }
+            finally
+            {
+                _busy.Release();
+            }
         }
 
         public async ValueTask DisposeAsync()
@@ -78,21 +88,28 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            using (await _busy.AcquireAsync().CAF())
+            await _busy.WaitAsync().CAF();
+            try
             {
                 if (_subscriptionsCount == 0) return;
 
                 // remove, ignore result
                 await ClusterEvents.RemoveSubscriptionAsync(_subscriptionId).CAF();
             }
+            finally
+            {
+                _busy.Release();
+            }
 
             _busy.Dispose();
 
             // this should not be a warning
             // https://github.com/dotnet/roslyn-analyzers/issues/3909
+            // https://github.com/dotnet/roslyn-analyzers/issues/3675
+            // https://github.com/dotnet/roslyn-analyzers/pull/3679
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
             GC.SuppressFinalize(this);
-#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
+#pragma warning restore CA1816
         }
     }
 }

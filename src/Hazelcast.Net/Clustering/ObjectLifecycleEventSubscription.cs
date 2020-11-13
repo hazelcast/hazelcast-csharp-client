@@ -39,16 +39,22 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleCodecEvent, null, LoggerFactory));
         }
 
-        internal Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, ValueTask> Handle { get; set; }
+        internal Func<DistributedObjectCreatedEventArgs, ValueTask> OnObjectCreated { get; set; }
+
+        internal Func<DistributedObjectDestroyedEventArgs, ValueTask> OnObjectDestroyed { get; set; }
 
         private ValueTask HandleCodecEvent(string name, string serviceName, string eventTypeName, Guid memberId, object state)
         {
-            if (Handle == null) return default;
-
             return eventTypeName switch
             {
-                "CREATED" => Handle(DistributedObjectLifecycleEventType.Created, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId)),
-                "DESTROYED" => Handle(DistributedObjectLifecycleEventType.Destroyed, new DistributedObjectLifecycleEventArgs(serviceName, name, memberId)),
+                "CREATED" => OnObjectCreated == null
+                    ? default
+                    : OnObjectCreated(new DistributedObjectCreatedEventArgs(serviceName, name, memberId)),
+
+                "DESTROYED" => OnObjectDestroyed == null
+                    ? default
+                    : OnObjectDestroyed(new DistributedObjectDestroyedEventArgs(serviceName, name, memberId)),
+
                 _ => throw new NotSupportedException($"Event type \"{eventTypeName}\" is not supported.")
             };
         }

@@ -18,22 +18,17 @@ using Hazelcast.Events;
 
 namespace Hazelcast
 {
-    internal class MemberLifecycleEventHandler : HazelcastClientEventHandlerBase<MemberLifecycleEventArgs>
+    /// <summary>
+    /// Represents a handler for a cluster object created event.
+    /// </summary>
+    internal class DistributedObjectCreatedEventHandler : HazelcastClientEventHandlerBase<DistributedObjectCreatedEventArgs>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MemberLifecycleEventHandler"/> class.
+        /// Initializes a new instance of the <see cref="DistributedObjectCreatedEventHandler"/> class.
         /// </summary>
-        /// <param name="eventType">The type of the event.</param>
         /// <param name="handler">An action to execute</param>
-        public MemberLifecycleEventHandler(MemberLifecycleEventType eventType, Func<IHazelcastClient, MemberLifecycleEventArgs, ValueTask> handler)
+        public DistributedObjectCreatedEventHandler(Func<IHazelcastClient, DistributedObjectCreatedEventArgs, ValueTask> handler)
             : base(handler)
-        {
-            EventType = eventType;
-        }
-
-        /// <summary>
-        /// Gets the type of the event.
-        /// </summary>
-        public MemberLifecycleEventType EventType { get; }
+        { }
     }
 }

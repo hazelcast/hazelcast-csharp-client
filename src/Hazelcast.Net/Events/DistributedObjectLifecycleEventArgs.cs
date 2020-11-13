@@ -17,9 +17,9 @@ using System;
 namespace Hazelcast.Events
 {
     /// <summary>
-    /// Represents event data for a cluster object lifecycle event.
+    /// Provides a base class for cluster object lifecycle events data.
     /// </summary>
-    public class DistributedObjectLifecycleEventArgs
+    public abstract class DistributedObjectLifecycleEventArgs
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectLifecycleEventArgs"/> class.
@@ -27,7 +27,7 @@ namespace Hazelcast.Events
         /// <param name="serviceName">The service unique name.</param>
         /// <param name="name">The object unique name.</param>
         /// <param name="sourceMemberId">The unique identifier of the source member.</param>
-        public DistributedObjectLifecycleEventArgs(string serviceName, string name, Guid sourceMemberId)
+        protected DistributedObjectLifecycleEventArgs(string serviceName, string name, Guid sourceMemberId)
         {
             ServiceName = serviceName;
             Name = name;
