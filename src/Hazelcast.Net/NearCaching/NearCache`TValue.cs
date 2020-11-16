@@ -54,14 +54,14 @@ namespace Hazelcast.NearCaching
         /// <param name="keyData">The key data.</param>
         /// <param name="valueFactory">A factory that accepts the key data and returns the value data.</param>
         /// <returns>An attempt at getting or adding a value to the cache.</returns>
-        public async Task<Attempt<TValue>> TryGetOrAddAsync(IData keyData, Func<IData, Task<IData>> valueFactory)
+        public async Task<Maybe<TValue>> TryGetOrAddAsync(IData keyData, Func<IData, Task<IData>> valueFactory)
         {
             try
             {
                 var (success, valueObject) = await InnerCache.TryGetOrAddAsync(keyData, valueFactory).CAF();
                 var value = ToTValue(valueObject);
                 if (success) return value;
-                return Attempt.Fail(value);
+                return Maybe.None;
             }
             catch
             {

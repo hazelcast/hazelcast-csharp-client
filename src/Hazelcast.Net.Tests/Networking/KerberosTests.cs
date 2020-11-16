@@ -134,11 +134,12 @@ namespace Hazelcast.Tests.Networking
             // expect it to work with Kerberos authentication / authorization
 
             var client = await CreateAndStartClientAsync();
-            var dictionary = await client.GetDictionaryAsync<string, User>(CreateUniqueName());
+            var dictionary = await client.GetMapAsync<string, User>(CreateUniqueName());
             var user = new User { Name = "Mr Random" };
             await dictionary.SetAsync("x", user);
-            var user2 = await dictionary.GetAsync("x");
-            Assert.AreEqual(user.Name, user2.Name);
+            var result = await dictionary.GetAsync("x");
+            Assert.That(result, Is.Not.Null);
+            Assert.AreEqual(user.Name, result.Name);
         }
 
         public class User

@@ -48,8 +48,8 @@ namespace Hazelcast.Tests.Remote
             {
                 var context = await client.BeginTransactionAsync(txOptions);
 
-                var d1 = await context.GetDictionaryAsync<int, string>("test1");
-                var d2 = await context.GetDictionaryAsync<int, string>("test2");
+                var d1 = await context.GetMapAsync<int, string>("test1");
+                var d2 = await context.GetMapAsync<int, string>("test2");
 
                 await d1.SetAsync(i, "value");
                 await d2.SetAsync(i, "value");

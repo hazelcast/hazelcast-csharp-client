@@ -24,11 +24,6 @@ namespace Hazelcast.DistributedObjects
     public interface ITopicEventHandler<T>
     {
         /// <summary>
-        /// Gets the handled event type.
-        /// </summary>
-        TopicEventTypes EventType { get; }
-
-        /// <summary>
         /// Handles an event.
         /// </summary>
         /// <param name="sender">The <see cref="IHTopic{T}"/> that triggered the event.</param>

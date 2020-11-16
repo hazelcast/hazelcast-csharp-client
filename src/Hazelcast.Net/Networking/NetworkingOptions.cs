@@ -36,7 +36,7 @@ namespace Hazelcast.Networking
             Addresses = new List<string>(other.Addresses);
             ShuffleAddresses = other.ShuffleAddresses;
             SmartRouting = other.SmartRouting;
-            RetryOnTargetDisconnected = other.RetryOnTargetDisconnected;
+            RetryOperations = other.RetryOperations;
             ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
             WaitForClientMilliseconds = other.WaitForClientMilliseconds;
             ReconnectMode = other.ReconnectMode;
@@ -74,18 +74,18 @@ namespace Hazelcast.Networking
         public bool SmartRouting { get; set; } = true;
 
         /// <summary>
-        /// Whether to redo operations.
+        /// Whether to retry operations.
         /// </summary>
         /// <remarks>
-        /// <para>If true, the client will redo the operations that were executing on the server and
-        /// the client lost the connection. This can happen because of network, or simply because the
-        /// member died.</para>
+        /// <para>While sending the requests to related members, operations can fail due to various
+        /// reasons. Read-only operations are retried by default. If you want to enable retry for
+        /// the other operations, set this property to <c>true</c>.</para>
         /// <para>Note that it is not clear whether the operation is performed or not. For idempotent
         /// operations this is harmless, but for non idempotent ones retrying can cause
         /// undesirable effects. Also note that the redo can perform on any member.</para>
         /// </remarks>
 
-        public bool RetryOnTargetDisconnected { get; set; } = true;
+        public bool RetryOperations { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the connection timeout.

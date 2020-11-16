@@ -61,7 +61,7 @@ namespace Hazelcast.Examples.WebSite
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // Get the Distributed Map from Cluster.
-            await using var map = await client.GetDictionaryAsync<string, string>("my-distributed-map");
+            await using var map = await client.GetMapAsync<string, string>("my-distributed-map");
             //Set the key-value pair
             await map.SetAsync("key", "value");
             // Run the IdentifiedEntryProcessor class on the Hazelcast Cluster Member holding the key called "key"

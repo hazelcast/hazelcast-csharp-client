@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Remote
     {
         private class Subscription<TKey, TValue> : IAsyncDisposable
         {
-            private readonly IHReplicatedDictionary<TKey, TValue> _dictionary;
+            private readonly IHReplicatedMap<TKey, TValue> _map;
 
             public int EntryAddedCount;
             public int EntryUpdatedCount;
@@ -38,32 +38,32 @@ namespace Hazelcast.Tests.Remote
 
             private Guid _sid;
 
-            public Subscription(IHReplicatedDictionary<TKey, TValue> dictionary)
+            public Subscription(IHReplicatedMap<TKey, TValue> map)
             {
-                _dictionary = dictionary;
+                _map = map;
             }
 
             public async Task SubscribeAsync()
             {
-                _sid = await _dictionary.SubscribeAsync(SubscribeEvents);
+                _sid = await _map.SubscribeAsync(SubscribeEvents);
             }
 
             public async Task SubscribeAsync(TKey key)
             {
-                _sid = await _dictionary.SubscribeAsync(SubscribeEvents, key);
+                _sid = await _map.SubscribeAsync(SubscribeEvents, key);
             }
 
             public async Task SubscribeAsync(IPredicate predicate)
             {
-                _sid = await _dictionary.SubscribeAsync(SubscribeEvents, predicate);
+                _sid = await _map.SubscribeAsync(SubscribeEvents, predicate);
             }
 
             public async Task SubscribeAsync(TKey key, IPredicate predicate)
             {
-                _sid = await _dictionary.SubscribeAsync(SubscribeEvents, key, predicate);
+                _sid = await _map.SubscribeAsync(SubscribeEvents, key, predicate);
             }
 
-            private void SubscribeEvents(ReplicatedDictionaryEventHandlers<TKey, TValue> events)
+            private void SubscribeEvents(ReplicatedMapEventHandlers<TKey, TValue> events)
             {
                 // TODO when event states are available, re-implement as ...?
                 /*
@@ -80,7 +80,7 @@ namespace Hazelcast.Tests.Remote
 
             public async ValueTask DisposeAsync()
             {
-                await _dictionary.UnsubscribeAsync(_sid);
+                await _map.UnsubscribeAsync(_sid);
             }
 
             public ValueTask AssertCountEventually(Func<int> count, int value)
@@ -93,30 +93,30 @@ namespace Hazelcast.Tests.Remote
             }
         }
 
-        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedDictionary<TKey, TValue> dictionary)
+        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedMap<TKey, TValue> map)
         {
-            var s = new Subscription<TKey, TValue>(dictionary);
+            var s = new Subscription<TKey, TValue>(map);
             await s.SubscribeAsync();
             return s;
         }
 
-        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedDictionary<TKey, TValue> dictionary, TKey key)
+        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedMap<TKey, TValue> map, TKey key)
         {
-            var s = new Subscription<TKey, TValue>(dictionary);
+            var s = new Subscription<TKey, TValue>(map);
             await s.SubscribeAsync(key);
             return s;
         }
 
-        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedDictionary<TKey, TValue> dictionary, IPredicate predicate)
+        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedMap<TKey, TValue> map, IPredicate predicate)
         {
-            var s = new Subscription<TKey, TValue>(dictionary);
+            var s = new Subscription<TKey, TValue>(map);
             await s.SubscribeAsync(predicate);
             return s;
         }
 
-        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedDictionary<TKey, TValue> dictionary, TKey key, IPredicate predicate)
+        private static async Task<Subscription<TKey, TValue>> SubscribeAsync<TKey, TValue>(IHReplicatedMap<TKey, TValue> map, TKey key, IPredicate predicate)
         {
-            var s = new Subscription<TKey, TValue>(dictionary);
+            var s = new Subscription<TKey, TValue>(map);
             await s.SubscribeAsync(key, predicate);
             return s;
         }
@@ -124,7 +124,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAddEntryListener()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await using var s = await SubscribeAsync(dictionary);
@@ -142,7 +142,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAddEntryListener_key()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await using var s = await SubscribeAsync(dictionary, 1);
@@ -154,7 +154,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAddEntryListener_key_other()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await using var s = await SubscribeAsync(dictionary, 1);
@@ -166,7 +166,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAddEntryListener_predicate()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await using var s = await SubscribeAsync(dictionary, Predicate.Key().LessThan(5));
@@ -177,7 +177,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestAddEntryListener_predicate_key()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await using var s1 = await SubscribeAsync(dictionary, 2, Predicate.Key().LessThan(5));
@@ -191,7 +191,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestClear()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.GetAndSetAsync(1, "value1");
@@ -203,7 +203,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestContainsKey()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.GetAndSetAsync(1, "value1");
@@ -217,7 +217,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestContainsValue()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.GetAndSetAsync(1, "value1");
@@ -231,7 +231,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestGet()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.GetAndSetAsync(1, "value1");
@@ -242,7 +242,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestIsEmpty()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.True(await dictionary.IsEmptyAsync());
@@ -251,7 +251,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestEntrySet()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillValues(dictionary);
@@ -265,7 +265,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestKeySet()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillValues(dictionary);
@@ -279,7 +279,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPut()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.GetAndSetAsync(1, "value1");
@@ -290,7 +290,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
 		public async Task TestPut_null()
 		{
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await AssertEx.ThrowsAsync<ArgumentNullException>(async () =>
@@ -302,7 +302,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPut_ttl()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.GetAndSetAsync(1, "value1", TimeSpan.FromSeconds(2));
@@ -310,14 +310,14 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(value, "value1");
             await AssertEx.SucceedsEventually(async () =>
             {
-                Assert.Null(await dictionary.GetAsync(1));
+                Assert.That(await dictionary.GetAsync(1), Is.Null);
             }, 10000, 500);
         }
 
         [Test]
         public async Task TestPutAll()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var entries = new Dictionary<int?, string>();
@@ -336,7 +336,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestRemove()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.GetAndSetAsync(1, "value1");
@@ -349,7 +349,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestRemoveEntryListener()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var s = await SubscribeAsync(dictionary);
@@ -366,7 +366,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestSize()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillValues(dictionary);
@@ -376,7 +376,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestValues()
         {
-            var dictionary = await Client.GetReplicatedDictionaryAsync<int?, string>(CreateUniqueName());
+            var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillValues(dictionary);
@@ -388,11 +388,11 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(10, values.Count);
         }
 
-        private async Task FillValues(IHReplicatedDictionary<int?, string> dictionary)
+        private async Task FillValues(IHReplicatedMap<int?, string> map)
         {
             for (var i = 0; i < 10; i++)
             {
-                await dictionary.GetAndSetAsync(i, "value" + i);
+                await map.GetAndSetAsync(i, "value" + i);
             }
         }
     }

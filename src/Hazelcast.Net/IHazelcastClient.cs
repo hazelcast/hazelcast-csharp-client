@@ -126,7 +126,7 @@ namespace Hazelcast
         ValueTask DestroyAsync(IDistributedObject o);
 
         /// <summary>
-        /// Gets an <see cref="IHDictionary{TKey,TValue}"/> distributed object.
+        /// Gets an <see cref="IHMap{TKey,TValue}"/> distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
@@ -136,10 +136,10 @@ namespace Hazelcast
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHDictionary<TKey, TValue>> GetDictionaryAsync<TKey, TValue>(string name);
+        Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name);
 
         /// <summary>
-        /// Gets an <see cref="IHReplicatedDictionary{TKey,TValue}"/> distributed object.
+        /// Gets an <see cref="IHReplicatedMap{TKey,TValue}"/> distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
@@ -149,10 +149,10 @@ namespace Hazelcast
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHReplicatedDictionary<TKey, TValue>> GetReplicatedDictionaryAsync<TKey, TValue>(string name);
+        Task<IHReplicatedMap<TKey, TValue>> GetReplicatedMapAsync<TKey, TValue>(string name);
 
         /// <summary>
-        /// Gets an <see cref="IHMultiDictionary{TKey,TValue}"/> distributed object.
+        /// Gets an <see cref="IHMultiMap{TKey,TValue}"/> distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>
         /// <typeparam name="TValue">The type of the values.</typeparam>
@@ -162,7 +162,7 @@ namespace Hazelcast
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name);
+        Task<IHMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name);
 
         /// <summary>
         /// Gets an <see cref="IHTopic{T}"/> distributed object.

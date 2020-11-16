@@ -67,6 +67,7 @@ namespace Hazelcast.DistributedObjects
         Task<T> GetAndSetAsync(int index, T item);
 
         //Getting
+
         /// <summary>
         /// Returns the element in the specified position in this list
         /// </summary>
@@ -104,6 +105,7 @@ namespace Hazelcast.DistributedObjects
         Task<int> LastIndexOfAsync(T item);
 
         //Removing
+
         /// <summary>
         /// Removes the first occurrence of the specified element from this list, if it is present.
         /// If this list does not contain the element, it is unchanged.

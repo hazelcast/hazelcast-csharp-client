@@ -33,62 +33,6 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public async Task WithNewContext()
-        {
-            AsyncContext.Ensure();
-            var id = AsyncContext.CurrentContext.Id;
-
-            long idx = -1;
-            await TaskEx.RunWithNewContext(() =>
-            {
-                idx = AsyncContext.CurrentContext.Id;
-                return Task.CompletedTask;
-            });
-
-            Assert.That(idx, Is.Not.EqualTo(id));
-        }
-
-        [Test]
-        public async Task WithNewContextResult()
-        {
-            AsyncContext.Ensure();
-            var id = AsyncContext.CurrentContext.Id;
-
-            var idx = await TaskEx.RunWithNewContext(() =>
-                Task.FromResult(AsyncContext.CurrentContext.Id));
-
-            Assert.That(idx, Is.Not.EqualTo(id));
-        }
-
-        [Test]
-        public async Task WithNewContextToken()
-        {
-            AsyncContext.Ensure();
-            var id = AsyncContext.CurrentContext.Id;
-
-            long idx = -1;
-            await TaskEx.RunWithNewContext(token =>
-            {
-                idx = AsyncContext.CurrentContext.Id;
-                return Task.CompletedTask;
-            }, CancellationToken.None);
-
-            Assert.That(idx, Is.Not.EqualTo(id));
-        }
-
-        [Test]
-        public async Task WithNewContextResultToken()
-        {
-            AsyncContext.Ensure();
-            var id = AsyncContext.CurrentContext.Id;
-
-            var idx = await TaskEx.RunWithNewContext(token =>
-                Task.FromResult(AsyncContext.CurrentContext.Id), CancellationToken.None);
-
-            Assert.That(idx, Is.Not.EqualTo(id));
-        }
-
-        [Test]
         public async Task WithTimeout()
         {
             // arg exception

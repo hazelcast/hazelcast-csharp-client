@@ -95,7 +95,7 @@ namespace Hazelcast.Tests.NearCache
         [Timeout(5*60_000)]
         public async Task NearCacheClearedBySet(bool strict)
         {
-            var dictionary = await _client.GetDictionaryAsync<string, string>(_name);
+            var dictionary = await _client.GetMapAsync<string, string>(_name);
             await using var _ = new AsyncDisposable(() => dictionary?.DestroyAsync() ?? default);
             var cache = GetNearCache(dictionary);
 
@@ -148,7 +148,7 @@ namespace Hazelcast.Tests.NearCache
             }
         }
 
-        private async Task RunTestInternal(IHDictionary<string, string> dictionary)
+        private async Task RunTestInternal(IHMap<string, string> dictionary)
         {
             var tasks = new List<Task>();
 
@@ -183,7 +183,7 @@ namespace Hazelcast.Tests.NearCache
             await Task.WhenAll(tasks);
         }
 
-        private async Task SetTask(IHDictionary<string, string> dictionary, SemaphoreSlim started, int id)
+        private async Task SetTask(IHMap<string, string> dictionary, SemaphoreSlim started, int id)
         {
             var i = 0;
             while (!_stop)
@@ -200,7 +200,7 @@ namespace Hazelcast.Tests.NearCache
 
                 // check if we see our last update
                 var valueStr = await dictionary.GetAsync(Key).CAF();
-                if (valueStr == null) continue; // ignore nulls (?)
+                if (valueStr == null) continue; // not found
 
                 var valueInt = int.Parse(valueStr);
                 if (valueInt == i) continue; // match = ok
@@ -227,7 +227,7 @@ namespace Hazelcast.Tests.NearCache
             Logger.LogInformation($"AddOrUpdate task {id} performed {i} operations.");
         }
 
-        private async Task GetTask(IHDictionary<string, string> dictionary, int id)
+        private async Task GetTask(IHMap<string, string> dictionary, int id)
         {
             var n = 0;
             while (!_stop)

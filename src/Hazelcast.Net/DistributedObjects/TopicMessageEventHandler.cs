@@ -49,9 +49,6 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <inheritdoc />
-        public TopicEventTypes EventType => TopicEventTypes.Message;
-
-        /// <inheritdoc />
         public ValueTask HandleAsync(IHTopic<T> sender, MemberInfo member, long publishTime, T payload, object state)
             => _handler(sender, CreateEventArgs(member, publishTime, payload, state));
 

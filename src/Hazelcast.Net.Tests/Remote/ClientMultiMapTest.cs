@@ -30,7 +30,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestClear()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.TryAddAsync("a", "b");
@@ -42,7 +42,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestContains()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsTrue(await dictionary.TryAddAsync("key1", "value1"));
@@ -63,12 +63,12 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestForceUnlock()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.LockAsync("key1");
 
-            await TaskEx.RunWithNewContext(async () =>
+            await AsyncContext.RunWithNew(async () =>
             {
                 await dictionary.ForceUnlockAsync("key1");
             });
@@ -79,7 +79,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestKeySetEntrySetAndValues()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsTrue(await dictionary.TryAddAsync("key1", "value1"));
@@ -107,7 +107,7 @@ namespace Hazelcast.Tests.Remote
         {
             using var __ = HConsoleForTest();
 
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var added1 = 0;
@@ -171,12 +171,12 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestLock()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.LockAsync("key1");
 
-            var locked = await TaskEx.RunWithNewContext(async () =>
+            var locked = await AsyncContext.RunWithNew(async () =>
             {
                 return await dictionary.TryLockAsync("key1");
             });
@@ -189,13 +189,13 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestLockTtl()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             await dictionary.LockAsync("key1", TimeSpan.FromSeconds(1));
 
             var count = 0;
-            await TaskEx.RunWithNewContext(async () =>
+            await AsyncContext.RunWithNew(async () =>
             {
                 if (!await dictionary.TryLockAsync("key1"))
                     Interlocked.Increment(ref count);
@@ -211,7 +211,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutGetRemove()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsTrue(await dictionary.TryAddAsync("key1", "value1"));
@@ -242,7 +242,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestRemoveListener()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             var count = 0;
@@ -263,12 +263,12 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestTryLock()
         {
-            var dictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var dictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.IsTrue(await dictionary.TryLockAsync("key1", TimeSpan.FromMilliseconds(200)));
 
-            var locked = await TaskEx.RunWithNewContext(async () =>
+            var locked = await AsyncContext.RunWithNew(async () =>
             {
                 return await dictionary.TryLockAsync("key1", TimeSpan.FromMilliseconds(200));
             });
@@ -277,7 +277,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.IsTrue(await dictionary.IsLockedAsync("key1"));
 
-            var locking = TaskEx.RunWithNewContext(async () =>
+            var locking = AsyncContext.RunWithNew(async () =>
             {
                 return await dictionary.TryLockAsync("key1", TimeSpan.FromSeconds(20));
             });

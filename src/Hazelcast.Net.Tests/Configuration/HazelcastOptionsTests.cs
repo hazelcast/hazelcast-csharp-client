@@ -121,6 +121,9 @@ namespace Hazelcast.Tests.Configuration
             TestSubscriber.Ctored = false;
             await subscriber.SubscribeAsync(null, CancellationToken.None);
             Assert.IsTrue(TestSubscriber.Ctored);
+
+            var loadBalancer = options.LoadBalancer.Service;
+            Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
         }
 
         [Test]
@@ -160,7 +163,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsTrue(options.Addresses.Contains("otherhost"));
             Assert.IsFalse(options.ShuffleAddresses);
             Assert.IsFalse(options.SmartRouting);
-            Assert.IsFalse(options.RetryOnTargetDisconnected);
+            Assert.IsFalse(options.RetryOperations);
             Assert.AreEqual(1000, options.ConnectionTimeoutMilliseconds);
             Assert.AreEqual(1001, options.WaitForClientMilliseconds);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
@@ -213,20 +216,11 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
-        public void LoadBalancingOptionsFile()
-        {
-            var options = ReadResource(Resources.HazelcastOptions).LoadBalancing;
-
-            var loadBalancer = options.LoadBalancer.Service;
-            Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
-        }
-
-        [Test]
         public void LoadBalancingOptions1()
         {
             const string json = @"{ ""hazelcast"": {
-""loadBalancing"" : {
-    ""mode"": ""random""
+""loadBalancer"" : {
+    ""typeName"": ""random""
 }
 }}";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -235,9 +229,8 @@ namespace Hazelcast.Tests.Configuration
             builder.AddJsonStream(stream);
             var configuration = builder.Build();
 
-            var root = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, root);
-            var options = root.LoadBalancing;
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, options);
 
             Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -246,8 +239,8 @@ namespace Hazelcast.Tests.Configuration
         public void LoadBalancingOptions2()
         {
             const string json = @"{ ""hazelcast"": {
-""loadBalancing"" : {
-    ""mode"": ""ROUNDROBIN""
+""loadBalancer"" : {
+    ""typeName"": ""ROUNDROBIN""
 }
 }}";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -256,9 +249,8 @@ namespace Hazelcast.Tests.Configuration
             builder.AddJsonStream(stream);
             var configuration = builder.Build();
 
-            var root = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, root);
-            var options = root.LoadBalancing;
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, options);
 
             Assert.IsInstanceOf<RoundRobinLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -267,11 +259,8 @@ namespace Hazelcast.Tests.Configuration
         public void LoadBalancingOptions3()
         {
             const string json = @"{ ""hazelcast"": {
-""loadBalancing"" : {
-    ""mode"": ""custom"",
-    ""loadBalancer"": {
-        ""typeName"": ""Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net""
-    }
+""loadBalancer"" : {
+    ""typeName"": ""Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer, Hazelcast.Net""
 }
 }}";
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -280,9 +269,8 @@ namespace Hazelcast.Tests.Configuration
             builder.AddJsonStream(stream);
             var configuration = builder.Build();
 
-            var root = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, root);
-            var options = root.LoadBalancing;
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, options);
 
             Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
         }

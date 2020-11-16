@@ -36,7 +36,7 @@ namespace Hazelcast.Examples.Transactions
                 // perform operations with the transaction
                 try
                 {
-                    var transactionMap = await transactionContext.GetDictionaryAsync<string, string>("txn-map");
+                    var transactionMap = await transactionContext.GetMapAsync<string, string>("txn-map");
                     await transactionMap.GetOrAddAsync("key", "value");
                     await transactionContext.CommitAsync();
                 }
@@ -47,7 +47,7 @@ namespace Hazelcast.Examples.Transactions
             }
 
             // verify that value is available outside the transaction
-            var map = await client.GetDictionaryAsync<string, string>("txn-map");
+            var map = await client.GetMapAsync<string, string>("txn-map");
             Console.WriteLine();
             Console.WriteLine("After transaction:");
             Console.WriteLine("map[\"key\"]: " + await map.GetAsync("key"));
@@ -59,7 +59,7 @@ namespace Hazelcast.Examples.Transactions
                 // perform operations with the transaction
                 try
                 {
-                    var transactionMap = await transactionContext.GetDictionaryAsync<string, string>("txn-map");
+                    var transactionMap = await transactionContext.GetMapAsync<string, string>("txn-map");
                     await transactionMap.TryUpdateAsync("key", "value", "other");
                     Console.WriteLine();
                     Console.WriteLine("In transaction:");
@@ -83,7 +83,7 @@ namespace Hazelcast.Examples.Transactions
                 new TransactionOptions { Type = TransactionOptions.TransactionType.OnePhase }))
             {
                 // perform operations with the transaction
-                var transactionMap = await transactionContext.GetDictionaryAsync<string, string>("txn-map");
+                var transactionMap = await transactionContext.GetMapAsync<string, string>("txn-map");
                 await transactionMap.TryUpdateAsync("key", "value", "other");
                 Console.WriteLine();
                 Console.WriteLine("In transaction:");

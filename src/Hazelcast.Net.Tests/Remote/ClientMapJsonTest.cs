@@ -24,32 +24,32 @@ namespace Hazelcast.Tests.Remote
     [TestFixture]
     public class ClientMapJsonTest : SingleMemberClientRemoteTestBase
     {
-        private IHDictionary<string, HazelcastJsonValue> _dictionary;
+        private IHMap<string, HazelcastJsonValue> _map;
 
         [OneTimeSetUp]
         public async Task SetUp()
         {
-            _dictionary = await Client.GetDictionaryAsync<string, HazelcastJsonValue>(CreateUniqueName());
+            _map = await Client.GetMapAsync<string, HazelcastJsonValue>(CreateUniqueName());
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            await _dictionary.ClearAsync();
+            await _map.ClearAsync();
         }
 
         [OneTimeTearDown]
         public async Task OneTimeTearDown()
         {
-            await _dictionary.DestroyAsync();
-            await _dictionary.DisposeAsync();
+            await _map.DestroyAsync();
+            await _map.DisposeAsync();
         }
 
         private async Task FillAsync()
         {
             for (var i = 1; i < 30; i++)
             {
-                await _dictionary.SetAsync("key-" + i, new HazelcastJsonValue("{ \"age\": " + i + " }"));
+                await _map.SetAsync("key-" + i, new HazelcastJsonValue("{ \"age\": " + i + " }"));
             }
         }
 
@@ -57,16 +57,16 @@ namespace Hazelcast.Tests.Remote
         public async Task PutJsonValue_Succeeded()
         {
             var value = new HazelcastJsonValue("{ \"age\": 20 }");
-            await _dictionary.SetAsync("key-1", value);
+            await _map.SetAsync("key-1", value);
         }
 
         [Test]
         public async Task GetJsonValue_Succeeded()
         {
             var value = new HazelcastJsonValue("{ \"age\": 20 }");
-            await _dictionary.SetAsync("key-1", value);
+            await _map.SetAsync("key-1", value);
 
-            var result = await _dictionary.GetAsync("key-1");
+            var result = await _map.GetAsync("key-1");
 
             Assert.AreEqual(value, result);
         }
@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Remote
         public async Task QueryOnNumberProperty_Succeeded()
         {
             await FillAsync();
-            var result = await _dictionary.GetValuesAsync(Predicate.IsLessThan("age", 20));
+            var result = await _map.GetValuesAsync(Predicate.IsLessThan("age", 20));
             Assert.AreEqual(19, result.Count);
         }
 
@@ -83,11 +83,11 @@ namespace Hazelcast.Tests.Remote
         public async Task QueryOnTextAndNumberProperty_WhenSomeEntriesDoNotHaveTheField_ShouldNotFail()
         {
             var value = new HazelcastJsonValue("{ \"email\": \"a@b.com\" }");
-            await _dictionary.SetAsync("key-a", value);
+            await _map.SetAsync("key-a", value);
 
             await FillAsync();
 
-            var result = await _dictionary.GetValuesAsync(Predicate.IsEqual("email", "a@b.com"));
+            var result = await _map.GetValuesAsync(Predicate.IsEqual("email", "a@b.com"));
 
             Assert.AreEqual(1, result.Count);
         }
@@ -96,11 +96,11 @@ namespace Hazelcast.Tests.Remote
         public async Task QueryOnNestedProperty_Succeeded()
         {
             var value = new HazelcastJsonValue("{ \"outer\": {\"inner\": 24} }");
-            await _dictionary.SetAsync("key-a", value);
+            await _map.SetAsync("key-a", value);
 
             await FillAsync();
 
-            var result = await _dictionary.GetValuesAsync(Predicate.IsEqual("outer.inner", 24));
+            var result = await _map.GetValuesAsync(Predicate.IsEqual("outer.inner", 24));
 
             Assert.AreEqual(1, result.Count);
         }

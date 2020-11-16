@@ -33,6 +33,7 @@ namespace Hazelcast.Transactions
         private long _threadId; // the "threadId", i.e. async context, which owns the transaction
         private long _startTime; // the start time of the transaction
         private MemberConnection _connection; // the client supporting the transaction
+        private bool _completed; // whether the transaction has been completed
 
         // TODO transactions need some TLC
         // how is two-phases commit supposed to work? is it all server-side (and then, why
@@ -203,11 +204,15 @@ namespace Hazelcast.Transactions
             }
         }
 
+        /// <inheritdoc />
+        public void Complete()
+        {
+            _completed = true;
+        }
+
+        /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            // be sure to always clear this!
-            InTransaction = false;
-
             try
             {
                 await _distributedObjectFactory.DisposeAsync().CAF();
@@ -215,16 +220,11 @@ namespace Hazelcast.Transactions
             catch
             { /* ignore */ } // TODO: log?
 
-            if (State == TransactionState.Active)
+            // if still in a transaction, either commit or rollback
+            if (InTransaction)
             {
-                // abandoned transaction, roll it back
-
-                try
-                {
-                    await RollbackAsync().CAF();
-                }
-                catch
-                { /* ignore */ } // TODO: log?
+                // may throw
+                await (_completed ? CommitAsync() : RollbackAsync()).CAF();
             }
         }
 
@@ -264,24 +264,24 @@ namespace Hazelcast.Transactions
                     => new HTxQueue<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMultiDictionary<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiDictionary<TKey, TValue> source)
-            => GetMultiDictionaryAsync<TKey, TValue>(source.Name);
+        public Task<IHTxMultiMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source)
+            => GetMultiMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxMultiDictionary<TKey, TValue>> GetMultiDictionaryAsync<TKey, TValue>(string name)
+        public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiDictionary<TKey, TValue>, HTxMultiDictionary<TKey, TValue>>(ServiceNames.MultiDictionary, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HTxMultiDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
+                    => new HTxMultiMap<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxDictionary<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHDictionary<TKey, TValue> source)
-            => GetDictionaryAsync<TKey, TValue>(source.Name);
+        public Task<IHTxMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMap<TKey, TValue> source)
+            => GetMapAsync<TKey, TValue>(source.Name);
 
-        public Task<IHTxDictionary<TKey, TValue>> GetDictionaryAsync<TKey, TValue>(string name)
+        public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
-            return _distributedObjectFactory.GetOrCreateAsync<IHTxDictionary<TKey, TValue>, HTxDictionary<TKey, TValue>>(ServiceNames.Dictionary, name, true,
+            return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(ServiceNames.Map, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HTxDictionary<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
+                    => new HTxMap<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
     }
 }

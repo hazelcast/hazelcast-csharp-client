@@ -20,12 +20,12 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    public class ClientTxntxMultiDictionaryTest : SingleMemberClientRemoteTestBase
+    public class ClientTxMultiMapTest : SingleMemberClientRemoteTestBase
     {
         [Test]
         public async Task TestPutGetRemove()
         {
-            var multiDictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(multiDictionary);
 
             for (var i = 0; i < 10; i++)
@@ -46,7 +46,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestPutGetRemove2()
         {
-            var multiDictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             var key = "key";
             await multiDictionary.TryAddAsync(key, "value");
             var context = await Client.BeginTransactionAsync();
@@ -69,7 +69,7 @@ namespace Hazelcast.Tests.Remote
             const string key = "key";
             const string value = "value";
 
-            var multiDictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
 
             await multiDictionary.TryAddAsync(key, value);
             var context = await Client.BeginTransactionAsync();
@@ -86,7 +86,7 @@ namespace Hazelcast.Tests.Remote
         {
             const string key = "key";
             const string value = "value";
-            var multiDictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             for (var i = 0; i < 10; i++)
             {
                 await multiDictionary.TryAddAsync(key, value + i);
@@ -108,7 +108,7 @@ namespace Hazelcast.Tests.Remote
             var key = "key";
             var value = "value";
 
-            var multiDictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await multiDictionary.TryAddAsync(key, value);
 
             var context = await Client.BeginTransactionAsync();
@@ -129,7 +129,7 @@ namespace Hazelcast.Tests.Remote
             var key = "key";
             var value = "value";
 
-            var multiDictionary = await Client.GetMultiDictionaryAsync<string, string>(CreateUniqueName());
+            var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             await multiDictionary.TryAddAsync(key, value);
 
             var context = await Client.BeginTransactionAsync();

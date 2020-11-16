@@ -250,7 +250,7 @@ namespace Hazelcast.Clustering
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
                     // and may throw if canceled while waiting - and then the exception is rethrown
-                    if (invocation.IsRetryable(exception, _clusterState.Options.Networking.RetryOnTargetDisconnected) &&
+                    if (invocation.IsRetryable(exception, _clusterState.Options.Networking.RetryOperations) &&
                         await invocation.CanRetryAsync(() => _clusterState.GetNextCorrelationId()).CAF())
                     {
                         HConsole.WriteLine(this, "Retrying...");

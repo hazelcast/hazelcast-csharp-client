@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.NearCache
     public class NearCacheInvalidationTest : NearCacheTestBase
     {
         private IHazelcastClient _client;
-        private IHDictionary<object, object> _dictionary;
+        private IHMap<object, object> _map;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
@@ -49,17 +49,17 @@ namespace Hazelcast.Tests.NearCache
             Assert.That(client, Is.Not.Null);
             SerializationService = client.SerializationService;
 
-            _dictionary = await _client.GetDictionaryAsync<object, object>("nc-" + TestUtils.RandomString());
+            _map = await _client.GetMapAsync<object, object>("nc-" + TestUtils.RandomString());
 
-            var nearCache = GetNearCache(_dictionary);
+            var nearCache = GetNearCache(_map);
             Assert.That(nearCache, Is.InstanceOf<NearCaching.NearCache>());
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            if (_dictionary != null) await _dictionary.DestroyAsync();
-            _dictionary = null;
+            if (_map != null) await _map.DestroyAsync();
+            _map = null;
 
             if (_client != null) await _client.DisposeAsync();
             _client = null;
@@ -90,13 +90,13 @@ namespace Hazelcast.Tests.NearCache
         {
             const string theKey = "key";
 
-            await _dictionary.SetAsync(theKey, "value1");
+            await _map.SetAsync(theKey, "value1");
 
             var partitioner = ((HazelcastClient)_client).Cluster.Partitioner;
             var keyData = ((HazelcastClient) _client).SerializationService.ToData(theKey);
             var partitionId = partitioner.GetPartitionId(keyData.PartitionHash);
 
-            var cache = GetNearCache(_dictionary) as NearCaching.NearCache;
+            var cache = GetNearCache(_map) as NearCaching.NearCache;
             var metadata = cache.RepairingHandler.GetMetadata(partitionId);
 
             await AssertEx.SucceedsEventually(() =>
@@ -106,7 +106,7 @@ namespace Hazelcast.Tests.NearCache
 
             metadata.Sequence -= 2; //distort the sequence
 
-            await RemoveKeyAtServerAsync(_dictionary.Name, theKey);
+            await RemoveKeyAtServerAsync(_map.Name, theKey);
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -120,17 +120,17 @@ namespace Hazelcast.Tests.NearCache
         {
             const string theKey = "key";
 
-            await _dictionary.SetAsync(theKey, "value1");
+            await _map.SetAsync(theKey, "value1");
 
             var partitioner = ((HazelcastClient) _client).Cluster.Partitioner;
             var keyData = ((HazelcastClient)_client).SerializationService.ToData(theKey);
             var partitionId = partitioner.GetPartitionId(keyData.PartitionHash);
 
-            var cache = GetNearCache(_dictionary) as NearCaching.NearCache;
+            var cache = GetNearCache(_map) as NearCaching.NearCache;
             var metadata = cache.RepairingHandler.GetMetadata(partitionId);
             var initialSequence = metadata.Sequence;
 
-            await RemoveKeyAtServerAsync(_dictionary.Name, theKey);
+            await RemoveKeyAtServerAsync(_map.Name, theKey);
 
             await AssertEx.SucceedsEventually(() =>
             {

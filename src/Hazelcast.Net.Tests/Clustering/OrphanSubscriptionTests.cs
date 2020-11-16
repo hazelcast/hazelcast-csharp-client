@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Clustering
 
             HConsole.WriteLine(this, "Get dictionary");
 
-            var dictionary = await client.GetDictionaryAsync<string, string>("name");
+            var dictionary = await client.GetMapAsync<string, string>("name");
             var count = 0;
 
             var clusterEvents = client.Cluster.Events;
@@ -323,7 +323,7 @@ namespace Hazelcast.Tests.Clustering
                             HConsole.WriteLine(this, $"(server{state.Id}) Trigger event");
                             var key = setRequest.Key;
                             var value = setRequest.Value;
-                            var addedEvent = MapAddEntryListenerServerCodec.EncodeEntryEvent(key, value, value, value, (int)HDictionaryEventTypes.Added, state.SubscriptionId, 1);
+                            var addedEvent = MapAddEntryListenerServerCodec.EncodeEntryEvent(key, value, value, value, (int)MapEventTypes.Added, state.SubscriptionId, 1);
                             await SendEventAsync(addedEvent, state.SubscriptionCorrelationId).CAF();
                         }
                         break;

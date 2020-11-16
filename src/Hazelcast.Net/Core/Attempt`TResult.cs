@@ -26,10 +26,22 @@ namespace Hazelcast.Core
     /// <remarks>
     /// <para>An <see cref="Attempt{TResult}"/> is either successful or failed, it
     /// carries a <typeparamref name="TResult"/> result, and an exception.</para>
+    /// <para>An attempt can be used explicitly:  <code>
+    /// var attempt = await TryAsync(...);
+    /// if (attempt.Success)
+    /// {
+    ///     // use attempt.Value
+    /// }
+    /// </code> or implicitly via deconstruction: <code>
+    /// var (success, value) = await TryAsync(...);
+    /// if (success)
+    /// {
+    ///     // use value
+    /// }
+    /// </code>
+    /// </para>
     /// </remarks>
-#pragma warning disable CA1815 // Override equals and operator equals on value types - not meant to be compared
-    internal readonly struct Attempt<TResult>
-#pragma warning restore CA1815
+    internal readonly struct Attempt<TResult> : IEquatable<Attempt<TResult>>, IEquatable<TResult>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Attempt{TResult}"/> struct.
@@ -148,5 +160,31 @@ namespace Hazelcast.Core
         // generic and second the generic attempt, and we want to avoid this - and
         // all the tricks to convert a struct into another... still imply some
         // allocations
+
+
+        /// <inheritdoc />
+        public bool Equals(Attempt<TResult> other)
+            => (Success && other.Success && (Value is null ? other.Value is null : Value.Equals(other.Value))) || 
+               (!Success && !other.Success);
+
+        /// <inheritdoc />
+        public bool Equals(TResult other)
+            => Success && (Value is null ? other is null : Value.Equals(other));
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+            => obj is Attempt<TResult> attempt && Equals(attempt);
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Success, Value);
+        }
+
+        public static bool operator ==(Attempt<TResult> left, Attempt<TResult> right)
+            => left.Equals(right);
+
+        public static bool operator !=(Attempt<TResult> left, Attempt<TResult> right)
+            => !left.Equals(right);
     }
 }

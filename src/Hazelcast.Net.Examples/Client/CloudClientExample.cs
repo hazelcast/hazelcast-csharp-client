@@ -29,7 +29,7 @@ namespace Hazelcast.Examples.Client
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // use a map
-            await using var map = await client.GetDictionaryAsync<string, string>("ssl-example");
+            await using var map = await client.GetMapAsync<string, string>("ssl-example");
             await map.SetAsync("key", "value");
             var value = await map.GetAsync("key");
             Console.WriteLine($"\"key\": \"{value}\"");

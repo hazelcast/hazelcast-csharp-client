@@ -157,4 +157,76 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="DistributedObjects\IHMap.Setting.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.Removing.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.Processing.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.Intercepting.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.Indexing.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.Getting.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.Events.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.Caching.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\IHMap.AggrProj.cs">
+      <DependentUpon>IHMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMapWithCache.Setting.cs">
+      <DependentUpon>HMapWithCache.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMapWithCache.Removing.cs">
+      <DependentUpon>HMapWithCache.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMapWithCache.Processing.cs">
+      <DependentUpon>HMapWithCache.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMapWithCache.Getting.cs">
+      <DependentUpon>HMapWithCache.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Setting.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Removing.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Processing.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Locking.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Intercepting.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Indexing.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Getting.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Events.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.Caching.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DistributedObjects\Impl\HMap.AggrProj.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

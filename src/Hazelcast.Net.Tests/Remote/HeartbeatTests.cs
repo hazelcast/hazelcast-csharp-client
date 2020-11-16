@@ -104,10 +104,10 @@ namespace Hazelcast.Tests.Remote
         {
             using var _ = HConsoleForTest();
 
-            await new DictionarySimpleExample().Run(CreateHazelcastOptions(), 1000);
+            await new MapSimpleExample().Run(CreateHazelcastOptions(), 1000);
         }
 
-        public class DictionarySimpleExample
+        public class MapSimpleExample
         {
             public const string CacheName = "simple-example";
 
@@ -117,7 +117,7 @@ namespace Hazelcast.Tests.Remote
                 var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
                 // get the distributed map from the cluster
-                var map = await client.GetDictionaryAsync<string, string>(CacheName);
+                var map = await client.GetMapAsync<string, string>(CacheName);
 
                 // get the logger
                 var logger = options.LoggerFactory.Service.CreateLogger("Demo");
