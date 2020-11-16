@@ -118,7 +118,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
-        public async Task<TValue> PutIfAbsent(TKey key, TValue value)
+        public async Task<TValue> PutIfAbsentAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
 

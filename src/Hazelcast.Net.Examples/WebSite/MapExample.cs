@@ -32,7 +32,7 @@ namespace Hazelcast.Examples.WebSite
             await map.GetAsync("key");
 
             // concurrent methods, optimistic updating
-            await map.PutIfAbsent("somekey", "somevalue");
+            await map.PutIfAbsentAsync("somekey", "somevalue");
             await map.ReplaceAsync("key", "value", "newvalue");
 
             // destroy the map

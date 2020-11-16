@@ -43,6 +43,37 @@ namespace Hazelcast.DistributedObjects
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
         /// <summary>
+        /// Sets (adds or updates) an entry.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time to live.</param>
+        /// /// <param name="maxIdle">A max-idle time.</param>
+        /// <returns>A task that will complete when the entry has been added or updated.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
+        /// </remarks>
+        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle);
+
+        /// <summary>
+        /// Sets (adds or updates) an entry with a time-to-live and a max-idle, and returns the previous value, if any.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="timeToLive">A time-to-live period.</param>
+        /// <param name="maxIdle">A max-idle duration.</param>
+        /// <returns>The previous value for the specified key, if any; otherwise <c>default(TValue)</c>.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
+        /// </remarks>
+        // TODO: document MapStore behavior
+        Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle);
+
+        /// <summary>
         /// Updates an entry if it exists.
         /// </summary>
         /// <param name="key">A key.</param>
@@ -106,7 +137,7 @@ namespace Hazelcast.DistributedObjects
         /// If write-through persistence is configured, before the value is stored in memory,
         /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
         /// </remarks>
-        Task<TValue> PutIfAbsent(TKey key, TValue value);
+        Task<TValue> PutIfAbsentAsync(TKey key, TValue value);
 
         /// <summary>
         /// Adds an entry with a time-to-live if no entry with the key already exists.
@@ -127,7 +158,29 @@ namespace Hazelcast.DistributedObjects
         /// If write-through persistence is configured, before the value is stored in memory,
         /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
         /// </remarks>
-        Task<TValue> PutIfAbsent(TKey key, TValue value, TimeSpan timeToLive);
+        Task<TValue> PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Adds an entry with a time-to-live and a max-idle if no entry with the key already exists.
+        /// Returns the new value, or the existing value if the entry already exists.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time-to-live.</param>
+        /// <param name="maxIdle">A max-idle duration.</param>
+        /// <returns>The value for the key. This will be either the existing value for the key if the entry
+        /// already exists, or the new value if the no entry with the key already existed.</returns>
+        /// <remarks>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
+        /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
+        /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
+        /// to try to load the value from the <c>MapStore</c> backing the map, if any.
+        /// If write-through persistence is configured, before the value is stored in memory,
+        /// <c>MapStore.store</c> is invoked to write the value to the store.</para>
+        /// </remarks>
+        Task<TValue> PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle);
 
         /// <summary>
         /// Sets (adds or updates) an entry without calling the <c>MapStore</c> on the server side, if defined.
@@ -147,6 +200,26 @@ namespace Hazelcast.DistributedObjects
         /// TODO: document zero & infinite
         /// </remarks>
         Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive);
+
+        /// <summary>
+        /// Sets (adds or updates) an entry without calling the <c>MapStore</c> on the server side, if defined.
+        /// </summary>
+        /// <param name="key">A key.</param>
+        /// <param name="value">A value.</param>
+        /// <param name="timeToLive">A time-to-live.</param>
+        /// <param name="maxIdle">A max-idle duration.</param>
+        /// <remarks>
+        /// <para>If the dictionary has a <c>MapStore</c> attached, the entry is added to the store but not persisted.
+        /// Flushing the store is required to make sure that the entry is actually persisted.</para>
+        /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>
+        /// <para>
+        /// Time resolution for <param name="timeToLive"></param> is seconds. The given value is rounded to the next closest second value.
+        /// </para>
+        /// <para>The value is automatically expired, evicted and removed after the
+        /// <paramref name="timeToLive"/> has elapsed.</para>
+        /// TODO: document zero & infinite
+        /// </remarks>
+        Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle);
 
         /// <summary>
         /// Updates the time-to-live of an entry.

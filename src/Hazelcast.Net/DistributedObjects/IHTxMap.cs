@@ -115,7 +115,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
         /// </remarks>
-        Task<TValue> PutIfAbsent(TKey key, TValue value);
+        Task<TValue> PutIfAbsentAsync(TKey key, TValue value);
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.RemoveAsync"/>.

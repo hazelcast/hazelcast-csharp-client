@@ -205,8 +205,8 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync(keyValue1, keyValue1);
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            await txDictionary.PutIfAbsent(keyValue1, "NOT_THIS");
-            await txDictionary.PutIfAbsent(keyValue2, keyValue2);
+            await txDictionary.PutIfAbsentAsync(keyValue1, "NOT_THIS");
+            await txDictionary.PutIfAbsentAsync(keyValue2, keyValue2);
             await context.CommitAsync();
             Assert.That(await dictionary.GetAsync(keyValue1), Is.EqualTo(keyValue1));
             Assert.That(await dictionary.GetAsync(keyValue2), Is.EqualTo(keyValue2));

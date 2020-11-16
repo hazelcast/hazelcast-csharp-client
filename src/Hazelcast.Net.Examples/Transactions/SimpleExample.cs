@@ -37,7 +37,7 @@ namespace Hazelcast.Examples.Transactions
                 try
                 {
                     var transactionMap = await transactionContext.GetMapAsync<string, string>("txn-map");
-                    await transactionMap.PutIfAbsent("key", "value");
+                    await transactionMap.PutIfAbsentAsync("key", "value");
                     await transactionContext.CommitAsync();
                 }
                 catch

@@ -176,10 +176,10 @@ namespace Hazelcast.Tests.Remote
 
             await map.SetAsync("key1", 42).CAF();
 
-            var result1 = await map.PutIfAbsent("key1", 43).CAF();
+            var result1 = await map.PutIfAbsentAsync("key1", 43).CAF();
             Assert.That(result1, Is.EqualTo(42));
 
-            var result2 = await map.PutIfAbsent("key2", 43).CAF();
+            var result2 = await map.PutIfAbsentAsync("key2", 43).CAF();
             Assert.That(result2, Is.EqualTo(0));
 
             var value1 = await map.GetAsync("key1").CAF();

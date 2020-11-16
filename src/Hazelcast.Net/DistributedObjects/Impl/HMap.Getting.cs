@@ -139,7 +139,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IMapEntryStats<TKey, TValue>> GetEntryView(TKey key)
+        public Task<IMapEntryStats<TKey, TValue>> GetEntryViewAsync(TKey key)
             => GetEntryStatsAsync(key, CancellationToken.None);
 
         private async Task<IMapEntryStats<TKey, TValue>> GetEntryStatsAsync(TKey key, CancellationToken cancellationToken)

@@ -25,24 +25,24 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMapWithCache<TKey, TValue> // Setting
     {
         /// <inheritdoc />
-        protected override async Task SetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected override async Task SetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
         {
             // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            await base.SetAsync(keyData, valueData, timeToLive).CAF();
+            await base.SetAsync(keyData, valueData, timeToLive, maxIdle).CAF();
             _cache.Remove(keyData);
         }
 
         /// <inheritdoc />
-        protected override async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive)
+        protected override async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
         {
             // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            var value = await base.GetAndSetAsync(keyData, valueData, timeToLive).CAF();
+            var value = await base.GetAndSetAsync(keyData, valueData, timeToLive, maxIdle).CAF();
             _cache.Remove(keyData);
             return value;
         }
@@ -102,10 +102,10 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+            Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             _cache.Remove(keyData);
-            var task = base.GetOrAdd(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -119,10 +119,10 @@ namespace Hazelcast.DistributedObjects.Impl
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-            Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, CancellationToken cancellationToken)
+            Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
             _cache.Remove(keyData);
-            var task = base.SetTransientAsync(keyData, valueData, timeToLive, cancellationToken);
+            var task = base.SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
