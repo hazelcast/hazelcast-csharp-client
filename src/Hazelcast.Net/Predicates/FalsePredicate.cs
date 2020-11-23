@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class FalsePredicate : IPredicate, IIdentifiedDataSerializable
+    internal class FalsePredicate : IPredicate, IIdentifiedDataSerializable
     {
         public void ReadData(IObjectDataInput input)
         {

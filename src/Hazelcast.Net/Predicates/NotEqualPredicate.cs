@@ -14,7 +14,7 @@
 
 namespace Hazelcast.Predicates
 {
-    public class NotEqualPredicate : EqualPredicate
+    internal class NotEqualPredicate : EqualPredicate
     {
         public NotEqualPredicate()
         { }

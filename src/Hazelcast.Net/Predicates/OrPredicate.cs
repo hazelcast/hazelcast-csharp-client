@@ -18,7 +18,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class OrPredicate : IPredicate, IIdentifiedDataSerializable
+    internal class OrPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private IPredicate[] _predicates;
 

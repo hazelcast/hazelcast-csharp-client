@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class BetweenPredicate : IPredicate, IIdentifiedDataSerializable
+    internal class BetweenPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private string _attributeName;
         private object _from;

@@ -20,7 +20,7 @@ namespace Hazelcast.Predicates
     /// <summary>
     ///     SQL Predicate
     /// </summary>
-    public class SqlPredicate : IPredicate, IIdentifiedDataSerializable
+    internal class SqlPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private string _sql;
 
