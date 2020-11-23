@@ -80,7 +80,7 @@ namespace Hazelcast.Tests.Networking
 
             options.Cloud.DiscoveryToken = null;
             Assert.That(options.Cloud.Enabled, Is.False);
-            Assert.Throws<ArgumentException>(() => _ = new AddressProvider(options, loggerFactory));
+
             options.Cloud.DiscoveryToken = "*****";
             Assert.That(options.Cloud.Enabled, Is.True);
 
