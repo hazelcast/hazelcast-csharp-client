@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -47,7 +48,8 @@ namespace Hazelcast.Testing
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            options.ClusterName = RcCluster?.Id ?? options.ClusterName;
+            var clusterOptions = (IClusterOptions) options;
+            clusterOptions.ClusterName = RcCluster?.Id ?? clusterOptions.ClusterName;
             return options;
         }
 

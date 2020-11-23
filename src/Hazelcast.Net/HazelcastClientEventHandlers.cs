@@ -198,7 +198,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        internal  HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
+        internal HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler));
             return this;

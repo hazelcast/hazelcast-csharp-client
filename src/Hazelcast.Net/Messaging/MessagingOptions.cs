@@ -38,7 +38,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets or sets the max fast invocation count.
         /// </summary>
-        public int MaxFastInvocationCount { get; set; } = 5;
+        internal int MaxFastInvocationCount { get; set; } = 5;
 
         /// <summary>
         /// Gets or sets the min retry delay.

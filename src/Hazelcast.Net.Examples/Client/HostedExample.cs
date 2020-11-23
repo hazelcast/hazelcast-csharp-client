@@ -88,7 +88,7 @@ namespace Hazelcast.Examples.Client
                     // this is how options could be altered
                     services.Configure<HazelcastOptions>(options =>
                     {
-                        options.ClientNamePrefix = "test.client_";
+                        //options.Labels.Add("test");
                     });
 
                     // add a hosted service

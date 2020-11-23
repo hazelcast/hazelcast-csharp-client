@@ -20,14 +20,9 @@ namespace Hazelcast.Events
     public enum DistributedObjectLifecycleEventType
     {
         /// <summary>
-        /// Nothing (default)
-        /// </summary>
-        Nothing = 0,
-
-        /// <summary>
         /// The object was created.
         /// </summary>
-        Created,
+        Created = 1, // zero is for default, make sure we start at 1
 
         /// <summary>
         /// The object was destroyed.

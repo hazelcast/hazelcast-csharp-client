@@ -36,9 +36,8 @@ namespace Hazelcast.Networking
             Addresses = new List<string>(other.Addresses);
             ShuffleAddresses = other.ShuffleAddresses;
             SmartRouting = other.SmartRouting;
-            RetryOperations = other.RetryOperations;
+            RedoOperations = other.RedoOperations;
             ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
-            WaitForClientMilliseconds = other.WaitForClientMilliseconds;
             ReconnectMode = other.ReconnectMode;
 
             Ssl = other.Ssl.Clone();
@@ -95,7 +94,7 @@ namespace Hazelcast.Networking
         /// undesirable effects. Also note that the redo can perform on any member.</para>
         /// </remarks>
 
-        public bool RetryOperations { get; set; } = true;
+        public bool RedoOperations { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the connection timeout.
@@ -111,12 +110,6 @@ namespace Hazelcast.Networking
         /// Gets or sets the reconnection mode in case the client is disconnected.
         /// </summary>
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
-
-        /// <summary>
-        /// Gets or sets the delay to pause for when looking for a client
-        /// to handle cluster view events and no client is available.
-        /// </summary>
-        public int WaitForClientMilliseconds { get; set; } = 1_000;
 
         /// <summary>
         /// Gets the SSL options.

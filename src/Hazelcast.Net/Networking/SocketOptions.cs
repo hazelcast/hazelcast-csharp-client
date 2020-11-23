@@ -38,10 +38,11 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
-        /// The buffer size.
+        /// The send and receive buffers size.
         /// </summary>
         /// <remarks>
-        /// <para>The buffer size is expressed in Kibibytes, ie units of 1024 bytes.</para>
+        /// <para>The buffer size is expressed in Kibibytes, ie units of 1024 bytes. This
+        /// sets the size of both the send and receive buffers.</para>
         /// </remarks>
         public int BufferSizeKiB { get; set; } = 128;
 

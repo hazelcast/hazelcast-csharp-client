@@ -186,7 +186,7 @@ namespace Hazelcast.Clustering
 
                 // no clients => wait for clients
                 // this *may* throw
-                await Task.Delay(_clusterState.Options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();
+                await Task.Delay(_clusterState.Options.WaitForConnectionMilliseconds, cancellationToken).CAF();
             }
 
             // this *will* throw

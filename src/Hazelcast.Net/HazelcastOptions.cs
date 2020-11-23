@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 
@@ -24,8 +25,6 @@ namespace Hazelcast
     /// </summary>
     public sealed partial class HazelcastOptions
     {
-        private string _clientNamePrefix;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
         /// </summary>
@@ -46,6 +45,8 @@ namespace Hazelcast
             Subscribers = new List<IHazelcastClientEventSubscriber>(other.Subscribers);
             Labels = new HashSet<string>(other.Labels);
             LoggerFactory = other.LoggerFactory.Clone();
+
+            ((IClusterOptions) this).ClientNamePrefix = ((IClusterOptions) other).ClientNamePrefix;
 
             Core = other.Core.Clone();
             Heartbeat = other.Heartbeat.Clone();

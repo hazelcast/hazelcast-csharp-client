@@ -26,7 +26,7 @@ namespace Hazelcast
         /// Gets the Hazelcast configuration section name, which is <c>"hazelcast"</c>.
         /// </summary>
         /// <returns>The Hazelcast configuration section name, which is <c>"hazelcast"</c>.</returns>
-        public const string Hazelcast = "hazelcast";
+        internal const string Hazelcast = "hazelcast";
 
         /// <summary>
         /// Builds Hazelcast options.

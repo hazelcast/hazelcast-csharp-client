@@ -78,11 +78,11 @@ namespace Hazelcast.Tests.Networking
 
             options.Addresses.Clear();
 
-            options.Cloud.Enabled = true;
-
             options.Cloud.DiscoveryToken = null;
+            Assert.That(options.Cloud.Enabled, Is.False);
             Assert.Throws<ArgumentException>(() => _ = new AddressProvider(options, loggerFactory));
             options.Cloud.DiscoveryToken = "*****";
+            Assert.That(options.Cloud.Enabled, Is.True);
 
             options.Cloud.UrlBase = null;
             Assert.Throws<ArgumentNullException>(() => _ = new AddressProvider(options, loggerFactory));
