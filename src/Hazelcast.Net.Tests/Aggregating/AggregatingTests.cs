@@ -96,23 +96,24 @@ namespace Hazelcast.Tests.Aggregating
 
             var data = _serializationService.ToData(aggregator);
 
-            IAggregator<TResult> x = null;
             if (aggregatorType.IsGenericType)
             {
                 // doh - cannot deserialize generic types?
+                IAggregator<object> x = null;
 
                 if (aggregatorType.GetGenericTypeDefinition() == typeof(MaxAggregator<>))
-                    x = _serializationService.ToObject<MaxAggregator<TResult>>(data);
+                    x = _serializationService.ToObject<MaxAggregator<object>>(data);
                 else if (aggregatorType.GetGenericTypeDefinition() == typeof(MinAggregator<>))
-                    x = _serializationService.ToObject<MinAggregator<TResult>>(data);
+                    x = _serializationService.ToObject<MinAggregator<object>>(data);
                 else Assert.Fail("Unsupported generic aggregator type.");
+
+                Assert.That(x.AttributePath, Is.EqualTo(aggregator.AttributePath));
             }
             else
             {
-                x = _serializationService.ToObject<IAggregator<TResult>>(data);
+                var x = _serializationService.ToObject<IAggregator<TResult>>(data);
+                Assert.That(x.AttributePath, Is.EqualTo(aggregator.AttributePath));
             }
-
-            Assert.That(x.AttributePath, Is.EqualTo(aggregator.AttributePath));
         }
     }
 }
