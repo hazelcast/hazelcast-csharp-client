@@ -62,6 +62,15 @@ namespace Hazelcast.Clustering
         /// Gets the service factory for <see cref="ILoadBalancer"/>.
         /// </summary>
         /// <returns>The service factory for <see cref="ILoadBalancer"/>.</returns>
+        /// <remarks>
+        /// <para>Load balancing determines how the Hazelcast client selects the member to
+        /// talk to, when it could talk to any member. By default it uses a round-robin
+        /// mechanism (see <see cref="RoundRobinLoadBalancer"/>), but it can also be random
+        /// (see <see cref="RandomLoadBalancer"/>) or static (see <see cref="StaticLoadBalancer"/>)
+        /// or any type that implements <see cref="ILoadBalancer"/>. In the configuration file,
+        /// the short names <c>roundrobin</c>, <c>random</c> and <c>static</c> can be used
+        /// in place of the full type name.</para>
+        /// </remarks>
         SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
 
         /// <summary>

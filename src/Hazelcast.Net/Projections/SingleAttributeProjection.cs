@@ -21,7 +21,7 @@ namespace Hazelcast.Projections
     /// <summary>
     /// Represents a simple attribute projection.
     /// </summary>
-    public class SingleAttributeProjection : IProjection
+    public class SingleAttributeProjection : IProjection, IIdentifiedDataSerializable
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SingleAttributeProjection"/> class/.

@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Remote
                 var key = i + "key";
                 await multiDictionary.PutAsync(key, "value");
                 await using var context = await Client.BeginTransactionAsync();
-                var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
+                var txMultiDictionary = await context.GetMultiMapAsync<string, string>(multiDictionary.Name);
                 Assert.IsFalse(await txMultiDictionary.PutAsync(key, "value"));
                 Assert.IsTrue(await txMultiDictionary.PutAsync(key, "value1"));
                 Assert.IsTrue(await txMultiDictionary.PutAsync(key, "value2"));
@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Remote
             await multiDictionary.PutAsync(key, "value");
             var context = await Client.BeginTransactionAsync();
 
-            var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
+            var txMultiDictionary = await context.GetMultiMapAsync<string, string>(multiDictionary.Name);
 
             Assert.IsFalse(await txMultiDictionary.PutAsync(key, "value"));
             Assert.IsTrue(await txMultiDictionary.PutAsync(key, "value1"));
@@ -74,7 +74,7 @@ namespace Hazelcast.Tests.Remote
             await multiDictionary.PutAsync(key, value);
             var context = await Client.BeginTransactionAsync();
 
-            var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
+            var txMultiDictionary = await context.GetMultiMapAsync<string, string>(multiDictionary.Name);
             await txMultiDictionary.RemoveAsync(key, value);
             await context.CommitAsync();
 
@@ -95,7 +95,7 @@ namespace Hazelcast.Tests.Remote
 
             var context = await Client.BeginTransactionAsync();
 
-            var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
+            var txMultiDictionary = await context.GetMultiMapAsync<string, string>(multiDictionary.Name);
             await txMultiDictionary.RemoveAsync(key);
             await context.CommitAsync();
 
@@ -113,7 +113,7 @@ namespace Hazelcast.Tests.Remote
 
             var context = await Client.BeginTransactionAsync();
 
-            var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
+            var txMultiDictionary = await context.GetMultiMapAsync<string, string>(multiDictionary.Name);
 
             await txMultiDictionary.PutAsync(key, "newValue");
             await txMultiDictionary.PutAsync("newKey", value);
@@ -133,7 +133,7 @@ namespace Hazelcast.Tests.Remote
             await multiDictionary.PutAsync(key, value);
 
             var context = await Client.BeginTransactionAsync();
-            var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
+            var txMultiDictionary = await context.GetMultiMapAsync<string, string>(multiDictionary.Name);
 
             await txMultiDictionary.PutAsync(key, "newValue");
 

@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.Remote
 
             await using (var tx = await Client.BeginTransactionAsync())
             {
-                var txList = await tx.GetTransactionalAsync(list);
+                var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
                 Assert.AreEqual(2, await txList.CountAsync());
@@ -59,7 +59,7 @@ namespace Hazelcast.Tests.Remote
 
             await using (var tx = await Client.BeginTransactionAsync())
             {
-                var txList = await tx.GetTransactionalAsync(list);
+                var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
                 Assert.AreEqual(2, await txList.CountAsync());
@@ -87,7 +87,7 @@ namespace Hazelcast.Tests.Remote
 
             await using (var tx = await Client.BeginTransactionAsync())
             {
-                var txList = await tx.GetTransactionalAsync(list);
+                var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
                 Assert.AreEqual(2, await txList.CountAsync());
@@ -116,7 +116,7 @@ namespace Hazelcast.Tests.Remote
 
             await using (var tx = await Client.BeginTransactionAsync())
             {
-                var txList = await tx.GetTransactionalAsync(list);
+                var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
                 Assert.AreEqual(2, await txList.CountAsync());

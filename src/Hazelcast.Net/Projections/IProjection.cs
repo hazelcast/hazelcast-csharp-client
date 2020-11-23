@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Serialization;
-
 namespace Hazelcast.Projections
 {
     /// <summary>
@@ -24,6 +22,6 @@ namespace Hazelcast.Projections
     /// n-to-n projections.</para>
     /// <para>Projections must have a server-side counterpart.</para>
     /// </remarks>
-    public interface IProjection : IIdentifiedDataSerializable
+    public interface IProjection
     { }
 }

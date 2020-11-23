@@ -20,7 +20,7 @@ namespace Hazelcast.Security
     /// <summary>
     /// Provides an implementation of <see cref="ICredentialsFactory"/> that returns a static username+password <see cref="ICredentials"/>.
     /// </summary>
-    public class UsernamePasswordCredentialsFactory : StaticCredentialsFactory
+    internal class UsernamePasswordCredentialsFactory : StaticCredentialsFactory
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="UsernamePasswordCredentialsFactory"/> class.

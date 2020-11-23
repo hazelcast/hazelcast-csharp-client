@@ -14,7 +14,7 @@
 
 namespace Hazelcast.Transactions
 {
-    public enum TransactionState
+    internal enum TransactionState
     {
         None = 0, // default
         Active,
