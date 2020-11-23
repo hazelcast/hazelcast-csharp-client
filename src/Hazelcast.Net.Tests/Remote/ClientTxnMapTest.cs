@@ -88,12 +88,12 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync("key2", "value2");
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            Assert.That(await txDictionary.GetAndSetAsync("key3", "value3"), Is.Null);
-            Assert.AreEqual(3, await txDictionary.CountAsync());
+            Assert.That(await txDictionary.PutAsync("key3", "value3"), Is.Null);
+            Assert.AreEqual(3, await txDictionary.SizeAsync());
             Assert.AreEqual(3, (await txDictionary.GetKeysAsync()).Count);
             Assert.AreEqual(3, (await txDictionary.GetValuesAsync()).Count);
             await context.CommitAsync();
-            Assert.AreEqual(3, await dictionary.CountAsync());
+            Assert.AreEqual(3, await dictionary.SizeAsync());
             Assert.AreEqual(3, (await dictionary.GetKeysAsync()).Count);
             Assert.AreEqual(3, (await dictionary.GetValuesAsync()).Count);
         }
@@ -121,7 +121,7 @@ namespace Hazelcast.Tests.Remote
 
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            Assert.That(await txDictionary.GetAndSetAsync("key1", "value1"), Is.Null);
+            Assert.That(await txDictionary.PutAsync("key1", "value1"), Is.Null);
             Assert.That(await txDictionary.GetAsync("key1"), Is.EqualTo("value1"));
             Assert.That(await dictionary.GetAsync("key1"), Is.Null);
             await context.CommitAsync();
@@ -137,7 +137,7 @@ namespace Hazelcast.Tests.Remote
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
             var ttlMillis = 100;
-            Assert.That(await txDictionary.GetAndSetAsync("key1", "value1", TimeSpan.FromMilliseconds(ttlMillis)), Is.Null);
+            Assert.That(await txDictionary.PutAsync("key1", "value1", TimeSpan.FromMilliseconds(ttlMillis)), Is.Null);
             Assert.That(await txDictionary.GetAsync("key1"), Is.EqualTo("value1"));
 
             await context.CommitAsync();
@@ -177,7 +177,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync(key, value);
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            await txDictionary.RemoveAsync(key);
+            await txDictionary.DeleteAsync(key);
             await context.CommitAsync();
             Assert.That(await dictionary.GetAsync(key), Is.Null);
         }
@@ -205,8 +205,8 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync(keyValue1, keyValue1);
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            await txDictionary.GetOrAddAsync(keyValue1, "NOT_THIS");
-            await txDictionary.GetOrAddAsync(keyValue2, keyValue2);
+            await txDictionary.PutIfAbsentAsync(keyValue1, "NOT_THIS");
+            await txDictionary.PutIfAbsentAsync(keyValue2, keyValue2);
             await context.CommitAsync();
             Assert.That(await dictionary.GetAsync(keyValue1), Is.EqualTo(keyValue1));
             Assert.That(await dictionary.GetAsync(keyValue2), Is.EqualTo(keyValue2));
@@ -223,7 +223,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync(key, value);
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            await txDictionary.RemoveAsync(key);
+            await txDictionary.DeleteAsync(key);
             await context.CommitAsync();
             Assert.That(await dictionary.GetAsync(key), Is.Null);
         }
@@ -262,8 +262,8 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync(key1, "OLD_VALUE");
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            await txDictionary.TryUpdateAsync(key1, replaceValue);
-            await txDictionary.TryUpdateAsync(key2, "NOT_POSSIBLE");
+            await txDictionary.ReplaceAsync(key1, replaceValue);
+            await txDictionary.ReplaceAsync(key2, "NOT_POSSIBLE");
             await context.CommitAsync();
             Assert.That(await dictionary.GetAsync(key1), Is.EqualTo(replaceValue));
             Assert.That(await dictionary.GetAsync(key2), Is.Null);
@@ -284,8 +284,8 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync(key2, oldValue2);
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            await txDictionary.TryUpdateAsync(key1, oldValue1, newValue1);
-            await txDictionary.TryUpdateAsync(key2, "NOT_OLD_VALUE", "NEW_VALUE_CANT_BE_THIS");
+            await txDictionary.ReplaceAsync(key1, oldValue1, newValue1);
+            await txDictionary.ReplaceAsync(key2, "NOT_OLD_VALUE", "NEW_VALUE_CANT_BE_THIS");
             await context.CommitAsync();
             Assert.That(await dictionary.GetAsync(key1), Is.EqualTo(newValue1));
             Assert.That(await dictionary.GetAsync(key2), Is.EqualTo(oldValue2));
@@ -333,7 +333,7 @@ namespace Hazelcast.Tests.Remote
             var value = "Value";
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            Assert.That(await txDictionary.GetAndSetAsync(key, value), Is.Null);
+            Assert.That(await txDictionary.PutAsync(key, value), Is.Null);
             await context.CommitAsync();
         }
 

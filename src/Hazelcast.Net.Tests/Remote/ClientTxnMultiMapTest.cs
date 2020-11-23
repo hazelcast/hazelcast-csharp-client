@@ -31,12 +31,12 @@ namespace Hazelcast.Tests.Remote
             for (var i = 0; i < 10; i++)
             {
                 var key = i + "key";
-                await multiDictionary.TryAddAsync(key, "value");
+                await multiDictionary.PutAsync(key, "value");
                 await using var context = await Client.BeginTransactionAsync();
                 var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
-                Assert.IsFalse(await txMultiDictionary.TryAddAsync(key, "value"));
-                Assert.IsTrue(await txMultiDictionary.TryAddAsync(key, "value1"));
-                Assert.IsTrue(await txMultiDictionary.TryAddAsync(key, "value2"));
+                Assert.IsFalse(await txMultiDictionary.PutAsync(key, "value"));
+                Assert.IsTrue(await txMultiDictionary.PutAsync(key, "value1"));
+                Assert.IsTrue(await txMultiDictionary.PutAsync(key, "value2"));
                 Assert.AreEqual(3, (await txMultiDictionary.GetAsync(key)).Count);
                 await context.CommitAsync();
                 Assert.AreEqual(3, (await multiDictionary.GetAsync(key)).Count);
@@ -48,14 +48,14 @@ namespace Hazelcast.Tests.Remote
         {
             var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             var key = "key";
-            await multiDictionary.TryAddAsync(key, "value");
+            await multiDictionary.PutAsync(key, "value");
             var context = await Client.BeginTransactionAsync();
 
             var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
 
-            Assert.IsFalse(await txMultiDictionary.TryAddAsync(key, "value"));
-            Assert.IsTrue(await txMultiDictionary.TryAddAsync(key, "value1"));
-            Assert.IsTrue(await txMultiDictionary.TryAddAsync(key, "value2"));
+            Assert.IsFalse(await txMultiDictionary.PutAsync(key, "value"));
+            Assert.IsTrue(await txMultiDictionary.PutAsync(key, "value1"));
+            Assert.IsTrue(await txMultiDictionary.PutAsync(key, "value2"));
             Assert.AreEqual(3, (await txMultiDictionary.GetAsync(key)).Count);
 
             await context.CommitAsync();
@@ -71,7 +71,7 @@ namespace Hazelcast.Tests.Remote
 
             var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
 
-            await multiDictionary.TryAddAsync(key, value);
+            await multiDictionary.PutAsync(key, value);
             var context = await Client.BeginTransactionAsync();
 
             var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
@@ -89,7 +89,7 @@ namespace Hazelcast.Tests.Remote
             var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
             for (var i = 0; i < 10; i++)
             {
-                await multiDictionary.TryAddAsync(key, value + i);
+                await multiDictionary.PutAsync(key, value + i);
             }
 
 
@@ -109,16 +109,16 @@ namespace Hazelcast.Tests.Remote
             var value = "value";
 
             var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
-            await multiDictionary.TryAddAsync(key, value);
+            await multiDictionary.PutAsync(key, value);
 
             var context = await Client.BeginTransactionAsync();
 
             var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
 
-            await txMultiDictionary.TryAddAsync(key, "newValue");
-            await txMultiDictionary.TryAddAsync("newKey", value);
+            await txMultiDictionary.PutAsync(key, "newValue");
+            await txMultiDictionary.PutAsync("newKey", value);
 
-            Assert.AreEqual(3, await txMultiDictionary.CountAsync());
+            Assert.AreEqual(3, await txMultiDictionary.SizeAsync());
 
             await context.CommitAsync();
         }
@@ -130,12 +130,12 @@ namespace Hazelcast.Tests.Remote
             var value = "value";
 
             var multiDictionary = await Client.GetMultiMapAsync<string, string>(CreateUniqueName());
-            await multiDictionary.TryAddAsync(key, value);
+            await multiDictionary.PutAsync(key, value);
 
             var context = await Client.BeginTransactionAsync();
             var txMultiDictionary = await context.GetTransactionalAsync(multiDictionary);
 
-            await txMultiDictionary.TryAddAsync(key, "newValue");
+            await txMultiDictionary.PutAsync(key, "newValue");
 
             Assert.AreEqual(2, await txMultiDictionary.ValueCountAsync(key));
 

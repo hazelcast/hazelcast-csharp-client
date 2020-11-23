@@ -142,7 +142,7 @@ namespace Hazelcast.Tests.Remote
                     logger.LogDebug("Key: " + await map.GetAsync("key"));
                     logger.LogDebug("Values: " + string.Join(", ", await map.GetValuesAsync()));
                     logger.LogDebug("Keys: " + string.Join(", ", await map.GetKeysAsync()));
-                    logger.LogDebug("Count: " + await map.CountAsync());
+                    logger.LogDebug("Count: " + await map.SizeAsync());
 
                     logger.LogDebug("Entries: " + string.Join(", ", await map.GetEntriesAsync()));
                     logger.LogDebug("ContainsKey: " + await map.ContainsKeyAsync("key"));

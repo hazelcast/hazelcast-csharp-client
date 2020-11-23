@@ -298,13 +298,13 @@ namespace Hazelcast.Tests.NearCache
         [Test]
         public async Task TestNearCacheInvalidationOnPut()
         {
-            await TestInvalidateAsync((m, k) => m.RemoveAsync(k));
+            await TestInvalidateAsync((m, k) => m.DeleteAsync(k));
         }
 
         [Test]
         public async Task TestNearCacheInvalidationOnRemove()
         {
-            await TestInvalidateAsync((m, k) => m.RemoveAsync(k));
+            await TestInvalidateAsync((m, k) => m.DeleteAsync(k));
         }
 
         [Test]
@@ -323,7 +323,7 @@ namespace Hazelcast.Tests.NearCache
             Assert.AreEqual(100, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
-            await dictionary.RemoveAsync(new SqlPredicate("this == 'value2'"));
+            await dictionary.RemoveAllAsync(new SqlPredicate("this == 'value2'"));
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -401,7 +401,7 @@ namespace Hazelcast.Tests.NearCache
             Assert.AreEqual(1, cache.Count);
             Assert.AreEqual(cache.Count, cache.Statistics.EntryCount);
 
-            await dictionary.RemoveAsync("key");
+            await dictionary.DeleteAsync("key");
             value = await dictionary.GetAsync("key");
             Assert.That(value, Is.Null);
         }

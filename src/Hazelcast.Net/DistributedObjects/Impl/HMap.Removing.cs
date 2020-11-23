@@ -66,7 +66,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<TValue> GetAndRemoveAsync(TKey key)
+        public Task<TValue> RemoveAsync(TKey key)
             => GetAndRemoveAsync(key, CancellationToken.None);
 
         private
@@ -138,7 +138,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task RemoveAsync(TKey key)
+        public Task DeleteAsync(TKey key)
             => RemoveAsync(key, CancellationToken.None);
 
         private
@@ -157,7 +157,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task RemoveAsync(IPredicate predicate)
+        public Task RemoveAllAsync(IPredicate predicate)
             => RemoveAsync(predicate, CancellationToken.None);
 
         protected virtual
@@ -180,7 +180,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>For performance reasons, this method does not return the value. Prefer
-        /// <see cref="RemoveAsync(TKey)"/> if the value is required.</para>
+        /// <see cref="DeleteAsync"/> if the value is required.</para>
         /// </remarks>
         protected virtual
 #if !HZ_OPTIMIZE_ASYNC

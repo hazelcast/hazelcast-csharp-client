@@ -20,15 +20,15 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of MultiMap</summary>
     public interface IHTxMultiMap<TKey, TValue> : ITransactionalObject
     {
-        Task<IReadOnlyList<TValue>> GetAsync(TKey key);
+        Task<IReadOnlyCollection<TValue>> GetAsync(TKey key);
 
-        Task<bool> TryAddAsync(TKey key, TValue value);
+        Task<bool> PutAsync(TKey key, TValue value);
 
         Task<bool> RemoveAsync(TKey key, TValue value);
 
-        Task<IReadOnlyList<TValue>> RemoveAsync(TKey key);
+        Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key);
 
-        Task<int> CountAsync();
+        Task<int> SizeAsync();
 
         Task<int> ValueCountAsync(TKey key);
     }

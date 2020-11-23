@@ -77,7 +77,7 @@ namespace Hazelcast.DistributedObjects
         /// defined in <c>key</c>'s class.
         /// </para>
         /// </remarks>
-        Task<bool> TryAddAsync(TKey key, TValue value);
+        Task<bool> PutAsync(TKey key, TValue value);
 
         // Getting
 
@@ -88,7 +88,7 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>Returns the set of key-value pairs in the multi-map.</summary>
         /// <returns>the collection of key-value pairs in the multi-map. </returns>
-        Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync();
+        Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntriesAsync();
 
         /// <summary>Returns the set of keys in the multi-map.</summary>
         /// <returns>the collection of keys in the multi-map.</returns>
@@ -116,12 +116,12 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>Returns the number of key-value pairs in the multi-map.</summary>
         /// <returns>the number of key-value pairs in the multi-map.</returns>
-        Task<int> CountAsync();
+        Task<int> SizeAsync();
 
         /// <summary>Returns number of values matching to given key in the multi-map.</summary>
         /// <param name="key">the key whose values count are to be returned</param>
         /// <returns>number of values matching to given key in the multi-map.</returns>
-        Task<int> CountValuesAsync(TKey key);
+        Task<int> ValueCountAsync(TKey key);
 
         // Removing
 
@@ -134,13 +134,13 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Removes all the entries with the given key.</summary>
         /// <param name="key">the key of the entries to remove</param>
         /// <returns>the collection of removed values associated with the given key</returns>
-        Task<IReadOnlyCollection<TValue>> GetAndRemoveAsync(TKey key);
+        Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key);
 
         /// <summary>
         /// Removes all the entries with the given key.
         /// </summary>
         /// <param name="key">the key of the entries to remove</param>
-        Task RemoveAsync(TKey key);
+        Task DeleteAsync(TKey key);
 
         /// <summary>Clears the multi-map. Removes all key-value pairs.</summary>
         Task ClearAsync();

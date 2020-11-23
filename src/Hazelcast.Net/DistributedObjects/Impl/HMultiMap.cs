@@ -157,7 +157,7 @@ namespace Hazelcast.DistributedObjects.Impl
             => UnsubscribeBaseAsync(subscriptionId);
 
         /// <inheritdoc />
-        public async Task<bool> TryAddAsync(TKey key, TValue value)
+        public async Task<bool> PutAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = MultiMapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId);
@@ -176,7 +176,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync()
+        public Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntriesAsync()
              => GetEntrySetAsync(CancellationToken.None);
 
         private async Task<IReadOnlyCollection<KeyValuePair<TKey, TValue>>> GetEntrySetAsync(CancellationToken cancellationToken)
@@ -233,7 +233,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<int> CountAsync()
+        public async Task<int> SizeAsync()
         {
             var requestMessage = MultiMapSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
@@ -241,7 +241,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<int> CountValuesAsync(TKey key)
+        public async Task<int> ValueCountAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapValueCountCodec.EncodeRequest(Name, keyData, ContextId);
@@ -260,7 +260,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<TValue>> GetAndRemoveAsync(TKey key)
+        public async Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key)
         {
             var keyData = ToSafeData(key);
 
@@ -271,7 +271,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task RemoveAsync(TKey key)
+        public async Task DeleteAsync(TKey key)
         {
             var keyData = ToSafeData(key);
 

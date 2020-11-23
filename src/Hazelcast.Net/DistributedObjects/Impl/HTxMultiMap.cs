@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(ServiceNames.MultiMap, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public async Task<IReadOnlyList<TValue>> GetAsync(TKey key)
+        public async Task<IReadOnlyCollection<TValue>> GetAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<bool> TryAddAsync(TKey key, TValue value)
+        public async Task<bool> PutAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
             var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
@@ -55,7 +55,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalMultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<IReadOnlyList<TValue>> RemoveAsync(TKey key)
+        public async Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key)
         {
             var keyData = ToData(key);
             var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<int> CountAsync()
+        public async Task<int> SizeAsync()
         {
             var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
