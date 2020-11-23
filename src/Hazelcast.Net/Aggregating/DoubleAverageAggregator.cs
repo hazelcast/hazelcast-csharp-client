@@ -22,7 +22,7 @@ namespace Hazelcast.Aggregating
     /// <remarks>
     /// <para>Null input values are not accepted.</para>
     /// </remarks>
-    public sealed class DoubleAverageAggregator : AggregatorBase<double>
+    internal sealed class DoubleAverageAggregator : AggregatorBase<double>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DoubleAverageAggregator"/> class.

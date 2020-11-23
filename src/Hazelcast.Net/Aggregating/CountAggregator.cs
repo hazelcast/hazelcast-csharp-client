@@ -22,7 +22,7 @@ namespace Hazelcast.Aggregating
     /// <remarks>
     /// <para>Null input values are accepted.</para>
     /// </remarks>
-    public sealed class CountAggregator : AggregatorBase<long>
+    internal sealed class CountAggregator : AggregatorBase<long>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CountAggregator"/> class.

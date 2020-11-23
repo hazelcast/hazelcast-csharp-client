@@ -22,7 +22,7 @@ namespace Hazelcast.Aggregating
     /// <remarks>
     /// <para>Null input values not accepted.</para>
     /// </remarks>
-    public sealed class FloatingPointSumAggregator : AggregatorBase<double>
+    internal sealed class FloatingPointSumAggregator : AggregatorBase<double>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FloatingPointSumAggregator"/> class.

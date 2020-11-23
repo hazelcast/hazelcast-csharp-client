@@ -21,7 +21,7 @@ namespace Hazelcast.Aggregating
     /// <summary>
     /// Provides a base class for all <see cref="IAggregator{TResult}"/> implementations.
     /// </summary>
-    public abstract class AggregatorBase<TResult> : IAggregator<TResult>
+    internal abstract class AggregatorBase<TResult> : IAggregator<TResult>, IIdentifiedDataSerializable
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AggregatorBase{TResult}"/> class.
