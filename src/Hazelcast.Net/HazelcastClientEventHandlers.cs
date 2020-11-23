@@ -165,7 +165,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ConnectionAdded(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
+        internal HazelcastClientEventHandlers ConnectionAdded(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler.AsAsync()));
             return this;
@@ -176,7 +176,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ConnectionAdded(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
+        internal HazelcastClientEventHandlers ConnectionAdded(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler));
             return this;
@@ -187,7 +187,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ConnectionRemoved(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
+        internal HazelcastClientEventHandlers ConnectionRemoved(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler.AsAsync()));
             return this;
@@ -198,7 +198,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
+        internal  HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
         {
             Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler));
             return this;

@@ -17,7 +17,7 @@ namespace Hazelcast.Events
     /// <summary>
     /// Represents event data for connection lifecycle events.
     /// </summary>
-    public class ConnectionLifecycleEventArgs
+    internal class ConnectionLifecycleEventArgs
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectionLifecycleEventArgs"/> class.
