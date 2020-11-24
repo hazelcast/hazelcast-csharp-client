@@ -14,10 +14,20 @@
 
 namespace Hazelcast.Data
 {
+    /// <summary>
+    /// Configures indexing options for <see cref="IndexType.Bitmap"/> indexes.
+    /// </summary>
     public class BitmapIndexOptions
     {
+        /// <summary>
+        /// Gets or sets the unique key.
+        /// </summary>
         public string UniqueKey { get; set; } = Predicates.Predicate.KeyConst;
 
+        /// <summary>
+        /// Gets or sets the <see cref="UniqueKeyTransformation"/> which will be
+        /// applied to the <see cref="UniqueKey"/> value.
+        /// </summary>
         public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
     }
 }

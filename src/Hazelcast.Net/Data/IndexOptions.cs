@@ -22,14 +22,14 @@ namespace Hazelcast.Data
     /// Configuration of an index.
     /// </summary>
     /// <remarks>
-    /// Hazelcast support two types of indexes: sorted index and hash index.
-    /// Sorted indexes could be used with equality and range predicates and have logarithmic search time.
-    /// Hash indexes could be used with equality predicates and have constant search time assuming the hash
-    /// function of the indexed field disperses the elements properly.
-    /// <p>
-    /// Index could be created on one or more attributes.
+    /// <para>Hazelcast support three types of indexes: sorted, hash and bitmap indexes. They can be
+    /// created on one or more attributes, specified by their name.</para>
+    /// <para>Sorted indexes can be used with equality and range predicates and have logarithmic
+    /// search time.</para>
+    /// <para>Hash indexes can be used with equality predicates and have constant search time assuming
+    /// the hash function of the indexed field disperses the elements properly.</para>
+    /// <para>Bitmap indexes (to be completed).</para>
     /// </remarks>
-    /// <seealso cref="IndexType"/>
     public class IndexOptions
     {
         public static readonly IndexType DefaultType = IndexType.Sorted;
@@ -49,26 +49,29 @@ namespace Hazelcast.Data
         }
 
         /// <summary>
-        /// Name of the index.
+        /// Gets or sets the name of the index.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// Type of the index.
+        /// Gets or sets the type of the index.
         /// </summary>
         public IndexType Type { get; set; } = DefaultType;
 
         /// <summary>
-        /// Indexed attributes.
+        /// Gets the indexed attributes.
         /// </summary>
         public IList<string> Attributes { get; } = new List<string>();
 
+        /// <summary>
+        /// Gets or sets the bitmap index options.
+        /// </summary>
         public BitmapIndexOptions BitmapIndexOptions{ get; set; } = new BitmapIndexOptions();
 
         /// <summary>
-        /// Adds an index attribute with the given.
+        /// Adds an indexed attribute.
         /// </summary>
-        /// <param name="attribute">Attribute name.</param>
+        /// <param name="attribute">The name of the attribute.</param>
         /// <returns>This instance for chaining.</returns>
         public IndexOptions AddAttribute(string attribute)
         {
@@ -77,6 +80,11 @@ namespace Hazelcast.Data
             return this;
         }
 
+        /// <summary>
+        /// Adds indexed attributes.
+        /// </summary>
+        /// <param name="attributes">The names of the attributes.</param>
+        /// <returns>This instance for chaining.</returns>
         public IndexOptions AddAttributes(params string[] attributes)
         {
             foreach (var attribute in attributes)
@@ -104,6 +112,7 @@ namespace Hazelcast.Data
                 throw new ArgumentException($"Attribute name cannot end with dot: {attributeName}", nameof(attributeName));
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"IndexConfig[Name={Name}, IndexType= {Type}, Attributes={string.Join(",", Attributes)}]";

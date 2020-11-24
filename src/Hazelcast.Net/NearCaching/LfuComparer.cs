@@ -40,4 +40,19 @@ namespace Hazelcast.NearCaching
             return cx.CompareTo(cy);
         }
     }
+
+    /// <summary>
+    /// Compares <see cref="NearCacheEntry"/> randomly.
+    /// </summary>
+    internal class RandomComparer : IComparer<NearCacheEntry>
+    {
+        /// <inheritdoc />
+        public int Compare(NearCacheEntry x, NearCacheEntry y)
+        {
+            if (x == null) throw new ArgumentNullException(nameof(x));
+            if (y == null) throw new ArgumentNullException(nameof(y));
+
+            return 0; // meaning they are equal = no reason to pick one or the other
+        }
+    }
 }

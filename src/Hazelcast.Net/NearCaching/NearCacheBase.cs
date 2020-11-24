@@ -462,6 +462,7 @@ namespace Hazelcast.NearCaching
                 EvictionPolicy.Lfu => new LfuComparer(),
                 EvictionPolicy.Lru => new LruComparer(),
                 EvictionPolicy.None => new DefaultComparer(),
+                EvictionPolicy.Random => new RandomComparer(),
                 _ => throw new NotSupportedException()
             };
         }

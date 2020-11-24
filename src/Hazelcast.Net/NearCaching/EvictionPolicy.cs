@@ -32,6 +32,11 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Evict least-frequently used entries first.
         /// </summary>
-        Lfu
+        Lfu,
+
+        /// <summary>
+        /// Evict random entries.
+        /// </summary>
+        Random
     }
 }
