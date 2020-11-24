@@ -90,21 +90,6 @@ namespace Hazelcast.Tests.Core
             // and, the test should not leak the task exception
         }
 
-        [Test]
-        public async Task AwaitCanceled()
-        {
-            // ok to pass null
-            await TaskEx.AwaitCanceled(null);
-
-            // normal task = normal
-            await TaskEx.AwaitCanceled(Task.CompletedTask);
-
-            // canceled task = ok too
-            var completionSource = new TaskCompletionSource<int>();
-            completionSource.TrySetCanceled();
-            await TaskEx.AwaitCanceled(completionSource.Task);
-        }
-
         private static Task Delay(CancellationToken cancellationToken)
         {
             return Task.Delay(4_000, cancellationToken);

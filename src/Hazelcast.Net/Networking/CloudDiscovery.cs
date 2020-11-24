@@ -38,9 +38,10 @@ namespace Hazelcast.Networking
         private readonly ILogger _logger;
         private readonly Uri _endpointUrl;
         private readonly int _connectionTimeoutMilliseconds;
+        private readonly int _defaultPort;
         private static string _response;
 
-        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, Uri cloudBaseUrl, ILoggerFactory loggerFactory)
+        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, Uri cloudBaseUrl, int defaultPort, ILoggerFactory loggerFactory)
         {
             if (string.IsNullOrWhiteSpace(discoveryToken)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(discoveryToken));
             if (cloudBaseUrl == null) throw new ArgumentNullException(nameof(cloudBaseUrl));
@@ -97,7 +98,7 @@ namespace Hazelcast.Networking
             return sr.ReadToEnd();
         }
 
-        private static Dictionary<NetworkAddress, NetworkAddress> ParseResponse(string jsonResult)
+        private Dictionary<NetworkAddress, NetworkAddress> ParseResponse(string jsonResult)
         {
             var regexPrivate = new Regex(RegexPrivateStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             var regexPublic = new Regex(RegexPublicStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -112,7 +113,7 @@ namespace Hazelcast.Networking
 
                 var publicAddress = NetworkAddress.Parse(publicAddressStr);
                 if (publicAddress.Port == 0)
-                    publicAddress = publicAddress.WithPort(NetworkAddress.DefaultPort);
+                    publicAddress = publicAddress.WithPort(_defaultPort);
 
                 var privateAddress = NetworkAddress.Parse(privateAddressStr);
                 if (privateAddress.Port == 0)

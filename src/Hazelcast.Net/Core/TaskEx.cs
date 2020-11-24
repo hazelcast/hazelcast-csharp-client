@@ -26,25 +26,6 @@ namespace Hazelcast.Core
     internal static class TaskEx
     {
         /// <summary>
-        /// Awaits a task that is expected to be canceled.
-        /// </summary>
-        /// <param name="task">The task.</param>
-        /// <returns>A task that will complete when the <paramref name="task"/> has completed.</returns>
-        /// <remarks>
-        /// <para>If the <paramref name="task"/> throws a <see cref="OperationCanceledException"/>, that exception is swallowed,
-        /// as the task is expected to have been canceled. Any other exception is rethrown.</para>
-        /// </remarks>
-        public static async ValueTask AwaitCanceled(Task task)
-        {
-            if (task == null) return;
-            try
-            {
-                await task.CAF();
-            }
-            catch (OperationCanceledException) { /* expected */ }
-        }
-
-        /// <summary>
         /// Runs a task with a timeout.
         /// </summary>
         /// <param name="taskAction">The task action.</param>

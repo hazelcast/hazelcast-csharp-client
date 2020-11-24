@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 // ReSharper disable once CheckNamespace
 namespace System
@@ -12,16 +13,19 @@ namespace System
         /// <param name="task">The task.</param>
         /// <returns>A task with an observed exception.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task ObserveException(this Task task)
-            => task.ContinueWith(t =>
-                {
-                    if (!t.IsFaulted) return t;
-                    _ = t.Exception;
-                    return Task.CompletedTask;
-                },
-                default,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Current).Unwrap();
+        public static async Task ObserveException(this Task task)
+        {
+            if (task == null) return;
+
+            try
+            {
+                await task.CAF();
+            }
+            catch
+            {
+                // observe the exception
+            }
+        }
 
         /// <summary>
         /// Observes the exception of a faulted task.
@@ -29,15 +33,39 @@ namespace System
         /// <param name="task">The task.</param>
         /// <returns>A task with an observed exception.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task<T> ObserveException<T>(this Task<T> task)
-            => task.ContinueWith(t =>
-                {
-                    if (!t.IsFaulted) return t;
-                    _ = t.Exception;
-                    return Task.FromResult(default(T)!);
-                },
-                default,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Current).Unwrap();
+        public static async Task<T> ObserveException<T>(this Task<T> task)
+        {
+            if (task == null) return default;
+
+            try
+            {
+                return await task.CAF();
+            }
+            catch 
+            {
+                // observe the exception
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// Observes a canceled task.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>A task that will complete when the task completes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task ObserveCanceled(this Task task)
+        {
+            if (task == null) return;
+
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // observe the exception
+            }
+        }
     }
 }

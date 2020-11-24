@@ -39,17 +39,20 @@ namespace Hazelcast.Clustering
 
         private readonly ILogger _logger;
 
+        private readonly AddressLocker _addressLocker = new AddressLocker();
+
         // address -> client
         // used for fast querying of _memberClients by network address
         private readonly ConcurrentDictionary<NetworkAddress, MemberConnection> _addressConnections = new ConcurrentDictionary<NetworkAddress, MemberConnection>();
 
         private Func<CancellationToken, ValueTask> _onFirstConnection;
+        private Func<CancellationToken, ValueTask> _onConnectionToNewCluster;
+
         private Guid _clusterServerSideId; // the server-side identifier of the cluster
 
         private Task _clusterConnectTask; // the task that connects the first client of the cluster
         private Task _clusterMembersTask; // the task that connects clients for all members of the cluster
-
-        private Func<CancellationToken, ValueTask> _onConnectionToNewCluster;
+        private CancellationTokenSource _clusterMembersCancel; // cancellation for _clusterMemberTask
 
         public ClusterConnections(ClusterState clusterState, ClusterClusterEvents clusterClusterEvents, ClusterEvents clusterEvents, ClusterMembers clusterMembers, ISerializationService serializationService, Func<ValueTask> terminateAsync)
         {
@@ -92,7 +95,7 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Connects to the server-side cluster.
+        /// Connects to the cluster.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when connected.</returns>
@@ -101,8 +104,10 @@ namespace Hazelcast.Clustering
             using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken, false);
             cancellationToken = cancellation.Token;
 
+            // properties cannot be changed once connected
             _clusterState.MarkPropertiesReadOnly();
 
+            // FIXME understand the lock
             using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
                 if (_clusterState.ConnectionState != ClusterConnectionState.NotConnected)
@@ -118,16 +123,17 @@ namespace Hazelcast.Clustering
                 // wait for the member table
                 await _clusterMembers.WaitForFirstMemberViewEventAsync(cancellationToken).CAF();
 
-                // start connecting members - if we're smart-routing - else there's only 1 connection
-                // this is a background task that cancels with the cluster
+                // if we are smart-routing, start the background tasks that ensures that
+                // we have one connection per member (else, there is only one connection)
                 if (_clusterState.Options.Networking.SmartRouting)
                     _clusterMembersTask = EnsureMemberConnectionsAsync(_clusterState.CancellationToken);
 
-                // execute subscribers
-                await OnFirstConnection(cancellationToken).CAF();
+                // run first connection callback (deals with subscribers...)
+                await _onFirstConnection(cancellationToken).CAF();
             }
             catch
             {
+                // we *have* retried and failed, now terminate
                 await _terminateAsync().CAF();
                 _clusterState.ConnectionState = ClusterConnectionState.NotConnected;
                 throw;
@@ -135,27 +141,14 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Starts <see cref="ConnectFirstAsync"/> in a background task.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <remarks>
-        /// <para>This method is used to reconnect a cluster that has been disconnected.</para>
-        /// </remarks>
-        private void StartReconnectWithLock(CancellationToken cancellationToken)
-        {
-            _clusterConnectTask ??= ConnectFirstAsync(cancellationToken).ContinueWith(async x =>
-            {
-                if (x.IsFaulted)
-                {
-                    await _terminateAsync().CAF();
-                }
-            }, cancellationToken, TaskContinuationOptions.None, TaskScheduler.Current);
-        }
-
-        /// <summary>
         /// Establishes a first connection to the server-side cluster.
         /// </summary>
         /// <returns>A task that will complete when connected.</returns>
+        /// <remarks>
+        /// <para>Tries all the candidate addresses until one works; tries again
+        /// according to the configured retry strategy, and if nothing works,
+        /// end up throwing an exception.</para>
+        /// </remarks>
         private async Task ConnectFirstAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
@@ -173,7 +166,7 @@ namespace Hazelcast.Clustering
                         break;
 
                     tried.Add(address);
-                    var attempt = await TryConnectAsync(address, cancellationToken).CAF();
+                    var attempt = await GetOrConnectAsync(address, cancellationToken).CAF();
                     if (attempt)
                     {
                         // avoid race conditions, this task is going to end, and if the
@@ -225,12 +218,15 @@ namespace Hazelcast.Clustering
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                // TODO: 1s delay should be configurable / not hard-coded
                 await Task.Delay(1000, cancellationToken).CAF();
+
+                // TODO: consider connecting to members in parallel
 
                 foreach (var member in _clusterMembers.SnapshotMembers())
                 {
                     if (cancellationToken.IsCancellationRequested) break;
-                    await TryConnectAsync(member.Address, cancellationToken).CAF(); // does not throw
+                    await GetOrConnectAsync(member.Address, cancellationToken).CAF(); // does not throw
 
                     // ignore result
                     // TryConnectAsync does add the connection to ...
@@ -239,58 +235,43 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Tries to get, or open, a connection to an address.
+        /// Gets, or opens, a connection to an address.
         /// </summary>
         /// <param name="address">The address.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the connection has been retrieved or established,
         /// and represents an attempt representing the client.</returns>
         /// <remarks>
-        /// <para>This method does not throw but returns a failed attempt.</para>
+        /// <para>This method does not throw but may return a failed attempt.</para>
         /// </remarks>
-        private async Task<Attempt<MemberConnection>> TryConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
+        private async Task<Attempt<MemberConnection>> GetOrConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
+            // if we already have a client for that address, return the client
+            // if it is active, or fail if it is not - cannot open yet another
+            // client to that same address
             // ReSharper disable once InconsistentlySynchronizedField
             if (_addressConnections.TryGetValue(address, out var clientConnection))
-            {
-                // if we already have a client for that address, return the client
-                // if it is active, or fail if it is not - cannot open yet another
-                // client to that same address
-                if (clientConnection.Active) return clientConnection;
-                return Attempt.Failed;
-            }
+                return Attempt.If(clientConnection.Active, clientConnection);
 
-            // ensure we only connect to an endpoint once at a time
-            // addresses are unique by their IPEndPoint as a NetworkAddress hash
-            // is in fact its IPEndPoint hash - so we can lock the address
-            // itself to achieve what we want (no two addresses can point to the
-            // same endpoint).
-            //
-            // we do not *wait* for the lock, either we can have it or not - this
-            // is the only place where an address is locked, so if it's locked
-            // some other code is already trying to connect to it and there is no
-            // point waiting to try too - faster to just fail immediately
+            // lock the address - can only connect once at a time per address
+            using var locked = _addressLocker.LockAsync(address);
 
-            using var acquired = await address.Lock.TryAcquireAsync().CAF();
-            if (!acquired) return Attempt.Failed;
+            // exit now if canceled
+            if (cancellationToken.IsCancellationRequested)
+                return Attempt.Fail<MemberConnection>();
 
+            // test again - maybe the address has been reconnected
+            // ReSharper disable once InconsistentlySynchronizedField
+            if (_addressConnections.TryGetValue(address, out clientConnection))
+                return Attempt.If(clientConnection.Active, clientConnection);
+
+            // else actually connect
             try
             {
-                // ReSharper disable once InconsistentlySynchronizedField
-                if (_addressConnections.TryGetValue(address, out clientConnection))
-                {
-                    // if we already have a client for that address, return the client
-                    // if it is active, or fail if it is not - cannot open yet another
-                    // client to that same address
-                    if (clientConnection.Active) return clientConnection;
-                    return Attempt.Failed;
-                }
-
-                // else actually connect - this may throw
+                // this may throw
 #pragma warning disable CA2000 // Dispose objects before losing scope - will be disposed, eventually
-                clientConnection = await ConnectWithLockAsync(address, cancellationToken).CAF();
+                return await ConnectAsync(address, cancellationToken).CAF();
 #pragma warning restore CA2000
-                return clientConnection;
             }
             catch (Exception e)
             {
@@ -299,12 +280,12 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Opens a connection to an address, while being locked.
+        /// Opens a connection to an address.
         /// </summary>
         /// <param name="address">The address.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
-        private async Task<MemberConnection> ConnectWithLockAsync(NetworkAddress address, CancellationToken cancellationToken)
+        private async Task<MemberConnection> ConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // map private address to public address
             address = _clusterMembers.MapAddress(address);
@@ -381,7 +362,7 @@ namespace Hazelcast.Clustering
 
                 _clusterEvents.NotifyConnectionEstablished(connection);
 
-                await _clusterClusterEvents.OnConnectionAdded(/*client*/).CAF(); // does not throw
+                await _clusterClusterEvents.OnConnectionAdded().CAF(); // does not throw
 
                 if (isFirst)
                     await _clusterClusterEvents.OnClientLifecycleEvent(ClientLifecycleState.Connected).CAF(); // does not throw
@@ -390,17 +371,24 @@ namespace Hazelcast.Clustering
             return connection;
         }
 
+        /// <summary>
+        /// Deals with a <see cref="MemberConnection"/> going down.
+        /// </summary>
+        /// <param name="connection">The terminated connection.</param>
         private async ValueTask HandleConnectionTermination(MemberConnection connection)
         {
-            // this runs when a client signals that it is shutting down
-
             var terminate = false;
 
+            // FIXME explain lock
             using (await _clusterState.ClusterLock.AcquireAsync(CancellationToken.None).CAF())
             {
+                // not a connection anymore
                 _addressConnections.TryRemove(connection.Address, out _);
 
+                // notify members + figure out whether that was the last remaining connection
                 var wasLast = _clusterMembers.NotifyTerminatedConnection(connection);
+
+                // FIXME need to reorder things here
 
                 if (wasLast)
                     await _clusterClusterEvents.OnClientLifecycleEvent(ClientLifecycleState.Disconnected).CAF(); // does not throw
@@ -409,9 +397,22 @@ namespace Hazelcast.Clustering
 
                 _clusterEvents.NotifyConnectionTerminated(connection, wasLast);
 
+                // if there are remaining connections, the background members task will
+                // deal with the situation and reconnect whatever needs to be reconnected,
+                // but we can still talk to the cluster - otherwise, we are disconnected
                 if (!wasLast)
                     return;
 
+                // shutdown the background members task
+                _clusterMembersCancel.Cancel();
+                await _clusterMembersTask.ObserveCanceled().CAF();
+
+                // look for race conditions - can the background member task restore ?!
+                // FIXME what happens when the above task is canceled? DANGER!
+                // connecting cannot be aborted randomly, that's dangerous!
+                // FIXME can the above task have created another connection in the meantime?
+
+                // the cluster is now disconnected
                 _logger.LogInformation("Disconnected (reconnect mode: {ReconnectMode}, {ReconnectAction})",
                     _clusterState.Options.Networking.ReconnectMode,
                     _clusterState.Options.Networking.ReconnectMode switch
@@ -422,19 +423,29 @@ namespace Hazelcast.Clustering
                         _ => "Meh?"
                     });
 
+                // decide what to do next
                 switch (_clusterState.Options.Networking.ReconnectMode)
                 {
                     case ReconnectMode.DoNotReconnect:
+                        // DoNotReconnect = the cluster becomes & remains Disconnected
                         _clusterState.ConnectionState = ClusterConnectionState.Disconnected;
                         terminate = true;
                         break;
 
+                    // idea here was to suspend (queue?) all calls until reconnected, it
                     // was never supported by the CSharp client, really - fallback to async
-                    case ReconnectMode.ReconnectSync: // TODO: implement ReconnectSync
+                    case ReconnectMode.ReconnectSync: // TODO: implement ReconnectSync?
 
                     case ReconnectMode.ReconnectAsync:
+                        // ReconnectAsync = the cluster becomes Connecting, and tries to reconnect
                         _clusterState.ConnectionState = ClusterConnectionState.Connecting;
-                        StartReconnectWithLock(_clusterState.CancellationToken);
+                        // FIXME client lifecycle events?
+                        _clusterConnectTask ??= ConnectFirstAsync(_clusterState.CancellationToken).ContinueWith(async x =>
+                        {
+                            await _terminateAsync().CAF();
+
+                        }, default, TaskContinuationOptions.NotOnRanToCompletion, TaskScheduler.Current);
+
                         break;
 
                     default:
@@ -448,10 +459,11 @@ namespace Hazelcast.Clustering
             }
         }
 
+        /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await TaskEx.AwaitCanceled(_clusterMembersTask).CAF();
-            await TaskEx.AwaitCanceled(_clusterConnectTask).CAF();
+            await _clusterMembersTask.ObserveCanceled().CAF();
+            await _clusterConnectTask.ObserveCanceled().CAF();
         }
     }
 }

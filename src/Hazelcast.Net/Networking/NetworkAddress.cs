@@ -13,21 +13,17 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace Hazelcast.Networking
 {
     /// <summary>
     /// Represents a network address.
     /// </summary>
-    public class NetworkAddress
+    public class NetworkAddress : IEquatable<NetworkAddress>
     {
-        private volatile SemaphoreSlim _lock;
-
         // NOTES
         //
         // an IP v4 address is 'x.x.x.x' where each octet 'x' is a byte (8 bits unsigned)
@@ -49,21 +45,11 @@ namespace Hazelcast.Networking
         // which explain the 'node-local' vs 'link-local' vs 'global' scopes
 
         /// <summary>
-        /// Gets the default Hazelcast server port.
-        /// </summary>
-        public const int DefaultPort = 5701;
-
-        /// <summary>
-        /// Gets the port range to scan.
-        /// </summary>
-        public const int PortRange = 3;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="NetworkAddress"/> class with a hostname and a port.
         /// </summary>
         /// <param name="hostName">The hostname.</param>
         /// <param name="port">The port.</param>
-        public NetworkAddress(string hostName, int port = DefaultPort)
+        public NetworkAddress(string hostName, int port = 0)
             : this(hostName, GetIPAddressByName(hostName), port)
         { }
 
@@ -72,7 +58,7 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <param name="ipAddress">The IP address.</param>
         /// <param name="port">The port.</param>
-        public NetworkAddress(IPAddress ipAddress, int port = DefaultPort)
+        public NetworkAddress(IPAddress ipAddress, int port = 0)
             : this(null, ipAddress, port)
         { }
 
@@ -99,7 +85,7 @@ namespace Hazelcast.Networking
         /// <remarks>
         /// <para>The <paramref name="hostName"/> and <paramref name="ipAddress"/> are assumed to be consistent.</para>
         /// </remarks>
-        private NetworkAddress(string hostName, IPAddress ipAddress, int port)
+        internal NetworkAddress(string hostName, IPAddress ipAddress, int port)
         {
             if (ipAddress == null) throw new ArgumentNullException(nameof(ipAddress));
             if (port < 0) throw new ArgumentOutOfRangeException(nameof(port));
@@ -121,21 +107,6 @@ namespace Hazelcast.Networking
 
             IPEndPoint = new IPEndPoint(source.IPAddress, port);
             HostName = source.HostName;
-        }
-
-        /// <summary>
-        /// Gets the lock semaphore for this address.
-        /// </summary>
-        public SemaphoreSlim Lock
-        {
-            get
-            {
-                // lazily create locks - no overhead as long as not locking
-                // may create multiple semaphores but only 1 will be used
-                if (_lock != null) return _lock;
-                Interlocked.CompareExchange(ref _lock, new SemaphoreSlim(1, 1), null);
-                return _lock;
-            }
         }
 
         /// <summary>
@@ -196,7 +167,7 @@ namespace Hazelcast.Networking
         /// get an IP for the hostname via DNS.</para>
         /// </remarks>
         // ReSharper disable once InconsistentNaming
-        public static IPAddress GetIPAddressByName(string hostname)
+        internal static IPAddress GetIPAddressByName(string hostname)
         {
             if (hostname == "0.0.0.0") return IPAddress.Any;
 
@@ -213,7 +184,7 @@ namespace Hazelcast.Networking
         /// <param name="s">The string.</param>
         /// <param name="defaultPort">The default port to use if none is specified.</param>
         /// <returns>The network address.</returns>
-        public static NetworkAddress Parse(string s, int defaultPort = 0)
+        internal static NetworkAddress Parse(string s, int defaultPort = 0)
         {
             if (TryParse(s, out NetworkAddress address, defaultPort)) return address;
             throw new FormatException($"The string \"{s}\" does not represent a valid network address.");
@@ -226,7 +197,7 @@ namespace Hazelcast.Networking
         /// <param name="address">The network address.</param>
         /// <param name="defaultPort">The default port to use if none is specified.</param>
         /// <returns>Whether the string could be parsed into an address.</returns>
-        public static bool TryParse(string s, out NetworkAddress address, int defaultPort = 0)
+        internal static bool TryParse(string s, out NetworkAddress address, int defaultPort = 0)
         {
             address = null;
 
@@ -325,90 +296,11 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
-        /// Tries to parse a string into all possible <see cref="NetworkAddress"/> instance.
-        /// </summary>
-        /// <param name="s">The string.</param>
-        /// <param name="addresses">The network addresses.</param>
-        /// <returns>Whether the string could be parsed into addresses.</returns>
-        public static bool TryParse(string s, out IEnumerable<NetworkAddress> addresses)
-        {
-            if (!TryParse(s, out NetworkAddress address))
-            {
-                addresses = Enumerable.Empty<NetworkAddress>();
-                return false;
-            }
-
-            if (address.IsIpV4)
-            {
-                addresses = ExpandPorts(address);
-                return true;
-            }
-
-            // got to be v6 - cannot get IPAddress to parse anything that would not be v4 or v6
-            //if (!address.IsIpV6)
-            //    throw new NotSupportedException($"Address family {address.IPAddress.AddressFamily} is not supported.");
-
-            // see https://4sysops.com/archives/ipv6-tutorial-part-6-site-local-addresses-and-link-local-addresses/
-            // loopback - is ::1 exclusively
-            // site-local - equivalent to private IP addresses in v4 = fe:c0:...
-            // link-local - hosts on the link
-            // global - globally route-able addresses
-
-            // global or has a scope = qualified, can return
-            if (address.IsIpV6GlobalOrScoped)
-            {
-                addresses = ExpandPorts(address);
-                return true;
-            }
-
-            // address is site-local or link-local, and has no scopeId
-            // get localhost addresses
-            addresses = GetV6LocalAddresses().SelectMany(x => ExpandPorts(address, x));
-            return true;
-        }
-
-        private static IEnumerable<NetworkAddress> ExpandPorts(NetworkAddress address, IPAddress ipAddress = null)
-        {
-            if (address.Port > 0)
-            {
-                // qualified with a port = can only be this address
-                yield return address;
-            }
-            else
-            {
-                // not qualified with a port = can be a port range
-                for (var port = DefaultPort; port < DefaultPort + PortRange; port++)
-                    yield return ipAddress == null
-                        ? new NetworkAddress(address, port)
-                        : new NetworkAddress(address.HostName, ipAddress, port);
-            }
-        }
-
-        /// <summary>
-        /// (internal for tests only)
-        /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
-        /// </summary>
-        /// <returns>All scoped IP addresses corresponding to the specified address.</returns>
-        internal static IEnumerable<IPAddress> GetV6LocalAddresses()
-        {
-            // if the address is IP v6 local without a scope,
-            // resolve -> the local address, with all avail scopes?
-
-            var hostname = HDns.GetHostName();
-            var entry = HDns.GetHostEntry(hostname);
-            foreach (var address in entry.AddressList)
-            {
-                if (address.AddressFamily == AddressFamily.InterNetworkV6)
-                    yield return address;
-            }
-        }
-
-        /// <summary>
         /// Creates a new instance of the network address with the same host but a different port.
         /// </summary>
         /// <param name="port">The port.</param>
         /// <returns>A new instance of the network address with the same host but a different port.</returns>
-        public NetworkAddress WithPort(int port) => new NetworkAddress(Host, port);
+        internal NetworkAddress WithPort(int port) => new NetworkAddress(Host, port);
 
         /// <inheritdoc />
         public override string ToString()
@@ -426,6 +318,12 @@ namespace Hazelcast.Networking
         public override bool Equals(object obj)
         {
             return obj is NetworkAddress other && Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(NetworkAddress other)
+        {
+            return Equals(this, other);
         }
 
         /// <summary>

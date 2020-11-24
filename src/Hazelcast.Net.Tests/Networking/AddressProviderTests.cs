@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Networking
             var addressProvider = new AddressProvider(options, loggerFactory);
 
             Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(3));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("127.0.0.1")));
+            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("127.0.0.1", 5701)));
             Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("127.0.0.1", 5702)));
             Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("127.0.0.1", 5703)));
 
@@ -52,7 +52,7 @@ namespace Hazelcast.Tests.Networking
             addressProvider = new AddressProvider(options, loggerFactory);
 
             Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(3));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.1")));
+            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.1", 5701)));
             Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.1", 5702)));
             Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.1", 5703)));
 

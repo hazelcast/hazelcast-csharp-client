@@ -744,8 +744,8 @@ namespace Hazelcast.Clustering
         {
             await _scheduler.DisposeAsync().CAF();
 
-            await TaskEx.AwaitCanceled(_clusterEventsTask).CAF();
-            await TaskEx.AwaitCanceled(_ghostTask).CAF();
+            await _clusterEventsTask.ObserveCanceled().CAF();
+            await _ghostTask.ObserveCanceled().CAF();
 
             // connection is going down
             // it will be disposed as well as all other connections

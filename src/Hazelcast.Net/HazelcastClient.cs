@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -97,7 +98,7 @@ namespace Hazelcast
         public string ClusterName => Cluster.Name;
 
         /// <inheritdoc />
-        public IEnumerable<MemberInfo> Members => Cluster.Members.SnapshotMembers();
+        public IReadOnlyCollection<MemberInfo> Members => Cluster.Members.SnapshotMembers().ToList();
 
         /// <inheritdoc />
         public bool IsActive => Cluster.IsActive;
