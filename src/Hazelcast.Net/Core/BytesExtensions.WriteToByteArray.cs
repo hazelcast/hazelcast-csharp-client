@@ -16,7 +16,7 @@ using System;
 
 namespace Hazelcast.Core
 {
-    public static partial class BytesExtensions // Write to byte[]
+    internal static partial class BytesExtensions // Write to byte[]
     {
         /// <summary>
         /// Writes a <see cref="byte"/> value to an array of bytes.

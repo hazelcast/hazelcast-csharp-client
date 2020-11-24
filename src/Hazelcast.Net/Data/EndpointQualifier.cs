@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Data
 {
-    public class EndpointQualifier : IIdentifiedDataSerializable, IEquatable<EndpointQualifier>
+    internal class EndpointQualifier : IIdentifiedDataSerializable, IEquatable<EndpointQualifier>
     {
         public EndpointQualifier(ProtocolType type, string identifier)
         {

@@ -16,7 +16,7 @@ using System;
 
 namespace Hazelcast.Core
 {
-    public static partial class BytesExtensions // Read from byte[]
+    internal static partial class BytesExtensions // Read from byte[]
     {
         /// <summary>
         /// Reads a <see cref="byte"/> value from an array of bytes.

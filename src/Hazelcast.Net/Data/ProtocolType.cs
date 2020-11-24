@@ -1,13 +1,13 @@
 ﻿namespace Hazelcast.Data
 {
-    public enum ProtocolType
+    internal enum ProtocolType
     {
-        // order must match ProtocolType.java
+        // values MUST match ProtocolType.java
 
         Member = 0,
-        Client,
-        Wan,
-        Rest,
-        MemCache
+        Client = 1,
+        Wan = 2,
+        Rest = 3,
+        MemCache = 4
     }
 }

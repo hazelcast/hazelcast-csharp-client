@@ -90,7 +90,7 @@ namespace Hazelcast.Data
             return this;
         }
 
-        public static void ValidateAttribute(IndexOptions options, string attributeName)
+        internal static void ValidateAttribute(IndexOptions options, string attributeName)
         {
             if (attributeName == null)
                 throw new ArgumentNullException(nameof(attributeName), $"Attribute name cannot be null: {options}");

@@ -17,7 +17,7 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
-    public static partial class BytesExtensions // Read from ReadOnlySpan
+    internal static partial class BytesExtensions // Read from ReadOnlySpan
     {
         /// <summary>
         /// Reads a <see cref="short"/> value from a span of bytes.

@@ -19,6 +19,8 @@ namespace Hazelcast.Data
     /// </summary>
     public enum IndexType
     {
+        // values MUST match IndexType.java
+
         /// <summary>
         /// Sorted index. Can be used with equality and range predicates.
         /// </summary>
@@ -27,6 +29,11 @@ namespace Hazelcast.Data
         /// <summary>
         /// Hash index. Can be used with equality predicates.
         /// </summary>
-        Hashed = 1
+        Hashed = 1,
+
+        /// <summary>
+        /// Bitmap index. Can be used with equality predicates.
+        /// </summary>
+        Bitmap = 2
     }
 }
