@@ -20,6 +20,7 @@ using Hazelcast;
 
 [assembly: InternalsVisibleTo("Hazelcast.Net.Tests, PublicKey=" + AssemblySigning.PublicKey)]
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing, PublicKey=" + AssemblySigning.PublicKey)]
+[assembly: InternalsVisibleTo("hb, PublicKey=" + AssemblySigning.PublicKey)]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection, PublicKey=" + AssemblySigning.PublicKey)]
 
 // We propose to accept that the code is not CLS Compliant anymore (remove

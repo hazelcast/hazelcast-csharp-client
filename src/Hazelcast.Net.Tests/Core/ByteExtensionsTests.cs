@@ -14,6 +14,8 @@
 
 using System;
 using System.Buffers;
+using System.Linq;
+using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Testing;
 using NUnit.Framework;
@@ -533,6 +535,20 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
+        public void ValidateUtf8()
+        {
+            // a string that contains 1, 2, 3 and 4 bytes chars
+            var s = new string(new[] { Utf8Char.OneByte, Utf8Char.TwoBytes, Utf8Char.ThreeBytes }) + Utf8Char.FourBytes;
+
+            // validate Encoding.UTF8 as a reference for Write/Read Utf8Char tests below
+            var encodingBytes = Encoding.UTF8.GetBytes(s);
+            AssertBytes(encodingBytes, 0x78, 0xc3, 0xa3, 0xe0, 0xa3, 0x9f, 0xf0, 0x9f, 0x98, 0x81);
+
+            // and back
+            Assert.That(Encoding.UTF8.GetString(encodingBytes), Is.EqualTo(s));
+        }
+
+        [Test]
         public void WriteUtf8Char()
         {
             var bytes = new byte[8];
@@ -563,10 +579,15 @@ namespace Hazelcast.Tests.Core
             Assert.That(pos, Is.EqualTo(5));
             AssertBytes(bytes, 0, 0, 0xe0, 0xa3, 0x9f, 0, 0, 0);
 
-            // cannot write surrogate pairs
-            // TODO: support writing surrogate pairs
+            // cannot write surrogate pairs as chars!
             pos = 2;
             Assert.Throws<InvalidOperationException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.FourBytesH));
+
+            // must write as string!
+            pos = 2;
+            bytes.WriteUtf8Chars(ref pos, Utf8Char.FourBytes);
+            Assert.That(pos, Is.EqualTo(6));
+            AssertBytes(bytes, 0, 0, 0xf0, 0x9f, 0x98, 0x81, 0, 0);
         }
 
         [Test]
@@ -599,11 +620,15 @@ namespace Hazelcast.Tests.Core
             Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char.ThreeBytes));
             Assert.That(pos, Is.EqualTo(5));
 
-            // cannot read surrogate pairs
-            // TODO: support reading surrogate pairs
-            bytes = new byte[] { 0, 0, 0xf0, 0xa0, 0x8c, 0x8e, 0, 0 };
+            // cannot read surrogate pairs as chars!
+            bytes = new byte[] { 0, 0, 0xf0, 0x9f, 0x98, 0x81, 0, 0 };
             pos = 2;
             Assert.Throws<InvalidOperationException>(() => _ = bytes.ReadUtf8Char(ref pos));
+
+            // must read as string!
+            // with a length of 2 chars
+            pos = 2;
+            Assert.That(bytes.ReadUtf8String(ref pos, 2), Is.EqualTo(Utf8Char.FourBytes));
         }
 
         [Test]
@@ -693,7 +718,11 @@ namespace Hazelcast.Tests.Core
 
             if (equals) return;
 
-            Assert.Fail($"Expected ({string.Join(" ", values)}) but got ({string.Join(" ", bytes)}).");
+            var svalues = values.Select(x => x.ToString("x2"));
+            var sbytes = bytes.Select(x => x.ToString("x2"));
+
+            Assert.Fail($"Expected ({string.Join(" ", svalues)}) " +
+                        $"but got ({string.Join(" ", sbytes)}).");
         }
 
         private enum SomeEnum

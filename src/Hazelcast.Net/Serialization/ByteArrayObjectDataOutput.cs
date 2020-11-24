@@ -363,13 +363,18 @@ namespace Hazelcast.Serialization
         {
             endianness = endianness.Resolve(DefaultEndianness);
 
+            // length is the length of the string, in chars
+            // each char can be 1, 2 or 3 bytes - surrogate pairs are reported as 2 chars
+            // note: this is consistent with Java
+
             var length = value?.Length ?? ArraySerializer.NullArrayLength;
             Write(length, endianness);
             if (value == null || length <= 0) return;
 
-            Validate(_position, length * 3 * BytesExtensions.SizeOfByte); // UTF8 char is max 3 bytes
-            for (var i = 0; i < length; i++)
-                _data.WriteUtf8Char(ref _position, value[i]);
+            // and so, this is safe for ensuring we have enough bytes
+            Validate(_position, length * 4 * BytesExtensions.SizeOfByte);
+
+            _data.WriteUtf8Chars(ref _position, value);
         }
 
         /// <inheritdoc />

@@ -15,7 +15,15 @@
 
         // there are no '4 bytes' chars in C#, surrogate pairs are 2 chars
         // '\u2070e' CJK UNIFIED IDEOGRAPH-2070E f0a09c8e
-        public const char FourBytesH = '\uf0a0';
-        public const char FourBytesL = '\u8c8e';
+        public const char FourBytesH = (char) 0xd83d;
+        public const char FourBytesL = (char) 0xde01;
+
+        // can only be expressed as a string
+        // '\u1f601' GRINNING FACE WITH SMILING EYES f09f9881
+        public const string FourBytes = "😁"; // "\u1f601" - d83d + de01
+
+        // can only be expressed as a string
+        // '\u2070e' CJK UNIFIED IDEOGRAPH-2070E f0a09c8e
+        //public const string FourBytes = "𠜎"; // "\u2070e" - d841 + df0e
     }
 }
