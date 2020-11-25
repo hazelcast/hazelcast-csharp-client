@@ -13,10 +13,13 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using Hazelcast.Configuration;
 
 namespace Hazelcast.Core
 {
-    /// <summary>The IConfigPatternMatcher provides a strategy to match an item name to a configuration pattern.</summary>
+    /// <summary>
+    /// Provides a strategy to match an item name to a configuration pattern.
+    /// </summary>
     /// <remarks>
     /// The IConfigPatternMatcher provides a strategy to match an item name to a configuration pattern.
     /// <p/>
@@ -35,12 +38,11 @@ namespace Hazelcast.Core
     /// </remarks>
     public interface IPatternMatcher
     {
-        /// <summary>Returns the best match for an item name out of a list of configuration patterns.</summary>
-        /// <param name="configPatterns">list of configuration patterns</param>
-        /// <param name="itemName">item name to match</param>
-        /// <returns>a key of configPatterns which matches the item name or <tt>null</tt> if nothing matches</returns>
-        /// <exception cref="InvalidConfigurationException">if ambiguous configurations are found</exception>
-        /// <exception cref="InvalidConfigurationException"/>
-        string Matches(IEnumerable<string> configPatterns, string itemName);
+        /// <summary>Gets the best match for an item name out of a list of configuration patterns.</summary>
+        /// <param name="patterns">A list of configuration patterns.</param>
+        /// <param name="name">The item name to match.</param>
+        /// <returns>The element of the <see cref="patterns"/> list that best matches the item <see cref="name"/>, if any; otherwise <c>null</c>.</returns>
+        /// <exception cref="ConfigurationException">Occurs when ambiguous configurations are found.</exception>
+        string Matches(IEnumerable<string> patterns, string name);
     }
 }

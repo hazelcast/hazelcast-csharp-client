@@ -20,14 +20,14 @@ namespace Hazelcast.Core
 {
     internal class MatchingPointPatternMatcher : IPatternMatcher
     {
-        public virtual string Matches(IEnumerable<string> configPatterns, string itemName)
+        public virtual string Matches(IEnumerable<string> patterns, string name)
         {
             string candidate = null;
             string duplicate = null;
             var lastMatchingPoint = -1;
-            foreach (var pattern in configPatterns)
+            foreach (var pattern in patterns)
             {
-                var matchingPoint = GetMatchingPoint(pattern, itemName);
+                var matchingPoint = GetMatchingPoint(pattern, name);
                 if (matchingPoint > -1 && matchingPoint >= lastMatchingPoint)
                 {
                     duplicate = matchingPoint == lastMatchingPoint ? candidate : null;
@@ -38,7 +38,7 @@ namespace Hazelcast.Core
             if (duplicate != null)
             {
                 throw new ConfigurationException(
-                    $"Found ambiguous configurations for item \"{itemName}\": \"{candidate}\" vs. \"{duplicate}\"\nPlease specify your configuration.");
+                    $"Found ambiguous configurations for item \"{name}\": \"{candidate}\" vs. \"{duplicate}\"\nPlease specify your configuration.");
             }
             return candidate;
         }
