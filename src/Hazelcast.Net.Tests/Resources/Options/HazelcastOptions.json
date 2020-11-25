@@ -7,6 +7,11 @@
     // name of the cluster
     "clusterName": "cluster",
 
+    // how long to pause before looking for clients again, when trying to
+    // set the client that handles cluster view events, and no client is
+    // available
+    "waitForClientMilliseconds": 1001,
+
     // client labels
     "labels": [
       "label_1",
@@ -78,19 +83,14 @@
       // whether to use smart routing
       "smartRouting": false,
 
-      // whether to retry non-readonly operations
-      "retryOperations": false,
+      // whether to redo non-readonly operations
+      "redoOperations": false,
 
       // ?
       "connectionTimeoutMilliseconds": 1000,
 
       // how to reconnect in case the client is disconnected from the cluster
       "reconnectMode": "doNotReconnect",
-
-      // how long to pause before looking for clients again, when trying to
-      // set the client that handles cluster view events, and no client is
-      // available
-      "waitForClientMilliseconds": 1001,
 
       "ssl": {
         "enabled": true,

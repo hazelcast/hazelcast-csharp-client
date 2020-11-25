@@ -124,6 +124,9 @@ namespace Hazelcast.Tests.Configuration
 
             var loadBalancer = options.LoadBalancer.Service;
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
+
+            var clusterOptions = (IClusterOptions) options;
+            Assert.AreEqual(1000, clusterOptions.WaitForConnectionMilliseconds);
         }
 
         [Test]
@@ -139,7 +142,9 @@ namespace Hazelcast.Tests.Configuration
         {
             var options = ReadResource(Resources.HazelcastOptions).Messaging;
 
-            Assert.AreEqual(1000, options.MaxFastInvocationCount);
+            // internal, cannot change
+            Assert.AreEqual(5, options.MaxFastInvocationCount);
+
             Assert.AreEqual(1001, options.MinRetryDelayMilliseconds);
             Assert.AreEqual(1003, options.OperationTimeoutMilliseconds);
         }
@@ -163,9 +168,8 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsTrue(options.Addresses.Contains("otherhost"));
             Assert.IsFalse(options.ShuffleAddresses);
             Assert.IsFalse(options.SmartRouting);
-            Assert.IsFalse(options.RetryOperations);
+            Assert.IsFalse(options.RedoOperations);
             Assert.AreEqual(1000, options.ConnectionTimeoutMilliseconds);
-            Assert.AreEqual(1001, options.WaitForClientMilliseconds);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
             Assert.IsFalse(options.ShuffleAddresses);
 
@@ -186,7 +190,9 @@ namespace Hazelcast.Tests.Configuration
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);
             Assert.AreEqual("token", cloudOptions.DiscoveryToken);
-            Assert.AreEqual(new Uri("http://cloud"), cloudOptions.UrlBase);
+
+            // constant
+            Assert.AreEqual(new Uri("https://coordinator.hazelcast.cloud/"), cloudOptions.UrlBase);
 
             var socketOptions = options.Socket;
             Assert.AreEqual(1000, socketOptions.BufferSizeKiB);

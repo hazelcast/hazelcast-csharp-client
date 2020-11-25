@@ -52,8 +52,8 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var sstate = ToSafeState<SubscriptionState<CollectionItemEventHandlers<T>>>(state);
 
+            if (eventTypeData == 0) return;
             var eventType = (CollectionItemEventTypes) eventTypeData;
-            if (eventType == CollectionItemEventTypes.Nothing) return;
 
             var member = Cluster.Members.GetMember(memberId);
             var item = LazyArg<T>(itemData);

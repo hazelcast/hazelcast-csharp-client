@@ -51,7 +51,7 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Gets or sets the eviction percentage.
         /// </summary>
-        public int EvictionPercentage { get; set; } = 20;
+        internal int EvictionPercentage { get; set; } = 20;
 
         /// <summary>
         /// Gets or sets the in-memory format.
@@ -69,7 +69,7 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Gets or sets the period of the cleanup.
         /// </summary>
-        public int CleanupPeriodSeconds { get; set; } = 5;
+        internal int CleanupPeriodSeconds { get; set; } = 5;
 
         /// <summary>
         /// Gets or sets the maximum size of the cache before entries get evicted.

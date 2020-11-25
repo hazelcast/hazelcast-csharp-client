@@ -25,7 +25,6 @@ namespace Hazelcast.Examples.Client
             // create an Hazelcast client and connect to a Cloud server
             var options = HazelcastOptions.Build();
             var cloud = options.Networking.Cloud;
-            cloud.Enabled = true;
             cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
 
             var ssl = options.Networking.Ssl;

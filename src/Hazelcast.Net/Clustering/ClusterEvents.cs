@@ -554,15 +554,7 @@ namespace Hazelcast.Clustering
             // cancelled, when the cluster goes down (and never up again)
             while (!cancellationToken.IsCancellationRequested)
             {
-                connection ??= _clusterMembers.GetRandomConnection(false);
-
-                if (connection == null)
-                {
-                    // no clients => wait for clients
-                    // TODO: consider IRetryStrategy?
-                    await Task.Delay(_clusterState.Options.Networking.WaitForClientMilliseconds, cancellationToken).CAF();
-                    continue;
-                }
+                connection ??= await _clusterMembers.WaitRandomConnection(cancellationToken).CAF();
 
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end

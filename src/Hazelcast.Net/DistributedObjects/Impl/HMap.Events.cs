@@ -34,7 +34,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var handlers = new MapEventHandlers<TKey, TValue>();
             events(handlers);
 
-            var flags = MapEventTypes.Nothing;
+            var flags = default (MapEventTypes);
             foreach (var handler in handlers)
                 flags |= handler.EventType;
 
@@ -106,8 +106,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
         private async ValueTask HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, object state)
         {
+            if (eventTypeData == 0) return;
             var eventType = (MapEventTypes) eventTypeData;
-            if (eventType == MapEventTypes.Nothing) return;
 
             var member = Cluster.Members.GetMember(memberId);
             var key = LazyArg<TKey>(keyData);

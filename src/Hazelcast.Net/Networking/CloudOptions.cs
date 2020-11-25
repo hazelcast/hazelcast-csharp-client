@@ -32,7 +32,6 @@ namespace Hazelcast.Networking
         /// </summary>
         private CloudOptions(CloudOptions other)
         {
-            Enabled = other.Enabled;
             DiscoveryToken = other.DiscoveryToken;
             UrlBase = other.UrlBase;
         }
@@ -40,7 +39,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Whether Hazelcast Cloud is enabled.
         /// </summary>
-        public bool Enabled { get; set; }
+        internal bool Enabled => !string.IsNullOrWhiteSpace(DiscoveryToken);
 
         /// <summary>
         /// Gets or sets the discovery token of the cluster.
@@ -50,7 +49,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets or sets the cloud url base.
         /// </summary>
-        public Uri UrlBase { get; set; } = new Uri("https://coordinator.hazelcast.cloud");
+        internal Uri UrlBase { get; set; } = new Uri("https://coordinator.hazelcast.cloud");
 
         /// <summary>
         /// Clones the options.

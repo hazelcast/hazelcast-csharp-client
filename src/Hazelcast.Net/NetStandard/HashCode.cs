@@ -72,7 +72,7 @@ namespace System
     // https://github.com/Cyan4973/xxHash
 
     [ExcludeFromCodeCoverage] // not covering MS code
-    public struct HashCode
+    internal struct HashCode
     {
         private static readonly uint s_seed = GenerateGlobalSeed();
 

@@ -20,14 +20,9 @@ namespace Hazelcast.Events
     internal enum ConnectionLifecycleEventType
     {
         /// <summary>
-        /// Nothing (default).
-        /// </summary>
-        Nothing = 0,
-
-        /// <summary>
         /// A connection was added.
         /// </summary>
-        Added,
+        Added = 1, // zero is for default, make sure we start at 1
 
         /// <summary>
         /// A connection was removed.

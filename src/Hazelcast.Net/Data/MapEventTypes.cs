@@ -23,14 +23,9 @@ namespace Hazelcast.Data
     public enum MapEventTypes
     {
         /// <summary>
-        /// Nothing (default value).
-        /// </summary>
-        Nothing = 0,
-
-        /// <summary>
         /// The entry was added.
         /// </summary>
-        Added = 1,
+        Added = 1, // zero is for default, make sure we start at 1
 
         /// <summary>
         /// The entry was removed.

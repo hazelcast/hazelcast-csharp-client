@@ -27,19 +27,31 @@ namespace Hazelcast.Clustering
     internal interface IClusterOptions
     {
         /// <summary>
-        /// Gets the cluster name.
+        /// Gets or sets the cluster name.
         /// </summary>
-        string ClusterName { get; }
+        string ClusterName { get; set; }
 
         /// <summary>
-        /// Gets the client name.
+        /// Gets or sets the client name.
         /// </summary>
-        string ClientName { get; }
+        string ClientName { get; set; }
 
         /// <summary>
-        /// Gets the client name prefix.
+        /// Gets or sets the client name prefix.
         /// </summary>
-        string ClientNamePrefix { get; }
+        string ClientNamePrefix { get; set; }
+
+        /// <summary>
+        /// Gets or sets the delay to pause for when looking for a client
+        /// to handle cluster view events and no client is available.
+        /// </summary>
+        /// <remarks>
+        /// <para>In some situations the cluster needs a connection: to subscribe to cluster-level
+        /// events (members view, partitions view), to begin a transaction... It then invokes
+        /// <see cref="ClusterMembers.WaitRandomConnection"/> which will try to return an available
+        /// connection, else will wait for <see cref="WaitForConnectionMilliseconds"/> before retrying.</para>
+        /// </remarks>
+        int WaitForConnectionMilliseconds { get; set; }
 
         /// <summary>
         /// Gets the client labels.
