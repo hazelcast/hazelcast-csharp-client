@@ -32,7 +32,7 @@ namespace Hazelcast.Messaging
         {
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
-            OperationTimeoutMilliseconds = other.OperationTimeoutMilliseconds;
+            InvocationTimeoutMilliseconds = other.InvocationTimeoutMilliseconds;
         }
 
         /// <summary>
@@ -46,9 +46,9 @@ namespace Hazelcast.Messaging
         public int MinRetryDelayMilliseconds { get; set; } = 1_000;
 
         /// <summary>
-        /// Gets or sets the operation timeout.
+        /// Gets or sets the invocation timeout.
         /// </summary>
-        public int OperationTimeoutMilliseconds { get; set; } = 120_000;
+        public int InvocationTimeoutMilliseconds { get; set; } = 120_000;
 
         /// <summary>
         /// Clones the options.
