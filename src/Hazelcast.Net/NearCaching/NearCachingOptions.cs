@@ -64,24 +64,19 @@ namespace Hazelcast.NearCaching
         public IDictionary<string, NearCacheOptions> Caches { get; } = new Dictionary<string, NearCacheOptions>();
 
         /// <summary>
-        /// Gets or sets the NearCache configuration pattern matcher.
-        /// </summary>
-        public IPatternMatcher PatternMatcher { get; set; } = new MatchingPointPatternMatcher();
-
-        /// <summary>
         /// Gets options for a Near Cache.
         /// </summary>
         /// <param name="name">The name.</param>
+        /// <param name="patternMatcher">A pattern matcher.</param>
         /// <returns>Options for the Near Cache matching the specified <paramref name="name"/>.</returns>
-        public NearCacheOptions GetCacheOptions(string name)
+        public NearCacheOptions GetCacheOptions(string name, IPatternMatcher patternMatcher)
         {
+            if (patternMatcher == null) throw new ArgumentNullException(nameof(patternMatcher));
+
             if (Caches.TryGetValue(name, out var configuration))
                 return configuration;
 
-            if (PatternMatcher == null)
-                throw new InvalidOperationException("No pattern matcher has been defined.");
-
-            var key = PatternMatcher.Matches(Caches.Keys, name);
+            var key = patternMatcher.Matches(Caches.Keys, name);
             return key == null ? null : Caches[key];
         }
 
