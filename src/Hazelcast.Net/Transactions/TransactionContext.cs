@@ -61,7 +61,9 @@ namespace Hazelcast.Transactions
         /// <inheritdoc />
         public Guid TransactionId { get; private set; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets or sets the state of the transaction.
+        /// </summary>
         public TransactionState State { get; private set; }
 
         /// <summary>
@@ -231,20 +233,12 @@ namespace Hazelcast.Transactions
         // Objects
 
         /// <inheritdoc />
-        public Task<IHTxList<TItem>> GetTransactionalAsync<TItem>(IHList<TItem> source)
-            => GetListAsync<TItem>(source.Name);
-
-        /// <inheritdoc />
         public Task<IHTxList<TItem>> GetListAsync<TItem>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxList<TItem>, HTxList<TItem>>(ServiceNames.List, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HTxList<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
-
-        /// <inheritdoc />
-        public Task<IHTxSet<TItem>> GetTransactionalAsync<TItem>(IHSet<TItem> source)
-            => GetSetAsync<TItem>(source.Name);
 
         /// <inheritdoc />
         public Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name)
@@ -254,9 +248,7 @@ namespace Hazelcast.Transactions
                     => new HTxSet<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxQueue<TItem>> GetTransactionalAsync<TItem>(IHQueue<TItem> source)
-            => GetQueueAsync<TItem>(source.Name);
-
+        /// <inheritdoc />
         public Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxQueue<TItem>, HTxQueue<TItem>>(ServiceNames.Queue, name, true,
@@ -264,9 +256,7 @@ namespace Hazelcast.Transactions
                     => new HTxQueue<TItem>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMultiMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source)
-            => GetMultiMapAsync<TKey, TValue>(source.Name);
-
+        /// <inheritdoc />
         public Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxMultiMap<TKey, TValue>, HTxMultiMap<TKey, TValue>>(ServiceNames.MultiMap, name, true,
@@ -274,9 +264,7 @@ namespace Hazelcast.Transactions
                     => new HTxMultiMap<TKey, TValue>(name, factory, cluster, _connection, TransactionId, serializationService, loggerFactory));
         }
 
-        public Task<IHTxMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMap<TKey, TValue> source)
-            => GetMapAsync<TKey, TValue>(source.Name);
-
+        /// <inheritdoc />
         public Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
             return _distributedObjectFactory.GetOrCreateAsync<IHTxMap<TKey, TValue>, HTxMap<TKey, TValue>>(ServiceNames.Map, name, true,

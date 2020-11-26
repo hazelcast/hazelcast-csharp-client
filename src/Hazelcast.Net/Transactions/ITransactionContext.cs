@@ -29,11 +29,6 @@ namespace Hazelcast.Transactions
         Guid TransactionId { get; }
 
         /// <summary>
-        /// Gets the state of the transaction.
-        /// </summary>
-        TransactionState State { get; }
-
-        /// <summary>
         /// Commits the transaction.
         /// </summary>
         Task CommitAsync();
@@ -64,14 +59,6 @@ namespace Hazelcast.Transactions
         Task<IHTxList<TItem>> GetListAsync<TItem>(string name);
 
         /// <summary>
-        /// Gets a <see cref="IHTxList{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="source">The original, non-transactional list.</param>
-        /// <returns>The transactional list that was retrieved or created.</returns>
-        Task<IHTxList<TItem>> GetTransactionalAsync<TItem>(IHList<TItem> source);
-
-        /// <summary>
         /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
         /// </summary>
         /// <typeparam name="TItem">The type of the items.</typeparam>
@@ -80,28 +67,12 @@ namespace Hazelcast.Transactions
         Task<IHTxSet<TItem>> GetSetAsync<TItem>(string name);
 
         /// <summary>
-        /// Gets a <see cref="IHTxSet{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="source">The original, non-transactional set.</param>
-        /// <returns>The transactional set that was retrieved or created.</returns>
-        Task<IHTxSet<TItem>> GetTransactionalAsync<TItem>(IHSet<TItem> source);
-
-        /// <summary>
         /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
         /// </summary>
         /// <typeparam name="TItem">The type of the items.</typeparam>
         /// <param name="name">The unique name of the v.</param>
         /// <returns>The transactional queue that was retrieved or created.</returns>
         Task<IHTxQueue<TItem>> GetQueueAsync<TItem>(string name);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxQueue{TItem}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the items.</typeparam>
-        /// <param name="source">The original, non-transactional queue.</param>
-        /// <returns>The transactional queue that was retrieved or created.</returns>
-        Task<IHTxQueue<TItem>> GetTransactionalAsync<TItem>(IHQueue<TItem> source);
 
         /// <summary>
         /// Gets a <see cref="IHTxMultiMap{TKey,TValue}"/> transactional distributed object.
@@ -113,15 +84,6 @@ namespace Hazelcast.Transactions
         Task<IHTxMultiMap<TKey, TValue>> GetMultiMapAsync<TKey, TValue>(string name);
 
         /// <summary>
-        /// Gets a <see cref="IHTxMultiMap{TKey,TValue}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the keys.</typeparam>
-        /// <typeparam name="TValue">The type of the values.</typeparam>
-        /// <param name="source">The original, non-transactional map.</param>
-        /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMultiMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMultiMap<TKey, TValue> source);
-
-        /// <summary>
         /// Gets a <see cref="IHTxMap{TKey,TValue}"/> transactional distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>
@@ -129,14 +91,5 @@ namespace Hazelcast.Transactions
         /// <param name="name">The unique name of the v.</param>
         /// <returns>The transactional map that was retrieved or created.</returns>
         Task<IHTxMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name);
-
-        /// <summary>
-        /// Gets a <see cref="IHTxMap{TKey,TValue}"/> transactional distributed object.
-        /// </summary>
-        /// <typeparam name="TKey">The type of the keys.</typeparam>
-        /// <typeparam name="TValue">The type of the values.</typeparam>
-        /// <param name="source">The original, non-transactional map.</param>
-        /// <returns>The transactional map that was retrieved or created.</returns>
-        Task<IHTxMap<TKey, TValue>> GetTransactionalAsync<TKey, TValue>(IHMap<TKey, TValue> source);
     }
 }

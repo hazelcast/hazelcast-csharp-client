@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.Remote
 
             await using var context = await Client.BeginTransactionAsync();
 
-            var txSet = await context.GetTransactionalAsync(set);
+            var txSet = await context.GetSetAsync<string>(set.Name);
             Assert.IsTrue(await txSet.AddAsync("item2"));
             Assert.AreEqual(2, await txSet.CountAsync());
             Assert.AreEqual(1, await set.CountAsync());

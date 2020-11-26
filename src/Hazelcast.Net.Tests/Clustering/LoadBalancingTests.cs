@@ -32,7 +32,12 @@ namespace Hazelcast.Tests.Clustering
             for (var i = 0; i < 4; i++)
                 Assert.That(lb.GetMember(), Is.EqualTo(memberId));
 
-            Assert.Throws<InvalidOperationException>(() => lb.NotifyMembers(new[] { Guid.NewGuid() }));
+            // no effect
+            lb.NotifyMembers(new[] { Guid.NewGuid() });
+
+            Assert.That(lb.Count, Is.EqualTo(1));
+            for (var i = 0; i < 4; i++)
+                Assert.That(lb.GetMember(), Is.EqualTo(memberId));
 
             lb = new StaticLoadBalancer(new Dictionary<string, string>
             {

@@ -22,7 +22,7 @@ namespace Hazelcast.Security
     /// <summary>
     /// Implements a Kerberos <see cref="ICredentialsFactory"/>.
     /// </summary>
-    public sealed class KerberosCredentialsFactory : IResettableCredentialsFactory
+    internal sealed class KerberosCredentialsFactory : IResettableCredentialsFactory
     {
         private static IKerberosTokenProvider _tokenProvider;
         private readonly string _spn;

@@ -23,7 +23,7 @@ namespace Hazelcast.Security
     /// <summary>
     /// Provides an implementation of <see cref="ICredentialsFactory"/> that returns a static token <see cref="ICredentials"/>.
     /// </summary>
-    public class TokenCredentialsFactory : StaticCredentialsFactory
+    internal class TokenCredentialsFactory : StaticCredentialsFactory
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenCredentialsFactory"/>.

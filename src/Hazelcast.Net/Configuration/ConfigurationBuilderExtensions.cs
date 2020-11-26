@@ -24,6 +24,14 @@ namespace Hazelcast.Configuration
     /// </summary>
     public static class ConfigurationBuilderExtensions
     {
+        /// <summary>
+        /// Adds an <see cref="IConfigurationProvider"/> that reads Hazelcast configuration value from a file.
+        /// </summary>
+        /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
+        /// <param name="filePath">The path to the file.</param>
+        /// <param name="fileName">The name of the file.</param>
+        /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
+        /// <returns></returns>
         public static IConfigurationBuilder AddHazelcastFile(this IConfigurationBuilder configurationBuilder, string filePath, string fileName, string environmentName)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
@@ -69,7 +77,7 @@ namespace Hazelcast.Configuration
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         /// <remarks>
-        /// <para>Adds support for hazelcast.x.y arguments that do not respect the standard hazelcast:x:y pattern.</para>
+        /// <para>Adds support for `hazelcast.x.y` arguments that do not respect the standard `hazelcast:x:y` pattern.</para>
         /// <para>Does not add default support for command line arguments.</para>
         /// </remarks>
         public static IConfigurationBuilder AddHazelcastCommandLine(this IConfigurationBuilder configurationBuilder, string[] args)

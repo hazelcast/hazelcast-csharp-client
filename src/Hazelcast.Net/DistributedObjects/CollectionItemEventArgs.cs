@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <summary>
-        /// Gets the member.
+        /// Gets the member that fired the event.
         /// </summary>
         public MemberInfo Member { get; }
 

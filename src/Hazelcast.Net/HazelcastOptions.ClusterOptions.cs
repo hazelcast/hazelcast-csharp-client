@@ -66,7 +66,7 @@ namespace Hazelcast
         /// <inheritdoc />
         [BinderIgnore]
         public SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
-            = new SingletonServiceFactory<ILoadBalancer> { Creator = () => new RandomLoadBalancer() };
+            = new SingletonServiceFactory<ILoadBalancer> { Creator = () => new RoundRobinLoadBalancer() };
 
         [BinderName("loadBalancer")]
         [BinderIgnore(false)]
@@ -89,6 +89,9 @@ namespace Hazelcast
                         break;
                     case "ROUNDROBIN":
                         LoadBalancer.Creator = () => new RoundRobinLoadBalancer();
+                        break;
+                    case "STATIC":
+                        LoadBalancer.Creator = () => new StaticLoadBalancer(value.Args);
                         break;
                     default:
                         LoadBalancer.Creator = () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args);
