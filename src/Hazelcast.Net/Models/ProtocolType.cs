@@ -1,4 +1,4 @@
-﻿namespace Hazelcast.Data
+﻿namespace Hazelcast.Models
 {
     internal enum ProtocolType
     {

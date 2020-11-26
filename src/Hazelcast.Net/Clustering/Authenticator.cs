@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;

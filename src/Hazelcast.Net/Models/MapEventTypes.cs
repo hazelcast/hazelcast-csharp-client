@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Specifies the map and entries event types.

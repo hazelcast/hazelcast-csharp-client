@@ -112,7 +112,7 @@ namespace Hazelcast.Protocol.Codecs
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeMembersViewEvent(int version, ICollection<Hazelcast.Data.MemberInfo> memberInfos)
+        public static ClientMessage EncodeMembersViewEvent(int version, ICollection<Hazelcast.Models.MemberInfo> memberInfos)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[EventMembersViewInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
@@ -137,7 +137,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<int, IList<Hazelcast.Data.MemberInfo>, object, ValueTask> handleMembersViewEventAsync, Func<int, IList<KeyValuePair<Guid, IList<int>>>, object, ValueTask> handlePartitionsViewEventAsync, object state, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func<int, IList<Hazelcast.Models.MemberInfo>, object, ValueTask> handleMembersViewEventAsync, Func<int, IList<KeyValuePair<Guid, IList<int>>>, object, ValueTask> handlePartitionsViewEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;

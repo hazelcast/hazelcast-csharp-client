@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Events;
 using Hazelcast.Networking;
 using Moq;

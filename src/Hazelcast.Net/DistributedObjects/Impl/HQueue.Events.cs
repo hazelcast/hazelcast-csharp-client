@@ -15,7 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;

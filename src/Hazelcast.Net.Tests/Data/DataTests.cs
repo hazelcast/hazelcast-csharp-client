@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;

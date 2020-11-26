@@ -14,7 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Events;
 using Hazelcast.Networking;
 using NUnit.Framework;

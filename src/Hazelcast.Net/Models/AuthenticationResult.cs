@@ -15,7 +15,7 @@
 using System;
 using Hazelcast.Networking;
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Represents the result of the client authentication.

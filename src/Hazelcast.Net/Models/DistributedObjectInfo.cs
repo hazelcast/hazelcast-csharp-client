@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     internal class DistributedObjectInfo : IEquatable<DistributedObjectInfo>
     {

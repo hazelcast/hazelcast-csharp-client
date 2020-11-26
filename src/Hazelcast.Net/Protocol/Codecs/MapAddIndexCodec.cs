@@ -64,11 +64,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// Index configuration.
             ///</summary>
-            public Hazelcast.Data.IndexOptions IndexConfig { get; set; }
+            public Hazelcast.Models.IndexOptions IndexConfig { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Hazelcast.Data.IndexOptions indexConfig)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Models.IndexOptions indexConfig)
         {
             var clientMessage = new ClientMessage
             {

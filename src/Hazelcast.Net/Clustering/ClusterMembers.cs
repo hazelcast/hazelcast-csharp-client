@@ -19,7 +19,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Events;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;

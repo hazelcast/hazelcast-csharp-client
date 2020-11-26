@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;

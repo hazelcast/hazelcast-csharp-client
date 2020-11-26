@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Defines transformations which can be applied to <see cref="BitmapIndexOptions.UniqueKey"/> values.

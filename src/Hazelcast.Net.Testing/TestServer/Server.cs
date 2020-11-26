@@ -20,7 +20,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;

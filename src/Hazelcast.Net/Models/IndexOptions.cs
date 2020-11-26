@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Configuration of an index.

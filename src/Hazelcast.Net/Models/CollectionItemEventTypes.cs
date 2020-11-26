@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Data
+using System;
+
+namespace Hazelcast.Models
 {
     /// <summary>
-    /// Configures indexing options for <see cref="IndexType.Bitmap"/> indexes.
+    /// Specifies the collection item event types.
     /// </summary>
-    public class BitmapIndexOptions
+    [Flags]
+    public enum CollectionItemEventTypes
     {
         /// <summary>
-        /// Gets or sets the unique key.
+        /// The item was added.
         /// </summary>
-        public string UniqueKey { get; set; } = Query.Predicates.KeyName;
+        Added = 1, // zero is for default, make sure we start at 1
 
         /// <summary>
-        /// Gets or sets the <see cref="UniqueKeyTransformation"/> which will be
-        /// applied to the <see cref="UniqueKey"/> value.
+        /// The item was removed.
         /// </summary>
-        public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
+        Removed = 2
     }
 }

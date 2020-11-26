@@ -15,7 +15,7 @@
 using System;
 using Hazelcast.Serialization;
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     internal class EndpointQualifier : IIdentifiedDataSerializable, IEquatable<EndpointQualifier>
     {
