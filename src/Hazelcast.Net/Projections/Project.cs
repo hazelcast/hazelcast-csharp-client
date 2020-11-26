@@ -31,8 +31,7 @@ namespace Hazelcast.Projections
         /// Projects multiple attributes.
         /// </summary>
         /// <returns>A projection.</returns>
-        // TODO: implement
-        //public static IProjection MultipleAttribute()
-        //    => new MultipleAttributeProjection();
+        public static IProjection MultipleAttribute()
+            => new MultiAttributeProjection();
     }
 }
