@@ -21,7 +21,7 @@ using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Clustering
 {

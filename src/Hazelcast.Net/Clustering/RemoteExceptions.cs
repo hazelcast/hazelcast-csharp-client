@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Protocol;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Clustering
 {

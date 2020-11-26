@@ -21,7 +21,7 @@ using Hazelcast.Data;
 using Hazelcast.Messaging;
 using Hazelcast.Query;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Collections;
 

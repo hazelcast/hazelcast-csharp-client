@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
 using NUnit.Framework;
 

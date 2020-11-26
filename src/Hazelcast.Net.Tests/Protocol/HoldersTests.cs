@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Query;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;

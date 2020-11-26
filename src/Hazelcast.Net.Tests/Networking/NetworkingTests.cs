@@ -28,7 +28,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Protocol;

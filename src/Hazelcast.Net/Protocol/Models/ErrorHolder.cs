@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using Hazelcast.Exceptions;
 
-namespace Hazelcast.Protocol.Data
+namespace Hazelcast.Protocol.Models
 {
     internal class ErrorHolder
     {

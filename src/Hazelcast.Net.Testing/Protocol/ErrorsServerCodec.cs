@@ -17,7 +17,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Testing.Protocol
 {
