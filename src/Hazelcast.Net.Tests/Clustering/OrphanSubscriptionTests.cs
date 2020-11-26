@@ -333,7 +333,7 @@ namespace Hazelcast.Tests.Clustering
                 default:
                     {
                         // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
-                        var messageName = CodecConstants.GetMessageTypeName(msg.MessageType);
+                        var messageName = MessageTypeConstants.GetMessageTypeName(msg.MessageType);
                         await SendErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{msg.MessageType:X}) not implemented.").CAF();
                         break;
                     }

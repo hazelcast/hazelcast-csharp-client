@@ -157,7 +157,7 @@ namespace Hazelcast.DistributedObjects
         private void ObjectDisposed(DistributedObjectBase o)
         {
             // simply disposing the distributed object removes it from the list
-            var info = new DistributedObjectInfo(o);
+            var info = new DistributedObjectInfo(o.ServiceName, o.Name);
             _objects.TryRemove(info);
         }
 
@@ -170,7 +170,7 @@ namespace Hazelcast.DistributedObjects
         {
             // try to get the object - and then, dispose it
 
-            var info = new DistributedObjectInfo(o);
+            var info = new DistributedObjectInfo(o.ServiceName, o.Name);
             var attempt = await _objects.TryGetAndRemoveAsync(info).CAF();
             if (attempt)
                 await TryDispose(attempt.Value).CAF();

@@ -52,7 +52,7 @@ namespace System.IO
 
             if (MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> array))
             {
-                //return await stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken).CAF();
+                //return await stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken).ConfigureAwait(false);
 
                 // see below, cancellation issue
                 var reading = stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken);
@@ -64,14 +64,14 @@ namespace System.IO
                     throw new TaskCanceledException();
                 }
 
-                var result = await reading.CAF();
+                var result = await reading.ConfigureAwait(false);
                 return result;
             }
 
             var bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
             try
             {
-                //var result = await stream.ReadAsync(bytes, 0, memory.Length, cancellationToken).CAF();
+                //var result = await stream.ReadAsync(bytes, 0, memory.Length, cancellationToken).ConfigureAwait(false);
 
                 // stream.ReadAsync for network streams *ignores* the cancellation token
                 // see https://github.com/dotnet/runtime/issues/24093
@@ -86,7 +86,7 @@ namespace System.IO
                     throw new TaskCanceledException();
                 }
 
-                var result = await reading.CAF();
+                var result = await reading.ConfigureAwait(false);
 
                 new Span<byte>(bytes, 0, result).CopyTo(memory.Span);
                 return result;

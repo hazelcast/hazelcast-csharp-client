@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Hazelcast.Protocol
+namespace Hazelcast.Messaging
 {
-    internal static class CodecConstants
+    // this is a utility class used for debugging, that analyzes the codecs via
+    // reflection and builds a table that can map the type of a received message
+    // to its actual type name (from the codec).
+    //
+    // it is only compiled, and used, in DEBUG mode.
+
+    internal static class MessageTypeConstants
     {
 #if DEBUG
         private static readonly Dictionary<int, string> MessageNames = new Dictionary<int, string>();
 
-        static CodecConstants()
+        static MessageTypeConstants()
         {
-            var codecTypes = typeof (CodecConstants).Assembly
+            var codecTypes = typeof (MessageTypeConstants).Assembly
                 .GetTypes()
                 .Where(x => x.Namespace != null &&
                             x.Namespace.StartsWith("Hazelcast.Protocol", StringComparison.Ordinal) &&

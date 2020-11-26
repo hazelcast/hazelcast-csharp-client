@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Data
 {
@@ -24,10 +23,6 @@ namespace Hazelcast.Data
             Name = name;
             ServiceName = serviceName;
         }
-
-        public DistributedObjectInfo(IDistributedObject o)
-            : this(o.ServiceName, o.Name)
-        { }
 
         public string Name { get; }
 

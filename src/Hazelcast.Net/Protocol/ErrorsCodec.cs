@@ -14,10 +14,11 @@
 
 using System.Collections.Generic;
 using Hazelcast.Messaging;
+using Hazelcast.Protocol.BuiltInCodecs;
 using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Protocol.Data;
 
-namespace Hazelcast.Protocol.BuiltInCodecs
+namespace Hazelcast.Protocol
 {
     internal static class ErrorsCodec
     {

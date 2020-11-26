@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 // ReSharper disable once CheckNamespace
 namespace System
@@ -19,7 +18,7 @@ namespace System
 
             try
             {
-                await task.CAF();
+                await task.ConfigureAwait(false);
             }
             catch
             {
@@ -39,9 +38,9 @@ namespace System
 
             try
             {
-                return await task.CAF();
+                return await task.ConfigureAwait(false);
             }
-            catch 
+            catch
             {
                 // observe the exception
                 return default;
