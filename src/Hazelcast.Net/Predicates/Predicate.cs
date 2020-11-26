@@ -88,10 +88,10 @@ namespace Hazelcast.Predicates
         public static IPredicate True()
             => new TruePredicate();
 
-        public static IPredicate Partition(object partitionKey, IPredicate predicate)
+        public static IPartitionPredicate Partition(object partitionKey, IPredicate predicate)
             => new PartitionPredicate(partitionKey, predicate);
 
-        public static IPredicate Page(int pageSize, IPredicate predicate, IComparer<KeyValuePair<object, object>> comparer)
+        public static IPagingPredicate Page(int pageSize, IPredicate predicate, IComparer<KeyValuePair<object, object>> comparer)
             => new PagingPredicate(pageSize, predicate, comparer);
     }
 }

@@ -16,7 +16,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
@@ -54,7 +53,7 @@ namespace Hazelcast.Predicates
     /// Console.WriteLine("values = " + values) // will print 'values = [0, 1]'
     /// </code>
     /// </example>
-    internal class PagingPredicate : IPredicate, IIdentifiedDataSerializable
+    internal class PagingPredicate : IPagingPredicate, IIdentifiedDataSerializable
     {
         //private static readonly KeyValuePair<int, KeyValuePair<object, object>> NullAnchor = new KeyValuePair<int, KeyValuePair<object, object>>(-1, new KeyValuePair<object, object>(null, null));
 
@@ -85,9 +84,7 @@ namespace Hazelcast.Predicates
             _anchorList = new List<KeyValuePair<int, KeyValuePair<object, object>>>();
         }
 
-        /// <summary>
-        /// Page size of each iteration
-        /// </summary>
+        /// <inheritdoc />
         public int PageSize { get; }
 
         /// <summary>
@@ -104,6 +101,16 @@ namespace Hazelcast.Predicates
         /// </remarks>
         public IComparer<KeyValuePair<object, object>> Comparer { get; }
 
+        public KeyValuePair<object, object> Anchor
+        {
+            get
+            {
+                if (_anchorList == null) return default;
+                var anchorEntry = _anchorList[Page];
+                return anchorEntry.Value;
+            }
+        }
+
         private List<KeyValuePair<int, KeyValuePair<object, object>>> _anchorList;
 
         internal IList<KeyValuePair<int, KeyValuePair<object, object>>> AnchorList => _anchorList;
@@ -116,9 +123,7 @@ namespace Hazelcast.Predicates
             _anchorList.AddRange(anchors);
         }
 
-        /// <summary>
-        /// Current page index
-        /// </summary>
+        /// <inheritdoc />
         public int Page { get; set; }
 
         /// <summary>
@@ -126,9 +131,7 @@ namespace Hazelcast.Predicates
         /// </summary>
         public IterationType? IterationType { get; set; }
 
-        /// <summary>
-        /// resets for reuse
-        /// </summary>
+        /// <inheritdoc />
         public void Reset()
         {
             IterationType = null;
@@ -136,17 +139,13 @@ namespace Hazelcast.Predicates
             Page = 0;
         }
 
-        /// <summary>
-        /// sets the page value to next page
-        /// </summary>
+        /// <inheritdoc />
         public void NextPage()
         {
             Page++;
         }
 
-        /// <summary>
-        /// sets the page value to previous page
-        /// </summary>
+        /// <inheritdoc />
         public void PreviousPage()
         {
             if (Page != 0) {

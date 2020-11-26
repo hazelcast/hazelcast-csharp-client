@@ -25,7 +25,7 @@ namespace Hazelcast.Predicates
     ///
     /// This predicate can only be used as an outer predicate
     /// </remarks>
-    internal class PartitionPredicate : IPredicate, IIdentifiedDataSerializable
+    internal class PartitionPredicate : IPartitionPredicate, IIdentifiedDataSerializable
     {
         public PartitionPredicate()
         { }
@@ -36,16 +36,10 @@ namespace Hazelcast.Predicates
             PartitionKey = partitionKey;
         }
 
-        /// <summary>
-        /// Returns the predicate that will run on target partition
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IPredicate Target { get; private set; }
 
-        /// <summary>
-        /// Returns the partition key that determines the partition the target Predicate is going to execute on
-        /// </summary>
-        /// <returns>the partition key</returns>
+        /// <inheritdoc />
         public object PartitionKey { get; private set; }
 
         public void ReadData(IObjectDataInput input)
