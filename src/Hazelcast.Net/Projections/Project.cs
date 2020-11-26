@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Data
+namespace Hazelcast.Projections
 {
     /// <summary>
-    /// Configures indexing options for <see cref="IndexType.Bitmap"/> indexes.
+    /// Creates <see cref="IProjection"/> instances.
     /// </summary>
-    public class BitmapIndexOptions
+    public static class Project
     {
         /// <summary>
-        /// Gets or sets the unique key.
+        /// Projects a single attribute.
         /// </summary>
-        public string UniqueKey { get; set; } = Predicates.Query.KeyName;
+        /// <param name="attributePath">The attribute.</param>
+        /// <returns>A projection.</returns>
+        public static IProjection SingleAttribute(string attributePath)
+            => new SingleAttributeProjection(attributePath);
 
         /// <summary>
-        /// Gets or sets the <see cref="UniqueKeyTransformation"/> which will be
-        /// applied to the <see cref="UniqueKey"/> value.
+        /// Projects multiple attributes.
         /// </summary>
-        public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
+        /// <returns>A projection.</returns>
+        // TODO: implement
+        //public static IProjection MultipleAttribute()
+        //    => new MultipleAttributeProjection();
     }
 }

@@ -49,7 +49,7 @@ namespace Hazelcast.Tests.Data
 
             x = new BitmapIndexOptions();
 
-            Assert.That(x.UniqueKey, Is.EqualTo(Hazelcast.Predicates.Predicate.KeyConst));
+            Assert.That(x.UniqueKey, Is.EqualTo(Hazelcast.Predicates.Query.KeyName));
             Assert.That(x.UniqueKeyTransformation, Is.EqualTo(UniqueKeyTransformation.Object));
         }
 

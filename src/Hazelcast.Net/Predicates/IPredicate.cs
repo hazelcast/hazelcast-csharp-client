@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Serialization;
-
 namespace Hazelcast.Predicates
 {
 
@@ -22,7 +20,7 @@ namespace Hazelcast.Predicates
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All builtin predicates can be accessed via <see cref="Predicate"/> static class.
+    /// All builtin predicates can be accessed via <see cref="Query"/> static class.
     /// </para>
     /// <para>
     /// A custom predicate must be serializable via Hazelcast serialization,

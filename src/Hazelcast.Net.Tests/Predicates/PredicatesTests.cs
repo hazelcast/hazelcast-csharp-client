@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Hazelcast.Core;
 using Hazelcast.Predicates;
 using Hazelcast.Serialization;
@@ -41,74 +42,129 @@ namespace Hazelcast.Tests.Predicates
         [Test]
         public void MiscPredicatesTests()
         {
-            AssertPredicate(Predicate.True(), PredicateDataSerializerHook.TruePredicate);
-            AssertPredicate(Predicate.False(), PredicateDataSerializerHook.FalsePredicate);
+            AssertPredicate(Query.True(), PredicateDataSerializerHook.TruePredicate);
+            AssertPredicate(Query.False(), PredicateDataSerializerHook.FalsePredicate);
 
-            AssertPredicate(Predicate.Not(Predicate.True()), PredicateDataSerializerHook.NotPredicate);
-            AssertPredicate(Predicate.True().Not(), PredicateDataSerializerHook.NotPredicate);
+            AssertPredicate(Query.WhereNot(Query.True()), PredicateDataSerializerHook.NotPredicate);
+            AssertPredicate(Query.True().Not(), PredicateDataSerializerHook.NotPredicate);
 
-            AssertPredicate(Predicate.And(), PredicateDataSerializerHook.AndPredicate);
-            AssertPredicate(Predicate.True().And(Predicate.False()), PredicateDataSerializerHook.AndPredicate);
+            AssertPredicate(Query.WhereAll(), PredicateDataSerializerHook.AndPredicate);
+            AssertPredicate(Query.True().And(Query.False()), PredicateDataSerializerHook.AndPredicate);
 
-            AssertPredicate(Predicate.Or(), PredicateDataSerializerHook.OrPredicate);
-            AssertPredicate(Predicate.True().Or(Predicate.False()), PredicateDataSerializerHook.OrPredicate);
+            AssertPredicate(Query.WhereAny(), PredicateDataSerializerHook.OrPredicate);
+            AssertPredicate(Query.True().Or(Query.False()), PredicateDataSerializerHook.OrPredicate);
 
-            AssertPredicate(Predicate.IsEqual("name", 33), PredicateDataSerializerHook.EqualPredicate);
-            AssertPredicate(Predicate.Property("name").Equal(33), PredicateDataSerializerHook.EqualPredicate);
-            AssertPredicate(Predicate.IsNotEqual("name", 33), PredicateDataSerializerHook.NotEqualPredicate);
-            AssertPredicate(Predicate.Property("name").NotEqual(33), PredicateDataSerializerHook.NotEqualPredicate);
+            AssertPredicate(Query.EqualTo("name", 33), PredicateDataSerializerHook.EqualPredicate);
+            AssertPredicate(Query.Where("name").IsEqualTo(33), PredicateDataSerializerHook.EqualPredicate);
+            AssertPredicate(Query.NotEqualTo("name", 33), PredicateDataSerializerHook.NotEqualPredicate);
+            AssertPredicate(Query.Where("name").IsNotEqualTo(33), PredicateDataSerializerHook.NotEqualPredicate);
 
-            AssertPredicate(Predicate.IsGreaterThan("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
-            AssertPredicate(Predicate.Property("name").GreaterThan(33), PredicateDataSerializerHook.GreaterLessPredicate);
-            AssertPredicate(Predicate.IsGreaterThanOrEqual("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
-            AssertPredicate(Predicate.Property("name").GreaterThanOrEqual(33), PredicateDataSerializerHook.GreaterLessPredicate);
-            AssertPredicate(Predicate.IsLessThan("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
-            AssertPredicate(Predicate.Property("name").LessThan(33), PredicateDataSerializerHook.GreaterLessPredicate);
-            AssertPredicate(Predicate.IsLessThanOrEqual("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
-            AssertPredicate(Predicate.Property("name").LessThanOrEqual(33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.GreaterThan("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.Where("name").IsGreaterThan(33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.GreaterThanOrEqualTo("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.Where("name").IsGreaterThanOrEqualTo(33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.LessThan("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.Where("name").IsLessThan(33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.LessThanOrEqualTo("name", 33), PredicateDataSerializerHook.GreaterLessPredicate);
+            AssertPredicate(Query.Where("name").IsLessThanOrEqualTo(33), PredicateDataSerializerHook.GreaterLessPredicate);
 
-            AssertPredicate(Predicate.IsBetween("name", 33, 44), PredicateDataSerializerHook.BetweenPredicate);
-            AssertPredicate(Predicate.Property("name").Between(33, 44), PredicateDataSerializerHook.BetweenPredicate);
+            AssertPredicate(Query.Between("name", 33, 44), PredicateDataSerializerHook.BetweenPredicate);
+            AssertPredicate(Query.Where("name").IsBetween(33, 44), PredicateDataSerializerHook.BetweenPredicate);
 
-            AssertPredicate(Predicate.IsIn("name", 33, 44), PredicateDataSerializerHook.InPredicate);
-            AssertPredicate(Predicate.Property("name").In(33, 44), PredicateDataSerializerHook.InPredicate);
+            AssertPredicate(Query.In("name", 33, 44), PredicateDataSerializerHook.InPredicate);
+            AssertPredicate(Query.Where("name").IsIn(33, 44), PredicateDataSerializerHook.InPredicate);
 
-            AssertPredicate(Predicate.IsLike("name", "expression"), PredicateDataSerializerHook.LikePredicate);
-            AssertPredicate(Predicate.Property("name").Like("expression"), PredicateDataSerializerHook.LikePredicate);
-            AssertPredicate(Predicate.IsILike("name", "expression"), PredicateDataSerializerHook.ILikePredicate);
-            AssertPredicate(Predicate.Property("name").ILike("expression"), PredicateDataSerializerHook.ILikePredicate);
-            AssertPredicate(Predicate.MatchesRegex("name", "regex"), PredicateDataSerializerHook.RegexPredicate);
-            AssertPredicate(Predicate.Property("name").MatchesRegex("regex"), PredicateDataSerializerHook.RegexPredicate);
+            AssertPredicate(Query.Like("name", "expression"), PredicateDataSerializerHook.LikePredicate);
+            AssertPredicate(Query.Where("name").IsLike("expression"), PredicateDataSerializerHook.LikePredicate);
+            AssertPredicate(Query.ILike("name", "expression"), PredicateDataSerializerHook.ILikePredicate);
+            AssertPredicate(Query.Where("name").IsILike("expression"), PredicateDataSerializerHook.ILikePredicate);
+            AssertPredicate(Query.Match("name", "regex"), PredicateDataSerializerHook.RegexPredicate);
+            AssertPredicate(Query.Where("name").Matches("regex"), PredicateDataSerializerHook.RegexPredicate);
 
-            AssertPredicate(Predicate.InstanceOf("className"), PredicateDataSerializerHook.InstanceofPredicate);
+            AssertPredicate(Query.InstanceOf("className"), PredicateDataSerializerHook.InstanceofPredicate);
 
-            AssertPredicate(Predicate.IsIn("name", 1, 2, 3), PredicateDataSerializerHook.InPredicate);
+            AssertPredicate(Query.In("name", 1, 2, 3), PredicateDataSerializerHook.InPredicate);
 
-            AssertPredicate(Predicate.Sql("sql"), PredicateDataSerializerHook.SqlPredicate);
+            AssertPredicate(Query.Sql("sql"), PredicateDataSerializerHook.SqlPredicate);
 
-            AssertPredicate(Predicate.Key("property").ILike("expression"), PredicateDataSerializerHook.ILikePredicate);
-            AssertPredicate(Predicate.This().ILike("expression"), PredicateDataSerializerHook.ILikePredicate);
+            AssertPredicate(Query.WhereKey("property").IsILike("expression"), PredicateDataSerializerHook.ILikePredicate);
+            AssertPredicate(Query.WhereValue().IsILike("expression"), PredicateDataSerializerHook.ILikePredicate);
 
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).In(1, 2));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).Between(1, 2));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).Equal(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).NotEqual(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).GreaterThan(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).GreaterThanOrEqual(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).LessThan(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).LessThanOrEqual(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).Like("a"));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).ILike("a"));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateProperty) null).MatchesRegex("a"));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsIn(1, 2));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsBetween(1, 2));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsEqualTo(3));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsNotEqualTo(3));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsGreaterThan(3));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsGreaterThanOrEqualTo(3));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsLessThan(3));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsLessThanOrEqualTo(3));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsLike("a"));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsILike("a"));
+            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).Matches("a"));
+        }
+
+        [Test]
+        public void QuerySyntaxes()
+        {
+            var p1 = Query.EqualTo("attribute", "value");
+            Console.WriteLine("p1: " + p1);
+            Assert.That(p1.ToString(), Is.EqualTo("(attribute == value)"));
+
+            var p2 = Query.Where("attribute").IsEqualTo("value");
+            Console.WriteLine("p2: " + p2);
+            Assert.That(p2.ToString(), Is.EqualTo("(attribute == value)"));
+
+
+            var p3 = Query.EqualTo("attribute", "value").Not();
+            Console.WriteLine("p3: " + p3);
+            Assert.That(p3.ToString(), Is.EqualTo("NOT((attribute == value))"));
+
+            var p4 = Query.WhereNot(Query.EqualTo("attribute", "value"));
+            Console.WriteLine("p4: " + p4);
+            Assert.That(p4.ToString(), Is.EqualTo("NOT((attribute == value))"));
+
+            var p5 = Query.Where("attribute").IsNot().EqualTo("value");
+            Console.WriteLine("p5: " + p5);
+            Assert.That(p5.ToString(), Is.EqualTo("NOT((attribute == value))"));
+
+            var p6 = Query.WhereAll(
+                Query.EqualTo("attribute1", "value1"),
+                Query.EqualTo("attribute2", "value2").Not());
+            Console.WriteLine("p6: " + p6);
+            Assert.That(p6.ToString(), Is.EqualTo("AND((attribute1 == value1), NOT((attribute2 == value2)))"));
+
+            var p7 = Query
+                .Where("attribute1").IsEqualTo("value1")
+                .And("attribute2").IsNot().EqualTo("value2");
+            Console.WriteLine("p7: " + p7);
+            Assert.That(p7.ToString(), Is.EqualTo("AND((attribute1 == value1), NOT((attribute2 == value2)))"));
+
+            var p8 = Query.True().And(Query.False());
+            Console.WriteLine("p8: " + p8);
+            Assert.That(p8.ToString(), Is.EqualTo("AND(TRUE, FALSE)"));
+
+            var p9 = Query
+                .Where("A").IsEqualTo("valueA")
+                .Or("B").IsEqualTo("valueB")
+                .And("C").IsEqualTo("valueC");
+            Console.WriteLine("p9: " + p9);
+            Assert.That(p9.ToString(), Is.EqualTo("OR((A == valueA), AND((B == valueB), (C == valueC)))"));
+
+            var pA = Query
+                .Where("A").IsEqualTo("valueA")
+                .And("B").IsEqualTo("valueB")
+                .Or("C").IsEqualTo("valueC");
+            Console.WriteLine("pA1: " + pA);
+            Assert.That(pA.ToString(), Is.EqualTo("OR(AND((A == valueA), (B == valueB)), (C == valueC))"));
         }
 
         [Test]
         public void PagingPredicateTest()
         {
-            AssertPredicate(new PagingPredicate(3, Predicate.True()), PredicateDataSerializerHook.PagingPredicate);
-            AssertPredicate(new PagingPredicate(3, Predicate.True(), new PredicateComparer()), PredicateDataSerializerHook.PagingPredicate);
+            AssertPredicate(new PagingPredicate(3, Query.True()), PredicateDataSerializerHook.PagingPredicate);
+            AssertPredicate(new PagingPredicate(3, Query.True(), new PredicateComparer()), PredicateDataSerializerHook.PagingPredicate);
 
-            var paging = new PagingPredicate(3, Predicate.True());
+            var paging = new PagingPredicate(3, Query.True());
             paging.AnchorList.Add(new KeyValuePair<int, KeyValuePair<object, object>>(0, new KeyValuePair<object, object>("a", "b")));
             paging.AnchorList.Add(new KeyValuePair<int, KeyValuePair<object, object>>(1, new KeyValuePair<object, object>("c", "d")));
             AssertPredicate(paging, PredicateDataSerializerHook.PagingPredicate);
@@ -139,9 +195,9 @@ namespace Hazelcast.Tests.Predicates
         public void PartitionPredicate()
         {
             AssertPredicate(new PartitionPredicate(), PredicateDataSerializerHook.PartitionPredicate);
-            AssertPredicate(new PartitionPredicate("key", Predicate.True()), PredicateDataSerializerHook.PartitionPredicate);
+            AssertPredicate(new PartitionPredicate("key", Query.True()), PredicateDataSerializerHook.PartitionPredicate);
 
-            var partition = new PartitionPredicate("key", Predicate.True());
+            var partition = new PartitionPredicate("key", Query.True());
 
             Assert.That(partition.FactoryId, Is.EqualTo(FactoryIds.PredicateFactoryId));
             Assert.That(partition.ClassId, Is.EqualTo(PredicateDataSerializerHook.PartitionPredicate));

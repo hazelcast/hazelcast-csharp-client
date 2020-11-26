@@ -37,39 +37,39 @@ namespace Hazelcast.Tests.Aggregating
         [Test]
         public void Tests()
         {
-            AssertAggregator((CountAggregator) Aggregator.Count("name"), AggregatorDataSerializerHook.Count);
+            AssertAggregator((CountAggregator) Aggregate.Count("name"), AggregatorDataSerializerHook.Count);
 
-            AssertAggregator((BigIntegerSumAggregator) Aggregator.BigIntegerSum("name"), AggregatorDataSerializerHook.BigIntSum);
-            AssertAggregator((DoubleSumAggregator) Aggregator.DoubleSum("name"), AggregatorDataSerializerHook.DoubleSum);
-            AssertAggregator((FixedSumAggregator) Aggregator.FixedPointSum("name"), AggregatorDataSerializerHook.FixedSum);
-            AssertAggregator((LongSumAggregator) Aggregator.LongSum("name"), AggregatorDataSerializerHook.LongSum);
-            AssertAggregator((FloatingPointSumAggregator) Aggregator.FloatingPointSum("name"), AggregatorDataSerializerHook.FloatingPointSum);
-            AssertAggregator((IntegerSumAggregator) Aggregator.IntegerSum("name"), AggregatorDataSerializerHook.IntSum);
+            AssertAggregator((BigIntegerSumAggregator) Aggregate.BigIntegerSum("name"), AggregatorDataSerializerHook.BigIntSum);
+            AssertAggregator((DoubleSumAggregator) Aggregate.DoubleSum("name"), AggregatorDataSerializerHook.DoubleSum);
+            AssertAggregator((FixedSumAggregator) Aggregate.FixedPointSum("name"), AggregatorDataSerializerHook.FixedSum);
+            AssertAggregator((LongSumAggregator) Aggregate.LongSum("name"), AggregatorDataSerializerHook.LongSum);
+            AssertAggregator((FloatingPointSumAggregator) Aggregate.FloatingPointSum("name"), AggregatorDataSerializerHook.FloatingPointSum);
+            AssertAggregator((IntegerSumAggregator) Aggregate.IntegerSum("name"), AggregatorDataSerializerHook.IntSum);
 
-            AssertAggregator((NumberAverageAggregator) Aggregator.NumberAvg("name"), AggregatorDataSerializerHook.NumberAvg);
-            AssertAggregator((DoubleAverageAggregator) Aggregator.DoubleAvg("name"), AggregatorDataSerializerHook.DoubleAvg);
-            AssertAggregator((IntegerAverageAggregator) Aggregator.IntegerAvg("name"), AggregatorDataSerializerHook.IntAvg);
-            AssertAggregator((LongAverageAggregator) Aggregator.LongAvg("name"), AggregatorDataSerializerHook.LongAvg);
+            AssertAggregator((NumberAverageAggregator) Aggregate.NumberAvg("name"), AggregatorDataSerializerHook.NumberAvg);
+            AssertAggregator((DoubleAverageAggregator) Aggregate.DoubleAvg("name"), AggregatorDataSerializerHook.DoubleAvg);
+            AssertAggregator((IntegerAverageAggregator) Aggregate.IntegerAvg("name"), AggregatorDataSerializerHook.IntAvg);
+            AssertAggregator((LongAverageAggregator) Aggregate.LongAvg("name"), AggregatorDataSerializerHook.LongAvg);
 
-            AssertAggregator((MaxAggregator<int>) Aggregator.Max<int>("name"), AggregatorDataSerializerHook.Max);
-            AssertAggregator((MinAggregator<int>) Aggregator.Min<int>("name"), AggregatorDataSerializerHook.Min);
+            AssertAggregator((MaxAggregator<int>) Aggregate.Max<int>("name"), AggregatorDataSerializerHook.Max);
+            AssertAggregator((MinAggregator<int>) Aggregate.Min<int>("name"), AggregatorDataSerializerHook.Min);
 
-            AssertAggregator((CountAggregator) Aggregator.Count(), AggregatorDataSerializerHook.Count);
+            AssertAggregator((CountAggregator) Aggregate.Count(), AggregatorDataSerializerHook.Count);
 
-            AssertAggregator((BigIntegerSumAggregator) Aggregator.BigIntegerSum(), AggregatorDataSerializerHook.BigIntSum);
-            AssertAggregator((DoubleSumAggregator) Aggregator.DoubleSum(), AggregatorDataSerializerHook.DoubleSum);
-            AssertAggregator((FixedSumAggregator) Aggregator.FixedPointSum(), AggregatorDataSerializerHook.FixedSum);
-            AssertAggregator((LongSumAggregator) Aggregator.LongSum(), AggregatorDataSerializerHook.LongSum);
-            AssertAggregator((FloatingPointSumAggregator) Aggregator.FloatingPointSum(), AggregatorDataSerializerHook.FloatingPointSum);
-            AssertAggregator((IntegerSumAggregator) Aggregator.IntegerSum(), AggregatorDataSerializerHook.IntSum);
+            AssertAggregator((BigIntegerSumAggregator) Aggregate.BigIntegerSum(), AggregatorDataSerializerHook.BigIntSum);
+            AssertAggregator((DoubleSumAggregator) Aggregate.DoubleSum(), AggregatorDataSerializerHook.DoubleSum);
+            AssertAggregator((FixedSumAggregator) Aggregate.FixedPointSum(), AggregatorDataSerializerHook.FixedSum);
+            AssertAggregator((LongSumAggregator) Aggregate.LongSum(), AggregatorDataSerializerHook.LongSum);
+            AssertAggregator((FloatingPointSumAggregator) Aggregate.FloatingPointSum(), AggregatorDataSerializerHook.FloatingPointSum);
+            AssertAggregator((IntegerSumAggregator) Aggregate.IntegerSum(), AggregatorDataSerializerHook.IntSum);
 
-            AssertAggregator((NumberAverageAggregator) Aggregator.NumberAvg(), AggregatorDataSerializerHook.NumberAvg);
-            AssertAggregator((DoubleAverageAggregator) Aggregator.DoubleAvg(), AggregatorDataSerializerHook.DoubleAvg);
-            AssertAggregator((IntegerAverageAggregator) Aggregator.IntegerAvg(), AggregatorDataSerializerHook.IntAvg);
-            AssertAggregator((LongAverageAggregator) Aggregator.LongAvg(), AggregatorDataSerializerHook.LongAvg);
+            AssertAggregator((NumberAverageAggregator) Aggregate.NumberAvg(), AggregatorDataSerializerHook.NumberAvg);
+            AssertAggregator((DoubleAverageAggregator) Aggregate.DoubleAvg(), AggregatorDataSerializerHook.DoubleAvg);
+            AssertAggregator((IntegerAverageAggregator) Aggregate.IntegerAvg(), AggregatorDataSerializerHook.IntAvg);
+            AssertAggregator((LongAverageAggregator) Aggregate.LongAvg(), AggregatorDataSerializerHook.LongAvg);
 
-            AssertAggregator((MaxAggregator<int>) Aggregator.Max<int>(), AggregatorDataSerializerHook.Max);
-            AssertAggregator((MinAggregator<int>) Aggregator.Min<int>(), AggregatorDataSerializerHook.Min);
+            AssertAggregator((MaxAggregator<int>) Aggregate.Max<int>(), AggregatorDataSerializerHook.Max);
+            AssertAggregator((MinAggregator<int>) Aggregate.Min<int>(), AggregatorDataSerializerHook.Min);
         }
 
         private void AssertAggregator<TResult>(AggregatorBase<TResult> aggregator, int classId)
@@ -79,8 +79,8 @@ namespace Hazelcast.Tests.Aggregating
             Assert.That(aggregator.FactoryId, Is.EqualTo(FactoryIds.AggregatorDsFactoryId));
             Assert.That(aggregator.ClassId, Is.EqualTo(classId));
 
-            Assert.Throws<ArgumentException>(() => _ = Aggregator.Count(""));
-            Assert.Throws<ArgumentException>(() => _ = Aggregator.Count(null));
+            Assert.Throws<ArgumentException>(() => _ = Aggregate.Count(""));
+            Assert.Throws<ArgumentException>(() => _ = Aggregate.Count(null));
 
             Assert.Throws<ArgumentNullException>(() => aggregator.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => aggregator.ReadData(null));

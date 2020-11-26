@@ -17,7 +17,7 @@ using System.Numerics;
 namespace Hazelcast.Aggregating
 {
     /// <summary>
-    /// Creates aggregators.
+    /// Creates <see cref="IAggregator{TResult}"/> instances.
     /// </summary>
     /// <remarks>
     /// Min/Max/Average aggregators are type specific, so an IntegerAvg() aggregator expects all elements to be integers.
@@ -40,11 +40,12 @@ namespace Hazelcast.Aggregating
     /// count aggregation on "person.postalCodes" will return 1 for each input object and not the size of the collection.
     /// In order to calculate the size of the collection use the [any] operator, e.g. "person.postalCodes[any]".
     /// </remarks>
-    public static class Aggregator
+    public static class Aggregate
     {
         /// <summary>
         /// Counts input values (accepts nulls).
         /// </summary>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<long> Count()
         {
             return new CountAggregator();
@@ -54,6 +55,7 @@ namespace Hazelcast.Aggregating
         /// Counts input values (accepts nulls).
         /// </summary>
         /// <param name="attributePath">An attribute path.</param>
+        /// <returns>The aggregator.</returns>
         /// <remarks><para>Values are extracted from the specified <paramref name="attributePath"/>.</para></remarks>
         public static IAggregator<long> Count(string attributePath)
         {
@@ -63,6 +65,7 @@ namespace Hazelcast.Aggregating
         /// <summary>
         /// Averages <see cref="double"/> input values (does not accept nulls).
         /// </summary>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> DoubleAvg()
         {
             return new DoubleAverageAggregator();
@@ -72,6 +75,7 @@ namespace Hazelcast.Aggregating
         /// Averages <see cref="double"/> input values (does not accept nulls).
         /// </summary>
         /// <param name="attributePath">An attribute path.</param>
+        /// <returns>The aggregator.</returns>
         /// <remarks><para>Values are extracted from the specified <paramref name="attributePath"/>.</para></remarks>
         public static IAggregator<double> DoubleAvg(string attributePath)
         {
@@ -83,8 +87,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts only int input values
         /// </summary>
-        /// <returns></returns>
-        /// <returns><see cref="IntegerAverageAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> IntegerAvg()
         {
             return new IntegerAverageAggregator();
@@ -96,7 +99,7 @@ namespace Hazelcast.Aggregating
         /// Accepts only int input values
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="IntegerAverageAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> IntegerAvg(string attributePath)
         {
             return new IntegerAverageAggregator(attributePath);
@@ -107,7 +110,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts only long input values
         /// </summary>
-        /// <returns><see cref="LongAverageAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> LongAvg()
         {
             return new LongAverageAggregator();
@@ -119,7 +122,7 @@ namespace Hazelcast.Aggregating
         /// Accepts only long input values
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="LongAverageAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> LongAvg(string attributePath)
         {
             return new LongAverageAggregator(attributePath);
@@ -130,7 +133,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts float or double input values.
         /// </summary>
-        /// <returns><see cref="NumberAverageAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> NumberAvg()
         {
             return new NumberAverageAggregator();
@@ -142,7 +145,7 @@ namespace Hazelcast.Aggregating
         /// Accepts float or double input values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="NumberAverageAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> NumberAvg(string attributePath)
         {
             return new NumberAverageAggregator(attributePath);
@@ -156,7 +159,7 @@ namespace Hazelcast.Aggregating
         /// an aggregator that calculates the max of the input values.
         /// Accepts null input values
         /// </summary>
-        /// <returns><see cref="MaxAggregator{TResult}"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<TResult> Max<TResult>()
         {
             return new MaxAggregator<TResult>();
@@ -167,7 +170,7 @@ namespace Hazelcast.Aggregating
         /// Accepts null input values and null extracted values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="MaxAggregator{TResult}"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<TResult> Max<TResult>(string attributePath)
         {
             return new MaxAggregator<TResult>(attributePath);
@@ -181,7 +184,7 @@ namespace Hazelcast.Aggregating
         /// an aggregator that calculates the min of the input values.
         /// Accepts null input values
         /// </summary>
-        /// <returns><see cref="MinAggregator{TResult}"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<TResult> Min<TResult>()
         {
             return new MinAggregator<TResult>();
@@ -192,7 +195,7 @@ namespace Hazelcast.Aggregating
         /// Accepts null input values and null extracted values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="MinAggregator{TResult}"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<TResult> Min<TResult>(string attributePath)
         {
             return new MinAggregator<TResult>(attributePath);
@@ -207,7 +210,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts only BigInteger input values.
         /// </summary>
-        /// <returns><see cref="BigIntegerSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<BigInteger> BigIntegerSum()
         {
             return new BigIntegerSumAggregator();
@@ -219,7 +222,7 @@ namespace Hazelcast.Aggregating
         /// Accepts only BigInteger input values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="BigIntegerSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<BigInteger> BigIntegerSum(string attributePath)
         {
             return new BigIntegerSumAggregator(attributePath);
@@ -230,7 +233,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts only double input values.
         /// </summary>
-        /// <returns><see cref="DoubleSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> DoubleSum()
         {
             return new DoubleSumAggregator();
@@ -242,7 +245,7 @@ namespace Hazelcast.Aggregating
         /// Accepts only double input values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="DoubleSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> DoubleSum(string attributePath)
         {
             return new DoubleSumAggregator(attributePath);
@@ -253,7 +256,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts only int input values.
         /// </summary>
-        /// <returns><see cref="IntegerSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<long> IntegerSum()
         {
             return new IntegerSumAggregator();
@@ -265,7 +268,7 @@ namespace Hazelcast.Aggregating
         /// Accepts only int input values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="IntegerSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<long> IntegerSum(string attributePath)
         {
             return new IntegerSumAggregator(attributePath);
@@ -276,7 +279,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts only long input values.
         /// </summary>
-        /// <returns><see cref="LongSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<long> LongSum()
         {
             return new LongSumAggregator();
@@ -288,7 +291,7 @@ namespace Hazelcast.Aggregating
         /// Accepts only long input values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="LongSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<long> LongSum(string attributePath)
         {
             return new LongSumAggregator(attributePath);
@@ -299,7 +302,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts float or double input values.
         /// </summary>
-        /// <returns><see cref="FixedSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<long> FixedPointSum()
         {
             return new FixedSumAggregator();
@@ -311,7 +314,7 @@ namespace Hazelcast.Aggregating
         /// Accepts float or double input values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="FixedSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<long> FixedPointSum(string attributePath)
         {
             return new FixedSumAggregator(attributePath);
@@ -322,7 +325,7 @@ namespace Hazelcast.Aggregating
         /// Does NOT accept null input values.
         /// Accepts float or double input values.
         /// </summary>
-        /// <returns><see cref="FloatingPointSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> FloatingPointSum()
         {
             return new FloatingPointSumAggregator();
@@ -334,7 +337,7 @@ namespace Hazelcast.Aggregating
         /// Accepts float or double input values.
         /// </summary>
         /// <param name="attributePath">attribute Path</param>
-        /// <returns><see cref="FloatingPointSumAggregator"/></returns>
+        /// <returns>The aggregator.</returns>
         public static IAggregator<double> FloatingPointSum(string attributePath)
         {
             return new FloatingPointSumAggregator(attributePath);

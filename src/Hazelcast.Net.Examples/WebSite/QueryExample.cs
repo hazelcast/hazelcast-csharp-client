@@ -86,11 +86,11 @@ namespace Hazelcast.Examples.WebSite
             // Add some users to the Distributed Map
             await GenerateUsers(users);
             // Create a Predicate from a String (a SQL like Where clause)
-            var sqlQuery = Predicate.Sql("active AND age BETWEEN 18 AND 21)");
+            var sqlQuery = Query.Sql("active AND age BETWEEN 18 AND 21)");
             // Creating the same Predicate as above but with a builder
-            var criteriaQuery = Predicate.And(
-                Predicate.IsEqual("active", true),
-                Predicate.IsBetween("age", 18, 21)
+            var criteriaQuery = Query.WhereAll(
+                Query.EqualTo("active", true),
+                Query.Between("age", 18, 21)
             );
             // Get result collections using the two different Predicates
             var result1 = await users.GetValuesAsync(sqlQuery);

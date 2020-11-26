@@ -169,7 +169,7 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            await using var s = await SubscribeAsync(dictionary, Predicate.Key().LessThan(5));
+            await using var s = await SubscribeAsync(dictionary, Query.WhereKey().IsLessThan(5));
             await FillValues(dictionary);
             await s.AssertCountEventually(() => s.EntryAddedCount, 5);
         }
@@ -180,8 +180,8 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetReplicatedMapAsync<int?, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            await using var s1 = await SubscribeAsync(dictionary, 2, Predicate.Key().LessThan(5));
-            await using var s2 = await SubscribeAsync(dictionary, 6, Predicate.Key().LessThan(5));
+            await using var s1 = await SubscribeAsync(dictionary, 2, Query.WhereKey().IsLessThan(5));
+            await using var s2 = await SubscribeAsync(dictionary, 6, Query.WhereKey().IsLessThan(5));
 
             await FillValues(dictionary);
             await s1.AssertCountEventually(() => s1.EntryAddedCount, 1);

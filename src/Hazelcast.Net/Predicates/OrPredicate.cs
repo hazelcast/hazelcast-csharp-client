@@ -18,16 +18,32 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    internal class OrPredicate : IPredicate, IIdentifiedDataSerializable
+    internal abstract class LogicalPredicateBase : IPredicate, IIdentifiedDataSerializable
     {
+        // TODO: consider using a list instead of an array?
         private IPredicate[] _predicates;
 
-        public OrPredicate()
-        { }
-
-        public OrPredicate(params IPredicate[] predicates)
+        internal LogicalPredicateBase(IPredicate[] predicates)
         {
             _predicates = predicates;
+        }
+
+        public int FactoryId => FactoryIds.PredicateFactoryId;
+
+        public abstract int ClassId { get; }
+
+        protected internal IPredicate[] ConcatInternal(IPredicate predicate)
+        {
+            var predicates = new IPredicate[_predicates.Length + 1];
+            Array.Copy(_predicates, predicates, _predicates.Length);
+            predicates[_predicates.Length] = predicate;
+            return predicates;
+        }
+
+        protected internal IPredicate Last
+        {
+            get => _predicates[^1];
+            set => _predicates[^1] = value;
         }
 
         public void ReadData(IObjectDataInput input)
@@ -51,23 +67,21 @@ namespace Hazelcast.Predicates
             }
         }
 
-        public int FactoryId => FactoryIds.PredicateFactoryId;
-
-        public int ClassId => PredicateDataSerializerHook.OrPredicate;
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj is null) return false;
-            return obj is OrPredicate other && Equals(this, other);
-        }
-
-        private static bool Equals(OrPredicate left, OrPredicate right)
+        private static bool Equals(LogicalPredicateBase left, LogicalPredicateBase right)
         {
             if (ReferenceEquals(left, right)) return true;
             if (left is null || right is null) return false;
 
             return left._predicates.SequenceEqual(right._predicates);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null) return false;
+            return obj is LogicalPredicateBase other && 
+                   obj.GetType() == GetType() && 
+                   Equals(this, other);
         }
 
         public override int GetHashCode()
@@ -79,7 +93,20 @@ namespace Hazelcast.Predicates
 
         public override string ToString()
         {
-            return "OR(" + string.Join(", ", _predicates.Select(x => x.ToString())) + ")";
+            var op = GetType() == typeof (OrPredicate) ? "OR" : "AND";
+            return op + "(" + string.Join(", ", _predicates.Select(x => x.ToString())) + ")";
         }
+    }
+
+    internal class OrPredicate : LogicalPredicateBase
+    {
+        public OrPredicate(params IPredicate[] predicates)
+            : base(predicates)
+        { }
+
+        public override int ClassId => PredicateDataSerializerHook.OrPredicate;
+
+        public OrPredicate Concat(IPredicate predicate)
+            => new OrPredicate(ConcatInternal(predicate));
     }
 }

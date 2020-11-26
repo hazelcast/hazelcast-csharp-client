@@ -44,11 +44,11 @@ namespace Hazelcast.Examples.DistributedObjects
             const int partitionKey = 10;
 
             // all keys on the same partition of the partitionKey will be returned
-            var partitionKeys = await map.GetKeysAsync(Predicate.Partition(partitionKey, Predicate.True()));
+            var partitionKeys = await map.GetKeysAsync(Query.Partition(partitionKey, Query.True()));
             Console.WriteLine("Partition keys: " + string.Join(", ", partitionKeys));
 
             // keys less than 100 and on the same partition of the partitionKey will be returned
-            var filteredKeys = await map.GetKeysAsync(Predicate.Partition(partitionKey, Predicate.IsLessThan("this",100)));
+            var filteredKeys = await map.GetKeysAsync(Query.Partition(partitionKey, Query.LessThan("this",100)));
             Console.WriteLine("Filtered keys: " + string.Join(", ", filteredKeys));
 
             // destroy the map

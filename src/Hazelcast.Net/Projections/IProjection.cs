@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Aggregating;
+
 namespace Hazelcast.Projections
 {
     /// <summary>
-    /// Defines a projection that can transform an object into other objects.
+    /// Transform an object into another object.
     /// </summary>
     /// <remarks>
-    /// <para>Only 1-to-1 projections are allowed. Use an <see cref="IAggregator{TResult}"/> to perform n-to-1 or
-    /// n-to-n projections.</para>
+    /// <para>Only 1-to-1 projections are allowed. Use an <see cref="IAggregator{TResult}"/>
+    /// to perform n-to-1 or n-to-n projections.</para>
     /// <para>Projections must have a server-side counterpart.</para>
     /// </remarks>
     public interface IProjection

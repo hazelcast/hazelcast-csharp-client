@@ -54,8 +54,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(10, await dictionary.AggregateAsync(Aggregator.Count()));
-            Assert.AreEqual(10, await dictionary.AggregateAsync(Aggregator.Count("this")));
+            Assert.AreEqual(10, await dictionary.AggregateAsync(Aggregate.Count()));
+            Assert.AreEqual(10, await dictionary.AggregateAsync(Aggregate.Count("this")));
         }
 
         [Test]
@@ -66,8 +66,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.DoubleAvg()));
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.DoubleAvg("this")));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.DoubleAvg()));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.DoubleAvg("this")));
         }
 
         [Test]
@@ -78,8 +78,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.IntegerAvg()));
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.IntegerAvg("this")));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.IntegerAvg()));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.IntegerAvg("this")));
         }
 
         [Test]
@@ -90,8 +90,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.LongAvg()));
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.LongAvg("this")));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.LongAvg()));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.LongAvg("this")));
         }
 
         [Test]
@@ -107,8 +107,8 @@ namespace Hazelcast.Tests.Remote
             await Fill(dictionary, i => (int) i);
             await Fill(dictionary, i => (long) i);
 
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.NumberAvg()));
-            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregator.NumberAvg("this")));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.NumberAvg()));
+            Assert.AreEqual(4.5d, await dictionary.AggregateAsync(Aggregate.NumberAvg("this")));
         }
 
         [Test]
@@ -119,8 +119,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(9, await dictionary.AggregateAsync(Aggregator.Max<int>()));
-            Assert.AreEqual(9, await dictionary.AggregateAsync(Aggregator.Max<int>("this")));
+            Assert.AreEqual(9, await dictionary.AggregateAsync(Aggregate.Max<int>()));
+            Assert.AreEqual(9, await dictionary.AggregateAsync(Aggregate.Max<int>("this")));
         }
 
         [Test]
@@ -131,8 +131,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(0, await dictionary.AggregateAsync(Aggregator.Min<int>()));
-            Assert.AreEqual(0, await dictionary.AggregateAsync(Aggregator.Min<int>("this")));
+            Assert.AreEqual(0, await dictionary.AggregateAsync(Aggregate.Min<int>()));
+            Assert.AreEqual(0, await dictionary.AggregateAsync(Aggregate.Min<int>("this")));
         }
 
         [Test]
@@ -143,8 +143,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => new BigInteger(i));
 
-            Assert.AreEqual(new BigInteger(45), await dictionary.AggregateAsync(Aggregator.BigIntegerSum()));
-            Assert.AreEqual(new BigInteger(45), await dictionary.AggregateAsync(Aggregator.BigIntegerSum("this")));
+            Assert.AreEqual(new BigInteger(45), await dictionary.AggregateAsync(Aggregate.BigIntegerSum()));
+            Assert.AreEqual(new BigInteger(45), await dictionary.AggregateAsync(Aggregate.BigIntegerSum("this")));
         }
 
         [Test]
@@ -155,8 +155,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregator.DoubleSum()));
-            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregator.DoubleSum("this")));
+            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregate.DoubleSum()));
+            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregate.DoubleSum("this")));
         }
 
         [Test]
@@ -167,8 +167,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregator.IntegerSum()));
-            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregator.IntegerSum("this")));
+            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregate.IntegerSum()));
+            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregate.IntegerSum("this")));
         }
 
         [Test]
@@ -179,8 +179,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregator.LongSum()));
-            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregator.LongSum("this")));
+            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregate.LongSum()));
+            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregate.LongSum("this")));
         }
 
         [Test]
@@ -200,8 +200,8 @@ namespace Hazelcast.Tests.Remote
 
             await using var d = await Client.GetMapAsync<string, int>(name);
 
-            Assert.AreEqual(90, await d.AggregateAsync(Aggregator.FixedPointSum()));
-            Assert.AreEqual(90, await d.AggregateAsync(Aggregator.FixedPointSum("this")));
+            Assert.AreEqual(90, await d.AggregateAsync(Aggregate.FixedPointSum()));
+            Assert.AreEqual(90, await d.AggregateAsync(Aggregate.FixedPointSum("this")));
         }
 
         [Test]
@@ -214,8 +214,8 @@ namespace Hazelcast.Tests.Remote
             await Fill(dictionary, i => (int) i);
             await Fill(dictionary, i => (long) i);
 
-            Assert.AreEqual(90, await dictionary.AggregateAsync(Aggregator.FixedPointSum()));
-            Assert.AreEqual(90, await dictionary.AggregateAsync(Aggregator.FixedPointSum("this")));
+            Assert.AreEqual(90, await dictionary.AggregateAsync(Aggregate.FixedPointSum()));
+            Assert.AreEqual(90, await dictionary.AggregateAsync(Aggregate.FixedPointSum("this")));
         }
 
         [Test]
@@ -226,8 +226,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum()));
-            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum("this")));
+            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregate.FloatingPointSum()));
+            Assert.AreEqual(45d, await dictionary.AggregateAsync(Aggregate.FloatingPointSum("this")));
         }
 
         [Test]
@@ -239,8 +239,8 @@ namespace Hazelcast.Tests.Remote
             await Fill(dictionary, i => (float) i);
             await Fill(dictionary, i => (double) i);
 
-            Assert.AreEqual(90d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum()));
-            Assert.AreEqual(90d, await dictionary.AggregateAsync(Aggregator.FloatingPointSum("this")));
+            Assert.AreEqual(90d, await dictionary.AggregateAsync(Aggregate.FloatingPointSum()));
+            Assert.AreEqual(90d, await dictionary.AggregateAsync(Aggregate.FloatingPointSum("this")));
         }
 
         [Test]
@@ -251,10 +251,10 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => i);
 
-            var predicate = Predicate.IsGreaterThan("this", 5);
+            var predicate = Query.GreaterThan("this", 5);
 
-            Assert.AreEqual(4, await dictionary.AggregateAsync(Aggregator.Count(), predicate));
-            Assert.AreEqual(4, await dictionary.AggregateAsync(Aggregator.Count("this"), predicate));
+            Assert.AreEqual(4, await dictionary.AggregateAsync(Aggregate.Count(), predicate));
+            Assert.AreEqual(4, await dictionary.AggregateAsync(Aggregate.Count("this"), predicate));
         }
 
         [Test]
@@ -265,7 +265,7 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => new Header(i, new Handle(false)));
 
-            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregator.LongSum("id")));
+            Assert.AreEqual(45, await dictionary.AggregateAsync(Aggregate.LongSum("id")));
         }
 
         [Test]
@@ -276,8 +276,8 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => new Header(i, new Handle(false)));
 
-            var predicate = Predicate.IsGreaterThan("id", 5);
-            Assert.AreEqual(30, await dictionary.AggregateAsync(Aggregator.LongSum("id"), predicate));
+            var predicate = Query.GreaterThan("id", 5);
+            Assert.AreEqual(30, await dictionary.AggregateAsync(Aggregate.LongSum("id"), predicate));
         }
 
         [Test]
@@ -288,7 +288,7 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => new Item(new Header(i, new Handle(false)), new int[1], new int[1]));
 
-            Assert.AreEqual(10, await dictionary.AggregateAsync(Aggregator.Count("enabled[any]")));
+            Assert.AreEqual(10, await dictionary.AggregateAsync(Aggregate.Count("enabled[any]")));
         }
 
         [Test]
@@ -299,7 +299,7 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.ThrowsAsync<ArgumentException>(async () =>
             {
-                await dictionary.AggregateAsync(Aggregator.LongSum("id"), null);
+                await dictionary.AggregateAsync(Aggregate.LongSum("id"), null);
             });
 		}
 
@@ -325,7 +325,7 @@ namespace Hazelcast.Tests.Remote
 
             await Fill(dictionary, i => new Header(i, new Handle(false)));
 
-            var predicate = Predicate.IsGreaterThan("id", 5);
+            var predicate = Query.GreaterThan("id", 5);
             var result = await dictionary.ProjectAsync<long>(new SingleAttributeProjection("id"), predicate);
             var expected = new HashSet<long> {6, 7, 8, 9};
             CollectionAssert.AreEquivalent(expected, result);

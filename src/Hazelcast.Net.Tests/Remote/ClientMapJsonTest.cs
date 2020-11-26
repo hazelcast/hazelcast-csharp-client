@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Remote
         public async Task QueryOnNumberProperty_Succeeded()
         {
             await FillAsync();
-            var result = await _map.GetValuesAsync(Predicate.IsLessThan("age", 20));
+            var result = await _map.GetValuesAsync(Query.LessThan("age", 20));
             Assert.AreEqual(19, result.Count);
         }
 
@@ -87,7 +87,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync();
 
-            var result = await _map.GetValuesAsync(Predicate.IsEqual("email", "a@b.com"));
+            var result = await _map.GetValuesAsync(Query.EqualTo("email", "a@b.com"));
 
             Assert.AreEqual(1, result.Count);
         }
@@ -100,7 +100,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync();
 
-            var result = await _map.GetValuesAsync(Predicate.IsEqual("outer.inner", 24));
+            var result = await _map.GetValuesAsync(Query.EqualTo("outer.inner", 24));
 
             Assert.AreEqual(1, result.Count);
         }

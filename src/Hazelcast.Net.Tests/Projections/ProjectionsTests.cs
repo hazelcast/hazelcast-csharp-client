@@ -26,14 +26,12 @@ namespace Hazelcast.Tests.Projections
         [Test]
         public void SingleAttributeProjectionTest()
         {
-            Assert.Throws<ArgumentException>(() => _ = new SingleAttributeProjection(""));
+            Assert.Throws<ArgumentException>(() => _ = Project.SingleAttribute(""));
 
-            var p = new SingleAttributeProjection();
+            var x = Project.SingleAttribute("attribute");
 
-            Assert.That(p.FactoryId, Is.EqualTo(FactoryIds.ProjectionDsFactoryId));
-            Assert.That(p.ClassId, Is.EqualTo(ProjectionDataSerializerHook.SingleAttribute));
-
-            p = new SingleAttributeProjection("attribute");
+            Assert.That(x, Is.InstanceOf<SingleAttributeProjection>());
+            var p = (SingleAttributeProjection) x;
 
             Assert.That(p.FactoryId, Is.EqualTo(FactoryIds.ProjectionDsFactoryId));
             Assert.That(p.ClassId, Is.EqualTo(ProjectionDataSerializerHook.SingleAttribute));
