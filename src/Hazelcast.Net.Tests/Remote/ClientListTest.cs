@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(list, 3);
 
-            await list.InsertAsync(1, "item1Mod");
+            await list.AddAsync(1, "item1Mod");
             Assert.AreEqual("item1Mod", await list.GetAsync(1));
         }
 
@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(list, 3);
 
-            await list.InsertRangeAsync(1, new[] {"item1Mod", "item2Mod"});
+            await list.AddAllAsync(1, new[] {"item1Mod", "item2Mod"});
             Assert.That(new [] {"item0", "item1Mod", "item2Mod", "item1", "item2"},
                 Is.EquivalentTo(await list.GetAllAsync()));
         }
@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(list, 5);
 
-            await list.GetAndSetAsync(3, "item3Mod");
+            await list.Set(3, "item3Mod");
             Assert.AreEqual("item3Mod", await list.GetAsync(3));
         }
 
@@ -89,8 +89,8 @@ namespace Hazelcast.Tests.Remote
 
             Assert.AreEqual("item3", await list.GetAsync(3));
 
-            await list.GetRangeAsync(2, 4);
-            Assert.That(new [] {"item2", "item3"}, Is.EquivalentTo(await list.GetRangeAsync(2, 4)));
+            await list.GetSublistAsync(2, 4);
+            Assert.That(new [] {"item2", "item3"}, Is.EquivalentTo(await list.GetSublistAsync(2, 4)));
         }
 
         [Test]
@@ -132,8 +132,8 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(list, 5);
 
-            Assert.False(await list.RemoveAsync("item33"));
-            Assert.True(await list.RemoveAsync("item3"));
+            Assert.False(await list.RemoveFixmeAsync("item33"));
+            Assert.True(await list.RemoveFixmeAsync("item3"));
         }
     }
 }

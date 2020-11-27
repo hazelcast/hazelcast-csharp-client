@@ -43,7 +43,7 @@ namespace Hazelcast.Examples.DistributedObjects
                 await map.SetAsync(i, "value" + i);
 
             // verify
-            Console.WriteLine("Count: " + await map.SizeAsync());
+            Console.WriteLine("Count: " + await map.GetSizeAsync());
 
             // process
             // note: hazelcast-test.jar has the same UpdateEntryProcessor,

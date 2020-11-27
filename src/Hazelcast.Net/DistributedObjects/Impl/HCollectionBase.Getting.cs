@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public abstract Task<bool> ContainsAsync(T item);
 
         /// <inheritdoc />
-        public abstract Task<int> CountAsync();
+        public abstract Task<int> GetSizeAsync();
 
         /// <inheritdoc />
         public abstract Task<bool> ContainsAllAsync<TItem>(ICollection<TItem> items)

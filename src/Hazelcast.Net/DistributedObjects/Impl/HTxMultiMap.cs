@@ -64,14 +64,14 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 
-        public async Task<int> SizeAsync()
+        public async Task<int> GetSizeAsync()
         {
             var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalMultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<int> ValueCountAsync(TKey key)
+        public async Task<int> GetValueCountAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);

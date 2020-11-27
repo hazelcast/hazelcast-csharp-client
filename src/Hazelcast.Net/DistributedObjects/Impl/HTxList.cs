@@ -61,7 +61,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritoc />
-        public async Task<int> CountAsync()
+        public async Task<int> GetSizeAsync()
         {
             var requestMessage = TransactionalListSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();

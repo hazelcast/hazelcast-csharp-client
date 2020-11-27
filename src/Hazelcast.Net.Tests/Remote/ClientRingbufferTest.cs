@@ -41,11 +41,11 @@ namespace Hazelcast.Tests.Remote
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(rb);
 
-            var s = await rb.AddRangeAsync(new List<string> {"foo", "bar"}, OverflowPolicy.Overwrite);
+            var s = await rb.AddAllAsync(new List<string> {"foo", "bar"}, OverflowPolicy.Overwrite);
 
             Assert.AreEqual(s, await rb.GetTailSequenceAsync());
-            Assert.AreEqual("foo", await rb.GetAsync(0));
-            Assert.AreEqual("bar", await rb.GetAsync(1));
+            Assert.AreEqual("foo", await rb.ReadOneAsync(0));
+            Assert.AreEqual("bar", await rb.ReadOneAsync(1));
             Assert.AreEqual(0, await rb.GetHeadSequenceAsync());
             Assert.AreEqual(1, await rb.GetTailSequenceAsync());
         }
@@ -58,7 +58,7 @@ namespace Hazelcast.Tests.Remote
 
             var sequence = await rb.AddAsync("foo");
 
-            Assert.AreEqual("foo", await rb.GetAsync(sequence));
+            Assert.AreEqual("foo", await rb.ReadOneAsync(sequence));
         }
 
         [Test]
@@ -69,7 +69,7 @@ namespace Hazelcast.Tests.Remote
 
             var s = await rb.AddAsync("foo", OverflowPolicy.Overwrite);
 
-            Assert.AreEqual("foo", await rb.GetAsync(s));
+            Assert.AreEqual("foo", await rb.ReadOneAsync(s));
         }
 
         [Test]
@@ -90,7 +90,7 @@ namespace Hazelcast.Tests.Remote
 
             await AssertEx.ThrowsAsync<ArgumentException>(async () =>
             {
-                await rb.GetRangeAsync(0, 0, rb.MaxBatchSize + 1);
+                await rb.ReadManyAsync(0, 0, rb.MaxBatchSize + 1);
             });
 		}
 
@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Remote
             {
                 // so with this model, the invocation task
 
-                await rb.GetRangeAsync(0, Capacity + 1, Capacity + 1).CAF();
+                await rb.ReadManyAsync(0, Capacity + 1, Capacity + 1).CAF();
             });
         }
 
@@ -131,7 +131,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
-                await rb.GetRangeAsync(0, 2, 1);
+                await rb.ReadManyAsync(0, 2, 1);
             });
 		}
 
@@ -143,7 +143,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
-                await rb.GetAsync(-1);
+                await rb.ReadOneAsync(-1);
             });
 		}
 
@@ -157,7 +157,7 @@ namespace Hazelcast.Tests.Remote
             await rb.AddAsync("2");
             await rb.AddAsync("3");
 
-            var result = await rb.GetRangeAsync(0, 3, 3);
+            var result = await rb.ReadManyAsync(0, 3, 3);
             Assert.That(result, Is.EquivalentTo(new[] { "1", "2", "3" }));
         }
 
@@ -175,7 +175,7 @@ namespace Hazelcast.Tests.Remote
             await rb.AddAsync("6");
 
             //surplus results should not be read
-            var result = await rb.GetRangeAsync(0, 3, 3);
+            var result = await rb.ReadManyAsync(0, 3, 3);
             Assert.That(result, Is.EquivalentTo(new[] { "1", "2", "3" }));
         }
 
@@ -200,7 +200,7 @@ namespace Hazelcast.Tests.Remote
 
             await rb.AddAsync("foo");
 
-            Assert.AreEqual(1, await rb.CountAsync());
+            Assert.AreEqual(1, await rb.GetSizeAsync());
         }
 
         [Test]
@@ -216,7 +216,7 @@ namespace Hazelcast.Tests.Remote
 
             try
             {
-                await rb.GetAsync(await rb.GetHeadSequenceAsync() - 1);
+                await rb.ReadOneAsync(await rb.GetHeadSequenceAsync() - 1);
                 Assert.Fail("Expected an exception.");
             }
             catch (RemoteException e)

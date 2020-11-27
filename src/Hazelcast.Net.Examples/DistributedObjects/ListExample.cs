@@ -41,9 +41,9 @@ namespace Hazelcast.Examples.DistributedObjects
 
             Console.WriteLine("Contains: " + await list.ContainsAsync("item2"));
 
-            Console.WriteLine("Count: " + await list.CountAsync());
+            Console.WriteLine("Count: " + await list.GetSizeAsync());
 
-            Console.WriteLine("Sublist: " + string.Join(", ", await list.GetRangeAsync(0, 2)));
+            Console.WriteLine("Sublist: " + string.Join(", ", await list.GetSublistAsync(0, 2)));
 
             // destroy the list
             await client.DestroyAsync(list);

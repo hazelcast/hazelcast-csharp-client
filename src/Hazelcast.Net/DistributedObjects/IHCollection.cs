@@ -31,6 +31,7 @@ namespace Hazelcast.DistributedObjects
     public interface IHCollection<T> : IDistributedObject, IAsyncEnumerable<T>
     {
         //setting
+
         /// <summary>
         /// Adds an item to the collection.
         /// </summary>
@@ -44,9 +45,10 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TItem">type of elements</typeparam>
         /// <param name="items">element collection</param>
         /// <returns><c>true</c> if this collection changed, <c>false</c> otherwise.</returns>
-        Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items) where TItem : T;
+        Task<bool> AddAll<TItem>(ICollection<TItem> items) where TItem : T;
 
         //getting
+
         /// <summary>
         /// Gets the collection items.
         /// </summary>
@@ -57,7 +59,7 @@ namespace Hazelcast.DistributedObjects
         /// Gets the number of items in the collection.
         /// </summary>
         /// <returns>The number of items in the collection.</returns>
-        Task<int> CountAsync();
+        Task<int> GetSizeAsync();
 
         /// <summary>
         /// Determines whether this instance is empty.
@@ -81,12 +83,13 @@ namespace Hazelcast.DistributedObjects
         Task<bool> ContainsAsync(T item);
 
         //removing
+
         /// <summary>
         /// Removes an item from the collection.
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns><c>true</c> if the item was removed; otherwise <c>false</c>.</returns>
-        Task<bool> RemoveAsync(T item);
+        Task<bool> RemoveFixmeAsync(T item);
 
         /// <summary>
         /// Removes all of the elements in the specified collection from this collection.

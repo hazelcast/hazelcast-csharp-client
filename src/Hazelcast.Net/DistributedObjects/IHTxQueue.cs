@@ -20,18 +20,16 @@ namespace Hazelcast.DistributedObjects
     /// <summary>Transactional implementation of Queue</summary>
     public interface IHTxQueue<TItem> : ITransactionalObject
     {
-        Task<bool> TryEnqueueAsync(TItem item);
-        Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait);
+        Task<bool> OfferAsync(TItem item);
 
-        Task<TItem> PeekAsync();
+        Task<bool> OfferAsync(TItem item, TimeSpan timeToWait);
 
-        Task<TItem> TryPeekAsync(TimeSpan timeToWait);
+        Task<TItem> PeekAsync(TimeSpan timeToWait = default);
 
-        Task<TItem> TryDequeueAsync();
-        Task<TItem> TryDequeueAsync(TimeSpan timeToWait);
+        Task<TItem> PollAsync(TimeSpan timeToWait = default);
 
-        Task<int> CountAsync();
+        Task<int> GetSizeAsync();
 
-        Task<TItem> DequeueAsync();
+        Task<TItem> TakeAsync();
     }
 }

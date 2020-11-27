@@ -165,7 +165,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalMapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<int> SizeAsync()
+        public async Task<int> GetSizeAsync()
         {
             var requestMessage = TransactionalMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();

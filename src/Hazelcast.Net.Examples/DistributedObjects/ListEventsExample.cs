@@ -48,7 +48,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             await list.AddAsync("item1");
             await list.AddAsync("item2");
-            await list.RemoveAsync("item1");
+            await list.RemoveFixmeAsync("item1");
 
             while (count < 3) await Task.Delay(100);
 

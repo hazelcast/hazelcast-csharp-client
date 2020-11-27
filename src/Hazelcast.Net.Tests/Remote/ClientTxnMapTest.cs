@@ -88,11 +88,11 @@ namespace Hazelcast.Tests.Remote
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
             Assert.That(await txDictionary.PutAsync("key3", "value3"), Is.Null);
-            Assert.AreEqual(3, await txDictionary.SizeAsync());
+            Assert.AreEqual(3, await txDictionary.GetSizeAsync());
             Assert.AreEqual(3, (await txDictionary.GetKeysAsync()).Count);
             Assert.AreEqual(3, (await txDictionary.GetValuesAsync()).Count);
             await context.CommitAsync();
-            Assert.AreEqual(3, await dictionary.SizeAsync());
+            Assert.AreEqual(3, await dictionary.GetSizeAsync());
             Assert.AreEqual(3, (await dictionary.GetKeysAsync()).Count);
             Assert.AreEqual(3, (await dictionary.GetValuesAsync()).Count);
         }

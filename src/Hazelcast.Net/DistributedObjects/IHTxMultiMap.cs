@@ -28,8 +28,8 @@ namespace Hazelcast.DistributedObjects
 
         Task<IReadOnlyCollection<TValue>> RemoveAsync(TKey key);
 
-        Task<int> SizeAsync();
+        Task<int> GetSizeAsync();
 
-        Task<int> ValueCountAsync(TKey key);
+        Task<int> GetValueCountAsync(TKey key);
     }
 }

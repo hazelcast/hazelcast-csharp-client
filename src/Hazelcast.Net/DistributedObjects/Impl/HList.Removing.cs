@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HList<T> // Remove
     {
         /// <inheritdoc />
-        public override async Task<bool> RemoveAsync(T item)
+        public override async Task<bool> RemoveFixmeAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListRemoveCodec.EncodeRequest(Name, itemData);
@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<T> GetAndRemoveAtAsync(int index)
+        public async Task<T> RemoveAsync(int index)
         {
             var requestMessage = ListRemoveWithIndexCodec.EncodeRequest(Name, index);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

@@ -151,9 +151,9 @@ namespace Hazelcast.DistributedObjects
         Task<bool> ReplaceAsync(TKey key, TValue oldValue, TValue newValue);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.SizeAsync"/>.
+        /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.GetSizeAsync"/>.
         /// </summary>
-        Task<int> SizeAsync();
+        Task<int> GetSizeAsync();
 
         /// <summary>
         /// Transactional implementation of <see cref="IHMap{TKey,TValue}.GetValuesAsync()"/>.

@@ -28,15 +28,15 @@ namespace Hazelcast.Examples.WebSite
             // Get a Blocking Queue called "my-distributed-queue"
             var queue = await client.GetQueueAsync<string>("my-distributed-queue");
             // Offer a String into the Distributed Queue
-            await queue.EnqueueAsync("item");
+            await queue.PutAsync("item");
             // Poll the Distributed Queue and return the String
-            await queue.TryDequeueAsync();
+            await queue.PollAsync();
             //Timed blocking Operations
-            await queue.TryEnqueueAsync("anotheritem", TimeSpan.FromMilliseconds(500));
-            await queue.TryDequeueAsync(TimeSpan.FromSeconds(5));
+            await queue.OfferAsync("anotheritem", TimeSpan.FromMilliseconds(500));
+            await queue.PollAsync(TimeSpan.FromSeconds(5));
             //Indefinitely blocking Operations
-            await queue.EnqueueAsync("yetanotheritem");
-            Console.WriteLine(await queue.DequeueAsync());
+            await queue.PutAsync("yetanotheritem");
+            Console.WriteLine(await queue.TakeAsync());
         }
     }
 }

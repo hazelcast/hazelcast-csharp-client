@@ -33,9 +33,9 @@ namespace Hazelcast.Examples.WebSite
             await list.AddAsync("item2");
 
             // Remove the first element
-            Console.WriteLine("Removed: " + await list.GetAndRemoveAtAsync(0));
+            Console.WriteLine("Removed: " + await list.RemoveAsync(0));
             // There is only one element left
-            Console.WriteLine("Current size is " + await list.CountAsync());
+            Console.WriteLine("Current size is " + await list.GetSizeAsync());
             // Clear the list
             await list.ClearAsync();
 

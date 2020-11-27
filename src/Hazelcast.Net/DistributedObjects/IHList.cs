@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="index">index at which the specified element is to be inserted</param>
         /// <param name="item">element to be inserted</param>
-        Task InsertAsync(int index, T item);
+        Task AddAsync(int index, T item);
 
         /// <summary>
         /// Inserts all of the elements in the specified collection into this
@@ -56,7 +56,7 @@ namespace Hazelcast.DistributedObjects
         /// operation is in progress.  (Note that this will occur if the specified
         /// collection is this list, and it's nonempty.)
         /// </remarks>
-        Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items) where TItem : T;
+        Task<bool> AddAllAsync<TItem>(int index, ICollection<TItem> items) where TItem : T;
 
         /// <summary>
         /// Replaces the element at the specified position in this list with the specified element.
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="index">index index of the element to replace</param>
         /// <param name="item">element to be stored at the specified position</param>
         /// <returns>The element previously at the specified position</returns>
-        Task<T> GetAndSetAsync(int index, T item);
+        Task<T> Set(int index, T item);
 
         //Getting
 
@@ -85,7 +85,7 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// If  <c>fromIndex</c> and <tt>toIndex</tt> are equal, the returned list is empty.
         /// </remarks>
-        Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex);
+        Task<IReadOnlyList<T>> GetSublistAsync(int fromIndex, int toIndex);
 
         /// <summary>
         /// Returns the zero-based index of the first occurrence of a specific item in this list.
@@ -112,6 +112,6 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="index">element to be removed from this list, if present</param>
         /// <returns>the element previously at the specified position</returns>
-        Task<T> GetAndRemoveAtAsync(int index);
+        Task<T> RemoveAsync(int index);
     }
 }

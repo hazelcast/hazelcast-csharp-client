@@ -40,7 +40,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             Console.WriteLine("Contains: " + await set.ContainsAsync("item2"));
 
-            Console.WriteLine("Count: " + await set.CountAsync());
+            Console.WriteLine("Count: " + await set.GetSizeAsync());
 
             // destroy the set
             await client.DestroyAsync(set);

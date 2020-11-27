@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HQueue<T> // Getting
     {
         /// <inheritdoc />
-        public override async Task<int> CountAsync()
+        public override async Task<int> GetSizeAsync()
         {
             var requestMessage = QueueSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

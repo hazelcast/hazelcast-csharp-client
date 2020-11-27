@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalSetRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<int> CountAsync()
+        public async Task<int> GetSizeAsync()
         {
             var requestMessage = TransactionalSetSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();

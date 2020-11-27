@@ -44,7 +44,7 @@ namespace Hazelcast.Examples.DistributedObjects
                 var sequence = await ringBuffer.GetHeadSequenceAsync();
                 while (sequence < 100)
                 {
-                    var item = await ringBuffer.GetAsync(sequence++);
+                    var item = await ringBuffer.ReadOneAsync(sequence++);
                     Console.WriteLine("Reading value " + item);
                 }
             });

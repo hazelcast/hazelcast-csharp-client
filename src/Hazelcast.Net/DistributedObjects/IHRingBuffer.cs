@@ -100,7 +100,7 @@ namespace Hazelcast.DistributedObjects
         /// or if overflowPolicy is null
         /// </exception>
         /// <exception cref="System.ArgumentException">if collection is empty</exception>
-        Task<long> AddRangeAsync(ICollection<TItem> items, OverflowPolicy overflowPolicy);
+        Task<long> AddAllAsync(ICollection<TItem> items, OverflowPolicy overflowPolicy);
 
         /// <summary>
         /// Asynchronously writes an item with a configurable
@@ -171,7 +171,7 @@ namespace Hazelcast.DistributedObjects
         /// or if maxCount larger than the capacity of the ringbuffer
         /// or if maxCount larger than 1000 (to prevent overload)
         /// </exception>
-        Task<IReadOnlyList<TItem>> GetRangeAsync(long startSequence, int minCount, int maxCount);
+        Task<IReadOnlyList<TItem>> ReadManyAsync(long startSequence, int minCount, int maxCount);
 
         /// <summary>Reads one item from the Ringbuffer.</summary>
         /// <remarks>
@@ -211,7 +211,7 @@ namespace Hazelcast.DistributedObjects
         /// +1.
         /// </exception>
         /// <exception cref="System.Exception">if the call is interrupted while blocking.</exception>
-        ValueTask<TItem> GetAsync(long sequence);
+        ValueTask<TItem> ReadOneAsync(long sequence);
 
         /// <summary>Returns the remaining capacity of the ringbuffer.</summary>
         /// <remarks>
@@ -229,7 +229,7 @@ namespace Hazelcast.DistributedObjects
         /// around the ring. This is because no items are getting retired.
         /// </remarks>
         /// <returns>the size.</returns>
-        Task<long> CountAsync();
+        Task<long> GetSizeAsync();
 
         /// <summary>Returns the sequence of the tail.</summary>
         /// <remarks>

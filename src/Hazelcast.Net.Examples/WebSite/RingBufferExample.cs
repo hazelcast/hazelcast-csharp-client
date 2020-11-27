@@ -34,9 +34,9 @@ namespace Hazelcast.Examples.WebSite
             // we start from the oldest item.
             // if you want to start from the next item, call rb.tailSequence()+1
             var sequence = await rb.GetHeadSequenceAsync();
-            Console.WriteLine(await rb.GetAsync(sequence));
+            Console.WriteLine(await rb.ReadOneAsync(sequence));
             sequence += 1;
-            Console.WriteLine(await rb.GetAsync(sequence));
+            Console.WriteLine(await rb.ReadOneAsync(sequence));
 
             await client.DestroyAsync(rb);
         }

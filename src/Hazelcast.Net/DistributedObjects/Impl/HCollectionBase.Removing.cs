@@ -20,7 +20,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HCollectionBase<T> // Removing
     {
         /// <inheritdoc />
-        public abstract Task<bool> RemoveAsync(T item);
+        public abstract Task<bool> RemoveFixmeAsync(T item);
 
         /// <inheritdoc />
         public abstract Task<bool> RemoveAllAsync<TItem>(ICollection<TItem> items)

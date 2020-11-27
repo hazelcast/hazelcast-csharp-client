@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HList<T> // Setting
     {
         /// <inheritdoc />
-        public async Task<T> GetAndSetAsync(int index, T item)
+        public async Task<T> Set(int index, T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListSetCodec.EncodeRequest(Name, index, itemData);
@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task InsertAsync(int index, T item)
+        public async Task AddAsync(int index, T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListAddWithIndexCodec.EncodeRequest(Name, index, itemData);
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items)
+        public override async Task<bool> AddAll<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = ListAddAllCodec.EncodeRequest(Name, itemsData);
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<bool> InsertRangeAsync<TItem>(int index, ICollection<TItem> items)
+        public async Task<bool> AddAllAsync<TItem>(int index, ICollection<TItem> items)
             where TItem : T
         {
             var itemsData = ToSafeData(items);
