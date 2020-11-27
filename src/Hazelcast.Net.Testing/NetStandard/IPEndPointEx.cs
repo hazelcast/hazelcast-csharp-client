@@ -17,7 +17,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#if NETSTANDARD2_0 || NETSTANDARD2_1
 using System.Globalization;
+#endif
 
 // ReSharper disable once CheckNamespace
 namespace System.Net

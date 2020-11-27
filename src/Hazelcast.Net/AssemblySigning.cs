@@ -12,10 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Runtime.CompilerServices;
+
 namespace Hazelcast
 {
+    /// <summary>
+    /// Provides constants for assembly signing.
+    /// </summary>
     internal class AssemblySigning
     {
+        /// <summary>
+        /// Gets the Hazelcast assembly signing public key.
+        /// </summary>
+        /// <remarks>
+        /// <para>This key is used in <c>AssemblyInfo.cs</c> to expose the internals
+        /// of the <c>Hazelcast.Net</c> assembly to other assemblies such as tests,
+        /// via <see cref="InternalsVisibleToAttribute"/> attributes.</para>
+        /// </remarks>
         internal const string PublicKey = "00240000048000009400000006020000002400005253413100040000010001004d81045a994968" +
                                           "ac643918d7bbce405b2473471d8de6aed6bbffc0fe1874bfcabf3c0b437c6c5293a589bdcbe884" +
                                           "c6d86934069b35deaf5ab2e770cbff41a20dd4014bb53e481c30bd3ead29437b02dec5916a717a" +
