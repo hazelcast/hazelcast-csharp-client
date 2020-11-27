@@ -15,8 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Models;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Models;
 using Hazelcast.Transactions;
 
 namespace Hazelcast

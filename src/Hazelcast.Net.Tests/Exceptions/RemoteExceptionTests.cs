@@ -19,7 +19,6 @@ using Hazelcast.Exceptions;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
-using Hazelcast.Tests.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Exceptions

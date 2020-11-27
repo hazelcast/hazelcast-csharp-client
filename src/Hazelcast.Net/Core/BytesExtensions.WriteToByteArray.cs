@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Hazelcast.Core
 {

@@ -44,8 +44,8 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // retrieve employee
             var result = await map.GetAsync(employee.Id);
-            Console.WriteLine(result != null 
-                ? $"Gotten employee '{result.Name}'." 
+            Console.WriteLine(result != null
+                ? $"Gotten employee '{result.Name}'."
                 : "Employee not found?");
 
             // destroy the map

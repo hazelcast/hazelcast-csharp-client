@@ -19,10 +19,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Models;
 using Hazelcast.Events;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 

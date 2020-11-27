@@ -10,8 +10,8 @@
 
 namespace Hazelcast.Tests {
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,15 +23,15 @@ namespace Hazelcast.Tests {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
-        
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Hazelcast.Tests {
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,7 +59,7 @@ namespace Hazelcast.Tests {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
@@ -69,7 +69,7 @@ namespace Hazelcast.Tests {
                 return ((byte[])(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
@@ -79,7 +79,7 @@ namespace Hazelcast.Tests {
                 return ((byte[])(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
@@ -97,7 +97,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_Default", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
@@ -115,7 +115,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_Kerberos", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
@@ -135,7 +135,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_MA_Optional", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
@@ -155,7 +155,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_MA_Required", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
@@ -173,7 +173,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_NearCache", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
         ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
@@ -193,14 +193,14 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_Ssl", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
         ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
         ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
         ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
-        ///  
+        ///
         ///  &lt;network&gt;
         ///    &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
         ///    &lt;outbound-ports&gt;
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Cluster_Ssl_Signed", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
@@ -226,7 +226,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("Empty", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
@@ -239,7 +239,7 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("EmptyWithComments", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {

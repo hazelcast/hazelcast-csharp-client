@@ -92,7 +92,7 @@ result=instance_0.getSerializationService().toBytes(list)
             var response = await ExecuteRemotePythonAsync(script);
             if (!response.Success)
                 throw new InvalidOperationException(response.ToString());
-            
+
             var data = new HeapData(response.Result);
             return SerializationService.ToObject<List<object>>(data);
         }

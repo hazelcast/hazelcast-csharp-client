@@ -41,7 +41,7 @@ namespace Hazelcast.Tests.Testing
         }
 
         // gets the version indicated by the [assembly:ServerVersion()] in AssemblyInfo.cs
-        private NuGetVersion TestAssemblyServerVersion 
+        private NuGetVersion TestAssemblyServerVersion
             => GetType().Assembly.GetCustomAttributes<ServerVersionAttribute>().FirstOrDefault()?.Version;
     }
 }

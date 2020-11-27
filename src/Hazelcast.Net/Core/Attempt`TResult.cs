@@ -164,7 +164,7 @@ namespace Hazelcast.Core
 
         /// <inheritdoc />
         public bool Equals(Attempt<TResult> other)
-            => (Success && other.Success && (Value is null ? other.Value is null : Value.Equals(other.Value))) || 
+            => (Success && other.Success && (Value is null ? other.Value is null : Value.Equals(other.Value))) ||
                (!Success && !other.Success);
 
         /// <inheritdoc />

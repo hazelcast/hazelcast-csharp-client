@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Impl
@@ -28,9 +27,9 @@ namespace Hazelcast.DistributedObjects.Impl
         // need that one because we are an HCollection - weird?
         // tries to enqueue immediately, does not wait & does not throw
         public override async Task<bool> AddAsync(T item) => await TryEnqueueAsync(item).CAF();
-        
+
         // <inheritdoc />
-        public async Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait = default) 
+        public async Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait = default)
             => await TryEnqueueAsync(item, timeToWait, CancellationToken.None).CAF();
 
         // <inheritdoc />

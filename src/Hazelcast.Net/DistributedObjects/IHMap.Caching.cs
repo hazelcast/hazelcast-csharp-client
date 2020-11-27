@@ -72,7 +72,7 @@ namespace Hazelcast.DistributedObjects
         /// </param>
         /// <returns>A task that will complete when the map store has been loaded.</returns>
         Task LoadAllAsync(bool replaceExistingValues);
-        
+
         /// <summary>
         /// Loads the given keys into the store.
         /// </summary>

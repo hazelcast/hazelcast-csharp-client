@@ -22,7 +22,6 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 // ReSharper disable once CheckNamespace
 namespace System.IO

@@ -16,7 +16,6 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Testing;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 
 namespace Hazelcast.Tests.Networking
 {

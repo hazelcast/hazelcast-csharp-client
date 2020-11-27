@@ -15,16 +15,12 @@
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Models;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
-using Hazelcast.Protocol.Codecs;
-using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.TestServer

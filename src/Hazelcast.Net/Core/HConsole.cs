@@ -19,7 +19,6 @@
 using System;
 using System.Diagnostics;
 using System.Text;
-
 #if HZ_CONSOLE
 using System.Globalization;
 #endif

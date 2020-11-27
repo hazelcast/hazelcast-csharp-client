@@ -21,7 +21,7 @@ namespace Hazelcast.Events
         // NotActive Disconnecting
         // Active    Reconnecting (?)
         // NotActive Disconnected
-        // 
+        //
 
         Starting,
         Started,

@@ -14,7 +14,6 @@
 
 using System;
 using System.Text;
-using Hazelcast.Protocol;
 
 namespace Hazelcast.Messaging
 {

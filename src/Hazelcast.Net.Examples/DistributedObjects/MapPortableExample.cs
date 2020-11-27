@@ -14,7 +14,6 @@
 
 using System;
 using System.Threading.Tasks;
-using System.Xml.XPath;
 using Hazelcast.Examples.Models;
 
 namespace Hazelcast.Examples.DistributedObjects

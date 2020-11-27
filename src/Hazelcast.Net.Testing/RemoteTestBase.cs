@@ -16,8 +16,8 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing
 {
