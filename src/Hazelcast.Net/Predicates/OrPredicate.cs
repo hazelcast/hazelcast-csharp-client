@@ -79,8 +79,8 @@ namespace Hazelcast.Predicates
         {
             if (ReferenceEquals(this, obj)) return true;
             if (obj is null) return false;
-            return obj is LogicalPredicateBase other && 
-                   obj.GetType() == GetType() && 
+            return obj is LogicalPredicateBase other &&
+                   obj.GetType() == GetType() &&
                    Equals(this, other);
         }
 
@@ -100,6 +100,10 @@ namespace Hazelcast.Predicates
 
     internal class OrPredicate : LogicalPredicateBase
     {
+        public OrPredicate()
+            : this(Array.Empty<IPredicate>())
+        { }
+
         public OrPredicate(params IPredicate[] predicates)
             : base(predicates)
         { }

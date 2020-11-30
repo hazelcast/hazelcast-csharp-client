@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Predicates
 {
     internal class AndPredicate : LogicalPredicateBase
     {
+        public AndPredicate()
+            : this(Array.Empty<IPredicate>())
+        { }
+
         public AndPredicate(params IPredicate[] predicates)
             : base(predicates)
         { }

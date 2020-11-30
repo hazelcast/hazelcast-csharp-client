@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Hazelcast.Core;
 using Hazelcast.Predicates;
 using Hazelcast.Serialization;
@@ -89,18 +88,6 @@ namespace Hazelcast.Tests.Predicates
 
             AssertPredicate(Query.WhereKey("property").IsILike("expression"), PredicateDataSerializerHook.ILikePredicate);
             AssertPredicate(Query.WhereValue().IsILike("expression"), PredicateDataSerializerHook.ILikePredicate);
-
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsIn(1, 2));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsBetween(1, 2));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsEqualTo(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsNotEqualTo(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsGreaterThan(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsGreaterThanOrEqualTo(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsLessThan(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsLessThanOrEqualTo(3));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsLike("a"));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).IsILike("a"));
-            Assert.Throws<ArgumentNullException>(() => ((PredicateBuilder) null).Matches("a"));
         }
 
         [Test]
