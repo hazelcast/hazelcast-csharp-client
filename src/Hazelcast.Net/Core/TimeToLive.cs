@@ -12,24 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
-using System.Threading;
 
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Utilities for managing time-to-live.
+    /// Provides time-to-live constants.
     /// </summary>
-    public static class TimeToLive
+    public static partial class TimeToLive 
     {
         /// <summary>
-        /// A constants used to specify an infinite time-to-live (never expire).
+        /// An infinite time-to-live (never expire).
         /// </summary>
-        public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
+        public static TimeSpan Infinite => TimeSpanExtensions.MinusOneMillisecond;
 
         /// <summary>
-        /// A constants used to specify a zero time-to-live (expire immediately).
+        /// The default time-to-live (use the value configured on the server).
         /// </summary>
-        public static readonly TimeSpan Zero = TimeSpan.Zero;
+        public static TimeSpan Default => TimeSpan.Zero;
     }
 }

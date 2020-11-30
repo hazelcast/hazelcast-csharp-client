@@ -12,24 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
-using System.Threading;
 
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Utilities for managing time-to-wait.
+    /// Provides time-to-wait constants.
     /// </summary>
-    public static class TimeToWait
+    public static partial class TimeToWait 
     {
         /// <summary>
-        /// A constants used to specify an infinite time-to-wait (wait forever).
+        /// An infinite time-to-wait (wait forever).
         /// </summary>
-        public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
+        public static TimeSpan Infinite => TimeSpanExtensions.MinusOneMillisecond;
 
         /// <summary>
-        /// A constants used to specify a zero time-to-wait (do not wait).
+        /// A zero time-to-wait (do not wait).
         /// </summary>
-        public static readonly TimeSpan Zero = TimeSpan.Zero;
+        public static TimeSpan Zero => TimeSpan.Zero;
     }
 }

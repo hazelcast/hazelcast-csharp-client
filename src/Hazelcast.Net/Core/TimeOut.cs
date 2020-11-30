@@ -19,17 +19,17 @@ using System;
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Provides idle-time constants.
+    /// Provides time-out constants.
     /// </summary>
-    public static partial class IdleTime
+    public static partial class TimeOut
     {
         /// <summary>
-        /// An infinite idle-time (never idle).
+        /// An infinite time-out (never expires).
         /// </summary>
         public static TimeSpan Infinite => TimeSpanExtensions.MinusOneMillisecond;
 
         /// <summary>
-        /// The default idle-time (use the value configured on the server).
+        /// The default timeout (use the configured value).
         /// </summary>
         public static TimeSpan Default => TimeSpan.Zero;
     }

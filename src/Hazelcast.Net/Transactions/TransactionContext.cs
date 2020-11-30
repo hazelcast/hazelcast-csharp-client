@@ -115,8 +115,10 @@ namespace Hazelcast.Transactions
 
             try
             {
-                var timeoutMilliseconds = _options.Timeout.TimeoutMilliseconds(0, int.MaxValue);
-                var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMilliseconds, _options.Durability, (int) _options.Type, ContextId);
+                // codec wants 0 for server config, maxValue for infinite, no negative value
+                var timeoutMs = _options.Timeout.RoundedMilliseconds(false).NegativeAs(long.MaxValue);
+
+                var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMs, _options.Durability, (int) _options.Type, ContextId);
                 var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CAF();
                 TransactionId = TransactionCreateCodec.DecodeResponse(responseMessage).Response;
                 State = TransactionState.Active;
@@ -143,10 +145,6 @@ namespace Hazelcast.Transactions
                 HConsole.WriteLine(this, $"Commit transaction on context #{ContextId} that was started on #{_threadId}");
                 throw new InvalidOperationException("Transactions cannot span multiple async contexts.");
             }
-
-            var timeoutMilliseconds = _options.Timeout.TimeoutMilliseconds(0, int.MaxValue);
-            if (_startTime + timeoutMilliseconds < Clock.Milliseconds)
-                throw new TransactionException("Transaction has timed out.");
 
             HConsole.WriteLine(this, $"Commit transaction on context #{ContextId}");
 

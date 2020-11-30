@@ -12,24 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
-using System.Threading;
 
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Utilities for managing time-to-live.
+    /// Provides lease-time constants.
     /// </summary>
-    public static class LeaseTime
+    public static partial class LeaseTime
     {
         /// <summary>
-        /// A constants used to specify an infinite lease time.
+        /// The max lease-time (according to server configuration).
         /// </summary>
-        public static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
+        public static TimeSpan MaxValue => TimeSpanExtensions.MinusOneMillisecond;
 
         /// <summary>
-        /// A constants used to specify a zero lease time (expire immediately).
+        /// A zero lease-time.
         /// </summary>
-        public static readonly TimeSpan Zero = TimeSpan.Zero;
+        public static TimeSpan Zero => TimeSpan.Zero;
     }
 }

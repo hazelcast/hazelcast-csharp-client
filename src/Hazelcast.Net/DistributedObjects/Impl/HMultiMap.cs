@@ -289,15 +289,15 @@ namespace Hazelcast.DistributedObjects.Impl
 
         /// <inheritdoc />
         public Task LockAsync(TKey key)
-            => LockAsync(key, Timeout.InfiniteTimeSpan);
+            => LockAsync(key, TimeOut.Infinite);
 
         /// <inheritdoc />
         public Task<bool> TryLockAsync(TKey key)
-            => TryLockAsync(key, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+            => TryLockAsync(key, TimeSpan.Zero, TimeOut.Infinite);
 
         /// <inheritdoc />
         public Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
-            => TryLockAsync(key, timeToWait, Timeout.InfiniteTimeSpan);
+            => TryLockAsync(key, timeToWait, TimeOut.Infinite);
 
         /// <inheritdoc />
         public async Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)

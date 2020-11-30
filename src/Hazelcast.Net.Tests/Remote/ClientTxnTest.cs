@@ -14,6 +14,8 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
 using Hazelcast.Transactions;
 using NUnit.Framework;
@@ -84,10 +86,14 @@ namespace Hazelcast.Tests.Remote
 
             await Task.Delay(500);
 
-            await AssertEx.ThrowsAsync<TransactionException>(async () =>
+            var e = await AssertEx.ThrowsAsync<RemoteException>(async () =>
             {
                 await context.CommitAsync();
             });
+
+            // java: TransactionImpl.checkTimeout() throws TransactionException,
+            // not TransactionTimedOutException - go figure
+            Assert.That(e.Error, Is.EqualTo(RemoteError.Transaction));
 		}
     }
 }
