@@ -52,11 +52,9 @@ namespace Hazelcast.Predicates
         /// </summary>
         int PageSize { get; }
 
-        // FIXME comparer and anchor
+        // NOTE: comparer and anchor - keep internal for now (usage?)
         // in Java they are typed ie KeyValuePair<TKey, TValue>, here it is <object, object>
-        // is this working as expected?
-        // is it OK not to be typed?
-        // note that being typed would require ... the query itself to be typed?
+        // is this working as expected? is it OK not to be typed?
 
         /// <summary>
         /// Gets the comparer that is used to sort the results on the client.
@@ -65,11 +63,11 @@ namespace Hazelcast.Predicates
         /// <para>The comparer implementation should be serializable by Hazelcast,
         /// and should have a corresponding identical implementation on the server.</para>
         /// </remarks>
-        IComparer<KeyValuePair<object, object>> Comparer { get; }
+        //IComparer<KeyValuePair<object, object>> Comparer { get; }
 
         /// <summary>
         /// Gets the anchor entry, i.e. the last entry on the previous page.
         /// </summary>
-        KeyValuePair<object, object> Anchor { get; }
+        //KeyValuePair<object, object> Anchor { get; }
     }
 }
