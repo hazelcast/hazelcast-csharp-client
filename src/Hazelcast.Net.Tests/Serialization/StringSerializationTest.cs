@@ -137,8 +137,10 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestStringSurrogateCharEncode()
         {
-            var str = new string(new[] { Utf8Char.FourBytesH, Utf8Char.FourBytesL });
-            Assert.Throws<SerializationException>(() => _serializationService.ToData(str));
+            var data = _serializationService.ToData(Utf8Char.FourBytes);
+            var s = _serializationService.ToObject<string>(data);
+
+            Assert.That(s, Is.EqualTo(Utf8Char.FourBytes));
         }
 
         [Test]

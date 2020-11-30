@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
@@ -412,7 +411,7 @@ namespace Hazelcast.Serialization
             // each char can be 1, 2 or 3 bytes - surrogate pairs are reported as 2 chars
             // note: this is consistent with Java
 
-            return _data.ReadUtf8String(ref _position, length);
+            return length == 0 ? "" : _data.ReadUtf8String(ref _position, length);
         }
 
         /// <inheritdoc />

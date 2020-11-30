@@ -305,6 +305,8 @@ namespace Hazelcast.Core
 
         public static string ReadUtf8String(this byte[] bytes, ref int position, int length)
         {
+            if (length == 0) return "";
+
             var buffer = ArrayPool<char>.Shared.Rent(length);
             try
             {
@@ -320,6 +322,8 @@ namespace Hazelcast.Core
         public static void ReadUtf8Chars(this byte[] bytes, ref int position, char[] buffer, int length)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
+            if (length == 0) return;
 
             if (position < 0 || bytes.Length < position + SizeOfByte)
                 throw new ArgumentOutOfRangeException(nameof(position));
