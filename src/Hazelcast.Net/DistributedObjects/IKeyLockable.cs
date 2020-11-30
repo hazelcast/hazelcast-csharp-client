@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
         /// <para>The lock is automatically released after the specified <paramref name="leaseTime"/>. If
-        /// <paramref name="leaseTime"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the lock is never
+        /// <paramref name="leaseTime"/> is <see cref="TimeOut.Infinite"/>, the lock is never
         /// released.</para>
         /// </remarks>
         Task LockAsync(TKey key, TimeSpan leaseTime);
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns <c>false</c>.
-        /// If <paramref name="timeToWait"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// If <paramref name="timeToWait"/> is <see cref="TimeOut.Infinite"/>, waits forever.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
         /// </remarks>
@@ -83,9 +83,9 @@ namespace Hazelcast.DistributedObjects
         /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked after <paramref name="timeToWait"/>, returns <c>false</c>.
-        /// If <paramref name="timeToWait"/> is <see cref="Timeout.InfiniteTimeSpan"/>, waits forever.</para>
+        /// If <paramref name="timeToWait"/> is <see cref="TimeOut.Infinite"/>, waits forever.</para>
         /// <para>If acquired, the lock is automatically released after the specified <paramref cref="leaseTime"/>.
-        /// If <paramref name="leaseTime"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the lock is never
+        /// If <paramref name="leaseTime"/> is <see cref="TimeOut.Infinite"/>, the lock is never
         /// released.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>

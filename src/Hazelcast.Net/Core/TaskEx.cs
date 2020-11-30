@@ -46,7 +46,7 @@ namespace Hazelcast.Core
         /// </remarks>
         public static Task RunWithTimeout(Func<CancellationToken, Task> taskAction, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
-            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            var timeoutMs = timeout.RoundedMilliseconds().NegativeAs(-1).ClampToInt32();
             return RunWithTimeout(taskAction, timeoutMs, cancellationToken);
         }
 
@@ -127,7 +127,7 @@ namespace Hazelcast.Core
         /// </remarks>
         public static Task RunWithTimeout<TArg>(Func<TArg, CancellationToken, Task> taskAction, TArg arg, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
-            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            var timeoutMs = timeout.RoundedMilliseconds().NegativeAs(-1).ClampToInt32();
             return RunWithTimeout(taskAction, arg, timeoutMs, cancellationToken);
         }
 
@@ -209,7 +209,7 @@ namespace Hazelcast.Core
         /// </remarks>
         public static Task<TResult> RunWithTimeout<TResult>(Func<CancellationToken, Task<TResult>> taskAction, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
-            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            var timeoutMs = timeout.RoundedMilliseconds().NegativeAs(-1).ClampToInt32();
             return RunWithTimeout(taskAction, timeoutMs, cancellationToken);
         }
 
@@ -286,7 +286,7 @@ namespace Hazelcast.Core
         /// </remarks>
         public static Task<TResult> RunWithTimeout<TArg, TResult>(Func<TArg, CancellationToken, Task<TResult>> taskAction, TArg arg, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
-            var timeoutMs = timeout.RoundedMilliseconds(0, -1).ClampInt32();
+            var timeoutMs = timeout.RoundedMilliseconds().NegativeAs(-1).ClampToInt32();
             return RunWithTimeout(taskAction, arg, timeoutMs, cancellationToken);
         }
 

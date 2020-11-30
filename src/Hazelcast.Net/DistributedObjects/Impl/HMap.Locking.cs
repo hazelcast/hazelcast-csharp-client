@@ -22,7 +22,6 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     // ReSharper disable UnusedTypeParameter
     internal partial class HMap<TKey, TValue> // Locking
-    // ReSharper restore NonReadonlyMemberInGetHashCode
     {
         /// <inheritdoc />
         public
@@ -31,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task LockAsync(TKey key)
         {
-            var task = LockAsync(key, TimeToLive.InfiniteTimeSpan);
+            var task = LockAsync(key, LeaseTime.MaxValue);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -46,7 +45,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var keyData = ToSafeData(key);
 
             var refId = _lockReferenceIdSequence.GetNext();
-            var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
+
+            // codec wants -1 for server config, 0 for zero (useless), "max" for max = server config
+            var leaseTimeMs = leaseTime.RoundedMilliseconds().NegativeAs(-1);
 
             var requestMessage = MapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, refId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
@@ -60,7 +61,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task<bool> TryLockAsync(TKey key)
         {
-            var task = TryLockAsync(key, LeaseTime.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            var task = TryLockAsync(key, TimeToWait.Zero, LeaseTime.MaxValue);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -76,7 +77,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
             Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
         {
-            var task = TryLockAsync(key, timeToWait, Timeout.InfiniteTimeSpan);
+            var task = TryLockAsync(key, timeToWait, LeaseTime.MaxValue);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -91,8 +92,12 @@ namespace Hazelcast.DistributedObjects.Impl
             var keyData = ToSafeData(key);
 
             var refId = _lockReferenceIdSequence.GetNext();
-            var leaseTimeMs = leaseTime.CodecMilliseconds(long.MaxValue);
-            var timeToWaitMs = timeToWait.CodecMilliseconds(0);
+
+            // codec wants -1 for server config, 0 for zero (useless), "max" for max = server config
+            var leaseTimeMs = leaseTime.RoundedMilliseconds().NegativeAs(-1);
+
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds().NegativeAs(-1);
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();

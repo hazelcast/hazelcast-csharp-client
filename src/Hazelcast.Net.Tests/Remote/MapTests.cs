@@ -322,11 +322,11 @@ namespace Hazelcast.Tests.Remote
             // (so it's "add or replace" really)
             // NOTE: no way to know whether it added or replaced?
 
-            await map.PutTransientAsync("key", 42, TimeToLive.InfiniteTimeSpan).CAF();
+            await map.PutTransientAsync("key", 42, TimeToLive.Infinite).CAF();
 
-            await map.PutTransientAsync("key", 43, TimeToLive.InfiniteTimeSpan).CAF();
+            await map.PutTransientAsync("key", 43, TimeToLive.Infinite).CAF();
 
-            await map.PutTransientAsync("key1", 43, TimeToLive.InfiniteTimeSpan).CAF();
+            await map.PutTransientAsync("key1", 43, TimeToLive.Infinite).CAF();
 
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);

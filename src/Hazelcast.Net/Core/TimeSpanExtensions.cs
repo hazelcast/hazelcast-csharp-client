@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 
 namespace Hazelcast.Core
 {
@@ -23,56 +22,30 @@ namespace Hazelcast.Core
     internal static class TimeSpanExtensions
     {
         /// <summary>
-        /// Gets the value of the <see cref="TimeSpan"/> expressed in whole milliseconds.
+        /// The constant -1ms value.
         /// </summary>
-        /// <param name="timeSpan">The time span.</param>
-        /// <param name="infinite">The value of "infinite".</param>
-        /// <returns>The value of the specified time span expressed in whole milliseconds.</returns>
-        /// <remarks>
-        /// <para>For timeouts, codecs expect infinite to be zero, but for lease times, or other
-        /// durations, they expect infinite to be -1s or sometimes <see cref="long.MaxValue"/>.
-        /// This method converts <see cref="TimeSpan.Zero"/> to zero, and
-        /// <see cref="Timeout.InfiniteTimeSpan"/> to <paramref name="infinite"/>.</para>
-        /// <para>This allows our public API to use <see cref="Timeout.InfiniteTimeSpan"/> (which
-        /// has an actual value of -1ms) for everything infinite without bothering about
-        /// other conventions.</para>
-        /// </remarks>
-        public static long CodecMilliseconds(this TimeSpan timeSpan, long infinite)
-            => timeSpan == Timeout.InfiniteTimeSpan ? infinite : (long) timeSpan.TotalMilliseconds;
+        public static TimeSpan MinusOneMillisecond { get; } = TimeSpan.FromMilliseconds(-1);
 
         /// <summary>
-        /// Gets the value of the <see cref="TimeSpan"/> expressed in whole timeout milliseconds.
+        /// Gets the value of the current <see cref="TimeSpan"/> structure expressed in whole milliseconds.
         /// </summary>
-        /// <param name="timeSpan">The time span.</param>
-        /// <param name="defaultTimeout">The default timeout if the time span is zero.</param>
-        /// <param name="infiniteTimeout">The milliseconds value of the infinite timeout.</param>
-        /// <returns>The value of the specified time span expressed in whole timeout milliseconds.</returns>
+        /// <param name="timespan">The <see cref="TimeSpan"/>.</param>
+        /// <param name="roundToZero">Whether it is OK to round a value to zero.</param>
+        /// <returns>The value of the <paramref name="timespan"/> structure expressed in whole milliseconds.</returns>
         /// <remarks>
-        /// <para>The time span is expected to be negative (e.g. <see cref="Timeout.InfiniteTimeSpan"/> which
-        /// is -1ms) for infinite, zero (e.g. <see cref="TimeSpan.Zero"/>) for default, or positive for
-        /// an actual value.</para>
+        /// <para>If the rounded value is zero, but the non-rounded value is greater than zero (for instance,
+        /// if <paramref name="timespan"/> is 0.666ms), the returned value depends on <paramref name="roundToZero"/>.
+        /// If it is <c>true</c> then 0 is returned; otherwise, 1 is returned, assuming that 0 might have some
+        /// special meaning that should be avoided.</para>
         /// </remarks>
-        public static int TimeoutMilliseconds(this TimeSpan timeSpan, int defaultTimeout, int infiniteTimeout = -1)
+        public static long RoundedMilliseconds(this TimeSpan timespan, bool roundToZero = true)
         {
-            var timeout = (int) timeSpan.TotalMilliseconds;
-            return timeout > 0 ? timeout : timeout < 0 ? infiniteTimeout : defaultTimeout;
-        }
+            var milliseconds = timespan.TotalMilliseconds;
 
-        // THIS IS TEMP - WILL BE REPLACED WHEN MERGING TIMESTAMPS
-        public static long RoundedMilliseconds(this TimeSpan timespan, int zeroMs, int infiniteMs)
-        {
-            var ms = (long) timespan.TotalMilliseconds;
-            if (ms == 0) return zeroMs;
-            if (ms < 0) return infiniteMs;
-            return ms;
-        }
-
-        // THIS IS TEMP - WILL BE REMOVED WHEN MERGING TIMESTAMPS
-        public static int ClampInt32(this long value)
-        {
-            if (value < int.MinValue) return int.MinValue;
-            if (value > int.MaxValue) return int.MaxValue;
-            return (int) value;
+            var rounded = (long) milliseconds;
+            if (rounded != 0 || milliseconds == 0) return rounded;
+            if (roundToZero) return 0;
+            return milliseconds > 0 ? 1 : -1;
         }
     }
 }
