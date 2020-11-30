@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -146,7 +147,16 @@ namespace Hazelcast.Tests.Remote
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            Assert.IsNull(await queue.GetElementAsync());
+            Assert.IsNull(await queue.PeekAsync());
+        }
+
+        [Test]
+        public async Task TestGetElementAsync()
+        {
+            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
+            await using var _ = DestroyAndDispose(queue);
+
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async() => await queue.GetElementAsync());
         }
 
         [Test]
