@@ -23,7 +23,7 @@ namespace Hazelcast.Aggregating
     /// <remarks>
     /// <para>Null input values are accepted.</para>
     /// </remarks>
-    public sealed class MaxAggregator<TResult> : AggregatorBase<TResult>
+    internal sealed class MaxAggregator<TResult> : AggregatorBase<TResult>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MinAggregator{TResult}"/> class.

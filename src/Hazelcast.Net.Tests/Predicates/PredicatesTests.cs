@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Hazelcast.Core;
 using Hazelcast.Predicates;
@@ -260,6 +261,15 @@ namespace Hazelcast.Tests.Predicates
 
             // NOTE
             // the behavior for non-supported types and iteration types is ... weird
+        }
+
+        private void AssertPredicate(IPredicate predicate, int classId)
+        {
+            var typeOfPredicate = predicate.GetType();
+            var assertMethods = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic);
+            var assertMethod = assertMethods.First(x => x.Name == nameof(AssertPredicate) && x.IsGenericMethod);
+            var method = assertMethod.GetGenericMethodDefinition().MakeGenericMethod(typeOfPredicate);
+            method.Invoke(this, new object[] { predicate, classId });
         }
 
         private T AssertPredicate<T>(T predicate, int classId)

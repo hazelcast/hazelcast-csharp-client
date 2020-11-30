@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections;
+using System.Collections.Generic;
+
 namespace Hazelcast.Predicates
 {
     /// <summary>
@@ -19,112 +22,76 @@ namespace Hazelcast.Predicates
     /// </summary>
     public static class Predicate
     {
-        public const string KeyConst = "__key";
+        internal const string KeyConst = "__key";
         private const string ThisConst = "this";
 
         public static PredicateProperty Key(string property = null)
-        {
-            return new PredicateProperty(property != null ? KeyConst + "." + property : KeyConst);
-        }
+            => new PredicateProperty(property != null ? KeyConst + "." + property : KeyConst);
 
         public static PredicateProperty Property(string property)
-        {
-            return new PredicateProperty(property);
-        }
+            => new PredicateProperty(property);
 
         public static PredicateProperty This()
-        {
-            return new PredicateProperty(ThisConst);
-        }
+            => new PredicateProperty(ThisConst);
 
-        public static InstanceofPredicate InstanceOf(string fullJavaClassName)
-        {
-            return new InstanceofPredicate(fullJavaClassName);
-        }
+        public static IPredicate InstanceOf(string fullJavaClassName)
+            => new InstanceofPredicate(fullJavaClassName);
 
-        public static AndPredicate And(params IPredicate[] predicates)
-        {
-            return new AndPredicate(predicates);
-        }
+        public static IPredicate And(params IPredicate[] predicates)
+            => new AndPredicate(predicates);
 
-        public static FalsePredicate False()
-        {
-            return new FalsePredicate();
-        }
+        public static IPredicate False()
+            => new FalsePredicate();
 
-        public static BetweenPredicate IsBetween(string attributeName, object from, object to)
-        {
-            return new BetweenPredicate(attributeName, from, to);
-        }
+        public static IPredicate IsBetween(string attributeName, object from, object to)
+            => new BetweenPredicate(attributeName, from, to);
 
-        public static EqualPredicate IsEqual(string attributeName, object value)
-        {
-            return new EqualPredicate(attributeName, value);
-        }
+        public static IPredicate IsEqual(string attributeName, object value)
+            => new EqualPredicate(attributeName, value);
 
-        public static GreaterLessPredicate IsGreaterThan(string attributeName, object value)
-        {
-            return new GreaterLessPredicate(attributeName, value, false, false);
-        }
+        public static IPredicate IsGreaterThan(string attributeName, object value)
+            => new GreaterLessPredicate(attributeName, value, false, false);
 
-        public static GreaterLessPredicate IsGreaterThanOrEqual(string attributeName, object value)
-        {
-            return new GreaterLessPredicate(attributeName, value, true, false);
-        }
+        public static IPredicate IsGreaterThanOrEqual(string attributeName, object value)
+            => new GreaterLessPredicate(attributeName, value, true, false);
 
-        public static CaseInsensitiveLikePredicate IsILike(string attributeName, string expression)
-        {
-            return new CaseInsensitiveLikePredicate(attributeName, expression);
-        }
+        public static IPredicate IsILike(string attributeName, string expression)
+            => new CaseInsensitiveLikePredicate(attributeName, expression);
 
-        public static InPredicate IsIn(string attributeName, params object[] values)
-        {
-            return new InPredicate(attributeName, values);
-        }
+        public static IPredicate IsIn(string attributeName, params object[] values)
+            => new InPredicate(attributeName, values);
 
-        public static GreaterLessPredicate IsLessThan(string attributeName, object value)
-        {
-            return new GreaterLessPredicate(attributeName, value, false, true);
-        }
+        public static IPredicate IsLessThan(string attributeName, object value)
+            => new GreaterLessPredicate(attributeName, value, false, true);
 
-        public static GreaterLessPredicate IsLessThanOrEqual(string attributeName, object value)
-        {
-            return new GreaterLessPredicate(attributeName, value, true, true);
-        }
+        public static IPredicate IsLessThanOrEqual(string attributeName, object value)
+            => new GreaterLessPredicate(attributeName, value, true, true);
 
-        public static LikePredicate IsLike(string attributeName, string expression)
-        {
-            return new LikePredicate(attributeName, expression);
-        }
+        public static IPredicate IsLike(string attributeName, string expression)
+            => new LikePredicate(attributeName, expression);
 
-        public static NotEqualPredicate IsNotEqual(string attributeName, object value)
-        {
-            return new NotEqualPredicate(attributeName, value);
-        }
+        public static IPredicate IsNotEqual(string attributeName, object value)
+            => new NotEqualPredicate(attributeName, value);
 
-        public static RegexPredicate MatchesRegex(string attributeName, string regex)
-        {
-            return new RegexPredicate(attributeName, regex);
-        }
+        public static IPredicate MatchesRegex(string attributeName, string regex)
+            => new RegexPredicate(attributeName, regex);
 
-        public static NotPredicate Not(IPredicate predicate)
-        {
-            return new NotPredicate(predicate);
-        }
+        public static IPredicate Not(IPredicate predicate)
+        => new NotPredicate(predicate);
 
-        public static OrPredicate Or(params IPredicate[] predicates)
-        {
-            return new OrPredicate(predicates);
-        }
+        public static IPredicate Or(params IPredicate[] predicates)
+            => new OrPredicate(predicates);
 
-        public static SqlPredicate Sql(string sql)
-        {
-            return new SqlPredicate(sql);
-        }
+        public static IPredicate Sql(string sql)
+            => new SqlPredicate(sql);
 
-        public static TruePredicate True()
-        {
-            return new TruePredicate();
-        }
+        public static IPredicate True()
+            => new TruePredicate();
+
+        public static IPartitionPredicate Partition(object partitionKey, IPredicate predicate)
+            => new PartitionPredicate(partitionKey, predicate);
+
+        public static IPagingPredicate Page(int pageSize, IPredicate predicate, IComparer<KeyValuePair<object, object>> comparer)
+            => new PagingPredicate(pageSize, predicate, comparer);
     }
 }

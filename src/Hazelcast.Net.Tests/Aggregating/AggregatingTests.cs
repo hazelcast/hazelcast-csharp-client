@@ -72,9 +72,10 @@ namespace Hazelcast.Tests.Aggregating
             AssertAggregator((MinAggregator<int>) Aggregator.Min<int>(), AggregatorDataSerializerHook.Min);
         }
 
-        private void AssertAggregator<TAggregator>(TAggregator aggregator, int classId)
-            where TAggregator : IAggregator
+        private void AssertAggregator<TResult>(AggregatorBase<TResult> aggregator, int classId)
         {
+            var aggregatorType = aggregator.GetType();
+
             Assert.That(aggregator.FactoryId, Is.EqualTo(FactoryIds.AggregatorDsFactoryId));
             Assert.That(aggregator.ClassId, Is.EqualTo(classId));
 
@@ -88,30 +89,31 @@ namespace Hazelcast.Tests.Aggregating
             aggregator.WriteData(output);
 
             using var input = new ByteArrayObjectDataInput(output.Buffer, _serializationService, Endianness.Unspecified);
-            var a = (TAggregator) Activator.CreateInstance(typeof(TAggregator));
+            var a = (AggregatorBase<TResult>) Activator.CreateInstance(aggregatorType);
             a.ReadData(input);
 
             Assert.That(a.AttributePath, Is.EqualTo(aggregator.AttributePath));
 
             var data = _serializationService.ToData(aggregator);
 
-            IAggregator x = null;
-            if (typeof (TAggregator).IsGenericType)
+            if (aggregatorType.IsGenericType)
             {
                 // doh - cannot deserialize generic types?
+                IAggregator<object> x = null;
 
-                if (typeof (TAggregator).GetGenericTypeDefinition() == typeof(MaxAggregator<>))
+                if (aggregatorType.GetGenericTypeDefinition() == typeof(MaxAggregator<>))
                     x = _serializationService.ToObject<MaxAggregator<object>>(data);
-                else if (typeof(TAggregator).GetGenericTypeDefinition() == typeof(MinAggregator<>))
+                else if (aggregatorType.GetGenericTypeDefinition() == typeof(MinAggregator<>))
                     x = _serializationService.ToObject<MinAggregator<object>>(data);
                 else Assert.Fail("Unsupported generic aggregator type.");
+
+                Assert.That(x.AttributePath, Is.EqualTo(aggregator.AttributePath));
             }
             else
             {
-                x = _serializationService.ToObject<TAggregator>(data);
+                var x = _serializationService.ToObject<IAggregator<TResult>>(data);
+                Assert.That(x.AttributePath, Is.EqualTo(aggregator.AttributePath));
             }
-
-            Assert.That(x.AttributePath, Is.EqualTo(aggregator.AttributePath));
         }
     }
 }

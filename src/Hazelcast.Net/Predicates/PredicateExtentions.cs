@@ -22,83 +22,83 @@ namespace Hazelcast.Predicates
     public static class PredicateExtentions
     {
 
-        public static AndPredicate And(this IPredicate firstPredicate, IPredicate secondPredicate)
+        public static IPredicate And(this IPredicate firstPredicate, IPredicate secondPredicate)
         {
             return new AndPredicate(firstPredicate, secondPredicate);
         }
 
-        public static BetweenPredicate Between(this PredicateProperty predicateProperty, object from, object to)
+        public static IPredicate Between(this PredicateProperty predicateProperty, object from, object to)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new BetweenPredicate(predicateProperty.Property,  from, to);
         }
 
-        public static EqualPredicate Equal(this PredicateProperty predicateProperty, object value)
+        public static IPredicate Equal(this PredicateProperty predicateProperty, object value)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new EqualPredicate(predicateProperty.Property, value);
         }
 
-        public static GreaterLessPredicate GreaterThan(this PredicateProperty predicateProperty, object value)
+        public static IPredicate GreaterThan(this PredicateProperty predicateProperty, object value)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new GreaterLessPredicate(predicateProperty.Property, value, false, false);
         }
 
-        public static GreaterLessPredicate GreaterThanOrEqual(this PredicateProperty predicateProperty, object value)
+        public static IPredicate GreaterThanOrEqual(this PredicateProperty predicateProperty, object value)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new GreaterLessPredicate(predicateProperty.Property, value, true, false);
         }
 
-        public static CaseInsensitiveLikePredicate ILike(this PredicateProperty predicateProperty, string expression)
+        public static IPredicate ILike(this PredicateProperty predicateProperty, string expression)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new CaseInsensitiveLikePredicate(predicateProperty.Property, expression);
         }
 
-        public static InPredicate In(this PredicateProperty predicateProperty, params object[] values)
+        public static IPredicate In(this PredicateProperty predicateProperty, params object[] values)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new InPredicate(predicateProperty.Property, values);
         }
 
-        public static GreaterLessPredicate LessThan(this PredicateProperty predicateProperty, object value)
+        public static IPredicate LessThan(this PredicateProperty predicateProperty, object value)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new GreaterLessPredicate(predicateProperty.Property, value, false, true);
         }
 
-        public static GreaterLessPredicate LessThanOrEqual(this PredicateProperty predicateProperty, object value)
+        public static IPredicate LessThanOrEqual(this PredicateProperty predicateProperty, object value)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new GreaterLessPredicate(predicateProperty.Property, value, true, true);
         }
 
-        public static LikePredicate Like(this PredicateProperty predicateProperty, string expression)
+        public static IPredicate Like(this PredicateProperty predicateProperty, string expression)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new LikePredicate(predicateProperty.Property, expression);
         }
 
-        public static NotEqualPredicate NotEqual(this PredicateProperty predicateProperty, object value)
+        public static IPredicate NotEqual(this PredicateProperty predicateProperty, object value)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new NotEqualPredicate(predicateProperty.Property, value);
         }
 
-        public static RegexPredicate MatchesRegex(this PredicateProperty predicateProperty, string regex)
+        public static IPredicate MatchesRegex(this PredicateProperty predicateProperty, string regex)
         {
             if (predicateProperty == null) throw new ArgumentNullException(nameof(predicateProperty));
             return new RegexPredicate(predicateProperty.Property, regex);
         }
 
-        public static NotPredicate Not(this IPredicate predicate)
+        public static IPredicate Not(this IPredicate predicate)
         {
             return new NotPredicate(predicate);
         }
 
-        public static OrPredicate Or(this IPredicate firstPredicate, IPredicate secondPredicate)
+        public static IPredicate Or(this IPredicate firstPredicate, IPredicate secondPredicate)
         {
             return new OrPredicate(firstPredicate, secondPredicate);
         }

@@ -19,7 +19,7 @@ namespace Hazelcast.Aggregating
     /// <summary>
     /// Represents an aggregator that sums the input values, and does *not accept null input values.
     /// </summary>
-    public sealed class IntegerSumAggregator : AggregatorBase<long>
+    internal sealed class IntegerSumAggregator : AggregatorBase<long>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="IntegerSumAggregator"/> class.

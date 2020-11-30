@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class GreaterLessPredicate : IPredicate, IIdentifiedDataSerializable
+    internal class GreaterLessPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private string _attributeName;
         private bool _equal;

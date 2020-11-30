@@ -22,7 +22,7 @@ namespace Hazelcast.Aggregating
     /// <remarks>
     /// <para>Null input values not accepted.</para>
     /// </remarks>
-    public sealed class LongSumAggregator : AggregatorBase<long>
+    internal sealed class LongSumAggregator : AggregatorBase<long>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="LongSumAggregator"/> class.

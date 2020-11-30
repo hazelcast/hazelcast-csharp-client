@@ -23,7 +23,7 @@ namespace Hazelcast.Aggregating
     /// <remarks>
     /// <para>Null input values not accepted.</para>
     /// </remarks>
-    public sealed class BigIntegerSumAggregator : AggregatorBase<BigInteger>
+    internal sealed class BigIntegerSumAggregator : AggregatorBase<BigInteger>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BigIntegerSumAggregator"/> class.

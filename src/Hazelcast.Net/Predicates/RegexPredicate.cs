@@ -17,7 +17,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class RegexPredicate : IPredicate, IIdentifiedDataSerializable
+    internal class RegexPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private string _attributeName;
         private string _regex;

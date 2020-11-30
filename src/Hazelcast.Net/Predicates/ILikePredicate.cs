@@ -16,7 +16,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Predicates
 {
-    public class CaseInsensitiveLikePredicate : LikePredicate, IIdentifiedDataSerializable
+    internal class CaseInsensitiveLikePredicate : LikePredicate, IIdentifiedDataSerializable
     {
         public CaseInsensitiveLikePredicate()
         { }
