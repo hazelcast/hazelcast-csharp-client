@@ -448,6 +448,44 @@ namespace Hazelcast.Core
         }
 
 
+        // FIXME move
+        public static int CountUtf8Bytes(char[] values)
+        {
+            var count = 0;
+            for (var i = 0; i < values.Length; i++)
+            {
+                var value = values[i];
+
+                // 1 byte, 7 bits, represented as 0vvvvvvv
+                if (value <= 0x007f)
+                {
+                    count += 1;
+                    continue;
+                }
+
+                // 2 bytes, 11 bits, represented as 110vvvvv 10vvvvvv
+                if (value <= 0x07ff)
+                {
+                    count += 2;
+                    continue;
+                }
+
+                // 3 bytes, 16 bits, represented as 1110vvvv 10vvvvvv 10vvvvvv
+                if (value <= 0xd7ff)
+                {
+                    count += 3;
+                    continue;
+                }
+
+                // 4 bytes
+                count += 4;
+                i += 1;
+            }
+
+            return count;
+        }
+
+
 
         /// <summary>
         /// Writes a <see cref="Guid"/> value to an array of bytes.

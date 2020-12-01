@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using BenchmarkDotNet.Attributes;
 using Hazelcast.Core;
 
@@ -22,47 +23,47 @@ namespace Hazelcast.Benchmarks
     {
         private readonly byte[] _bytes = new byte[256];
 
-        // what about four chars?
+        // the integer we write first is 4 bytes
+        // Utf8Char.Mix is 5 chars and 10 bytes long
+
+        // yields
+        //
+        // |            Method |     Mean |    Error |   StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+        // |------------------ |---------:|---------:|---------:|-------:|------:|------:|----------:|
+        // |  BuiltinWriteUtf8 | 58.87 ns | 1.148 ns | 1.074 ns | 0.0095 |     - |     - |      40 B |
+        // | EncodingWriteUtf8 | 55.90 ns | 0.671 ns | 0.659 ns |      - |     - |     - |         - |
+        //
+        // so I guess our own stuff is not that fast eh?
+        // ok going to kill it
 
         [Benchmark]
         public void BuiltinWriteUtf8()
         {
             var position = 0;
+            var s = Utf8Char.Mix;
 
-            _bytes.WriteUtf8Char(ref position, Utf8Char.OneByte);
-            _bytes.WriteUtf8Char(ref position, Utf8Char.TwoBytes);
-            _bytes.WriteUtf8Char(ref position, Utf8Char.ThreeBytes);
+            var a = s.ToCharArray();
+            var byteCount = BytesExtensions.CountUtf8Bytes(a);
+            _bytes.WriteInt(position, byteCount);
+            position += BytesExtensions.SizeOfInt;
 
-            if (position != 6) throw new Exception("position");
+            _bytes.WriteUtf8String(ref position, a);
+            if (position != 14) throw new Exception($"position is {position}");
         }
 
         [Benchmark]
         public void EncodingWriteUtf8()
         {
             var position = 0;
+            var s = Utf8Char.Mix;
 
-            // that version yields
-            //
-            // |            Method |     Mean |    Error |   StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-            // |------------------ |---------:|---------:|---------:|-------:|------:|------:|----------:|
-            // |  BuiltinWriteUtf8 | 12.80 ns | 0.272 ns | 0.255 ns |      - |     - |     - |         - |
-            // | EncodingWriteUtf8 | 32.69 ns | 0.419 ns | 0.392 ns | 0.0076 |     - |     - |      32 B |
+            var byteCount = Encoding.UTF8.GetByteCount(s);
+            _bytes.WriteInt(position, byteCount);
+            position += BytesExtensions.SizeOfInt;
 
-            //var chars = new[] { Utf8Char.OneByte, Utf8Char.TwoBytes, Utf8Char.ThreeBytes };
-            //position += Encoding.UTF8.GetBytes(chars, 0, chars.Length, _bytes, 0);
-
-            // that version yields
-            //
-            // |            Method |     Mean |    Error |   StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-            // |------------------ |---------:|---------:|---------:|-------:|------:|------:|----------:|
-            // |  BuiltinWriteUtf8 | 12.62 ns | 0.236 ns | 0.375 ns |      - |     - |     - |         - |
-            // | EncodingWriteUtf8 | 71.60 ns | 0.877 ns | 0.820 ns | 0.0229 |     - |     - |      96 B |
-
-            //position += Encoding.UTF8.GetBytes(new []{ Utf8Char.OneByte }, 0, 1, _bytes, 0);
-            //position += Encoding.UTF8.GetBytes(new[] { Utf8Char.TwoBytes }, 0, 1, _bytes, 0);
-            //position += Encoding.UTF8.GetBytes(new[] { Utf8Char.ThreeBytes }, 0, 1, _bytes, 0);
-
-            if (position != 6) throw new Exception("position");
+            var count = Encoding.UTF8.GetBytes(s, 0, s.Length, _bytes, position);
+            position += count;
+            if (position != 14) throw new Exception($"position is {position}");
         }
 
         public static class Utf8Char
@@ -80,8 +81,20 @@ namespace Hazelcast.Benchmarks
 
             // there are no '4 bytes' chars in C#, surrogate pairs are 2 chars
             // '\u2070e' CJK UNIFIED IDEOGRAPH-2070E f0a09c8e
-            public const char FourBytesH = '\uf0a0';
-            public const char FourBytesL = '\u8c8e';
+            public const char FourBytesH = (char)0xd83d;
+            public const char FourBytesL = (char)0xde01;
+
+            // can only be expressed as a string
+            // '\u1f601' GRINNING FACE WITH SMILING EYES f09f9881
+            public const string FourBytes = "😁"; // "\u1f601" - d83d + de01
+
+            // can only be expressed as a string
+            // '\u2070e' CJK UNIFIED IDEOGRAPH-2070E f0a09c8e
+            //public const string FourBytes = "𠜎"; // "\u2070e" - d841 + df0e
+
+            // all of them in one string
+            //public static readonly string Mix = OneByte + TwoBytes + ThreeBytes + FourBytes;
+            public static readonly string Mix = new string(new[] { OneByte , TwoBytes , ThreeBytes }) +  FourBytes;
         }
     }
 }
