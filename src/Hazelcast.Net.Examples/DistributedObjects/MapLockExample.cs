@@ -54,6 +54,9 @@ namespace Hazelcast.Examples.DistributedObjects
             // add value
             await map.SetAsync("key", "value");
 
+            // TODO: enable this again once we figure out AsyncContext
+            /*
+
             // locking in the current context
             await map.LockAsync("key");
 
@@ -87,6 +90,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // report
             Console.WriteLine("New value (should be 'value1'): " + await map.GetAsync("key")); // should be value1
+            */
 
             // destroy the map
             await client.DestroyAsync(map);
