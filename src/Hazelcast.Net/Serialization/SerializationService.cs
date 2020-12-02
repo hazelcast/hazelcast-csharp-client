@@ -58,7 +58,6 @@ namespace Hazelcast.Serialization
 
         protected internal readonly IPartitioningStrategy GlobalPartitioningStrategy;
 
-        private volatile bool _isActive = true;
         private bool _overrideClrSerialization;
 
         internal SerializationService(IInputOutputFactory inputOutputFactory, int version,
@@ -105,8 +104,6 @@ namespace Hazelcast.Serialization
         public virtual IPortableContext GetPortableContext() => _portableContext;
 
         public virtual Endianness Endianness => _inputOutputFactory.Endianness;
-
-        public virtual bool IsActive() => _isActive;
 
         #region DataOutput / DataInput
 
@@ -235,20 +232,14 @@ namespace Hazelcast.Serialization
         }
 
         [DoesNotReturn]
-        private void ThrowMissingSerializer(int typeId)
+        private static void ThrowMissingSerializer(int typeId)
         {
-            if (!_isActive)
-                throw new ClientNotConnectedException();
-
             throw new SerializationException($"Could not find a serializer for type {typeId}.");
         }
 
         [DoesNotReturn]
-        private void ThrowMissingSerializer(Type type)
+        private static void ThrowMissingSerializer(Type type)
         {
-            if (!_isActive)
-                throw new ClientNotConnectedException();
-
             throw new SerializationException($"Could not find a serializer for type {type}.");
         }
 
@@ -545,7 +536,6 @@ namespace Hazelcast.Serialization
         // TODO: the service should be disposable instead!
         public virtual void Destroy()
         {
-            _isActive = false;
             foreach (var serializer in _typeMap.Values)
             {
                 serializer.Destroy();

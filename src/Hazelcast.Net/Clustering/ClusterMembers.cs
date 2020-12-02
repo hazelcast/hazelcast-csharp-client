@@ -239,6 +239,7 @@ namespace Hazelcast.Clustering
             // either "smart" mode but the load balancer did not return a member,
             // or "uni-socket" mode where there should only be once connection
             connection = _connections.Values.FirstOrDefault();
+            // FIXME better error + NOT CONNECTED
             if (connection == null && throwIfNoConnection)
                 throw new HazelcastException("Could not get a connection.");
 

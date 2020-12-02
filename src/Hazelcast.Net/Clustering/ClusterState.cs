@@ -33,6 +33,9 @@ namespace Hazelcast.Clustering
 
         private volatile bool _readonlyProperties;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClusterState"/> class.
+        /// </summary>
         public ClusterState(IClusterOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             Options = options;
@@ -44,6 +47,11 @@ namespace Hazelcast.Clustering
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
         }
 
+        #region Events
+
+        /// <summary>
+        /// Triggers when the state changes.
+        /// </summary>
         public Func<ConnectionState, ValueTask> StateChanged
         {
             get => _stateChangeQueue.StateChanged;
@@ -53,6 +61,30 @@ namespace Hazelcast.Clustering
                 _stateChangeQueue.StateChanged = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
+
+        #endregion
+
+        #region Readonly Properties
+
+        /// <summary>
+        /// Throws an <see cref="InvalidOperationException"/> if properties (On...) are read-only.
+        /// </summary>
+        public void ThrowIfPropertiesAreReadOnly()
+        {
+            if (_readonlyProperties) throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+        }
+
+        /// <summary>
+        /// Sets properties (On...) as read-only.
+        /// </summary>
+        public void SetPropertiesReadOnly()
+        {
+            _readonlyProperties = true;
+        }
+
+        #endregion
+
+        #region Infos
 
         /// <summary>
         /// Gets the unique identifier of the cluster, as assigned by the client.
@@ -68,6 +100,10 @@ namespace Hazelcast.Clustering
         /// Gets the name of the cluster server.
         /// </summary>
         public string ClusterName { get; }
+
+        #endregion
+
+        #region ConnectionState
 
         /// <summary>
         /// Gets the connection state.
@@ -103,6 +139,36 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Whether the cluster is connected.
+        /// </summary>
+        public bool IsConnected => ConnectionState == ConnectionState.Connected;
+
+        /// <summary>
+        /// Whether the cluster is "up" i.e. connected or connecting.
+        /// </summary>
+        public bool IsUp => ConnectionState == ConnectionState.Connected ||
+                            ConnectionState == ConnectionState.Connecting ||
+                            ConnectionState == ConnectionState.Reconnecting;
+
+        /// <summary>
+        /// Whether the cluster is "down" i.e. not connected, or disconnecting.
+        /// </summary>
+        public bool IsDown => ConnectionState == ConnectionState.NotConnected ||
+                              ConnectionState == ConnectionState.Disconnecting;
+
+        /// <summary>
+        /// Throws a <see cref="ClientNotConnectedException"/> if the cluster is not connected.
+        /// </summary>
+        /// <param name="innerException">An optional inner exception.</param>
+        public void ThrowIfNotConnected(Exception innerException = null)
+        {
+            if (ConnectionState != ConnectionState.Connected) 
+                throw new ClientNotConnectedException(innerException);
+        }
+
+        #endregion
+
+        /// <summary>
         /// Gets the cluster general <see cref="CancellationToken"/>.
         /// </summary>
         public CancellationToken CancellationToken => _clusterCancellation.Token;
@@ -124,25 +190,6 @@ namespace Hazelcast.Clustering
         /// Whether smart routing is enabled.
         /// </summary>
         public bool IsSmartRouting => Options.Networking.SmartRouting;
-
-        /// <summary>
-        /// Whether the cluster is connected.
-        /// </summary>
-        public bool IsConnected => ConnectionState == ConnectionState.Connected;
-
-        /// <summary>
-        /// Whether the cluster is "up" i.e. connected or connecting.
-        /// </summary>
-        public bool IsUp => ConnectionState == ConnectionState.Connected ||
-                            ConnectionState == ConnectionState.Connecting ||
-                            ConnectionState == ConnectionState.Reconnecting;
-
-        /// <summary>
-        /// Whether the cluster is "down" i.e. not connected, or disconnecting.
-        /// </summary>
-        public bool IsDown => ConnectionState == ConnectionState.NotConnected ||
-                              ConnectionState == ConnectionState.Disconnecting;
-
 
         /// <summary>
         /// Gets the partitioner.
@@ -187,36 +234,11 @@ namespace Hazelcast.Clustering
         public ISequence<int> ConnectionIdSequence { get; } = new Int32Sequence();
 
         /// <summary>
-        /// Throws an <see cref="InvalidOperationException"/> if properties (On...) are read-only.
-        /// </summary>
-        public void ThrowIfPropertiesAreReadOnly()
-        {
-            if (_readonlyProperties) throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
-        }
-
-        /// <summary>
-        /// Sets properties (On...) as read-only.
-        /// </summary>
-        public void SetPropertiesReadOnly()
-        {
-            _readonlyProperties = true;
-        }
-
-        /// <summary>
         /// Throws a <see cref="ClientNotConnectedException"/> if the cluster operations have been canceled.
         /// </summary>
         public void ThrowIfCancelled()
         {
             if (_clusterCancellation.IsCancellationRequested) throw new ClientNotConnectedException();
-        }
-
-        /// <summary>
-        /// Throws a <see cref="ClientNotConnectedException"/> if the cluster is not connected.
-        /// </summary>
-        /// <param name="innerException">An optional inner exception.</param>
-        public void ThrowIfNotConnected(Exception innerException = null)
-        {
-            if (ConnectionState != ConnectionState.Connected) throw new ClientNotConnectedException(innerException);
         }
 
         /// <summary>

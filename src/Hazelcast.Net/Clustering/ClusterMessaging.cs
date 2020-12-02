@@ -232,8 +232,7 @@ namespace Hazelcast.Clustering
             {
                 try
                 {
-                    var connection = GetInvocationConnection(invocation);
-                    if (connection == null) throw new ClientNotConnectedException();
+                    var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
                     var timeoutMs = _clusterState.Options.Messaging.InvocationTimeoutMilliseconds;
                     return await connection.SendAsync(invocation, timeoutMs).CAF();
                 }
@@ -267,6 +266,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <returns>A connection for the invocation.</returns>
+        /// <exception cref="">Occurs when no connection is available.</exception>
         private MemberConnection GetInvocationConnection(Invocation invocation)
         {
             // try the target connection
@@ -289,7 +289,16 @@ namespace Hazelcast.Clustering
             }
 
             // fail over to random client
-            return _clusterMembers.GetRandomConnection(false);
+            // may throw if no connection is available, or the cluster is not connected
+            try
+            {
+                return _clusterMembers.GetRandomConnection(false);
+            }
+            catch
+            {
+                // fixme what's the state exactly?!
+                throw new ClientNotConnectedException();
+            }
         }
     }
 }
