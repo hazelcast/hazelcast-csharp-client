@@ -21,7 +21,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal partial class HSet<T> // Removing
     {
-        public override async Task<bool> RemoveFixmeAsync(T item)
+        public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = SetRemoveCodec.EncodeRequest(Name, itemData);

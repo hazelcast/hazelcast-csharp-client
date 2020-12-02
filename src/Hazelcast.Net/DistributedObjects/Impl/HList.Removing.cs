@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HList<T> // Remove
     {
         /// <inheritdoc />
-        public override async Task<bool> RemoveFixmeAsync(T item)
+        public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = ListRemoveCodec.EncodeRequest(Name, itemData);

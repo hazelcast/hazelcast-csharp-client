@@ -134,8 +134,8 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(collection, 5);
 
-            Assert.That(await collection.RemoveFixmeAsync("item2"));
-            Assert.That(await collection.RemoveFixmeAsync("itemX"), Is.False);
+            Assert.That(await collection.RemoveAsync("item2"));
+            Assert.That(await collection.RemoveAsync("itemX"), Is.False);
         }
 
         [Test]

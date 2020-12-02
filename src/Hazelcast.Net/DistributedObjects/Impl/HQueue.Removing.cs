@@ -22,7 +22,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HQueue<T> // Removing
     {
         /// <inheritdoc />
-        public override async Task<bool> RemoveFixmeAsync(T item)
+        public override async Task<bool> RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
             var requestMessage = QueueRemoveCodec.EncodeRequest(Name, itemData);

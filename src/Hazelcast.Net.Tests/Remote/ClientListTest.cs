@@ -132,8 +132,8 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(list, 5);
 
-            Assert.False(await list.RemoveFixmeAsync("item33"));
-            Assert.True(await list.RemoveFixmeAsync("item3"));
+            Assert.False(await list.RemoveAsync("item33"));
+            Assert.True(await list.RemoveAsync("item3"));
         }
     }
 }

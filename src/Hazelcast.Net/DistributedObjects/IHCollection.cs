@@ -89,7 +89,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns><c>true</c> if the item was removed; otherwise <c>false</c>.</returns>
-        Task<bool> RemoveFixmeAsync(T item);
+        Task<bool> RemoveAsync(T item);
 
         /// <summary>
         /// Removes all of the elements in the specified collection from this collection.
