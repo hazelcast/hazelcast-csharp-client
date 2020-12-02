@@ -26,7 +26,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
-    internal class SerializationService : ISerializationService
+    internal class SerializationService
     {
         public const byte SerializerVersion = 1;
         private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersArraySize;
@@ -45,9 +45,9 @@ namespace Hazelcast.Serialization
         private readonly ConcurrentDictionary<int, ISerializerAdapter> _idMap =
             new ConcurrentDictionary<int, ISerializerAdapter>();
 
-        private readonly IInputOutputFactory _inputOutputFactory;
+        // private readonly IInputOutputFactory _inputOutputFactory;
         private readonly ISerializerAdapter _nullSerializerAdapter;
-        private readonly int _outputBufferSize;
+        private readonly int _initialOutputBufferSize;
         private readonly PortableContext _portableContext;
         private readonly PortableSerializer _portableSerializer;
         private readonly ISerializerAdapter _portableSerializerAdapter;
@@ -61,7 +61,7 @@ namespace Hazelcast.Serialization
         private volatile bool _isActive = true;
         private bool _overrideClrSerialization;
 
-        internal SerializationService(IInputOutputFactory inputOutputFactory, int version,
+        internal SerializationService(Endianness endianness, int version,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
             IDictionary<int, IPortableFactory> portableFactories, ICollection<IClassDefinition> classDefinitions,
             SerializerHooks hooks,
@@ -70,9 +70,9 @@ namespace Hazelcast.Serialization
             ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<SerializationService>();
-            _inputOutputFactory = inputOutputFactory;
+            Endianness = endianness;
             GlobalPartitioningStrategy = partitioningStrategy;
-            _outputBufferSize = initialOutputBufferSize;
+            _initialOutputBufferSize = initialOutputBufferSize;
             _portableContext = new PortableContext(this, version);
 
             // create data serializer (will be added as constant)
@@ -104,19 +104,35 @@ namespace Hazelcast.Serialization
 
         public virtual IPortableContext GetPortableContext() => _portableContext;
 
-        public virtual Endianness Endianness => _inputOutputFactory.Endianness;
+        public Endianness Endianness { get; }
 
         public virtual bool IsActive() => _isActive;
 
         #region DataOutput / DataInput
 
-        private IBufferObjectDataOutput GetDataOutput() => new ByteArrayObjectDataOutput(0, this, Endianness);
+        private ObjectDataOutput GetDataOutput()
+        {
+            //TODO pooling
+            return CreateObjectDataOutput();
+        }
 
-        private void ReturnDataOutput(IBufferObjectDataOutput output) { }
+        private void ReturnDataOutput(ObjectDataOutput output)
+        {
+            //TODO pooling
+            output.Dispose();
+        }
 
-        private IBufferObjectDataInput GetDataInput(IData data) => new ByteArrayObjectDataInput(data.ToByteArray(), HeapData.DataOffset, this, Endianness);
+        private ObjectDataInput GetDataInput(IData data)
+        {
+            //TODO pooling
+            return new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
+        } 
 
-        private void ReturnDataInput(IBufferObjectDataInput input) { }
+        private void ReturnDataInput(ObjectDataInput input)
+        {
+            //TODO pooling
+            input.Dispose();
+        }
 
         #endregion
 
@@ -136,8 +152,8 @@ namespace Hazelcast.Serialization
             {
                 var serializer = SerializerFor(o);
                 var partitionHash = CalculatePartitionHash(o, strategy);
-                output.Write(partitionHash, Endianness.BigEndian);
-                output.Write(serializer.TypeId, Endianness.BigEndian);
+                output.WriteIntBigEndian(partitionHash);
+                output.WriteIntBigEndian(serializer.TypeId);
                 serializer.Write(output, o);
                 return new HeapData(output.ToByteArray());
             }
@@ -158,7 +174,7 @@ namespace Hazelcast.Serialization
             {
                 null => default,
                 T ot => ot,
-                _ => throw new InvalidCastException($"Deserialized object is of type {oo.GetType()}, not {typeof (T)}.")
+                _ => throw new InvalidCastException($"Deserialized object is of type {oo.GetType()}, not {typeof(T)}.")
             };
         }
 
@@ -168,10 +184,7 @@ namespace Hazelcast.Serialization
                 return o;
 
             // TODO: but, if returned, why is it disposable in the first place?
-#pragma warning disable CA2000 // Dispose objects before losing scope - is returned
             var input = GetDataInput(data);
-#pragma warning restore CA2000
-
             try
             {
                 var typeId = data.TypeId;
@@ -197,7 +210,7 @@ namespace Hazelcast.Serialization
             try
             {
                 var serializer = SerializerFor(o);
-                output.Write(serializer.TypeId);
+                output.WriteInt(serializer.TypeId);
                 serializer.Write(output, o);
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
@@ -220,13 +233,14 @@ namespace Hazelcast.Serialization
                 var o = serializer.Read(input);
                 if (o is null)
                 {
-                    var typeOfT = typeof (T);
+                    var typeOfT = typeof(T);
                     if (typeOfT.IsValueType && !typeOfT.IsNullableType())
-                        throw new SerializationException($"Deserialized null value cannot be of value type {typeof (T)}.");
+                        throw new SerializationException($"Deserialized null value cannot be of value type {typeof(T)}.");
                     return default;
                 }
+
                 if (o is T ot) return ot;
-                throw new InvalidCastException($"Deserialized object is of type {o.GetType()}, not {typeof (T)}.");
+                throw new InvalidCastException($"Deserialized object is of type {o.GetType()}, not {typeof(T)}.");
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
             {
@@ -256,17 +270,17 @@ namespace Hazelcast.Serialization
 
         #region Create object data input/output
 
-        public IBufferObjectDataInput CreateObjectDataInput(byte[] data)
-            => _inputOutputFactory.CreateInput(data, this);
+        public ObjectDataInput CreateObjectDataInput(byte[] data)
+            => new ObjectDataInput(data, this, Endianness);
 
-        public IBufferObjectDataInput CreateObjectDataInput(IData data)
-            => _inputOutputFactory.CreateInput(data, this);
+        public ObjectDataInput CreateObjectDataInput(IData data)
+            => CreateObjectDataInput(data.ToByteArray());
 
-        public IBufferObjectDataOutput CreateObjectDataOutput(int size)
-            => _inputOutputFactory.CreateOutput(size, this);
+        public ObjectDataOutput CreateObjectDataOutput(int size)
+            => new ObjectDataOutput(size, this, Endianness);
 
-        public IBufferObjectDataOutput CreateObjectDataOutput()
-            => _inputOutputFactory.CreateOutput(_outputBufferSize, this);
+        public ObjectDataOutput CreateObjectDataOutput()
+            => new ObjectDataOutput(_initialOutputBufferSize, this, Endianness);
 
         #endregion
 
@@ -294,7 +308,7 @@ namespace Hazelcast.Serialization
             => AddConstantSerializer(type, CreateSerializerAdapter(type, serializer));
 
         public void AddConstantSerializer<TSerialized>(ISerializerAdapter adapter)
-            => AddConstantSerializer(typeof (TSerialized), adapter);
+            => AddConstantSerializer(typeof(TSerialized), adapter);
 
         public void AddConstantSerializer<TSerialized>(ISerializer serializer)
             => AddConstantSerializer<TSerialized>(CreateSerializerAdapter<TSerialized>(serializer));
@@ -308,14 +322,15 @@ namespace Hazelcast.Serialization
 
             if (_createSerializerAdapter == null)
             {
-                var method = typeof (SerializationService).GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+                var method = typeof(SerializationService).GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
                     .FirstOrDefault(x => x.Name == nameof(CreateSerializerAdapter) && x.IsGenericMethod);
-                if (method == null) throw new ServiceFactoryException("Internal error (failed to get CreateSerializerAdapter method).");
+                if (method == null)
+                    throw new ServiceFactoryException("Internal error (failed to get CreateSerializerAdapter method).");
                 _createSerializerAdapter = method.GetGenericMethodDefinition();
             }
 
             var createSerializerAdapter = _createSerializerAdapter.MakeGenericMethod(type);
-            return (ISerializerAdapter) createSerializerAdapter.Invoke(this, new object[] { serializer });
+            return (ISerializerAdapter) createSerializerAdapter.Invoke(this, new object[] {serializer});
         }
 
         private static ISerializerAdapter CreateSerializerAdapter<T>(ISerializer serializer)
@@ -345,7 +360,8 @@ namespace Hazelcast.Serialization
         private bool AddSerializer(Type type, ISerializerAdapter adapter)
         {
             if (_constantTypesMap.ContainsKey(type))
-                throw new ArgumentException($"Type {type} is a constant type and its serializer cannot be overridden.", nameof(type));
+                throw new ArgumentException($"Type {type} is a constant type and its serializer cannot be overridden.",
+                    nameof(type));
 
             var added = true;
 
@@ -354,7 +370,8 @@ namespace Hazelcast.Serialization
                 added = false;
                 var existing = _typeMap[type];
                 if (existing.Serializer.GetType() != adapter.Serializer.GetType())
-                    throw new InvalidOperationException($"Serializer {existing.Serializer} has already been registered for type {type}.");
+                    throw new InvalidOperationException(
+                        $"Serializer {existing.Serializer} has already been registered for type {type}.");
             }
 
             if (!_idMap.TryAdd(adapter.TypeId, adapter))
@@ -362,7 +379,8 @@ namespace Hazelcast.Serialization
                 added = false;
                 var existing = _idMap[adapter.TypeId];
                 if (existing.Serializer.GetType() != adapter.Serializer.GetType())
-                    throw new InvalidOperationException($"Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.");
+                    throw new InvalidOperationException(
+                        $"Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.");
             }
 
             return added;
@@ -389,7 +407,8 @@ namespace Hazelcast.Serialization
                 {
                     Interlocked.CompareExchange(ref _global, null, adapter);
                     _overrideClrSerialization = false;
-                    throw new InvalidOperationException($"Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.");
+                    throw new InvalidOperationException(
+                        $"Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.");
                 }
             }
         }
@@ -479,9 +498,11 @@ namespace Hazelcast.Serialization
                     {
                         break;
                     }
+
                     GetInterfaces(typeSuperclass, interfaces);
                     typeSuperclass = typeSuperclass.BaseType;
                 }
+
                 if (serializer == null)
                 {
                     // look for interfaces
@@ -495,6 +516,7 @@ namespace Hazelcast.Serialization
                     }
                 }
             }
+
             return serializer;
         }
 
@@ -529,7 +551,8 @@ namespace Hazelcast.Serialization
         #endregion
 
         public virtual void DisposeData(IData data)
-        { }
+        {
+        }
 
         /// <exception cref="System.IO.IOException"></exception>
         public IPortableReader CreatePortableReader(IData data)
@@ -538,6 +561,7 @@ namespace Hazelcast.Serialization
             {
                 throw new ArgumentException("Given data is not Portable! -> " + data.TypeId);
             }
+
             var input = CreateObjectDataInput(data);
             return _portableSerializer.CreateReader(input);
         }
@@ -550,6 +574,7 @@ namespace Hazelcast.Serialization
             {
                 serializer.Destroy();
             }
+
             _typeMap.Clear();
             _idMap.Clear();
             Interlocked.Exchange(ref _global, null);
@@ -566,6 +591,7 @@ namespace Hazelcast.Serialization
                 var partitionKey = ToData(pk, TheEmptyPartitioningStrategy);
                 partitionHash = partitionKey?.PartitionHash ?? 0;
             }
+
             return partitionHash;
         }
 
@@ -583,6 +609,7 @@ namespace Hazelcast.Serialization
                 {
                     interfaces.Add(t);
                 }
+
                 foreach (var cl in types)
                 {
                     GetInterfaces(cl, interfaces);
@@ -621,6 +648,7 @@ namespace Hazelcast.Serialization
                     }
                 }
             }
+
             _portableContext.RegisterClassDefinition(cd);
         }
 
@@ -633,10 +661,12 @@ namespace Hazelcast.Serialization
                 if (classDefMap.ContainsKey(cd.ClassId))
                 {
                     throw new SerializationException("Duplicate registration found for class-id[" +
-                                                              cd.ClassId + "]!");
+                                                     cd.ClassId + "]!");
                 }
+
                 classDefMap.Add(cd.ClassId, cd);
             }
+
             foreach (var classDefinition in classDefinitions)
             {
                 RegisterClassDefinition(classDefinition, classDefMap, checkClassDefErrors);
@@ -650,6 +680,7 @@ namespace Hazelcast.Serialization
             {
                 AddSerializer(type, serializer);
             }
+
             return serializer;
         }
 
@@ -662,6 +693,7 @@ namespace Hazelcast.Serialization
         }
 
         public void Dispose()
-        { }
+        {
+        }
     }
 }

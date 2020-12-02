@@ -24,7 +24,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal class HTxSet<TItem> : TransactionalDistributedObjectBase, IHTxSet<TItem>
     {
-        public HTxSet(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxSet(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
             : base(ServiceNames.Set, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 

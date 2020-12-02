@@ -155,7 +155,7 @@ namespace Hazelcast.Serialization
         /// <param name="fieldName">name of the field</param>
         /// <param name="portables">portable array to be written</param>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
-        void WritePortableArray(string fieldName, IPortable[] portables);
+        void WritePortableArray<TPortable>(string fieldName, TPortable[] portables) where TPortable : IPortable;
 
         /// <summary>Writes a primitive short.</summary>
         /// <remarks>Writes a primitive short.</remarks>

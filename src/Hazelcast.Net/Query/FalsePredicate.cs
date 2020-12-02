@@ -21,12 +21,10 @@ namespace Hazelcast.Query
     {
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
         }
 
         public int FactoryId =>FactoryIds.PredicateFactoryId;

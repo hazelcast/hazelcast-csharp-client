@@ -35,7 +35,7 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, IPortable p)
         {
-            if (!(output is IBufferObjectDataOutput))
+            if (!(output is ObjectDataOutput))
             {
                 throw new ArgumentException("ObjectDataOutput must be instance of BufferObjectDataOutput!");
             }
@@ -43,21 +43,21 @@ namespace Hazelcast.Serialization
             {
                 throw new ArgumentException("Portable class id cannot be zero!");
             }
-            output.Write(p.FactoryId);
-            output.Write(p.ClassId);
-            WriteInternal((IBufferObjectDataOutput) output, p);
+            output.WriteInt(p.FactoryId);
+            output.WriteInt(p.ClassId);
+            WriteInternal((ObjectDataOutput) output, p);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public IPortable Read(IObjectDataInput input)
         {
-            if (!(input is IBufferObjectDataInput))
+            if (!(input is ObjectDataInput))
             {
                 throw new ArgumentException("ObjectDataInput must be instance of BufferObjectDataInput!");
             }
             var factoryId = input.ReadInt();
             var classId = input.ReadInt();
-            return Read((IBufferObjectDataInput) input, factoryId, classId);
+            return Read((ObjectDataInput) input, factoryId, classId);
         }
 
         public void Destroy()
@@ -65,7 +65,7 @@ namespace Hazelcast.Serialization
             _factories.Clear();
         }
 
-        internal DefaultPortableReader CreateMorphingReader(IBufferObjectDataInput input)
+        internal DefaultPortableReader CreateMorphingReader(ObjectDataInput input)
         {
             var factoryId = input.ReadInt();
             var classId = input.ReadInt();
@@ -78,7 +78,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        internal DefaultPortableReader CreateReader(IBufferObjectDataInput input)
+        internal DefaultPortableReader CreateReader(ObjectDataInput input)
         {
             var factoryId = input.ReadInt();
             var classId = input.ReadInt();
@@ -87,10 +87,10 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
-        internal void WriteInternal(IBufferObjectDataOutput output, IPortable p)
+        internal void WriteInternal(ObjectDataOutput output, IPortable p)
         {
             var cd = _context.LookupOrRegisterClassDefinition(p);
-            output.Write(cd.Version);
+            output.WriteInt(cd.Version);
             var writer = new DefaultPortableWriter(this, output, cd);
             p.WritePortable(writer);
             writer.End();
@@ -111,7 +111,7 @@ namespace Hazelcast.Serialization
             return portable;
         }
 
-        private DefaultPortableReader CreateReader(IBufferObjectDataInput input, int factoryId, int classId, int version,
+        private DefaultPortableReader CreateReader(ObjectDataInput input, int factoryId, int classId, int version,
             int portableVersion)
         {
             var effectiveVersion = version;
@@ -153,7 +153,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
-        internal IPortable Read(IBufferObjectDataInput @in, int factoryId, int classId)
+        internal IPortable Read(ObjectDataInput @in, int factoryId, int classId)
         {
             var version = @in.ReadInt();
             var portable = CreateNewPortableInstance(factoryId, classId);

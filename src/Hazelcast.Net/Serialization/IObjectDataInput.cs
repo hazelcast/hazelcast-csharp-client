@@ -12,24 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Serialization
 {
-    /// <summary>
-    /// Extends <see cref="IDataInput"/> with support for <see cref="IData"/> and objects.
-    /// </summary>
-    public interface IObjectDataInput : IDataInput
+    public interface IObjectDataInput
     {
-        /// <summary>
-        /// Reads an <see cref="IData"/> instance.
-        /// </summary>
-        /// <returns>The <see cref="IData"/> instance.</returns>
-        IData ReadData();
+        Endianness Endianness { get; }
 
-        /// <summary>
-        /// Reads an object.
-        /// </summary>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <returns>The object.</returns>
+        bool ReadBoolean();
+
+        byte ReadByte();
+
+        sbyte ReadSbyte();
+
+        char ReadChar();
+
+        short ReadShort();
+
+        ushort ReadUshort();
+
+        int ReadInt();
+
+        long ReadLong();
+
+        float ReadFloat();
+
+        double ReadDouble();
+
+        string ReadUTF();
+
+        bool[] ReadBooleanArray();
+
+        byte[] ReadByteArray();
+
+        char[] ReadCharArray();
+
+        short[] ReadShortArray();
+
+        int[] ReadIntArray();
+
+        long[] ReadLongArray();
+
+        float[] ReadFloatArray();
+
+        double[] ReadDoubleArray();
+
+        string[] ReadUTFArray();
+
         T ReadObject<T>();
+
+        int Read(byte[] b);
+
+        int Read(byte[] b, int off, int len);
+
+        int SkipBytes(int n);
     }
 }

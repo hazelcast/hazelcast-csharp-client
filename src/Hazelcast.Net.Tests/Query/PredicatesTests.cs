@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Query
     [TestFixture]
     public class PredicatesTests
     {
-        private ISerializationService _serializationService;
+        private SerializationService _serializationService;
 
         [SetUp]
         public void SetUp()
@@ -139,7 +139,7 @@ namespace Hazelcast.Tests.Query
 
             // cannot test reading data as the paging predicate is not really meant to read data
             // so we cannot test that writing then reading works, need integration tests for this
-            Assert.Throws<NotSupportedException>(() => paging.ReadData(new ByteArrayObjectDataInput(new byte[0], null, Endianness.Unspecified)));
+            Assert.Throws<NotSupportedException>(() => paging.ReadData(new ObjectDataInput(new byte[0], null, Endianness.BigEndian)));
         }
 
         [Test]
@@ -156,9 +156,9 @@ namespace Hazelcast.Tests.Query
             Assert.Throws<ArgumentNullException>(() => partition.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => partition.ReadData(null));
 
-            using var output = new ByteArrayObjectDataOutput(1024, _serializationService, Endianness.Unspecified);
+            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
             partition.WriteData(output);
-            using var input = new ByteArrayObjectDataInput(output.Buffer, _serializationService, Endianness.Unspecified);
+            using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
             var p = new PartitionPredicate();
             p.ReadData(input);
 
@@ -174,10 +174,10 @@ namespace Hazelcast.Tests.Query
             Assert.Throws<ArgumentNullException>(() => comparer.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => comparer.ReadData(null));
 
-            using var output = new ByteArrayObjectDataOutput(1024, _serializationService, Endianness.Unspecified);
+            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
             comparer.WriteData(output);
             var c = new PredicateComparer();
-            using var input = new ByteArrayObjectDataInput(output.Buffer, _serializationService, Endianness.Unspecified);
+            using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
             c.ReadData(input);
 
             Assert.That(c.Type, Is.EqualTo(comparer.Type));
@@ -288,13 +288,13 @@ namespace Hazelcast.Tests.Query
             Assert.Throws<ArgumentNullException>(() => predicate.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => predicate.ReadData(null));
 
-            using var output = new ByteArrayObjectDataOutput(1024, _serializationService, Endianness.Unspecified);
+            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
             predicate.WriteData(output);
 
             T p = default;
             if (typeof (T) != typeof (PagingPredicate) && typeof (T) != typeof (PartitionPredicate))
             {
-                using var input = new ByteArrayObjectDataInput(output.Buffer, _serializationService, Endianness.Unspecified);
+                using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
                 p = (T)Activator.CreateInstance(typeof(T));
                 p.ReadData(input);
 

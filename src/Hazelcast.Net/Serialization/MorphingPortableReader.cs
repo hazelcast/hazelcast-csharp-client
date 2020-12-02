@@ -16,7 +16,7 @@ namespace Hazelcast.Serialization
 {
     internal class MorphingPortableReader : DefaultPortableReader
     {
-        public MorphingPortableReader(PortableSerializer serializer, IBufferObjectDataInput input, IClassDefinition cd)
+        public MorphingPortableReader(PortableSerializer serializer, ObjectDataInput input, IClassDefinition cd)
             : base(serializer, input, cd)
         {
         }
@@ -345,7 +345,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override IPortable[] ReadPortableArray(string fieldName)
+        public override TPortable[] ReadPortableArray<TPortable>(string fieldName)
         {
             var fd = Cd.GetField(fieldName);
             if (fd == null)
@@ -356,7 +356,7 @@ namespace Hazelcast.Serialization
             {
                 throw new InvalidPortableFieldException();
             }
-            return base.ReadPortableArray(fieldName);
+            return base.ReadPortableArray<TPortable>(fieldName);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

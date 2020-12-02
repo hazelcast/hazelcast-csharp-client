@@ -19,10 +19,10 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization
 {
-    public class ByteArrayObjectDataInputTest
+    public class ObjectDataInputTest
     {
         private static readonly byte[] InitData = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-        private ByteArrayObjectDataInput _input;
+        private ObjectDataInput _input;
 
         [TearDown]
         public virtual void After()
@@ -33,32 +33,24 @@ namespace Hazelcast.Tests.Serialization
         [SetUp]
         public virtual void Before()
         {
-            _input = new ByteArrayObjectDataInput(InitData, null, Endianness.BigEndian);
+            _input = new ObjectDataInput(InitData, null, Endianness.BigEndian);
         }
 
         public virtual void TestCheckAvailable()
         {
-            _input.Validate(-1, InitData.Length);
+            _input.CheckAvailable(-1, InitData.Length);
         }
 
         public virtual void TestCheckAvailable_EOF()
         {
-            _input.Validate(0, InitData.Length + 1);
+            _input.CheckAvailable(0, InitData.Length + 1);
         }
 
         [Test]
         public virtual void TestClose()
         {
             _input.Dispose();
-            Assert.IsNull(_input.Data);
-        }
-
-        [Test]
-        public virtual void TestInit()
-        {
-            _input.Initialize(InitData, 2);
-            Assert.AreEqual(InitData, _input.Data);
-            Assert.AreEqual(2, _input.Position);
+            Assert.IsNull(_input.Buffer);
         }
 
         [Test]
@@ -87,8 +79,8 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestReadBool()
         {
-            var read1 = _input.ReadBool();
-            var read2 = _input.ReadBool();
+            var read1 = _input.ReadBoolean();
+            var read2 = _input.ReadBoolean();
             Assert.IsFalse(read1);
             Assert.IsTrue(read2);
         }
@@ -96,7 +88,7 @@ namespace Hazelcast.Tests.Serialization
         public virtual void TestReadBool_EOF()
         {
             _input.Position = InitData.Length + 1;
-            _input.ReadBool();
+            _input.ReadBoolean();
         }
 
         [Test]
@@ -109,11 +101,11 @@ namespace Hazelcast.Tests.Serialization
             };
             _input.Initialize(bytes1, 0);
             _input.Position = 10;
-            var theNullArray = _input.ReadBoolArray();
+            var theNullArray = _input.ReadBooleanArray();
             _input.Position = 0;
-            var theZeroLenghtArray = _input.ReadBoolArray();
+            var theZeroLenghtArray = _input.ReadBooleanArray();
             _input.Position = 4;
-            var booleanArray = _input.ReadBoolArray();
+            var booleanArray = _input.ReadBooleanArray();
             Assert.IsNull(theNullArray);
             Assert.AreEqual(new bool[0], theZeroLenghtArray);
             Assert.AreEqual(new[] {true}, booleanArray);
@@ -122,15 +114,15 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestReadBoolPosition()
         {
-            var read1 = _input.ReadBool(0);
-            var read2 = _input.ReadBool(1);
+            var read1 = _input.ReadBoolean(0);
+            var read2 = _input.ReadBoolean(1);
             Assert.IsFalse(read1);
             Assert.IsTrue(read2);
         }
 
         public virtual void TestReadBoolPosition_EOF()
         {
-            _input.ReadBool(InitData.Length + 1);
+            _input.ReadBoolean(InitData.Length + 1);
         }
 
         [Test]
@@ -213,35 +205,6 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-        public virtual void TestReadData()
-        {
-            byte[] bytes1 =
-            {
-                0, 0, 0, 0, 0, 0, 0, 8, unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1)),
-                unchecked((byte) (-1)), 0, 0, 0, 0, 0, 1, unchecked((byte) (-1)), unchecked((byte) (-1)),
-                unchecked((byte) (-1)), unchecked(
-                    (byte) (-1))
-            };
-            _input.Initialize(bytes1, 0);
-            _input.Position = bytes1.Length - 4;
-            var nullData = _input.ReadData();
-            _input.Position = 0;
-            var theZeroLenghtArray = _input.ReadData();
-            _input.Position = 4;
-            var data = _input.ReadData();
-            Assert.IsNull(nullData);
-            Assert.AreEqual(0, theZeroLenghtArray.TypeId);
-            Assert.AreEqual(new byte[0], theZeroLenghtArray.ToByteArray());
-            Assert.AreEqual(
-                new byte[]
-                {
-                    unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1)), 0, 0,
-                    0,
-                    0
-                }, data.ToByteArray());
-        }
-
-        [Test]
         public virtual void TestReadDouble()
         {
             var readDouble = _input.ReadDouble();
@@ -262,25 +225,7 @@ namespace Hazelcast.Tests.Serialization
             var theZeroLenghtArray = _input.ReadDoubleArray();
             Assert.AreEqual(new double[0], theZeroLenghtArray);
         }
-
-        [Test]
-        public virtual void TestReadDoubleEndianness()
-        {
-            var readDouble = _input.ReadDouble(Endianness.LittleEndian);
-            var longB = BytesExtensions.ReadLong(InitData, 0, Endianness.LittleEndian);
-            var aDouble = BitConverter.Int64BitsToDouble(longB);
-            Assert.AreEqual(aDouble, readDouble, 0);
-        }
-
-        [Test]
-        public virtual void TestReadDoubleForPositionEndianness()
-        {
-            var readDouble = _input.ReadDouble(2, Endianness.LittleEndian);
-            var longB = BytesExtensions.ReadLong(InitData, 2, Endianness.LittleEndian);
-            var aDouble = BitConverter.Int64BitsToDouble(longB);
-            Assert.AreEqual(aDouble, readDouble, 0);
-        }
-
+        
         [Test]
         public virtual void TestReadDoublePosition()
         {
@@ -319,24 +264,6 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-        public virtual void TestReadFloatEndianness()
-        {
-            double readFloat = _input.ReadFloat(Endianness.LittleEndian);
-            var intB = BytesExtensions.ReadIntL(InitData, 0);
-            double aFloat = BitConverter.ToSingle(BitConverter.GetBytes(intB), 0);
-            Assert.AreEqual(aFloat, readFloat, 0);
-        }
-
-        [Test]
-        public virtual void TestReadFloatForPositionEndianness()
-        {
-            double readFloat = _input.ReadFloat(2, Endianness.LittleEndian);
-            var intB = BytesExtensions.ReadIntL(InitData, 2);
-            double aFloat = BitConverter.ToSingle(BitConverter.GetBytes(intB), 0);
-            Assert.AreEqual(aFloat, readFloat, 0);
-        }
-
-        [Test]
         public virtual void TestReadFloatPosition()
         {
             double readFloat = _input.ReadFloat(2);
@@ -348,67 +275,45 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestReadForBOffLen()
         {
-            var read = _input.ReadBytes(InitData, 0, 5);
+            var read = _input.Read(InitData, 0, 5);
             Assert.AreEqual(5, read);
         }
 
         public virtual void TestReadForBOffLen_negativeLen()
         {
-            _input.ReadBytes(InitData, 0, -11);
+            _input.Read(InitData, 0, -11);
         }
 
         public virtual void TestReadForBOffLen_negativeOffset()
         {
-            _input.ReadBytes(InitData, -10, 1);
+            _input.Read(InitData, -10, 1);
         }
 
         public virtual void TestReadForBOffLen_null_array()
         {
-            _input.ReadBytes(null, 0, 1);
+            _input.Read(null, 0, 1);
         }
 
         [Test]
         public virtual void TestReadForBOffLen_pos_gt_size()
         {
-            var read = _input.ReadBytes(InitData, 0, 10);
+            var read = _input.Read(InitData, 0, 10);
             Assert.AreEqual(10, read);
 
-            read = _input.ReadBytes(InitData, 0, 1);
+            read = _input.Read(InitData, 0, 1);
 
             Assert.AreEqual(-1, read);
-        }
-
-        [Test]
-        public virtual void TestReadBytesB()
-        {
-            var readFull = new byte[InitData.Length];
-            _input.ReadBytes(readFull);
-            Assert.AreEqual(readFull, _input.Data);
-        }
-
-        public virtual void TestReadBytesB_EOF()
-        {
-            _input.Position = InitData.Length;
-            var readFull = new byte[InitData.Length];
-            _input.ReadBytes(readFull);
         }
 
         [Test]
         public virtual void TestReadBytesForBOffLen()
         {
             var readFull = new byte[10];
-            _input.ReadBytes(readFull, 0, 5);
+            _input.Read(readFull, 0, 5);
             for (var i = 0; i < 5; i++)
             {
-                Assert.AreEqual(readFull[i], _input.Data[i]);
+                Assert.AreEqual(readFull[i], _input.Buffer[i]);
             }
-        }
-
-        public virtual void TestReadBytesForBOffLen_EOF()
-        {
-            _input.Position = InitData.Length;
-            var readFull = new byte[InitData.Length];
-            _input.ReadBytes(readFull, 0, readFull.Length);
         }
 
         [Test]
@@ -438,23 +343,7 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(new int[0], theZeroLenghtArray);
             Assert.AreEqual(new[] {1}, bytes);
         }
-
-        [Test]
-        public virtual void TestReadIntEndianness()
-        {
-            var readInt = _input.ReadInt(Endianness.LittleEndian);
-            var theInt = BytesExtensions.ReadIntL(InitData, 0);
-            Assert.AreEqual(theInt, readInt);
-        }
-
-        [Test]
-        public virtual void TestReadIntForPositionEndianness()
-        {
-            var readInt = _input.ReadInt(3, Endianness.LittleEndian);
-            var theInt = BytesExtensions.ReadIntL(InitData, 3);
-            Assert.AreEqual(theInt, readInt);
-        }
-
+        
         [Test]
         public virtual void TestReadIntPosition()
         {
@@ -489,22 +378,6 @@ namespace Hazelcast.Tests.Serialization
             Assert.IsNull(theNullArray);
             Assert.AreEqual(new long[0], theZeroLenghtArray);
             Assert.AreEqual(new long[] {1}, bytes);
-        }
-
-        [Test]
-        public virtual void TestReadLongEndianness()
-        {
-            var readLong = _input.ReadLong(Endianness.LittleEndian);
-            var longB = BytesExtensions.ReadLongL(InitData, 0);
-            Assert.AreEqual(longB, readLong);
-        }
-
-        [Test]
-        public virtual void TestReadLongForPositionEndianness()
-        {
-            var readLong = _input.ReadLong(2, Endianness.LittleEndian);
-            var longB = BytesExtensions.ReadLongL(InitData, 2);
-            Assert.AreEqual(longB, readLong);
         }
 
         [Test]
@@ -544,22 +417,6 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-        public virtual void TestReadShortEndianness()
-        {
-            var read = _input.ReadShort(Endianness.LittleEndian);
-            var val = BytesExtensions.ReadShort(InitData, 0, Endianness.LittleEndian);
-            Assert.AreEqual(val, read);
-        }
-
-        [Test]
-        public virtual void TestReadShortForPositionEndianness()
-        {
-            var read = _input.ReadShort(1, Endianness.LittleEndian);
-            var val = BytesExtensions.ReadShort(InitData, 1, Endianness.LittleEndian);
-            Assert.AreEqual(val, read);
-        }
-
-        [Test]
         public virtual void TestReadShortPosition()
         {
             var read = _input.ReadShort(1);
@@ -591,13 +448,13 @@ namespace Hazelcast.Tests.Serialization
                 unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1))
             };
             _input.Initialize(bytes1, bytes1.Length - 4);
-            var unsigned = _input.ReadUnsignedShort();
+            var unsigned = _input.ReadUshort();
             Assert.AreEqual(unchecked(0xFFFF), unsigned);
         }
 
-        [Test]
-        public virtual void TestReadUTF()
+        public void TestReadUTF()
         {
+            //EXTENDED TEST ELSEWHERE: StringSerializationTest
         }
 
         [Test]
@@ -609,24 +466,15 @@ namespace Hazelcast.Tests.Serialization
                 unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1))
             };
             _input.Initialize(bytes1, 0);
-            var theZeroLenghtArray = _input.ReadString();
+            var theZeroLenghtArray = _input.ReadUTF();
             Assert.AreEqual(new string[0], theZeroLenghtArray);
-        }
-
-        [Test]
-        public virtual void TestSkip()
-        {
-            var s1 = _input.Skip(-1);
-            var s3 = _input.Skip(1);
-            Assert.AreEqual(0, s1);
-            Assert.AreEqual(1, s3);
         }
 
         [Test]
         public virtual void TestSkipBytes()
         {
-            long s1 = _input.Skip(-1);
-            long s3 = _input.Skip(1);
+            long s1 = _input.SkipBytes(-1);
+            long s3 = _input.SkipBytes(1);
             Assert.AreEqual(0, s1);
             Assert.AreEqual(1, s3);
         }

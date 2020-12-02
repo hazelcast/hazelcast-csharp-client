@@ -27,7 +27,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
         /// <exception cref="System.IO.IOException"></exception>
         public override void Write(IObjectDataOutput output, float[] obj)
         {
-            output.WriteArray(obj);
+            output.WriteFloatArray(obj);
         }
     }
 }

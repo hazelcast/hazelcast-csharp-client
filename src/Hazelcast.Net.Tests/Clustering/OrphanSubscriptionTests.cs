@@ -167,7 +167,7 @@ namespace Hazelcast.Tests.Clustering
             }, 8000, 200);
         }
 
-        private static string GetKey(int partitionId, int partitionCount, ISerializationService serializationService)
+        private static string GetKey(int partitionId, int partitionCount, SerializationService serializationService)
         {
             int GetHash(string value) => serializationService.ToData(value).PartitionHash;
 

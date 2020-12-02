@@ -17,7 +17,7 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Represents the basic unit of serialization.
     /// </summary>
-    public interface IData
+    internal interface IData
     {
         /// <summary>Gets the size of the data contained in this instance.</summary>
         int DataSize { get; }

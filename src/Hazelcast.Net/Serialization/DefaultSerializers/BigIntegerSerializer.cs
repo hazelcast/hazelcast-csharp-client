@@ -32,7 +32,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
         {
             var bytes = obj.ToByteArray();
             Array.Reverse(bytes);
-            output.WriteArray(bytes);
+            output.WriteByteArray(bytes);
         }
     }
 }

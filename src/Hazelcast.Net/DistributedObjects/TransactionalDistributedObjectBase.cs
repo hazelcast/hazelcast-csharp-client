@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="transactionId">The unique identifier of the transaction.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        protected TransactionalDistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        protected TransactionalDistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
             : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
         {
             TransactionId = transactionId;

@@ -31,8 +31,8 @@ namespace Hazelcast.Tests.Serialization.Objects
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(_data.Length);
-            output.WriteBytes(_data);
+            output.WriteInt(_data.Length);
+            output.Write(_data);
         }
 
         public int FactoryId => SerializationTestsConstants.DATA_SERIALIZABLE_FACTORY_ID;
@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Serialization.Objects
         {
             var len = input.ReadInt();
             _data = new byte[len];
-            input.ReadBytes(_data);
+            input.Read(_data);
         }
 
         public override bool Equals(object obj)

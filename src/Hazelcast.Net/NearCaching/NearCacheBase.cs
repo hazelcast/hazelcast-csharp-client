@@ -51,7 +51,7 @@ namespace Hazelcast.NearCaching
         /// <param name="serializationService">The localization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         /// <param name="nearCacheOptions">NearCache options.</param>
-        protected NearCacheBase(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheOptions nearCacheOptions)
+        protected NearCacheBase(string name, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory, NearCacheOptions nearCacheOptions)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
             Name = name;
@@ -98,7 +98,7 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Gets the serialization service.
         /// </summary>
-        public ISerializationService SerializationService { get; }
+        public SerializationService SerializationService { get; }
 
         /// <summary>
         /// Gets the logger factory.

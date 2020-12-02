@@ -45,7 +45,7 @@ namespace Hazelcast.Clustering
         /// <param name="loggerFactory">A logger factory.</param>
         public Cluster(
             IClusterOptions options,
-            ISerializationService serializationService,
+            SerializationService serializationService,
             ILoggerFactory loggerFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));

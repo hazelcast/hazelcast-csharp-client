@@ -35,7 +35,7 @@ namespace Hazelcast.DistributedObjects
             = new ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase>();
 
         private readonly Cluster _cluster;
-        private readonly ISerializationService _serializationService;
+        private readonly SerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
 
@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public DistributedObjectFactory(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public DistributedObjectFactory(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
@@ -69,7 +69,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The distributed object.</returns>
         public async Task<T> GetOrCreateAsync<T, TImpl>(
             string serviceName, string name, bool remote,
-            Func<string, DistributedObjectFactory, Cluster, ISerializationService, ILoggerFactory, TImpl> factory,
+            Func<string, DistributedObjectFactory, Cluster, SerializationService, ILoggerFactory, TImpl> factory,
             CancellationToken cancellationToken = default)
             where TImpl : DistributedObjectBase, T
         {

@@ -29,7 +29,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var i = 0;
             foreach (var value in collection)
             {
-                frame.Bytes.WriteLong(i * BytesExtensions.SizeOfLong, value);
+                frame.Bytes.WriteLongL(i * BytesExtensions.SizeOfLong, value);
                 i++;
             }
 

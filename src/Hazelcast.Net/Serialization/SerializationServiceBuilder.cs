@@ -21,7 +21,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
-    internal sealed class SerializationServiceBuilder : ISerializationServiceBuilder
+    internal sealed class SerializationServiceBuilder
     {
         private readonly ILoggerFactory _loggerFactory;
         private const int DefaultOutBufferSize = 4*1024;
@@ -56,7 +56,7 @@ namespace Hazelcast.Serialization
             _hooks = new SerializerHooks();
         }
 
-        public ISerializationServiceBuilder SetVersion(byte version)
+        public SerializationServiceBuilder SetVersion(byte version)
         {
             if (version > SerializationService.SerializerVersion)
                 throw new ArgumentException($"Value cannot be higher than the max supported version ({SerializationService.SerializerVersion}).");
@@ -65,25 +65,25 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationServiceBuilder AddHook<T>()
+        public SerializationServiceBuilder AddHook<T>()
         {
             _hooks.Add(typeof(T));
             return this;
         }
 
-        public ISerializationServiceBuilder AddHook(Type type)
+        public SerializationServiceBuilder AddHook(Type type)
         {
             _hooks.Add(type);
             return this;
         }
 
-        public ISerializationServiceBuilder AddDefinitions(ISerializerDefinitions definition)
+        public SerializationServiceBuilder AddDefinitions(ISerializerDefinitions definition)
         {
             _definitions.Add(definition);
             return this;
         }
 
-        public ISerializationServiceBuilder SetPortableVersion(int version)
+        public SerializationServiceBuilder SetPortableVersion(int version)
         {
             if (version < 0)
                 throw new ArgumentOutOfRangeException(nameof(version), "Value must be greater than, or equal to, zero.");
@@ -92,7 +92,7 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationServiceBuilder SetConfig(SerializationOptions options)
+        public SerializationServiceBuilder SetConfig(SerializationOptions options)
         {
             _options = options;
             if (_portableVersion < 0)
@@ -104,43 +104,43 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationServiceBuilder AddDataSerializableFactory(int id, IDataSerializableFactory factory)
+        public SerializationServiceBuilder AddDataSerializableFactory(int id, IDataSerializableFactory factory)
         {
             _dataSerializableFactories.Add(id, factory);
             return this;
         }
 
-        public ISerializationServiceBuilder AddPortableFactory(int id, IPortableFactory factory)
+        public SerializationServiceBuilder AddPortableFactory(int id, IPortableFactory factory)
         {
             _portableFactories.Add(id, factory);
             return this;
         }
 
-        public ISerializationServiceBuilder AddClassDefinition(IClassDefinition cd)
+        public SerializationServiceBuilder AddClassDefinition(IClassDefinition cd)
         {
             _classDefinitions.Add(cd);
             return this;
         }
 
-        public ISerializationServiceBuilder SetCheckClassDefErrors(bool checkClassDefErrors)
+        public SerializationServiceBuilder SetCheckClassDefErrors(bool checkClassDefErrors)
         {
             _checkClassDefErrors = checkClassDefErrors;
             return this;
         }
 
-        public ISerializationServiceBuilder SetEndianness(Endianness endianness)
+        public SerializationServiceBuilder SetEndianness(Endianness endianness)
         {
             _endianness = endianness;
             return this;
         }
 
-        public ISerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitionStrategy)
+        public SerializationServiceBuilder SetPartitioningStrategy(IPartitioningStrategy partitionStrategy)
         {
             _partitioningStrategy = partitionStrategy;
             return this;
         }
 
-        public ISerializationServiceBuilder SetInitialOutputBufferSize(int initialOutputBufferSize)
+        public SerializationServiceBuilder SetInitialOutputBufferSize(int initialOutputBufferSize)
         {
             if (initialOutputBufferSize <= 0)
             {
@@ -150,7 +150,7 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ISerializationService Build()
+        public SerializationService Build()
         {
             if (_portableVersion < 0)
                 _portableVersion = 0;
@@ -163,7 +163,7 @@ namespace Hazelcast.Serialization
             }
 
             var service = new SerializationService(
-                CreateInputOutputFactory(),
+                _endianness,
                 _portableVersion,
                 _dataSerializableFactories,
                 _portableFactories,
@@ -177,7 +177,7 @@ namespace Hazelcast.Serialization
 
             if (_options != null)
             {
-                var globalSerializer = _options.DefaultSerializer;
+                var globalSerializer = _options.GlobalSerializer;
                 if (globalSerializer != null)
                     service.SetGlobalSerializer(globalSerializer.Service, globalSerializer.OverrideClr);
 
@@ -215,13 +215,6 @@ namespace Hazelcast.Serialization
                 portableFactories.Add(factoryOptions.Id, factoryOptions.Service);
             }
         }
-
-        private IInputOutputFactory CreateInputOutputFactory()
-        {
-            if (_endianness == Endianness.Unspecified)
-                _endianness = Endianness.BigEndian;
-
-            return new ByteArrayInputOutputFactory(_endianness);
-        }
+        
     }
 }

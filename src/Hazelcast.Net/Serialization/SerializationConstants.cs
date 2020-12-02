@@ -73,7 +73,6 @@ namespace Hazelcast.Serialization
         public const int JavaDefaultTypeSynchronousQueue = -47;
         public const int JavaDefaultTypeLinkedTransferQueue = -48;
         public const int JavaDefaultTypePriorityQueue = -49;
-        public const int JavaDefaultTypeEnum = -50;
 
         // ------------------------------------------------------------
         // JAVA SERIALIZATION

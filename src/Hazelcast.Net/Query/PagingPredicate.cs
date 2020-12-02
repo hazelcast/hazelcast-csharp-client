@@ -155,24 +155,20 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-
             throw new NotSupportedException("Client should not need to use ReadData method.");
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-
             output.WriteObject(Predicate);
             output.WriteObject(Comparer);
-            output.Write(Page);
-            output.Write(PageSize);
-            output.Write(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
-            output.Write(AnchorList.Count);
+            output.WriteInt(Page);
+            output.WriteInt(PageSize);
+            output.WriteUTF(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
+            output.WriteInt(AnchorList.Count);
             foreach (var (key, anchorEntry) in AnchorList)
             {
-                output.Write(key);
+                output.WriteInt(key);
                 output.WriteObject(anchorEntry.Key);
                 output.WriteObject(anchorEntry.Value);
             }

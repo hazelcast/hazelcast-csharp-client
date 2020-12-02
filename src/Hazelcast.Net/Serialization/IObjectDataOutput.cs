@@ -12,29 +12,64 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Core;
+
 namespace Hazelcast.Serialization
 {
-    /// <summary>
-    /// Extends <see cref="IDataOutput"/> with support for <see cref="IData"/> and objects.
-    /// </summary>
-    public interface IObjectDataOutput : IDataOutput
+    public interface IObjectDataOutput
     {
-        /// <summary>
-        /// Writes an <see cref="IData"/> instance.
-        /// </summary>
-        /// <param name="value">The <see cref="IData"/> instance.</param>
-        void WriteData(IData value);
+        Endianness Endianness { get; }
 
-        /// <summary>
-        /// Writes an object.
-        /// </summary>
-        /// <param name="value">The object.</param>
+        void WriteBoolean(bool v);
+
+        void WriteByte(byte b);
+        
+        void WriteSbyte(sbyte b);
+
+        void WriteChar(char v);
+
+        void WriteShort(short v);
+        
+        void WriteUshort(ushort v);
+
+        void WriteInt(int v);
+
+        void WriteLong(long v);
+
+        void WriteFloat(float v);
+
+        void WriteDouble(double v);
+
+        void WriteUTF(string s);
+        
+        void WriteChars(string s);
+
+        void WriteBytes(string s);
+
+        void WriteBooleanArray(bool[] booleans);
+
+        void WriteByteArray(byte[] bytes);
+
+        void WriteCharArray(char[] chars);
+
+        void WriteShortArray(short[] values);
+
+        void WriteIntArray(int[] ints);
+
+        void WriteLongArray(long[] longs);
+
+        void WriteFloatArray(float[] values);
+
+        void WriteDoubleArray(double[] values);
+
+        void WriteUTFArray(string[] values);
+
         void WriteObject(object value);
 
-        /// <summary>
-        /// Gets a byte array representation of the object.
-        /// </summary>
-        /// <returns>An array of byte representing the object.</returns>
-        byte[] ToByteArray();
+        void Write(byte[] b);
+
+        void Write(byte[] b, int off, int len);
+
+        byte[] ToByteArray(int padding = 0);
     }
 }

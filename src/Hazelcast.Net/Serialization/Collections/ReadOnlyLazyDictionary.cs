@@ -32,7 +32,7 @@ namespace Hazelcast.Serialization.Collections
     /// </remarks>
     internal sealed class ReadOnlyLazyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     {
-        private readonly ISerializationService _serializationService;
+        private readonly SerializationService _serializationService;
 
         private readonly Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>> _entries = new Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>>();
         private readonly Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>> _keyEntries = new Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>>();
@@ -41,7 +41,7 @@ namespace Hazelcast.Serialization.Collections
         /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue}"/> class.
         /// </summary>
         /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyDictionary(ISerializationService serializationService)
+        public ReadOnlyLazyDictionary(SerializationService serializationService)
         {
             _serializationService = serializationService;
         }
@@ -51,7 +51,7 @@ namespace Hazelcast.Serialization.Collections
         /// </summary>
         /// <param name="entries"></param>
         /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyDictionary(IEnumerable<KeyValuePair<IData, IData>> entries, ISerializationService serializationService)
+        public ReadOnlyLazyDictionary(IEnumerable<KeyValuePair<IData, IData>> entries, SerializationService serializationService)
         {
             _serializationService = serializationService;
             Add(entries);

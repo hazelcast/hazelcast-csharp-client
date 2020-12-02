@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.NearCache
 {
     public class NearCacheTestBase : MultiMembersRemoteTestBase
     {
-        protected ISerializationService SerializationService { get; set; }
+        internal SerializationService SerializationService { get; set; }
 
         internal NearCacheBase GetNearCache<TKey, TValue>(IHMap<TKey, TValue> dictionary)
         {

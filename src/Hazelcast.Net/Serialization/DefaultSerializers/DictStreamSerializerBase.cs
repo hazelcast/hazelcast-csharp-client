@@ -32,7 +32,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
             public void Write(IObjectDataOutput output, DType obj)
             {
                 var size = obj.Count;
-                output.Write(size);
+                output.WriteInt(size);
                 if (size > 0)
                 {
                     foreach (var kvp in obj)

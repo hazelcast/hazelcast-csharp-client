@@ -26,7 +26,7 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="service">The serialization service.</param>
         /// <param name="endianness">The default endianness.</param>
-        protected ByteArrayObjectDataInputOuputBase(ISerializationService service, Endianness endianness)
+        protected ByteArrayObjectDataInputOuputBase(SerializationService service, Endianness endianness)
         {
             SerializationService = service;
             DefaultEndianness = endianness;
@@ -35,7 +35,7 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Gets the serialization service.
         /// </summary>
-        protected ISerializationService SerializationService { get; }
+        protected SerializationService SerializationService { get; }
 
         /// <summary>
         /// Gets the default endianness.

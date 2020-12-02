@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
@@ -23,7 +24,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
         public override LinkedList<T> Read(IObjectDataInput input)
         {
             var size = input.ReadInt();
-            if (size <= ArraySerializer.NullArrayLength) return null;
+            if (size <= BytesExtensions.SizeOfNullArray) return null;
 
             var list = new LinkedList<T>();
             for (var i = 0; i < size; i++)
@@ -35,8 +36,8 @@ namespace Hazelcast.Serialization.DefaultSerializers
 
         public override void Write(IObjectDataOutput output, LinkedList<T> obj)
         {
-            var size = obj == null ? ArraySerializer.NullArrayLength : obj.Count;
-            output.Write(size);
+            var size = obj?.Count ?? BytesExtensions.SizeOfNullArray;
+            output.WriteInt(size);
             foreach (var o in obj)
             {
                 output.WriteObject(o);

@@ -25,9 +25,19 @@ namespace Hazelcast.Core
     internal static partial class BytesExtensions
     {
         /// <summary>
+        /// Represents a null array size
+        /// </summary>
+        public const int SizeOfNullArray = -1;
+            
+        /// <summary>
         /// Gets the size of a <see cref="byte"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfByte = 1;
+
+        /// <summary>
+        /// Gets the size of a <see cref="sbyte"/> value in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfUnsignedByte = 1;
 
         /// <summary>
         /// Gets the size of a <see cref="short"/> value in arrays or sequences of bytes.
@@ -74,31 +84,20 @@ namespace Hazelcast.Core
         /// </summary>
         public const int SizeOfDecimal = 16;
 
-
-
         /// <summary>
         /// Gets the size of a <see cref="bool"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfBool = 1;
-
-
 
         /// <summary>
         /// Gets the size of a <see cref="char"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfChar = 2;
 
-
-
         /// <summary>
         /// Gets the size of a <see cref="Guid"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfGuid = (1 + 16) * SizeOfByte;
-
-
-
-
-
 
         /// <summary>
         /// Copies a sequence of <typeparamref name="T"/> to a span of <typeparamref name="T"/>.

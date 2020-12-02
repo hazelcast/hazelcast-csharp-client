@@ -26,12 +26,12 @@ namespace Hazelcast.Core
         /// <param name="value">The value to write.</param>
         public static void WriteByte(this byte[] bytes, int position, byte value)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfByte)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
             bytes[position] = value;
+        }
+
+        public static void WriteSbyte(this byte[] bytes, int position, sbyte value)
+        {
+            bytes[position] = (byte) value;
         }
 
         /// <summary>
@@ -41,29 +41,8 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteShort(this byte[] bytes, int position, short value, Endianness endianness = Endianness.Unspecified)
-        {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfShort)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
-            var unsigned = (ushort)value;
-
-            unchecked
-            {
-                if (endianness.Resolve().IsBigEndian())
-                {
-                    bytes[position]     = (byte) (unsigned >> 8);
-                    bytes[position + 1] = (byte) unsigned;
-                }
-                else
-                {
-                    bytes[position]     = (byte) unsigned;
-                    bytes[position + 1] = (byte) (unsigned >> 8);
-                }
-            }
-        }
+        public static void WriteShort(this byte[] bytes, int position, short value, Endianness endianness)
+            => bytes.WriteUShort(position, (ushort)value, endianness);
 
         /// <summary>
         /// Writes an <see cref="ushort"/> value to an array of bytes.
@@ -72,39 +51,22 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteUShort(this byte[] bytes, int position, ushort value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteUShort(this byte[] bytes, int position, ushort value, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfUnsignedShort)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
-            var unsigned = value;
-
             unchecked
             {
-                if (endianness.Resolve().IsBigEndian())
+                if (endianness.IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 8);
-                    bytes[position + 1] = (byte) unsigned;
+                    bytes[position] = (byte) (value >> 8);
+                    bytes[position + 1] = (byte) value;
                 }
                 else
                 {
-                    bytes[position]     = (byte) unsigned;
-                    bytes[position + 1] = (byte) (unsigned >> 8);
+                    bytes[position] = (byte) value;
+                    bytes[position + 1] = (byte) (value >> 8);
                 }
             }
         }
-
-        /// <summary>
-        /// Writes an <see cref="int"/> enum value to an array of bytes.
-        /// </summary>
-        /// <param name="bytes">The array of bytes to write to.</param>
-        /// <param name="position">The position in the array where the value should be written.</param>
-        /// <param name="value">The value to write.</param>
-        /// <param name="endianness">The endianness.</param>
-        public static void WriteInt(this byte[] bytes, int position, Enum value, Endianness endianness = Endianness.Unspecified)
-            => bytes.WriteInt(position, (int)(object)value, endianness);
 
         /// <summary>
         /// Writes an <see cref="int"/> value to an array of bytes.
@@ -113,27 +75,21 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteInt(this byte[] bytes, int position, int value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteInt(this byte[] bytes, int position, int value, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfInt)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
-            var unsigned = (uint)value;
-
+            var unsigned = (uint) value;
             unchecked
             {
-                if (endianness.Resolve().IsBigEndian())
+                if (endianness.IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 24);
+                    bytes[position] = (byte) (unsigned >> 24);
                     bytes[position + 1] = (byte) (unsigned >> 16);
                     bytes[position + 2] = (byte) (unsigned >> 8);
                     bytes[position + 3] = (byte) unsigned;
                 }
                 else
                 {
-                    bytes[position]     = (byte) unsigned;
+                    bytes[position] = (byte) unsigned;
                     bytes[position + 1] = (byte) (unsigned >> 8);
                     bytes[position + 2] = (byte) (unsigned >> 16);
                     bytes[position + 3] = (byte) (unsigned >> 24);
@@ -148,20 +104,14 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteLong(this byte[] bytes, int position, long value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteLong(this byte[] bytes, int position, long value, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfLong)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
-            var unsigned = (ulong)value;
-
+            var unsigned = (ulong) value;
             unchecked
             {
-                if (endianness.Resolve().IsBigEndian())
+                if (endianness.IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 56);
+                    bytes[position] = (byte) (unsigned >> 56);
                     bytes[position + 1] = (byte) (unsigned >> 48);
                     bytes[position + 2] = (byte) (unsigned >> 40);
                     bytes[position + 3] = (byte) (unsigned >> 32);
@@ -172,7 +122,7 @@ namespace Hazelcast.Core
                 }
                 else
                 {
-                    bytes[position]     = (byte) unsigned;
+                    bytes[position] = (byte) unsigned;
                     bytes[position + 1] = (byte) (unsigned >> 8);
                     bytes[position + 2] = (byte) (unsigned >> 16);
                     bytes[position + 3] = (byte) (unsigned >> 24);
@@ -183,7 +133,6 @@ namespace Hazelcast.Core
                 }
             }
         }
-
 
 
         /// <summary>
@@ -193,13 +142,8 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteFloat(this byte[] bytes, int position, float value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteFloat(this byte[] bytes, int position, float value, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfFloat)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
 #if NETSTANDARD2_0
             var unsigned = (uint) BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
 #else
@@ -208,22 +152,21 @@ namespace Hazelcast.Core
 #endif
             unchecked
             {
-                if (endianness.Resolve().IsBigEndian())
+                if (endianness.IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 24);
+                    bytes[position] = (byte) (unsigned >> 24);
                     bytes[position + 1] = (byte) (unsigned >> 16);
                     bytes[position + 2] = (byte) (unsigned >> 8);
                     bytes[position + 3] = (byte) unsigned;
                 }
                 else
                 {
-                    bytes[position]     = (byte) unsigned;
+                    bytes[position] = (byte) unsigned;
                     bytes[position + 1] = (byte) (unsigned >> 8);
                     bytes[position + 2] = (byte) (unsigned >> 16);
                     bytes[position + 3] = (byte) (unsigned >> 24);
                 }
             }
-
         }
 
         /// <summary>
@@ -233,21 +176,15 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteDouble(this byte[] bytes, int position, double value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteDouble(this byte[] bytes, int position, double value, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfDouble)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
             // this is essentially an unsafe *((long*)&value)
             var unsigned = (ulong) BitConverter.DoubleToInt64Bits(value);
-
             unchecked
             {
-                if (endianness.Resolve().IsBigEndian())
+                if (endianness.IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 56);
+                    bytes[position] = (byte) (unsigned >> 56);
                     bytes[position + 1] = (byte) (unsigned >> 48);
                     bytes[position + 2] = (byte) (unsigned >> 40);
                     bytes[position + 3] = (byte) (unsigned >> 32);
@@ -258,7 +195,7 @@ namespace Hazelcast.Core
                 }
                 else
                 {
-                    bytes[position]     = (byte) unsigned;
+                    bytes[position] = (byte) unsigned;
                     bytes[position + 1] = (byte) (unsigned >> 8);
                     bytes[position + 2] = (byte) (unsigned >> 16);
                     bytes[position + 3] = (byte) (unsigned >> 24);
@@ -269,7 +206,6 @@ namespace Hazelcast.Core
                 }
             }
         }
-
 
 
         /// <summary>
@@ -282,7 +218,6 @@ namespace Hazelcast.Core
             => bytes.WriteByte(position, value ? (byte) 0x01 : (byte) 0x00);
 
 
-
         /// <summary>
         /// Writes a <see cref="char"/> value to an array of bytes.
         /// </summary>
@@ -290,25 +225,19 @@ namespace Hazelcast.Core
         /// <param name="position">The position in the array where the value should be written.</param>
         /// <param name="value">The value to write.</param>
         /// <param name="endianness">The endianness.</param>
-        public static void WriteChar(this byte[] bytes, int position, char value, Endianness endianness = Endianness.Unspecified)
+        public static void WriteChar(this byte[] bytes, int position, char value, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfChar)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
             var unsigned = value;
-
             unchecked
             {
-                if (endianness.Resolve().IsBigEndian())
+                if (endianness.IsBigEndian())
                 {
-                    bytes[position]     = (byte) (unsigned >> 8);
+                    bytes[position] = (byte) (unsigned >> 8);
                     bytes[position + 1] = (byte) unsigned;
                 }
                 else
                 {
-                    bytes[position]     = (byte) unsigned;
+                    bytes[position] = (byte) unsigned;
                     bytes[position + 1] = (byte) (unsigned >> 8);
                 }
             }
@@ -445,55 +374,6 @@ namespace Hazelcast.Core
                     position += 4;
                 }
             }
-        }
-
-
-
-        /// <summary>
-        /// Writes a <see cref="Guid"/> value to an array of bytes.
-        /// </summary>
-        /// <param name="bytes">The array of bytes to write to.</param>
-        /// <param name="position">The position in the array where the value should be written.</param>
-        /// <param name="value">The value to write.</param>
-        public static void WriteGuid(this byte[] bytes, int position, Guid value)
-        {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            // must at least be able to write a bool
-            if (position < 0 || bytes.Length < position + SizeOfBool)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
-            // write the 'empty' bool
-            bytes.WriteBool(position, value == Guid.Empty);
-            if (value == Guid.Empty) return;
-
-            // if not empty, must be able to write the full guid
-            if (bytes.Length < position + SizeOfGuid)
-                throw new ArgumentOutOfRangeException(nameof(position));
-
-            position += SizeOfByte;
-
-            var v = new JavaUuidOrder { Value = value };
-
-            bytes[position] = v.X0; position += SizeOfByte;
-            bytes[position] = v.X1; position += SizeOfByte;
-            bytes[position] = v.X2; position += SizeOfByte;
-            bytes[position] = v.X3; position += SizeOfByte;
-
-            bytes[position] = v.X4; position += SizeOfByte;
-            bytes[position] = v.X5; position += SizeOfByte;
-            bytes[position] = v.X6; position += SizeOfByte;
-            bytes[position] = v.X7; position += SizeOfByte;
-
-            bytes[position] = v.X8; position += SizeOfByte;
-            bytes[position] = v.X9; position += SizeOfByte;
-            bytes[position] = v.XA; position += SizeOfByte;
-            bytes[position] = v.XB; position += SizeOfByte;
-
-            bytes[position] = v.XC; position += SizeOfByte;
-            bytes[position] = v.XD; position += SizeOfByte;
-            bytes[position] = v.XE; position += SizeOfByte;
-            bytes[position] = v.XF;
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
     {
         private readonly ISequence<long> _lockReferenceIdSequence;
 
-        public HMultiMap(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory loggerFactory)
+        public HMultiMap(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory loggerFactory)
             : base(ServiceNames.MultiMap, name, factory, cluster, serializationService, loggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;

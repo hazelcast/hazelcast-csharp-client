@@ -36,18 +36,14 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-
-            _attributeName = input.ReadString();
+            _attributeName = input.ReadUTF();
             _to = input.ReadObject<object>();
             _from = input.ReadObject<object>();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-
-            output.Write(_attributeName);
+            output.WriteUTF(_attributeName);
             output.WriteObject(_to);
             output.WriteObject(_from);
         }

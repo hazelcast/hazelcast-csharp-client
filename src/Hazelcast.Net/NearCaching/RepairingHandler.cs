@@ -32,7 +32,7 @@ namespace Hazelcast.NearCaching
         private readonly MetaData[] _metadataTable;
         private readonly NearCache _nearCache;
         private readonly int _partitionCount;
-        private readonly ISerializationService _serializationService;
+        private readonly SerializationService _serializationService;
         private readonly Partitioner _partitioner;
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Hazelcast.NearCaching
         /// <param name="partitioner">The partitioner.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public RepairingHandler(Guid clusterClientId, NearCache nearCache, int maxToleratedMissCount, Partitioner partitioner, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public RepairingHandler(Guid clusterClientId, NearCache nearCache, int maxToleratedMissCount, Partitioner partitioner, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _clusterClientId = clusterClientId;
             _nearCache = nearCache;

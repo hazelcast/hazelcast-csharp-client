@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
     /// <typeparam name="T">The type of the list items.</typeparam>
     internal partial class HList<T> : HCollectionBase<T>, IHList<T>
     {
-        public HList(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HList(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
             : base(ServiceNames.List, name, factory, cluster, serializationService, loggerFactory)
         { }
 

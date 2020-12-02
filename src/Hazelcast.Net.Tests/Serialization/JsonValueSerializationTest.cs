@@ -25,7 +25,7 @@ namespace Hazelcast.Tests.Serialization
     [TestFixture]
     public class HazelcastJsonValueSerializationTest
     {
-        private ISerializationService _serializationService;
+        private SerializationService _serializationService;
 
         [SetUp]
         public virtual void Setup()

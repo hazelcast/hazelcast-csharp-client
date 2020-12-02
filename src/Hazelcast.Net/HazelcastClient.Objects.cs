@@ -41,7 +41,7 @@ namespace Hazelcast
                 ? null
                 : await _nearCacheManager.GetOrCreateNearCacheAsync<TValue>(name, nearCacheOptions).CAF();
 
-            HMap<TKey, TValue> CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+            HMap<TKey, TValue> CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
                 => nearCacheOptions == null
                     ? new HMap<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
                     : new HMapWithCache<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);

@@ -75,8 +75,8 @@ namespace Hazelcast.Examples.DistributedObjects
                 array = ms.ToArray();
             }
 
-            output.Write(array.Length);
-            output.WriteBytes(array);
+            output.WriteInt(array.Length);
+            output.Write(array);
         }
 
         public Person Read(IObjectDataInput input)
@@ -85,7 +85,7 @@ namespace Hazelcast.Examples.DistributedObjects
             var len = input.ReadInt();
 
             var buffer = new byte[len];
-            input.ReadBytes(buffer);
+            input.Read(buffer);
 
             using var ms = new MemoryStream(buffer);
             return (Person) bf.Deserialize(ms);

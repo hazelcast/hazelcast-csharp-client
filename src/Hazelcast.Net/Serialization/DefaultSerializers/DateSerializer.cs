@@ -29,7 +29,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
 
         public override void Write(IObjectDataOutput output, DateTime obj)
         {
-            output.Write(ToEpochDateTime(obj));
+            output.WriteLong(ToEpochDateTime(obj));
         }
 
         private static DateTime FromEpochTime(long sinceEpoxMillis)

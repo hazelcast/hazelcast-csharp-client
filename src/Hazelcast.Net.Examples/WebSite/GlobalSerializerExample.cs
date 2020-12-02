@@ -39,7 +39,7 @@ namespace Hazelcast.Examples.WebSite
             var formatter = new BinaryFormatter();
             var stream = new MemoryStream();
             formatter.Serialize(stream, obj);
-            output.WriteArray(stream.GetBuffer());
+            output.WriteByteArray(stream.GetBuffer());
         }
     }
 
@@ -50,7 +50,7 @@ namespace Hazelcast.Examples.WebSite
         {
             // create an Hazelcast client and connect to a server running on localhost
             var options = BuildExampleOptions(args);
-            options.Serialization.DefaultSerializer = new SerializerOptions
+            options.Serialization.GlobalSerializer = new SerializerOptions
             {
                 Creator = () => new GlobalSerializer()
             };

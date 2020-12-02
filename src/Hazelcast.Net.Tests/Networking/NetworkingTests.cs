@@ -510,9 +510,9 @@ namespace Hazelcast.Tests.Networking
         {
             const int origin = 1234;
             var bytes = new byte[4];
-            bytes.WriteInt(0, origin);
+            bytes.WriteInt(0, origin, Endianness.BigEndian);
             var buffer = new ReadOnlySequence<byte>(bytes);
-            var value = BytesExtensions.ReadInt(ref buffer);
+            var value = BytesExtensions.ReadInt(ref buffer, Endianness.BigEndian);
             NUnit.Framework.Assert.AreEqual(origin, value);
         }
 

@@ -27,12 +27,12 @@ namespace Hazelcast.Tests.Serialization
             SerializationServiceBuilder builder1 = new SerializationServiceBuilder(new NullLoggerFactory());
             builder1.SetPortableVersion(6);
             builder1.AddPortableFactory(1, new MyPortableFactory());
-            ISerializationService ss1 = builder1.Build();
+            SerializationService ss1 = builder1.Build();
 
             SerializationServiceBuilder builder2 = new SerializationServiceBuilder(new NullLoggerFactory());
             builder2.SetPortableVersion(6);
             builder2.AddPortableFactory(1, new MyPortableFactory());
-            ISerializationService ss2 = builder2.Build();
+            SerializationService ss2 = builder2.Build();
 
             //make sure ss2 cached class definition of Child
             ss2.ToData(new Child("ubeyd"));

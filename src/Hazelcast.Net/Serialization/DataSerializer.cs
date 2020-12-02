@@ -64,7 +64,7 @@ namespace Hazelcast.Serialization
             var id = 0;
             try
             {
-                var identified = input.ReadBool();
+                var identified = input.ReadBoolean();
                 if (!identified)
                     throw new SerializationException("Non-identified DataSerializable is not supported by .NET client. " +
                                                               "Please use IIdentifiedDataSerializable instead.");
@@ -92,9 +92,9 @@ namespace Hazelcast.Serialization
         /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, IIdentifiedDataSerializable obj)
         {
-            output.Write(true); // identified flag
-            output.Write(obj.FactoryId);
-            output.Write(obj.ClassId);
+            output.WriteBoolean(true); // identified flag
+            output.WriteInt(obj.FactoryId);
+            output.WriteInt(obj.ClassId);
             obj.WriteData(output);
         }
 

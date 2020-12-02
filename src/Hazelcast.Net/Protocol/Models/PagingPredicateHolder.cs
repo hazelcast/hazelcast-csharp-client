@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.Models
             PartitionKeyData = partitionKeyData;
         }
 
-        public static PagingPredicateHolder Of(IPredicate predicate, ISerializationService serializationService)
+        public static PagingPredicateHolder Of(IPredicate predicate, SerializationService serializationService)
         {
             if (predicate is null)
                 return null;
@@ -71,7 +71,7 @@ namespace Hazelcast.Protocol.Models
             throw new InvalidOperationException("Predicate is neither a PartitionPredicate nor a PagingPredicate.");
         }
 
-        private static PagingPredicateHolder BuildHolder(ISerializationService serializationService,
+        private static PagingPredicateHolder BuildHolder(SerializationService serializationService,
             PagingPredicate pagingPredicate, IData partitionKeyData)
         {
             var anchorList = pagingPredicate.AnchorList;

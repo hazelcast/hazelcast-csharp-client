@@ -95,17 +95,13 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[8];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[]) null).WriteChar(2, 'x'));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteChar(-1, 'x'));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteChar(7, 'x'));
-
-            bytes.WriteChar(2, 'x');
+            bytes.WriteChar(2, 'x', Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 0, 120, 0, 0, 0, 0);
 
             bytes.WriteChar(2, 'x', Endianness.LittleEndian);
             AssertBytes(bytes, 0, 0, 120, 0, 0, 0, 0, 0);
 
-            bytes.WriteChar(2, '❤');
+            bytes.WriteChar(2, '❤', Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 39, 100, 0, 0, 0, 0);
 
             bytes.WriteChar(2, '❤', Endianness.LittleEndian);
@@ -117,17 +113,17 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[] { 0, 0, 0, 120, 0 };
 
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadChar(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadChar(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadChar(7));
+            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadChar(2, Endianness.BigEndian));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadChar(-1, Endianness.BigEndian));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadChar(7, Endianness.BigEndian));
 
-            Assert.That(bytes.ReadChar(2), Is.EqualTo('x'));
+            Assert.That(bytes.ReadChar(2, Endianness.BigEndian), Is.EqualTo('x'));
 
             bytes = new byte[] { 0, 0, 120, 0 };
             Assert.That(bytes.ReadChar(2, Endianness.LittleEndian), Is.EqualTo('x'));
 
             bytes = new byte[] { 0, 0, 39, 100 };
-            Assert.That(bytes.ReadChar(2), Is.EqualTo('❤'));
+            Assert.That(bytes.ReadChar(2, Endianness.BigEndian), Is.EqualTo('❤'));
 
             bytes = new byte[] { 0, 0, 100, 39 };
             Assert.That(bytes.ReadChar(2, Endianness.LittleEndian), Is.EqualTo('❤'));
@@ -138,11 +134,7 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[8];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteInt(2, 123456789));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteInt(-1, 123456789));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteInt(7, 123456789));
-
-            bytes.WriteInt(2, 123456789);
+            bytes.WriteInt(2, 123456789, Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 7, 91, 205, 21, 0);
 
             bytes.WriteInt(2, 123456789, Endianness.LittleEndian);
@@ -157,11 +149,7 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[] { 0, 0, 7, 91, 205, 21, 0 };
 
-            Assert.Throws<ArgumentNullException>(() => _= ((byte[])null).ReadInt(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadInt(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadInt(7));
-
-            Assert.That(bytes.ReadInt(2), Is.EqualTo(123456789));
+            Assert.That(bytes.ReadInt(2, Endianness.BigEndian), Is.EqualTo(123456789));
 
             bytes = new byte[] { 0, 0, 21, 205, 91, 7, 0 };
             Assert.That(bytes.ReadInt(2, Endianness.LittleEndian), Is.EqualTo(123456789));
@@ -174,11 +162,9 @@ namespace Hazelcast.Tests.Core
             var bytes = new byte[] { 0 };
             var sequence = new ReadOnlySequence<byte>(bytes);
 
-            Assert.Throws<ArgumentException>(() => _ = BytesExtensions.ReadInt(ref sequence));
-
             bytes = new byte[] { 7, 91, 205, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             sequence = new ReadOnlySequence<byte>(bytes);
-            Assert.That(BytesExtensions.ReadInt(ref sequence), Is.EqualTo(123456789));
+            Assert.That(BytesExtensions.ReadInt(ref sequence, Endianness.BigEndian), Is.EqualTo(123456789));
             Assert.That(sequence.Length, Is.EqualTo(12));
 
             bytes = new byte[] { 21, 205, 91, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -192,7 +178,7 @@ namespace Hazelcast.Tests.Core
             var lastSegment = firstSegment.Append(bytes2);
 
             sequence = new ReadOnlySequence<byte>(firstSegment, 0, lastSegment, lastSegment.Memory.Length);
-            Assert.That(BytesExtensions.ReadInt(ref sequence), Is.EqualTo(123456789));
+            Assert.That(BytesExtensions.ReadInt(ref sequence, Endianness.BigEndian), Is.EqualTo(123456789));
             Assert.That(sequence.Length, Is.EqualTo(12));
         }
 
@@ -204,14 +190,14 @@ namespace Hazelcast.Tests.Core
 
             try
             {
-                _ = span.ReadInt();
+                _ = span.ReadInt(Endianness.BigEndian);
                 Assert.Fail("Expected an exception.");
             }
             catch (ArgumentException) { /* expected */ }
 
             bytes = new byte[] { 7, 91, 205, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             span = new ReadOnlySpan<byte>(bytes);
-            Assert.That(span.ReadInt(), Is.EqualTo(123456789));
+            Assert.That(span.ReadInt(Endianness.BigEndian), Is.EqualTo(123456789));
 
             bytes = new byte[] { 21, 205, 91, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             span = new ReadOnlySpan<byte>(bytes);
@@ -219,22 +205,12 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void WriteIntEnum()
+        public void WriteIntLEnum()
         {
             var bytes = new byte[8];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteInt(2, SomeEnum.Value1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteInt(-1, SomeEnum.Value1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteInt(7, SomeEnum.Value1));
-
-            bytes.WriteInt(2, SomeEnum.Value1);
-            AssertBytes(bytes, 0, 0, 7, 91, 205, 21, 0);
-
-            bytes.WriteInt(2, SomeEnum.Value1, Endianness.LittleEndian);
-            AssertBytes(bytes, 0, 0, 21, 205, 91, 7, 0);
-
             bytes.WriteIntL(2, SomeEnum.Value1);
-            AssertBytes(bytes, 0, 0, 21, 205, 91, 7, 0);
+            AssertBytes(bytes, 0, 0, 7, 91, 205, 21, 0);
         }
 
         [Test]
@@ -242,11 +218,7 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[8];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteShort(2, 12345));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteShort(-1, 12345));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteShort(7, 12345));
-
-            bytes.WriteShort(2, 12345);
+            bytes.WriteShort(2, 12345, Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 48, 57, 0, 0, 0);
 
             bytes.WriteShort(2, 12345, Endianness.LittleEndian);
@@ -258,11 +230,11 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[] { 0, 0, 48, 57, 0, 0, 0 };
 
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadShort(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadShort(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadShort(7));
+            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadShort(2, Endianness.BigEndian));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadShort(-1, Endianness.BigEndian));
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadShort(7, Endianness.BigEndian));
 
-            Assert.That(bytes.ReadShort(2), Is.EqualTo(12345));
+            Assert.That(bytes.ReadShort(2, Endianness.BigEndian), Is.EqualTo(12345));
 
             bytes = new byte[] { 0, 0, 57, 48, 0, 0, 0 };
             Assert.That(bytes.ReadShort(2, Endianness.LittleEndian), Is.EqualTo(12345));
@@ -276,14 +248,14 @@ namespace Hazelcast.Tests.Core
 
             try
             {
-                _ = span.ReadShort();
+                _ = span.ReadShort(Endianness.BigEndian);
                 Assert.Fail("Expected an exception.");
             }
             catch (ArgumentException) { /* expected */ }
 
             bytes = new byte[] { 48, 57, 0, 0, 0 };
             span = new ReadOnlySpan<byte>(bytes);
-            Assert.That(span.ReadShort(), Is.EqualTo(12345));
+            Assert.That(span.ReadShort(Endianness.BigEndian), Is.EqualTo(12345));
 
             bytes = new byte[] { 57, 48, 0, 0, 0 };
             span = new ReadOnlySpan<byte>(bytes);
@@ -295,11 +267,7 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[8];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteUShort(2, 12345));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUShort(-1, 12345));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUShort(7, 12345));
-
-            bytes.WriteUShort(2, 12345);
+            bytes.WriteUShort(2, 12345, Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 48, 57, 0, 0, 0);
 
             bytes.WriteUShort(2, 12345, Endianness.LittleEndian);
@@ -311,11 +279,7 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[] { 0, 0, 48, 57, 0, 0, 0 };
 
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadUShort(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadUShort(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadUShort(7));
-
-            Assert.That(bytes.ReadUShort(2), Is.EqualTo(12345));
+            Assert.That(bytes.ReadUShort(2, Endianness.BigEndian), Is.EqualTo(12345));
 
             bytes = new byte[] { 0, 0, 57, 48, 0, 0, 0 };
             Assert.That(bytes.ReadUShort(2, Endianness.LittleEndian), Is.EqualTo(12345));
@@ -327,11 +291,11 @@ namespace Hazelcast.Tests.Core
             var bytes = new byte[] { 0 };
             var sequence = new ReadOnlySequence<byte>(bytes);
 
-            Assert.Throws<ArgumentException>(() => _ = BytesExtensions.ReadUShort(ref sequence));
+            Assert.Throws<ArgumentException>(() => _ = BytesExtensions.ReadUShort(ref sequence, Endianness.BigEndian));
 
             bytes = new byte[] { 48, 57, 0, 0, 0 };
             sequence = new ReadOnlySequence<byte>(bytes);
-            Assert.That(BytesExtensions.ReadUShort(ref sequence), Is.EqualTo(12345));
+            Assert.That(BytesExtensions.ReadUShort(ref sequence, Endianness.BigEndian), Is.EqualTo(12345));
             Assert.That(sequence.Length, Is.EqualTo(3));
 
             bytes = new byte[] { 57, 48, 0, 0, 0 };
@@ -345,7 +309,7 @@ namespace Hazelcast.Tests.Core
             var lastSegment = firstSegment.Append(bytes2);
 
             sequence = new ReadOnlySequence<byte>(firstSegment, 0, lastSegment, lastSegment.Memory.Length);
-            Assert.That(BytesExtensions.ReadUShort(ref sequence), Is.EqualTo(12345));
+            Assert.That(BytesExtensions.ReadUShort(ref sequence, Endianness.BigEndian), Is.EqualTo(12345));
             Assert.That(sequence.Length, Is.EqualTo(3));
         }
 
@@ -357,14 +321,14 @@ namespace Hazelcast.Tests.Core
 
             try
             {
-                _ = span.ReadUShort();
+                _ = span.ReadUShort(Endianness.BigEndian);
                 Assert.Fail("Expected an exception.");
             }
             catch (ArgumentException) { /* expected */ }
 
             bytes = new byte[] { 48, 57, 0, 0, 0 };
             span = new ReadOnlySpan<byte>(bytes);
-            Assert.That(span.ReadUShort(), Is.EqualTo(12345));
+            Assert.That(span.ReadUShort(Endianness.BigEndian), Is.EqualTo(12345));
 
             bytes = new byte[] { 57, 48, 0, 0, 0 };
             span = new ReadOnlySpan<byte>(bytes);
@@ -376,11 +340,7 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[16];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteLong(2, (long) int.MaxValue + 123456));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteLong(-1, (long)int.MaxValue + 123456));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteLong(14, (long)int.MaxValue + 123456));
-
-            bytes.WriteLong(2, (long)int.MaxValue + 123456);
+            bytes.WriteLong(2, (long)int.MaxValue + 123456, Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 0, 0, 0, 0, 128, 1, 226, 63, 0, 0, 0, 0, 0, 0);
 
             bytes.WriteLong(2, (long)int.MaxValue + 123456, Endianness.LittleEndian);
@@ -394,12 +354,7 @@ namespace Hazelcast.Tests.Core
         public void ReadLong()
         {
             var bytes = new byte[] { 0, 0, 0, 0, 0, 0, 128, 1, 226, 63, 0, 0, 0, 0, 0, 0 };
-
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadLong(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadLong(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadLong(15));
-
-            Assert.That(bytes.ReadLong(2), Is.EqualTo((long)int.MaxValue + 123456));
+            Assert.That(bytes.ReadLong(2, Endianness.BigEndian), Is.EqualTo((long)int.MaxValue + 123456));
 
             bytes = new byte[] { 0, 0, 63, 226, 1, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             Assert.That(bytes.ReadLong(2, Endianness.LittleEndian), Is.EqualTo((long)int.MaxValue + 123456));
@@ -411,11 +366,7 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[16];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteFloat(2, (float) 0.0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteFloat(-1, (float)0.0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteFloat(14, (float)0.0));
-
-            bytes.WriteFloat(2, (float)int.MaxValue + 123456);
+            bytes.WriteFloat(2, (float)int.MaxValue + 123456, Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 79, 0, 1, 226, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
             bytes.WriteFloat(2, (float)int.MaxValue + 123456, Endianness.LittleEndian);
@@ -426,12 +377,7 @@ namespace Hazelcast.Tests.Core
         public void ReadFloat()
         {
             var bytes = new byte[] { 0, 0, 79, 0, 1, 226, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadFloat(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadFloat(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadFloat(14));
-
-            Assert.That(bytes.ReadFloat(2), Is.EqualTo((float)int.MaxValue + 123456));
+            Assert.That(bytes.ReadFloat(2, Endianness.BigEndian), Is.EqualTo((float)int.MaxValue + 123456));
 
             bytes = new byte[] { 0, 0, 226, 1, 0, 79, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             Assert.That(bytes.ReadFloat(2, Endianness.LittleEndian), Is.EqualTo((float)int.MaxValue + 123456));
@@ -441,12 +387,7 @@ namespace Hazelcast.Tests.Core
         public void WriteDouble()
         {
             var bytes = new byte[16];
-
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteDouble(2, (float)0.0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteDouble(-1, (float)0.0));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteDouble(14, (float)0.0));
-
-            bytes.WriteDouble(2, (double)int.MaxValue + 123456);
+            bytes.WriteDouble(2, (double)int.MaxValue + 123456, Endianness.BigEndian);
             AssertBytes(bytes, 0, 0, 65, 224, 0, 60, 71, 224, 0, 0, 0, 0, 0, 0, 0, 0);
 
             bytes.WriteDouble(2, (double)int.MaxValue + 123456, Endianness.LittleEndian);
@@ -457,12 +398,7 @@ namespace Hazelcast.Tests.Core
         public void ReadDouble()
         {
             var bytes = new byte[] { 0, 0, 65, 224, 0, 60, 71, 224, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadDouble(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadDouble(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadDouble(14));
-
-            Assert.That(bytes.ReadDouble(2), Is.EqualTo((double)int.MaxValue + 123456));
+            Assert.That(bytes.ReadDouble(2, Endianness.BigEndian), Is.EqualTo((double)int.MaxValue + 123456));
 
             bytes = new byte[] { 0, 0, 0, 0, 224, 71, 60, 0, 224, 65, 0, 0, 0, 0, 0, 0 };
             Assert.That(bytes.ReadDouble(2, Endianness.LittleEndian), Is.EqualTo((double)int.MaxValue + 123456));
@@ -473,29 +409,8 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[24];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteGuid(2, Guid.Empty));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteGuid(-1, Guid.Empty));
-
-            bytes.WriteGuid(23, Guid.Empty);
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteGuid(23, Guid.NewGuid()));
-
             var guid = Guid.NewGuid();
             var values = guid.ToByteArray();
-
-            bytes.WriteGuid(2, guid);
-            AssertBytes(bytes, 0, 0, 0,
-                values[6], values[7], values[4], values[5],
-                values[0], values[1], values[2], values[3],
-                values[15], values[14], values[13], values[12],
-                values[11], values[10], values[9], values[8]);
-
-            bytes.WriteGuid(2, Guid.Empty);
-            AssertBytes(bytes, 0, 0, 1,
-                // not modified
-                values[6], values[7], values[4], values[5],
-                values[0], values[1], values[2], values[3],
-                values[15], values[14], values[13], values[12],
-                values[11], values[10], values[9], values[8]);
 
             // endianness is not an options for guids
             bytes.WriteGuidL(2, guid);
@@ -509,28 +424,16 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ReadGuid()
         {
-            var bytes = new byte[] { 0, 0, 1 };
-
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadGuid(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadGuid(-1));
-
-            Assert.That(bytes.ReadGuid(2), Is.EqualTo(Guid.Empty));
-
-            bytes = new byte[] { 0, 0, 0 };
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadGuid(2));
-
             var guid = Guid.NewGuid();
             var values = guid.ToByteArray();
-            bytes = new byte[] { 0, 0, 0,
+            var bytes = new byte[] { 0, 0, 0,
                 values[6], values[7], values[4], values[5],
                 values[0], values[1], values[2], values[3],
                 values[15], values[14], values[13], values[12],
                 values[11], values[10], values[9], values[8] };
-            Assert.That(bytes.ReadGuid(2), Is.EqualTo(guid));
             Assert.That(bytes.ReadGuidL(2), Is.EqualTo(guid));
 
             bytes = new byte[] { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            Assert.That(bytes.ReadGuid(2), Is.EqualTo(Guid.Empty));
             Assert.That(bytes.ReadGuidL(2), Is.EqualTo(Guid.Empty));
         }
 
@@ -548,88 +451,6 @@ namespace Hazelcast.Tests.Core
             Assert.That(Encoding.UTF8.GetString(encodingBytes), Is.EqualTo(s));
         }
 
-        [Test]
-        public void WriteUtf8Char()
-        {
-            var bytes = new byte[8];
-
-            var pos = 0;
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteUtf8Char(ref pos, Utf8Char.OneByte));
-            pos = -1;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.OneByte));
-            pos = 8;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.OneByte));
-            pos = 7;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.TwoBytes));
-            pos = 6;
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.ThreeBytes));
-
-            pos = 2;
-            bytes.WriteUtf8Char(ref pos, Utf8Char.OneByte);
-            Assert.That(pos, Is.EqualTo(3));
-            AssertBytes(bytes, 0, 0, 0x78, 0, 0, 0, 0, 0);
-
-            pos = 2;
-            bytes.WriteUtf8Char(ref pos, Utf8Char.TwoBytes);
-            Assert.That(pos, Is.EqualTo(4));
-            AssertBytes(bytes, 0, 0, 0xc3, 0xa3, 0, 0, 0, 0);
-
-            pos = 2;
-            bytes.WriteUtf8Char(ref pos, Utf8Char.ThreeBytes);
-            Assert.That(pos, Is.EqualTo(5));
-            AssertBytes(bytes, 0, 0, 0xe0, 0xa3, 0x9f, 0, 0, 0);
-
-            // cannot write surrogate pairs as chars!
-            pos = 2;
-            Assert.Throws<InvalidOperationException>(() => bytes.WriteUtf8Char(ref pos, Utf8Char.FourBytesH));
-
-            // must write as string!
-            pos = 2;
-            bytes.WriteUtf8Chars(ref pos, Utf8Char.FourBytes);
-            Assert.That(pos, Is.EqualTo(6));
-            AssertBytes(bytes, 0, 0, 0xf0, 0x9f, 0x98, 0x81, 0, 0);
-        }
-
-        [Test]
-        public void ReadUtf8Char()
-        {
-            var pos = 0;
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[]) null).ReadUtf8Char(ref pos));
-            var bytes = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0x78 };
-            pos = 8;
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadUtf8Char(ref pos));
-            bytes = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0xc3 };
-            pos = 7;
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadUtf8Char(ref pos));
-            bytes = new byte[] { 0, 0, 0, 0, 0, 0, 0xe0, 0xa3 };
-            pos = 6;
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadUtf8Char(ref pos));
-
-            bytes = new byte[] { 0, 0, 0x78, 0, 0, 0, 0, 0 };
-            pos = 2;
-            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char.OneByte));
-            Assert.That(pos, Is.EqualTo(3));
-
-            bytes = new byte[] { 0, 0, 0xc3, 0xe3, 0, 0, 0, 0 };
-            pos = 2;
-            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char.TwoBytes));
-            Assert.That(pos, Is.EqualTo(4));
-
-            bytes = new byte[] { 0, 0, 0xe0, 0xa3, 0x9f, 0, 0, 0 };
-            pos = 2;
-            Assert.That(bytes.ReadUtf8Char(ref pos), Is.EqualTo(Utf8Char.ThreeBytes));
-            Assert.That(pos, Is.EqualTo(5));
-
-            // cannot read surrogate pairs as chars!
-            bytes = new byte[] { 0, 0, 0xf0, 0x9f, 0x98, 0x81, 0, 0 };
-            pos = 2;
-            Assert.Throws<InvalidOperationException>(() => _ = bytes.ReadUtf8Char(ref pos));
-
-            // must read as string!
-            // with a length of 2 chars
-            pos = 2;
-            Assert.That(bytes.ReadUtf8String(ref pos, 2), Is.EqualTo(Utf8Char.FourBytes));
-        }
 
         [Test]
         public void FillSpan()
@@ -695,19 +516,6 @@ namespace Hazelcast.Tests.Core
             span.Fill(ref sequence);
             Assert.That(sequence.Length, Is.EqualTo(2));
             for (var i = 0; i < 8; i++) Assert.That(bytes[i], Is.EqualTo(i));
-        }
-
-        [Test]
-        public void ResolveEndianness()
-        {
-            Assert.That(Endianness.LittleEndian.Resolve(), Is.EqualTo(Endianness.LittleEndian));
-            Assert.That(Endianness.BigEndian.Resolve(), Is.EqualTo(Endianness.BigEndian));
-            Assert.That(Endianness.Unspecified.Resolve(), Is.EqualTo(Endianness.BigEndian));
-
-            Assert.Throws<NotSupportedException>(() => _ = ((Endianness) 666).Resolve());
-
-            Assert.That(Endianness.Native.Resolve(), Is.EqualTo(EndiannessExtensions.NativeEndianness));
-            Assert.That(EndiannessExtensions.NativeEndianness, Is.EqualTo(BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian));
         }
 
         private static void AssertBytes(byte[] bytes, params byte[] values)

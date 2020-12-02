@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HMapWithCache(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory)
+        public HMapWithCache(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory)
             : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
         {
             _cache = cache;

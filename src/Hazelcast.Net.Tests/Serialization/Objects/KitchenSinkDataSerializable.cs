@@ -51,29 +51,30 @@ namespace Hazelcast.Tests.Serialization.Objects
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(Bool);
-            output.WriteArray(BoolArray);
-            output.Write(Byte);
-            output.WriteArray(ByteArray);
-            output.Write(Char);
-            output.WriteArray(CharArray);
-            output.Write(Short);
-            output.WriteArray(ShortArray);
-            output.Write(Int);
-            output.WriteArray(IntArray);
-            output.Write(Long);
-            output.WriteArray(LongArray);
-            output.Write(Float);
-            output.WriteArray(FloatArray);
-            output.Write(Double);
-            output.WriteArray(DoubleArray);
+            output.WriteBoolean(Bool);
+            output.WriteBooleanArray(BoolArray);
+            output.WriteByte(Byte);
+            output.WriteByteArray(ByteArray);
+            output.WriteChar(Char);
+            output.WriteCharArray(CharArray);
+            output.WriteShort(Short);
+            output.WriteShortArray(ShortArray);
+            output.WriteInt(Int);
+            output.WriteIntArray(IntArray);
+            output.WriteLong(Long);
+            output.WriteLongArray(LongArray);
+            output.WriteFloat(Float);
+            output.WriteFloatArray(FloatArray);
+            output.WriteDouble(Double);
+            output.WriteDoubleArray(DoubleArray);
             output.WriteObject(Serializable);
             //output.WriteObject(SerializableArray);
             //output.WriteObject(Portable);
             //output.WriteObject(PortableArray);
-            output.WriteAsCharArray(Chars);
-            output.Write(String);
-            output.WriteArray(StringArray);
+            output.WriteInt(Chars.Length);
+            output.WriteChars(Chars);
+            output.WriteUTF(String);
+            output.WriteUTFArray(StringArray);
             output.WriteObject(DateTime);
         }
 
@@ -83,8 +84,8 @@ namespace Hazelcast.Tests.Serialization.Objects
 
         public void ReadData(IObjectDataInput input)
         {
-            Bool = input.ReadBool();
-            BoolArray = input.ReadBoolArray();
+            Bool = input.ReadBoolean();
+            BoolArray = input.ReadBooleanArray();
             Byte = input.ReadByte();
             ByteArray = input.ReadByteArray();
             Char = input.ReadChar();
@@ -104,8 +105,8 @@ namespace Hazelcast.Tests.Serialization.Objects
             //Portable = input.ReadObject<IPortable>();
             //input.ReadObject(PortableArray);
             Chars = new string(input.ReadCharArray());
-            String = input.ReadString();
-            StringArray = input.ReadStringArray();
+            String = input.ReadUTF();
+            StringArray = input.ReadUTFArray();
             DateTime = input.ReadObject<DateTime>();
         }
 

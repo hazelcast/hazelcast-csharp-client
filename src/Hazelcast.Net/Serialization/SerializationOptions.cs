@@ -82,12 +82,13 @@ namespace Hazelcast.Serialization
             PortableFactories = new List<FactoryOptions<IPortableFactory>>(other.PortableFactories);
             DataSerializableFactories = new List<FactoryOptions<IDataSerializableFactory>>(other.DataSerializableFactories);
 
-            DefaultSerializer = other.DefaultSerializer?.Clone();
+            GlobalSerializer = other.GlobalSerializer?.Clone();
             Serializers = new List<SerializerOptions>(other.Serializers);
         }
 
+
         /// <summary>
-        /// Gets or sets the <see cref="Endianness"/>.
+        /// Gets or sets the <see cref="Endianness"/>. This value should match the server configuration.
         /// </summary>
         public Endianness Endianness { get; set; } = Endianness.BigEndian;
 
@@ -212,7 +213,7 @@ namespace Hazelcast.Serialization
         #region Serializers
 
         [BinderIgnore]
-        public SerializerOptions DefaultSerializer { get; set; }
+        public SerializerOptions GlobalSerializer { get; set; }
 
 #pragma warning disable IDE0051 // Remove unused private members - used by binding
         [BinderIgnore(false)]
@@ -222,7 +223,7 @@ namespace Hazelcast.Serialization
             get => default;
             set
             {
-                DefaultSerializer = new SerializerOptions
+                GlobalSerializer = new SerializerOptions
                 {
                     OverrideClr = value.OverrideClr,
                     Creator = () => ServiceFactory.CreateInstance<ISerializer>(value.TypeName, value.Args)

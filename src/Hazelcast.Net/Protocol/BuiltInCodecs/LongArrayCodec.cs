@@ -27,7 +27,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
             for (var i = 0; i < collection.Length; i++)
             {
-                frame.Bytes.WriteLong(i * BytesExtensions.SizeOfLong, collection[i]);
+                frame.Bytes.WriteLongL(i * BytesExtensions.SizeOfLong, collection[i]);
             }
 
             clientMessage.Append(frame);
@@ -44,7 +44,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new long[itemCount];
             for (var i = 0; i < itemCount; i++)
             {
-                result[i] = frame.Bytes.ReadLong(i * BytesExtensions.SizeOfLong);
+                result[i] = frame.Bytes.ReadLongL(i * BytesExtensions.SizeOfLong);
             }
             return result;
         }

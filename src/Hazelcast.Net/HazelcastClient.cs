@@ -48,7 +48,7 @@ namespace Hazelcast
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HazelcastClient(HazelcastOptions options, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HazelcastClient(HazelcastOptions options, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
@@ -104,9 +104,9 @@ namespace Hazelcast
         public bool IsConnected => Cluster.IsConnected;
 
         /// <summary>
-        /// Gets the <see cref="ISerializationService"/>.
+        /// Gets the <see cref="SerializationService"/>.
         /// </summary>
-        public ISerializationService SerializationService { get; }
+        public SerializationService SerializationService { get; }
 
         /// <summary>
         /// Starts the client by connecting to the remote cluster.

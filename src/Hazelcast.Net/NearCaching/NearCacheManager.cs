@@ -38,7 +38,7 @@ namespace Hazelcast.NearCaching
         private readonly ConcurrentAsyncDictionary<string, NearCache> _caches = new ConcurrentAsyncDictionary<string, NearCache>();
 
         private readonly Cluster _cluster;
-        private readonly ISerializationService _serializationService;
+        private readonly SerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly long _reconciliationIntervalMillis;
         private readonly NearCachingOptions _options;
@@ -49,7 +49,7 @@ namespace Hazelcast.NearCaching
         private long _lastAntiEntropyRunMillis;
         private volatile int _running;
 
-        public NearCacheManager(Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCachingOptions options)
+        public NearCacheManager(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory, NearCachingOptions options)
         {
             _cluster = cluster;
             _serializationService = serializationService;

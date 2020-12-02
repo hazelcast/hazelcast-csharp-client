@@ -43,8 +43,8 @@ namespace Hazelcast.Tests.Serialization.Objects
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(_runnerCount);
-            output.Write(_raceCount);
+            output.WriteInt(_runnerCount);
+            output.WriteInt(_raceCount);
             for (var i = 0; i < _runnerCount; i++)
             {
                 for (var j = 0; j < _raceCount; j++)

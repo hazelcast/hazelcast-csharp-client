@@ -267,7 +267,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestReadPortableArray()
         {
-            Assert.IsNull(reader.ReadPortableArray("NO SUCH FIELD"));
+            Assert.IsNull(reader.ReadPortableArray<MorphingPortable>("NO SUCH FIELD"));
         }
 
         [Test]

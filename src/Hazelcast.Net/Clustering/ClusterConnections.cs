@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
         private readonly ClusterClusterEvents _clusterClusterEvents;
         private readonly ClusterMembers _clusterMembers;
         private readonly Authenticator _authenticator;
-        private readonly ISerializationService _serializationService;
+        private readonly SerializationService _serializationService;
 
         private readonly Func<ValueTask> _terminateAsync;
 
@@ -54,7 +54,7 @@ namespace Hazelcast.Clustering
         private Task _clusterMembersTask; // the task that connects clients for all members of the cluster
         private CancellationTokenSource _clusterMembersCancel; // cancellation for _clusterMemberTask
 
-        public ClusterConnections(ClusterState clusterState, ClusterClusterEvents clusterClusterEvents, ClusterEvents clusterEvents, ClusterMembers clusterMembers, ISerializationService serializationService, Func<ValueTask> terminateAsync)
+        public ClusterConnections(ClusterState clusterState, ClusterClusterEvents clusterClusterEvents, ClusterEvents clusterEvents, ClusterMembers clusterMembers, SerializationService serializationService, Func<ValueTask> terminateAsync)
         {
             _clusterState = clusterState;
             _clusterClusterEvents = clusterClusterEvents;

@@ -34,16 +34,14 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            _attributeName = input.ReadString();
-            _regex = input.ReadString();
+            _attributeName = input.ReadUTF();
+            _regex = input.ReadUTF();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-            output.Write(_attributeName);
-            output.Write(_regex);
+            output.WriteUTF(_attributeName);
+            output.WriteUTF(_regex);
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

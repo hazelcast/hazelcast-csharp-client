@@ -39,10 +39,10 @@ namespace Hazelcast.Tests.Projections
             Assert.Throws<ArgumentNullException>(() => p.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => p.ReadData(null));
 
-            using var output = new ByteArrayObjectDataOutput(256, null, Endianness.Unspecified);
+            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian);
             p.WriteData(output);
 
-            using var input = new ByteArrayObjectDataInput(output.Buffer, null, Endianness.Unspecified);
+            using var input = new ObjectDataInput(output.Buffer, null, Endianness.BigEndian);
 
             p = new SingleAttributeProjection();
             p.ReadData(input);

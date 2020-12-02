@@ -39,28 +39,5 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         /// <returns>true if this endianness is 'little-endian'; otherwise false.</returns>
         public static bool IsLittleEndian(this Endianness endianness) => endianness == Endianness.LittleEndian;
-
-        /// <summary>
-        /// Resolves an endianness.
-        /// </summary>
-        /// <param name="endianness">The endianness.</param>
-        /// <param name="defaultValue">An optional default value.</param>
-        /// <returns>The <paramref name="endianness"/> if it is specified, else the <paramref name="defaultValue"/>.</returns>
-        public static Endianness Resolve(this Endianness endianness, Endianness defaultValue = Endianness.BigEndian)
-        {
-            // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
-            switch (endianness)
-            {
-                case Endianness.Unspecified:
-                    return defaultValue;
-                case Endianness.Native:
-                    return NativeEndianness;
-                case Endianness.LittleEndian:
-                case Endianness.BigEndian:
-                    return endianness;
-                default:
-                    throw new NotSupportedException();
-            }
-        }
     }
 }

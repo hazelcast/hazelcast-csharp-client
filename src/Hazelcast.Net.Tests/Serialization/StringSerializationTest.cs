@@ -34,7 +34,7 @@ namespace Hazelcast.Tests.Serialization
         private const int TestStrSize = 1 << 20;
         private static readonly byte[] TestDataBytesAll = Encoding.UTF8.GetBytes(TestDataAll);
         private static readonly char[] AllChars;
-        private ISerializationService _serializationService;
+        private SerializationService _serializationService;
 
         static StringSerializationTest()
         {
@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Serialization
             objectDataOutput.Write(null);
             var bytes = objectDataOutput.ToByteArray();
             var objectDataInput = _serializationService.CreateObjectDataInput(bytes);
-            var decodedStr = objectDataInput.ReadString();
+            var decodedStr = objectDataInput.ReadUTF();
             Assert.IsNull(decodedStr);
         }
 
@@ -177,11 +177,11 @@ namespace Hazelcast.Tests.Serialization
         {
             var bytes = new byte[3 * BytesExtensions.SizeOfInt + input.Length];
             var pos = 0;
-            bytes.WriteInt(pos, 0);
+            bytes.WriteInt(pos, 0, Endianness.BigEndian);
             pos += BytesExtensions.SizeOfInt;
-            bytes.WriteInt(pos, SerializationConstants.ConstantTypeString);
+            bytes.WriteInt(pos, SerializationConstants.ConstantTypeString, Endianness.BigEndian);
             pos += BytesExtensions.SizeOfInt;
-            bytes.WriteInt(pos, length);
+            bytes.WriteInt(pos, length, Endianness.BigEndian);
             pos += BytesExtensions.SizeOfInt;
             input.CopyTo(bytes, pos);
             return bytes;

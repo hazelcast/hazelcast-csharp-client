@@ -30,20 +30,5 @@ namespace Hazelcast.Tests.Core
             Assert.That(Endianness.LittleEndian.IsBigEndian(), Is.False);
             Assert.That(Endianness.LittleEndian.IsLittleEndian(), Is.True);
         }
-
-        [Test]
-        public void Resolve()
-        {
-            Assert.That(Endianness.Unspecified.Resolve(), Is.EqualTo(Endianness.BigEndian));
-            Assert.That(Endianness.Unspecified.Resolve(Endianness.LittleEndian), Is.EqualTo(Endianness.LittleEndian));
-            Assert.That(Endianness.Unspecified.Resolve(Endianness.Unspecified), Is.EqualTo(Endianness.Unspecified));
-
-            Assert.That(Endianness.LittleEndian.Resolve(), Is.EqualTo(Endianness.LittleEndian));
-            Assert.That(Endianness.BigEndian.Resolve(Endianness.LittleEndian), Is.EqualTo(Endianness.BigEndian));
-
-            Assert.Throws<NotSupportedException>(() => ((Endianness) (-1)).Resolve());
-
-            Assert.That(Endianness.Native.Resolve(), Is.EqualTo(EndiannessExtensions.NativeEndianness));
-        }
     }
 }

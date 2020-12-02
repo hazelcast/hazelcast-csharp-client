@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.Aggregating
     [TestFixture]
     public class AggregatingTests
     {
-        private ISerializationService _serializationService;
+        private SerializationService _serializationService;
 
         [SetUp]
         public void SetUp()
@@ -85,10 +85,10 @@ namespace Hazelcast.Tests.Aggregating
             Assert.Throws<ArgumentNullException>(() => aggregator.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => aggregator.ReadData(null));
 
-            using var output = new ByteArrayObjectDataOutput(1024, _serializationService, Endianness.Unspecified);
+            using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
             aggregator.WriteData(output);
 
-            using var input = new ByteArrayObjectDataInput(output.Buffer, _serializationService, Endianness.Unspecified);
+            using var input = new ObjectDataInput(output.Buffer, _serializationService, Endianness.BigEndian);
             var a = (AggregatorBase<TResult>) Activator.CreateInstance(aggregatorType);
             a.ReadData(input);
 

@@ -29,7 +29,7 @@ namespace Hazelcast.Protocol.Models
 
         internal IList<KeyValuePair<IData, IData>> AnchorDataList { get; }
 
-        internal IEnumerable<KeyValuePair<int, KeyValuePair<object, object>>> AsAnchorIterator(ISerializationService serializationService)
+        internal IEnumerable<KeyValuePair<int, KeyValuePair<object, object>>> AsAnchorIterator(SerializationService serializationService)
         {
             using var dataEntryIterator = AnchorDataList.GetEnumerator();
             foreach (var pageNumber in AnchorPageList)

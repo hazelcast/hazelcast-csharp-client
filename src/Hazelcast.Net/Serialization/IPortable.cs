@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Hazelcast.Serialization
 {
     /// <summary>Portable provides an alternative serialization method.</summary>

@@ -17,129 +17,63 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    // TODO: what is this?!
+    /// <summary>
+    /// Empty implementation of <see cref="IObjectDataOutput"/> used by <see cref="ClassDefinitionWriter"/> to
+    /// create a class definition by calling the WritePortable of the Portable instance.
+    /// </summary>
     internal sealed class EmptyObjectDataOutput : IObjectDataOutput
     {
-        public byte[] ToByteArray() => Array.Empty<byte>();
+        public Endianness Endianness => Endianness.BigEndian;
+        public void WriteBoolean(bool v) { }
 
-        public void WriteData(IData value)
-        {
-            // nothing
-        }
+        public void WriteByte(byte b) { }
 
-        public void WriteObject(object value)
-        {
-            // nothing
-        }
+        public void WriteSbyte(sbyte b) { }
 
-        public void Write(byte value)
-        {
-            // nothing
-        }
+        public void WriteChar(char v) { }
 
-        public void WriteArray(byte[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteShort(short v) { }
 
-        public void Write(short value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteUshort(ushort v) { }
 
-        public void WriteArray(short[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteInt(int v) { }
 
-        public void Write(int value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteLong(long v) { }
 
-        public void WriteArray(int[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteFloat(float v) { }
 
-        public void Write(long value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteDouble(double v) { }
 
-        public void WriteArray(long[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteUTF(string s) { }
 
-        public void Write(bool value)
-        {
-            // nothing
-        }
+        public void WriteChars(string s) { }
 
-        public void WriteArray(bool[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteBytes(string s) { }
 
-        public void Write(char value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteBooleanArray(bool[] booleans) { }
 
-        public void WriteArray(char[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteByteArray(byte[] bytes) { }
 
-        public void Write(float value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteCharArray(char[] chars) { }
 
-        public void WriteArray(float[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteShortArray(short[] values) { }
 
-        public void Write(double value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteIntArray(int[] ints) { }
 
-        public void WriteArray(double[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteLongArray(long[] longs) { }
 
-        public void Write(string value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteFloatArray(float[] values) { }
 
-        public void WriteAsCharArray(string value, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteDoubleArray(double[] values) { }
 
-        public void WriteAsBytes(string value)
-        {
-            // nothing
-        }
+        public void WriteUTFArray(string[] values) { }
 
-        public void WriteArray(string[] values, Endianness endianness = Endianness.Unspecified)
-        {
-            // nothing
-        }
+        public void WriteObject(object value) { }
 
-        public void WriteBytes(byte[] bytes)
-        {
-            // nothing
-        }
+        public void Write(byte[] b) { }
 
-        public void WriteBytes(byte[] bytes, int offset, int count)
-        {
-            // nothing
-        }
+        public void Write(byte[] b, int off, int len) { }
+
+        public byte[] ToByteArray(int padding = 0) => Array.Empty<byte>();
     }
 }

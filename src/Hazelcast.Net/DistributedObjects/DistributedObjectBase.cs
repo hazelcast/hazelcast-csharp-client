@@ -48,7 +48,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="cluster">A cluster.</param>
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        protected DistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        protected DistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             if (string.IsNullOrWhiteSpace(serviceName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(serviceName));
             ServiceName = serviceName;
@@ -118,7 +118,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Gets the serialization service.
         /// </summary>
-        protected ISerializationService SerializationService { get; }
+        protected SerializationService SerializationService { get; }
 
         /// <summary>
         /// Gets the cluster.

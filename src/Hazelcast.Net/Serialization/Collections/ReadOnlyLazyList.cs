@@ -30,13 +30,13 @@ namespace Hazelcast.Serialization.Collections
     internal sealed class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>
     {
         private readonly List<ReadOnlyLazyEntry<TValue>> _content = new List<ReadOnlyLazyEntry<TValue>>();
-        private readonly ISerializationService _serializationService;
+        private readonly SerializationService _serializationService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue}"/> class.
         /// </summary>
         /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyList(ISerializationService serializationService)
+        public ReadOnlyLazyList(SerializationService serializationService)
         {
             _serializationService = serializationService;
         }
@@ -46,7 +46,7 @@ namespace Hazelcast.Serialization.Collections
         /// </summary>
         /// <param name="valueData">Value data items.</param>
         /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyList(IEnumerable<IData> valueData, ISerializationService serializationService)
+        public ReadOnlyLazyList(IEnumerable<IData> valueData, SerializationService serializationService)
         {
             _serializationService = serializationService;
             foreach (var valueObject in valueData)
