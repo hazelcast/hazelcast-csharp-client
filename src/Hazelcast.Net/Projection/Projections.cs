@@ -30,8 +30,9 @@ namespace Hazelcast.Projection
         /// <summary>
         /// Projects multiple attributes.
         /// </summary>
+        /// <param name="attributePaths">The attribute paths.</param>
         /// <returns>A projection.</returns>
-        public static IProjection MultipleAttribute()
-            => new MultiAttributeProjection();
+        public static IProjection MultipleAttribute(params string[] attributePaths)
+            => new MultiAttributeProjection(attributePaths);
     }
 }
