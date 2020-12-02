@@ -54,7 +54,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // read
             Console.WriteLine("Query");
-            var values = await map.GetValuesAsync(Predicates.Query.LessThan("age", 6));
+            var values = await map.GetValuesAsync(Query.Predicates.LessThan("age", 6));
             Console.WriteLine($"Retrieved {values.Count} entries with 'age < 6'.");
             foreach (var value in values)
                 Console.WriteLine($"Entry value: {value}");

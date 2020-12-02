@@ -15,7 +15,7 @@
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Remote
         public async Task QueryOnNumberProperty_Succeeded()
         {
             await FillAsync();
-            var result = await _map.GetValuesAsync(Query.LessThan("age", 20));
+            var result = await _map.GetValuesAsync(Predicates.LessThan("age", 20));
             Assert.AreEqual(19, result.Count);
         }
 
@@ -87,7 +87,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync();
 
-            var result = await _map.GetValuesAsync(Query.EqualTo("email", "a@b.com"));
+            var result = await _map.GetValuesAsync(Predicates.EqualTo("email", "a@b.com"));
 
             Assert.AreEqual(1, result.Count);
         }
@@ -100,7 +100,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync();
 
-            var result = await _map.GetValuesAsync(Query.EqualTo("outer.inner", 24));
+            var result = await _map.GetValuesAsync(Predicates.EqualTo("outer.inner", 24));
 
             Assert.AreEqual(1, result.Count);
         }

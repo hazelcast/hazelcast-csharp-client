@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 
 namespace Hazelcast.DistributedObjects
 {

@@ -20,7 +20,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Data;
 using Hazelcast.Messaging;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Collections;

@@ -15,10 +15,10 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Aggregating;
+using Hazelcast.Aggregation;
 using Hazelcast.Core;
-using Hazelcast.Predicates;
-using Hazelcast.Projections;
+using Hazelcast.Query;
+using Hazelcast.Projection;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization.Collections;
 

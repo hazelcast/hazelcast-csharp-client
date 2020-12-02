@@ -14,9 +14,9 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Aggregating;
-using Hazelcast.Predicates;
-using Hazelcast.Projections;
+using Hazelcast.Aggregation;
+using Hazelcast.Query;
+using Hazelcast.Projection;
 
 namespace Hazelcast.DistributedObjects
 {

@@ -15,7 +15,7 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Examples.WebSite
@@ -86,11 +86,11 @@ namespace Hazelcast.Examples.WebSite
             // Add some users to the Distributed Map
             await GenerateUsers(users);
             // Create a Predicate from a String (a SQL like Where clause)
-            var sqlQuery = Query.Sql("active AND age BETWEEN 18 AND 21)");
+            var sqlQuery = Predicates.Sql("active AND age BETWEEN 18 AND 21)");
             // Creating the same Predicate as above but with a builder
-            var criteriaQuery = Query.WhereAll(
-                Query.EqualTo("active", true),
-                Query.Between("age", 18, 21)
+            var criteriaQuery = Predicates.All(
+                Predicates.EqualTo("active", true),
+                Predicates.Between("age", 18, 21)
             );
             // Get result collections using the two different Predicates
             var result1 = await users.GetValuesAsync(sqlQuery);

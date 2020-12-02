@@ -51,7 +51,7 @@ namespace Hazelcast.Examples.DistributedObjects
             // this works
             var result = await map.ExecuteAsync(
                 new UpdateEntryProcessor("value-UPDATED"),
-                Predicates.Query.Sql("this==value5"));
+                Query.Predicates.Sql("this==value5"));
 
             Console.WriteLine("Updated value result: " + result[5]);
             Console.WriteLine("The same value from  the map: " + await map.GetAsync(5));
