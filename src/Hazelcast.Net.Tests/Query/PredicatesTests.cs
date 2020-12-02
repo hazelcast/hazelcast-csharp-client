@@ -46,9 +46,9 @@ namespace Hazelcast.Tests.Query
 
             AssertPredicate(Predicates.Not(Predicates.True()), PredicateDataSerializerHook.NotPredicate);
 
-            AssertPredicate(Predicates.All(), PredicateDataSerializerHook.AndPredicate);
+            AssertPredicate(Predicates.And(), PredicateDataSerializerHook.AndPredicate);
 
-            AssertPredicate(Predicates.Any(), PredicateDataSerializerHook.OrPredicate);
+            AssertPredicate(Predicates.Or(), PredicateDataSerializerHook.OrPredicate);
 
             AssertPredicate(Predicates.EqualTo("name", 33), PredicateDataSerializerHook.EqualPredicate);
             AssertPredicate(Predicates.Value("name").IsEqualTo(33), PredicateDataSerializerHook.EqualPredicate);
@@ -98,22 +98,13 @@ namespace Hazelcast.Tests.Query
             Console.WriteLine("p2: " + p2);
             Assert.That(p2.ToString(), Is.EqualTo("(attribute == value)"));
 
-
-            var p3 = Predicates.EqualTo("attribute", "value").Not();
-            Console.WriteLine("p3: " + p3);
-            Assert.That(p3.ToString(), Is.EqualTo("NOT((attribute == value))"));
-
             var p4 = Predicates.Not(Predicates.EqualTo("attribute", "value"));
             Console.WriteLine("p4: " + p4);
             Assert.That(p4.ToString(), Is.EqualTo("NOT((attribute == value))"));
 
-            var p5 = Predicates.Value("attribute").IsNot().EqualTo("value");
-            Console.WriteLine("p5: " + p5);
-            Assert.That(p5.ToString(), Is.EqualTo("NOT((attribute == value))"));
-
-            var p6 = Predicates.All(
+            var p6 = Predicates.And(
                 Predicates.EqualTo("attribute1", "value1"),
-                Predicates.EqualTo("attribute2", "value2").Not());
+                Predicates.Not(Predicates.EqualTo("attribute2", "value2")));
             Console.WriteLine("p6: " + p6);
             Assert.That(p6.ToString(), Is.EqualTo("AND((attribute1 == value1), NOT((attribute2 == value2)))"));
         }

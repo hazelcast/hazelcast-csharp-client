@@ -71,7 +71,7 @@ namespace Hazelcast.Query
         /// </summary>
         /// <param name="predicates">The predicates.</param>
         /// <returns>A new predicate.</returns>
-        public static IPredicate All(params IPredicate[] predicates)
+        public static IPredicate And(params IPredicate[] predicates)
             => new AndPredicate(predicates);
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Hazelcast.Query
         /// </summary>
         /// <param name="predicates">The predicates.</param>
         /// <returns>A new predicate.</returns>
-        public static IPredicate Any(params IPredicate[] predicates)
+        public static IPredicate Or(params IPredicate[] predicates)
             => new OrPredicate(predicates);
 
         /// <summary>
