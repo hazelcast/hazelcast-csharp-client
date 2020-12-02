@@ -51,5 +51,10 @@ namespace Hazelcast
         /// </summary>
         /// <returns>The general Near Caching options.</returns>
         public NearCachingOptions NearCache { get; } = new NearCachingOptions();
+
+        /// <summary>
+        /// Gets or sets the configuration pattern matcher.
+        /// </summary>
+        public IPatternMatcher PatternMatcher { get; set; } = new MatchingPointPatternMatcher();
     }
 }

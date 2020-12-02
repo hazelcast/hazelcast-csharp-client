@@ -18,7 +18,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 

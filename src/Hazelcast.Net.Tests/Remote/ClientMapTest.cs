@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Tests.TestObjects;
@@ -437,7 +437,7 @@ namespace Hazelcast.Tests.Remote
 
             const string value = "valueX";
             var entryProcessor = new IdentifiedEntryProcessor(value);
-            var result = await dictionary.ExecuteAsync(entryProcessor, Predicate.Sql("this == value5"));
+            var result = await dictionary.ExecuteAsync(entryProcessor, Predicates.Sql("this == value5"));
             Assert.AreEqual(result.Count, 1);
             foreach (var resultKV in result)
             {
@@ -844,14 +844,14 @@ namespace Hazelcast.Tests.Remote
             var sid1 = await dictionary.SubscribeAsync(events => events
                     .EntryAdded((sender, args) => Interlocked.Increment(ref added1))
                     .EntryRemoved((sender, args) => Interlocked.Increment(ref removed1)),
-                Predicate.Sql("this == value1"),
+                Predicates.Sql("this == value1"),
                 false);
 
             var sid2 = await dictionary.SubscribeAsync(events => events
                 .EntryAdded((sender, args) => Interlocked.Increment(ref added2))
                 .EntryRemoved((sender, args) => Interlocked.Increment(ref removed2)),
                 "key3",
-                Predicate.Sql("this == value3"),
+                Predicates.Sql("this == value3"),
                 true);
 
             var sid3 = await dictionary.SubscribeAsync(events => events
@@ -917,7 +917,7 @@ namespace Hazelcast.Tests.Remote
             var sid2 = await dictionary.SubscribeAsync(events => events
                 .EntryAdded((sender, args) => Interlocked.Increment(ref added2))
                 .EntryRemoved((sender, args) => Interlocked.Increment(ref removed2)),
-                Predicate.Sql("this == value1"),
+                Predicates.Sql("this == value1"),
                 false
             );
 
@@ -1212,7 +1212,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillAsync(dictionary);
 
-            await dictionary.RemoveAllAsync(Predicate.Sql("this != value1"));
+            await dictionary.RemoveAllAsync(Predicates.Sql("this != value1"));
             Assert.AreEqual(1, (await dictionary.GetValuesAsync()).Count);
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
         }

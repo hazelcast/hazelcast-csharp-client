@@ -54,8 +54,8 @@
       // ?
       "defaultTimeoutMilliseconds": 1002,
 
-      // timeout for complete operations
-      "operationTimeoutMilliseconds": 1003
+      // timeout for complete invocations
+      "invocationTimeoutMilliseconds": 1003
     },
 
     // heartbeat options

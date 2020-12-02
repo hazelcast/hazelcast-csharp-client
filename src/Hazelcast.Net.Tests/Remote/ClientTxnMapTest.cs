@@ -16,7 +16,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Testing;
 using NUnit.Framework;
 

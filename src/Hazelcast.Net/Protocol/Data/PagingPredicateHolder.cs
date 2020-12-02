@@ -14,7 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.Data

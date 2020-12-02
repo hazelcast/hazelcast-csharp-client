@@ -22,7 +22,7 @@ namespace Hazelcast.Data
         /// <summary>
         /// Gets or sets the unique key.
         /// </summary>
-        public string UniqueKey { get; set; } = Predicates.Predicate.KeyConst;
+        public string UniqueKey { get; set; } = Query.Predicates.KeyName;
 
         /// <summary>
         /// Gets or sets the <see cref="UniqueKeyTransformation"/> which will be

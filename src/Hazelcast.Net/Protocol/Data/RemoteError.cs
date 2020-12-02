@@ -114,6 +114,11 @@ namespace Hazelcast.Protocol.Data
         StaleAppendRequestException = 92,
         NotLeaderException = 93,
         VersionMismatchException = 94,
+        NoSuchMethodError = 95,
+        NoSuchMethodException = 96,
+        NoSuchFieldError = 97,
+        NoSuchFieldException = 98,
+        NoClassDefinitionFound = 99,
 
         // These exception codes are reserved to by used by hazelcast-jet project
         JetExceptionsRangeStart = 500,

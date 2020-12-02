@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.NearCaching;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Testing;
 using NUnit.Framework;
 

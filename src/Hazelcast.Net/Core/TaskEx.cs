@@ -21,7 +21,7 @@ using Hazelcast.Exceptions;
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Provides utility methods for running <see cref="Task"/>.
+    /// Provides utility methods for running a <see cref="Task"/>.
     /// </summary>
     internal static class TaskEx
     {
@@ -37,6 +37,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static Task RunWithTimeout(Func<CancellationToken, Task> taskAction, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
@@ -56,6 +62,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static async Task RunWithTimeout(Func<CancellationToken, Task> taskAction, int timeoutMilliseconds, CancellationToken cancellationToken = default)
         {
@@ -106,6 +118,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static Task RunWithTimeout<TArg>(Func<TArg, CancellationToken, Task> taskAction, TArg arg, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
@@ -127,6 +145,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static async Task RunWithTimeout<TArg>(Func<TArg, CancellationToken, Task> taskAction, TArg arg, int timeoutMilliseconds, CancellationToken cancellationToken = default)
         {
@@ -176,6 +200,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static Task<TResult> RunWithTimeout<TResult>(Func<CancellationToken, Task<TResult>> taskAction, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
@@ -196,6 +226,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static async Task<TResult> RunWithTimeout<TResult>(Func<CancellationToken, Task<TResult>> taskAction, int timeoutMilliseconds, CancellationToken cancellationToken = default)
         {
@@ -241,6 +277,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static Task<TResult> RunWithTimeout<TArg, TResult>(Func<TArg, CancellationToken, Task<TResult>> taskAction, TArg arg, TimeSpan timeout, CancellationToken cancellationToken = default)
         {
@@ -263,6 +305,12 @@ namespace Hazelcast.Core
         /// <para>In case of a timeout, the <see cref="TaskTimeoutException"/> that is thrown contains a
         /// reference to the original task. Also, a continuation is added to the task, which observes its
         /// exceptions, thus making sure no unobserved exception can leak.</para>
+        /// <para>In case of a timeout, the cancellation token that is passed to the task action is
+        /// canceled, and it is expected that the task will behave and terminate nicely. The task is
+        /// <em>not</em> aborted. Conversely, cancelling the task is a technical .NET-level, client-side
+        /// operation, <em>not</em> a logical, application-level operation. Underlying cluster operations,
+        /// if any, are not "canceled" nor "rolled back" and could have partially be executed. The exact
+        /// state of the cluster after a cancellation is unspecified.</para>
         /// </remarks>
         public static async Task<TResult> RunWithTimeout<TResult, TArg>(Func<TArg, CancellationToken, Task<TResult>> taskAction, TArg arg, int timeoutMilliseconds, CancellationToken cancellationToken = default)
         {

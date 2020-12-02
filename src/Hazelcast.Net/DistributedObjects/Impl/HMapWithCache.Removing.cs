@@ -30,7 +30,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Predicates;
+using Hazelcast.Query;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.DistributedObjects.Impl

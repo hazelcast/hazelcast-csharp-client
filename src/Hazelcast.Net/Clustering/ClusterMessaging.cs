@@ -235,7 +235,7 @@ namespace Hazelcast.Clustering
                 {
                     var connection = GetInvocationConnection(invocation);
                     if (connection == null) throw new ClientNotConnectedException();
-                    var timeoutMs = _clusterState.Options.Messaging.OperationTimeoutMilliseconds;
+                    var timeoutMs = _clusterState.Options.Messaging.InvocationTimeoutMilliseconds;
                     return await connection.SendAsync(invocation, timeoutMs, cancellationToken).CAF();
                 }
                 catch (TaskCanceledException)
