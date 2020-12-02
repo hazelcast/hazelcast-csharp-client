@@ -104,7 +104,7 @@ namespace Hazelcast.Data
         /// <summary>
         /// Gets the address map.
         /// </summary>
-        public IDictionary<EndpointQualifier, NetworkAddress> AddressMap { get; }
+        internal IDictionary<EndpointQualifier, NetworkAddress> AddressMap { get; }
 
         /// <inheritdoc />
         public override bool Equals(object obj)

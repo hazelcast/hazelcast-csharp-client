@@ -14,29 +14,32 @@
 
 namespace Hazelcast.Data
 {
+    /// <summary>
+    /// Defines transformations which can be applied to <see cref="BitmapIndexOptions.UniqueKey"/> values.
+    /// </summary>
     public enum UniqueKeyTransformation
     {
 #pragma warning disable CA1720 // Identifier contains type name - well, yes
 
-        /**
-         * Extracted unique key value is interpreted as an object value.
-         * Non-negative unique ID is assigned to every distinct object value.
-         */
+        /// <summary>
+        /// The unique key value is interpreted as an object value.
+        /// Non-negative unique ID is assigned to every distinct object value.
+        /// </summary>
         Object = 0,
 
-        /**
-         * Extracted unique key value is interpreted as a whole integer value of
-         * byte, short, int or long type. The extracted value is upcasted to
-         * long (if necessary) and unique non-negative ID is assigned to every
-         * distinct value.
-         */
+        /// <summary>
+        /// The unique key value is interpreted as a whole integer value of
+        /// byte, short, int or long type. The extracted value is upcasted to
+        /// long (if necessary) and unique non-negative ID is assigned to every
+        /// distinct value.
+        /// </summary>
         Long = 1,
 
-        /**
-         * Extracted unique key value is interpreted as a whole integer value of
-         * byte, short, int or long type. The extracted value is upcasted to
-         * long (if necessary) and the resulting value is used directly as an ID.
-         */
+        /// <summary>
+        /// The unique key value is interpreted as a whole integer value of
+        /// byte, short, int or long type. The extracted value is upcasted to
+        /// long (if necessary) and the resulting value is used directly as an ID.
+        /// </summary>
         Raw = 2
 
 #pragma warning restore CA1720

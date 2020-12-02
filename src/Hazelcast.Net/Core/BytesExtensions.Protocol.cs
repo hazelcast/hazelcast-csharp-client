@@ -16,7 +16,7 @@ using System;
 
 namespace Hazelcast.Core
 {
-    public static partial class BytesExtensions // Protocol
+    internal static partial class BytesExtensions // Protocol
     {
         // use little endian where it makes sense
         // for some types (byte, bool...) it just does not make sense

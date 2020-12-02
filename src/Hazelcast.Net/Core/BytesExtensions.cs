@@ -22,7 +22,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods to byte buffers.
     /// </summary>
-    public static partial class BytesExtensions
+    internal static partial class BytesExtensions
     {
         /// <summary>
         /// Gets the size of a <see cref="byte"/> value in arrays or sequences of bytes.

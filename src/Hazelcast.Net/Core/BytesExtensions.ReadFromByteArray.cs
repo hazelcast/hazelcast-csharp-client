@@ -13,10 +13,11 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 
 namespace Hazelcast.Core
 {
-    public static partial class BytesExtensions // Read from byte[]
+    internal static partial class BytesExtensions // Read from byte[]
     {
         /// <summary>
         /// Reads a <see cref="byte"/> value from an array of bytes.
@@ -263,12 +264,16 @@ namespace Hazelcast.Core
                 var b = bytes[position];
                 var x = b >> 4;
 
+                // 1 byte, 7 bits, represented as 0vvvvvvv
+                //                                ^^^^
                 if (x >= 0 && x <= 7)
                 {
                     position += 1;
                     return (char)b;
                 }
 
+                // 2 bytes, 11 bits, represented as 110vvvvv 10vvvvvv
+                //                                  ^^^^
                 if (x == 12 || x == 13)
                 {
                     if (bytes.Length < position + 2 * SizeOfByte)
@@ -280,6 +285,8 @@ namespace Hazelcast.Core
                     return (char)(first | second);
                 }
 
+                // 3 bytes, 16 bits, represented as 1110vvvv 10vvvvvv 10vvvvvv
+                //                                  ^^^^
                 if (x == 14)
                 {
                     if (bytes.Length < position + 3 * SizeOfByte)
@@ -296,6 +303,73 @@ namespace Hazelcast.Core
             }
         }
 
+        public static string ReadUtf8String(this byte[] bytes, ref int position, int length)
+        {
+            if (length == 0) return "";
+
+            var buffer = ArrayPool<char>.Shared.Rent(length);
+            try
+            {
+                bytes.ReadUtf8Chars(ref position, buffer, length);
+                return new string(buffer, 0, length);
+            }
+            finally
+            {
+                ArrayPool<char>.Shared.Return(buffer);
+            }
+        }
+
+        public static void ReadUtf8Chars(this byte[] bytes, ref int position, char[] buffer, int length)
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
+            if (length == 0) return;
+
+            if (position < 0 || bytes.Length < position + SizeOfByte)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            if (length > buffer.Length)
+                throw new ArgumentOutOfRangeException(nameof(length));
+
+            var i = 0;
+
+            while (i < length)
+            {
+                var b = bytes[position];
+                var x = b >> 4;
+
+                if (x <= 14)
+                {
+                    buffer[i++] = ReadUtf8Char(bytes, ref position);
+                }
+                else
+                {
+                    // surrogate pair
+
+                    // 4 bytes, 21 bits, represented as 11110vvv 10vvvvvv 10vvvvvv 10vvvvvv
+                    //                                  0xf0     0x80     0x80     0x80
+                    //                                      0x0f     0x3f     0x3f     0x3f
+
+                    if (bytes.Length < position + 4 * SizeOfByte)
+                        throw new ArgumentOutOfRangeException(nameof(position));
+
+                    var first = (b & 0x07) << 18;
+                    var second = (bytes[position + 1] & 0x3f) << 12;
+                    var third = (bytes[position + 2] & 0x3f) << 6;
+                    var fourth = bytes[position + 3] & 0x3f;
+                    position += 4;
+
+                    var v = first | second | third | fourth; // real unicode value
+
+                    // which we need to split on two chars
+                    v -= 0x10000;
+                    buffer[i++] = (char)(0xd800 + ((v & 0xffc00) >> 10)); // high 10 bits
+                    if (i == length)
+                        throw new ArgumentOutOfRangeException(nameof(length));
+                    buffer[i++] = (char)(0xdc00 + (v & 0x3ff)); // low 10 bits
+                }
+            }
+        }
 
 
         /// <summary>

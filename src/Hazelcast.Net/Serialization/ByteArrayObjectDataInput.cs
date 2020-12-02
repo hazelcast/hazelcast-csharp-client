@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
@@ -408,17 +407,11 @@ namespace Hazelcast.Serialization
             var length = ReadInt();
             if (length == ArraySerializer.NullArrayLength) return null;
 
-            var buffer = ArrayPool<char>.Shared.Rent(length);
-            try
-            {
-                for (var i = 0; i < length; i++)
-                    buffer[i] = _data.ReadUtf8Char(ref _position);
-                return new string(buffer, 0, length);
-            }
-            finally
-            {
-                ArrayPool<char>.Shared.Return(buffer);
-            }
+            // length is the length of the string, in chars
+            // each char can be 1, 2 or 3 bytes - surrogate pairs are reported as 2 chars
+            // note: this is consistent with Java
+
+            return length == 0 ? "" : _data.ReadUtf8String(ref _position, length);
         }
 
         /// <inheritdoc />

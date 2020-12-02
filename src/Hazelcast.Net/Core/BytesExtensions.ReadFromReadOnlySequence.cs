@@ -18,7 +18,7 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
-    public static partial class BytesExtensions // Read from ReadOnlySequence
+    internal static partial class BytesExtensions // Read from ReadOnlySequence
     {
         /// <summary>
         /// Reads an <see cref="ushort"/> value from a sequence of bytes, and slices the sequence accordingly.
