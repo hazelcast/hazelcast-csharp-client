@@ -17,7 +17,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast;
 using Hazelcast.Core;
 using Hazelcast.Events;
 using Hazelcast.Exceptions;
@@ -29,7 +28,8 @@ namespace Hazelcast.Clustering
 {
     internal class ClusterConnections : IAsyncDisposable
     {
-        private readonly AddressLocker _addressLocker = new AddressLocker();
+        // we don't need an address locker now, but we may in the future
+        //private readonly AddressLocker _addressLocker = new AddressLocker();
         private readonly SemaphoreSlim _onClosedMutex = new SemaphoreSlim(1);
 
         private readonly ClusterState _clusterState;
@@ -454,8 +454,8 @@ namespace Hazelcast.Clustering
         private async Task<Attempt<MemberConnection>> ConnectFirstAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // lock the address - can only connect once at a time per address
-            // TODO: pointless for a first connection, nothing else is connecting?
-            using var locked = _addressLocker.LockAsync(address);
+            // but! this is the first connection so nothing else can connect
+            //using var locked = _addressLocker.LockAsync(address);
 
             try
             {
@@ -487,15 +487,18 @@ namespace Hazelcast.Clustering
                 return Attempt.If(clientConnection.Active, clientConnection);
 
             // lock the address - can only connect once at a time per address
-            using var locked = _addressLocker.LockAsync(address);
+            // but! this is adding connections from ConnectAddresses which is sequential,
+            // so nothing else can connect
+            //using var locked = _addressLocker.LockAsync(address);
 
             // exit now if canceled
             if (cancellationToken.IsCancellationRequested)
                 return Attempt.Fail<MemberConnection>();
 
             // test again - maybe the address has been reconnected while we waited for the lock
-            if (_addressConnections.TryGetValue(address, out clientConnection))
-                return Attempt.If(clientConnection.Active, clientConnection);
+            // but! if nothing else can connect, this is pointless
+            //if (_addressConnections.TryGetValue(address, out clientConnection))
+            //    return Attempt.If(clientConnection.Active, clientConnection);
 
             // else actually connect
             try
