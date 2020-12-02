@@ -88,7 +88,7 @@ namespace Hazelcast.Examples.WebSite
             // Create a Predicate from a String (a SQL like Where clause)
             var sqlQuery = Predicates.Sql("active AND age BETWEEN 18 AND 21)");
             // Creating the same Predicate as above but with a builder
-            var criteriaQuery = Predicates.All(
+            var criteriaQuery = Predicates.And(
                 Predicates.EqualTo("active", true),
                 Predicates.Between("age", 18, 21)
             );

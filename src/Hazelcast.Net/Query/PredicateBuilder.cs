@@ -47,22 +47,6 @@ namespace Hazelcast.Query
 
 
         /// <summary>
-        /// Negates the next condition.
-        /// </summary>
-        /// <returns>A predicate builder.</returns>
-        public virtual IsNotPredicateBuilder IsNot()
-            => new IsNotPredicateBuilder(_name);
-
-        /// <summary>
-        /// Negates the next condition.
-        /// </summary>
-        /// <returns>A predicate builder.</returns>
-        public virtual DoesNotPredicateBuilder DoesNot()
-            => new DoesNotPredicateBuilder(_name);
-
-
-
-        /// <summary>
         /// Succeeds if the target value is between the specified inclusive bounds.
         /// </summary>
         /// <param name="lowerBound">The lower inclusive bound.</param>
