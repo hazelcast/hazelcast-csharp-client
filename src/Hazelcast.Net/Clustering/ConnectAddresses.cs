@@ -22,6 +22,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
+    /// <summary>
+    /// Connects addresses.
+    /// </summary>
     internal class ConnectAddresses : IAsyncDisposable
     {
         private readonly BufferBlock<NetworkAddress> _addresses = new BufferBlock<NetworkAddress>();
@@ -38,6 +41,11 @@ namespace Hazelcast.Clustering
         private volatile bool _draining;
         private volatile bool _pausing;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectAddresses"/> class.
+        /// </summary>
+        /// <param name="connect">The connect function.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
         public ConnectAddresses(Func<NetworkAddress, CancellationToken, Task> connect, ILoggerFactory loggerFactory)
         {
             _connect = connect ?? throw new ArgumentNullException(nameof(connect));
@@ -48,11 +56,16 @@ namespace Hazelcast.Clustering
             _connecting = ConnectAsync(_cancel.Token);
         }
 
+        // throws if this instance has been disposed
         private void ThrowIfDisposed()
         {
             if (_disposed > 0) throw new ObjectDisposedException(nameof(ConnectAddresses));
         }
 
+        /// <summary>
+        /// Waits for a pending connection, if any, then pauses the task.
+        /// </summary>
+        /// <returns></returns>
         public async ValueTask PauseAsync()
         {
             ThrowIfDisposed();
@@ -64,6 +77,11 @@ namespace Hazelcast.Clustering
             await _paused.WaitAsync().CAF();
         }
 
+        /// <summary>
+        /// Resumes the task.
+        /// </summary>
+        /// <param name="drain">Whether to drain the queue before resuming.</param>
+        /// <returns>A task that will complete when the task has resumed.</returns>
         public async ValueTask ResumeAsync(bool drain = false)
         {
             ThrowIfDisposed();
@@ -84,6 +102,10 @@ namespace Hazelcast.Clustering
             }
         }
 
+        /// <summary>
+        /// Adds an address to connect.
+        /// </summary>
+        /// <param name="address">The address to connect.</param>
         public void Add(NetworkAddress address)
         {
             ThrowIfDisposed();
@@ -94,6 +116,7 @@ namespace Hazelcast.Clustering
             _logger.LogWarning($"Failed to add an address ({address}).");
         }
 
+        // (background task loop) connect addresses
         private async Task ConnectAsync(CancellationToken cancellationToken)
         {
             // TODO: consider throttling?

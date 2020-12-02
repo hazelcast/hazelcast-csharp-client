@@ -113,7 +113,6 @@ namespace Hazelcast.Partitioning
         /// Notifies the partitioner of the partitions count.
         /// </summary>
         /// <param name="count">The partitions count.</param>
-        /// <returns>The known count.</returns>
         /// <remarks>
         /// <para>The specified <paramref name="count"/> must be either the first one,
         /// i.e. the partitioner does not know of partitions yet, or it must be equal

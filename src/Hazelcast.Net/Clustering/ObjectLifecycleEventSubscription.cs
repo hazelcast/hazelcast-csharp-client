@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Events;
 using Hazelcast.Protocol.Codecs;
 
@@ -39,21 +40,21 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleCodecEvent, null, LoggerFactory));
         }
 
-        internal Func<DistributedObjectCreatedEventArgs, ValueTask> OnObjectCreated { get; set; }
+        internal Func<DistributedObjectCreatedEventArgs, ValueTask> ObjectCreated { get; set; }
 
-        internal Func<DistributedObjectDestroyedEventArgs, ValueTask> OnObjectDestroyed { get; set; }
+        internal Func<DistributedObjectDestroyedEventArgs, ValueTask> ObjectDestroyed { get; set; }
 
         private ValueTask HandleCodecEvent(string name, string serviceName, string eventTypeName, Guid memberId, object state)
         {
             return eventTypeName switch
             {
-                "CREATED" => OnObjectCreated == null
+                "CREATED" => ObjectCreated == null
                     ? default
-                    : OnObjectCreated(new DistributedObjectCreatedEventArgs(serviceName, name, memberId)),
+                    : ObjectCreated.AwaitEach(new DistributedObjectCreatedEventArgs(serviceName, name, memberId)),
 
-                "DESTROYED" => OnObjectDestroyed == null
+                "DESTROYED" => ObjectDestroyed == null
                     ? default
-                    : OnObjectDestroyed(new DistributedObjectDestroyedEventArgs(serviceName, name, memberId)),
+                    : ObjectDestroyed.AwaitEach(new DistributedObjectDestroyedEventArgs(serviceName, name, memberId)),
 
                 _ => throw new NotSupportedException($"Event type \"{eventTypeName}\" is not supported.")
             };

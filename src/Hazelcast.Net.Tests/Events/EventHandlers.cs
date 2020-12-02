@@ -104,7 +104,7 @@ namespace Hazelcast.Tests.Events
 
             var handle = new HazelcastClientEventHandlers();
             handle
-                .ClientStateChanged((sender, args) => counts[0]++)
+                .StateChanged((sender, args) => counts[0]++)
                 .ConnectionOpened((sender, args) => counts[1]++)
                 .ConnectionClosed((sender, args) => counts[2]++)
                 .MembersUpdated((sender, args) => counts[3]++)
@@ -123,7 +123,7 @@ namespace Hazelcast.Tests.Events
             Assert.That(handlers.Count, Is.Zero);
 
             handle
-                .ClientStateChanged((sender, args) => { counts[0]++; return new ValueTask(); })
+                .StateChanged((sender, args) => { counts[0]++; return new ValueTask(); })
                 .ConnectionOpened((sender, args) => { counts[1]++; return new ValueTask(); })
                 .ConnectionClosed((sender, args) => { counts[2]++; return new ValueTask(); })
                 .MembersUpdated((sender, args) => { counts[3]++; return new ValueTask(); })

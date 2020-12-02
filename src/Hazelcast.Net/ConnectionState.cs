@@ -37,6 +37,11 @@ namespace Hazelcast
         /// <summary>
         /// The client has been disconnected and is reconnecting.
         /// </summary>
-        Reconnecting
+        Reconnecting,
+
+        /// <summary>
+        /// The client is disconnecting.
+        /// </summary>
+        Disconnecting
     }
 }

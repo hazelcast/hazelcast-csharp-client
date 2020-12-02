@@ -29,8 +29,6 @@ namespace Hazelcast.Clustering
 
         private readonly ILogger _logger;
         private readonly Heartbeat _heartbeat;
-
-        // general cluster lifecycle
         private volatile int _disposed; // disposed flag
 
         /// <summary>
@@ -70,6 +68,7 @@ namespace Hazelcast.Clustering
             HConsole.Configure(x => x.Set(this, config => config.SetIndent(2).SetPrefix("CLUSTER")));
         }
 
+        // throws if this instance has been disposed
         private void ThrowIfDisposed()
         {
             if (_disposed > 0) throw new ObjectDisposedException(nameof(Cluster));

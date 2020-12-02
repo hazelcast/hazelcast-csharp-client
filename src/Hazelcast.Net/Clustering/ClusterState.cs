@@ -131,6 +131,20 @@ namespace Hazelcast.Clustering
         public bool IsConnected => ConnectionState == ConnectionState.Connected;
 
         /// <summary>
+        /// Whether the cluster is "up" i.e. connected or connecting.
+        /// </summary>
+        public bool IsUp => ConnectionState == ConnectionState.Connected ||
+                            ConnectionState == ConnectionState.Connecting ||
+                            ConnectionState == ConnectionState.Reconnecting;
+
+        /// <summary>
+        /// Whether the cluster is "down" i.e. not connected, or disconnecting.
+        /// </summary>
+        public bool IsDown => ConnectionState == ConnectionState.NotConnected ||
+                              ConnectionState == ConnectionState.Disconnecting;
+
+
+        /// <summary>
         /// Gets the partitioner.
         /// </summary>
         public Partitioner Partitioner { get; }

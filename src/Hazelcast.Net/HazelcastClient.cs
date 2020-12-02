@@ -66,16 +66,18 @@ namespace Hazelcast
             // through the special FuncExtensions.AwaitEach() method, see notes in
             // FuncExtensions.cs
 
-            // when ... triggers the user-level events
+            // when an object is created/destroyed, OnObject... triggers the user-level events
             cluster.ClusterEvents.ObjectCreated = OnObjectCreated;
             cluster.ClusterEvents.ObjectDestroyed = OnObjectDestroyed;
+
+            // when client/cluster state changes, OnStateChanged triggers user-level events
             cluster.State.StateChanged += OnStateChanged;
 
             // when partitions are updated, OnPartitionUpdated triggers the user-level event
             cluster.Events.PartitionsUpdated += OnPartitionsUpdated;
 
             // when a partition is lost, OnPartitionLost triggers the user-level event
-            cluster.ClusterEvents.OnPartitionLost = OnPartitionLost;
+            cluster.ClusterEvents.PartitionLost = OnPartitionLost;
 
             // when members are updated, Connections.OnMembersUpdated queues the added
             // members so that a connection is opened to each of them.

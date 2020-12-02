@@ -299,7 +299,7 @@ namespace Hazelcast.Tests.Configuration
             options.AddSubscriber("TestSubscriber");
             options.AddSubscriber(typeof (TestSubscriber));
             options.AddSubscriber<TestSubscriber>();
-            options.AddSubscriber(x => x.ClientStateChanged((sender, args) => { }));
+            options.AddSubscriber(x => x.StateChanged((sender, args) => { }));
 
             Assert.That(options.Subscribers.Count, Is.EqualTo(5));
 

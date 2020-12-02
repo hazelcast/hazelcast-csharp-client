@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Clustering;
-
 namespace Hazelcast
 {
+    /// <summary>
+    /// Represents event data for the state changed event.
+    /// </summary>
     public class StateChangedEventArgs
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StateChangedEventArgs"/> class.
+        /// </summary>
+        /// <param name="state"></param>
         public StateChangedEventArgs(ConnectionState state)
         {
             State = state;

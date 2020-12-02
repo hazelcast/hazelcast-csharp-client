@@ -182,15 +182,12 @@ namespace Hazelcast
             return this;
         }
 
-        // TODO: consider having 1 event per state
-        // original code has 1 unique 'StateChanged' event, could we have eg ClientStarting, ClientStarted, etc...?
-
         /// <summary>
         /// Adds a handler which runs when the client state changes.
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ClientStateChanged(Action<IHazelcastClient, StateChangedEventArgs> handler)
+        public HazelcastClientEventHandlers StateChanged(Action<IHazelcastClient, StateChangedEventArgs> handler)
         {
             Add(new StateChangedEventHandler(handler.AsAsync()));
             return this;
@@ -201,7 +198,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ClientStateChanged(Func<IHazelcastClient, StateChangedEventArgs, ValueTask> handler)
+        public HazelcastClientEventHandlers StateChanged(Func<IHazelcastClient, StateChangedEventArgs, ValueTask> handler)
         {
             Add(new StateChangedEventHandler(handler));
             return this;

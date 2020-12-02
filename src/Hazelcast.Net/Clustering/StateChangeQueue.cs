@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
+    /// <summary>
+    /// Raises client state change events sequentially, in order.
+    /// </summary>
     internal class StateChangeQueue : IAsyncDisposable
     {
         private readonly BufferBlock<ConnectionState> _states = new BufferBlock<ConnectionState>();
@@ -28,9 +31,13 @@ namespace Hazelcast.Clustering
         private readonly Task _raising;
         private readonly ILogger _logger;
 
-        private Func<ConnectionState, ValueTask> _stateChanged; 
+        private Func<ConnectionState, ValueTask> _stateChanged;
         private volatile int _disposed;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StateChangeQueue"/> class.
+        /// </summary>
+        /// <param name="loggerFactory">A logger factory.</param>
         public StateChangeQueue(ILoggerFactory loggerFactory)
         {
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
@@ -39,11 +46,15 @@ namespace Hazelcast.Clustering
             _raising = RaiseEvents(_cancel.Token);
         }
 
+        // throws if this instance has been disposed
         private void ThrowIfDisposed()
         {
             if (_disposed > 0) throw new ObjectDisposedException(nameof(StateChangeQueue));
         }
 
+        /// <summary>
+        /// Occurs when the state has changed.
+        /// </summary>
         public Func<ConnectionState, ValueTask> StateChanged
         {
             get => _stateChanged;
@@ -54,6 +65,10 @@ namespace Hazelcast.Clustering
             }
         }
 
+        /// <summary>
+        /// Adds a state change to the queue.
+        /// </summary>
+        /// <param name="state">The new state.</param>
         public void Add(ConnectionState state)
         {
             ThrowIfDisposed();
@@ -63,6 +78,7 @@ namespace Hazelcast.Clustering
             _logger.LogWarning($"Failed to add a state {state}.");
         }
 
+        // (background task loop) raises events
         private async Task RaiseEvents(CancellationToken cancellationToken)
         {
             await Task.Yield();

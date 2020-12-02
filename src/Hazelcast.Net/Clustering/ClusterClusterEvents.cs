@@ -31,7 +31,7 @@ namespace Hazelcast.Clustering
 
         private Func<DistributedObjectCreatedEventArgs, ValueTask> _objectCreated;
         private Func<DistributedObjectDestroyedEventArgs, ValueTask> _objectDestroyed;
-        private Func<PartitionLostEventArgs, ValueTask> _onPartitionLost;
+        private Func<PartitionLostEventArgs, ValueTask> _partitionLost;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterClusterEvents"/> class.
@@ -45,13 +45,13 @@ namespace Hazelcast.Clustering
 
             _objectLifecycleEventSubscription = new ObjectLifecycleEventSubscription(_clusterState, clusterEvents)
             {
-                OnObjectCreated = args => _objectCreated.AwaitEach(args),
-                OnObjectDestroyed = args => _objectDestroyed.AwaitEach(args)
+                ObjectCreated = args => _objectCreated.AwaitEach(args),
+                ObjectDestroyed = args => _objectDestroyed.AwaitEach(args)
             };
 
             _partitionLostEventSubscription = new PartitionLostEventSubscription(_clusterState, clusterEvents, clusterMembers)
             {
-                OnPartitionLost = args => _onPartitionLost.AwaitEach(args)
+                PartitionLost = args => _partitionLost.AwaitEach(args)
             };
         }
 
@@ -87,13 +87,13 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets the function that triggers a partition list event.
         /// </summary>
-        public Func<PartitionLostEventArgs, ValueTask> OnPartitionLost
+        public Func<PartitionLostEventArgs, ValueTask> PartitionLost
         {
-            get => _onPartitionLost;
+            get => _partitionLost;
             set
             {
                 _clusterState.ThrowIfPropertiesAreReadOnly();
-                _onPartitionLost = value;
+                _partitionLost = value;
             }
         }
 

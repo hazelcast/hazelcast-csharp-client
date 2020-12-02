@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast;
 using Hazelcast.Core;
 using Hazelcast.Events;
 using Hazelcast.Exceptions;
@@ -49,6 +50,8 @@ namespace Hazelcast.Clustering
         private Func<MemberConnection, bool, ValueTask> _connectionClosed;
         private BackgroundTask _reconnect;
         private Guid _clusterId; // the server-side identifier of the cluster
+
+        private volatile int _disposed; // disposed flag
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterConnections"/> class.
@@ -218,7 +221,14 @@ namespace Hazelcast.Clustering
             // empty and there are no connections left, which means that no other
             // connection can be added/removed at that point
 
-            // the cluster is now disconnected
+
+            if (_clusterState.IsDown)
+            {
+                // the cluster is down
+                _logger.LogInformation("Disconnected (down)");
+            }
+
+            // the cluster is now disconnected, but not down
             _logger.LogInformation("Disconnected (reconnect mode: {ReconnectMode}, {ReconnectAction})",
                 _clusterState.Options.Networking.ReconnectMode,
                 _clusterState.Options.Networking.ReconnectMode switch
@@ -228,8 +238,6 @@ namespace Hazelcast.Clustering
                     ReconnectMode.ReconnectAsync => "trying to reconnect asynchronously",
                     _ => "Meh?"
                 });
-
-            // FIXME what-if we've disposed and are not connected anymore or should not reconnect?
 
             // what we do next depends on options
             switch (_clusterState.Options.Networking.ReconnectMode)
@@ -248,7 +256,6 @@ namespace Hazelcast.Clustering
                 case ReconnectMode.ReconnectAsync:
                     // ReconnectAsync = the cluster reconnects via a background task
                     // operations can still be performed but will fail
-                    await _clusterState.TransitionAsync(ConnectionState.Reconnecting).CAF();
                     _reconnect = BackgroundTask.Run(ReconnectAsync);
                     break;
 
@@ -608,11 +615,16 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
             // stop and dispose the background task that connects members
             if (_clusterState.IsSmartRouting)
                 await _connectAddresses.DisposeAsync().CAF(); // does not throw
 
-            await _reconnect.CompletedOrCancelAsync(true).CAF();
+            var reconnect = _reconnect;
+            if (reconnect != null)
+                await reconnect.CompletedOrCancelAsync(true).CAF();
 
             _onClosedMutex.Dispose();
         }

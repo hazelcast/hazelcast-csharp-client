@@ -100,7 +100,7 @@ namespace Hazelcast
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             // every async operations using this client will need a proper async context
-            // and, we must do this in a non-async method for the change to bubble up!
+            // and, we *must* do this in a non-async method for the change to bubble up!
             AsyncContext.Ensure();
 
             return StartNewClientAsyncInternal(options, cancellationToken);
@@ -154,7 +154,7 @@ namespace Hazelcast
             return options;
         }
 
-        // (internal for tests only)
+        // (internal for tests only) creates the serialization service
         internal static ISerializationService CreateSerializationService(SerializationOptions options, ILoggerFactory loggerFactory)
         {
             // TODO: refactor serialization service entirely
@@ -175,6 +175,7 @@ namespace Hazelcast
             return serializationServiceBuilder.Build();
         }
 
+        // creates the client
         private static HazelcastClient CreateClient(HazelcastOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));

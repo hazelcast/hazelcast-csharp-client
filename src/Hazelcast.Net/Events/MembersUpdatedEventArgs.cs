@@ -17,8 +17,17 @@ using Hazelcast.Models;
 
 namespace Hazelcast.Events
 {
+    /// <summary>
+    /// Represents event data for the members updated event.
+    /// </summary>
     public class MembersUpdatedEventArgs
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MembersUpdatedEventArgs"/> class.
+        /// </summary>
+        /// <param name="addedMembers">Added members.</param>
+        /// <param name="removedMembers">Removed members.</param>
+        /// <param name="members">All members.</param>
         public MembersUpdatedEventArgs(IReadOnlyCollection<MemberInfo> addedMembers, IReadOnlyCollection<MemberInfo> removedMembers, IReadOnlyCollection<MemberInfo> members)
         {
             AddedMembers = addedMembers;
@@ -26,10 +35,19 @@ namespace Hazelcast.Events
             Members = members;
         }
 
+        /// <summary>
+        /// Gets the added members.
+        /// </summary>
         public IReadOnlyCollection<MemberInfo> AddedMembers { get; }
 
+        /// <summary>
+        /// Gets the removed members.
+        /// </summary>
         public IReadOnlyCollection<MemberInfo> RemovedMembers { get; }
 
+        /// <summary>
+        /// Gets the complete, updated list of members.
+        /// </summary>
         public IReadOnlyCollection<MemberInfo> Members { get; }
     }
 }

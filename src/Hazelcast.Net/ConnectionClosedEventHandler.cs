@@ -18,8 +18,15 @@ using Hazelcast.Events;
 
 namespace Hazelcast
 {
+    /// <summary>
+    /// Represents a handler for a connection closed event.
+    /// </summary>
     internal class ConnectionClosedEventHandler : HazelcastClientEventHandlerBase<ConnectionClosedEventArgs>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionClosedEventArgs"/> class.
+        /// </summary>
+        /// <param name="handler">An action to execute.</param>
         public ConnectionClosedEventHandler(Func<IHazelcastClient, ConnectionClosedEventArgs, ValueTask> handler)
             : base(handler)
         { }

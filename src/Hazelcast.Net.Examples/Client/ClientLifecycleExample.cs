@@ -31,7 +31,7 @@ namespace Hazelcast.Examples.Client
 
             // create another Hazelcast client and connect to a server running on localhost
             options.AddSubscriber(on => on
-                .ClientStateChanged((c, eventArgs) =>
+                .StateChanged((c, eventArgs) =>
                 {
                     Console.WriteLine($"State: {eventArgs.State}");
                     if (eventArgs.State == ConnectionState.Connected)

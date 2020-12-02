@@ -18,8 +18,15 @@ using Hazelcast.Events;
 
 namespace Hazelcast
 {
+    /// <summary>
+    /// Represents a handler for a connection opened event.
+    /// </summary>
     internal class ConnectionOpenedEventHandler : HazelcastClientEventHandlerBase<ConnectionOpenedEventArgs>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionOpenedEventHandler"/> class.
+        /// </summary>
+        /// <param name="handler">An action to execute.</param>
         public ConnectionOpenedEventHandler(Func<IHazelcastClient, ConnectionOpenedEventArgs, ValueTask> handler)
             : base(handler)
         { }
