@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Models
 {
     /// <summary>
-    /// Defines an operation that can be executed by the <see cref="IExecutor"/>.
+    /// Type of the index.
     /// </summary>
-    public interface IExecutable
+    public enum IndexType
     {
+        // values MUST match IndexType.java
+
         /// <summary>
-        /// Executes.
+        /// Sorted index. Can be used with equality and range predicates.
         /// </summary>
-        void Execute(); // TODO: not needed on C# side
+        Sorted = 0,
+
+        /// <summary>
+        /// Hash index. Can be used with equality predicates.
+        /// </summary>
+        Hashed = 1,
+
+        /// <summary>
+        /// Bitmap index. Can be used with equality predicates.
+        /// </summary>
+        Bitmap = 2
     }
 }

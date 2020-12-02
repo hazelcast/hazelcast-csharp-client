@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Data;
+using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {

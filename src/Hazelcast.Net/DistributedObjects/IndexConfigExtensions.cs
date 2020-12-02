@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using Hazelcast.Data;
+using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {

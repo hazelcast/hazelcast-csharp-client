@@ -68,11 +68,11 @@ namespace Hazelcast.Serialization
                 if (!identified)
                     throw new SerializationException("Non-identified DataSerializable is not supported by .NET client. " +
                                                               "Please use IIdentifiedDataSerializable instead.");
-                
+
                 factoryId = input.ReadInt();
                 if (!_factories.TryGetValue(factoryId, out var factory))
                     throw new SerializationException($"No DataSerializerFactory registered with id: {factoryId}.");
-                
+
                 id = input.ReadInt();
                 var serializable = factory.Create(id);
                 if (serializable == null)

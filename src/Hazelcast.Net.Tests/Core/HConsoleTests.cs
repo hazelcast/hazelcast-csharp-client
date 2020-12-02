@@ -16,7 +16,6 @@ using System;
 using System.Threading;
 using Hazelcast.Core;
 using Hazelcast.Testing;
-using Hazelcast.Tests.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Core

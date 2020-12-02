@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
-using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
 using NUnit.Framework;
 
@@ -338,9 +337,9 @@ namespace Hazelcast.Tests.Messaging
         [Test]
         public void MessageTypeName()
         {
-            var name1 = CodecConstants.GetMessageTypeName(MapAddEntryListenerCodec.RequestMessageType);
-            var name2 = CodecConstants.GetMessageTypeName(MapAddEntryListenerCodec.ResponseMessageType);
-            var name3 = CodecConstants.GetMessageTypeName(0x011902 /*MapAddEntryListenerCodec.EventEntryMessageType*/);
+            var name1 = MessageTypeConstants.GetMessageTypeName(MapAddEntryListenerCodec.RequestMessageType);
+            var name2 = MessageTypeConstants.GetMessageTypeName(MapAddEntryListenerCodec.ResponseMessageType);
+            var name3 = MessageTypeConstants.GetMessageTypeName(0x011902 /*MapAddEntryListenerCodec.EventEntryMessageType*/);
 
 #if DEBUG
             Assert.That(name1, Is.EqualTo("MapAddEntryListener.Request"));

@@ -45,4 +45,3 @@ namespace Hazelcast.Testing.Networking
         public Stream Stream2 { get; }
     }
 }
-

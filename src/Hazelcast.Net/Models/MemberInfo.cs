@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Hazelcast.Networking;
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Represents a member of a cluster.

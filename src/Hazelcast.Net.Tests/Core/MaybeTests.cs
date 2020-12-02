@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Reflection;
 using Hazelcast.Core;
 using NUnit.Framework;
 

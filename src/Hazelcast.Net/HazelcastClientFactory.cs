@@ -67,7 +67,7 @@ namespace Hazelcast
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
-        /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], IEnumerable{KeyValuePair{string, string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
+        /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{string,string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
         /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
         /// </remarks>
         public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastOptions> configure, CancellationToken cancellationToken)

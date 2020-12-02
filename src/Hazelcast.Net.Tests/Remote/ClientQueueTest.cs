@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Remote
         // important to stick with this name as it is configured in hazelcast.xml
         // with a corresponding queue max size of 6 items
         private const string QueueNameBase = "ClientQueueTest";
-        
+
         protected override async Task<IHCollection<string>> GetHCollectionAsync(string baseName = default, bool isUnique = true)
         {
             var name = baseName ?? QueueNameBase;
@@ -40,9 +40,9 @@ namespace Hazelcast.Tests.Remote
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
-            
+
             await queue.EnqueueAsync("item0");
-            
+
             Assert.That(await queue.CountAsync(), Is.EqualTo(1));
         }
 
@@ -55,11 +55,11 @@ namespace Hazelcast.Tests.Remote
             //configured max capacity in server config.
             const int maxCapacity = 6;
             await FillCollection(queue, maxCapacity-1);
-            
+
             Assert.True(await queue.TryEnqueueAsync("item6"));
             Assert.False(await queue.TryEnqueueAsync("item6"));
         }
-        
+
         [Test]
         public async Task TestTryEnqueueAsync_waitNonZero()
         {
@@ -69,7 +69,7 @@ namespace Hazelcast.Tests.Remote
             //configured max capacity in server config.
             const int maxCapacity = 6;
             await FillCollection(queue, maxCapacity);
-            
+
             Assert.False(await queue.TryEnqueueAsync("item", TimeSpan.FromSeconds(2)));
         }
 
@@ -122,7 +122,7 @@ namespace Hazelcast.Tests.Remote
                 Assert.That(list[i], Is.EqualTo("item" + i));
             }
         }
-        
+
         [Test]
         public async Task TestDrainToAsync_witMaxSize()
         {

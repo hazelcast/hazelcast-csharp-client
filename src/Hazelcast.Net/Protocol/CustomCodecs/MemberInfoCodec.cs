@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int LiteMemberFieldOffset = UuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int InitialFrameSize = LiteMemberFieldOffset + BytesExtensions.SizeOfBool;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.MemberInfo memberInfo)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.MemberInfo memberInfo)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -59,7 +59,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.MemberInfo Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.MemberInfo Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
@@ -72,7 +72,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
             var version = MemberVersionCodec.Decode(iterator);
             var isAddressMapExists = false;
-            IDictionary<Hazelcast.Data.EndpointQualifier, Hazelcast.Networking.NetworkAddress> addressMap = default;
+            IDictionary<Hazelcast.Models.EndpointQualifier, Hazelcast.Networking.NetworkAddress> addressMap = default;
             if (iterator.NextIsNotTheEnd())
             {
                 addressMap = MapCodec.Decode(iterator, EndpointQualifierCodec.Decode, AddressCodec.Decode);
@@ -80,7 +80,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             }
 
             iterator.SkipToStructEnd();
-            return new Hazelcast.Data.MemberInfo(address, uuid, attributes, liteMember, version, isAddressMapExists, addressMap);
+            return new Hazelcast.Models.MemberInfo(address, uuid, attributes, liteMember, version, isAddressMapExists, addressMap);
         }
     }
 }

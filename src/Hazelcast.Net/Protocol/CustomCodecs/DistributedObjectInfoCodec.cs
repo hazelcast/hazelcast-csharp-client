@@ -39,7 +39,7 @@ namespace Hazelcast.Protocol.CustomCodecs
     internal static class DistributedObjectInfoCodec
     {
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.DistributedObjectInfo distributedObjectInfo)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.DistributedObjectInfo distributedObjectInfo)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -49,7 +49,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.DistributedObjectInfo Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.DistributedObjectInfo Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
@@ -57,7 +57,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             var name = StringCodec.Decode(iterator);
 
             iterator.SkipToStructEnd();
-            return new Hazelcast.Data.DistributedObjectInfo(serviceName, name);
+            return new Hazelcast.Models.DistributedObjectInfo(serviceName, name);
         }
     }
 }

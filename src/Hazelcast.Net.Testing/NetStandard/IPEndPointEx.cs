@@ -52,19 +52,6 @@ namespace System.Net
                 }
             }
 
-#if NETSTANDARD2_0
-            if (IPAddress.TryParse(s.Slice(0, addressLength).ToString(), out IPAddress address))
-            {
-                uint port = 0;
-                if (addressLength == s.Length ||
-                    (uint.TryParse(s.Slice(addressLength + 1).ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out port) && port <= System.Net.IPEndPoint.MaxPort))
-
-                {
-                    result = new System.Net.IPEndPoint(address, (int)port);
-                    return true;
-                }
-            }
-#endif
 #if NETSTANDARD2_1
                 if (IPAddress.TryParse(s.Slice(0, addressLength), out IPAddress address))
                 {
@@ -77,6 +64,18 @@ namespace System.Net
                         return true;
                     }
                 }
+#else
+            if (IPAddress.TryParse(s.Slice(0, addressLength).ToString(), out IPAddress address))
+            {
+                uint port = 0;
+                if (addressLength == s.Length ||
+                    (uint.TryParse(s.Slice(addressLength + 1).ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out port) && port <= System.Net.IPEndPoint.MaxPort))
+
+                {
+                    result = new System.Net.IPEndPoint(address, (int)port);
+                    return true;
+                }
+            }
 #endif
 
             result = null;

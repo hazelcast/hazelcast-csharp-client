@@ -14,8 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Data;
 using Hazelcast.Exceptions;
+using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
 

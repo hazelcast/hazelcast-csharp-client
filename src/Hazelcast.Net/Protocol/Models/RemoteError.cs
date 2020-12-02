@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Protocol.Data
+namespace Hazelcast.Protocol.Models
 {
     /// <summary>
     /// Defines the error codes that can be returned by a remote server.

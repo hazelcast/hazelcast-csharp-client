@@ -14,7 +14,7 @@
 
 using Hazelcast.DistributedObjects;
 
-namespace Hazelcast.Data
+namespace Hazelcast.Models
 {
     /// <summary>Represents statistics for an entry in an <see cref="IHMap{TKey,TValue}"/>.</summary>
     public interface IMapEntryStats<out TKey, out TValue>

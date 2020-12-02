@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Configuration;
 
 namespace Hazelcast.Transactions
 {

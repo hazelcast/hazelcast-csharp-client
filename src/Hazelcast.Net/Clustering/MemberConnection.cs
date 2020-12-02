@@ -18,11 +18,11 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 using Hazelcast.Networking;
-using Hazelcast.Protocol.BuiltInCodecs;
+using Hazelcast.Protocol;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering

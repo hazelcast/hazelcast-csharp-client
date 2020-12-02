@@ -88,11 +88,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// An array of distributed object info in the cluster.
             ///</summary>
-            public ICollection<Hazelcast.Data.DistributedObjectInfo> Response { get; set; }
+            public ICollection<Hazelcast.Models.DistributedObjectInfo> Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection<Hazelcast.Data.DistributedObjectInfo> response)
+        public static ClientMessage EncodeResponse(ICollection<Hazelcast.Models.DistributedObjectInfo> response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);

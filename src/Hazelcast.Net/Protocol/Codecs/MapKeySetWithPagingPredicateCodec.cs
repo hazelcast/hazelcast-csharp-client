@@ -67,11 +67,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// specified query criteria.
             ///</summary>
-            public Hazelcast.Protocol.Data.PagingPredicateHolder Predicate { get; set; }
+            public Hazelcast.Protocol.Models.PagingPredicateHolder Predicate { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Data.PagingPredicateHolder predicate)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Models.PagingPredicateHolder predicate)
         {
             var clientMessage = new ClientMessage
             {
@@ -110,11 +110,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// The updated anchor list.
             ///</summary>
-            public Hazelcast.Protocol.Data.AnchorDataListHolder AnchorDataList { get; set; }
+            public Hazelcast.Protocol.Models.AnchorDataListHolder AnchorDataList { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection<IData> response, Hazelcast.Protocol.Data.AnchorDataListHolder anchorDataList)
+        public static ClientMessage EncodeResponse(ICollection<IData> response, Hazelcast.Protocol.Models.AnchorDataListHolder anchorDataList)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);

@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Models
 {
-    /// <summary>
-    /// Defines an operation that can be executed by the <see cref="IExecutor"/>.
-    /// </summary>
-    /// <typeparam name="TResult">The type of the result of the operation.</typeparam>
-    public interface IExecutable<out TResult>
+    internal enum ProtocolType
     {
-        /// <summary>
-        /// Executes.
-        /// </summary>
-        TResult Execute(); // TODO: not needed on C# side
+        // values MUST match ProtocolType.java
+
+        Member = 0,
+        Client = 1,
+        Wan = 2,
+        Rest = 3,
+        MemCache = 4
     }
 }

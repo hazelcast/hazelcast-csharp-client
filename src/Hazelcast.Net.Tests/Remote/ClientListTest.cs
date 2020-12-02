@@ -14,7 +14,6 @@
 
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -39,7 +38,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(list);
 
             await FillCollection(list, 3);
-            
+
             await list.InsertAsync(1, "item1Mod");
             Assert.AreEqual("item1Mod", await list.GetAsync(1));
         }
@@ -103,7 +102,7 @@ namespace Hazelcast.Tests.Remote
             var items  = await FillCollection(list, 5);
             await list.AddAsync("item0");
             items.Add("item0");
-            
+
             for (var i = 0; i < 5; i++)
             {
                 Assert.AreEqual(i, await list.IndexOfAsync(items[i]));
@@ -118,7 +117,7 @@ namespace Hazelcast.Tests.Remote
 
             await FillCollection(list, 5);
             var items  = await FillCollection(list, 5);
-            
+
             for (var i = 0; i < 5; i++)
             {
                 Assert.AreEqual(i + 5 , await list.LastIndexOfAsync(items[i]));

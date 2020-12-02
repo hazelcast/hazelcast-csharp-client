@@ -40,17 +40,17 @@ namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
     /// The statistics is composed of three parameters.
-    /// 
+    ///
     /// The first paramteter is the timestamp taken when the statistics collected.
-    /// 
+    ///
     /// The second parameter, the clientAttribute is a String that is composed of key=value pairs separated by ','. The
     /// following characters ('=' '.' ',' '\') should be escaped.
-    /// 
+    ///
     /// Please note that if any client implementation can not provide the value for a statistics, the corresponding key, value
     /// pair will not be presented in the statistics string. Only the ones, that the client can provide will be added.
-    /// 
+    ///
     /// The third parameter, metrics is a compressed byte array containing all metrics recorded by the client.
-    /// 
+    ///
     /// The metrics are composed of the following fields:
     ///   - string:                 prefix
     ///   - string:                 metric
@@ -59,12 +59,12 @@ namespace Hazelcast.Protocol.Codecs
     ///   - enum:                   unit [BYTES,MS,PERCENT,COUNT,BOOLEAN,ENUM]
     ///   - set of enum:            excluded targets [MANAGEMENT_CENTER,JMX,DIAGNOSTICS]
     ///   - set of <string,string>: tags associated with the metric
-    /// 
+    ///
     /// The used compression algorithm is the same that is used inside the IMDG clients and members for storing the metrics blob
     /// in-memory. The algorithm uses a dictionary based delta compression further deflated by using ZLIB compression.
-    /// 
+    ///
     /// The byte array has the following layout:
-    /// 
+    ///
     /// +---------------------------------+--------------------+
     /// | Compressor version              |   2 bytes (short)  |
     /// +---------------------------------+--------------------+
@@ -74,21 +74,21 @@ namespace Hazelcast.Protocol.Codecs
     /// +---------------------------------+--------------------+
     /// | ZLIB compressed metrics blob    |   variable size    |
     /// +---------------------------------+--------------------+
-    /// 
+    ///
     /// ==========
     /// THE HEADER
     /// ==========
-    /// 
+    ///
     /// Compressor version:      the version currently in use is 1.
     /// Size of dictionary blob: the size of the ZLIB compressed blob as it is constructed as follows.
-    /// 
+    ///
     /// ===================
     /// THE DICTIONARY BLOB
     /// ===================
-    /// 
+    ///
     /// The dictionary is built from the string fields of the metric and assigns an int dictionary id to every string in the metrics
     /// in the blob. The dictionary is serialized to the dictionary blob sorted by the strings using the following layout.
-    /// 
+    ///
     /// +------------------------------------------------+--------------------+
     /// | Number of dictionary entries                   |   4 bytes (int)    |
     /// +------------------------------------------------+--------------------+
@@ -104,11 +104,11 @@ namespace Hazelcast.Protocol.Codecs
     /// +------------------------------------------------+--------------------+
     /// | ...                                            |   ...              |
     /// +------------------------------------------------+--------------------+
-    /// 
+    ///
     /// Let's say we have the following dictionary:
     ///   - <42,"gc.minorCount">
     ///   - <43,"gc.minorTime">
-    /// 
+    ///
     /// It is then serialized as follows:
     /// +------------------------------------------------+--------------------+
     /// | 2 (size of the dictionary)                     |   4 bytes (int)    |
@@ -129,16 +129,16 @@ namespace Hazelcast.Protocol.Codecs
     /// +------------------------------------------------+--------------------+
     /// | "Time"                                         |   13 bytes         |
     /// +------------------------------------------------+--------------------+
-    /// 
+    ///
     /// The dictionary blob constructed this way is then gets ZLIB compressed.
-    /// 
+    ///
     /// ===============
     /// THE METRIC BLOB
     /// ===============
-    /// 
+    ///
     /// The compressed dictionary blob is followed by the compressed metrics blob
     /// with the following layout:
-    /// 
+    ///
     /// +------------------------------------------------+--------------------+
     /// | Number of metrics                              |   4 bytes (int)    |
     /// +------------------------------------------------+--------------------+
@@ -174,11 +174,11 @@ namespace Hazelcast.Protocol.Codecs
     /// +------------------------------------------------+--------------------+
     /// | ...                                            |   ...              |
     /// +------------------------------------------------+--------------------+
-    /// 
+    ///
     /// The metrics mask shows which fields are the same in the current and the
     /// previous metric. The following masks are used to construct the metrics
     /// mask.
-    /// 
+    ///
     /// MASK_PREFIX              = 0b00000001;
     /// MASK_METRIC              = 0b00000010;
     /// MASK_DISCRIMINATOR       = 0b00000100;
@@ -186,15 +186,15 @@ namespace Hazelcast.Protocol.Codecs
     /// MASK_UNIT                = 0b00010000;
     /// MASK_EXCLUDED_TARGETS    = 0b00100000;
     /// MASK_TAG_COUNT           = 0b01000000;
-    /// 
+    ///
     /// If a bit representing a field is set, the given field marked above with (*)
     /// is not written to blob and the last value for that field should be taken
     /// during deserialization.
-    /// 
+    ///
     /// Since the number of tags are not limited, all tags and their values
     /// marked with (**) are written even if the tag set is the same as in the
     /// previous metric.
-    /// 
+    ///
     /// The metrics blob constructed this way is then gets ZLIB compressed.
     ///</summary>
 #if SERVER_CODEC

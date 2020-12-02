@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Data
+using System;
+
+namespace Hazelcast.Models
 {
     /// <summary>
-    /// Type of the index.
+    /// Specifies the collection item event types.
     /// </summary>
-    public enum IndexType
+    [Flags]
+    public enum CollectionItemEventTypes
     {
-        // values MUST match IndexType.java
+        /// <summary>
+        /// The item was added.
+        /// </summary>
+        Added = 1, // zero is for default, make sure we start at 1
 
         /// <summary>
-        /// Sorted index. Can be used with equality and range predicates.
+        /// The item was removed.
         /// </summary>
-        Sorted = 0,
-
-        /// <summary>
-        /// Hash index. Can be used with equality predicates.
-        /// </summary>
-        Hashed = 1,
-
-        /// <summary>
-        /// Bitmap index. Can be used with equality predicates.
-        /// </summary>
-        Bitmap = 2
+        Removed = 2
     }
 }

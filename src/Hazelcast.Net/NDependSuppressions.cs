@@ -58,111 +58,168 @@ using System.Diagnostics.CodeAnalysis;
 // Unfortunately, NDepend uses e.g. 'method' scope which is not OK
 #pragma warning disable IDE0076 // Invalid global 'SuppressMessageAttribute'
 
+#region General
+
 // NDepend complains about 'public' methods in an 'internal' class
 // but even NDepend documentation mentions that not everyone agrees
 // see http://ericlippert.com/2014/09/15/internal-or-public/
 // we *do* use 'public' methods in 'internal' classes, so, suppress
-[assembly: SuppressMessage("NDepend", "ND1807:AvoidPublicMethodsNotPubliclyVisible",
-    Justification = "Accepted."
+[assembly: SuppressMessage(NDepend.Category, NDepend.Check.AvoidPublicMethodsNotPubliclyVisible,
+    Justification = NDepend.Justification.Accepted
 )]
+
+#endregion
+
+#region Accepted Checks
 
 // We use System.Random in our RandomProvider and don't expect it
 // to be used for anything security-related, so, suppress
-[assembly: SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes",
+[assembly: SuppressMessage(NDepend.Category, "ND3101:DontUseSystemRandomForSecurityPurposes",
     Target = /*~M:*/ "Hazelcast.Core.RandomProvider.NewRandom()",
-    Scope = "method",
+    Scope = NDepend.Scope.Method,
     Justification = "Not used for security purposes.")]
-[assembly: SuppressMessage("NDepend", "ND3101:DontUseSystemRandomForSecurityPurposes",
+[assembly: SuppressMessage(NDepend.Category, "ND3101:DontUseSystemRandomForSecurityPurposes",
     Target = /*~M:*/ "Hazelcast.Core.RandomProvider..cctor()",
-    Scope = "method",
+    Scope = NDepend.Scope.Method,
     Justification = "Not used for security purposes.")]
 
 // collides with System.Reflection.MemberInfo but really, it's
 // two different worlds and we can use MemberInfo too
-[assembly: SuppressMessage("NDepend", "ND2012:AvoidHavingDifferentTypesWithSameName",
+[assembly: SuppressMessage(NDepend.Category, "ND2012:AvoidHavingDifferentTypesWithSameName",
     Target = /*~T:*/ "Hazelcast.Data.MemberInfo",
-    Scope = "type",
-    Justification = "Accepted.")]
-
-// codecs are what they are, not much we want to do about it for now
-[assembly: SuppressMessage("NDepend", "",
-    Target = /*~N:*/ "Hazelcast.Protocol.Codecs",
-    Scope = "namespaceAndDescendants",
-    Justification = "Exclude codecs from code analysis.")]
-[assembly: SuppressMessage("NDepend", "",
-    Target = /*~N:*/ "Hazelcast.Protocol.BuiltInCodecs",
-    Scope = "namespaceAndDescendants",
-    Justification = "Exclude codecs from code analysis.")]
-[assembly: SuppressMessage("NDepend", "",
-    Target = /*~N:*/ "Hazelcast.Protocol.CustomCodecs",
-    Scope = "namespaceAndDescendants",
-    Justification = "Exclude codecs from code analysis.")]
+    Scope = NDepend.Scope.Type,
+    Justification = NDepend.Justification.Accepted)]
 
 // JavaUuidOrder is a special struct that is used for (de) serializing Guid
 // and therefore used in twisted ways, and this is intentional
-[assembly: SuppressMessage("NDepend", "ND1903:StructuresShouldBeImmutable",
+[assembly: SuppressMessage(NDepend.Category, "ND1903:StructuresShouldBeImmutable",
     Target = /*~T:*/ "Hazelcast.Core.JavaUuidOrder",
-    Scope = "type",
-    Justification = "Accepted.")]
-[assembly: SuppressMessage("NDepend", "ND1905:AFieldMustNotBeAssignedFromOutsideItsParentHierarchyTypes",
+    Scope = NDepend.Scope.Type,
+    Justification = NDepend.Justification.Accepted)]
+[assembly: SuppressMessage(NDepend.Category, "ND1905:AFieldMustNotBeAssignedFromOutsideItsParentHierarchyTypes",
     Target = "Hazelcast.Core.JavaUuidOrder.Value",
-    Scope = "method",
-    Justification = "Accepted.")]
-[assembly: SuppressMessage("NDepend", "ND2000:InstanceFieldsNamingConvention",
+    Scope = NDepend.Scope.Method,
+    Justification = NDepend.Justification.Accepted)]
+[assembly: SuppressMessage(NDepend.Category, "ND2000:InstanceFieldsNamingConvention",
     Target = "Hazelcast.Core.JavaUuidOrder.Value",
-    Scope = "method",
-    Justification = "Accepted.")]
-
+    Scope = NDepend.Scope.Method,
+    Justification = NDepend.Justification.Accepted)]
 
 // do *not* suppress that one but use a customized rule
 /*
-[assembly: SuppressMessage("NDepend",
+[assembly: SuppressMessage(NDepend.Category,
     "ND2016:MethodsPrefixedWithTryShouldReturnABoolean",
-    Scope = "method",
+    Scope = NDepend.Scope.Method,
     Justification="We have many TryXxx methods that return Attempt or are async.")]
 */
+
+#endregion
+
+#region Codecs
+
+// TODO: we should use all codecs, or mark them individually
+// and so, we should not mark them all as "not dead code"
+
+// codecs are what they are, not much we want to do about it for now
+[assembly: SuppressMessage(NDepend.Category, NDepend.Check.All,
+    Target = /*~N:*/ "Hazelcast.Protocol.Codecs",
+    Scope = NDepend.Scope.NamespaceAndDescendants,
+    Justification = "Exclude codecs from code analysis.")]
+[assembly: SuppressMessage(NDepend.Category, NDepend.Check.All,
+    Target = /*~N:*/ "Hazelcast.Protocol.BuiltInCodecs",
+    Scope = NDepend.Scope.NamespaceAndDescendants,
+    Justification = "Exclude codecs from code analysis.")]
+[assembly: SuppressMessage(NDepend.Category, NDepend.Check.All,
+    Target = /*~N:*/ "Hazelcast.Protocol.CustomCodecs",
+    Scope = NDepend.Scope.NamespaceAndDescendants,
+    Justification = NDepend.Justification.ExcludeCodecs)]
+
+#endregion
+
+#region Types Not Dead
+
+[assembly: SuppressMessage(NDepend.Category, NDepend.Check.PotentiallyDeadTypes,
+    Target = "Hazelcast.AssemblySigning",
+    Justification = NDepend.Justification.TypeNotDead)]
+
+#endregion
+
+#region System
 
 // suppress issues with our System.* extensions for dealing with netstandard versions
 // each namespace needs its rule
 
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System",
     Scope = "namespaceAndDescendants",
     Justification = "Exclude MS code from analysis.")]
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.IO",
     Scope = "namespaceAndDescendants",
     Justification = "Exclude MS code from analysis.")]
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.Buffers",
     Scope = "namespaceAndDescendants",
     Justification = "Exclude MS code from analysis.")]
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.Threading.Tasks",
     Scope = "namespaceAndDescendants",
     Justification = "Exclude MS code from analysis.")]
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.Collections.Generic",
     Scope = "namespaceAndDescendants",
     Justification = "Exclude MS code from analysis.")]
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.Diagnostics.CodeAnalysis",
     Scope = "namespaceAndDescendants",
-    Justification = "Accepted.")]
-[assembly:SuppressMessage("NDepend", "",
+    Justification = NDepend.Justification.Accepted)]
+[assembly:SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.Runtime.CompilerServices",
     Scope = "namespaceAndDescendants",
     Justification = "Imported code.")]
 
 #if NETSTANDARD2_0
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~T:*/ "System.Runtime.CompilerServices.RuntimeHelpersEx",
-    Scope = "type",
+    Scope = NDepend.Scope.Type,
     Justification = "Imported code.")]
-[assembly: SuppressMessage("NDepend", "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.Collections.Concurrent",
     Scope = "namespaceAndDescendants",
     Justification = "Imported code.")]
 #endif
+
+#endregion
+
+// ReSharper disable once CheckNamespace
+internal static class NDepend
+{
+    public const string Category = "NDepend";
+
+    public static class Check
+    {
+        public const string All = "";
+        public const string PotentiallyDeadTypes = "ND1700:PotentiallyDeadTypes";
+        public const string AvoidPublicMethodsNotPubliclyVisible = "ND1807:AvoidPublicMethodsNotPubliclyVisible";
+    }
+
+    public static class Scope
+    {
+        public const string Deep = "deep";
+        public const string Module = "module";
+        public const string Namespace = "namespace";
+        public const string Type = "type";
+        public const string Method = "method";
+        public const string Field = "field";
+        public const string NamespaceAndDescendants = "namespaceAndDescendants";
+    }
+
+    public static class Justification
+    {
+        public const string Accepted = "Accepted.";
+        public const string ExcludeCodecs = "Exclude codecs from analyzis.";
+        public const string TypeNotDead = "Not dead.";
+    }
+}
 
 #endif

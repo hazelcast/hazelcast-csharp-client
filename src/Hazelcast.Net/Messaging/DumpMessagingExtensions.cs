@@ -14,7 +14,6 @@
 
 using System;
 using System.Text;
-using Hazelcast.Protocol;
 
 namespace Hazelcast.Messaging
 {
@@ -49,7 +48,7 @@ namespace Hazelcast.Messaging
                     ? "EVENT"
                     : (message.MessageType & 1) > 0 ? "RESPONSE" : "REQUEST";
 
-                var name = message.OperationName ?? CodecConstants.GetMessageTypeName(message.MessageType);
+                var name = message.OperationName ?? MessageTypeConstants.GetMessageTypeName(message.MessageType);
 
                 text.AppendLine($"{prefix} [{message.CorrelationId}]");
                 text.AppendLine($"TYPE 0x{message.MessageType:x} {name}");

@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.Data;
+using Hazelcast.Models;
 using Hazelcast.Query;
 
 namespace Hazelcast.DistributedObjects
@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects
         Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys);
 
         /// <summary>
-        /// Queries the map based on the specified predicate and returns matching keys. 
+        /// Queries the map based on the specified predicate and returns matching keys.
         /// </summary>
         /// <param name="predicate">A predicate to filter the entries with.</param>
         /// <returns>readonly clone of all keys matching the predicate.</returns>
@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects
         /// and have a counterpart on the server.</para>
         /// </remarks>
         Task<IReadOnlyCollection<TKey>> GetKeysAsync(IPredicate predicate);
-        
+
         /// <summary>
         /// Queries the map based on the specified predicate and returns a readonly collection of the values of matching entries.
         /// Gets values for entries matching a predicate.

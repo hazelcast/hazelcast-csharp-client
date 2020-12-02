@@ -41,7 +41,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int TypeFieldOffset = 0;
         private const int InitialFrameSize = TypeFieldOffset + BytesExtensions.SizeOfInt;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.EndpointQualifier endpointQualifier)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.EndpointQualifier endpointQualifier)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -54,7 +54,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.EndpointQualifier Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.EndpointQualifier Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();

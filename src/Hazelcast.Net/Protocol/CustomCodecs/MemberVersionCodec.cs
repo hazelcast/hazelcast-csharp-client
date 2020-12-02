@@ -43,7 +43,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int PatchFieldOffset = MinorFieldOffset + BytesExtensions.SizeOfByte;
         private const int InitialFrameSize = PatchFieldOffset + BytesExtensions.SizeOfByte;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Data.MemberVersion memberVersion)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.MemberVersion memberVersion)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -56,7 +56,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Data.MemberVersion Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.MemberVersion Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
@@ -67,7 +67,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             var minor = initialFrame.Bytes.ReadByteL(MinorFieldOffset);
             var patch = initialFrame.Bytes.ReadByteL(PatchFieldOffset);
             iterator.SkipToStructEnd();
-            return new Hazelcast.Data.MemberVersion(major, minor, patch);
+            return new Hazelcast.Models.MemberVersion(major, minor, patch);
         }
     }
 }

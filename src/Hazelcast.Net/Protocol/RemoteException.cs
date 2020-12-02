@@ -15,7 +15,7 @@
 using System;
 using System.Runtime.Serialization;
 using Hazelcast.Exceptions;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Protocol
 {

@@ -15,11 +15,8 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Exceptions;
-using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Core

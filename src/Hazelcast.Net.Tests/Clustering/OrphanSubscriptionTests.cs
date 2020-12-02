@@ -18,13 +18,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Data;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 using Hazelcast.Networking;
-using Hazelcast.Protocol;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Protocol.Data;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Protocol;
@@ -333,7 +332,7 @@ namespace Hazelcast.Tests.Clustering
                 default:
                     {
                         // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
-                        var messageName = CodecConstants.GetMessageTypeName(msg.MessageType);
+                        var messageName = MessageTypeConstants.GetMessageTypeName(msg.MessageType);
                         await SendErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{msg.MessageType:X}) not implemented.").CAF();
                         break;
                     }
