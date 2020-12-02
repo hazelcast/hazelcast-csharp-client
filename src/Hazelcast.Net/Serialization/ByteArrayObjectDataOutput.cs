@@ -370,7 +370,7 @@ namespace Hazelcast.Serialization
                 return;
             }
 
-            var byteCount = Encoding.UTF8.GetByteCount(value); // benchmark too
+            var byteCount = Encoding.UTF8.GetByteCount(value);
             Write(byteCount, endianness);
 
             if (byteCount > 0)
@@ -379,12 +379,7 @@ namespace Hazelcast.Serialization
                 var charCount = value.Length;
                 var x = Encoding.UTF8.GetBytes(value, 0, charCount, _data, _position);
                 _position += x;
-
-                // benchmark!
-                _data.WriteUtf8Chars(ref _position, value);
             }
-
-            // FIXME to the READ thing too
         }
 
         /// <inheritdoc />

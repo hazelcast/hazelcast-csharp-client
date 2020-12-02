@@ -114,7 +114,7 @@ namespace Hazelcast.Tests.Serialization
         {
             var allstr = new string(AllChars);
             var expected = Encoding.UTF8.GetBytes(allstr);
-            IData data = new HeapData(ToDataByte(expected, allstr.Length));
+            IData data = new HeapData(ToDataByte(expected, expected.Length));
             var actualStr = (string) _serializationService.ToObject<object>(data);
             Assert.AreEqual(allstr, actualStr);
         }
@@ -160,7 +160,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestStringDecode()
         {
-            IData data = new HeapData(ToDataByte(TestDataBytesAll, TestDataAll.Length));
+            IData data = new HeapData(ToDataByte(TestDataBytesAll, TestDataBytesAll.Length));
             var actualStr = (string) _serializationService.ToObject<object>(data);
             Assert.AreEqual(TestDataAll, actualStr);
         }
@@ -168,7 +168,7 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestStringEncode()
         {
-            var expected = ToDataByte(TestDataBytesAll, TestDataAll.Length);
+            var expected = ToDataByte(TestDataBytesAll, TestDataBytesAll.Length);
             var actual = _serializationService.ToData(TestDataAll).ToByteArray();
             Assert.AreEqual(expected, actual);
         }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
@@ -406,12 +407,11 @@ namespace Hazelcast.Serialization
         {
             var length = ReadInt();
             if (length == ArraySerializer.NullArrayLength) return null;
+            if (length == 0) return "";
 
-            // length is the length of the string, in chars
-            // each char can be 1, 2 or 3 bytes - surrogate pairs are reported as 2 chars
-            // note: this is consistent with Java
-
-            return length == 0 ? "" : _data.ReadUtf8String(ref _position, length);
+            var s = Encoding.UTF8.GetString(_data, _position, length);
+            _position += length;
+            return s;
         }
 
         /// <inheritdoc />
