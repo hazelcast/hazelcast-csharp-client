@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HQueue<T> // Dequeue
     {
         /// <inheritdoc />
-        public async Task<T> TryPeekAsync() // peek, or null
+        public async Task<T> PeekAsync() // peek, or null
         {
             var requestMessage = QueuePeekCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
@@ -32,7 +32,13 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<T> TryDequeueAsync(TimeSpan timeToWait = default)
+        public async Task<T> GetElementAsync()
+        {
+            return await PeekAsync().CAF() ?? throw new InvalidOperationException("The queue is empty.");
+        }
+
+        /// <inheritdoc />
+        public async Task<T> PollAsync(TimeSpan timeToWait = default)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMilliseconds);
@@ -42,7 +48,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<T> DequeueAsync()
+        public async Task<T> TakeAsync()
         {
             var requestMessage = QueueTakeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

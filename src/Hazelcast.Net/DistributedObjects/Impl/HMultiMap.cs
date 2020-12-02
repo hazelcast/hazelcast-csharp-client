@@ -233,7 +233,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<int> SizeAsync()
+        public async Task<int> GetSizeAsync()
         {
             var requestMessage = MultiMapSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CAF();
@@ -241,7 +241,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<int> ValueCountAsync(TKey key)
+        public async Task<int> GetValueCountAsync(TKey key)
         {
             var keyData = ToSafeData(key);
             var requestMessage = MultiMapValueCountCodec.EncodeRequest(Name, keyData, ContextId);

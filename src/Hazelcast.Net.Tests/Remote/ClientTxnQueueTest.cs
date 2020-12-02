@@ -30,9 +30,9 @@ namespace Hazelcast.Tests.Remote
             const string item = "offered";
             await using var context = await Client.BeginTransactionAsync();
             var txQueue = await context.GetQueueAsync<string>(CreateUniqueName());
-            Assert.IsTrue(await txQueue.TryEnqueueAsync(item));
-            Assert.AreEqual(1, await txQueue.CountAsync());
-            Assert.AreEqual(item, await txQueue.DequeueAsync());
+            Assert.IsTrue(await txQueue.OfferAsync(item));
+            Assert.AreEqual(1, await txQueue.GetSizeAsync());
+            Assert.AreEqual(item, await txQueue.TakeAsync());
             await context.CommitAsync();
         }
 
@@ -41,12 +41,12 @@ namespace Hazelcast.Tests.Remote
         {
             await using var context = await Client.BeginTransactionAsync();
             var txQueue = await context.GetQueueAsync<string>(CreateUniqueName());
-            Assert.IsTrue(await txQueue.TryEnqueueAsync("ali"));
-            var s = await txQueue.TryDequeueAsync();
+            Assert.IsTrue(await txQueue.OfferAsync("ali"));
+            var s = await txQueue.PollAsync();
             Assert.AreEqual("ali", s);
             await context.CommitAsync();
             var queue = await Client.GetQueueAsync<string>(txQueue.Name);
-            Assert.AreEqual(0, await queue.CountAsync());
+            Assert.AreEqual(0, await queue.GetSizeAsync());
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Remote
                     {
                         latch.WaitOne();
                         //Thread.Sleep(3000);
-                        await queue.TryEnqueueAsync("item0");
+                        await queue.OfferAsync("item0");
                     }
                     catch
                     {
@@ -79,7 +79,7 @@ namespace Hazelcast.Tests.Remote
                 await t;
                 try
                 {
-                    s = await txQueue.TryDequeueAsync(TimeSpan.FromSeconds(20));
+                    s = await txQueue.PollAsync(TimeSpan.FromSeconds(20));
                 }
                 catch (Exception e)
                 {
@@ -88,7 +88,7 @@ namespace Hazelcast.Tests.Remote
                 Assert.AreEqual("item0", s);
                 await context.CommitAsync();
                 context = null;
-                Assert.AreEqual(0, await queue.CountAsync());
+                Assert.AreEqual(0, await queue.GetSizeAsync());
             }
             finally
             {
@@ -106,9 +106,9 @@ namespace Hazelcast.Tests.Remote
             var item = "offered";
             await using var context = await Client.BeginTransactionAsync();
             var txQueue = await context.GetQueueAsync<string>(CreateUniqueName());
-            Assert.IsTrue(await txQueue.TryEnqueueAsync(item));
-            Assert.AreEqual(1, await txQueue.CountAsync());
-            Assert.AreEqual(item, await txQueue.DequeueAsync());
+            Assert.IsTrue(await txQueue.OfferAsync(item));
+            Assert.AreEqual(1, await txQueue.GetSizeAsync());
+            Assert.AreEqual(item, await txQueue.TakeAsync());
             await context.CommitAsync();
         }
 
@@ -117,14 +117,14 @@ namespace Hazelcast.Tests.Remote
         {
             await using var context = await Client.BeginTransactionAsync();
             var txQueue = await context.GetQueueAsync<string>(CreateUniqueName());
-            Assert.IsTrue(await txQueue.TryEnqueueAsync("ali"));
+            Assert.IsTrue(await txQueue.OfferAsync("ali"));
             var s = await txQueue.PeekAsync();
             Assert.AreEqual("ali", s);
             s = await txQueue.PeekAsync();
             Assert.AreEqual("ali", s);
             await context.CommitAsync();
             var queue = await Client.GetQueueAsync<string>(txQueue.Name);
-            Assert.AreEqual(1, await queue.CountAsync());
+            Assert.AreEqual(1, await queue.GetSizeAsync());
         }
     }
 }

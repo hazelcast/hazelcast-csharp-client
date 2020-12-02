@@ -46,7 +46,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(collection);
 
             await FillCollection(collection, 5);
-            Assert.AreEqual(5, await collection.CountAsync());
+            Assert.AreEqual(5, await collection.GetSizeAsync());
         }
 
         [Test]
@@ -56,8 +56,8 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(collection);
 
             var coll = new List<string> {"item1", "item2", "item3", "item4"};
-            Assert.IsTrue(await collection.AddRangeAsync(coll));
-            Assert.That(await collection.CountAsync(), Is.EqualTo(coll.Count));
+            Assert.IsTrue(await collection.AddAll(coll));
+            Assert.That(await collection.GetSizeAsync(), Is.EqualTo(coll.Count));
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace Hazelcast.Tests.Remote
                 Assert.True(actualItems.Contains(allItems[i]));
             }
 
-            Assert.That(await collection.CountAsync(), Is.EqualTo(testCount));
+            Assert.That(await collection.GetSizeAsync(), Is.EqualTo(testCount));
         }
 
         [Test]
@@ -91,7 +91,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(collection);
 
             await FillCollection(collection, 1);
-            Assert.AreEqual(1, await collection.CountAsync());
+            Assert.AreEqual(1, await collection.GetSizeAsync());
         }
 
         [Test]
@@ -258,7 +258,7 @@ namespace Hazelcast.Tests.Remote
 
             await using (collection)
             {
-                Assert.AreEqual(0, await collection.CountAsync());
+                Assert.AreEqual(0, await collection.GetSizeAsync());
             }
 
             await collection2.AddAsync("item");

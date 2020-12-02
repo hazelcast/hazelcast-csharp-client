@@ -35,6 +35,6 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>Returns the size of the set</summary>
         /// <returns>size</returns>
-        Task<int> CountAsync();
+        Task<int> GetSizeAsync();
     }
 }

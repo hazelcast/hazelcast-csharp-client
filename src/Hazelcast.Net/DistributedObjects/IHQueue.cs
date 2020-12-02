@@ -30,11 +30,13 @@ namespace Hazelcast.DistributedObjects
     /// </remarks>
     public interface IHQueue<T> : IHCollection<T>
     {
+        // setting
+
         /// <summary>
         /// Inserts the specified element into this queue, waiting if necessary for space to become available.
         /// </summary>
         /// <param name="item">the element to Add</param>
-        Task EnqueueAsync(T item);
+        Task PutAsync(T item);
 
         /// <summary>
         /// Inserts the specified element into this queue if it is possible to do
@@ -53,29 +55,29 @@ namespace Hazelcast.DistributedObjects
         /// <returns>
         /// <c>true</c> if the element was added to this queue, else <c>false</c>
         /// </returns>
-        Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait=default);
+        Task<bool> OfferAsync(T item, TimeSpan timeToWait = default);
 
-        //getting
+        // getting
+
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
         /// </summary>
         /// <returns>the head of this queue</returns>
-        Task<T> DequeueAsync();
+        Task<T> TakeAsync();
 
         /// <summary>
         /// Retrieves and removes the head of this queue, waiting up to the
         /// specified wait time if necessary for an element to become available.
         /// </summary>
         /// <remarks>
-        /// Retrieves and removes the head of this queue, waiting up to the
-        /// specified wait time if necessary for an element to become available.
+        /// <para>If <paramref name="timeToWait"/>"/> is not specified, waits until
+        /// an element becomes available.</para>
         /// </remarks>
-        /// <param name="timeToWait">how long to wait before giving up</param>
-        /// <returns>
-        /// the head of this queue, or <c>null</c> if the
-        /// specified waiting time elapses before an element is available
+        /// <param name="timeToWait">The optional time to wait before giving up.</param>
+        /// <returns>The head of this queue, or <c>null</c> if the
+        /// specified waiting time elapses before an element is available.
         /// </returns>
-        Task<T> TryDequeueAsync(TimeSpan timeToWait=default);
+        Task<T> PollAsync(TimeSpan timeToWait = default);
 
         /// <summary>
         /// Removes all available elements from this queue and adds them to the given collection.
@@ -108,7 +110,13 @@ namespace Hazelcast.DistributedObjects
         /// Retrieves, but does not remove, the head of this queue, or returns <c>null</c> if this queue is empty.
         /// </summary>
         /// <returns>the head of this queue, or <c>null</c> if this queue is empty</returns>
-        Task<T> TryPeekAsync();
+        Task<T> PeekAsync();
+
+        /// <summary>
+        /// Retrieves, but does not remove, the head of this queue, or throws if this queue is empty.
+        /// </summary>
+        /// <returns>the head of this queue</returns>
+        Task<T> GetElementAsync();
 
         /// <summary>
         /// Returns the number of additional elements that this queue can ideally

@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return SetAddCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items)
+        public override async Task<bool> AddAll<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = SetAddAllCodec.EncodeRequest(Name, itemsData);

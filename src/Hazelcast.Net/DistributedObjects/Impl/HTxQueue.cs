@@ -28,10 +28,10 @@ namespace Hazelcast.DistributedObjects.Impl
             : base(ServiceNames.Queue, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public Task<bool> TryEnqueueAsync(TItem item)
-            => TryEnqueueAsync(item, TimeToWait.Zero);
+        public Task<bool> OfferAsync(TItem item)
+            => OfferAsync(item, TimeToWait.Zero);
 
-        public async Task<bool> TryEnqueueAsync(TItem item, TimeSpan timeToWait)
+        public async Task<bool> OfferAsync(TItem item, TimeSpan timeToWait)
         {
             var itemData = ToSafeData(item);
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
@@ -40,11 +40,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<TItem> PeekAsync()
-            => await TryPeekAsync(TimeToWait.Zero).CAF() ??
-               throw new InvalidOperationException("The queue is empty.");
-
-        public async Task<TItem> TryPeekAsync(TimeSpan timeToWait)
+        public async Task<TItem> PeekAsync(TimeSpan timeToWait = default)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
@@ -53,10 +49,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TItem>(response);
         }
 
-        public Task<TItem> TryDequeueAsync()
-            => TryDequeueAsync(TimeToWait.Zero);
-
-        public async Task<TItem> TryDequeueAsync(TimeSpan timeToWait)
+        public async Task<TItem> PollAsync(TimeSpan timeToWait = default)
         {
             var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
             var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
@@ -65,14 +58,14 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TItem>(response);
         }
 
-        public async Task<int> CountAsync()
+        public async Task<int> GetSizeAsync()
         {
             var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task<TItem> DequeueAsync()
+        public async Task<TItem> TakeAsync()
         {
             var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();

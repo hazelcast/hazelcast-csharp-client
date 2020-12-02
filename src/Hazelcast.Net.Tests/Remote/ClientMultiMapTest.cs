@@ -36,7 +36,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.PutAsync("a", "b");
             await dictionary.PutAsync("a", "c");
             await dictionary.ClearAsync();
-            Assert.AreEqual(0, await dictionary.SizeAsync());
+            Assert.AreEqual(0, await dictionary.GetSizeAsync());
         }
 
         [Test]
@@ -219,21 +219,21 @@ namespace Hazelcast.Tests.Remote
             Assert.IsTrue(await dictionary.PutAsync("key1", "value3"));
             Assert.IsTrue(await dictionary.PutAsync("key2", "value4"));
             Assert.IsTrue(await dictionary.PutAsync("key2", "value5"));
-            Assert.AreEqual(3, await dictionary.ValueCountAsync("key1"));
-            Assert.AreEqual(2, await dictionary.ValueCountAsync("key2"));
-            Assert.AreEqual(5, await dictionary.SizeAsync());
+            Assert.AreEqual(3, await dictionary.GetValueCountAsync("key1"));
+            Assert.AreEqual(2, await dictionary.GetValueCountAsync("key2"));
+            Assert.AreEqual(5, await dictionary.GetSizeAsync());
             var coll = await dictionary.GetAsync("key1");
             Assert.AreEqual(3, coll.Count);
             coll = await dictionary.RemoveAsync("key2");
             Assert.AreEqual(2, coll.Count);
-            Assert.AreEqual(0, await dictionary.ValueCountAsync("key2"));
+            Assert.AreEqual(0, await dictionary.GetValueCountAsync("key2"));
             Assert.AreEqual(0, (await dictionary.GetAsync("key2")).Count);
             Assert.IsFalse(await dictionary.RemoveAsync("key1", "value4"));
-            Assert.AreEqual(3, await dictionary.SizeAsync());
+            Assert.AreEqual(3, await dictionary.GetSizeAsync());
             Assert.IsTrue(await dictionary.RemoveAsync("key1", "value2"));
-            Assert.AreEqual(2, await dictionary.SizeAsync());
+            Assert.AreEqual(2, await dictionary.GetSizeAsync());
             Assert.IsTrue(await dictionary.RemoveAsync("key1", "value1"));
-            Assert.AreEqual(1, await dictionary.SizeAsync());
+            Assert.AreEqual(1, await dictionary.GetSizeAsync());
             using var enumerator = (await dictionary.GetAsync("key1")).GetEnumerator();
             enumerator.MoveNext();
             Assert.AreEqual("value3", enumerator.Current);

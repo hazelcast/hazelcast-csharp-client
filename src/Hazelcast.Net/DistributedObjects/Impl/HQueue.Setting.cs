@@ -26,15 +26,15 @@ namespace Hazelcast.DistributedObjects.Impl
         // <inheritdoc />
         // need that one because we are an HCollection - weird?
         // tries to enqueue immediately, does not wait & does not throw
-        public override async Task<bool> AddAsync(T item) => await TryEnqueueAsync(item).CAF();
+        public override async Task<bool> AddAsync(T item) => await OfferAsync(item).CAF();
 
         // <inheritdoc />
-        public async Task<bool> TryEnqueueAsync(T item, TimeSpan timeToWait = default)
+        public async Task<bool> OfferAsync(T item, TimeSpan timeToWait = default)
             => await TryEnqueueAsync(item, timeToWait, CancellationToken.None).CAF();
 
         // <inheritdoc />
         // was: Put - enqueue, wait indefinitely, may throw
-        public Task EnqueueAsync(T item) => EnqueueAsync(item, CancellationToken.None);
+        public Task PutAsync(T item) => EnqueueAsync(item, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
@@ -66,7 +66,7 @@ namespace Hazelcast.DistributedObjects.Impl
         // <inheritdoc />
         // need to have it because HCollection but feels weird
         // maybe we need to have something above HCollection?
-        public override async Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items)
+        public override async Task<bool> AddAll<TItem>(ICollection<TItem> items)
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);

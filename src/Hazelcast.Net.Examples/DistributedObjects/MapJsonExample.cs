@@ -39,7 +39,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // count
             Console.WriteLine("Count");
-            Console.WriteLine($"{await map.SizeAsync()} entries");
+            Console.WriteLine($"{await map.GetSizeAsync()} entries");
 
             // get all
             Console.WriteLine("List");

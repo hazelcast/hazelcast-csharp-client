@@ -34,8 +34,8 @@ namespace Hazelcast.Tests.Remote
                 var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
-                Assert.AreEqual(2, await txList.CountAsync());
-                Assert.AreEqual(1, await list.CountAsync());
+                Assert.AreEqual(2, await txList.GetSizeAsync());
+                Assert.AreEqual(1, await list.GetSizeAsync());
                 Assert.IsFalse(await txList.RemoveAsync("item3"));
                 Assert.IsTrue(await txList.RemoveAsync("item1"));
                 Assert.IsTrue(await txList.AddAsync("item4"));
@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Remote
                 await tx.CommitAsync();
             }
 
-            Assert.AreEqual(2, await list.CountAsync());
+            Assert.AreEqual(2, await list.GetSizeAsync());
             var items = await list.GetAllAsync();
             Assert.AreEqual(2, items.Count);
             Assert.IsTrue(items.Contains("item2"));
@@ -62,8 +62,8 @@ namespace Hazelcast.Tests.Remote
                 var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
-                Assert.AreEqual(2, await txList.CountAsync());
-                Assert.AreEqual(1, await list.CountAsync());
+                Assert.AreEqual(2, await txList.GetSizeAsync());
+                Assert.AreEqual(1, await list.GetSizeAsync());
                 Assert.IsFalse(await txList.RemoveAsync("item3"));
                 Assert.IsTrue(await txList.RemoveAsync("item1"));
                 Assert.IsTrue(await txList.AddAsync("item4"));
@@ -71,7 +71,7 @@ namespace Hazelcast.Tests.Remote
                 await tx.RollbackAsync();
             }
 
-            Assert.AreEqual(1, await list.CountAsync());
+            Assert.AreEqual(1, await list.GetSizeAsync());
             var items = await list.GetAllAsync();
             Assert.AreEqual(1, items.Count);
             Assert.IsTrue(items.Contains("item1"));
@@ -90,8 +90,8 @@ namespace Hazelcast.Tests.Remote
                 var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
-                Assert.AreEqual(2, await txList.CountAsync());
-                Assert.AreEqual(1, await list.CountAsync());
+                Assert.AreEqual(2, await txList.GetSizeAsync());
+                Assert.AreEqual(1, await list.GetSizeAsync());
                 Assert.IsFalse(await txList.RemoveAsync("item3"));
                 Assert.IsTrue(await txList.RemoveAsync("item1"));
                 Assert.IsTrue(await txList.AddAsync("item4"));
@@ -99,7 +99,7 @@ namespace Hazelcast.Tests.Remote
                 tx.Complete();
             }
 
-            Assert.AreEqual(2, await list.CountAsync());
+            Assert.AreEqual(2, await list.GetSizeAsync());
             var items = await list.GetAllAsync();
             Assert.AreEqual(2, items.Count);
             Assert.IsTrue(items.Contains("item2"));
@@ -119,13 +119,13 @@ namespace Hazelcast.Tests.Remote
                 var txList = await tx.GetListAsync<string>(list.Name);
 
                 Assert.IsTrue(await txList.AddAsync("item2"));
-                Assert.AreEqual(2, await txList.CountAsync());
-                Assert.AreEqual(1, await list.CountAsync());
+                Assert.AreEqual(2, await txList.GetSizeAsync());
+                Assert.AreEqual(1, await list.GetSizeAsync());
                 Assert.IsFalse(await txList.RemoveAsync("item3"));
                 Assert.IsTrue(await txList.RemoveAsync("item1"));
             }
 
-            Assert.AreEqual(1, await list.CountAsync());
+            Assert.AreEqual(1, await list.GetSizeAsync());
             var items = await list.GetAllAsync();
             Assert.AreEqual(1, items.Count);
             Assert.IsTrue(items.Contains("item1"));

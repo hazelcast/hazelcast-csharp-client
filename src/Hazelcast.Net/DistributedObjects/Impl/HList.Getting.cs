@@ -41,7 +41,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<T>> GetRangeAsync(int fromIndex, int toIndex)
+        public async Task<IReadOnlyList<T>> GetSublistAsync(int fromIndex, int toIndex)
         {
             var requestMessage = ListSubCodec.EncodeRequest(Name, fromIndex, toIndex);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
@@ -94,7 +94,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public override async Task<int> CountAsync()
+        public override async Task<int> GetSizeAsync()
         {
             var requestMessage = ListSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

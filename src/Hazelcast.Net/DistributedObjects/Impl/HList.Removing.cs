@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<T> GetAndRemoveAtAsync(int index)
+        public async Task<T> RemoveAsync(int index)
         {
             var requestMessage = ListRemoveWithIndexCodec.EncodeRequest(Name, index);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

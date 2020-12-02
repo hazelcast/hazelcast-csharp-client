@@ -77,7 +77,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>Gets the number of entries contained in this map.</summary>
         /// <returns>The number of entries contained in this map.</returns>
         // TODO: document MapStore behavior
-        Task<int> SizeAsync();
+        Task<int> GetSizeAsync();
 
         /// <summary>Determines whether this map contains no entries.</summary>
         /// <returns><c>true</c> if this map contains no entries; otherwise <c>false</c>.</returns>

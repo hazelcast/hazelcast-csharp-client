@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -41,9 +42,9 @@ namespace Hazelcast.Tests.Remote
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            await queue.EnqueueAsync("item0");
+            await queue.PutAsync("item0");
 
-            Assert.That(await queue.CountAsync(), Is.EqualTo(1));
+            Assert.That(await queue.GetSizeAsync(), Is.EqualTo(1));
         }
 
         [Test]
@@ -56,8 +57,8 @@ namespace Hazelcast.Tests.Remote
             const int maxCapacity = 6;
             await FillCollection(queue, maxCapacity-1);
 
-            Assert.True(await queue.TryEnqueueAsync("item6"));
-            Assert.False(await queue.TryEnqueueAsync("item6"));
+            Assert.True(await queue.OfferAsync("item6"));
+            Assert.False(await queue.OfferAsync("item6"));
         }
 
         [Test]
@@ -70,7 +71,7 @@ namespace Hazelcast.Tests.Remote
             const int maxCapacity = 6;
             await FillCollection(queue, maxCapacity);
 
-            Assert.False(await queue.TryEnqueueAsync("item", TimeSpan.FromSeconds(2)));
+            Assert.False(await queue.OfferAsync("item", TimeSpan.FromSeconds(2)));
         }
 
         [Test]
@@ -79,8 +80,8 @@ namespace Hazelcast.Tests.Remote
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            var dequeueTask = queue.DequeueAsync();
-            await queue.TryEnqueueAsync("item0");
+            var dequeueTask = queue.TakeAsync();
+            await queue.OfferAsync("item0");
             Assert.That(await dequeueTask, Is.EqualTo("item0"));
         }
 
@@ -90,8 +91,8 @@ namespace Hazelcast.Tests.Remote
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            await queue.TryEnqueueAsync("item0");
-            Assert.That(await queue.TryDequeueAsync(), Is.EqualTo("item0"));
+            await queue.OfferAsync("item0");
+            Assert.That(await queue.PollAsync(), Is.EqualTo("item0"));
         }
 
         [Test]
@@ -100,9 +101,9 @@ namespace Hazelcast.Tests.Remote
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            await queue.TryEnqueueAsync("item0");
-            Assert.That(await queue.TryDequeueAsync(TimeSpan.FromSeconds(2)), Is.EqualTo("item0"));
-            Assert.IsNull(await queue.TryDequeueAsync(TimeSpan.FromSeconds(2)));
+            await queue.OfferAsync("item0");
+            Assert.That(await queue.PollAsync(TimeSpan.FromSeconds(2)), Is.EqualTo("item0"));
+            Assert.IsNull(await queue.PollAsync(TimeSpan.FromSeconds(2)));
         }
 
         [Test]
@@ -146,7 +147,16 @@ namespace Hazelcast.Tests.Remote
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            Assert.IsNull(await queue.TryPeekAsync());
+            Assert.IsNull(await queue.PeekAsync());
+        }
+
+        [Test]
+        public async Task TestGetElementAsync()
+        {
+            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
+            await using var _ = DestroyAndDispose(queue);
+
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async() => await queue.GetElementAsync());
         }
 
         [Test]
@@ -156,7 +166,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(queue);
 
             Assert.That(await queue.GetRemainingCapacityAsync(), Is.EqualTo(6));
-            Assert.That(await queue.TryEnqueueAsync("item_0"));
+            Assert.That(await queue.OfferAsync("item_0"));
             Assert.That(await queue.GetRemainingCapacityAsync(), Is.EqualTo(5));
         }
     }

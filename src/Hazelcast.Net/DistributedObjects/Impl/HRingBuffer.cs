@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<long> AddRangeAsync(ICollection<TItem> items, OverflowPolicy overflowPolicy)
+        public async Task<long> AddAllAsync(ICollection<TItem> items, OverflowPolicy overflowPolicy)
         {
             if (items.Count == 0) throw new ArgumentException("Cannot add zero items.", nameof(items));
             var itemsData = ToSafeData(items);
@@ -93,7 +93,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<TItem>> GetRangeAsync(long startSequence, int minCount, int maxCount)
+        public async Task<IReadOnlyList<TItem>> ReadManyAsync(long startSequence, int minCount, int maxCount)
         {
             if (startSequence < 0) throw new ArgumentOutOfRangeException(nameof(startSequence));
             if (minCount < 0) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be equal to, or greater than, zero.");
@@ -110,7 +110,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async ValueTask<TItem> GetAsync(long sequence)
+        public async ValueTask<TItem> ReadOneAsync(long sequence)
         {
             if (sequence < 0) throw new ArgumentOutOfRangeException(nameof(sequence));
 
@@ -129,7 +129,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<long> CountAsync()
+        public async Task<long> GetSizeAsync()
         {
             var requestMessage = RingbufferSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

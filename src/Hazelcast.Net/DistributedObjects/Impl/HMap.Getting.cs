@@ -299,7 +299,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<int> SizeAsync()
+        public Task<int> GetSizeAsync()
             => CountAsync(CancellationToken.None);
 
         private async Task<int> CountAsync(CancellationToken cancellationToken)

@@ -118,7 +118,7 @@ namespace Hazelcast.Tests.Remote
             await txMultiDictionary.PutAsync(key, "newValue");
             await txMultiDictionary.PutAsync("newKey", value);
 
-            Assert.AreEqual(3, await txMultiDictionary.SizeAsync());
+            Assert.AreEqual(3, await txMultiDictionary.GetSizeAsync());
 
             await context.CommitAsync();
         }
@@ -137,7 +137,7 @@ namespace Hazelcast.Tests.Remote
 
             await txMultiDictionary.PutAsync(key, "newValue");
 
-            Assert.AreEqual(2, await txMultiDictionary.ValueCountAsync(key));
+            Assert.AreEqual(2, await txMultiDictionary.GetValueCountAsync(key));
 
             await context.CommitAsync();
         }

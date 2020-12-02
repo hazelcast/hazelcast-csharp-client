@@ -42,7 +42,7 @@ namespace Hazelcast.Tests.Remote
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
 
             value = await TaskEx.RunWithTimeout(t=> map.GetAsync("key"), TimeSpan.FromSeconds(30)).CAF();
@@ -71,7 +71,7 @@ namespace Hazelcast.Tests.Remote
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
         }
 
@@ -138,7 +138,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.That(await map.GetAsync("key"), Is.EqualTo(43));
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
         }
 
@@ -159,7 +159,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.That(await map.GetAsync("key"), Is.EqualTo(43));
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
         }
 
@@ -188,7 +188,7 @@ namespace Hazelcast.Tests.Remote
             var value2 = await map.GetAsync("key2").CAF();
             Assert.AreEqual(43, value2);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(2, count);
         }
 
@@ -219,7 +219,7 @@ namespace Hazelcast.Tests.Remote
             var value2 = await map.GetAsync("key2").CAF();
             Assert.AreEqual(44, value2);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(2, count);
         }
 
@@ -240,7 +240,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.That(await map.ReplaceAsync("key2", 43), Is.Zero);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
         }
 
@@ -261,7 +261,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.That(await map.ReplaceAsync("key2", 43), Is.Null);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
         }
 
@@ -283,7 +283,7 @@ namespace Hazelcast.Tests.Remote
             var result2 = await map.ReplaceAsync("key1", 42, 44).CAF();
             Assert.IsTrue(result2);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
         }
 
@@ -306,7 +306,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.That(await map.GetAsync("key"), Is.Zero);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(0, count);
         }
 
@@ -331,7 +331,7 @@ namespace Hazelcast.Tests.Remote
             var value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(2, count);
         }
 
@@ -352,7 +352,7 @@ namespace Hazelcast.Tests.Remote
             value = await map.GetAsync("key").CAF();
             Assert.AreEqual(43, value);
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(1, count);
         }
 
@@ -369,12 +369,12 @@ namespace Hazelcast.Tests.Remote
 
             await map.SetAllAsync(entries).CAF();
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(100, count);
 
             await map.ClearAsync().CAF();
 
-            count = await map.SizeAsync().CAF();
+            count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(0, count);
         }
 
@@ -391,7 +391,7 @@ namespace Hazelcast.Tests.Remote
 
             await map.SetAllAsync(entries).CAF();
 
-            var count = await map.SizeAsync().CAF();
+            var count = await map.GetSizeAsync().CAF();
             Assert.AreEqual(100, count);
 
             var keys = await map.GetKeysAsync().CAF();

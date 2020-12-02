@@ -23,6 +23,6 @@ namespace Hazelcast.DistributedObjects.Impl
         public abstract Task<bool> AddAsync(T item);
 
         /// <inheritdoc />
-        public abstract Task<bool> AddRangeAsync<TItem>(ICollection<TItem> items) where TItem : T;
+        public abstract Task<bool> AddAll<TItem>(ICollection<TItem> items) where TItem : T;
     }
 }

@@ -33,12 +33,12 @@ namespace Hazelcast.Tests.Remote
 
             var txList = await context.GetListAsync<string>(list.Name);
             Assert.IsTrue(await txList.AddAsync("item2"));
-            Assert.AreEqual(2, await txList.CountAsync());
-            Assert.AreEqual(1, await list.CountAsync());
+            Assert.AreEqual(2, await txList.GetSizeAsync());
+            Assert.AreEqual(1, await list.GetSizeAsync());
             Assert.IsFalse(await txList.RemoveAsync("item3"));
             Assert.IsTrue(await txList.RemoveAsync("item1"));
             await context.CommitAsync();
-            Assert.AreEqual(1, await list.CountAsync());
+            Assert.AreEqual(1, await list.GetSizeAsync());
         }
     }
 }

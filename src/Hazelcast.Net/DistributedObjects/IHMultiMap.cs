@@ -116,12 +116,12 @@ namespace Hazelcast.DistributedObjects
 
         /// <summary>Returns the number of key-value pairs in the multi-map.</summary>
         /// <returns>the number of key-value pairs in the multi-map.</returns>
-        Task<int> SizeAsync();
+        Task<int> GetSizeAsync();
 
         /// <summary>Returns number of values matching to given key in the multi-map.</summary>
         /// <param name="key">the key whose values count are to be returned</param>
         /// <returns>number of values matching to given key in the multi-map.</returns>
-        Task<int> ValueCountAsync(TKey key);
+        Task<int> GetValueCountAsync(TKey key);
 
         // Removing
 

@@ -35,7 +35,7 @@ namespace Hazelcast.Examples.DistributedObjects
             {
                 for (var i = 0; i < 100; i++)
                 {
-                    await queue.TryEnqueueAsync("value " + i);
+                    await queue.OfferAsync("value " + i);
                 }
                 Console.WriteLine("produced");
             });
@@ -44,7 +44,7 @@ namespace Hazelcast.Examples.DistributedObjects
             {
                 var nConsumed = 0;
                 string e;
-                while (nConsumed++ < 100 && (e = await queue.TryDequeueAsync()) != null)
+                while (nConsumed++ < 100 && (e = await queue.PollAsync()) != null)
                 {
                     Console.WriteLine("Consuming " + e);
                 }

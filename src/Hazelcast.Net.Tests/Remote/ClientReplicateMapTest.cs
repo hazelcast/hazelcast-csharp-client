@@ -197,7 +197,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.PutAsync(1, "value1");
             await dictionary.PutAsync(2, "value2");
             await dictionary.ClearAsync();
-            Assert.AreEqual(0, await dictionary.SizeAsync());
+            Assert.AreEqual(0, await dictionary.GetSizeAsync());
         }
 
         [Test]
@@ -330,7 +330,7 @@ namespace Hazelcast.Tests.Remote
             {
                 Assert.AreEqual("value"+i, await dictionary.GetAsync(i));
             }
-            Assert.AreEqual(10, await dictionary.SizeAsync());
+            Assert.AreEqual(10, await dictionary.GetSizeAsync());
         }
 
         [Test]
@@ -342,7 +342,7 @@ namespace Hazelcast.Tests.Remote
             await dictionary.PutAsync(1, "value1");
             var value = await dictionary.RemoveAsync(1);
             Assert.AreEqual(value, "value1");
-            Assert.AreEqual(0, await dictionary.SizeAsync());
+            Assert.AreEqual(0, await dictionary.GetSizeAsync());
 
         }
 
@@ -370,7 +370,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(dictionary);
 
             await FillValues(dictionary);
-            Assert.AreEqual(10, await dictionary.SizeAsync());
+            Assert.AreEqual(10, await dictionary.GetSizeAsync());
         }
 
         [Test]

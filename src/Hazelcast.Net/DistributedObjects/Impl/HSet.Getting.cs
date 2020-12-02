@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.Impl
             return SetContainsCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task<int> CountAsync()
+        public override async Task<int> GetSizeAsync()
         {
             var requestMessage = SetSizeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
