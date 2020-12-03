@@ -24,7 +24,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents an ambient context that is local to a given asynchronous control flow, such as an asynchronous method.
     /// </summary>
-    public sealed class AsyncContext
+    internal sealed class AsyncContext
     {
         // the sequence of unique identifiers for contexts
         private static ISequence<long> _idSequence = new Int64Sequence();

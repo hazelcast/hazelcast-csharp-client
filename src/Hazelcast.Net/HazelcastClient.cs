@@ -78,9 +78,6 @@ namespace Hazelcast
                 foreach (var subscriber in options.Subscribers)
                     await subscriber.SubscribeAsync(this, cancellationToken).CAF();
             };
-
-            // every async operations using this client will need a proper async context
-            AsyncContext.Ensure();
         }
 
         /// <summary>

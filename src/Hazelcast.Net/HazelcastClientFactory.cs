@@ -94,7 +94,19 @@ namespace Hazelcast
         /// <param name="options">Options.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        public static async ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken)
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we must do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            return StartNewClientAsyncInternal(options, cancellationToken);
+        }
+
+        // implements the async part of StartNewClientAsync
+        private static async ValueTask<IHazelcastClient> StartNewClientAsyncInternal(HazelcastOptions options, CancellationToken cancellationToken)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -113,7 +125,19 @@ namespace Hazelcast
         /// <remarks>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>
-        public static async ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, TimeSpan timeout = default)
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, TimeSpan timeout = default)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we must do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            return StartNewClientAsyncInternal(options, timeout);
+        }
+
+        // implements the async part of StartNewClientAsync
+        private static async ValueTask<IHazelcastClient> StartNewClientAsyncInternal(HazelcastOptions options, TimeSpan timeout = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 

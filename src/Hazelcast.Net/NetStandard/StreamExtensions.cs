@@ -31,6 +31,10 @@ namespace System.IO
     /// </summary>
     internal static class StreamExtensions
     {
+        // NOTE: do *not* use the .CAF() extension method in this class, as this
+        // creates a cyclic dependency from System.* to Hazelcast.* which we'd
+        // rather avoid - stick with .ConfigureAwait(false).
+
         /// <summary>
         /// Reads from a stream.
         /// </summary>
@@ -51,6 +55,7 @@ namespace System.IO
 
             if (MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> array))
             {
+                // original code, replaced with code below - keep for reference
                 //return await stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken).ConfigureAwait(false);
 
                 // see below, cancellation issue
@@ -70,6 +75,7 @@ namespace System.IO
             var bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
             try
             {
+                // original code, replaced with code below - keep for reference
                 //var result = await stream.ReadAsync(bytes, 0, memory.Length, cancellationToken).ConfigureAwait(false);
 
                 // stream.ReadAsync for network streams *ignores* the cancellation token
