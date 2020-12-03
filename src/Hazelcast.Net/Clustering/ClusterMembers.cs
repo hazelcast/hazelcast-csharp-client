@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -47,10 +46,8 @@ namespace Hazelcast.Clustering
         //private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0, 1);
 
         // member id -> connection
-        // concurrent dictionary, so it is safe to read it without locks,
-        // still we use a lock to add/remove connections and determine first/last
-        private readonly ConcurrentDictionary<Guid, MemberConnection> _connections = new ConcurrentDictionary<Guid, MemberConnection>();
-        private readonly object _connectionsLock = new object();
+        // not concurrent, always managed through the mutex
+        private readonly Dictionary<Guid, MemberConnection> _connections = new Dictionary<Guid, MemberConnection>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterMembers"/> class.
@@ -62,60 +59,68 @@ namespace Hazelcast.Clustering
             _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
         }
 
+        /// <summary>
+        /// Gets this <see cref="ClusterMembers"/> lock object.
+        /// </summary>
+        public object Mutex { get; } = new object();
+
         #region Event Handlers
 
         /// <summary>
-        /// Notifies that a connection has been opened.
+        /// (thread-unsafe) Notifies that a connection has been opened.
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns><c>true</c> if the connection is the first one to be established; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>This method should be invoked within the global cluster lock.</para>
+        /// <para>This method is not thread-safe; the caller has to lock the
+        /// <see cref="Mutex"/> object to ensure thread-safety.</para>
         /// </remarks>
         public bool NotifyConnectionOpened(MemberConnection connection)
         {
-            lock (_connectionsLock)
+            var isFirst = _connections.Count == 0;
+
+#if NETSTANDARD2_0
+            var contains = _connections.ContainsKey(connection.MemberId);
+            _connections[connection.MemberId] = connection;
+            if (!contains)
+#else
+            if (!_connections.TryAdd(connection.MemberId, connection))
+#endif
+                throw new HazelcastException("Failed to add a connection (duplicate memberId).");
+
+            if (_clusterId == default)
             {
-                var isFirst = _connections.IsEmpty;
-
-                if (!_connections.TryAdd(connection.MemberId, connection))
-                    throw new HazelcastException("Failed to add a connection (duplicate memberId).");
-
-                if (_clusterId == default)
-                {
-                    _clusterId = connection.ClusterId; // first cluster
-                }
-                else if (_clusterId != connection.ClusterId)
-                {
-                    // see TcpClientConnectionManager java class handleSuccessfulAuth method
-                    // does not even consider the cluster identifier when !isFirst 
-                    if (isFirst)
-                    {
-                        _clusterId = connection.ClusterId; // new cluster
-                        _memberTable = new MemberTable();
-                    }
-                }
-
-                return isFirst;
+                _clusterId = connection.ClusterId; // first cluster
             }
+            else if (_clusterId != connection.ClusterId)
+            {
+                // see TcpClientConnectionManager java class handleSuccessfulAuth method
+                // does not even consider the cluster identifier when !isFirst
+                if (isFirst)
+                {
+                    _clusterId = connection.ClusterId; // new cluster
+                    _memberTable = new MemberTable();
+                }
+            }
+
+            return isFirst;
         }
 
         /// <summary>
-        /// Notifies that a connection has been closed.
+        /// (thread-unsafe) Notifies that a connection has been closed.
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns><c>true</c> if the connection was the last one; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>This method should be invoked within the global cluster lock.</para>
+        /// <para>This method is not thread-safe; the caller has to lock the
+        /// <see cref="Mutex"/> object to ensure thread-safety.</para>
         /// </remarks>
         public bool NotifyConnectionClosed(MemberConnection connection)
         {
-            lock (_connectionsLock)
-            {
-                var removed = _connections.TryRemove(connection.MemberId, out _);
-                var wasLast = removed && _connections.IsEmpty;
-                return wasLast;
-            }
+            var removed = _connections.ContainsKey(connection.MemberId);
+            if (removed) _connections.Remove(connection.MemberId);
+            var wasLast = removed && _connections.Count == 0;
+            return wasLast;
         }
 
         /// <summary>
@@ -125,6 +130,8 @@ namespace Hazelcast.Clustering
         /// <param name="members">The members.</param>
         public async ValueTask<MembersUpdatedEventArgs> NotifyMembersView(int version, ICollection<MemberInfo> members)
         {
+            // FIXME could we process two of these at a time?
+
             // get a new table
             var table = new MemberTable(version, members);
 
@@ -195,20 +202,17 @@ namespace Hazelcast.Clustering
         public IEnumerable<NetworkAddress> GetAddresses()
         {
             var members = _memberTable?.Members;
-            if (members == null) return Enumerable.Empty<NetworkAddress>();
-            return members.Values.Select(x => x.Address);
+            return members == null 
+                ? Enumerable.Empty<NetworkAddress>() 
+                : members.Values.Select(x => x.Address);
         }
 
 
         /// <summary>
         /// Gets a connection to a random member.
         /// </summary>
-        /// <param name="throwIfNoConnection">Whether to throw if no client connection can be obtained immediately.</param>
         /// <returns>A random client connection if available; otherwise <c>null</c>.</returns>
-        /// <remarks>
-        /// <para>Throws or return <c>null</c> if not client connection can be obtained immediately.</para>
-        /// </remarks>
-        public MemberConnection GetRandomConnection(bool throwIfNoConnection = true)
+        public MemberConnection GetRandomConnection()
         {
             MemberConnection connection;
 
@@ -231,18 +235,19 @@ namespace Hazelcast.Clustering
                 for (var i = 0; i < count; i++)
                 {
                     var memberId = _loadBalancer.GetMember();
-                    if (_connections.TryGetValue(memberId, out connection))
-                        return connection;
+                    lock (Mutex)
+                    {
+                        if (_connections.TryGetValue(memberId, out connection))
+                            return connection;
+                    }
                 }
             }
 
             // either "smart" mode but the load balancer did not return a member,
             // or "uni-socket" mode where there should only be once connection
-            connection = _connections.Values.FirstOrDefault();
-            // FIXME better error + NOT CONNECTED
-            if (connection == null && throwIfNoConnection)
-                throw new HazelcastException("Could not get a connection.");
+            lock (Mutex) connection = _connections.Values.FirstOrDefault();
 
+            // may be null
             return connection;
         }
 
@@ -253,7 +258,9 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         /// <returns><c>true</c> if a connection to the specified member was found; otherwise <c>false</c>.</returns>
         public bool TryGetConnection(Guid memberId, out MemberConnection connection)
-            => _connections.TryGetValue(memberId, out connection);
+        {
+            lock (Mutex) return _connections.TryGetValue(memberId, out connection);
+        }
 
         /// <summary>
         /// Waits for a random connection to be available and return it.
@@ -268,11 +275,11 @@ namespace Hazelcast.Clustering
             while (!cancellationToken.IsCancellationRequested)
             {
                 // this is just basically retrieving a random client
-                var clientConnection = GetRandomConnection(false);
+                var clientConnection = GetRandomConnection();
                 if (clientConnection != null) return clientConnection;
 
-                // no need to try again if the client died
-                _clusterState.ThrowIfCancelled();
+                // no need to try again if the client is down
+                _clusterState.ThrowIfCancelled(); // FIXME better?!
 
                 // no clients => wait for clients
                 // this *may* throw
@@ -291,7 +298,8 @@ namespace Hazelcast.Clustering
         /// <returns>A snapshot of the current client connections.</returns>
         public List<MemberConnection> SnapshotConnections(bool activeOnly)
         {
-            IEnumerable<MemberConnection> connections = _connections.Values;
+            IEnumerable<MemberConnection> connections;
+            lock (Mutex) connections = _connections.Values;
             if (activeOnly) connections = connections.Where(x => x.Active);
             return connections.ToList();
         }
@@ -322,19 +330,6 @@ namespace Hazelcast.Clustering
         public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLiteMember);
 
         /// <summary>
-        /// Terminate all member connections.
-        /// </summary>
-        /// <returns>A task that will complete when all member connections have been terminated.</returns>
-        public async ValueTask TerminateAll()
-        {
-            foreach (var (_, connection) in _connections)
-            {
-                await connection.TerminateAsync().CAF();
-            }
-        }
-
-
-        /// <summary>
         /// Waits for the first member view event.
         /// </summary>
         /// <returns>A task that will complete when the first member view event has been received.</returns>
@@ -349,7 +344,6 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await TerminateAll().CAF();
             _firstMembersView?.Dispose();
         }
     }

@@ -166,19 +166,6 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Throws if the cluster is disconnected (wait if it is connecting).
-        /// </summary>
-        public ValueTask ThrowIfNotConnected()
-        {
-            // method is async because eventually it should or at least may wait
-            // if the cluster is (re) connecting, to block calls somehow until the
-            // cluster is (re) connected.
-
-            State.ThrowIfNotConnected();
-            return default;
-        }
-
-        /// <summary>
         /// Terminates (dispose without exceptions).
         /// </summary>
         /// <returns>A task that completes when the cluster has terminated.</returns>
@@ -201,27 +188,40 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            // cancel operations,
-            // stops background tasks
-            // TODO: explain the lock
-            await State.WaitAsync().CAF();
+            // disposing the cluster terminates all operations
 
-            try
-            {
-                State.CancelOperations();
-            }
-            finally
-            {
-                State.Release();
-            }
+            // change the state - the final NotConnected state will
+            // be set by Connections when the last one goes down, and
+            // the cluster is not active anymore
+            State.NotifyState(ConnectionState.Disconnecting);
 
-            await Connections.DisposeAsync().CAF();
-            await ClusterEvents.DisposeAsync().CAF();
-            await Events.DisposeAsync().CAF();
-            await Members.DisposeAsync().CAF();
+            // we don't need heartbeat anymore
             await _heartbeat.DisposeAsync().CAF();
 
-            // last thing to dispose
+            // ClusterMessaging has nothing to dispose
+
+            // ClusterEvents need to shutdown
+            // - the events scheduler (always running)
+            // - the task that ensures
+            // - the task that deals with ghost subscriptions (if it's running)
+            await Events.DisposeAsync().CAF();
+
+            // ClusterClusterEvents need to shutdown
+            // - the two ObjectLifeCycle and PartitionLost subscriptions
+            await ClusterEvents.DisposeAsync().CAF();
+
+            // now it's time to dispose the connections, ie close all of them
+            // and shutdown
+            // - the reconnect task (if it's running)
+            // - the task that connects members (always running)
+            await Connections.DisposeAsync().CAF();
+
+            // at that point we can get rid of members
+            await Members.DisposeAsync().CAF();
+
+            // and finally, of the state itself
+            // which will shutdown
+            // - the state changed queue (always running)
             await State.DisposeAsync().CAF();
         }
     }

@@ -111,6 +111,35 @@ namespace Hazelcast.Clustering
         public ConnectionState ConnectionState { get; private set; } = ConnectionState.NotConnected;
 
         /// <summary>
+        /// (thread-unsafe) Immediately transitions to a new connection state,
+        /// and pushes the corresponding <see cref="StateChanged"/> event to the queue.
+        /// </summary>
+        /// <param name="to">The new state.</param>
+        /// <param name="from">An optional expected current state.</param>
+        /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
+        /// <remarks>
+        /// <para>This method is not thread-safe; the caller has to lock the
+        /// cluster state's <see cref="Mutex"/> to ensure thread-safety.</para>
+        /// </remarks>
+        public void NotifyState(ConnectionState to, ConnectionState from = ConnectionState.Unknown)
+        {
+            lock (_lock) // fixme state lock
+            {
+                if (from != ConnectionState.Unknown && from != ConnectionState)
+                {
+                    throw new InvalidOperationException($"Cannot transition to {to} from {from} because the current state is {ConnectionState}.");
+                }
+
+                if (ConnectionState != to)
+                {
+                    // queue will trigger events sequentially, in order, and in the background
+                    ConnectionState = to;
+                    _stateChangeQueue.Add(to);
+                }
+            }
+        }
+
+        /// <summary>
         /// Transitions to a new connection state.
         /// </summary>
         /// <param name="to">The new state.</param>
@@ -144,29 +173,38 @@ namespace Hazelcast.Clustering
         public bool IsConnected => ConnectionState == ConnectionState.Connected;
 
         /// <summary>
-        /// Whether the cluster is "up" i.e. connected or connecting.
+        /// Whether the cluster is active i.e. connected or connecting.
         /// </summary>
-        public bool IsUp => ConnectionState == ConnectionState.Connected ||
-                            ConnectionState == ConnectionState.Connecting ||
-                            ConnectionState == ConnectionState.Reconnecting;
+        /// <remarks>
+        /// <para>When the cluster is active it is either connected, or trying to get
+        /// connected. It may make sense to retry operations that fail, because they
+        /// should succeed when the cluster is eventually connected.</para>
+        /// </remarks>
+        public bool IsActive => ConnectionState == ConnectionState.Connected ||
+                                ConnectionState == ConnectionState.Connecting ||
+                                ConnectionState == ConnectionState.Disconnected ||
+                                ConnectionState == ConnectionState.Reconnecting;
 
         /// <summary>
-        /// Whether the cluster is "down" i.e. not connected, or disconnecting.
-        /// </summary>
-        public bool IsDown => ConnectionState == ConnectionState.NotConnected ||
-                              ConnectionState == ConnectionState.Disconnecting;
-
-        /// <summary>
-        /// Throws a <see cref="ClientNotConnectedException"/> if the cluster is not connected.
+        /// Throws a <see cref="ClientNotConnectedException"/> if the cluster is not active.
         /// </summary>
         /// <param name="innerException">An optional inner exception.</param>
-        public void ThrowIfNotConnected(Exception innerException = null)
+        public void ThrowIfNotActive(Exception innerException = null)
         {
-            if (ConnectionState != ConnectionState.Connected) 
-                throw new ClientNotConnectedException(innerException);
+            if (!IsActive) throw new ClientNotConnectedException(innerException, ConnectionState);
         }
 
         #endregion
+
+        #region Lock
+
+        /// <summary>
+        /// Gets the state mutex.
+        /// </summary>
+        public object Mutex { get; } = new object();
+
+        #endregion
+
 
         /// <summary>
         /// Gets the cluster general <see cref="CancellationToken"/>.
@@ -202,17 +240,6 @@ namespace Hazelcast.Clustering
         public ILoggerFactory LoggerFactory { get; }
 
         /// <summary>
-        /// Locks the state.
-        /// </summary>
-        public async ValueTask WaitAsync(CancellationToken cancellationToken = default)
-            => await _lock.WaitAsync(cancellationToken).CAF();
-
-        /// <summary>
-        /// Unlocks the state.
-        /// </summary>
-        public void Release() => _lock.Release();
-
-        /// <summary>
         /// Gets the cluster instrumentation.
         /// </summary>
         public ClusterInstrumentation Instrumentation { get; } = new ClusterInstrumentation();
@@ -246,17 +273,17 @@ namespace Hazelcast.Clustering
         /// cancellation with the supplied <paramref name="cancellationToken"/>.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <param name="throwIfNotConnected">Whether to throw immediately if the cluster is not connected.</param>
+        /// <param name="throwIfNotActive">Whether to throw immediately if the cluster is not connected.</param>
         /// <returns>A new <see cref="CancellationTokenSource"/>obtained by linking the cluster general
         /// cancellation with the supplied <paramref name="cancellationToken"/>.</returns>
         /// <remarks>
         /// <para>The called must ensure that the returned <see cref="CancellationTokenSource"/> is
         /// eventually disposed.</para>
         /// </remarks>
-        public CancellationTokenSource GetLinkedCancellation(CancellationToken cancellationToken, bool throwIfNotConnected = true)
+        public CancellationTokenSource GetLinkedCancellation(CancellationToken cancellationToken, bool throwIfNotActive = true)
         {
             // fail fast
-            if (throwIfNotConnected) ThrowIfNotConnected();
+            if (throwIfNotActive) ThrowIfNotActive();
 
             // note: that is a bad idea - what we return will be disposed, and we certainly do not
             // want the main _clusterCancellation to be disposed! plus, LinkedWith invoked with

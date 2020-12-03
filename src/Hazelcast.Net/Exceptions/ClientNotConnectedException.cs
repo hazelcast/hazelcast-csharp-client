@@ -20,6 +20,12 @@ namespace Hazelcast.Exceptions
     /// <summary>
     /// Represents the exception that is thrown when the Hazelcast client is invoked but is not connected.
     /// </summary>
+    /// <remarks>
+    /// <para>The <see cref="State"/> property provides the <see cref="ConnectionState"/> of the client
+    /// at the time the exception was thrown. The client may be either not connected at all, in which
+    /// case retrying an operation will not succeed. Or, it may be  temporarily disconnected and trying
+    /// to reconnect, in which case retrying an operation may eventually succeed.</para>
+    /// </remarks>
     [Serializable]
     public sealed class ClientNotConnectedException : HazelcastException
     {
@@ -28,7 +34,19 @@ namespace Hazelcast.Exceptions
         /// </summary>
         public ClientNotConnectedException()
             : base(ExceptionMessages.ClientNotConnectedException)
-        { }
+        {
+            State = ConnectionState.Unknown;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class.
+        /// </summary>
+        /// <param name="state">The client state.</param>
+        public ClientNotConnectedException(ConnectionState state)
+            : base(ExceptionMessages.ClientNotConnectedException)
+        {
+            State = state;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message.
@@ -36,38 +54,81 @@ namespace Hazelcast.Exceptions
         /// <param name="message">The message that describes the error.</param>
         public ClientNotConnectedException(string message)
             : base(message)
-        { }
+        {
+            State = ConnectionState.Unknown;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="state">The client state.</param>
+        public ClientNotConnectedException(string message, ConnectionState state)
+            : base(message)
+        {
+            State = state;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
-        /// <param name="innerException">The exception that is the cause of the current exception, or a null
-        /// reference if no inner exception is specified.</param>
-        public ClientNotConnectedException(Exception innerException)
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        /// <param name="state">The client state.</param>
+        public ClientNotConnectedException(Exception innerException, ConnectionState state = ConnectionState.Unknown)
             : base(ExceptionMessages.ClientNotConnectedException, innerException)
-        { }
+        {
+            State = state;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        /// <param name="innerException">The exception that is the cause of the current exception, or a null
-        /// reference if no inner exception is specified.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         public ClientNotConnectedException(string message, Exception innerException)
             : base(message, innerException)
-        { }
+        {
+            State = ConnectionState.Unknown;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        /// <param name="state">The client state.</param>
+        public ClientNotConnectedException(string message, Exception innerException, ConnectionState state = ConnectionState.Unknown)
+            : base(message, innerException)
+        {
+            State = state;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with serialized data.
         /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
-        /// about the exception being thrown.</param>
-        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
-        /// about the source or destination.</param>
+        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
         private ClientNotConnectedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        { }
+        {
+            State = (ConnectionState) info.GetInt32("error");
+        }
+
+        /// <inheritdoc />
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if (info == null) throw new ArgumentNullException(nameof(info));
+
+            info.AddValue("state", State);
+            base.GetObjectData(info, context);
+        }
+
+        /// <summary>
+        /// Gets the connection state.
+        /// </summary>
+        public ConnectionState State { get; }
     }
 }

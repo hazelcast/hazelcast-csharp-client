@@ -201,7 +201,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             // fail fast
-            _clusterState.ThrowIfNotConnected();
+            _clusterState.ThrowIfNotActive();
 
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
@@ -242,8 +242,9 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception exception)
                 {
-                    // if the cluster is not connected anymore, die
-                    _clusterState.ThrowIfNotConnected(exception);
+                    // if the cluster is down, die
+                    // if it's just temp disconnected, retry
+                    _clusterState.ThrowIfNotActive(exception);
 
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
@@ -266,7 +267,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <returns>A connection for the invocation.</returns>
-        /// <exception cref="">Occurs when no connection is available.</exception>
+        /// <exception cref="ClientNotConnectedException">Occurs when no connection could be found.</exception>
         private MemberConnection GetInvocationConnection(Invocation invocation)
         {
             // try the target connection
@@ -288,17 +289,13 @@ namespace Hazelcast.Clustering
                     return connection;
             }
 
-            // fail over to random client
-            // may throw if no connection is available, or the cluster is not connected
-            try
-            {
-                return _clusterMembers.GetRandomConnection(false);
-            }
-            catch
-            {
-                // fixme what's the state exactly?!
-                throw new ClientNotConnectedException();
-            }
+            // fall over to random client
+            connection = _clusterMembers.GetRandomConnection();
+            if (connection != null)
+                return connection;
+
+            // fail
+            throw new ClientNotConnectedException(_clusterState.ConnectionState);
         }
     }
 }

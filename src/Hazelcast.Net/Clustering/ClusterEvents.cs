@@ -104,17 +104,12 @@ namespace Hazelcast.Clustering
 
             // capture active clients, and adds the subscription - atomically.
             List<MemberConnection> connections;
-            await _clusterState.WaitAsync().CAF();
-            try
+            lock (_clusterState.Mutex)
             {
                 connections = _clusterMembers.SnapshotConnections(true);
 
                 if (!_subscriptions.TryAdd(subscription.Id, subscription))
                     throw new InvalidOperationException("A subscription with the same identifier already exists.");
-            }
-            finally
-            {
-                _clusterState.Release();
             }
 
             // from now on,
@@ -246,15 +241,10 @@ namespace Hazelcast.Clustering
         {
             // don't remove it now - will remove it only if all goes well
             ClusterSubscription subscription;
-            await _clusterState.WaitAsync().CAF();
-            try
+            lock (_clusterState.Mutex)
             {
                 if (!_subscriptions.TryGetValue(subscriptionId, out subscription))
                     return false; // unknown subscription
-            }
-            finally
-            {
-                _clusterState.Release();
             }
 
             await RemoveSubscriptionAsync(subscription, cancellationToken).CAF();
@@ -277,14 +267,9 @@ namespace Hazelcast.Clustering
 
             // remove the subscription, but if some member-level subscriptions could not
             // be removed, adds the subscription to the list of ghost subscriptions.
-            await _clusterState.WaitAsync().CAF();
-            try
+            lock (_clusterState.Mutex)
             {
                 _subscriptions.TryRemove(subscription.Id, out _);
-            }
-            finally
-            {
-                _clusterState.Release();
             }
 
             if (allRemoved) return;
@@ -561,8 +546,7 @@ namespace Hazelcast.Clustering
                 }
 
                 // success!
-                await _clusterState.WaitAsync().CAF();
-                try
+                lock (_clusterState.Mutex)
                 {
                     _clusterEventsConnection = connection;
                     _clusterEventsCorrelationId = correlationId;
@@ -570,10 +554,6 @@ namespace Hazelcast.Clustering
                     // avoid race conditions, this task is going to end, and if the
                     // client dies we want to be sure we restart the task
                     _clusterEventsTask = null;
-                }
-                finally
-                {
-                    _clusterState.Release();
                 }
 
                 break;

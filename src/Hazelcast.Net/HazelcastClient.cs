@@ -199,41 +199,6 @@ namespace Hazelcast
             // order is important, must dispose the cluster last, as it will tear down
             // connections that may be required by other things being disposed
 
-            // FIXME - cleanup shutdown & reconnect
-            // are we reconnecting correctly?
-            // what about immediately terminating the client?
-            // where and when should we lock the cluster? before dispose? prepareForDispose?
-
-            // the client is Active when the cluster is Active
-            // the cluster is Active from creation (even before it is connected) until it is disposed
-            //
-            // the client is Connected when the cluster is Connected
-            // the cluster is Connected when its ConnectionState is Connected
-            //
-            // ConnectionState diagram:
-            // creation -> NotConnected
-            // NotConnected -> ConnectAsync() -> Connecting
-            // Connecting
-            //   -> ConnectFirstAsync(), TryConnectAsync(), ConnectWithLockAsync() -> Connected
-            //   unless error -> NotConnected
-            // Connected -> HandleConnectionTermination()
-            //   ReconnectMode.DoNotReconnect -> Disconnected
-            //   ReconnectMode.ReconnectAsync (or Sync) -> Connecting
-            //
-            // and then there is ClientLifecycleState with events
-            // - Starting         Connecting
-            // - Started          n/a
-            // - ShuttingDown     Disconnecting
-            // - Shutdown
-            // - Connected        Connected
-            // - Disconnected     ReConnecting
-            //
-            // TODO
-            // - are we firing the ClientStateChanged events?
-            // - merge ClientLifecycleState and cluster ConnectionState
-            // - how is Disconnected different from NotConnected?
-            // - could we try to connect a Disconnected cluster again?
-
             try
             {
                 await _nearCacheManager.DisposeAsync().CAF();

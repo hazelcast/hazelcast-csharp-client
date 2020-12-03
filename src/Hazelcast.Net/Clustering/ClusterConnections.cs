@@ -189,8 +189,16 @@ namespace Hazelcast.Clustering
                 // connectAddresses is paused, and we have _onClosedMutex
                 // which means that no other connection can be added/removed at that point
 
-                // notify members
-                var wasLast = _clusterMembers.NotifyConnectionClosed(connection);
+                bool wasLast;
+                lock (_clusterMembers.Mutex)
+                {
+                    // atomically register the new connection and change the state
+                    // ie, the connection becomes unavailable and the state changes
+
+                    wasLast = _clusterMembers.NotifyConnectionClosed(connection);
+                    if (wasLast)
+                        _clusterState.NotifyState(ConnectionState.Disconnected);
+                }
 
                 // report that the connection has been closed
                 await RaiseConnectionClosed(connection, wasLast).CAF(); // does not throw
@@ -221,11 +229,12 @@ namespace Hazelcast.Clustering
             // empty and there are no connections left, which means that no other
             // connection can be added/removed at that point
 
-
-            if (_clusterState.IsDown)
+            if (!_clusterState.IsActive || _disposed == 1)
             {
                 // the cluster is down
                 _logger.LogInformation("Disconnected (down)");
+                await _clusterState.TransitionAsync(ConnectionState.NotConnected).CAF();
+                return;
             }
 
             // the cluster is now disconnected, but not down
@@ -238,6 +247,7 @@ namespace Hazelcast.Clustering
                     ReconnectMode.ReconnectAsync => "trying to reconnect asynchronously",
                     _ => "Meh?"
                 });
+
 
             // what we do next depends on options
             switch (_clusterState.Options.Networking.ReconnectMode)
@@ -569,6 +579,10 @@ namespace Hazelcast.Clustering
             // register the connection
             lock (_addressConnections)
             {
+                // TODO: ensure this is safe + we should terminate the connection
+                if (_disposed == 1)
+                    throw new ConnectionException("Connections are going down.");
+
                 _addressConnections[address] = connection;
                 if (!connection.Active)
                 {
@@ -582,9 +596,19 @@ namespace Hazelcast.Clustering
             // the code below will all execute *before* OnConnectionClosed handles
             // this connection
 
-            var isFirst = _clusterMembers.NotifyConnectionOpened(connection);
+            bool isFirst, isNewCluster;
+            lock (_clusterMembers.Mutex)
+            {
+                // atomically register the new connection and change the state
+                // ie, the connection becomes available and the state changes
 
-            var isNewCluster = false;
+                isFirst = _clusterMembers.NotifyConnectionOpened(connection);
+                if (isFirst)
+                    _clusterState.NotifyState(ConnectionState.Connected);
+            }
+
+            isNewCluster = false;
+
             if (_clusterId == default)
             {
                 _clusterId = connection.ClusterId; // first cluster
@@ -601,15 +625,7 @@ namespace Hazelcast.Clustering
                 }
             }
 
-            // now connected
-            if (isFirst)
-                await _clusterState.TransitionAsync(ConnectionState.Connected).CAF();
-
-            // *after* being connected, else handles might do things too soon?
-            // FIXME or, should they listened to something else?
-            //  would like to first raise 'connection opened', then raise 'cluster connected'
-            //  but 'connection opened' is going to trigger some operations on the cluster,
-            //  that need the cluster to be up and running already = ?
+            // connection is opened
             await RaiseConnectionOpened(connection, isFirst, isNewCluster).CAF();
 
             return connection;
@@ -625,9 +641,16 @@ namespace Hazelcast.Clustering
             if (_clusterState.IsSmartRouting)
                 await _connectAddresses.DisposeAsync().CAF(); // does not throw
 
+            // stop and dispose the reconnect task if it's running
             var reconnect = _reconnect;
             if (reconnect != null)
                 await reconnect.CompletedOrCancelAsync(true).CAF();
+
+            // trash all connections
+            ICollection<MemberConnection> connections;
+            lock (_addressConnections) connections = _addressConnections.Values;
+            foreach (var x in connections)
+                await x.TerminateAsync().CAF();
 
             _onClosedMutex.Dispose();
         }

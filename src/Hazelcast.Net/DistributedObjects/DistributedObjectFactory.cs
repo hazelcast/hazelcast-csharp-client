@@ -74,7 +74,6 @@ namespace Hazelcast.DistributedObjects
             where TImpl : DistributedObjectBase, T
         {
             if (_disposed == 1) throw new ObjectDisposedException("DistributedObjectFactory");
-            await _cluster.ThrowIfNotConnected().CAF();
 
             var info = new DistributedObjectInfo(serviceName, name);
 
@@ -130,8 +129,6 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         public async ValueTask CreateAllAsync(CancellationToken cancellationToken)
         {
-            await _cluster.ThrowIfNotConnected().CAF();
-
             await foreach (var (key, _) in _objects)
             {
                 // if the cluster goes down, we want to stop everything
