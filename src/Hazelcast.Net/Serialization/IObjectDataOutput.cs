@@ -16,60 +16,188 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
+    /// <summary>
+    /// Provides encoding methods for primitive and array of primitive types writing to the serialized byte array.
+    /// </summary>
     public interface IObjectDataOutput
     {
+        /// <summary>
+        /// The configured endianness via <see cref="SerializationOptions.Endianness"/>
+        /// </summary>
         Endianness Endianness { get; }
 
-        void WriteBoolean(bool v);
+        /// <summary>
+        /// Writes a <c>bool</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteBoolean(bool value);
 
-        void WriteByte(byte b);
+        /// <summary>
+        /// Writes a <c>byte</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteByte(byte value);
         
-        void WriteSByte(sbyte b);
+        /// <summary>
+        /// Writes a <c>sbyte</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteSByte(sbyte value);
 
-        void WriteChar(char v);
+        /// <summary>
+        /// Writes a <c>char</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteChar(char value);
 
-        void WriteShort(short v);
+        /// <summary>
+        /// Writes a <c>short</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteShort(short value);
         
-        void WriteUShort(ushort v);
+        /// <summary>
+        /// Writes a <c>ushort</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteUShort(ushort value);
 
-        void WriteInt(int v);
+        /// <summary>
+        /// Writes a <c>int</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteInt(int value);
 
-        void WriteLong(long v);
+        /// <summary>
+        /// Writes a <c>long</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteLong(long value);
 
-        void WriteFloat(float v);
+        /// <summary>
+        /// Writes a <c>float</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteFloat(float value);
 
-        void WriteDouble(double v);
+        /// <summary>
+        /// Writes a <c>double</c> value to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteDouble(double value);
 
-        void WriteUTF(string s);
+        /// <summary>
+        /// Writes a <c>string</c> value in UTF-8 encoding to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        void WriteUTF(string value);
         
-        void WriteChars(string s);
+        /// <summary>
+        /// Writes each <c>char</c> of the <paramref name="value"/> with <see cref="WriteChar"/> method to this serialization output
+        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        /// <remarks>
+        /// This method has the same effect with the following code;
+        /// <code>
+        /// foreach (var ch in value)
+        /// {
+        ///    WriteChar(ch);
+        /// }
+        /// </code>
+        /// </remarks>
+        void WriteChars(string value);
 
-        void WriteBytes(string s);
+        /// <summary>
+        /// Writes each <c>char</c> of the <paramref name="value"/> with <see cref="WriteByte"/> method to this serialization output        /// </summary>
+        /// <param name="value">the value to be encoded</param>
+        /// <remarks>
+        /// Each char value of the string will be cast to byte then written to output.
+        /// </remarks>
+        void WriteBytes(string value);
 
-        void WriteBooleanArray(bool[] booleans);
+        /// <summary>
+        /// Writes the <c>bool[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
+        void WriteBooleanArray(bool[] values);
 
-        void WriteByteArray(byte[] bytes);
+        /// <summary>
+        /// Writes the <c>byte[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
+        void WriteByteArray(byte[] values);
 
-        void WriteCharArray(char[] chars);
+        /// <summary>
+        /// Writes the <c>char[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
+        void WriteCharArray(char[] values);
 
+        /// <summary>
+        /// Writes the <c>short[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
         void WriteShortArray(short[] values);
 
-        void WriteIntArray(int[] ints);
+        /// <summary>
+        /// Writes the <c>int[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
+        void WriteIntArray(int[] values);
 
-        void WriteLongArray(long[] longs);
+        /// <summary>
+        /// Writes the <c>long[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
+        void WriteLongArray(long[] values);
 
+        /// <summary>
+        /// Writes the <c>float[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
         void WriteFloatArray(float[] values);
 
+        /// <summary>
+        /// Writes the <c>double[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
         void WriteDoubleArray(double[] values);
 
+        /// <summary>
+        /// Writes the <c>string[]</c> to this serialization output
+        /// </summary>
+        /// <param name="values">the value to be encoded</param>
         void WriteUTFArray(string[] values);
 
+        /// <summary>
+        /// Writes an object to this serialization output using hazelcast serialization
+        /// </summary>
+        /// <param name="value"></param>
         void WriteObject(object value);
 
-        void Write(byte[] b);
+        /// <summary>
+        /// Writes the content of the provided byte array to this serialization output
+        /// </summary>
+        /// <param name="bytes">the byte array to be written</param>
+        /// <remarks>
+        /// Please note that this method only writes the content of the array to the output
+        /// whereas <see cref="WriteByteArray"/> methods also take care of the size of the array.
+        /// </remarks>
+        void Write(byte[] bytes);
 
-        void Write(byte[] b, int off, int len);
+        /// <summary>
+        /// Writes the content of the provided byte array to this serialization output
+        /// </summary>
+        /// <param name="bytes">the byte array to be written</param>
+        /// <param name="offset">the offset of the bytes array for start reading from</param>
+        /// <param name="count">total number of bytes to be written from the bytes array</param>
+        void Write(byte[] bytes, int offset, int count);
 
+        /// <summary>
+        /// Creates a new byte array with the internal content of the serialized data.
+        /// </summary>
+        /// <param name="padding">the number of zero byte(s) to add to beginning of the returned array</param>
+        /// <returns>clone of internal byte content with optional padding bytes</returns>
         byte[] ToByteArray(int padding = 0);
     }
 }

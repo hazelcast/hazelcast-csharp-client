@@ -36,7 +36,7 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Represents a collection of <see cref="ISerializerHook{T}"/> types.
     /// </summary>
-    public sealed class SerializerHooks
+    internal sealed class SerializerHooks
     {
         private readonly List<Type> _types = new List<Type>();
 

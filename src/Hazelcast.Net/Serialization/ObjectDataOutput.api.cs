@@ -104,6 +104,10 @@ namespace Hazelcast.Serialization
         {
             var len = value.Length;
             EnsureAvailable(len * BytesExtensions.SizeOfChar);
+            foreach (var ch in value)
+            {
+                WriteChar(ch);
+            }
             for (var i = 0; i < len; i++)
             {
                 _buffer.WriteChar(_position, value[i], Endianness);

@@ -17,7 +17,7 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Provides an <see cref="IDataSerializableFactory"/>.
     /// </summary>
-    public interface IDataSerializerHook
+    internal interface IDataSerializerHook
     {
         /// <summary>
         /// Creates the <see cref="IDataSerializableFactory"/> provided by this hook.
