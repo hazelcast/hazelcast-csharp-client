@@ -253,34 +253,35 @@
       "minReconciliationIntervalSeconds": 1001,
 
       // maximum tolerated miss count
-      "maxToleratedMissCount": 1002,
+      "maxToleratedMissCount": 1002
 
-      // configurations
-      "caches": {
+    },
 
-        // default
-        "default": {
+    // near caches
+    "nearCaches": {
 
-          "evictionPolicy": "lru",
-          "inMemoryFormat": "binary",
-          "maxIdleSeconds": 1000,
-          "maxSize": 1001,
-          "timeToLiveSeconds": 1002,
-          "invalidateOnChange": true
-        },
+      // default
+      "default": {
 
-        // another
-        "other": {
+        "evictionPolicy": "lru",
+        "inMemoryFormat": "binary",
+        "maxIdleSeconds": 1000,
+        "maxSize": 1001,
+        "timeToLiveSeconds": 1002,
+        "invalidateOnChange": true
+      },
 
-          "evictionPolicy": "lfu",
-          "inMemoryFormat": "object",
-          "maxIdleSeconds": 2000,
-          "maxSize": 2001,
-          "timeToLiveSeconds": 2002,
-          "invalidateOnChange": false
-        }
+      // another
+      "other": {
 
+        "evictionPolicy": "lfu",
+        "inMemoryFormat": "object",
+        "maxIdleSeconds": 2000,
+        "maxSize": 2001,
+        "timeToLiveSeconds": 2002,
+        "invalidateOnChange": false
       }
+
     }
   }
 }
