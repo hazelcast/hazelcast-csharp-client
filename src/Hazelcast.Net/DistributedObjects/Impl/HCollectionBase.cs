@@ -23,7 +23,7 @@ namespace Hazelcast.DistributedObjects.Impl
 {
     internal abstract partial class HCollectionBase<T> : DistributedObjectBase, IHCollection<T>
     {
-        protected HCollectionBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        protected HCollectionBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
             : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
         { }
 

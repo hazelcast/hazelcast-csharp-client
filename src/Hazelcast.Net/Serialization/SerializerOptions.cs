@@ -30,11 +30,10 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Initializes a new instance of the <see cref="SerializationOptions"/> class.
         /// </summary>
-        private SerializerOptions(SerializerOptions other, bool shallow)
+        protected SerializerOptions(SerializerOptions other, bool shallow)
             : base(other, shallow)
         {
             SerializedType = other.SerializedType;
-            OverrideClr = other.OverrideClr;
         }
 
         /// <summary>
@@ -52,11 +51,6 @@ namespace Hazelcast.Serialization
             get => default;
             set => SerializedType = Type.GetType(value) ?? throw new ConfigurationException($"Unknown serialized type \"{value}\".");
         }
-
-        /// <summary>
-        /// Whether to fully override (and ignore) the native CLR serialization.
-        /// </summary>
-        public bool OverrideClr { get; set; }
 
         /// <summary>
         /// Clones the options.

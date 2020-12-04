@@ -19,7 +19,6 @@ using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Serialization.DefaultSerializers;
-using Hazelcast.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -30,24 +29,26 @@ namespace Hazelcast.Tests.Serialization
         private const string TestDataTurkish = "Pijamalı hasta, yağız şoföre çabucak güvendi.";
         private const string TestDataJapanese = "イロハニホヘト チリヌルヲ ワカヨタレソ ツネナラム";
         private const string TestDataAscii = "The quick brown fox jumps over the lazy dog";
-        private const string TestDataAll = TestDataTurkish + TestDataJapanese + TestDataAscii;
+        private const string TestDataUtf4ByteEmojis = "loudly crying face:\uD83D\uDE2D nerd face: \uD83E\uDD13";
+        private const string TestDataAll =
+            TestDataTurkish + TestDataJapanese + TestDataAscii + TestDataUtf4ByteEmojis;
         private const int TestStrSize = 1 << 20;
         private static readonly byte[] TestDataBytesAll = Encoding.UTF8.GetBytes(TestDataAll);
         private static readonly char[] AllChars;
-        private ISerializationService _serializationService;
+
+        private SerializationService _serializationService;
 
         static StringSerializationTest()
         {
             var chars = new List<char>(char.MaxValue);
             for (var c = 0; c < char.MaxValue; c++)
             {
-                if (char.IsSurrogate((char) c)) break;
-
                 if (char.IsLetter((char) c))
                 {
                     chars.Add((char) c);
                 }
             }
+
             AllChars = chars.ToArray();
         }
 
@@ -67,7 +68,7 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-        public virtual void TestLargeStringEncodeDecode()
+        public void TestLargeStringEncodeDecode()
         {
             var sb = new StringBuilder();
             var i = 0;
@@ -84,14 +85,14 @@ namespace Hazelcast.Tests.Serialization
             var actualStr = sb.ToString();
             var strBytes = Encoding.UTF8.GetBytes(actualStr);
             var actualDataBytes = _serializationService.ToData(actualStr).ToByteArray();
-            var expectedDataByte = ToDataByte(strBytes, actualStr.Length);
+            var expectedDataByte = ToDataByte(strBytes);
             var decodedStr = (string) _serializationService.ToObject<object>(new HeapData(expectedDataByte));
-            Assert.AreEqual(expectedDataByte, actualDataBytes, "Deserialized byte array do not match utf-8 encoding");
             Assert.AreEqual(decodedStr, actualStr);
+            Assert.AreEqual(expectedDataByte, actualDataBytes, "Deserialized byte array do not match utf-8 encoding");
         }
 
         [Test]
-        public virtual void TestNullStringEncodeDecode()
+        public void TestNullStringEncodeDecode()
         {
             var nullData = _serializationService.ToData(null);
             var decodedStr = (string) _serializationService.ToObject<object>(nullData);
@@ -99,28 +100,28 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-        public virtual void TestNullStringEncodeDecode2()
+        public void TestNullStringEncodeDecode2()
         {
             var objectDataOutput = _serializationService.CreateObjectDataOutput(256);
-            objectDataOutput.Write(null);
+            objectDataOutput.WriteUTF(null);
             var bytes = objectDataOutput.ToByteArray();
             var objectDataInput = _serializationService.CreateObjectDataInput(bytes);
-            var decodedStr = objectDataInput.ReadString();
+            var decodedStr = objectDataInput.ReadUTF();
             Assert.IsNull(decodedStr);
         }
 
         [Test]
-        public virtual void TestStringAllCharLetterDecode()
+        public void TestStringAllCharLetterDecode()
         {
             var allstr = new string(AllChars);
             var expected = Encoding.UTF8.GetBytes(allstr);
-            IData data = new HeapData(ToDataByte(expected, allstr.Length));
-            var actualStr = (string) _serializationService.ToObject<object>(data);
+            IData data = new HeapData(ToDataByte(expected));
+            var actualStr = _serializationService.ToObject<string>(data);
             Assert.AreEqual(allstr, actualStr);
         }
 
         [Test]
-        public virtual void TestStringAllCharLetterEncode()
+        public void TestStringAllCharLetterEncode()
         {
             var allstr = new string(AllChars);
             var expected = Encoding.UTF8.GetBytes(allstr);
@@ -135,16 +136,7 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-        public void TestStringSurrogateCharEncode()
-        {
-            var data = _serializationService.ToData(Utf8Char.FourBytes);
-            var s = _serializationService.ToObject<string>(data);
-
-            Assert.That(s, Is.EqualTo(Utf8Char.FourBytes));
-        }
-
-        [Test]
-        public virtual void TestStringArrayEncodeDecode()
+        public void TestStringArrayEncodeDecode()
         {
             var stringArray = new string[TestStrSize];
             for (var i = 0; i < stringArray.Length; i++)
@@ -155,33 +147,40 @@ namespace Hazelcast.Tests.Serialization
             var actualStr = (string[]) _serializationService.ToObject<object>(dataStrArray);
             Assert.AreEqual(SerializationConstants.ConstantTypeStringArray, dataStrArray.TypeId);
             Assert.AreEqual(stringArray, actualStr);
+
         }
 
         [Test]
-        public virtual void TestStringDecode()
+        public void TestStringDecode()
         {
-            IData data = new HeapData(ToDataByte(TestDataBytesAll, TestDataAll.Length));
-            var actualStr = (string) _serializationService.ToObject<object>(data);
+            var dataByte = ToDataByte(TestDataBytesAll);
+            var data = new HeapData(dataByte);
+            var actualStr = _serializationService.ToObject(data);
             Assert.AreEqual(TestDataAll, actualStr);
         }
 
         [Test]
-        public virtual void TestStringEncode()
+        public void TestStringEncode()
         {
-            var expected = ToDataByte(TestDataBytesAll, TestDataAll.Length);
+            var expected = ToDataByte(TestDataBytesAll);
             var actual = _serializationService.ToData(TestDataAll).ToByteArray();
             Assert.AreEqual(expected, actual);
         }
 
-        private static byte[] ToDataByte(byte[] input, int length)
+        private byte[] ToDataByte(byte[] input)
         {
+            // the first 4 byte of type id, 4 byte string length and last 4 byte of partition hashCode
+            var endianness = _serializationService.Endianness;
+            
             var bytes = new byte[3 * BytesExtensions.SizeOfInt + input.Length];
             var pos = 0;
-            bytes.WriteInt(pos, 0);
+            bytes.WriteInt(pos, 0, endianness);
             pos += BytesExtensions.SizeOfInt;
-            bytes.WriteInt(pos, SerializationConstants.ConstantTypeString);
+            // even when serialization service is configured with little endian byte order,
+            // the serializerTypeId (CONSTANT_TYPE_STRING) is still output in BIG_ENDIAN
+            bytes.WriteInt(pos, SerializationConstants.ConstantTypeString, Endianness.BigEndian);
             pos += BytesExtensions.SizeOfInt;
-            bytes.WriteInt(pos, length);
+            bytes.WriteInt(pos, input.Length, endianness);
             pos += BytesExtensions.SizeOfInt;
             input.CopyTo(bytes, pos);
             return bytes;

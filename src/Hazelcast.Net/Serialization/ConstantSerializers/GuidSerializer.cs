@@ -54,25 +54,25 @@ namespace Hazelcast.Serialization.ConstantSerializers
         {
             var order = default(JavaUuidOrder);
             order.Value = obj;
-            output.Write(order.X0);
-            output.Write(order.X1);
-            output.Write(order.X2);
-            output.Write(order.X3);
+            output.WriteByte(order.X0);
+            output.WriteByte(order.X1);
+            output.WriteByte(order.X2);
+            output.WriteByte(order.X3);
 
-            output.Write(order.X4);
-            output.Write(order.X5);
-            output.Write(order.X6);
-            output.Write(order.X7);
+            output.WriteByte(order.X4);
+            output.WriteByte(order.X5);
+            output.WriteByte(order.X6);
+            output.WriteByte(order.X7);
 
-            output.Write(order.X8);
-            output.Write(order.X9);
-            output.Write(order.XA);
-            output.Write(order.XB);
+            output.WriteByte(order.X8);
+            output.WriteByte(order.X9);
+            output.WriteByte(order.XA);
+            output.WriteByte(order.XB);
 
-            output.Write(order.XC);
-            output.Write(order.XD);
-            output.Write(order.XE);
-            output.Write(order.XF);
+            output.WriteByte(order.XC);
+            output.WriteByte(order.XD);
+            output.WriteByte(order.XE);
+            output.WriteByte(order.XF);
         }
     }
 }

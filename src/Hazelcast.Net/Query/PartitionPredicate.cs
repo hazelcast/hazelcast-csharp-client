@@ -44,14 +44,12 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
             PartitionKey = input.ReadObject<object>();
             Target = input.ReadObject<IPredicate>();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
             output.WriteObject(PartitionKey);
             output.WriteObject(Target);
         }

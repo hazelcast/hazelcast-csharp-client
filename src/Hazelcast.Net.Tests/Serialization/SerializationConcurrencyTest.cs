@@ -163,8 +163,8 @@ namespace Hazelcast.Tests.Serialization
 
         public virtual void WriteData(IObjectDataOutput @out)
         {
-            @out.Write(street);
-            @out.Write(no);
+            @out.WriteUTF(street);
+            @out.WriteInt(no);
         }
 
         public int FactoryId => SerializationConcurrencyTest.FactoryId;
@@ -173,7 +173,7 @@ namespace Hazelcast.Tests.Serialization
 
         public virtual void ReadData(IObjectDataInput @in)
         {
-            street = @in.ReadString();
+            street = @in.ReadUTF();
             no = @in.ReadInt();
         }
 
@@ -294,11 +294,11 @@ namespace Hazelcast.Tests.Serialization
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteData(IObjectDataOutput @out)
         {
-            @out.Write(name);
+            @out.WriteUTF(name);
             @out.WriteObject(address);
-            @out.Write(age);
-            @out.Write(height);
-            @out.Write(weight);
+            @out.WriteInt(age);
+            @out.WriteLong(height);
+            @out.WriteDouble(weight);
         }
 
         public int FactoryId => SerializationConcurrencyTest.FactoryId;
@@ -308,7 +308,7 @@ namespace Hazelcast.Tests.Serialization
         /// <exception cref="System.IO.IOException" />
         public virtual void ReadData(IObjectDataInput @in)
         {
-            name = @in.ReadString();
+            name = @in.ReadUTF();
             address = @in.ReadObject<Address>();
             age = @in.ReadInt();
             height = @in.ReadLong();

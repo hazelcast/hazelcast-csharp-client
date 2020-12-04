@@ -30,7 +30,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var i = 0;
             foreach (var guid in collection)
             {
-                frame.Bytes.WriteGuid(i * BytesExtensions.SizeOfGuid, guid);
+                frame.Bytes.WriteGuidL(i * BytesExtensions.SizeOfGuid, guid);
                 i++;
             }
 
@@ -48,7 +48,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<Guid>(itemCount);
             for (var i = 0; i < itemCount; i++)
             {
-                result.Add(frame.Bytes.ReadGuid(i * BytesExtensions.SizeOfGuid));
+                result.Add(frame.Bytes.ReadGuidL(i * BytesExtensions.SizeOfGuid));
             }
             return result;
         }

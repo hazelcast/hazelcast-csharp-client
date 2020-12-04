@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="transactionId">The unique identifier of the transaction.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        public HTxList(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public HTxList(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
             : base(ServiceNames.List, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 

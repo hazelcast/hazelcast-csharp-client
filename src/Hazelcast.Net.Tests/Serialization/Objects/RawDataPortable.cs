@@ -49,8 +49,8 @@ namespace Hazelcast.Tests.Serialization.Objects
             writer.WriteCharArray("c", c);
             writer.WritePortable("p", p);
             var output = writer.GetRawDataOutput();
-            output.Write(k);
-            output.Write(s);
+            output.WriteInt(k);
+            output.WriteUTF(s);
             output.WriteObject(sds);
         }
 
@@ -61,7 +61,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             p = reader.ReadPortable<NamedPortable>("p");
             var input = reader.GetRawDataInput();
             k = input.ReadInt();
-            s = input.ReadString();
+            s = input.ReadUTF();
             sds = input.ReadObject<ByteArrayDataSerializable>();
         }
 

@@ -57,14 +57,14 @@ namespace Hazelcast.Projection
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            AttributePaths = input.ReadStringArray();
+            AttributePaths = input.ReadUTFArray();
         }
 
         /// <inheritdoc />
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteArray(AttributePaths);
+            output.WriteUTFArray(AttributePaths);
         }
 
         /// <inheritdoc />

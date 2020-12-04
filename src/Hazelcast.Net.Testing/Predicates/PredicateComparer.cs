@@ -80,8 +80,8 @@ namespace Hazelcast.Testing.Predicates
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
 
-            output.Write(Type);
-            output.Write((int)IterationType);
+            output.WriteInt(Type);
+            output.WriteInt((int)IterationType);
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

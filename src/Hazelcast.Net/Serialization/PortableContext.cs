@@ -126,7 +126,7 @@ namespace Hazelcast.Serialization
         public Endianness Endianness => _serializationService.Endianness;
 
         /// <exception cref="System.IO.IOException" />
-        internal IClassDefinition ReadClassDefinition(IBufferObjectDataInput @in, int factoryId, int classId,
+        internal IClassDefinition ReadClassDefinition(ObjectDataInput @in, int factoryId, int classId,
             int version)
         {
             var register = true;
@@ -154,7 +154,7 @@ namespace Hazelcast.Serialization
                 if (type == FieldType.Portable)
                 {
                     // is null
-                    if (@in.ReadBool())
+                    if (@in.ReadBoolean())
                     {
                         register = false;
                     }

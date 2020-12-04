@@ -48,8 +48,8 @@ namespace Hazelcast.Aggregation
         /// <inheritdoc />
         protected override void WriteAggregatorData(IObjectDataOutput output)
         {
-            output.Write(0D); // member side field not used on client
-            output.Write(0L); // member side field not used on client
+            output.WriteDouble(0D); // member side field not used on client
+            output.WriteLong(0L); // member side field not used on client
         }
 
         /// <inheritdoc />

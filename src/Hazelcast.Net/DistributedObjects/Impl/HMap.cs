@@ -37,7 +37,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="logggerFactory">A logger factory.</param>
-        public HMap(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
+        public HMap(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
             : base(ServiceNames.Map, name, factory, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;

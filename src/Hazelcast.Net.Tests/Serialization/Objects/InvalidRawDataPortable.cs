@@ -33,8 +33,8 @@ namespace Hazelcast.Tests.Serialization.Objects
         {
             writer.WriteLong("l", l);
             var output = writer.GetRawDataOutput();
-            output.Write(k);
-            output.Write(s);
+            output.WriteInt(k);
+            output.WriteUTF(s);
             writer.WriteCharArray("c", c);
             output.WriteObject(sds);
             writer.WritePortable("p", p);

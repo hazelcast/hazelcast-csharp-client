@@ -82,12 +82,13 @@ namespace Hazelcast.Serialization
             PortableFactories = new List<FactoryOptions<IPortableFactory>>(other.PortableFactories);
             DataSerializableFactories = new List<FactoryOptions<IDataSerializableFactory>>(other.DataSerializableFactories);
 
-            DefaultSerializer = other.DefaultSerializer?.Clone();
+            GlobalSerializer = other.GlobalSerializer?.Clone();
             Serializers = new List<SerializerOptions>(other.Serializers);
         }
 
+
         /// <summary>
-        /// Gets or sets the <see cref="Endianness"/>.
+        /// Gets or sets the <see cref="Endianness"/>. This value should match the server configuration.
         /// </summary>
         public Endianness Endianness { get; set; } = Endianness.BigEndian;
 
@@ -212,19 +213,19 @@ namespace Hazelcast.Serialization
         #region Serializers
 
         [BinderIgnore]
-        public SerializerOptions DefaultSerializer { get; set; }
+        public GlobalSerializerOptions GlobalSerializer { get; set; }
 
 #pragma warning disable IDE0051 // Remove unused private members - used by binding
         [BinderIgnore(false)]
-        [BinderName("defaultSerializer")]
-        private DefaultSerializerInjectionOptions DefaultSerializerBinder
+        [BinderName("globalSerializer")]
+        private GlobalSerializerInjectionOptions GlobalSerializerBinder
         {
             get => default;
             set
             {
-                DefaultSerializer = new SerializerOptions
+                GlobalSerializer = new GlobalSerializerOptions
                 {
-                    OverrideClr = value.OverrideClr,
+                    OverrideClrSerialization = value.OverrideClrSerialization,
                     Creator = () => ServiceFactory.CreateInstance<ISerializer>(value.TypeName, value.Args)
                 };
             }
@@ -267,15 +268,15 @@ namespace Hazelcast.Serialization
             }
         }
 
-        internal class DefaultSerializerInjectionOptions : InjectionOptions
+        internal class GlobalSerializerInjectionOptions : InjectionOptions
         {
-            public bool OverrideClr { get; set; }
+            public bool OverrideClrSerialization { get; set; }
 
             protected override void ToString(StringBuilder text)
             {
                 base.ToString(text);
                 text.Append(", overrideClr: ");
-                text.Append(OverrideClr);
+                text.Append(OverrideClrSerialization);
             }
         }
 

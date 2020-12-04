@@ -35,7 +35,7 @@ namespace Hazelcast.Tests.Serialization
             //Endianness.NativeOrder() // why test it, it's one of the other two?!
         };
 
-        private ISerializationService CreateSerializationService(Endianness endianness)
+        private SerializationService CreateSerializationService(Endianness endianness)
         {
             return new SerializationServiceBuilder(new NullLoggerFactory())
                 .SetEndianness(endianness)

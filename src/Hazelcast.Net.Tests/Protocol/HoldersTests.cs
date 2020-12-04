@@ -47,7 +47,7 @@ namespace Hazelcast.Tests.Protocol
             }
         }
 
-        private AnchorDataListHolder GetAnchorDataListHolder(ISerializationService serializationService, out List<int> pageList, out List<KeyValuePair<IData, IData>> dataList)
+        private AnchorDataListHolder GetAnchorDataListHolder(SerializationService serializationService, out List<int> pageList, out List<KeyValuePair<IData, IData>> dataList)
         {
             pageList = new List<int> { 0, 1, 2, 3 };
             dataList = new List<KeyValuePair<IData, IData>>

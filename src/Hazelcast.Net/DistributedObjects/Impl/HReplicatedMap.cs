@@ -32,7 +32,7 @@ namespace Hazelcast.DistributedObjects.Impl
     {
         private readonly int _partitionId;
 
-        public HReplicatedMap(string name, DistributedObjectFactory factory, Cluster cluster, ISerializationService serializationService, int partitionId, ILoggerFactory loggerFactory)
+        public HReplicatedMap(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, int partitionId, ILoggerFactory loggerFactory)
             : base(ServiceNames.ReplicatedMap, name, factory, cluster, serializationService, loggerFactory)
         {
             _partitionId = partitionId;

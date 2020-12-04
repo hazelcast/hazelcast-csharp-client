@@ -20,23 +20,13 @@ namespace Hazelcast.Core
     public enum Endianness
     {
         /// <summary>
-        /// Endianness is not specified (this is the default value).
-        /// </summary>
-        Unspecified = 0,
-
-        /// <summary>
-        /// The native endianness.
-        /// </summary>
-        Native = 1,
-
-        /// <summary>
         /// Big-endian.
         /// </summary>
-        BigEndian = 2,
+        BigEndian = 0,
 
         /// <summary>
         /// Little-endian.
         /// </summary>
-        LittleEndian = 3
+        LittleEndian = 1
     }
 }

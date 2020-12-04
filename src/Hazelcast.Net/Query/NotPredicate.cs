@@ -32,15 +32,11 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-
             _predicate = input.ReadObject<IPredicate>();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-
             output.WriteObject(_predicate);
         }
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -33,12 +34,12 @@ namespace Hazelcast.Tests.Serialization
             //Endianness.NativeOrder()
         };
 
-        internal static ISerializationService CreateSerializationService(int version)
+        internal static SerializationService CreateSerializationService(int version)
         {
             return CreateSerializationService(version, Endianness.BigEndian);
         }
 
-        internal static ISerializationService CreateSerializationService(int version, Endianness order)
+        internal static SerializationService CreateSerializationService(int version, Endianness order)
         {
             return new SerializationServiceBuilder(new NullLoggerFactory())
                 .SetEndianness(order).SetPortableVersion(version)
@@ -52,13 +53,13 @@ namespace Hazelcast.Tests.Serialization
         {
             return new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
             {
-                () => new SampleIdentifiedDataSerializable(),
-                () => new ByteArrayDataSerializable(),
-                () => new DataDataSerializable(),
-                () => new ComplexDataSerializable(),
+                () => new SampleIdentifiedDataSerializable(),//0
+                () => new ByteArrayDataSerializable(),//1
+                null,//place holder for index 2
+                () => new ComplexDataSerializable()//3
             });
         }
-
+        
         internal static IClassDefinition CreateNamedPortableClassDefinition(int portableVersion)
         {
             var builder = new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
@@ -68,7 +69,7 @@ namespace Hazelcast.Tests.Serialization
             return builder.Build();
         }
 
-        private static void AssertRepeatedSerialisationGivesSameByteArrays(ISerializationService ss, IPortable p)
+        private static void AssertRepeatedSerialisationGivesSameByteArrays(SerializationService ss, IPortable p)
         {
             var data1 = ss.ToData(p);
             for (var k = 0; k < 100; k++)
@@ -80,13 +81,13 @@ namespace Hazelcast.Tests.Serialization
 
         public class TestObject1 : IPortable
         {
-            private IPortable[] portables;
+            private TestObject2[] portables;
 
             public TestObject1()
             {
             }
 
-            public TestObject1(IPortable[] p)
+            public TestObject1(TestObject2[] p)
             {
                 portables = p;
             }
@@ -102,7 +103,7 @@ namespace Hazelcast.Tests.Serialization
 
             public void ReadPortable(IPortableReader reader)
             {
-                portables = reader.ReadPortableArray("list");
+                portables = reader.ReadPortableArray<TestObject2>("list");
             }
         }
 
@@ -172,9 +173,8 @@ namespace Hazelcast.Tests.Serialization
                     "issue-1096", new ByteArrayDataSerializable(new byte[1])));
         }
 
-        //https://github.com/hazelcast/hazelcast/issues/2172
         [Test]
-        public void Test_Issue2172_WritePortableArray()
+        public void TestWritePortableArray()
         {
             var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetInitialOutputBufferSize(16).Build();
             var testObject2s = new TestObject2[100];
@@ -198,6 +198,11 @@ namespace Hazelcast.Tests.Serialization
             {
                 nn[i] = new NamedPortable("named-portable-" + i, i);
             }
+            
+            NamedPortable np = nn[0];
+            var data = ss.ToData(np);
+            Assert.AreEqual(np, ss.ToObject(data));
+            Assert.AreEqual(np, ss2.ToObject(data));
 
             var inner = new InnerPortable(new byte[] {0, 1, 2}, new[] {'c', 'h', 'a', 'r'},
                 new short[] {3, 4, 5}, new[] {9, 8, 7, 6}, new long[] {0, 1, 5, 7, 9, 11},
@@ -206,9 +211,10 @@ namespace Hazelcast.Tests.Serialization
             var main = new MainPortable(113, true, 'x', -500, 56789, -50992225L, 900.5678f, -897543.3678909d,
                 "this is main portable object created for testing!", inner);
 
-            var data = ss.ToData(main);
+            data = ss.ToData(main);
 
-            Assert.AreEqual(main, ss.ToObject<MainPortable>(data));
+            var mainPortable = ss.ToObject<MainPortable>(data);
+            Assert.AreEqual(main, mainPortable);
             Assert.AreEqual(main, ss2.ToObject<MainPortable>(data));
         }
 
@@ -366,36 +372,6 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(grandParent.timestamp, reader.ReadLong("timestamp"));
             Assert.AreEqual(parent.timestamp, reader.ReadLong("child.timestamp"));
             Assert.AreEqual(child.timestamp, reader.ReadLong("child.child.timestamp"));
-        }
-
-        [Test]
-        public void TestWriteDataWithPortable()
-        {
-            var ss = new SerializationServiceBuilder(new NullLoggerFactory())
-                .AddPortableFactory(SerializationTestsConstants.PORTABLE_FACTORY_ID,
-                    new PortableFactoryFunc(i => new NamedPortableV2()))
-                .AddDataSerializableFactory(SerializationTestsConstants.DATA_SERIALIZABLE_FACTORY_ID,
-                    GetDataSerializableFactory())
-                .Build();
-
-            var ss2 = new SerializationServiceBuilder(new NullLoggerFactory())
-                .AddPortableFactory(SerializationTestsConstants.PORTABLE_FACTORY_ID,
-                    new PortableFactoryFunc(i => new NamedPortable()))
-                .AddDataSerializableFactory(SerializationTestsConstants.DATA_SERIALIZABLE_FACTORY_ID,
-                    GetDataSerializableFactory())
-                .SetPortableVersion(5)
-                .Build();
-
-            IPortable p1 = new NamedPortableV2("test", 456, 500);
-            object o1 = new DataDataSerializable(ss.ToData(p1));
-
-            var data = ss.ToData(o1);
-
-            var o2 = ss2.ToObject<DataDataSerializable>(data);
-            Assert.AreEqual(o1, o2);
-
-            var p2 = ss2.ToObject<IPortable>(o2.Data);
-            Assert.AreEqual(p1, p2);
         }
 
         [Test]

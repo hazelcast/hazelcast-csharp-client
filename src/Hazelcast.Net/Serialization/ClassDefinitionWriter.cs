@@ -166,7 +166,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void WritePortableArray(string fieldName, IPortable[] portables)
+        public void WritePortableArray<TPortable>(string fieldName, TPortable[] portables) where TPortable : IPortable
         {
             if (portables == null || portables.Length == 0)
             {

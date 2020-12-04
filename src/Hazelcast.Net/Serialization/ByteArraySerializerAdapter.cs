@@ -29,7 +29,7 @@ namespace Hazelcast.Serialization
         public virtual void Write(IObjectDataOutput output, object obj)
         {
             var bytes = _serializer.Write((T) obj);
-            output.WriteArray(bytes);
+            output.WriteByteArray(bytes);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

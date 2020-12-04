@@ -52,7 +52,7 @@ namespace Hazelcast.Tests.Serialization
         public void TestGlobalSerializer()
         {
             var config = new SerializationOptions();
-            config.DefaultSerializer = new SerializerOptions
+            config.GlobalSerializer = new GlobalSerializerOptions
             {
                 Creator = () => (ISerializer) ServiceFactory.CreateInstance(typeof (GlobalSerializer).AssemblyQualifiedName)
             };
@@ -72,19 +72,18 @@ namespace Hazelcast.Tests.Serialization
         {
             var config = new SerializationOptions();
             var globalListSerializer = new GlobalListSerializer();
-            config.DefaultSerializer = new SerializerOptions
+            config.GlobalSerializer = new GlobalSerializerOptions
             {
                 Creator = () => globalListSerializer,
-                OverrideClr = true
+                OverrideClrSerialization = true
             };
 
             var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
 
-
             var list = new List<string> {"foo", "bar"};
 
             var d = ss.ToData(list);
-            var input = new ByteArrayObjectDataInput(d.ToByteArray(), HeapData.DataOffset, ss, Endianness.BigEndian);
+            var input = ss.CreateObjectDataInput(d);
 
             var actual = (List<string>)globalListSerializer.Read(input);
 
@@ -136,8 +135,8 @@ namespace Hazelcast.Tests.Serialization
                 array = ms.ToArray();
             }
 
-            output.Write(array.Length);
-            output.WriteBytes(array);
+            output.WriteInt(array.Length);
+            output.Write(array);
         }
 
         public CustomSerializableType Read(IObjectDataInput input)
@@ -146,7 +145,7 @@ namespace Hazelcast.Tests.Serialization
             var len = input.ReadInt();
 
             var buffer = new byte[len];
-            input.ReadBytes(buffer);
+            input.Read(buffer);
 
             CustomSerializableType result = null;
             using (var ms = new MemoryStream(buffer))
@@ -191,10 +190,10 @@ namespace Hazelcast.Tests.Serialization
             if (obj is IList<string>)
             {
                 IList<string> list = (IList<string>) obj;
-                output.Write(list.Count);
+                output.WriteInt(list.Count);
                 foreach (var o in list)
                 {
-                    output.Write(o);
+                    output.WriteUTF(o);
                 }
             }
         }
@@ -205,7 +204,7 @@ namespace Hazelcast.Tests.Serialization
             List<string> list = new List<string>(size);
             for (int i = 0; i < size; i++)
             {
-                list.Add(input.ReadString());
+                list.Add(input.ReadUTF());
             }
             return list;
         }

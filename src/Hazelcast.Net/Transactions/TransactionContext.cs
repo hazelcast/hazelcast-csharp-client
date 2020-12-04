@@ -47,7 +47,7 @@ namespace Hazelcast.Transactions
         /// <param name="options">Transaction options.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        public TransactionContext(Cluster cluster, TransactionOptions options, ISerializationService serializationService, ILoggerFactory loggerFactory)
+        public TransactionContext(Cluster cluster, TransactionOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _options = options ?? throw new ArgumentNullException(nameof(options));

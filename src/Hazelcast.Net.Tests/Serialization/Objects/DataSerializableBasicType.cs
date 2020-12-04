@@ -35,8 +35,8 @@ namespace Hazelcast.Tests.Serialization.Objects
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(dblValue1);
-            output.Write(dblValue2);
+            output.WriteDouble(dblValue1);
+            output.WriteDouble(dblValue2);
         }
 
         public void ReadData(IObjectDataInput input)

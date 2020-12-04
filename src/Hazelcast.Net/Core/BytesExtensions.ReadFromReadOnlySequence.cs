@@ -26,7 +26,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static ushort ReadUShort(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static ushort ReadUShort(ref ReadOnlySequence<byte> bytes, Endianness endianness)
         {
             const byte length = sizeof(ushort);
 
@@ -57,7 +57,7 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes to read from.</param>
         /// <param name="endianness">The endianness.</param>
         /// <returns>The value.</returns>
-        public static int ReadInt(ref ReadOnlySequence<byte> bytes, Endianness endianness = Endianness.Unspecified)
+        public static int ReadInt(ref ReadOnlySequence<byte> bytes, Endianness endianness)
         {
             if (bytes.Length < 4)
                 throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));

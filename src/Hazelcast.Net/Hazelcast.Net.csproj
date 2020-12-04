@@ -141,6 +141,12 @@
     <Compile Update="DistributedObjects\Impl\HTopic.*.cs">
       <DependentUpon>HTopic.cs</DependentUpon>
     </Compile>
+    <Compile Update="Serialization\ObjectDataOutput.*.cs">
+      <DependentUpon>ObjectDataOutput.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Serialization\ObjectDataInput.*.cs">
+      <DependentUpon>ObjectDataInput.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

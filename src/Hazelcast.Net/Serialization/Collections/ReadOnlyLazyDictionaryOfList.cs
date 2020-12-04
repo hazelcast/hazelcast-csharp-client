@@ -21,7 +21,7 @@ namespace Hazelcast.Serialization.Collections
 {
     internal sealed class ReadOnlyLazyDictionaryOfList<TKey, TValue> : IReadOnlyDictionary<TKey, IReadOnlyList<TValue>>
     {
-        private readonly ISerializationService _serializationService;
+        private readonly SerializationService _serializationService;
 
         private readonly Dictionary<IData, ReadOnlyLazyEntryOfList<TKey, TValue>> _entries
             = new Dictionary<IData, ReadOnlyLazyEntryOfList<TKey, TValue>>();
@@ -34,7 +34,7 @@ namespace Hazelcast.Serialization.Collections
         /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionaryOfList{TKey,TValue}"/> class.
         /// </summary>
         /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyDictionaryOfList(ISerializationService serializationService)
+        public ReadOnlyLazyDictionaryOfList(SerializationService serializationService)
         {
             _serializationService = serializationService;
         }

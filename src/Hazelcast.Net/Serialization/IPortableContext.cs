@@ -16,7 +16,7 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    public interface IPortableContext
+    internal interface IPortableContext
     {
         Endianness Endianness { get; }
 

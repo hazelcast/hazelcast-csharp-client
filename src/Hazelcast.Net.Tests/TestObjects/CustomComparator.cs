@@ -75,8 +75,8 @@ namespace Hazelcast.Tests.TestObjects
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(_type);
-            output.Write((int)_iterationType);
+            output.WriteInt(_type);
+            output.WriteInt((int)_iterationType);
         }
 
         public int FactoryId => IdentifiedFactory.FactoryId;

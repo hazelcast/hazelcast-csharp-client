@@ -239,9 +239,9 @@ namespace Hazelcast.Tests.Data
             Assert.Throws<ArgumentNullException>(() => q.WriteData(null));
             Assert.Throws<ArgumentNullException>(() => q.ReadData(null));
 
-            var output = new ByteArrayObjectDataOutput(1024, null, Endianness.Unspecified);
+            var output = new ObjectDataOutput(1024, null, Endianness.BigEndian);
             q.WriteData(output);
-            var input = new ByteArrayObjectDataInput(output.ToByteArray(), null, Endianness.Unspecified);
+            var input = new ObjectDataInput(output.ToByteArray(), null, Endianness.BigEndian);
             var r = new EndpointQualifier(ProtocolType.Wan, "meh");
             r.ReadData(input);
 

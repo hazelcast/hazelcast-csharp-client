@@ -68,9 +68,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             ll = reader.ReadLongArray("l");
             ff = reader.ReadFloatArray("f");
             dd = reader.ReadDoubleArray("d");
-            var pp = reader.ReadPortableArray("nn");
-            nn = new NamedPortable[pp.Length];
-            Array.Copy(pp, 0, nn, 0, nn.Length);
+            nn = reader.ReadPortableArray<NamedPortable>("nn");
         }
 
         public int FactoryId => SerializationTestsConstants.PORTABLE_FACTORY_ID;

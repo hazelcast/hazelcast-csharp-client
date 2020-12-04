@@ -48,7 +48,6 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
             var size = input.ReadInt();
             _predicates = new IPredicate[size];
             for (var i = 0; i < size; i++)
@@ -59,8 +58,7 @@ namespace Hazelcast.Query
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-            output.Write(_predicates.Length);
+            output.WriteInt(_predicates.Length);
             foreach (var predicate in _predicates)
             {
                 output.WriteObject(predicate);

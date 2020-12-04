@@ -225,10 +225,10 @@
         }
       ],
 
-      // default serializer
-      "defaultSerializer": {
+      // global serializer
+      "globalSerializer": {
         "typeName": "Hazelcast.Tests.Configuration.HazelcastOptionsTests+TestDefaultSerializer, Hazelcast.Net.Tests",
-        "overrideClr": true
+        "OverrideClrSerialization": true
       },
 
       // serializers

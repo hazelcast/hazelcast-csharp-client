@@ -38,22 +38,18 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-
-            _attributeName = input.ReadString();
+            _attributeName = input.ReadUTF();
             _value = input.ReadObject<object>();
-            _equal = input.ReadBool();
-            _less = input.ReadBool();
+            _equal = input.ReadBoolean();
+            _less = input.ReadBoolean();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-
-            output.Write(_attributeName);
+            output.WriteUTF(_attributeName);
             output.WriteObject(_value);
-            output.Write(_equal);
-            output.Write(_less);
+            output.WriteBoolean(_equal);
+            output.WriteBoolean(_less);
         }
 
         public int FactoryId =>FactoryIds.PredicateFactoryId;

@@ -54,7 +54,7 @@ namespace Hazelcast.Clustering
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is authenticated.</returns>
-        public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ISerializationService serializationService, CancellationToken cancellationToken)
+        public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, SerializationService serializationService, CancellationToken cancellationToken)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
             if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
@@ -98,7 +98,7 @@ namespace Hazelcast.Clustering
         // returns a result if successful
         // returns null if failed due to credentials (may want to retry)
         // throws if anything else went wrong
-        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, ISerializationService serializationService, CancellationToken cancellationToken)
+        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, SerializationService serializationService, CancellationToken cancellationToken)
         {
             const string clientType = "CSP"; // CSharp
 

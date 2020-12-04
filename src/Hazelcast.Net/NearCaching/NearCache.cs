@@ -42,7 +42,7 @@ namespace Hazelcast.NearCaching
         /// <param name="loggerFactory">A logger factory.</param>
         /// <param name="nearCacheOptions">NearCache options.</param>
         /// <param name="maxToleratedMissCount"></param>
-        public NearCache(string name, Cluster cluster, ISerializationService serializationService, ILoggerFactory loggerFactory, NearCacheOptions nearCacheOptions, int maxToleratedMissCount)
+        public NearCache(string name, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory, NearCacheOptions nearCacheOptions, int maxToleratedMissCount)
             : base(name, cluster, serializationService, loggerFactory, nearCacheOptions)
         {
             _maxToleratedMissCount = maxToleratedMissCount;

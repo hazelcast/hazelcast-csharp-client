@@ -131,7 +131,7 @@ namespace Hazelcast.Serialization
         /// <param name="fieldName">name of the field</param>
         /// <returns>the portabke value read</returns>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
-        IPortable[] ReadPortableArray(string fieldName);
+        TPortable[] ReadPortableArray<TPortable>(string fieldName) where TPortable : IPortable;
 
         /// <param name="fieldName">name of the field</param>
         /// <returns>the short value read</returns>

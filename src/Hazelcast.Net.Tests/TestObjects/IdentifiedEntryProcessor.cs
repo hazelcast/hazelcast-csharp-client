@@ -30,12 +30,12 @@ namespace Hazelcast.Tests.TestObjects
 
         public void ReadData(IObjectDataInput input)
         {
-            value = input.ReadString();
+            value = input.ReadUTF();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(value);
+            output.WriteUTF(value);
         }
 
         public int FactoryId => IdentifiedFactory.FactoryId;

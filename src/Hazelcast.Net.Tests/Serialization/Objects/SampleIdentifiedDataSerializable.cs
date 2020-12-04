@@ -32,8 +32,8 @@ namespace Hazelcast.Tests.Serialization.Objects
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.Write(i);
-            output.Write(c);
+            output.WriteInt(i);
+            output.WriteChar(c);
         }
 
         public void ReadData(IObjectDataInput input)

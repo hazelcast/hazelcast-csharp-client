@@ -24,14 +24,14 @@ namespace Hazelcast.Serialization
         private const char NestedFieldPattern = '.';
 
         private readonly int _finalPosition;
-        private readonly IBufferObjectDataInput _in;
+        private readonly ObjectDataInput _in;
         private readonly int _offset;
 
         protected readonly IClassDefinition Cd;
         private readonly PortableSerializer Serializer;
         private bool _raw;
 
-        public DefaultPortableReader(PortableSerializer serializer, IBufferObjectDataInput @in, IClassDefinition cd)
+        public DefaultPortableReader(PortableSerializer serializer, ObjectDataInput @in, IClassDefinition cd)
         {
             _in = @in;
             Serializer = serializer;
@@ -99,7 +99,7 @@ namespace Hazelcast.Serialization
             {
                 var pos = ReadPosition(fieldName, FieldType.Utf);
                 _in.Position = pos;
-                return _in.ReadString();
+                return _in.ReadUTF();
             }
             finally
             {
@@ -111,7 +111,7 @@ namespace Hazelcast.Serialization
         public virtual bool ReadBoolean(string fieldName)
         {
             var pos = ReadPosition(fieldName, FieldType.Boolean);
-            return _in.ReadBool(pos);
+            return _in.ReadBoolean(pos);
         }
 
         /// <exception cref="System.IO.IOException"/>
@@ -157,7 +157,7 @@ namespace Hazelcast.Serialization
             {
                 var pos = ReadPosition(fieldName, FieldType.BooleanArray);
                 _in.Position = pos;
-                return _in.ReadBoolArray();
+                return _in.ReadBooleanArray();
             }
             finally
             {
@@ -285,7 +285,7 @@ namespace Hazelcast.Serialization
             {
                 var pos = ReadPosition(fieldName, FieldType.UtfArray);
                 _in.Position = pos;
-                return _in.ReadStringArray();
+                return _in.ReadUTFArray();
             }
             finally
             {
@@ -310,7 +310,7 @@ namespace Hazelcast.Serialization
                 }
                 var pos = ReadPosition(fd);
                 _in.Position = pos;
-                var isNull = _in.ReadBool();
+                var isNull = _in.ReadBoolean();
                 var factoryId = _in.ReadInt();
                 var classId = _in.ReadInt();
                 CheckFactoryAndClass(fd, factoryId, classId);
@@ -327,7 +327,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
-        public virtual IPortable[] ReadPortableArray(string fieldName)
+        public virtual TPortable[] ReadPortableArray<TPortable>(string fieldName) where TPortable : IPortable
         {
             var currentPos = _in.Position;
             try
@@ -347,10 +347,10 @@ namespace Hazelcast.Serialization
                 var factoryId = _in.ReadInt();
                 var classId = _in.ReadInt();
 
-                if (len == ArraySerializer.NullArrayLength) return null;
+                if (len == BytesExtensions.SizeOfNullArray) return null;
 
                 CheckFactoryAndClass(fd, factoryId, classId);
-                var portables = new IPortable[len];
+                var portables = new TPortable[len];
                 if (len > 0)
                 {
                     var offset = _in.Position;
@@ -358,7 +358,7 @@ namespace Hazelcast.Serialization
                     {
                         var start = _in.ReadInt(offset + i* BytesExtensions.SizeOfInt);
                         _in.Position = start;
-                        portables[i] = Serializer.Read(_in, factoryId, classId);
+                        portables[i] = (TPortable) Serializer.Read(_in, factoryId, classId);
                     }
                 }
                 return portables;
@@ -421,7 +421,7 @@ namespace Hazelcast.Serialization
                     }
                     var pos = reader.ReadPosition(fd);
                     _in.Position = pos;
-                    var isNull = _in.ReadBool();
+                    var isNull = _in.ReadBoolean();
                     if (isNull)
                     {
                         throw new ArgumentNullException("Parent field is null: " + fieldNames[i]);

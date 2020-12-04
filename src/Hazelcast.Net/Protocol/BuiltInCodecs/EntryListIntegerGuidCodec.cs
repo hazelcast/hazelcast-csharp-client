@@ -31,8 +31,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var i = 0;
             foreach (var kvp in collection)
             {
-                frame.Bytes.WriteInt(i * EntrySizeInBytes, kvp.Key);
-                frame.Bytes.WriteGuid(i * EntrySizeInBytes + BytesExtensions.SizeOfInt, kvp.Value);
+                frame.Bytes.WriteIntL(i * EntrySizeInBytes, kvp.Key);
+                frame.Bytes.WriteGuidL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt, kvp.Value);
                 i++;
             }
             clientMessage.Append(frame);
@@ -45,8 +45,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var result = new List<KeyValuePair<int, Guid>>();
             for (var i = 0; i < itemCount; i++)
             {
-                var key = frame.Bytes.ReadInt(i * EntrySizeInBytes);
-                var value = frame.Bytes.ReadGuid(i * EntrySizeInBytes + BytesExtensions.SizeOfInt);
+                var key = frame.Bytes.ReadIntL(i * EntrySizeInBytes);
+                var value = frame.Bytes.ReadGuidL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt);
                 result.Add(new KeyValuePair<int, Guid>(key, value));
             }
             return result;
