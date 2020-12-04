@@ -40,12 +40,14 @@ namespace Hazelcast.Examples
         {
             if (args.Length < 1)
             {
-                Console.WriteLine(@"Usage: hx <example> <args>
-  executes the static 'Hazelcast.Examples.<example>Example.Run' method.
-  example: hx Client.Lifecycle
+                Console.WriteLine(@"Usage: hx [~]<example> <args>
+  finds examples matching <example> and runs their Run method.
+  if '~' is missing, looks for Hazelcast.Examples.<example>[Example] types; otherwise
+  look for types with a full name matching the <example> regex.
+  example: hx Client.Lifecycle ... hx ~MapSimple
   <args> are passed as arguments to the method, and to configuration, so it is for
   instance possible to configure the server with the following arg:
-    hazelcast.networking.addresses.0=192.168.0.42");
+    --hazelcast.networking.addresses.0=192.168.0.42");
                 return;
             }
 
@@ -63,7 +65,10 @@ namespace Hazelcast.Examples
 
                 var types = typeof(Program).Assembly
                     .GetTypes()
-                    .Where(x => x.FullName != null && regex.IsMatch(x.FullName))
+                    .Where(x => x.IsClass && !x.IsNested &&
+                            x.FullName != null &&
+                            !x.FullName.Contains('<') &&
+                            regex.IsMatch(x.FullName))
                     .ToList();
 
                 if (types.Count == 0)

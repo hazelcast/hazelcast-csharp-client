@@ -1645,7 +1645,7 @@ function hz-run-example {
         Die "Could not find the examples executable. Did you build the solution?"
     }
     if ($options.commargs.Count -eq 0) {
-        Die "oops"
+        Die "usage: hz run-example [~]<example> --% <args>"
     }
     &$hx $options.commargs
 }
