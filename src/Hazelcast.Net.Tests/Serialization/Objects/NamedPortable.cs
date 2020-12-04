@@ -18,8 +18,8 @@ namespace Hazelcast.Tests.Serialization.Objects
 {
     internal class NamedPortable : IPortable
     {
-        internal int k;
         internal string name;
+        internal int k;
 
         public NamedPortable()
         { }

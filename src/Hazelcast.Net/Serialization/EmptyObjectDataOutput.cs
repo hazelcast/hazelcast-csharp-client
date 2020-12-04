@@ -28,13 +28,13 @@ namespace Hazelcast.Serialization
 
         public void WriteByte(byte b) { }
 
-        public void WriteSbyte(sbyte b) { }
+        public void WriteSByte(sbyte b) { }
 
         public void WriteChar(char v) { }
 
         public void WriteShort(short v) { }
 
-        public void WriteUshort(ushort v) { }
+        public void WriteUShort(ushort v) { }
 
         public void WriteInt(int v) { }
 

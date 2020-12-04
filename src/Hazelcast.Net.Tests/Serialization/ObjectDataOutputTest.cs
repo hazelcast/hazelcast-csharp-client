@@ -76,22 +76,18 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestEnsureAvailable()
         {
-            _output = new ObjectDataOutput(0, null, Endianness.BigEndian);
-            _output.EnsureAvailable( 5);
+            _output.Buffer = null;
+            _output.EnsureAvailable(5);
             Assert.AreEqual(10, _output.Buffer.Length);
         }
 
-        // but ... we don't reset buffer to null anymore?
-        /*
         [Test]
         public virtual void TestEnsureAvailable_smallLen()
         {
-            _output = new ByteArrayObjectDataOutput(10, null, Endianness.BigEndian);
             _output.Buffer = null;
-            _output.Validate(0, 1);
+            _output.EnsureAvailable(1);
             Assert.AreEqual(10, _output.Buffer.Length);
         }
-        */
 
         [Test]
         public virtual void TestToByteArray()

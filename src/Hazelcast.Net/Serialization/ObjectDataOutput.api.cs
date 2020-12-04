@@ -34,7 +34,7 @@ namespace Hazelcast.Serialization
             _position += BytesExtensions.SizeOfByte;
         }
 
-        public void WriteSbyte(sbyte value)
+        public void WriteSByte(sbyte value)
         {
             EnsureAvailable(BytesExtensions.SizeOfUnsignedByte);
             _buffer.WriteSbyte(_position, value);
@@ -55,7 +55,7 @@ namespace Hazelcast.Serialization
             _position += BytesExtensions.SizeOfShort;
         }
 
-        public void WriteUshort(ushort value)
+        public void WriteUShort(ushort value)
         {
             EnsureAvailable(BytesExtensions.SizeOfUnsignedShort);
             _buffer.WriteUShort(_position, value, Endianness);

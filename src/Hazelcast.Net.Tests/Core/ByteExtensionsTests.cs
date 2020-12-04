@@ -32,10 +32,6 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[8];
 
-            Assert.Throws<ArgumentNullException>(() => ((byte[])null).WriteByte(2, 42));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteByte(-1, 42));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bytes.WriteByte(8, 42));
-
             bytes.WriteByte(2, 42);
             AssertBytes(bytes, 0, 0, 42, 0, 0, 0, 0, 0);
 
@@ -47,10 +43,6 @@ namespace Hazelcast.Tests.Core
         public void ReadByte()
         {
             var bytes = new byte[] { 0, 0, 42 };
-
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadByte(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadByte(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadByte(8));
 
             Assert.That(bytes.ReadByte(2), Is.EqualTo(42));
             Assert.That(bytes.ReadByteL(2), Is.EqualTo(42));
@@ -77,10 +69,6 @@ namespace Hazelcast.Tests.Core
         public void ReadBool()
         {
             var bytes = new byte[] { 0, 0, 1 };
-
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadBool(2));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadBool(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadBool(8));
 
             Assert.That(bytes.ReadBool(2), Is.True);
             Assert.That(bytes.ReadBoolL(2), Is.True);
@@ -210,7 +198,7 @@ namespace Hazelcast.Tests.Core
             var bytes = new byte[8];
 
             bytes.WriteIntL(2, SomeEnum.Value1);
-            AssertBytes(bytes, 0, 0, 7, 91, 205, 21, 0);
+            AssertBytes(bytes, 0, 0, 21, 205, 91, 7, 0);
         }
 
         [Test]

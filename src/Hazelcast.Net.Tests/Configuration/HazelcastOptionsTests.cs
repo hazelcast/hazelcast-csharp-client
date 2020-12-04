@@ -359,7 +359,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsInstanceOf<TestDataSerializableFactory>(dataSerializableFactoryOptions.Service);
 
             Assert.IsNotNull(options.GlobalSerializer);
-            Assert.IsTrue(options.GlobalSerializer.OverrideClr);
+            Assert.IsTrue(options.GlobalSerializer.OverrideClrSerialization);
             Assert.IsInstanceOf<TestDefaultSerializer>(options.GlobalSerializer.Service);
 
             Assert.AreEqual(1, options.Serializers.Count);

@@ -39,10 +39,10 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static short ReadShort(this byte[] bytes, int position, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfShort)
-                throw new ArgumentOutOfRangeException(nameof(position));
+            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            //
+            // if (position < 0 || bytes.Length < position + SizeOfShort)
+            //     throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
             {
@@ -62,10 +62,10 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static ushort ReadUShort(this byte[] bytes, int position, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfShort)
-                throw new ArgumentOutOfRangeException(nameof(position));
+            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            //
+            // if (position < 0 || bytes.Length < position + SizeOfShort)
+            //     throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
             {
@@ -85,10 +85,10 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static int ReadInt(this byte[] bytes, int position, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfInt)
-                throw new ArgumentOutOfRangeException(nameof(position));
+            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            //
+            // if (position < 0 || bytes.Length < position + SizeOfInt)
+            //     throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
             {
@@ -111,10 +111,10 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static long ReadLong(this byte[] bytes, int position, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfLong)
-                throw new ArgumentOutOfRangeException(nameof(position));
+            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            //
+            // if (position < 0 || bytes.Length < position + SizeOfLong)
+            //     throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
             {
@@ -143,10 +143,10 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static float ReadFloat(this byte[] bytes, int position, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfFloat)
-                throw new ArgumentOutOfRangeException(nameof(position));
+            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            //
+            // if (position < 0 || bytes.Length < position + SizeOfFloat)
+            //     throw new ArgumentOutOfRangeException(nameof(position));
 
             int value;
             unchecked
@@ -177,10 +177,10 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static double ReadDouble(this byte[] bytes, int position, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfDouble)
-                throw new ArgumentOutOfRangeException(nameof(position));
+            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            //
+            // if (position < 0 || bytes.Length < position + SizeOfDouble)
+            //     throw new ArgumentOutOfRangeException(nameof(position));
 
             long value;
             unchecked
@@ -220,10 +220,10 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static char ReadChar(this byte[] bytes, int position, Endianness endianness)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            if (position < 0 || bytes.Length < position + SizeOfChar)
-                throw new ArgumentOutOfRangeException(nameof(position));
+            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            //
+            // if (position < 0 || bytes.Length < position + SizeOfChar)
+            //     throw new ArgumentOutOfRangeException(nameof(position));
 
             unchecked
             {

@@ -50,7 +50,7 @@ namespace Hazelcast.Examples.WebSite
         {
             // create an Hazelcast client and connect to a server running on localhost
             var options = BuildExampleOptions(args);
-            options.Serialization.GlobalSerializer = new SerializerOptions
+            options.Serialization.GlobalSerializer = new GlobalSerializerOptions
             {
                 Creator = () => new GlobalSerializer()
             };

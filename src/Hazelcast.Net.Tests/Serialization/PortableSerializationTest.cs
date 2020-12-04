@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -52,12 +53,13 @@ namespace Hazelcast.Tests.Serialization
         {
             return new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
             {
-                () => new SampleIdentifiedDataSerializable(),
-                () => new ByteArrayDataSerializable(),
-                () => new ComplexDataSerializable(),
+                () => new SampleIdentifiedDataSerializable(),//0
+                () => new ByteArrayDataSerializable(),//1
+                null,//place holder for index 2
+                () => new ComplexDataSerializable()//3
             });
         }
-
+        
         internal static IClassDefinition CreateNamedPortableClassDefinition(int portableVersion)
         {
             var builder = new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
@@ -196,6 +198,11 @@ namespace Hazelcast.Tests.Serialization
             {
                 nn[i] = new NamedPortable("named-portable-" + i, i);
             }
+            
+            NamedPortable np = nn[0];
+            var data = ss.ToData(np);
+            Assert.AreEqual(np, ss.ToObject(data));
+            Assert.AreEqual(np, ss2.ToObject(data));
 
             var inner = new InnerPortable(new byte[] {0, 1, 2}, new[] {'c', 'h', 'a', 'r'},
                 new short[] {3, 4, 5}, new[] {9, 8, 7, 6}, new long[] {0, 1, 5, 7, 9, 11},
@@ -204,9 +211,10 @@ namespace Hazelcast.Tests.Serialization
             var main = new MainPortable(113, true, 'x', -500, 56789, -50992225L, 900.5678f, -897543.3678909d,
                 "this is main portable object created for testing!", inner);
 
-            var data = ss.ToData(main);
+            data = ss.ToData(main);
 
-            Assert.AreEqual(main, ss.ToObject<MainPortable>(data));
+            var mainPortable = ss.ToObject<MainPortable>(data);
+            Assert.AreEqual(main, mainPortable);
             Assert.AreEqual(main, ss2.ToObject<MainPortable>(data));
         }
 

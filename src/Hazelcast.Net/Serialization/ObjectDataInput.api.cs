@@ -38,7 +38,7 @@ namespace Hazelcast.Serialization
             return value;
         }
 
-        public sbyte ReadSbyte()
+        public sbyte ReadSByte()
         {
             CheckAvailable(Position, BytesExtensions.SizeOfByte);
             var value = _buffer.ReadByte(Position);
@@ -62,7 +62,7 @@ namespace Hazelcast.Serialization
             return value;
         }
 
-        public ushort ReadUshort()
+        public ushort ReadUShort()
         {
             CheckAvailable(Position, BytesExtensions.SizeOfUnsignedShort);
             var value = _buffer.ReadUShort(Position, Endianness);
@@ -153,7 +153,7 @@ namespace Hazelcast.Serialization
             for (var i = 0; i < length; i++)
             {
                 values[i] = _buffer.ReadChar(Position, Endianness);
-                Position += BytesExtensions.SizeOfBool;
+                Position += BytesExtensions.SizeOfChar;
             }
 
             return values;

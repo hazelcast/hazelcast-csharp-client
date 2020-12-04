@@ -32,7 +32,11 @@ namespace Hazelcast.Serialization
             Endianness = endianness;
         }
 
-        public byte[] Buffer => _buffer;
+        public byte[] Buffer
+        {
+            get => _buffer;
+            set => _buffer = value;
+        }
 
         internal int Position
         {
@@ -40,11 +44,10 @@ namespace Hazelcast.Serialization
             private set => _position = value;
         }
 
-        public void WriteInt(int value, int position)
+        public void WriteInt(int position, int value)
         {
             EnsureAvailable(BytesExtensions.SizeOfInt);
             _buffer.WriteInt(position, value, Endianness);
-            _position += BytesExtensions.SizeOfInt;
         }
 
         public void WriteIntBigEndian(int value)

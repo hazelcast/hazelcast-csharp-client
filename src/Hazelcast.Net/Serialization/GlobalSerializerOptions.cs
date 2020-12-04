@@ -19,42 +19,32 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    public class SerializerOptions : SingletonServiceFactory<ISerializer>
+    public class GlobalSerializerOptions : SerializerOptions
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="SerializationOptions"/> class.
+        /// Initializes a new instance of the <see cref="GlobalSerializerOptions"/> class.
         /// </summary>
-        public SerializerOptions()
+        public GlobalSerializerOptions()
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SerializationOptions"/> class.
+        /// Initializes a new instance of the <see cref="GlobalSerializerOptions"/> class.
         /// </summary>
-        protected SerializerOptions(SerializerOptions other, bool shallow)
+        private GlobalSerializerOptions(GlobalSerializerOptions other, bool shallow)
             : base(other, shallow)
         {
             SerializedType = other.SerializedType;
+            OverrideClrSerialization = other.OverrideClrSerialization;
         }
 
         /// <summary>
-        /// Gets or sets the type being serialized.
+        /// Whether to fully override (and ignore) the native CLR serialization.
         /// </summary>
-        [BinderIgnore]
-        public Type SerializedType { get; set; }
-
-        /// <summary>
-        /// Gets or sets the name of the type being serialized.
-        /// </summary>
-        [BinderIgnore(false)]
-        private string SerializedTypeName
-        {
-            get => default;
-            set => SerializedType = Type.GetType(value) ?? throw new ConfigurationException($"Unknown serialized type \"{value}\".");
-        }
+        public bool OverrideClrSerialization { get; set; }
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal new SerializerOptions Clone(bool shallow = true) => new SerializerOptions(this, shallow);
+        internal new GlobalSerializerOptions Clone(bool shallow = true) => new GlobalSerializerOptions(this, shallow);
     }
 }

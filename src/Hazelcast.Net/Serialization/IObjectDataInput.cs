@@ -24,13 +24,13 @@ namespace Hazelcast.Serialization
 
         byte ReadByte();
 
-        sbyte ReadSbyte();
+        sbyte ReadSByte();
 
         char ReadChar();
 
         short ReadShort();
 
-        ushort ReadUshort();
+        ushort ReadUShort();
 
         int ReadInt();
 

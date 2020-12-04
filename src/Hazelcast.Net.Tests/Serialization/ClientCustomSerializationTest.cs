@@ -52,7 +52,7 @@ namespace Hazelcast.Tests.Serialization
         public void TestGlobalSerializer()
         {
             var config = new SerializationOptions();
-            config.GlobalSerializer = new SerializerOptions
+            config.GlobalSerializer = new GlobalSerializerOptions
             {
                 Creator = () => (ISerializer) ServiceFactory.CreateInstance(typeof (GlobalSerializer).AssemblyQualifiedName)
             };
@@ -72,10 +72,10 @@ namespace Hazelcast.Tests.Serialization
         {
             var config = new SerializationOptions();
             var globalListSerializer = new GlobalListSerializer();
-            config.GlobalSerializer = new SerializerOptions
+            config.GlobalSerializer = new GlobalSerializerOptions
             {
                 Creator = () => globalListSerializer,
-                OverrideClr = true
+                OverrideClrSerialization = true
             };
 
             var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();

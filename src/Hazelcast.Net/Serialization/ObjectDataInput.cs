@@ -31,8 +31,7 @@ namespace Hazelcast.Serialization
             _serializationService = serializationService;
             Endianness = endianness;
             _length = buffer?.Length ?? 0;
-
-            Debug.Assert(offset < 0 || offset > _length, "Wrong offset value for input");
+            Debug.Assert(offset >= 0 && offset <= _length, "Wrong offset value for input");
             Position = offset;
         }
 

@@ -448,7 +448,7 @@ namespace Hazelcast.Tests.Serialization
                 unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1))
             };
             _input.Initialize(bytes1, bytes1.Length - 4);
-            var unsigned = _input.ReadUshort();
+            var unsigned = _input.ReadUShort();
             Assert.AreEqual(unchecked(0xFFFF), unsigned);
         }
 
