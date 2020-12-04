@@ -24,12 +24,12 @@ namespace Hazelcast.Core
     public static partial class TimeToWait 
     {
         /// <summary>
-        /// An infinite time-to-wait (wait forever).
+        /// -1ms, meaning: wait forever.
         /// </summary>
         public static TimeSpan Infinite => TimeSpanExtensions.MinusOneMillisecond;
 
         /// <summary>
-        /// A zero time-to-wait (do not wait).
+        /// 0ms, meaning: do not wait.
         /// </summary>
         public static TimeSpan Zero => TimeSpan.Zero;
     }

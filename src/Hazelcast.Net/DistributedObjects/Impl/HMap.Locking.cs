@@ -47,7 +47,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var refId = _lockReferenceIdSequence.GetNext();
 
             // codec wants -1 for server config, 0 for zero (useless), "max" for max = server config
-            var leaseTimeMs = leaseTime.RoundedMilliseconds().NegativeAs(-1);
+            var leaseTimeMs = leaseTime.RoundedMilliseconds();
 
             var requestMessage = MapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, refId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
@@ -94,10 +94,10 @@ namespace Hazelcast.DistributedObjects.Impl
             var refId = _lockReferenceIdSequence.GetNext();
 
             // codec wants -1 for server config, 0 for zero (useless), "max" for max = server config
-            var leaseTimeMs = leaseTime.RoundedMilliseconds().NegativeAs(-1);
+            var leaseTimeMs = leaseTime.RoundedMilliseconds();
 
             // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds().NegativeAs(-1);
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();

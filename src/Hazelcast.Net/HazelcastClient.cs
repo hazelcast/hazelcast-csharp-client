@@ -124,9 +124,9 @@ namespace Hazelcast
         Task StartAsync(TimeSpan timeout = default)
         {
             var timeoutMs = timeout.RoundedMilliseconds()
-                .ClampToInt32()
-                .ZeroAs(_options.Networking.ConnectionTimeoutMilliseconds) // default
-                .NegativeAs(-1); // infinite
+                .ClampToInt32();
+
+            if (timeoutMs == 0) timeoutMs = _options.Networking.ConnectionTimeoutMilliseconds; // default
 
             var task = TaskEx.RunWithTimeout((c, t) => c.Connections.ConnectAsync(t), Cluster, timeoutMs);
 

@@ -57,8 +57,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// </remarks>
         protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            // codec wants -1 for infinite, 0 for zero
-            var timeoutMs = timeToWait.RoundedMilliseconds().NegativeAs(-1);
+            var timeoutMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ContextId, timeoutMs);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();

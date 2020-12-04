@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (keyData, valueData) = ToSafeData(key, value);
 
             // server wants 0 for infinite, no negative value
-            var timeToLiveMs = timeToLive.RoundedMilliseconds(false).ZeroAs(1).NegativeAs(0);
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 = infinite, -1 = not supported?
 
             var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, timeToLiveMs);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();

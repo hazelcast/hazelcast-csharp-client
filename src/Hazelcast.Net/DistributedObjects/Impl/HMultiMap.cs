@@ -289,22 +289,22 @@ namespace Hazelcast.DistributedObjects.Impl
 
         /// <inheritdoc />
         public Task LockAsync(TKey key)
-            => LockAsync(key, TimeOut.Infinite);
+            => LockAsync(key, LeaseTime.MaxValue);
 
         /// <inheritdoc />
         public Task<bool> TryLockAsync(TKey key)
-            => TryLockAsync(key, TimeSpan.Zero, TimeOut.Infinite);
+            => TryLockAsync(key, TimeToWait.Zero, LeaseTime.MaxValue);
 
         /// <inheritdoc />
         public Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
-            => TryLockAsync(key, timeToWait, TimeOut.Infinite);
+            => TryLockAsync(key, timeToWait, LeaseTime.MaxValue);
 
         /// <inheritdoc />
         public async Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
         {
             var keyData = ToSafeData(key);
-            var leaseTimeMs = (long) leaseTime.TotalMilliseconds;
-            var timeToWaitMs = (long) timeToWait.TotalMilliseconds;
+            var leaseTimeMs = leaseTime.RoundedMilliseconds();
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
             var requestMessage = MultiMapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             return MultiMapTryLockCodec.DecodeResponse(responseMessage).Response;
@@ -314,7 +314,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task LockAsync(TKey key, TimeSpan leaseTime)
         {
             var keyData = ToSafeData(key);
-            var leaseTimeMs = (long) leaseTime.TotalMilliseconds;
+            var leaseTimeMs = leaseTime.RoundedMilliseconds();
             var requestMessage = MultiMapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, _lockReferenceIdSequence.GetNext());
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             _ = MultiMapLockCodec.DecodeResponse(responseMessage);

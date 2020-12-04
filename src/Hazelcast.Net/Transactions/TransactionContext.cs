@@ -115,8 +115,8 @@ namespace Hazelcast.Transactions
 
             try
             {
-                // codec wants 0 for server config, maxValue for infinite, no negative value
-                var timeoutMs = _options.Timeout.RoundedMilliseconds(false).NegativeAs(long.MaxValue);
+                // codec wants 0 for server config, -1 for infinite (?)
+                var timeoutMs = _options.Timeout.RoundedMilliseconds(false);
 
                 var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMs, _options.Durability, (int) _options.Type, ContextId);
                 var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CAF();

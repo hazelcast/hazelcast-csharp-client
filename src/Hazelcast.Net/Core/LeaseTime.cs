@@ -24,12 +24,12 @@ namespace Hazelcast.Core
     public static partial class LeaseTime
     {
         /// <summary>
-        /// The max lease-time (according to server configuration).
+        /// -1ms, meaning: server-configured maximum lease-time.
         /// </summary>
         public static TimeSpan MaxValue => TimeSpanExtensions.MinusOneMillisecond;
 
         /// <summary>
-        /// A zero lease-time.
+        /// 0ms, meaning: zero lease-time.
         /// </summary>
         public static TimeSpan Zero => TimeSpan.Zero;
     }

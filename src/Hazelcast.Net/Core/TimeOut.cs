@@ -24,12 +24,12 @@ namespace Hazelcast.Core
     public static partial class TimeOut
     {
         /// <summary>
-        /// An infinite time-out (never expires).
+        /// -1ms, meaning: infinite time-out.
         /// </summary>
         public static TimeSpan Infinite => TimeSpanExtensions.MinusOneMillisecond;
 
         /// <summary>
-        /// The default timeout (use the configured value).
+        /// 0ms, meaning: default timeout (use the configured value).
         /// </summary>
         public static TimeSpan Default => TimeSpan.Zero;
     }

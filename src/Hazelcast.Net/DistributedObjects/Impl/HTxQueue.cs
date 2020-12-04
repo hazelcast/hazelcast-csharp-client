@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var itemData = ToSafeData(item);
 
             // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds().NegativeAs(-1);
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<TItem> PeekAsync(TimeSpan timeToWait = default)
         {
             // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds().NegativeAs(-1);
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
@@ -57,7 +57,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<TItem> PollAsync(TimeSpan timeToWait = default)
         {
             // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds().NegativeAs(-1);
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();

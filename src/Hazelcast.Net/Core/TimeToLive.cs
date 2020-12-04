@@ -21,16 +21,16 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides time-to-live constants.
     /// </summary>
-    public static partial class TimeToLive 
+    public static partial class TimeToLive
     {
         /// <summary>
-        /// An infinite time-to-live (never expire).
+        /// 0ms, meaning: never expire.
         /// </summary>
-        public static TimeSpan Infinite => TimeSpanExtensions.MinusOneMillisecond;
+        public static TimeSpan Infinite => TimeSpan.Zero;
 
         /// <summary>
-        /// The default time-to-live (use the value configured on the server).
+        /// -1ms meaning: server-configured time-to-live.
         /// </summary>
-        public static TimeSpan Default => TimeSpan.Zero;
+        public static TimeSpan Default => TimeSpanExtensions.MinusOneMillisecond;
     }
 }

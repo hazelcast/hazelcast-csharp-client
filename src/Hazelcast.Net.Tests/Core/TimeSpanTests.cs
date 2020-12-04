@@ -31,15 +31,15 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void TimeToLiveProperties()
         {
-            Assert.That(TimeToLive.Infinite.TotalMilliseconds, Is.EqualTo(-1));
-            Assert.That(TimeToLive.Default.TotalMilliseconds, Is.EqualTo(0));
+            Assert.That(TimeToLive.Infinite.TotalMilliseconds, Is.EqualTo(0));
+            Assert.That(TimeToLive.Default.TotalMilliseconds, Is.EqualTo(-1));
         }
 
         [Test]
         public void IdleTimeProperties()
         {
-            Assert.That(IdleTime.Infinite.TotalMilliseconds, Is.EqualTo(-1));
-            Assert.That(IdleTime.Default.TotalMilliseconds, Is.EqualTo(0));
+            Assert.That(IdleTime.Infinite.TotalMilliseconds, Is.EqualTo(0));
+            Assert.That(IdleTime.Default.TotalMilliseconds, Is.EqualTo(-1));
         }
 
         [Test]
@@ -61,9 +61,7 @@ namespace Hazelcast.Tests.Core
         {
             Assert.That(TimeSpan.FromMilliseconds(123).RoundedMilliseconds(), Is.EqualTo(123));
             Assert.That(TimeSpan.FromMilliseconds(0).RoundedMilliseconds(), Is.EqualTo(0));
-            Assert.That(TimeSpan.FromMilliseconds(0).RoundedMilliseconds().ZeroAs(666), Is.EqualTo(666));
-            Assert.That(TimeSpan.FromMilliseconds(-123).RoundedMilliseconds().NegativeAs(-1), Is.EqualTo(-1));
-            Assert.That(TimeSpan.FromMilliseconds(-1).RoundedMilliseconds().NegativeAs(-666), Is.EqualTo(-666));
+            Assert.That(TimeSpan.FromMilliseconds(-123).RoundedMilliseconds(), Is.EqualTo(-1));
 
             // a tick is 100ns ie 0.0001 ms, ie 1ms = 10000 ticks
 
@@ -91,7 +89,7 @@ namespace Hazelcast.Tests.Core
             Assert.That(TimeSpan.FromMilliseconds(42).RoundedMilliseconds().ClampToInt32(), Is.EqualTo(42));
 
             Assert.That(TimeSpan.FromMilliseconds((long) int.MaxValue + 123).RoundedMilliseconds().ClampToInt32(), Is.EqualTo(int.MaxValue));
-            Assert.That(TimeSpan.FromMilliseconds((long) int.MinValue - 123).RoundedMilliseconds().ClampToInt32(), Is.EqualTo(int.MinValue));
+            Assert.That(TimeSpan.FromMilliseconds((long) int.MinValue - 123).RoundedMilliseconds().ClampToInt32(), Is.EqualTo(-1));
         }
     }
 }

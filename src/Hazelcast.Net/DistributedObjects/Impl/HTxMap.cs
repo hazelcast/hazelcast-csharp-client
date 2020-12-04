@@ -97,7 +97,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (keyData, valueData) = ToSafeData(key, value);
             // FIXME MEH TTL?
-            var timeToLiveMs = timeToLive.RoundedMilliseconds(false).NegativeAs(-1);
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false);
 
             var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
@@ -111,8 +111,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var (keyData, valueData) = ToSafeData(key, value);
 
-            // codec wants -1 for server config, 0 for infinite
-            var timeToLiveMs = timeToLive.RoundedMilliseconds(false).NegativeAs(-1);
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false);
 
              var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();

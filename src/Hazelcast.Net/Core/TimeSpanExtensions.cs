@@ -33,17 +33,20 @@ namespace Hazelcast.Core
         /// <param name="roundToZero">Whether it is OK to round a value to zero.</param>
         /// <returns>The value of the <paramref name="timespan"/> structure expressed in whole milliseconds.</returns>
         /// <remarks>
-        /// <para>If the rounded value is zero, but the non-rounded value is greater than zero (for instance,
+        /// <para>If the rounded value is zero, but the non-rounded value is not zero (for instance,
         /// if <paramref name="timespan"/> is 0.666ms), the returned value depends on <paramref name="roundToZero"/>.
-        /// If it is <c>true</c> then 0 is returned; otherwise, 1 is returned, assuming that 0 might have some
+        /// If it is <c>true</c> then 0 is returned; otherwise, 1 (or -1) is returned, assuming that 0 might have some
         /// special meaning that should be avoided.</para>
+        /// <para>If the value is negative, the returned value is -1.</para>
         /// </remarks>
         public static long RoundedMilliseconds(this TimeSpan timespan, bool roundToZero = true)
         {
             var milliseconds = timespan.TotalMilliseconds;
 
+            if (milliseconds == 0) return 0;
+
             var rounded = (long) milliseconds;
-            if (rounded != 0 || milliseconds == 0) return rounded;
+            if (rounded != 0) return rounded > 0 ? rounded : -1;
             if (roundToZero) return 0;
             return milliseconds > 0 ? 1 : -1;
         }

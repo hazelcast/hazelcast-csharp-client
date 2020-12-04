@@ -40,8 +40,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         public async Task<T> PollAsync(TimeSpan timeToWait = default)
         {
-            // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds().NegativeAs(-1);
+            var timeToWaitMs = timeToWait.RoundedMilliseconds(); // codec: 0 = zero, -1 = infinite
 
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();

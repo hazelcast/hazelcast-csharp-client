@@ -41,41 +41,5 @@ namespace Hazelcast.Core
             return (int) Math.Clamp(value, int.MinValue, int.MaxValue);
 #endif
         }
-
-        /// <summary>
-        /// Replaces this value by a new value if it is negative.
-        /// </summary>
-        /// <param name="value">This value.</param>
-        /// <param name="newValue">A new value.</param>
-        /// <returns>The new value, if this value is negative; otherwise, this value.</returns>
-        public static long NegativeAs(this long value, long newValue)
-            => value < 0 ? newValue : value;
-
-        /// <summary>
-        /// Replaces this value by a new value if it is negative.
-        /// </summary>
-        /// <param name="value">This value.</param>
-        /// <param name="newValue">A new value.</param>
-        /// <returns>The new value, if this value is negative; otherwise, this value.</returns>
-        public static int NegativeAs(this int value, int newValue)
-            => value < 0 ? newValue : value;
-
-        /// <summary>
-        /// Replaces this value by a new value if it is zero.
-        /// </summary>
-        /// <param name="value">This value.</param>
-        /// <param name="newValue">A new value.</param>
-        /// <returns>The new value, if this value is zero; otherwise, this value.</returns>
-        public static long ZeroAs(this long value, long newValue)
-            => value == 0 ? newValue : value;
-
-        /// <summary>
-        /// Replaces this value by a new value if it is zero.
-        /// </summary>
-        /// <param name="value">This value.</param>
-        /// <param name="newValue">A new value.</param>
-        /// <returns>The new value, if this value is zero; otherwise, this value.</returns>
-        public static int ZeroAs(this int value, int newValue)
-            => value == 0 ? newValue : value;
     }
 }

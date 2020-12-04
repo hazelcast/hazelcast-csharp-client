@@ -24,13 +24,13 @@ namespace Hazelcast.Core
     public static partial class IdleTime
     {
         /// <summary>
-        /// An infinite idle-time (never idle).
+        /// 0ms, meaning: An infinite idle-time (never idle).
         /// </summary>
-        public static TimeSpan Infinite => TimeSpanExtensions.MinusOneMillisecond;
+        public static TimeSpan Infinite => TimeSpan.Zero;
 
         /// <summary>
-        /// The default idle-time (use the value configured on the server).
+        /// -1ms, meaning: server-configured idle-time.
         /// </summary>
-        public static TimeSpan Default => TimeSpan.Zero;
+        public static TimeSpan Default => TimeSpanExtensions.MinusOneMillisecond;
     }
 }
