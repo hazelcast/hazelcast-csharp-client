@@ -274,7 +274,7 @@ namespace Hazelcast.Serialization
             => new ObjectDataInput(data, this, Endianness);
 
         public ObjectDataInput CreateObjectDataInput(IData data)
-            => CreateObjectDataInput(data.ToByteArray());
+            => new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
 
         public ObjectDataOutput CreateObjectDataOutput(int size)
             => new ObjectDataOutput(size, this, Endianness);

@@ -80,11 +80,10 @@ namespace Hazelcast.Tests.Serialization
 
             var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
 
-
             var list = new List<string> {"foo", "bar"};
 
             var d = ss.ToData(list);
-            var input = new ObjectDataInput(d.ToByteArray(), ss, Endianness.BigEndian, HeapData.DataOffset);
+            var input = ss.CreateObjectDataInput(d);
 
             var actual = (List<string>)globalListSerializer.Read(input);
 
@@ -194,7 +193,7 @@ namespace Hazelcast.Tests.Serialization
                 output.WriteInt(list.Count);
                 foreach (var o in list)
                 {
-                    output.WriteObject(o);
+                    output.WriteUTF(o);
                 }
             }
         }
