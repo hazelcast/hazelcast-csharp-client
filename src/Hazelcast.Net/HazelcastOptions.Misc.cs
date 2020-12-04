@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.NearCaching;
@@ -47,14 +49,33 @@ namespace Hazelcast
         public SerializationOptions Serialization { get; } = new SerializationOptions();
 
         /// <summary>
-        /// Gets the general Near Caching options.
+        /// Gets the common Near Cache options.
         /// </summary>
-        /// <returns>The general Near Caching options.</returns>
-        public NearCachingOptions NearCache { get; } = new NearCachingOptions();
+        /// <returns>The common Near Cache options.</returns>
+        public CommonNearCacheOptions NearCache { get; } = new CommonNearCacheOptions();
 
         /// <summary>
         /// Gets or sets the configuration pattern matcher.
         /// </summary>
         public IPatternMatcher PatternMatcher { get; set; } = new MatchingPointPatternMatcher();
+
+        /// <summary>
+        /// Gets options for Near Caches.
+        /// </summary>
+        public IDictionary<string, NearCacheOptions> NearCaches { get; } = new Dictionary<string, NearCacheOptions>();
+
+        /// <summary>
+        /// Gets options for a Near Cache.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>Options for the Near Cache matching the specified <paramref name="name"/>.</returns>
+        public NearCacheOptions GetNearCacheOptions(string name)
+        {
+            if (NearCaches.TryGetValue(name, out var configuration))
+                return configuration;
+
+            var key = PatternMatcher.Matches(NearCaches.Keys, name);
+            return key == null ? null : NearCaches[key];
+        }
     }
 }

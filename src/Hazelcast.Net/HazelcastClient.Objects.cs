@@ -36,7 +36,7 @@ namespace Hazelcast
         public async Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {
             // lookup a cache configuration for the specified map
-            var nearCacheOptions = _options.NearCache.GetCacheOptions(name, _options.PatternMatcher);
+            var nearCacheOptions = _options.GetNearCacheOptions(name);
             var nearCache = nearCacheOptions == null
                 ? null
                 : await _nearCacheManager.GetOrCreateNearCacheAsync<TValue>(name, nearCacheOptions).CAF();

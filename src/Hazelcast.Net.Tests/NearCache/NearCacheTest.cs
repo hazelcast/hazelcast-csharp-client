@@ -57,9 +57,8 @@ namespace Hazelcast.Tests.NearCache
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            var nearCacheOptions = options.NearCache;
 
-            nearCacheOptions.Caches["nc*"] = new NearCacheOptions
+            options.NearCaches["nc*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.None,
                 InvalidateOnChange = false,
@@ -67,32 +66,32 @@ namespace Hazelcast.Tests.NearCache
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.Caches["nc-invalidate*"] = new NearCacheOptions
+            options.NearCaches["nc-invalidate*"] = new NearCacheOptions
             {
                 InvalidateOnChange = true
             };
 
-            nearCacheOptions.Caches["nc-lru*"] = new NearCacheOptions
+            options.NearCaches["nc-lru*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.Lru,
                 InvalidateOnChange = false,
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.Caches["nc-lfu*"] = new NearCacheOptions
+            options.NearCaches["nc-lfu*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.Lfu,
                 InvalidateOnChange = false,
                 MaxSize = MaxSize
             };
 
-            nearCacheOptions.Caches["nc-ttl*"] = new NearCacheOptions
+            options.NearCaches["nc-ttl*"] = new NearCacheOptions
             {
                 TimeToLiveSeconds = 1,
                 InvalidateOnChange = false
             };
 
-            nearCacheOptions.Caches["nc-idle*"] = new NearCacheOptions
+            options.NearCaches["nc-idle*"] = new NearCacheOptions
             {
                 MaxIdleSeconds = 1,
                 CleanupPeriodSeconds = 2,

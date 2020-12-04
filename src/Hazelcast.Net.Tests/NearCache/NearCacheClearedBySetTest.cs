@@ -75,16 +75,14 @@ namespace Hazelcast.Tests.NearCache
         {
             var options = base.CreateHazelcastOptions();
 
-            var nearCacheOptions = options.NearCache;
-
-            nearCacheOptions.Caches["nc*"] = new NearCacheOptions
+            options.NearCaches["nc*"] = new NearCacheOptions
             {
                 EvictionPolicy = EvictionPolicy.None,
                 InvalidateOnChange = true,
                 InMemoryFormat = InMemoryFormat.Binary
             };
 
-            nearCacheOptions.MaxToleratedMissCount = 0;
+            options.NearCache.MaxToleratedMissCount = 0;
 
             return options;
         }

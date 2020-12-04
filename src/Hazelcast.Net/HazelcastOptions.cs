@@ -14,9 +14,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.NearCaching;
 
 namespace Hazelcast
 {
@@ -54,8 +56,12 @@ namespace Hazelcast
             Authentication = other.Authentication.Clone();
             LoadBalancer = other.LoadBalancer.Clone();
             Serialization = other.Serialization.Clone();
-            NearCache = other.NearCache.Clone();
             Messaging = other.Messaging.Clone();
+
+            NearCache = other.NearCache.Clone();
+            NearCaches = other.NearCaches.Select(kvp
+                => new KeyValuePair<string, NearCacheOptions>(kvp.Key, kvp.Value.Clone()))
+                .ToDictionary();
         }
 
         /// <summary>

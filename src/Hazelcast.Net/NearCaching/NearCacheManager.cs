@@ -41,7 +41,7 @@ namespace Hazelcast.NearCaching
         private readonly SerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly long _reconciliationIntervalMillis;
-        private readonly NearCachingOptions _options;
+        private readonly CommonNearCacheOptions _options;
 
         private Task _repairing;
         private CancellationTokenSource _repairingCancellation;
@@ -49,7 +49,7 @@ namespace Hazelcast.NearCaching
         private long _lastAntiEntropyRunMillis;
         private volatile int _running;
 
-        public NearCacheManager(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory, NearCachingOptions options)
+        public NearCacheManager(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory, CommonNearCacheOptions options)
         {
             _cluster = cluster;
             _serializationService = serializationService;

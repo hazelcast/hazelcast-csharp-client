@@ -69,18 +69,16 @@ namespace Hazelcast.Tests.NearCache
         {
             var options = base.CreateHazelcastOptions();
 
-            var nearCacheOptions = options.NearCache;
-
-            nearCacheOptions.Caches["nc*"] = new NearCacheOptions
+            options.NearCaches["nc*"] = new NearCacheOptions
             {
                 InvalidateOnChange = true,
                 EvictionPolicy = EvictionPolicy.None,
                 InMemoryFormat = InMemoryFormat.Binary
             };
 
-            nearCacheOptions.MaxToleratedMissCount = 0;
-            nearCacheOptions.ReconciliationIntervalSeconds = 10;
-            nearCacheOptions.MinReconciliationIntervalSeconds = 10;
+            options.NearCache.MaxToleratedMissCount = 0;
+            options.NearCache.ReconciliationIntervalSeconds = 10;
+            options.NearCache.MinReconciliationIntervalSeconds = 10;
 
             return options;
         }
