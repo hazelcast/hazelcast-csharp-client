@@ -14,6 +14,7 @@
 
 using System;
 using System.Buffers;
+using System.Diagnostics;
 
 namespace Hazelcast.Core
 {
@@ -27,7 +28,16 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static byte ReadByte(this byte[] bytes, int position)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfByte);
+
             return bytes[position];
+        }
+
+        public static sbyte ReadSByte(this byte[] bytes, int position)
+        {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedByte);
+
+            return (sbyte) bytes[position];
         }
 
         /// <summary>
@@ -39,10 +49,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static short ReadShort(this byte[] bytes, int position, Endianness endianness)
         {
-            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            //
-            // if (position < 0 || bytes.Length < position + SizeOfShort)
-            //     throw new ArgumentOutOfRangeException(nameof(position));
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfShort);
 
             unchecked
             {
@@ -62,10 +69,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static ushort ReadUShort(this byte[] bytes, int position, Endianness endianness)
         {
-            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            //
-            // if (position < 0 || bytes.Length < position + SizeOfShort)
-            //     throw new ArgumentOutOfRangeException(nameof(position));
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedShort);
 
             unchecked
             {
@@ -85,10 +89,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static int ReadInt(this byte[] bytes, int position, Endianness endianness)
         {
-            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            //
-            // if (position < 0 || bytes.Length < position + SizeOfInt)
-            //     throw new ArgumentOutOfRangeException(nameof(position));
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfInt);
 
             unchecked
             {
@@ -111,10 +112,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static long ReadLong(this byte[] bytes, int position, Endianness endianness)
         {
-            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            //
-            // if (position < 0 || bytes.Length < position + SizeOfLong)
-            //     throw new ArgumentOutOfRangeException(nameof(position));
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfLong);
 
             unchecked
             {
@@ -143,10 +141,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static float ReadFloat(this byte[] bytes, int position, Endianness endianness)
         {
-            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            //
-            // if (position < 0 || bytes.Length < position + SizeOfFloat)
-            //     throw new ArgumentOutOfRangeException(nameof(position));
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfFloat);
 
             int value;
             unchecked
@@ -177,10 +172,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static double ReadDouble(this byte[] bytes, int position, Endianness endianness)
         {
-            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            //
-            // if (position < 0 || bytes.Length < position + SizeOfDouble)
-            //     throw new ArgumentOutOfRangeException(nameof(position));
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfDouble);
 
             long value;
             unchecked
@@ -220,11 +212,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static char ReadChar(this byte[] bytes, int position, Endianness endianness)
         {
-            // if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            //
-            // if (position < 0 || bytes.Length < position + SizeOfChar)
-            //     throw new ArgumentOutOfRangeException(nameof(position));
-
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfChar);
             unchecked
             {
                 return (char)(endianness.IsBigEndian()

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 
 namespace Hazelcast.Core
 {
@@ -26,11 +27,13 @@ namespace Hazelcast.Core
         /// <param name="value">The value to write.</param>
         public static void WriteByte(this byte[] bytes, int position, byte value)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfByte);
             bytes[position] = value;
         }
 
         public static void WriteSbyte(this byte[] bytes, int position, sbyte value)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedByte);
             bytes[position] = (byte) value;
         }
 
@@ -53,6 +56,7 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteUShort(this byte[] bytes, int position, ushort value, Endianness endianness)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedShort);
             unchecked
             {
                 if (endianness.IsBigEndian())
@@ -77,6 +81,7 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteInt(this byte[] bytes, int position, int value, Endianness endianness)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfInt);
             var unsigned = (uint) value;
             unchecked
             {
@@ -106,6 +111,7 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteLong(this byte[] bytes, int position, long value, Endianness endianness)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfLong);
             var unsigned = (ulong) value;
             unchecked
             {
@@ -144,6 +150,8 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteFloat(this byte[] bytes, int position, float value, Endianness endianness)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfFloat);
+
 #if NETSTANDARD2_0
             var unsigned = (uint) BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
 #else
@@ -178,6 +186,7 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteDouble(this byte[] bytes, int position, double value, Endianness endianness)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfDouble);
             // this is essentially an unsafe *((long*)&value)
             var unsigned = (ulong) BitConverter.DoubleToInt64Bits(value);
             unchecked
@@ -227,6 +236,7 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteChar(this byte[] bytes, int position, char value, Endianness endianness)
         {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfChar);
             var unsigned = value;
             unchecked
             {

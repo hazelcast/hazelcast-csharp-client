@@ -101,10 +101,6 @@ namespace Hazelcast.Tests.Core
         {
             var bytes = new byte[] { 0, 0, 0, 120, 0 };
 
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadChar(2, Endianness.BigEndian));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadChar(-1, Endianness.BigEndian));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadChar(7, Endianness.BigEndian));
-
             Assert.That(bytes.ReadChar(2, Endianness.BigEndian), Is.EqualTo('x'));
 
             bytes = new byte[] { 0, 0, 120, 0 };
@@ -217,10 +213,6 @@ namespace Hazelcast.Tests.Core
         public void ReadShort()
         {
             var bytes = new byte[] { 0, 0, 48, 57, 0, 0, 0 };
-
-            Assert.Throws<ArgumentNullException>(() => _ = ((byte[])null).ReadShort(2, Endianness.BigEndian));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadShort(-1, Endianness.BigEndian));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _ = bytes.ReadShort(7, Endianness.BigEndian));
 
             Assert.That(bytes.ReadShort(2, Endianness.BigEndian), Is.EqualTo(12345));
 

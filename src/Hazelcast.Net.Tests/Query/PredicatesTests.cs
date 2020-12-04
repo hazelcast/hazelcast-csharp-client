@@ -135,7 +135,6 @@ namespace Hazelcast.Tests.Query
             Assert.Throws<ArgumentOutOfRangeException>(() => _ = new PagingPredicate(0));
             Assert.Throws<ArgumentException>(() => _ = new PagingPredicate(1, new PagingPredicate(1)));
 
-            Assert.Throws<ArgumentNullException>(() => paging.ReadData(null));
 
             // cannot test reading data as the paging predicate is not really meant to read data
             // so we cannot test that writing then reading works, need integration tests for this
@@ -152,9 +151,6 @@ namespace Hazelcast.Tests.Query
 
             Assert.That(partition.FactoryId, Is.EqualTo(FactoryIds.PredicateFactoryId));
             Assert.That(partition.ClassId, Is.EqualTo(PredicateDataSerializerHook.PartitionPredicate));
-
-            Assert.Throws<ArgumentNullException>(() => partition.WriteData(null));
-            Assert.Throws<ArgumentNullException>(() => partition.ReadData(null));
 
             using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
             partition.WriteData(output);
@@ -285,8 +281,8 @@ namespace Hazelcast.Tests.Query
             Assert.That(predicate.FactoryId, Is.EqualTo(FactoryIds.PredicateFactoryId));
             Assert.That(predicate.ClassId, Is.EqualTo(classId));
 
-            Assert.Throws<ArgumentNullException>(() => predicate.WriteData(null));
-            Assert.Throws<ArgumentNullException>(() => predicate.ReadData(null));
+            // Assert.Throws<ArgumentNullException>(() => predicate.WriteData(null));
+            // Assert.Throws<ArgumentNullException>(() => predicate.ReadData(null));
 
             using var output = new ObjectDataOutput(1024, _serializationService, Endianness.BigEndian);
             predicate.WriteData(output);

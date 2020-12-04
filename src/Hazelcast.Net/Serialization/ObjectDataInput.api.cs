@@ -41,7 +41,7 @@ namespace Hazelcast.Serialization
         public sbyte ReadSByte()
         {
             CheckAvailable(Position, BytesExtensions.SizeOfByte);
-            var value = _buffer.ReadByte(Position);
+            var value = _buffer.ReadSByte(Position);
             Position += BytesExtensions.SizeOfByte;
             return (sbyte) value;
         }
