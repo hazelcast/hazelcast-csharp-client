@@ -26,11 +26,11 @@ namespace Hazelcast.DistributedObjects.Impl
     {
         /// <inheritdoc />
         public Task SetAsync(TKey key, TValue value)
-            => SetAsync(key, value, TimeToLive.Infinite, IdleTime.Infinite);
+            => SetAsync(key, value, TimeToLive.Default, IdleTime.Infinite);
 
         /// <inheritdoc />
         public Task<TValue> PutAsync(TKey key, TValue value)
-            => PutAsync(key, value, TimeToLive.Infinite, IdleTime.Infinite);
+            => PutAsync(key, value, TimeToLive.Default, IdleTime.Infinite);
 
         /// <inheritdoc />
         public Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
