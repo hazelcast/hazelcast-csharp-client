@@ -19,7 +19,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods to the numeric value type (<see cref="long"/>, <see cref="int"/>...).
     /// </summary>
-    public static class NumericExtensions
+    internal static class NumericExtensions
     {
         /// <summary>
         /// Converts this value to an equivalent <see cref="int"/> clamped value.

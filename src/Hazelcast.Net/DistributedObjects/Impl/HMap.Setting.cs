@@ -317,7 +317,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The existing value, if any; otherwise the default value.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
-        /// <para>If the <paramref name="timeToLive"/> is <see cref="TimeOut.Infinite"/>, the entry lives forever.</para>
+        /// <para>If the <paramref name="timeToLive"/> is -1ms, the entry lives forever.</para>
         /// </remarks>
         protected virtual async Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {

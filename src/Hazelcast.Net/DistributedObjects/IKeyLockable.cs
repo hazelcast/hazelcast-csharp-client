@@ -37,15 +37,14 @@ namespace Hazelcast.DistributedObjects
         /// Locks an entry for a given time duration (lease time),
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
-        /// <param name="leaseTime">The lease time (<see cref="LeaseTime.MaxValue"/> i.e. -1ms = use the server-configured maximum value).</param>
+        /// <param name="leaseTime">The lease time (-1ms = use the server-configured maximum value).</param>
         /// <returns>A task that will complete when the lock has been acquired.</returns>
         /// <remarks>
         /// <para>If the lock is already owned by another owner, this will waiting until the lock can be acquired.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
         /// <para>The lock is automatically released after the specified <paramref name="leaseTime"/> has elapsed. If
-        /// <paramref name="leaseTime"/> is <see cref="LeaseTime.MaxValue"/> (-1ms), the lock is released
-        /// after the server-configured maximum timespan has elapsed.</para>
+        /// <paramref name="leaseTime"/> is -1ms, the lock is released  after the server-configured maximum timespan has elapsed.</para>
         /// </remarks>
         Task LockAsync(TKey key, TimeSpan leaseTime);
 
@@ -66,13 +65,11 @@ namespace Hazelcast.DistributedObjects
         /// Tries to lock an entry with a server-side timeout.
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
-        /// <param name="timeToWait">How long to wait for the lock (<see cref="TimeToWait.Infinite"/> i.e. -1ms to wait forever;
-        /// <see cref="TimeToWait.Zero"/> or 0ms to not wait at all.</param>
+        /// <param name="timeToWait">How long to wait for the lock (-1ms to wait forever; 0ms to not wait at all).</param>
         /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked after <paramref name="timeToWait"/> has elapsed, returns <c>false</c>.
-        /// If <paramref name="timeToWait"/> is <see cref="TimeToWait.Infinite"/> (-1ms), waits forever. If it is
-        /// <see cref="TimeToWait.Zero"/> (0ms), does not wait at all.</para>
+        /// If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does not wait at all.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
         /// <para>The lock is automatically released after the server-configured maximum timespan has elapsed.</para>
@@ -83,17 +80,15 @@ namespace Hazelcast.DistributedObjects
         /// Tries to lock an entry for a given time duration (lease time), with a server-side timeout.
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
-        /// <param name="timeToWait">How long to wait for the lock (<see cref="TimeToWait.Infinite"/> i.e. -1ms to wait forever;
-        /// <see cref="TimeToWait.Zero"/> or 0ms to not wait at all.</param>
-        /// <param name="leaseTime">The lease time (<see cref="LeaseTime.MaxValue"/> or -1ms = use the server-configured maximum value).</param>
+        /// <param name="timeToWait">How long to wait for the lock (-1ms to wait forever; 0ms to not wait at all).</param>
+        /// <param name="leaseTime">The lease time (-1ms = use the server-configured maximum value).</param>
         /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked after <paramref name="timeToWait"/> has elapsed, returns <c>false</c>.
-        /// If <paramref name="timeToWait"/> is <see cref="TimeToWait.Infinite"/> (-1ms), waits forever. If it is
-        /// <see cref="TimeToWait.Zero"/> (0ms), does not wait at all.</para>
+        /// If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does not wait at all.</para>
         /// <para>The lock is automatically released after the specified <paramref name="leaseTime"/> has elapsed. If
-        /// <paramref name="leaseTime"/> is <see cref="LeaseTime.MaxValue"/> (-1ms), the lock is released
-        /// after the server-configured maximum timespan has elapsed.</para>
+        /// <paramref name="leaseTime"/> is -1ms, the lock is released /// after the server-configured maximum timespan
+        /// has elapsed.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
         /// </remarks>
