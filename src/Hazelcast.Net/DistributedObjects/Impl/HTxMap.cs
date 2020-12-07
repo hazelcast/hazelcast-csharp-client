@@ -90,14 +90,9 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public Task SetAsync(TKey key, TValue value)
-            => SetAsync(key, value, TimeSpan.Zero);
-
-        public async Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task SetAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            // FIXME MEH TTL?
-            var timeToLiveMs = timeToLive.RoundedMilliseconds(false);
 
             var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();

@@ -87,17 +87,6 @@ namespace Hazelcast.DistributedObjects
         Task<TValue> PutAsync(TKey key, TValue value);
 
         /// <summary>
-        /// Transactional implementation of <see cref="IHMap{TKey,TValue}.SetAsync(TKey, TValue, TimeSpan)"/>.
-        /// </summary>
-        /// <param name="key">A key.</param>
-        /// <param name="value">A value.</param>
-        /// <param name="timeToLive">A time to live.</param>
-        /// <remarks>
-        /// <para>The inserted entry wil be visible only in the current transaction context, until the transaction is committed.</para>
-        /// </remarks>
-        Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
-
-        /// <summary>
         /// Transactional implementation of <see cref="IHMapBase{TKey,TValue}.PutAsync(TKey,TValue, TimeSpan)"/>.
         /// </summary>
         /// <param name="key">A key.</param>
