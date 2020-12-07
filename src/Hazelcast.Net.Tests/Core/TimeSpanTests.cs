@@ -22,38 +22,10 @@ namespace Hazelcast.Tests.Core
     public class TimeSpanTests
     {
         [Test]
-        public void LeaseTimeProperties()
+        public void TimeSpanValues()
         {
-            Assert.That(LeaseTime.MaxValue.TotalMilliseconds, Is.EqualTo(-1));
-            Assert.That(LeaseTime.Zero.TotalMilliseconds, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void TimeToLiveProperties()
-        {
-            Assert.That(TimeToLive.Infinite.TotalMilliseconds, Is.EqualTo(0));
-            Assert.That(TimeToLive.Default.TotalMilliseconds, Is.EqualTo(-1));
-        }
-
-        [Test]
-        public void IdleTimeProperties()
-        {
-            Assert.That(IdleTime.Infinite.TotalMilliseconds, Is.EqualTo(0));
-            Assert.That(IdleTime.Default.TotalMilliseconds, Is.EqualTo(-1));
-        }
-
-        [Test]
-        public void TimeToWaitProperties()
-        {
-            Assert.That(TimeToWait.Infinite.TotalMilliseconds, Is.EqualTo(-1));
-            Assert.That(TimeToWait.Zero.TotalMilliseconds, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void TimeOutProperties()
-        {
-            Assert.That(TimeOut.Infinite.TotalMilliseconds, Is.EqualTo(-1));
-            Assert.That(TimeOut.Default.TotalMilliseconds, Is.EqualTo(0));
+            Assert.That(TimeSpanExtensions.MinusOneMillisecond.TotalMilliseconds, Is.EqualTo(-1));
+            Assert.That(TimeSpan.Zero.TotalMilliseconds, Is.EqualTo(0));
         }
 
         [Test]

@@ -1007,7 +1007,7 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            await dictionary.LockAsync("key1", LeaseTime.FromSeconds(1));
+            await dictionary.LockAsync("key1", leaseTime: TimeSpan.FromSeconds(1));
 
             Assert.That(await dictionary.IsLockedAsync("key1"));
 
@@ -1024,7 +1024,7 @@ namespace Hazelcast.Tests.Remote
                 Assert.That(await dictionary.TryLockAsync("key1"), Is.False);
 
                 // can lock eventually
-                Assert.That(await dictionary.TryLockAsync("key1", TimeToWait.FromSeconds(4)));
+                Assert.That(await dictionary.TryLockAsync("key1", TimeSpan.FromSeconds(4)));
             });
 
             await dictionary.ForceUnlockAsync("key1");

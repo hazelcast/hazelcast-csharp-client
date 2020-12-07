@@ -29,7 +29,7 @@ namespace Hazelcast.DistributedObjects.Impl
         { }
 
         public Task<bool> OfferAsync(TItem item)
-            => OfferAsync(item, TimeToWait.Zero);
+            => OfferAsync(item, TimeSpan.Zero);
 
         public async Task<bool> OfferAsync(TItem item, TimeSpan timeToWait)
         {

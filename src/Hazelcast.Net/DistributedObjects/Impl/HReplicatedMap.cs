@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         public Task<TValue> PutAsync(TKey key, TValue value)
-            => PutAsync(key, value, TimeToLive.Infinite);
+            => PutAsync(key, value, TimeSpan.Zero);
 
         public async Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {

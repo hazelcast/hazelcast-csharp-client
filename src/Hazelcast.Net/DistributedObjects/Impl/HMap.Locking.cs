@@ -30,7 +30,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task LockAsync(TKey key)
         {
-            var task = LockAsync(key, LeaseTime.MaxValue);
+            var task = LockAsync(key, TimeSpanExtensions.MinusOneMillisecond);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -61,7 +61,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task<bool> TryLockAsync(TKey key)
         {
-            var task = TryLockAsync(key, TimeToWait.Zero, LeaseTime.MaxValue);
+            var task = TryLockAsync(key, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -77,7 +77,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
             Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait)
         {
-            var task = TryLockAsync(key, timeToWait, LeaseTime.MaxValue);
+            var task = TryLockAsync(key, timeToWait, TimeSpanExtensions.MinusOneMillisecond);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
