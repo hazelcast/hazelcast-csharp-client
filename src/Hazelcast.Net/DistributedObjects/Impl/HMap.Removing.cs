@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> // Removing
     {
         /// <inheritdoc />
-        public Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait)
+        public Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait = default)
             => TryRemoveAsync(key, timeToWait, CancellationToken.None);
 
         private

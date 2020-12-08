@@ -13,9 +13,7 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -28,7 +26,8 @@ namespace Hazelcast.DistributedObjects
         /// <param name="value">A value.</param>
         /// <returns>A task that will complete when the entry has been added or updated.</returns>
         /// <remarks>
-        /// <para>The value has an infinite time-to-live, and never becomes idle.</para>
+        /// <para>The value has an infinite time-to-live.</para>
+        /// <para>The value becomes idle after the server-configured idle time.</para>
         /// </remarks>
         Task SetAsync(TKey key, TValue value);
 
@@ -43,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is0ms, the value is retained
         /// indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</para>
-        /// <para>The value never becomes idle.</para>
+        /// <para>The value becomes idle after the server-configured idle time.</para>
         /// </remarks>
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive);
 
@@ -52,35 +51,32 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
-        /// <param name="timeToLive">A time to live (0ms to live
-        /// forever; -1ms to use the server-configured value).</param>
-        /// <param name="maxIdle">A max-idle time (0ms to never become idle; -1ms to use the server-configured value).</param>
+        /// <param name="timeToLive">A time to live (0ms to live forever; -1ms to use the server-configured value).</param>
+        /// <param name="maxIdle">A max-idle time (0ms to never become idle).</param>
         /// <returns>A task that will complete when the entry has been added or updated.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is 0ms, the value
         /// is retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</para>
         /// <para>The value is considered idle after the <paramref name="maxIdle"/> has elapsed. If it is
-        /// 0ms, the value never becomes idle. If it is -1ms, the value becomes idle after the server-configured idle time.</para>
+        /// 0ms, the value never becomes idle.</para>
         /// </remarks>
         Task SetAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle);
 
         /// <summary>
-        /// Sets (adds or updates) an entry with a time-to-live and a max-idle, and returns the previous value, if any.
+        /// Sets (adds or updates) an entry, and returns the previous value, if any.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        /// <param name="timeToLive">A time to live (0ms to live
-        /// forever; -1ms to use the server-configured value).</param>
-        /// <param name="maxIdle">A max-idle time (0ms to never
-        /// become idle; -1ms to use the server-configured value).</param>
+        /// <param name="timeToLive">A time to live (0ms to live forever; -1ms to use the server-configured value).</param>
+        /// <param name="maxIdle">A max-idle time (0ms to never become idle).</param>
         /// <returns>The previous value for the specified key, if any; otherwise <c>default(TValue)</c>.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is 0ms, the value is
         /// retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</para>
         /// <para>The value is considered idle after the <paramref name="maxIdle"/> has elapsed. If it is
-        /// 0ms, the value never becomes idle. If it is -1ms, the value becomes idle after the server-configured idle time.</para>
+        /// 0ms, the value never becomes idle.</para>
         /// </remarks>
         // TODO: document MapStore behavior
         Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle);
@@ -143,7 +139,8 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The value for the key. This will be either the existing value for the key if the entry
         /// already exists, or the new value if the no entry with the key already existed.</returns>
         /// <remarks>
-        /// <para>The value never becomes expires nor becomes idle.</para>
+        /// <para>The value never expires.</para>
+        /// <para>The value becomes idle after the server-configured idle time.</para>
         /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
         /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
         /// to try to load the value from the <c>MapStore</c> backing the map, if any.
@@ -165,7 +162,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is 0ms, the value
         /// is retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</para>
-        /// <para>The value never becomes idle.</para>
+        /// <para>The value becomes idle after the server-configured idle time.</para>
         /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
         /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
         /// to try to load the value from the <c>MapStore</c> backing the map, if any.
@@ -181,7 +178,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <param name="timeToLive">A time to live (0ms to live forever; -1ms to use the server-configured value).</param>
-        /// <param name="maxIdle">A max-idle time (0ms to never become idle; -1ms to use the server-configured value).</param>
+        /// <param name="maxIdle">A max-idle time (0ms to never become idle).</param>
         /// <returns>The value for the key. This will be either the existing value for the key if the entry
         /// already exists, or the new value if the no entry with the key already existed.</returns>
         /// <remarks>
@@ -189,8 +186,7 @@ namespace Hazelcast.DistributedObjects
         /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is 0ms, the value
         /// is retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</para>
         /// <para>The value is considered idle after the <paramref name="maxIdle"/> has elapsed. If it is
-        /// 0ms, the value never becomes idle. If it is -1ms, the value becomes idle after the
-        /// server-configured idle time.</para>
+        /// 0ms, the value never becomes idle.</para>
         /// <para>This methods <strong>interacts with the server-side <c>MapStore</c></strong>.
         /// If no value for the specified key is found in memory, <c>MapLoader.load(...)</c> is invoked
         /// to try to load the value from the <c>MapStore</c> backing the map, if any.
@@ -209,7 +205,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The value is automatically expired, evicted and removed after the
         /// <paramref name="timeToLive"/> has elapsed. If <paramref name="timeToLive"/> is 0ms, the value
         /// is retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</para>
-        /// <para>The value never becomes idle.</para>
+        /// <para>The value becomes idle after the server-configured idle time.</para>
         /// <para>If the dictionary has a <c>MapStore</c> attached, the entry is added to the store but not persisted.
         /// Flushing the store is required to make sure that the entry is actually persisted.</para>
         /// <para>
@@ -224,7 +220,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
         /// <param name="timeToLive">A time to live (0ms to live forever; -1ms to use the server-configured value).</param>
-        /// <param name="maxIdle">A max-idle time (0ms to never become idle; -1ms to use the server-configured value).</param>
+        /// <param name="maxIdle">A max-idle time (0ms to never become idle).</param>
         /// <returns>The value for the key. This will be either the existing value for the key if the entry
         /// already exists, or the new value if the no entry with the key already existed.</returns>
         /// <remarks>
@@ -233,7 +229,7 @@ namespace Hazelcast.DistributedObjects
         /// i.e. 0ms, the value is retained indefinitely. If it is -1ms,
         /// it lives for the duration of the server-configured time-to-live.</para>
         /// <para>The value is considered idle after the <paramref name="maxIdle"/> has elapsed. If it is
-        /// 0ms, the value never becomes idle. If it is -1ms, the value becomes idle after the server-configured idle time.</para>
+        /// 0ms, the value never becomes idle.</para>
         /// <para>If the dictionary has a <c>MapStore</c> attached, the entry is added to the store but not persisted.
         /// Flushing the store is required to make sure that the entry is actually persisted.</para>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed.</para>

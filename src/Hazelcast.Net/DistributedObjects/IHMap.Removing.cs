@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>The operation also returns <c>false</c> when no entry with the specified
         /// <paramref name="key"/> exists.</para>
         /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait = default);
 
         /// <summary>
         /// Removes an entry.

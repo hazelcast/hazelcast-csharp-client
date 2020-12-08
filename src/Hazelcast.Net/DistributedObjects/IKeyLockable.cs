@@ -14,7 +14,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects
 {
@@ -26,10 +25,11 @@ namespace Hazelcast.DistributedObjects
         /// <param name="key">The key identifying the entry.</param>
         /// <returns>A task that will complete when the lock has been acquired.</returns>
         /// <remarks>
-        /// <para>If the lock is already owned by another owner, this will waiting until the lock can be acquired.</para>
+        /// <para>If the lock is already owned by another owner, this will wait indefinitely until the
+        /// lock can be acquired.</para>
         /// <para>Locks are re-entrant, but counted: if a key is locked N times, then it should be unlocked
         /// N times before another thread can lock it.</para>
-        /// <para>The lock is automatically released after the server-configured maximum timespan has elapsed.</para>
+        /// <para>The lock is automatically released after the server-configured maximum lease time has elapsed.</para>
         /// </remarks>
         Task LockAsync(TKey key);
 
@@ -37,14 +37,14 @@ namespace Hazelcast.DistributedObjects
         /// Locks an entry for a given time duration (lease time),
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
-        /// <param name="leaseTime">The lease time (-1ms = use the server-configured maximum value).</param>
+        /// <param name="leaseTime">The lease time.</param>
         /// <returns>A task that will complete when the lock has been acquired.</returns>
         /// <remarks>
-        /// <para>If the lock is already owned by another owner, this will waiting until the lock can be acquired.</para>
+        /// <para>If the lock is already owned by another owner, this will wait indefinitely until the
+        /// lock can be acquired.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
-        /// <para>The lock is automatically released after the specified <paramref name="leaseTime"/> has elapsed. If
-        /// <paramref name="leaseTime"/> is -1ms, the lock is released  after the server-configured maximum timespan has elapsed.</para>
+        /// <para>The lock is automatically released after the specified <paramref name="leaseTime"/> has elapsed.</para>
         /// </remarks>
         Task LockAsync(TKey key, TimeSpan leaseTime);
 
@@ -52,17 +52,17 @@ namespace Hazelcast.DistributedObjects
         /// Tries to lock an entry immediately.
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
-        /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
+        /// <returns><c>true</c> if the lock was immediately acquired; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked, returns <c>false</c> immediately.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
-        /// <para>The lock is automatically released after the server-configured maximum timespan has elapsed.</para>
+        /// <para>The lock is automatically released after the server-configured maximum lease time has elapsed.</para>
         /// </remarks>
         Task<bool> TryLockAsync(TKey key);
 
         /// <summary>
-        /// Tries to lock an entry with a server-side timeout.
+        /// Tries to lock an entry within a server-side timeout.
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
         /// <param name="timeToWait">How long to wait for the lock (-1ms to wait forever; 0ms to not wait at all).</param>
@@ -72,23 +72,21 @@ namespace Hazelcast.DistributedObjects
         /// If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does not wait at all.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
-        /// <para>The lock is automatically released after the server-configured maximum timespan has elapsed.</para>
+        /// <para>The lock is automatically released after the server-configured maximum lease time has elapsed.</para>
         /// </remarks>
         Task<bool> TryLockAsync(TKey key, TimeSpan timeToWait);
 
         /// <summary>
-        /// Tries to lock an entry for a given time duration (lease time), with a server-side timeout.
+        /// Tries to lock an entry for a given time duration (lease time), within a server-side timeout.
         /// </summary>
         /// <param name="key">The key identifying the entry.</param>
         /// <param name="timeToWait">How long to wait for the lock (-1ms to wait forever; 0ms to not wait at all).</param>
-        /// <param name="leaseTime">The lease time (-1ms = use the server-configured maximum value).</param>
+        /// <param name="leaseTime">The lease time.</param>
         /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If the entry cannot be locked after <paramref name="timeToWait"/> has elapsed, returns <c>false</c>.
         /// If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does not wait at all.</para>
-        /// <para>The lock is automatically released after the specified <paramref name="leaseTime"/> has elapsed. If
-        /// <paramref name="leaseTime"/> is -1ms, the lock is released /// after the server-configured maximum timespan
-        /// has elapsed.</para>
+        /// <para>The lock is automatically released after the specified <paramref name="leaseTime"/> has elapsed.</para>
         /// <para>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
         /// N times before another owner can lock it.</para>
         /// </remarks>
