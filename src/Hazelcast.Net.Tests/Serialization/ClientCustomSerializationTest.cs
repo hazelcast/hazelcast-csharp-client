@@ -27,7 +27,7 @@ namespace Hazelcast.Tests.Serialization
     public class ClientCustomSerializationTest
     {
         [Test]
-        public virtual void TestCustomSerialize()
+        public virtual void TestCustomSerializer()
         {
             var config = new SerializationOptions();
 
