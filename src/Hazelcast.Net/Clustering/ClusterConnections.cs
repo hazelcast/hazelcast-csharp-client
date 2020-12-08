@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -28,6 +29,8 @@ namespace Hazelcast.Clustering
 {
     internal class ClusterConnections : IAsyncDisposable
     {
+        private static string _clientVersion;
+
         // we don't need an address locker now, but we may in the future
         //private readonly AddressLocker _addressLocker = new AddressLocker();
         private readonly SemaphoreSlim _onClosedMutex = new SemaphoreSlim(1);
@@ -531,6 +534,32 @@ namespace Hazelcast.Clustering
             }
         }
 
+        private static string ClientVersion
+        {
+            get
+            {
+                if (_clientVersion != null) return _clientVersion;
+
+                var assembly = Assembly.GetExecutingAssembly();
+                var attribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+                if (attribute != null)
+                {
+                    var version = attribute.InformationalVersion;
+                    var pos = version.IndexOf('+');
+                    if (pos > 0 && version.Length > pos + 7)
+                        version = version.Substring(0, pos + 7);
+                    _clientVersion = version;
+                }
+                else
+                {
+                    var v = assembly.GetCustomAttribute<AssemblyVersionAttribute>();
+                    _clientVersion = v != null ? v.Version : "?";
+                }
+
+                return _clientVersion;
+            }
+        }
+
         /// <summary>
         /// Opens a connection to an address.
         /// </summary>
@@ -574,13 +603,18 @@ namespace Hazelcast.Clustering
             }
 
             // report
-            _logger.LogInformation("Authenticated client \"{ClientName}\" connection {ClientId}" +
-                                   " with cluster \"{ClusterName}\" member {MemberId}" +
-                                   " running version {HazelcastServerVersion}" +
-                                   " at {RemoteAddress} via {LocalAddress}.",
-                _clusterState.ClientName, _clusterState.ClientId.ToString("N").Substring(0, 7),
-                _clusterState.ClusterName, result.MemberId.ToString("N").Substring(0, 7),
-                result.ServerVersion, result.MemberAddress, connection.LocalEndPoint);
+            _logger.LogInformation("Auth. client '{ClientName}' ({ClientId}) version {ClientVersion}"+
+                                   " connection {ConnectionId} {LocalAddress} -> {RemoteAddress}" +
+                                   " cluster '{ClusterName}' version {HazelcastServerVersion} member {MemberId}.",
+                _clusterState.ClientName,
+                _clusterState.ClientId.ToShortString(),
+                ClientVersion,
+                connection.Id.ToShortString(),
+                connection.LocalEndPoint,
+                result.MemberAddress,
+                _clusterState.ClusterName,
+                result.ServerVersion,
+                result.MemberId.ToShortString());
 
             // register the connection
             lock (_addressConnections)
