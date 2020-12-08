@@ -71,7 +71,7 @@ namespace Hazelcast.DistributedObjects
         /// <param name="timeToWait">How long to wait for an item (-1ms to wait forever; 0ms to not wait at all).</param>
         /// <returns>The item, or <c>null</c> if not item could be dequeued within the specified <paramref name="timeToWait"/>.</returns>
         /// <remarks>
-        /// <para>If an item is not immediately available, this will wait for the specified name="timeToWait"/>
+        /// <para>If an item is not immediately available, this will wait for the specified <paramref name="timeToWait"/>
         /// for an item to become available. If an item does not become available in time, returns <c>null</c>.
         /// If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does not wait at all.</para>
         /// </remarks>

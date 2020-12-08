@@ -118,17 +118,19 @@ namespace Hazelcast.DistributedObjects
         Task<bool> ReplaceAsync(TKey key, TValue newValue, TValue comparisonValue);
 
         /// <summary>
-        /// Tries to set (add or update) an entry within a server-side timeout.
+        /// Tries to set (add or update) an entry.
         /// </summary>
         /// <param name="key">A key.</param>
         /// <param name="value">A value.</param>
-        /// <param name="serverTimeout">A timeout.</param>
+        /// <param name="timeToWait">How long to wait (-1ms to wait forever; 0ms to not wait at all).</param>
         /// <returns><c>true</c> if the entry was set; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// <para>This method returns <c>false</c> when no lock on the key could be
-        /// acquired within the specified server-side timeout.</para>
+        /// <para>If the entry is not immediately available, because a lock is set on the key, this will wait
+        /// for the specified <paramref name="timeToWait"/> for the lock. If the lock cannot be acquired in time,
+        /// returns <c>null</c>. If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does
+        /// not wait at all.</para>
         /// </remarks>
-        Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan serverTimeout);
+        Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan timeToWait);
 
         /// <summary>
         /// Adds an entry if no entry with the key already exists.

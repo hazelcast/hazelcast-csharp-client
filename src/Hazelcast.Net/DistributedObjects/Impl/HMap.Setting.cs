@@ -223,8 +223,8 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan serverTimeout)
-            => TrySetAsync(key, value, serverTimeout, CancellationToken.None);
+        public Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan timeToWait)
+            => TrySetAsync(key, value, timeToWait, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
