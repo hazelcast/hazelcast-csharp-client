@@ -70,7 +70,7 @@ namespace Hazelcast.Examples.Serialization
         {
             public int TypeId => 20;
 
-            public void Destroy()
+            public void Dispose()
             { }
 
             public void Write(IObjectDataOutput output, object obj)
