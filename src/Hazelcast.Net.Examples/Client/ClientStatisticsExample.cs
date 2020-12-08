@@ -23,7 +23,7 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class ClientStatisticsExample
     {
-        public static async Task Run()
+        public async Task Run()
         {
             // enable client statistics
             // set the statistics send period, default value is 3 seconds

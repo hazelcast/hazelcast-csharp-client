@@ -26,7 +26,7 @@ namespace Hazelcast.Examples.WebSite
             Console.WriteLine($"Got message " + args.Payload);
         }
 
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(BuildExampleOptions(args));

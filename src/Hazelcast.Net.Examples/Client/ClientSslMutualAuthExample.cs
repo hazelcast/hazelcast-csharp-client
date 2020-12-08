@@ -20,7 +20,7 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class ClientSslMutualAuthExample : ExampleBase
     {
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             var options = BuildExampleOptions(args);
 

@@ -13,9 +13,11 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Hazelcast.Protocol;
 
@@ -23,7 +25,11 @@ namespace Hazelcast.Examples
 {
     public class Program
     {
-        private static List<(string, Exception)> _exceptions = new List<(string, Exception)>();
+        private static readonly List<(string, Exception)> _exceptions
+            = new List<(string, Exception)>();
+        private static readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions
+            = new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
+        private static bool _collectUnobservedExceptions;
 
         // NOTE
         //
@@ -43,22 +49,26 @@ namespace Hazelcast.Examples
                 return;
             }
 
-            var filter = args[0];
+            var exampleName = args[0];
 
 #if NETCOREAPP
-            if (filter.EndsWith('*'))
+            if (exampleName.StartsWith('~'))
 #else
-            if (filter.EndsWith("*"))
+            if (exampleName.StartsWith("~"))
 #endif
             {
-                filter = "Hazelcast.Examples." + filter.TrimEnd('*');
-                var types = typeof (Program).Assembly
+                // approx type name is a regex because, why not?
+
+                var regex = new Regex(exampleName.TrimStart('~'), RegexOptions.Compiled);
+
+                var types = typeof(Program).Assembly
                     .GetTypes()
-                    .Where(x => x.Name.EndsWith("Example") && x.FullName != null && x.FullName.StartsWith(filter))
+                    .Where(x => x.FullName != null && regex.IsMatch(x.FullName))
                     .ToList();
+
                 if (types.Count == 0)
                 {
-                    Console.WriteLine($"Error: no example matching '{filter}*'.");
+                    Console.WriteLine($"Error: no example matching pattern '{exampleName}'.");
                     return;
                 }
 
@@ -69,11 +79,14 @@ namespace Hazelcast.Examples
             }
             else
             {
-                var typeName = "Hazelcast.Examples." + filter + "Example";
-                var type = Type.GetType(typeName);
+                // exact type name can match Foo or FooExample.
+
+                var typeName1 = "Hazelcast.Examples." + exampleName;
+                var typeName2 = typeName1 + "Example";
+                var type = Type.GetType(typeName1) ?? Type.GetType(typeName2);
                 if (type == null)
                 {
-                    Console.WriteLine($"Error: could not find type {typeName}.");
+                    Console.WriteLine($"Error: could not find type {typeName1} nor {typeName2}.");
                     return;
                 }
 
@@ -95,10 +108,60 @@ namespace Hazelcast.Examples
         }
 
         private static string ClientExceptionCode(Exception e)
-        {
-            if (!(e is RemoteException cpe)) return null;
+            => e is RemoteException cpe ? " - " + cpe.Error : null;
 
-            return " - " + cpe.Error;
+        private static void InitializeUnobservedExceptions()
+        {
+            // make sure the queue is empty
+            while (_unobservedExceptions.TryDequeue(out _))
+            { }
+
+            // handle unobserved exceptions
+            TaskScheduler.UnobservedTaskException += UnobservedTaskException;
+
+            _collectUnobservedExceptions = false;
+
+            // GC should finalize everything, thus trigger unobserved exceptions
+            // this should deal with leftovers from previous tests
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            _collectUnobservedExceptions = true;
+        }
+
+        private static void CollectUnobservedExceptions()
+        {
+            // GC should finalize everything, thus trigger unobserved exceptions
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // check for unobserved exceptions and report
+            var failed = false;
+            while (_unobservedExceptions.TryDequeue(out var args))
+            {
+                //var innerException = args.Exception.Flatten().InnerException;
+                // log?
+                failed = true;
+            }
+
+            // remove handler
+            TaskScheduler.UnobservedTaskException -= UnobservedTaskException;
+        }
+
+        private static void UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs args)
+        {
+            string message;
+            if (_collectUnobservedExceptions)
+            {
+                message = "Unobserved";
+                _unobservedExceptions.Enqueue(args);
+            }
+            else
+            {
+                message = $"Leftover unobserved";
+            }
+            Console.WriteLine($"{message} Task Exception from {sender}\n{args.Exception}");
+            args.SetObserved();
         }
 
         private static async Task TryRunExampleAsync(Type type, string[] args)
@@ -107,6 +170,9 @@ namespace Hazelcast.Examples
             Console.WriteLine($"### {type.Name}");
             Console.WriteLine("###");
             Console.WriteLine();
+
+            InitializeUnobservedExceptions();
+
             try
             {
                 await RunExampleAsync(type, args);
@@ -121,39 +187,70 @@ namespace Hazelcast.Examples
                 Console.WriteLine(e);
                 Console.ForegroundColor = color;
             }
+
+            CollectUnobservedExceptions();
+
             Console.WriteLine();
         }
 
         private static async Task RunExampleAsync(Type type, string[] args)
         {
-            var method = type.GetMethod("Run", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            object example;
+            try
+            {
+                example = Activator.CreateInstance(type);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error: could not instantiate example {type.Name}.");
+                Console.WriteLine($"Exception: {e}");
+                return;
+            }
+
+            var method = type.GetMethod("Run", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
             if (method == null)
             {
-                Console.WriteLine($"Error: could not find static method {type.Name}.Run.");
+                Console.WriteLine($"Error: could not find instance method {type.Name}.Run.");
+                return;
+            }
+
+            var methodParameters = method.GetParameters();
+            if (methodParameters.Length > 1)
+            {
+                Console.WriteLine($"Error: method {type.Name}.Run has an invalid number of parameters.");
                 return;
             }
 
             var parameters = Array.Empty<object>();
-            if (method.GetParameters().Length > 0)
+            if (methodParameters.Length > 0)
             {
+                if (methodParameters[0].ParameterType != typeof (string[]))
+                {
+                    Console.WriteLine($"Error: method {type.Name}.Run has an invalid parameter type.");
+                    return;
+                }
+
                 args = args.Skip(1).ToArray();
                 parameters = new object[] { args };
             }
 
-
             if (method.ReturnType == typeof(Task))
             {
-                var task = (Task)method.Invoke(null, parameters);
+                var task = (Task) method.Invoke(example, parameters);
                 if (task == null)
                 {
-                    Console.WriteLine($"Error: static method {type.Name}.Run returned a null task.");
+                    Console.WriteLine($"Error: method {type.Name}.Run returned a null task.");
                     return;
                 }
                 await task;
             }
+            else if (method.ReturnType != typeof(void))
+            {
+                Console.WriteLine($"Error: method {type.Name}.Run has an invalid return type.");
+            }
             else
             {
-                method.Invoke(null, parameters);
+                method.Invoke(example, parameters);
             }
         }
     }

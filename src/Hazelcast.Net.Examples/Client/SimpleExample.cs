@@ -55,7 +55,7 @@ namespace Hazelcast.Examples.Client
         //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
         //
 
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // build options
             var options = HazelcastOptions.Build(args);

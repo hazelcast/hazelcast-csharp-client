@@ -21,7 +21,7 @@ namespace Hazelcast.Examples.DistributedObjects
     // ReSharper disable once UnusedMember.Global
     public class MapAsyncExample : ExampleBase
     {
-        public static async Task Run(params string[] args)
+        public async Task Run(params string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);

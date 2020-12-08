@@ -49,7 +49,7 @@ namespace Hazelcast.Examples.WebSite
     // ReSharper disable once UnusedMember.Global
     public class EntryProcessorExample : ExampleBase
     {
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // create an Hazelcast client and connect to a server running on localhost
             var options = BuildExampleOptions(args);

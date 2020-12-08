@@ -19,6 +19,9 @@ using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
+    /// <summary>
+    /// Configures a serializer for a type.
+    /// </summary>
     public class SerializerOptions : SingletonServiceFactory<ISerializer>
     {
         /// <summary>
