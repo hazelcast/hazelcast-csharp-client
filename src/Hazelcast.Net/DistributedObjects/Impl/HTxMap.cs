@@ -90,29 +90,25 @@ namespace Hazelcast.DistributedObjects.Impl
             return new ReadOnlyLazyList<TKey>(response, SerializationService);
         }
 
-        public Task SetAsync(TKey key, TValue value)
-            => SetAsync(key, value, TimeToLive.InfiniteTimeSpan);
-
-        public Task<TValue> PutAsync(TKey key, TValue value)
-            => PutAsync(key, value, TimeToLive.InfiniteTimeSpan);
-
-        public async Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        public async Task SetAsync(TKey key, TValue value)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
 
-            // FIXME timeToLive is ignored?
             var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
         }
 
+        public Task<TValue> PutAsync(TKey key, TValue value)
+            => PutAsync(key, value, TimeSpanExtensions.MinusOneMillisecond);
+
         public async Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var timeToLiveMilliseconds = timeToLive.CodecMilliseconds(-1);
 
-            var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMilliseconds);
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false);
+
+             var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);

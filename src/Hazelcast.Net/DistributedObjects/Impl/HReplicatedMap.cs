@@ -39,13 +39,16 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         public Task<TValue> PutAsync(TKey key, TValue value)
-            => PutAsync(key, value, TimeToLive.InfiniteTimeSpan);
+            => PutAsync(key, value, TimeSpan.Zero);
 
         public async Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            var ttl = timeToLive.CodecMilliseconds(0); // codec wants 0 for infinite
-            var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, ttl);
+
+            // server wants 0 for infinite, no negative value
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 = infinite, -1 = not supported?
+
+            var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, timeToLiveMs);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CAF();
             var response = ReplicatedMapPutCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);

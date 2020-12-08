@@ -29,21 +29,26 @@ namespace Hazelcast.DistributedObjects.Impl
         { }
 
         public Task<bool> OfferAsync(TItem item)
-            => OfferAsync(item, TimeToWait.Zero);
+            => OfferAsync(item, TimeSpan.Zero);
 
         public async Task<bool> OfferAsync(TItem item, TimeSpan timeToWait)
         {
             var itemData = ToSafeData(item);
-            var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
-            var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMilliseconds);
+
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
+
+            var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
         public async Task<TItem> PeekAsync(TimeSpan timeToWait = default)
         {
-            var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
-            var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
+
+            var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);
@@ -51,8 +56,10 @@ namespace Hazelcast.DistributedObjects.Impl
 
         public async Task<TItem> PollAsync(TimeSpan timeToWait = default)
         {
-            var timeToWaitMilliseconds = timeToWait.TimeoutMilliseconds(0);
-            var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMilliseconds);
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
+
+            var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CAF();
             var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TItem>(response);

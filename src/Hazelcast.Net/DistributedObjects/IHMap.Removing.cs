@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Query;
 
 namespace Hazelcast.DistributedObjects
@@ -25,16 +26,17 @@ namespace Hazelcast.DistributedObjects
         /// within the specified time to wait value.
         /// </summary>
         /// <param name="key">A key.</param>
-        /// <param name="timeToWait">The time to wait for a lock on the key.</param>
+        /// <param name="timeToWait">How long to wait for a lock on the key (-1ms to wait forever; 0ms to not wait at all).</param>
         /// <returns><c>true</c> if the entry was removed; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If the key is already locked by another thread and/or member, then this operation
         /// will wait for the <paramref name="timeToWait"/> for acquiring the lock. If the key
-        /// is still locked, this operation returns <c>false</c>.</para>
+        /// is still locked, this operation returns <c>false</c>. If <paramref name="timeToWait"/> is
+        /// -1ms, waits forever. If it is 0ms, does not wait at all.</para>
         /// <para>The operation also returns <c>false</c> when no entry with the specified
         /// <paramref name="key"/> exists.</para>
         /// </remarks>
-        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait);
+        Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait = default);
 
         /// <summary>
         /// Removes an entry.

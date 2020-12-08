@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> // Removing
     {
         /// <inheritdoc />
-        public Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait)
+        public Task<bool> TryRemoveAsync(TKey key, TimeSpan timeToWait = default)
             => TryRemoveAsync(key, timeToWait, CancellationToken.None);
 
         private
@@ -57,7 +57,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// </remarks>
         protected virtual async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            var timeoutMs = timeToWait.CodecMilliseconds(0);
+            var timeoutMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ContextId, timeoutMs);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();

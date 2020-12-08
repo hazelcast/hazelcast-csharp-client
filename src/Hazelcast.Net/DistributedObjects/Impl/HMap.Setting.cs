@@ -26,17 +26,17 @@ namespace Hazelcast.DistributedObjects.Impl
     {
         /// <inheritdoc />
         public Task SetAsync(TKey key, TValue value)
-            => SetAsync(key, value, TimeToLive.InfiniteTimeSpan, IdleTime.Infinite);
+            => SetAsync(key, value, TimeSpanExtensions.MinusOneMillisecond, TimeSpanExtensions.MinusOneMillisecond);
 
         /// <inheritdoc />
         public Task<TValue> PutAsync(TKey key, TValue value)
-            => PutAsync(key, value, TimeToLive.InfiniteTimeSpan, IdleTime.Infinite);
+            => PutAsync(key, value, TimeSpanExtensions.MinusOneMillisecond, TimeSpanExtensions.MinusOneMillisecond);
 
         /// <inheritdoc />
         public Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            return SetAsync(keyData, valueData, timeToLive, IdleTime.Infinite);
+            return SetAsync(keyData, valueData, timeToLive, TimeSpanExtensions.MinusOneMillisecond);
         }
 
         /// <inheritdoc />
@@ -48,9 +48,9 @@ namespace Hazelcast.DistributedObjects.Impl
 
         protected virtual async Task SetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
         {
-            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
-            var maxIdleMs = maxIdle.CodecMilliseconds(0);
-            var withMaxIdle = maxIdleMs > 0;
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapSetWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
-            return GetAndSetAsync(keyData, valueData, timeToLive, IdleTime.Infinite);
+            return GetAndSetAsync(keyData, valueData, timeToLive, TimeSpanExtensions.MinusOneMillisecond);
         }
 
         /// <inheritdoc />
@@ -75,9 +75,9 @@ namespace Hazelcast.DistributedObjects.Impl
 
         protected virtual async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
         {
-            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
-            var maxIdleMs = maxIdle.CodecMilliseconds(0);
-            var withMaxIdle = maxIdleMs > 0;
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
@@ -223,8 +223,8 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan serverTimeout)
-            => TrySetAsync(key, value, serverTimeout, CancellationToken.None);
+        public Task<bool> TryPutAsync(TKey key, TValue value, TimeSpan timeToWait)
+            => TrySetAsync(key, value, timeToWait, CancellationToken.None);
 
         private
 #if !HZ_OPTIMIZE_ASYNC
@@ -256,7 +256,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// </remarks>
         protected virtual async Task<bool> TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var timeoutMs = serverTimeout.CodecMilliseconds(0);
+            var timeoutMs = serverTimeout.RoundedMilliseconds(false); // codec: 0 = server, -1 = infinite
 
             var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeoutMs);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
@@ -274,7 +274,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task<TValue> GetOrAddAsync(TKey key, TValue value, CancellationToken cancellationToken)
         {
-            var task = GetOrAddAsync(key, value, TimeToLive.InfiniteTimeSpan, IdleTime.Infinite, cancellationToken);
+            var task = GetOrAddAsync(key, value, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -285,7 +285,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         /// <inheritdoc />
         public Task<TValue> PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive)
-            => GetOrAddAsync(key, value, timeToLive, IdleTime.Infinite, CancellationToken.None);
+            => GetOrAddAsync(key, value, timeToLive, TimeSpanExtensions.MinusOneMillisecond, CancellationToken.None);
 
         /// <inheritdoc />
         public Task<TValue> PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
@@ -317,13 +317,13 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The existing value, if any; otherwise the default value.</returns>
         /// <remarks>
         /// <para>The value is automatically expired, evicted and removed after the <paramref name="timeToLive"/> has elapsed..</para>
-        /// <para>If the <paramref name="timeToLive"/> is <see cref="Timeout.InfiniteTimeSpan"/>, the entry lives forever.</para>
+        /// <para>If the <paramref name="timeToLive"/> is -1ms, the entry lives forever.</para>
         /// </remarks>
         protected virtual async Task<TValue> GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
         {
-            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
-            var maxIdleMs = maxIdle.CodecMilliseconds(0);
-            var withMaxIdle = maxIdleMs > 0;
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapPutIfAbsentWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
@@ -340,7 +340,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         /// <inheritdoc />
         public Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
-            => SetTransientAsync(key, value, timeToLive, IdleTime.Infinite, CancellationToken.None);
+            => SetTransientAsync(key, value, timeToLive, TimeSpanExtensions.MinusOneMillisecond, CancellationToken.None);
 
         /// <inheritdoc />
         public Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
@@ -375,9 +375,9 @@ namespace Hazelcast.DistributedObjects.Impl
 #endif
         Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken = default)
         {
-            var timeToLiveMs = timeToLive.CodecMilliseconds(-1000);
-            var maxIdleMs = maxIdle.CodecMilliseconds(0);
-            var withMaxIdle = maxIdleMs > 0;
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapPutTransientWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)

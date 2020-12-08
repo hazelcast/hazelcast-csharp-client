@@ -33,50 +33,48 @@ namespace Hazelcast.DistributedObjects
         // setting
 
         /// <summary>
-        /// Inserts the specified element into this queue, waiting if necessary for space to become available.
+        /// Enqueues an item.
         /// </summary>
-        /// <param name="item">the element to Add</param>
+        /// <param name="item">The item to enqueue.</param>
+        /// <remarks>
+        /// <para>If space is not immediately available, this will wait indefinitely for space to become available.</para>
+        /// </remarks>
         Task PutAsync(T item);
 
         /// <summary>
-        /// Inserts the specified element into this queue if it is possible to do
-        /// so immediately without violating capacity restrictions, returning
-        /// <c>true</c> upon success and <c>false</c> if no space is currently
-        /// available.
+        /// Tries to enqueue an item.
         /// </summary>
+        /// <param name="item">The item to enqueue.</param>
+        /// <param name="timeToWait">How long to wait for space (-1ms to wait forever; 0ms to not wait at all).</param>
+        /// <returns><c>true</c> if the element was added to this queue; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// Inserts the specified element into this queue if it is possible to do
-        /// so immediately without violating capacity restrictions, returning
-        /// <c>true</c> upon success and <c>false</c> if no space is currently
-        /// available.
+        /// <para>If space is not immediately available, this will wait for the specified <paramref name="timeToWait"/>
+        /// for space to become available. If space does not become available in time, returns <c>false</c>.
+        /// If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does not wait at all.</para>
         /// </remarks>
-        /// <param name="item">the element to Add</param>
-        /// <param name="timeToWait">how long to wait before giving up</param>
-        /// <returns>
-        /// <c>true</c> if the element was added to this queue, else <c>false</c>
-        /// </returns>
         Task<bool> OfferAsync(T item, TimeSpan timeToWait = default);
 
         // getting
 
         /// <summary>
-        /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
+        /// Dequeues the head item.
         /// </summary>
-        /// <returns>the head of this queue</returns>
+        /// <returns>The head item.</returns>
+        /// <remarks>
+        /// <para>If an item is not immediately available, this will wait indefinitely for an item to become available.</para>
+        /// </remarks>
         Task<T> TakeAsync();
 
         /// <summary>
-        /// Retrieves and removes the head of this queue, waiting up to the
-        /// specified wait time if necessary for an element to become available.
+        /// Tries to dequeue an item.
         /// </summary>
+        /// <param name="timeToWait">How long to wait for an item (-1ms to wait forever; 0ms to not wait at all).</param>
+        /// <returns>The item, or <c>null</c> if not item could be dequeued within the specified <paramref name="timeToWait"/>.</returns>
         /// <remarks>
-        /// <para>If <paramref name="timeToWait"/>"/> is not specified, waits until
-        /// an element becomes available.</para>
+        /// <para>If an item is not immediately available, this will wait for the specified <paramref name="timeToWait"/>
+        /// for an item to become available. If an item does not become available in time, returns <c>null</c>.
+        /// If <paramref name="timeToWait"/> is -1ms, waits forever. If it is 0ms, does not wait at all.</para>
         /// </remarks>
-        /// <param name="timeToWait">The optional time to wait before giving up.</param>
-        /// <returns>The head of this queue, or <c>null</c> if the
-        /// specified waiting time elapses before an element is available.
-        /// </returns>
         Task<T> PollAsync(TimeSpan timeToWait = default);
 
         /// <summary>
