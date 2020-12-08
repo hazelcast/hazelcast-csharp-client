@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
-            var withMaxIdle = maxIdleMs != 0;
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapSetWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
@@ -77,7 +77,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
-            var withMaxIdle = maxIdleMs != 0;
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
@@ -323,7 +323,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
-            var withMaxIdle = maxIdleMs != 0;
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapPutIfAbsentWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
@@ -377,7 +377,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
             var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
-            var withMaxIdle = maxIdleMs != 0;
+            var withMaxIdle = maxIdleMs != -1;
 
             var requestMessage = withMaxIdle
                 ? MapPutTransientWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
