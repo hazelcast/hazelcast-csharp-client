@@ -23,9 +23,8 @@ namespace Hazelcast.Examples.WebSite
     {
         public int TypeId => 20;
 
-        public void Destroy()
-        {
-        }
+        public void Dispose()
+        { }
 
         public object Read(IObjectDataInput input)
         {

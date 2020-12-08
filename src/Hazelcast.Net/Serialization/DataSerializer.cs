@@ -98,7 +98,7 @@ namespace Hazelcast.Serialization
             obj.WriteData(output);
         }
 
-        public void Destroy()
+        public void Dispose()
         {
             _factories.Clear();
         }

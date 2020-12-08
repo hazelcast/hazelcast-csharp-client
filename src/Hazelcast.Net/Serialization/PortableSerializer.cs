@@ -60,7 +60,7 @@ namespace Hazelcast.Serialization
             return Read((ObjectDataInput) input, factoryId, classId);
         }
 
-        public void Destroy()
+        public void Dispose()
         {
             _factories.Clear();
         }

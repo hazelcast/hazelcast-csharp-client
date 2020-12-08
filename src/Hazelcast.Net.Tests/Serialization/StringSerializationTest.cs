@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Serialization
         [TearDown]
         public virtual void TearDown()
         {
-            _serializationService.Destroy();
+            _serializationService.Dispose();
         }
 
         [Test]

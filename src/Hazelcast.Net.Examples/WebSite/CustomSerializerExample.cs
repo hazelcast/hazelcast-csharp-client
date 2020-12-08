@@ -28,9 +28,8 @@ namespace Hazelcast.Examples.WebSite
     {
         public int TypeId => 10;
 
-        public void Destroy()
-        {
-        }
+        public void Dispose()
+        { }
 
         public void Write(IObjectDataOutput output, CustomSerializableType t)
         {

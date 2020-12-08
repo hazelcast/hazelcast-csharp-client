@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Serialization
 {
-    internal interface ISerializerAdapter
+    internal interface ISerializerAdapter : IDisposable
     {
-        void Destroy();
-
         ISerializer Serializer { get; }
 
         int TypeId { get; }

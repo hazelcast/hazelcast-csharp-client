@@ -19,9 +19,8 @@ namespace Hazelcast.Serialization.DefaultSerializers
     internal abstract class CollectionStreamSerializerBase<CollectionType> : IStreamSerializer<CollectionType>
         where CollectionType : ISet<object>
     {
-        public void Destroy()
-        {
-        }
+        public virtual void Dispose()
+        { }
 
         public abstract int TypeId { get; }
 
