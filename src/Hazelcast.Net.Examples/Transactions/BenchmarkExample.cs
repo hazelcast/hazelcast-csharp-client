@@ -22,7 +22,7 @@ namespace Hazelcast.Examples.Transactions
     // ReSharper disable once UnusedMember.Global
     public class BenchmarkExample : ExampleBase
     {
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);

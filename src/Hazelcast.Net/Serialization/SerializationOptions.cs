@@ -213,7 +213,7 @@ namespace Hazelcast.Serialization
         #region Serializers
 
         [BinderIgnore]
-        public GlobalSerializerOptions GlobalSerializer { get; set; }
+        public GlobalSerializerOptions GlobalSerializer { get; set; } = new GlobalSerializerOptions();
 
 #pragma warning disable IDE0051 // Remove unused private members - used by binding
         [BinderIgnore(false)]

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Configuration;
-using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    public class GlobalSerializerOptions : SerializerOptions
+    /// <summary>
+    /// Configures the global serializer.
+    /// </summary>
+    public class GlobalSerializerOptions : SingletonServiceFactory<ISerializer>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="GlobalSerializerOptions"/> class.
@@ -33,7 +33,6 @@ namespace Hazelcast.Serialization
         private GlobalSerializerOptions(GlobalSerializerOptions other, bool shallow)
             : base(other, shallow)
         {
-            SerializedType = other.SerializedType;
             OverrideClrSerialization = other.OverrideClrSerialization;
         }
 

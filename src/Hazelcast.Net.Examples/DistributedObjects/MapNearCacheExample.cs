@@ -23,7 +23,7 @@ namespace Hazelcast.Examples.DistributedObjects
     // ReSharper disable once UnusedMember.Global
     internal class MapNearCacheExample : ExampleBase
     {
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);

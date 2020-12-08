@@ -17,9 +17,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples
 {
+    // ReSharper disable once UnusedMember.Global
     public class LoggingExample : ExampleBase
     {
-        public static void Run(params string[] args)
+        public void Run(params string[] args)
         {
             var options = BuildExampleOptions(args, keyValues: new Dictionary<string, string>
             {

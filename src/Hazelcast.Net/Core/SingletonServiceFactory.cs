@@ -82,6 +82,11 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Determines whether this service factory has been configured and can create a service.
+        /// </summary>
+        public bool IsConfigured => _creator != null;
+
+        /// <summary>
         /// Gets or sets the service provider.
         /// </summary>
         /// <remarks>
@@ -114,7 +119,8 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the singleton instance of the service.
         /// </summary>
-        /// <returns>The singleton instance of the service, or null if no creator has been set.</returns>
+        /// <returns>The singleton instance of the service, or null if this service factory has not been configured.</returns>
+        // TODO: consider throwing instead of returning null
         public TService Service => _lazyService?.Value;
 
         /// <summary>

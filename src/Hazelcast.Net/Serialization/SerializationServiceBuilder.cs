@@ -178,7 +178,7 @@ namespace Hazelcast.Serialization
             if (_options != null)
             {
                 var globalSerializer = _options.GlobalSerializer;
-                if (globalSerializer != null)
+                if (globalSerializer.IsConfigured)
                     service.SetGlobalSerializer(globalSerializer.Service, globalSerializer.OverrideClrSerialization);
 
                 foreach (var serializer in _options.Serializers)

@@ -20,7 +20,7 @@ namespace Hazelcast.Examples.DistributedObjects
     // ReSharper disable once UnusedMember.Global
     public class SetExample : ExampleBase
     {
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // creates the example options
             var options = BuildExampleOptions(args);

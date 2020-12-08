@@ -21,7 +21,7 @@ namespace Hazelcast.Examples
 {
     public abstract class ExampleBase
     {
-        public static HazelcastOptions BuildExampleOptions(string[] args, Dictionary<string, string> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configureOptions = null)
+        public HazelcastOptions BuildExampleOptions(string[] args, Dictionary<string, string> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configureOptions = null)
         {
             keyValues ??= new Dictionary<string, string>();
 

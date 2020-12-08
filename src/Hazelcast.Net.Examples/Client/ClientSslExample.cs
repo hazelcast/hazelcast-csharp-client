@@ -20,7 +20,7 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class ClientSslExample : ExampleBase
     {
-        public static async Task Run(params string[] args)
+        public async Task Run(params string[] args)
         {
             var options = BuildExampleOptions(args);
 

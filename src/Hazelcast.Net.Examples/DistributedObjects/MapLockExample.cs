@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
     public class MapLockExample : ExampleBase
     {
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // uncomment and enable HzConsole to see the context changes
             //HzConsole.Configure<AsyncContext>(config => { config.SetMaxLevel(0); });

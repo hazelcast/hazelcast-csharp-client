@@ -20,9 +20,9 @@ using Hazelcast.Events;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    internal class ClientLifecycleExample
+    public class ClientLifecycleExample
     {
-        public static async Task Run(params string[] args)
+        public async Task Run(params string[] args)
         {
             // create an Hazelcast client and connect to a server running on localhost
             var options = HazelcastOptions.Build(args);

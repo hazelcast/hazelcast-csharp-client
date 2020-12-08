@@ -21,7 +21,7 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class MemberLifecycleExample : ExampleBase
     {
-        public static async Task Run(params string[] args)
+        public async Task Run(params string[] args)
         {
             var memberAdded = new SemaphoreSlim(0);
 

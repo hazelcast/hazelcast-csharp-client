@@ -20,7 +20,7 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class CloudClientSslExample
     {
-        public static async Task Run()
+        public async Task Run()
         {
             // create an Hazelcast client and connect to a Cloud server
             var options = HazelcastOptions.Build();

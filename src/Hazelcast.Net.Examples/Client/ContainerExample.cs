@@ -59,7 +59,7 @@ namespace Hazelcast.Examples.Client
         //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
         //
 
-        public static async Task Run(string[] args)
+        public async Task Run(string[] args)
         {
             // create a service collection
             var services = new ServiceCollection();
