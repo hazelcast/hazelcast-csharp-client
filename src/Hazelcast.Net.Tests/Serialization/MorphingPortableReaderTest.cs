@@ -28,8 +28,8 @@ namespace Hazelcast.Tests.Serialization
         [TearDown]
         public virtual void After()
         {
-            service1.Destroy();
-            service2.Destroy();
+            service1.Dispose();
+            service2.Dispose();
         }
 
         [SetUp]

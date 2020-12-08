@@ -412,20 +412,16 @@ namespace Hazelcast.Tests.Configuration
 
         public class TestDefaultSerializer : ISerializer
         {
-            public void Destroy()
-            {
-                throw new NotSupportedException();
-            }
+            public void Dispose()
+            { }
 
             public int TypeId => throw new NotSupportedException();
         }
 
         public class TestSerializer : ISerializer
         {
-            public void Destroy()
-            {
-                throw new NotSupportedException();
-            }
+            public void Dispose()
+            { }
 
             public int TypeId => throw new NotSupportedException();
         }

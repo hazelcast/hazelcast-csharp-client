@@ -45,9 +45,9 @@ namespace Hazelcast.Serialization
 
         public int TypeId => _serializer.TypeId;
 
-        public virtual void Destroy()
+        public virtual void Dispose()
         {
-            _serializer.Destroy();
+            _serializer.Dispose();
         }
 
         public virtual ISerializer Serializer => _serializer;

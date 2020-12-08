@@ -26,7 +26,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
-    internal class SerializationService
+    internal class SerializationService : IDisposable
     {
         public const byte SerializerVersion = 1;
         private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersArraySize;
@@ -126,7 +126,7 @@ namespace Hazelcast.Serialization
         {
             //TODO pooling
             return new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
-        } 
+        }
 
         private void ReturnDataInput(ObjectDataInput input)
         {
@@ -566,13 +566,12 @@ namespace Hazelcast.Serialization
             return _portableSerializer.CreateReader(input);
         }
 
-        // TODO: the service should be disposable instead!
-        public virtual void Destroy()
+        public virtual void Dispose()
         {
             _isActive = false;
             foreach (var serializer in _typeMap.Values)
             {
-                serializer.Destroy();
+                serializer.Dispose();
             }
 
             _typeMap.Clear();
@@ -690,10 +689,6 @@ namespace Hazelcast.Serialization
             {
                 return null;
             }
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

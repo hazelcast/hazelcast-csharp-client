@@ -30,8 +30,7 @@ namespace Hazelcast.Serialization.ConstantSerializers
             return buffer;
         }
 
-        public void Destroy()
-        {
-        }
+        public void Dispose()
+        { }
     }
 }

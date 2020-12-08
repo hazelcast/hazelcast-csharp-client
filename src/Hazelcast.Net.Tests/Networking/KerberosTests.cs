@@ -164,7 +164,7 @@ namespace Hazelcast.Tests.Networking
                 output.WriteUTF(obj.Name);
             }
 
-            public void Destroy()
+            public void Dispose()
             { }
         }
     }

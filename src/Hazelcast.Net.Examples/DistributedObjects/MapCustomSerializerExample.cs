@@ -60,10 +60,8 @@ namespace Hazelcast.Examples.DistributedObjects
     {
         public int TypeId => 10;
 
-        public void Destroy()
-        {
-            //NOOP
-        }
+        public void Dispose()
+        { }
 
         public void Write(IObjectDataOutput output, Person t)
         {

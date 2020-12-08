@@ -16,7 +16,7 @@ namespace Hazelcast.Serialization
 {
     internal abstract class SingletonSerializerBase<T> : IStreamSerializer<T>
         {
-            public virtual void Destroy()
+            public virtual void Dispose()
             { }
 
             public abstract int TypeId { get; }

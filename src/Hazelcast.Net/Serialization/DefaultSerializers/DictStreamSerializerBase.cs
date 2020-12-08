@@ -23,9 +23,8 @@ namespace Hazelcast.Serialization.DefaultSerializers
         {
             public abstract int TypeId { get; }
 
-            public void Destroy()
-            {
-            }
+            public virtual void Dispose()
+            { }
 
             public abstract DType Read(IObjectDataInput input);
 

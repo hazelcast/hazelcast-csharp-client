@@ -38,7 +38,7 @@ namespace Hazelcast.Tests.Serialization
             var config = new SerializationOptions();
             config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof (KitchenSinkPortableFactory));
 
-            var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
+            using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
                 .SetEndianness(endianness).Build();
 
             IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
@@ -49,8 +49,6 @@ namespace Hazelcast.Tests.Serialization
             var readObject = input.ReadObject<IPortable>();
 
             Assert.AreEqual(portable, readObject);
-
-            ss.Destroy();
         }
 
         [TestCaseSource(nameof(Endiannesses))]
@@ -61,7 +59,7 @@ namespace Hazelcast.Tests.Serialization
             var config = new SerializationOptions();
             config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof (KitchenSinkPortableFactory));
 
-            var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
+            using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
                 .SetEndianness(endianness).Build();
 
             var data = ss.ToData(portable);
@@ -71,8 +69,6 @@ namespace Hazelcast.Tests.Serialization
             actual.ReadPortable(reader);
 
             Assert.AreEqual(portable, actual);
-
-            ss.Destroy();
         }
 
         [TestCaseSource(nameof(Endiannesses))]
@@ -81,7 +77,7 @@ namespace Hazelcast.Tests.Serialization
             var obj = KitchenSinkDataSerializable.Generate();
             obj.Serializable = KitchenSinkDataSerializable.Generate();
 
-            var ss = new SerializationServiceBuilder(new NullLoggerFactory())
+            using var ss = new SerializationServiceBuilder(new NullLoggerFactory())
                 .AddDataSerializableFactory(1, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
                 {
                     () => new KitchenSinkDataSerializable(),
@@ -94,8 +90,6 @@ namespace Hazelcast.Tests.Serialization
             IObjectDataInput input = ss.CreateObjectDataInput(output.ToByteArray());
             var readObj = input.ReadObject<object>();
             Assert.AreEqual(obj, readObj);
-
-            ss.Destroy();
         }
 
         [Test]

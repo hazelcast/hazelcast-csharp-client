@@ -120,10 +120,8 @@ namespace Hazelcast.Tests.Serialization
     {
         public int TypeId => 10;
 
-        public void Destroy()
-        {
-            //NOOP
-        }
+        public void Dispose()
+        { }
 
         public void Write(IObjectDataOutput output, CustomSerializableType t)
         {
@@ -160,9 +158,8 @@ namespace Hazelcast.Tests.Serialization
     {
         public int TypeId => 20;
 
-        public void Destroy()
-        {
-        }
+        public void Dispose()
+        { }
 
         public void Write(IObjectDataOutput output, object obj)
         {
@@ -181,9 +178,8 @@ namespace Hazelcast.Tests.Serialization
     {
         public int TypeId => 50;
 
-        public void Destroy()
-        {
-        }
+        public void Dispose()
+        { }
 
         public void Write(IObjectDataOutput output, object obj)
         {
