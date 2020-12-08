@@ -170,7 +170,7 @@ namespace Hazelcast.Networking
         protected Pipe Pipe => _pipe;
 
         /// <summary>
-        /// Gets the stream read cancellation token source - for unit tests exclusively.
+        /// (protected for tests only) Gets the stream read cancellation token source.
         /// </summary>
         // ReSharper disable once InconsistentNaming
         protected CancellationTokenSource StreamReadCancellationTokenSource => _streamReadCancellationTokenSource;

@@ -22,6 +22,7 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 // ReSharper disable once CheckNamespace
 namespace System.IO
@@ -51,39 +52,43 @@ namespace System.IO
             if (stream == null) throw new ArgumentNullException(nameof(stream));
             if (memory.Length == 0) throw new ArgumentException("Empty memory.", nameof(memory));
 
-            // this is based upon what 2.1 does
+            byte[] bytes;
+            int offset;
+            int count;
+            bool rentedBytes;
 
             if (MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> array))
             {
-                // original code, replaced with code below - keep for reference
-                //return await stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken).ConfigureAwait(false);
+                bytes = array.Array; // directly get the underlying array
+                rentedBytes = false;
 
-                // see below, cancellation issue
-                var reading = stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken);
-                var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken)).ConfigureAwait(false);
+                offset = array.Offset;
+                count = array.Count;
+            }
+            else
+            {
+                bytes = ArrayPool<byte>.Shared.Rent(memory.Length); // rent an array
+                rentedBytes = true;
 
-                if (completed != reading)
-                {
-                    _ = reading.ObserveException();
-                    throw new TaskCanceledException();
-                }
-
-                var result = await reading.ConfigureAwait(false);
-                return result;
+                offset = 0;
+                count = memory.Length;
             }
 
-            var bytes = ArrayPool<byte>.Shared.Rent(memory.Length);
+            CancellationTokenRegistration reg;
+
             try
             {
-                // original code, replaced with code below - keep for reference
-                //var result = await stream.ReadAsync(bytes, 0, memory.Length, cancellationToken).ConfigureAwait(false);
-
                 // stream.ReadAsync for network streams *ignores* the cancellation token
                 // see https://github.com/dotnet/runtime/issues/24093
-                // hence this... workaround
-                //
-                var reading = stream.ReadAsync(bytes, 0, memory.Length, cancellationToken);
-                var completed = await Task.WhenAny(reading, Task.Delay(-1, cancellationToken)).ConfigureAwait(false);
+                // so, we wait on two tasks, including one that will complete when the cancellation
+                // token is canceled - beware, do NOT use Task.Delay(-1, cancellationToken) as it
+                // would stay around forever (leak) - instead, use a completion source
+
+                var completion = new TaskCompletionSource<int>();
+                reg = cancellationToken.Register(() => completion.TrySetCanceled());
+
+                var reading = stream.ReadAsync(bytes, offset, count, cancellationToken);
+                var completed = await Task.WhenAny(reading, completion.Task).CAF();
 
                 if (completed != reading)
                 {
@@ -93,12 +98,15 @@ namespace System.IO
 
                 var result = await reading.ConfigureAwait(false);
 
-                new Span<byte>(bytes, 0, result).CopyTo(memory.Span);
+                // copy the rented array
+                if (rentedBytes) new Span<byte>(bytes, 0, result).CopyTo(memory.Span);
+
                 return result;
             }
             finally
             {
-                ArrayPool<byte>.Shared.Return(bytes);
+                reg.Dispose(); // don't leak the registration
+                if (rentedBytes) ArrayPool<byte>.Shared.Return(bytes); // return the rented array
             }
         }
     }
