@@ -6,6 +6,24 @@
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
+  <!--
+    we used to use the Microsoft.CodeAnalysis.FxCopAnalyzers package, which has been deprecated in favour
+    of .NET analyzers shipped with Visual Studio 2019. they are enabled by default for .NET 5 projects,
+    but for our projects we need the EnableNETAnalyzers property set to true.
+
+    the AnalysisMode property can be AllDisabledByDefault, AllEnabledByDefault, or Default.
+    see the documentation for more details, options, etc.
+
+    references:
+    https://docs.microsoft.com/en-us/visualstudio/code-quality/migrate-from-fxcop-analyzers-to-net-analyzers?view=vs-2019
+    https://docs.microsoft.com/en-us/visualstudio/code-quality/install-net-analyzers?view=vs-2019
+    https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview
+  -->
+  <PropertyGroup>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+  </PropertyGroup>
+
   <PropertyGroup>
     <Description>Open-source .NET client for Hazelcast, the open-source in-memory distributed computing platform.</Description>
     <PackageProjectUrl>https://hazelcast.github.io/hazelcast-csharp-client/</PackageProjectUrl>
@@ -41,16 +59,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.9" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.9" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.9" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.9" />
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.3" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="5.0.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="5.0.0" />
   </ItemGroup>
