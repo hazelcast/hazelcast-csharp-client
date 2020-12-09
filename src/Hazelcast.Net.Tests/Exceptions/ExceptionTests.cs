@@ -63,13 +63,9 @@ namespace Hazelcast.Tests.Exceptions
         [Test]
         public void ClientNotConnectedExceptionConstructors()
         {
-            _ = new ClientOfflineException();
             _ = new ClientOfflineException(ClientState.Shutdown);
-            _ = new ClientOfflineException("exception");
             _ = new ClientOfflineException("exception", ClientState.Shutdown);
-            _ = new ClientOfflineException(new Exception("bang"));
             _ = new ClientOfflineException(new Exception("bang"), ClientState.Shutdown);
-            _ = new ClientOfflineException("exception", new Exception("bang"));
 
             var e = new ClientOfflineException("exception", new Exception("bang"), ClientState.Shutdown);
 

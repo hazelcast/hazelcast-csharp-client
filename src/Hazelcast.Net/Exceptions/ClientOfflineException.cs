@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace Hazelcast.Exceptions
@@ -29,10 +30,13 @@ namespace Hazelcast.Exceptions
     [Serializable]
     public sealed class ClientOfflineException : HazelcastException
     {
+        // NOTE: as per CA1032 we implement all constructors, but... keep them private.
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientOfflineException"/> class.
         /// </summary>
-        public ClientOfflineException()
+        [ExcludeFromCodeCoverage]
+        private ClientOfflineException()
             : base(ExceptionMessages.ClientNotConnectedException)
         {
             State = 0; // unknown
@@ -52,7 +56,8 @@ namespace Hazelcast.Exceptions
         /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public ClientOfflineException(string message)
+        [ExcludeFromCodeCoverage]
+        private ClientOfflineException(string message)
             : base(message)
         {
             State = 0; // unknown
@@ -74,7 +79,8 @@ namespace Hazelcast.Exceptions
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
-        public ClientOfflineException(Exception innerException)
+        [ExcludeFromCodeCoverage]
+        private ClientOfflineException(Exception innerException)
             : base(ExceptionMessages.ClientNotConnectedException, innerException)
         {
             State = 0; // unknown
@@ -98,7 +104,8 @@ namespace Hazelcast.Exceptions
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
-        public ClientOfflineException(string message, Exception innerException)
+        [ExcludeFromCodeCoverage]
+        private ClientOfflineException(string message, Exception innerException)
             : base(message, innerException)
         {
             State = 0; // unknown

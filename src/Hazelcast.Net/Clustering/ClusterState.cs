@@ -253,7 +253,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         public void ThrowIfCancelled()
         {
-            if (_clusterCancellation.IsCancellationRequested) throw new ClientOfflineException();
+            if (_clusterCancellation.IsCancellationRequested) throw new ClientOfflineException(ClientState);
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace Hazelcast.Clustering
             }
             catch
             {
-                throw new ClientOfflineException();
+                throw new ClientOfflineException(ClientState);
             }
         }
 
