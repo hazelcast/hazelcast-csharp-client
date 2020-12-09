@@ -25,33 +25,30 @@ namespace Hazelcast
         /// <remarks>
         /// <para>This value is used to represent an unknown value of the state.</para>
         /// </remarks>
-        Unknown = 0,
+        Unknown = 0, // zero is for unknown, make sure real states start at 1
 
         /// <summary>
-        /// The client is not connected.
+        /// The client is new and starting.
         /// </summary>
         /// <remarks>
-        /// <para>The client will transition to <see cref="Connecting"/> when requested
-        /// to connect by the user.</para>
+        /// <para>The client will transition to <see cref="Started"/> when it has started.</para>
         /// </remarks>
-        NotConnected = 1, // zero is for default, make sure we start at 1
+        Starting,
 
         /// <summary>
-        /// The client is connecting.
+        /// The client has started, and is now trying to connect to a first member.
         /// </summary>
-        /// <remarks>
         /// <para>The client will transition to <see cref="Connected"/> when it
-        /// has successfully connected, or to <see cref="NotConnected"/> in case it fails
+        /// has successfully connected, or to <see cref="Shutdown"/> in case it fails
         /// to connect.</para>
-        /// </remarks>
-        Connecting,
+        Started,
 
         /// <summary>
         /// The client is connected.
         /// </summary>
         /// <remarks>
         /// <para>The client will remain connected as long as it is not required to
-        /// disconnect by the user (in which case it will transition to <see cref="Disconnecting"/>
+        /// disconnect by the user (in which case it will transition to <see cref="ShuttingDown"/>
         /// or disconnected by the server or the network (in which case in will
         /// transition to <see cref="Disconnected"/>.</para>
         /// </remarks>
@@ -61,29 +58,26 @@ namespace Hazelcast
         /// The client has been disconnected.
         /// </summary>
         /// <remarks>
-        /// <para>This is a very temporary state. The client will transition to
-        /// <see cref="Reconnecting"/> if it is configured to reconnect when disconnected,
-        /// or to <see cref="NotConnected"/> otherwise.</para>
+        /// <para>Depending on the configuration, the client may try to reconnected, and
+        /// if successful, transition back to <see cref="Connected"/>. Otherwise, it
+        /// will transition to <see cref="Shutdown"/>.</para>
         /// </remarks>
         Disconnected,
 
         /// <summary>
-        /// The client has been disconnected and is reconnecting.
+        /// The client is shutting down.
         /// </summary>
         /// <remarks>
-        /// <para>The client will transition to <see cref="Connected"/> when it
-        /// has successfully reconnected, or to <see cref="NotConnected"/> in case it fails
-        /// to reconnect.</para>
+        /// <para>The client will transition to <see cref="Shutdown"/> once shutdown is complete.</para>
         /// </remarks>
-        Reconnecting,
+        ShuttingDown,
 
         /// <summary>
-        /// The client is disconnecting.
+        /// The client has shut down.
         /// </summary>
         /// <remarks>
-        /// <para>The client will transition to <see cref="NotConnected"/> when it
-        /// is done disconnecting.</para>
+        /// <para>This is the final, terminal state.</para>
         /// </remarks>
-        Disconnecting
+        Shutdown
     }
 }

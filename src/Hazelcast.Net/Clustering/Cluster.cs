@@ -164,23 +164,6 @@ namespace Hazelcast.Clustering
             return Connections.ConnectAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Terminates (dispose without exceptions).
-        /// </summary>
-        /// <returns>A task that completes when the cluster has terminated.</returns>
-        private async ValueTask TerminateAsync()
-        {
-            try
-            {
-                await DisposeAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                // that's all we can do really
-                _logger.LogWarning(e, "Caught an exception while terminating.");
-            }
-        }
-
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
@@ -192,7 +175,7 @@ namespace Hazelcast.Clustering
             // change the state - the final NotConnected state will
             // be set by Connections when the last one goes down, and
             // the cluster is not active anymore
-            State.NotifyState(ConnectionState.Disconnecting);
+            State.NotifyState(ConnectionState.ShuttingDown);
 
             // we don't need heartbeat anymore
             await _heartbeat.DisposeAsync().CAF();

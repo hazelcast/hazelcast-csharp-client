@@ -108,7 +108,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the connection state.
         /// </summary>
-        public ConnectionState ConnectionState { get; private set; } = ConnectionState.NotConnected;
+        public ConnectionState ConnectionState { get; private set; } = ConnectionState.Starting;
 
         /// <summary>
         /// (thread-unsafe) Immediately transitions to a new connection state,
@@ -142,24 +142,19 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Transitions to a new connection state.
         /// </summary>
-        /// <param name="to">The new state.</param>
-        /// <param name="from">An optional expected current state.</param>
+        /// <param name="newState">The new state.</param>
         /// <returns>A task that will complete once the cluster has transitioned to the new state.</returns>
         /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
-        public async ValueTask TransitionAsync(ConnectionState to, ConnectionState from = 0)
+        public async ValueTask TransitionAsync(ConnectionState newState)
         {
             await _lock.WaitAsync(CancellationToken.None).CAF();
 
             try
             {
-                if (from != 0 && from != ConnectionState)
-                {
-                    throw new InvalidOperationException($"Cannot transition to {to} from {from} because the current state is {ConnectionState}.");
-                }
-                ConnectionState = to;
+                ConnectionState = newState;
 
                 // queue will trigger events sequentially, in order, and in the background
-                _stateChangeQueue.Add(to);
+                _stateChangeQueue.Add(newState);
             }
             finally
             {
@@ -180,10 +175,9 @@ namespace Hazelcast.Clustering
         /// connected. It may make sense to retry operations that fail, because they
         /// should succeed when the cluster is eventually connected.</para>
         /// </remarks>
-        public bool IsActive => ConnectionState == ConnectionState.Connected ||
-                                ConnectionState == ConnectionState.Connecting ||
-                                ConnectionState == ConnectionState.Disconnected ||
-                                ConnectionState == ConnectionState.Reconnecting;
+        public bool IsActive => ConnectionState == ConnectionState.Starting ||
+                                ConnectionState == ConnectionState.Connected ||
+                                ConnectionState == ConnectionState.Disconnected;
 
         /// <summary>
         /// Throws a <see cref="ClientNotConnectedException"/> if the cluster is not active.
