@@ -65,7 +65,7 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Gets the service provider.
+        /// Gets the <see cref="IServiceProvider"/>.
         /// </summary>
         /// <remarks>
         /// <para>In dependency-injection scenario the service provider may be available,
@@ -76,7 +76,7 @@ namespace Hazelcast
         public IServiceProvider ServiceProvider { get; internal set; }
 
         /// <summary>
-        /// Gets the core options.
+        /// Gets the <see cref="CoreOptions"/>.
         /// </summary>
         /// <returns>The core options.</returns>
         [BinderIgnore(false)]

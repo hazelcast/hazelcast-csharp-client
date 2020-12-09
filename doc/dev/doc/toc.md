@@ -3,6 +3,7 @@
 # [Getting Started](gettingStarted.md)
 # [Configuration](configuration.md)
 # [Options](options.md)
+# [Logging](logging.md)
 # [Distributed Objects](distributedObjects.md)
 ## [HDictionary](hdictionary.md)
 ## [HList](hlist.md)

@@ -57,12 +57,13 @@ namespace Hazelcast.Networking
         internal int PortRange { get; } = 3;
 
         /// <summary>
-        /// Gets or sets the list initial addresses.
+        /// Gets or sets the list of initial addresses.
         /// </summary>
         /// <remarks>
         /// <para>The client uses this list to find a running member and connect
         /// to it. This initial member will then send the list of other members
         /// to the client.</para>
+        /// <para>Each address must be a valid IPv4 or IPv6 address.</para>
         /// </remarks>
         public IList<string> Addresses { get; } = new List<string>();
 
@@ -107,27 +108,27 @@ namespace Hazelcast.Networking
         public int ConnectionTimeoutMilliseconds { get; set; } = 60_000;
 
         /// <summary>
-        /// Gets or sets the reconnection mode in case the client is disconnected.
+        /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
         /// </summary>
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
 
         /// <summary>
-        /// Gets the SSL options.
+        /// Gets the <see cref="SslOptions"/>.
         /// </summary>
         public SslOptions Ssl { get; } = new SslOptions();
 
         /// <summary>
-        /// Gets the cloud options.
+        /// Gets the <see cref="CloudOptions"/>.
         /// </summary>
         public CloudOptions Cloud { get; } = new CloudOptions();
 
         /// <summary>
-        /// Gets the socket options.
+        /// Gets the <see cref="SocketOptions"/>.
         /// </summary>
         public SocketOptions Socket { get; } = new SocketOptions();
 
         /// <summary>
-        /// Gets the connection retry options.
+        /// Gets the connection <see cref="RetryOptions"/>.
         /// </summary>
         public RetryOptions ConnectionRetry { get; } = new RetryOptions();
 

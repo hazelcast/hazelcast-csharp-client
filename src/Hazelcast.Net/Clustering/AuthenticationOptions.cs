@@ -40,8 +40,45 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Gets the credentials factory service factory.
+        /// Gets the <see cref="SingletonServiceFactory{T}"/> for the <see cref="ICredentialsFactory"/>.
         /// </summary>
+        /// <remarks>
+        /// <para>When set in the configuration file, it is defined as an injected type, for instance:
+        /// <code>
+        /// "credentialsFactory":
+        /// {
+        ///   "typeName": "My.CredentialsFactory",
+        ///   "args":
+        ///   {
+        ///     "foo": 42
+        ///   }
+        /// }
+        /// </code>
+        /// where <c>typeName</c> is the name of the type, and <c>args</c> is an optional dictionary
+        /// of arguments for the type constructor.</para>
+        /// <para>In addition, shortcuts exists for common credentials factory. The whole <c>credentialsFactory</c>
+        /// block can be omitted and replace by one of the following:</para>
+        /// <para>Username and password:<code>
+        /// "username-password":
+        /// {
+        ///   "username": "someone",
+        ///   "password": "secret"
+        /// }
+        /// </code></para>
+        /// <para>Kerberos:<code>
+        /// "kerberos":
+        /// {
+        ///   "spn": "service-provider-name"
+        /// }
+        /// </code></para>
+        /// <para>Token:<code>
+        /// "token":
+        /// {
+        ///   "data": "some-secret-token",
+        ///   "encoding": "none"
+        /// }
+        /// </code>Supported encodings are: <c>none</c> and <c>base64</c>.</para>
+        /// </remarks>
         [BinderIgnore]
         public SingletonServiceFactory<ICredentialsFactory> CredentialsFactory { get; }
 

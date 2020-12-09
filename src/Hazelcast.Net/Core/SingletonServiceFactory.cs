@@ -25,6 +25,17 @@ namespace Hazelcast.Core
     /// <para>The <see cref="SingletonServiceFactory{TService}"/> class supports defining how
     /// a service should be created, via its <see cref="Creator"/> property, and then provides
     /// a unique instance of that service via its <see cref="Service"/> property.</para>
+    /// <para>In a configuration file, it supports a <c>typeName</c> property which is the
+    /// name of the type, and a <c>args</c> property which is a dictionary of arguments for
+    /// the type constructor. For instance:
+    /// <code>"service":
+    /// {
+    ///   "typeName": "My.Service,My.dll",
+    ///   "args":
+    ///   {
+    ///     "foo": 33
+    ///   }
+    /// }</code></para>
     /// </remarks>
     public class SingletonServiceFactory<TService> : IDisposable
         where TService : class

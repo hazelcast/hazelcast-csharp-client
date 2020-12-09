@@ -22,9 +22,29 @@ namespace Hazelcast
     public partial class HazelcastOptions // Subscribers
     {
         /// <summary>
-        /// Gets the subscribers.
+        /// Gets the list of subscribers.
         /// </summary>
         /// <returns>The subscribers.</returns>
+        /// <remarks>
+        /// <para>Subscribers can be added to the configuration programmatically via the <see cref="AddSubscriber(IHazelcastClientEventSubscriber)" />
+        /// method or any of its overloads. A subscriber is a class that implements <see cref="IHazelcastClientEventSubscriber"/> and subscribes
+        /// the client to events as soon as the client is connected.</para>
+        /// <para>In a configuration file, they are defined as an array of injected types, for instance:
+        /// <code>"subscribers": [
+        ///   {
+        ///     "typeName": "My.Subscriber, My.Dll"
+        ///   },
+        ///   {
+        ///     "typeName": "My.OtherSubscriber, My.dll",
+        ///     "args":
+        ///     {
+        ///       "foo": 33
+        ///     }
+        ///   }
+        /// ]</code>
+        /// where <c>typeName</c> is the name of the type, and <c>args</c> is an optional dictionary
+        /// of arguments for the type constructor.</para>
+        /// </remarks>
         [BinderIgnore]
         public IList<IHazelcastClientEventSubscriber> Subscribers { get; }
 
