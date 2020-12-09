@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Triggers when the state changes.
         /// </summary>
-        public Func<ConnectionState, ValueTask> StateChanged
+        public Func<ClientState, ValueTask> StateChanged
         {
             get => _stateChangeQueue.StateChanged;
             set
@@ -103,55 +103,49 @@ namespace Hazelcast.Clustering
 
         #endregion
 
-        #region ConnectionState
+        #region ClientState
 
         /// <summary>
-        /// Gets the connection state.
+        /// Gets the client state.
         /// </summary>
-        public ConnectionState ConnectionState { get; private set; } = ConnectionState.Starting;
+        public ClientState ClientState { get; private set; } = ClientState.Starting;
 
         /// <summary>
-        /// (thread-unsafe) Immediately transitions to a new connection state,
+        /// (thread-unsafe) Immediately transitions to a new client state,
         /// and pushes the corresponding <see cref="StateChanged"/> event to the queue.
         /// </summary>
-        /// <param name="to">The new state.</param>
-        /// <param name="from">An optional expected current state.</param>
+        /// <param name="newState">The new state.</param>
         /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
         /// <remarks>
         /// <para>This method is not thread-safe; the caller has to lock the
         /// cluster state's <see cref="Mutex"/> to ensure thread-safety.</para>
         /// </remarks>
-        public void NotifyState(ConnectionState to, ConnectionState from = ConnectionState.Unknown)
+        public void NotifyState(ClientState newState)
         {
             lock (_lock) // fixme state lock
             {
-                if (from != ConnectionState.Unknown && from != ConnectionState)
-                {
-                    throw new InvalidOperationException($"Cannot transition to {to} from {from} because the current state is {ConnectionState}.");
-                }
-
-                if (ConnectionState != to)
+                if (ClientState != newState)
                 {
                     // queue will trigger events sequentially, in order, and in the background
-                    ConnectionState = to;
-                    _stateChangeQueue.Add(to);
+                    ClientState = newState;
+                    _stateChangeQueue.Add(newState);
                 }
             }
         }
 
         /// <summary>
-        /// Transitions to a new connection state.
+        /// Transitions to a new client state.
         /// </summary>
         /// <param name="newState">The new state.</param>
         /// <returns>A task that will complete once the cluster has transitioned to the new state.</returns>
         /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
-        public async ValueTask TransitionAsync(ConnectionState newState)
+        public async ValueTask TransitionAsync(ClientState newState)
         {
             await _lock.WaitAsync(CancellationToken.None).CAF();
 
             try
             {
-                ConnectionState = newState;
+                ClientState = newState;
 
                 // queue will trigger events sequentially, in order, and in the background
                 _stateChangeQueue.Add(newState);
@@ -165,7 +159,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Whether the cluster is connected.
         /// </summary>
-        public bool IsConnected => ConnectionState == ConnectionState.Connected;
+        public bool IsConnected => ClientState == ClientState.Connected;
 
         /// <summary>
         /// Whether the cluster is active i.e. connected or connecting.
@@ -175,9 +169,9 @@ namespace Hazelcast.Clustering
         /// connected. It may make sense to retry operations that fail, because they
         /// should succeed when the cluster is eventually connected.</para>
         /// </remarks>
-        public bool IsActive => ConnectionState == ConnectionState.Starting ||
-                                ConnectionState == ConnectionState.Connected ||
-                                ConnectionState == ConnectionState.Disconnected;
+        public bool IsActive => ClientState == ClientState.Starting ||
+                                ClientState == ClientState.Connected ||
+                                ClientState == ClientState.Disconnected;
 
         /// <summary>
         /// Throws a <see cref="ClientNotConnectedException"/> if the cluster is not active.
@@ -185,7 +179,7 @@ namespace Hazelcast.Clustering
         /// <param name="innerException">An optional inner exception.</param>
         public void ThrowIfNotActive(Exception innerException = null)
         {
-            if (!IsActive) throw new ClientNotConnectedException(innerException, ConnectionState);
+            if (!IsActive) throw new ClientNotConnectedException(innerException, ClientState);
         }
 
         #endregion

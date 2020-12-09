@@ -147,7 +147,7 @@ namespace Hazelcast
         /// Handles a client state change (lifecycle).
         /// </summary>
         /// <param name="state">The new state.</param>
-        public ValueTask OnStateChanged(ConnectionState state)
+        public ValueTask OnStateChanged(ClientState state)
         {
             var args = new StateChangedEventArgs(state);
 

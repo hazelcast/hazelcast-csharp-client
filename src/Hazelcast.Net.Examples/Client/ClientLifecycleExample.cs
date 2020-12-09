@@ -34,7 +34,7 @@ namespace Hazelcast.Examples.Client
                 .StateChanged((c, eventArgs) =>
                 {
                     Console.WriteLine($"State: {eventArgs.State}");
-                    if (eventArgs.State == ConnectionState.Connected)
+                    if (eventArgs.State == ClientState.Connected)
                         connected.Release();
                 }));
             var hz2 = await HazelcastClientFactory.StartNewClientAsync(options);

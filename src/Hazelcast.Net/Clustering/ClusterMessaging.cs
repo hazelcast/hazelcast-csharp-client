@@ -295,7 +295,7 @@ namespace Hazelcast.Clustering
                 return connection;
 
             // fail
-            throw new ClientNotConnectedException(_clusterState.ConnectionState);
+            throw new ClientNotConnectedException(_clusterState.ClientState);
         }
     }
 }

@@ -15,9 +15,9 @@
 namespace Hazelcast
 {
     /// <summary>
-    /// Defines the possible states of the client connection.
+    /// Defines the possible states of the client.
     /// </summary>
-    public enum ConnectionState
+    public enum ClientState
     {
         /// <summary>
         /// The client is new and starting.

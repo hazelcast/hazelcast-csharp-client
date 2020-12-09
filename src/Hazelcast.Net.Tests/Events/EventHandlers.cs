@@ -42,7 +42,7 @@ namespace Hazelcast.Tests.Events
             });
 
             var client = Mock.Of<IHazelcastClient>();
-            var args = new StateChangedEventArgs(ConnectionState.Connected);
+            var args = new StateChangedEventArgs(ClientState.Connected);
             await handler.HandleAsync(client, args);
 
             Assert.That(count, Is.EqualTo(1));

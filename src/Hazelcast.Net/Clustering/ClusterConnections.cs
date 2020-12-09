@@ -199,7 +199,7 @@ namespace Hazelcast.Clustering
 
                     wasLast = _clusterMembers.NotifyConnectionClosed(connection);
                     if (wasLast)
-                        _clusterState.NotifyState(ConnectionState.Disconnected);
+                        _clusterState.NotifyState(ClientState.Disconnected);
                 }
 
                 // report that the connection has been closed
@@ -235,7 +235,7 @@ namespace Hazelcast.Clustering
             {
                 // the cluster is down
                 _logger.LogInformation("Disconnected (down)");
-                await _clusterState.TransitionAsync(ConnectionState.Shutdown).CAF();
+                await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
                 return;
             }
 
@@ -256,7 +256,7 @@ namespace Hazelcast.Clustering
             {
                 case ReconnectMode.DoNotReconnect:
                     // DoNotReconnect = the cluster remains unconnected
-                    await _clusterState.TransitionAsync(ConnectionState.Shutdown).CAF();
+                    await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
                     break;
 
                 case ReconnectMode.ReconnectSync: // TODO: implement ReconnectSync?
@@ -292,7 +292,7 @@ namespace Hazelcast.Clustering
             // properties cannot be changed once connected
             _clusterState.SetPropertiesReadOnly();
 
-            await _clusterState.TransitionAsync(ConnectionState.Started).CAF();
+            await _clusterState.TransitionAsync(ClientState.Started).CAF();
 
             try
             {
@@ -309,7 +309,7 @@ namespace Hazelcast.Clustering
             catch
             {
                 // we *have* retried and failed
-                await _clusterState.TransitionAsync(ConnectionState.Shutdown).CAF();
+                await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
                 throw;
             }
         }
@@ -337,7 +337,7 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 // we *have* retried and failed
-                await _clusterState.TransitionAsync(ConnectionState.Shutdown).CAF();
+                await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
 
                 // we are a background task and cannot throw!
                 _logger.LogError(e, "Failed to reconnect.");
@@ -612,7 +612,7 @@ namespace Hazelcast.Clustering
 
                 isFirst = _clusterMembers.NotifyConnectionOpened(connection);
                 if (isFirst)
-                    _clusterState.NotifyState(ConnectionState.Connected);
+                    _clusterState.NotifyState(ClientState.Connected);
             }
 
             isNewCluster = false;

@@ -40,9 +40,9 @@ namespace Hazelcast.Tests.Events
         [Test]
         public void StateChangedEventArgs()
         {
-            var args = new StateChangedEventArgs(ConnectionState.Connected);
+            var args = new StateChangedEventArgs(ClientState.Connected);
 
-            Assert.That(args.State, Is.EqualTo(ConnectionState.Connected));
+            Assert.That(args.State, Is.EqualTo(ClientState.Connected));
         }
 
         [Test]

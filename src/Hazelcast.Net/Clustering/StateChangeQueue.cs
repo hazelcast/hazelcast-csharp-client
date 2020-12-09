@@ -26,12 +26,12 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class StateChangeQueue : IAsyncDisposable
     {
-        private readonly BufferBlock<ConnectionState> _states = new BufferBlock<ConnectionState>();
+        private readonly BufferBlock<ClientState> _states = new BufferBlock<ClientState>();
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
         private readonly Task _raising;
         private readonly ILogger _logger;
 
-        private Func<ConnectionState, ValueTask> _stateChanged;
+        private Func<ClientState, ValueTask> _stateChanged;
         private volatile int _disposed;
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Occurs when the state has changed.
         /// </summary>
-        public Func<ConnectionState, ValueTask> StateChanged
+        public Func<ClientState, ValueTask> StateChanged
         {
             get => _stateChanged;
             set
@@ -69,7 +69,7 @@ namespace Hazelcast.Clustering
         /// Adds a state change to the queue.
         /// </summary>
         /// <param name="state">The new state.</param>
-        public void Add(ConnectionState state)
+        public void Add(ClientState state)
         {
             ThrowIfDisposed();
             if (_states.Post(state)) return;

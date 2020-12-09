@@ -21,7 +21,7 @@ namespace Hazelcast.Exceptions
     /// Represents the exception that is thrown when the Hazelcast client is invoked but is not connected.
     /// </summary>
     /// <remarks>
-    /// <para>The <see cref="State"/> property provides the <see cref="ConnectionState"/> of the client
+    /// <para>The <see cref="State"/> property provides the <see cref="ClientState"/> of the client
     /// at the time the exception was thrown. The client may be either not connected at all, in which
     /// case retrying an operation will not succeed. Or, it may be  temporarily disconnected and trying
     /// to reconnect, in which case retrying an operation may eventually succeed.</para>
@@ -42,7 +42,7 @@ namespace Hazelcast.Exceptions
         /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class.
         /// </summary>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(ConnectionState state)
+        public ClientNotConnectedException(ClientState state)
             : base(ExceptionMessages.ClientNotConnectedException)
         {
             State = state;
@@ -63,7 +63,7 @@ namespace Hazelcast.Exceptions
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(string message, ConnectionState state)
+        public ClientNotConnectedException(string message, ClientState state)
             : base(message)
         {
             State = state;
@@ -86,7 +86,7 @@ namespace Hazelcast.Exceptions
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(Exception innerException, ConnectionState state)
+        public ClientNotConnectedException(Exception innerException, ClientState state)
             : base(ExceptionMessages.ClientNotConnectedException, innerException)
         {
             State = state;
@@ -111,7 +111,7 @@ namespace Hazelcast.Exceptions
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(string message, Exception innerException, ConnectionState state)
+        public ClientNotConnectedException(string message, Exception innerException, ClientState state)
             : base(message, innerException)
         {
             State = state;
@@ -125,7 +125,7 @@ namespace Hazelcast.Exceptions
         private ClientNotConnectedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            State = (ConnectionState) info.GetInt32("state");
+            State = (ClientState) info.GetInt32("state");
         }
 
         /// <inheritdoc />
@@ -138,8 +138,8 @@ namespace Hazelcast.Exceptions
         }
 
         /// <summary>
-        /// Gets the connection state.
+        /// Gets the client state.
         /// </summary>
-        public ConnectionState State { get; }
+        public ClientState State { get; }
     }
 }

@@ -175,7 +175,7 @@ namespace Hazelcast.Clustering
             // change the state - the final NotConnected state will
             // be set by Connections when the last one goes down, and
             // the cluster is not active anymore
-            State.NotifyState(ConnectionState.ShuttingDown);
+            State.NotifyState(ClientState.ShuttingDown);
 
             // we don't need heartbeat anymore
             await _heartbeat.DisposeAsync().CAF();

@@ -23,14 +23,14 @@ namespace Hazelcast
         /// Initializes a new instance of the <see cref="StateChangedEventArgs"/> class.
         /// </summary>
         /// <param name="state"></param>
-        public StateChangedEventArgs(ConnectionState state)
+        public StateChangedEventArgs(ClientState state)
         {
             State = state;
         }
 
         /// <summary>
-        /// Gets the new state.
+        /// Gets the new client state.
         /// </summary>
-        public ConnectionState State { get; }
+        public ClientState State { get; }
     }
 }

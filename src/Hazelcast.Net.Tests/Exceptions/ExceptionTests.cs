@@ -64,26 +64,26 @@ namespace Hazelcast.Tests.Exceptions
         public void ClientNotConnectedExceptionConstructors()
         {
             _ = new ClientNotConnectedException();
-            _ = new ClientNotConnectedException(ConnectionState.Shutdown);
+            _ = new ClientNotConnectedException(ClientState.Shutdown);
             _ = new ClientNotConnectedException("exception");
-            _ = new ClientNotConnectedException("exception", ConnectionState.Shutdown);
+            _ = new ClientNotConnectedException("exception", ClientState.Shutdown);
             _ = new ClientNotConnectedException(new Exception("bang"));
-            _ = new ClientNotConnectedException(new Exception("bang"), ConnectionState.Shutdown);
+            _ = new ClientNotConnectedException(new Exception("bang"), ClientState.Shutdown);
             _ = new ClientNotConnectedException("exception", new Exception("bang"));
 
-            var e = new ClientNotConnectedException("exception", new Exception("bang"), ConnectionState.Shutdown);
+            var e = new ClientNotConnectedException("exception", new Exception("bang"), ClientState.Shutdown);
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
-            Assert.That(e.State, Is.EqualTo(ConnectionState.Shutdown));
+            Assert.That(e.State, Is.EqualTo(ClientState.Shutdown));
 
             e = e.SerializeAndDeSerialize();
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
-            Assert.That(e.State, Is.EqualTo(ConnectionState.Shutdown));
+            Assert.That(e.State, Is.EqualTo(ClientState.Shutdown));
         }
 
         [Test]
