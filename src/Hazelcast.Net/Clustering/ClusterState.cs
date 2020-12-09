@@ -174,12 +174,12 @@ namespace Hazelcast.Clustering
                                 ClientState == ClientState.Disconnected;
 
         /// <summary>
-        /// Throws a <see cref="ClientNotConnectedException"/> if the cluster is not active.
+        /// Throws a <see cref="ClientOfflineException"/> if the cluster is not active.
         /// </summary>
         /// <param name="innerException">An optional inner exception.</param>
         public void ThrowIfNotActive(Exception innerException = null)
         {
-            if (!IsActive) throw new ClientNotConnectedException(innerException, ClientState);
+            if (!IsActive) throw new ClientOfflineException(innerException, ClientState);
         }
 
         #endregion
@@ -249,11 +249,11 @@ namespace Hazelcast.Clustering
         public ISequence<int> ConnectionIdSequence { get; } = new Int32Sequence();
 
         /// <summary>
-        /// Throws a <see cref="ClientNotConnectedException"/> if the cluster operations have been canceled.
+        /// Throws a <see cref="ClientOfflineException"/> if the cluster operations have been canceled.
         /// </summary>
         public void ThrowIfCancelled()
         {
-            if (_clusterCancellation.IsCancellationRequested) throw new ClientNotConnectedException();
+            if (_clusterCancellation.IsCancellationRequested) throw new ClientOfflineException();
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace Hazelcast.Clustering
             }
             catch
             {
-                throw new ClientNotConnectedException();
+                throw new ClientOfflineException();
             }
         }
 

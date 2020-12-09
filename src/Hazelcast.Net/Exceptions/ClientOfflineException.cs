@@ -27,102 +27,102 @@ namespace Hazelcast.Exceptions
     /// to reconnect, in which case retrying an operation may eventually succeed.</para>
     /// </remarks>
     [Serializable]
-    public sealed class ClientNotConnectedException : HazelcastException
+    public sealed class ClientOfflineException : HazelcastException
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class.
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class.
         /// </summary>
-        public ClientNotConnectedException()
+        public ClientOfflineException()
             : base(ExceptionMessages.ClientNotConnectedException)
         {
             State = 0; // unknown
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class.
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class.
         /// </summary>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(ClientState state)
+        public ClientOfflineException(ClientState state)
             : base(ExceptionMessages.ClientNotConnectedException)
         {
             State = state;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public ClientNotConnectedException(string message)
+        public ClientOfflineException(string message)
             : base(message)
         {
             State = 0; // unknown
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(string message, ClientState state)
+        public ClientOfflineException(string message, ClientState state)
             : base(message)
         {
             State = state;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
-        public ClientNotConnectedException(Exception innerException)
+        public ClientOfflineException(Exception innerException)
             : base(ExceptionMessages.ClientNotConnectedException, innerException)
         {
             State = 0; // unknown
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(Exception innerException, ClientState state)
+        public ClientOfflineException(Exception innerException, ClientState state)
             : base(ExceptionMessages.ClientNotConnectedException, innerException)
         {
             State = state;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
-        public ClientNotConnectedException(string message, Exception innerException)
+        public ClientOfflineException(string message, Exception innerException)
             : base(message, innerException)
         {
             State = 0; // unknown
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(string message, Exception innerException, ClientState state)
+        public ClientOfflineException(string message, Exception innerException, ClientState state)
             : base(message, innerException)
         {
             State = state;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="ClientOfflineException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
-        private ClientNotConnectedException(SerializationInfo info, StreamingContext context)
+        private ClientOfflineException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             State = (ClientState) info.GetInt32("state");

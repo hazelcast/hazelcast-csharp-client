@@ -267,7 +267,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <returns>A connection for the invocation.</returns>
-        /// <exception cref="ClientNotConnectedException">Occurs when no connection could be found.</exception>
+        /// <exception cref="ClientOfflineException">Occurs when no connection could be found.</exception>
         private MemberConnection GetInvocationConnection(Invocation invocation)
         {
             // try the target connection
@@ -295,7 +295,7 @@ namespace Hazelcast.Clustering
                 return connection;
 
             // fail
-            throw new ClientNotConnectedException(_clusterState.ClientState);
+            throw new ClientOfflineException(_clusterState.ClientState);
         }
     }
 }

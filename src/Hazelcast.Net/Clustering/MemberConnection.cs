@@ -452,7 +452,8 @@ namespace Hazelcast.Clustering
                                      HConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
 
             // actually send the message
-            bool success;
+            var success = false;
+            var active = true;
             try
             {
                 success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
@@ -460,10 +461,13 @@ namespace Hazelcast.Clustering
             catch
             {
                 RemoveInvocation(invocation);
-                throw;
+                active = Active;
+                if (active) throw;
+
+                // not active anymore: ignore this exception, throw a disconnected exception below
             }
 
-            if (!Active)
+            if (!Active || !active)
             {
                 // if the client is not active anymore, the invocation *may* have been failed
                 // already, but there is a race condition here (what-if the client disposed
