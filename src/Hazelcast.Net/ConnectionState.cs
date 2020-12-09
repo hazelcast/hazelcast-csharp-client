@@ -20,20 +20,12 @@ namespace Hazelcast
     public enum ConnectionState
     {
         /// <summary>
-        /// The client state is unknown.
-        /// </summary>
-        /// <remarks>
-        /// <para>This value is used to represent an unknown value of the state.</para>
-        /// </remarks>
-        Unknown = 0, // zero is for unknown, make sure real states start at 1
-
-        /// <summary>
         /// The client is new and starting.
         /// </summary>
         /// <remarks>
         /// <para>The client will transition to <see cref="Started"/> when it has started.</para>
         /// </remarks>
-        Starting,
+        Starting, // zero is the default value, make sure real states start at 1
 
         /// <summary>
         /// The client has started, and is now trying to connect to a first member.

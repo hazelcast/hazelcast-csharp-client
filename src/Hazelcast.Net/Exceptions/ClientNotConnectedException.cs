@@ -35,7 +35,7 @@ namespace Hazelcast.Exceptions
         public ClientNotConnectedException()
             : base(ExceptionMessages.ClientNotConnectedException)
         {
-            State = ConnectionState.Unknown;
+            State = 0; // unknown
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Hazelcast.Exceptions
         public ClientNotConnectedException(string message)
             : base(message)
         {
-            State = ConnectionState.Unknown;
+            State = 0; // unknown
         }
 
         /// <summary>
@@ -74,8 +74,19 @@ namespace Hazelcast.Exceptions
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        public ClientNotConnectedException(Exception innerException)
+            : base(ExceptionMessages.ClientNotConnectedException, innerException)
+        {
+            State = 0; // unknown
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientNotConnectedException"/> class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// </summary>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(Exception innerException, ConnectionState state = ConnectionState.Unknown)
+        public ClientNotConnectedException(Exception innerException, ConnectionState state)
             : base(ExceptionMessages.ClientNotConnectedException, innerException)
         {
             State = state;
@@ -90,7 +101,7 @@ namespace Hazelcast.Exceptions
         public ClientNotConnectedException(string message, Exception innerException)
             : base(message, innerException)
         {
-            State = ConnectionState.Unknown;
+            State = 0; // unknown
         }
 
         /// <summary>
@@ -100,7 +111,7 @@ namespace Hazelcast.Exceptions
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         /// <param name="state">The client state.</param>
-        public ClientNotConnectedException(string message, Exception innerException, ConnectionState state = ConnectionState.Unknown)
+        public ClientNotConnectedException(string message, Exception innerException, ConnectionState state)
             : base(message, innerException)
         {
             State = state;
