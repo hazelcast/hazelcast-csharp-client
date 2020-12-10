@@ -124,7 +124,7 @@ namespace Hazelcast.Clustering
             var readElapsed = now - connection.LastReadTime;
             var writeElapsed = now - connection.LastWriteTime;
 
-            HConsole.WriteLine(this, $"Heartbeat on {connection.Id.ToString("N").Substring(0, 5)}, written {(long)(now - connection.LastWriteTime).TotalMilliseconds}ms ago, read {(long)(now - connection.LastReadTime).TotalMilliseconds}ms ago");
+            HConsole.WriteLine(this, $"Heartbeat on {connection.Id.ToShortString()}, written {(long)(now - connection.LastWriteTime).TotalMilliseconds}ms ago, read {(long)(now - connection.LastReadTime).TotalMilliseconds}ms ago");
 
             // make sure we read from the client at least every 'timeout',
             // which is greater than the interval, so we *should* have
