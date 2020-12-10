@@ -1,4 +1,11 @@
-# Hazelcast .NET Client
+<p align="center">
+    <a href="https://github.com/hazelcast/hazelcast-csharp-client/">
+        <img src="https://3l0wd94f0qdd10om8642z9se-wpengine.netdna-ssl.com/images/logos/hazelcast-logo-horz_md.png" />
+    </a>
+    <h2 align="center">Hazelcast .NET Client</h2>
+</p>
+
+---
 
 Hazelcast .NET brings the full power of the [Hazelcast](https://hazelcast.com) high-performance, in-memory computing platform to the Microsoft .NET ecosystem. The 
 [Hazelcast .NET Client](https://hazelcast.org/imdg/clients-languages/dotnet/) allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.
@@ -9,16 +16,44 @@ The .NET client itself is distributed via NuGet as a package named [Hazelcast.NE
 
 The Hazelcast .NET solution is Open Source, released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), and welcomes contributions. The project lives here on [GitHub](https://github.com/hazelcast/hazelcast-csharp-client), where you can obtain the source code, report issues, and interract with the community. Contributions are welcome!
 
-## Updates
+## Versions
 
-The Hazelcast .NET Client stable version is currently version 3. See [this branch](https://github.com/hazelcast/hazelcast-csharp-client/tree/3.12.z) for more information about version 3 of the client.
+The stable Hazelcast .NET Client version is version 3. See [this branch](https://github.com/hazelcast/hazelcast-csharp-client/tree/3.12.z) for more information about version 3 of the client.
 
-The `master` branch is the development branch for the upcoming version 4 of the client. Version 4 is currently in *alpha* stage, which means that there is a high likelyhood of bugs. We do not recommend for production use. If you are interested in code samples, please check [here](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples).
+The next version of the Hazelcast .NET Client is version 4.0, which is currently in *beta* stage.
 
+## Code Samples
 
-* CODE IN THIS BRANCH IS IN NO WAY SUPPORTED FOR ANY PRODUCTION USE
-* API IN THIS BRANCH CAN CHANGE IN BREAKING WAYS AT ANY TIME
+Check the [Hazelcast.Net.Examples](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples) project.
 
-And, contributions, (constructive) criticism, ideas, requests, comments... are welcome!
+## Contributing
 
-This README file will be updated as development progresses.
+We encourage any type of contribution in the form of issue reports or pull requests.
+
+### Issue Reports
+
+For issue reports, please share the following information with us to quickly resolve the problems.
+
+* Hazelcast IMDG and the client version that you use
+* General information about the environment and the architecture you use like Node.js version, cluster size, number of clients, Java version, JVM parameters, operating system etc.
+* Logs and stack traces, if any.
+* Detailed description of the steps to reproduce the issue.
+
+### Pull Requests
+
+Contributions are submitted, reviewed and accepted using the pull requests on GitHub. For an enhancement or larger
+feature, create a GitHub issue first to discuss.
+
+## Development
+
+Development for future versions takes place in the `master` branch (this branch). The [documentation site](http://hazelcast.github.io/hazelcast-csharp-client/) contains details about building, testing and running the code.
+
+## License
+
+[Apache 2.0 License](LICENSE).
+
+## Copyright
+
+Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+
+Visit [www.hazelcast.com](http://www.hazelcast.com) for more information.
