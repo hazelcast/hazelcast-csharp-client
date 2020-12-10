@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="Matches Method
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -88,26 +88,26 @@
 
 <a id="Hazelcast_Core_IPatternMatcher_Matches_" data-uid="Hazelcast.Core.IPatternMatcher.Matches*"></a>
 <h4 id="Hazelcast_Core_IPatternMatcher_Matches_System_Collections_Generic_IEnumerable_System_String__System_String_" data-uid="Hazelcast.Core.IPatternMatcher.Matches(System.Collections.Generic.IEnumerable{System.String},System.String)">Matches(IEnumerable&lt;String&gt;, String)</h4>
-<div class="markdown level1 summary"><p>Returns the best match for an item name out of a list of configuration patterns.</p>
+<div class="markdown level1 summary"><p>Gets the best match for an item name out of a list of configuration patterns.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">string Matches(IEnumerable&lt;string&gt; configPatterns, string itemName)</code></pre>
+  <pre><code class="lang-csharp hljs">string Matches(IEnumerable&lt;string&gt; patterns, string name)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.string">String</a>&gt;</td>
-      <td><span class="parametername">configPatterns</span></td>
-      <td><p>list of configuration patterns</p>
+      <td><span class="parametername">patterns</span></td>
+      <td><p>A list of configuration patterns.</p>
 </td>
     </tr>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.string">String</a></td>
-      <td><span class="parametername">itemName</span></td>
-      <td><p>item name to match</p>
+      <td><span class="parametername">name</span></td>
+      <td><p>The item name to match.</p>
 </td>
     </tr>
   </tbody>
@@ -117,7 +117,17 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.string">String</a></td>
-      <td><p>a key of configPatterns which matches the item name or <tt>null</tt> if nothing matches</p>
+      <td><p>The element of the <see cref="!:patterns"></see> list that best matches the item <see cref="!:name"></see>, if any; otherwise <code>null</code>.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="exceptions">Exceptions</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="Hazelcast.Configuration.ConfigurationException.html">ConfigurationException</a></td>
+      <td><p>Occurs when ambiguous configurations are found.</p>
 </td>
     </tr>
   </tbody>
@@ -128,7 +138,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

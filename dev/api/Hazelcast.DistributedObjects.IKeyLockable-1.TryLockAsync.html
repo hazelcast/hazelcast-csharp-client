@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="TryLockAsync Method
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -111,7 +111,7 @@
   <tbody>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/system.boolean">Boolean</a>&gt;</td>
-      <td><p><code>true</code> if the lock was acquired; otherwise <code>false</code>.</p>
+      <td><p><code>true</code> if the lock was immediately acquired; otherwise <code>false</code>.</p>
 </td>
     </tr>
   </tbody>
@@ -120,10 +120,11 @@
 <div class="markdown level1 remarks"><p>If the entry cannot be locked, returns <code>false</code> immediately.</p>
 <p>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
 N times before another owner can lock it.</p>
+<p>The lock is automatically released after the server-configured maximum lease time has elapsed.</p>
 </div>
 <a id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync_" data-uid="Hazelcast.DistributedObjects.IKeyLockable`1.TryLockAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IKeyLockable`1.TryLockAsync(`0,System.TimeSpan)">TryLockAsync(TKey, TimeSpan)</h4>
-<div class="markdown level1 summary"><p>Tries to lock an entry with a server-side timeout.</p>
+<div class="markdown level1 summary"><p>Tries to lock an entry within a server-side timeout.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -142,7 +143,7 @@ N times before another owner can lock it.</p>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
       <td><span class="parametername">timeToWait</span></td>
-      <td><p>How long to wait for the lock.</p>
+      <td><p>How long to wait for the lock (-1ms to wait forever; 0ms to not wait at all).</p>
 </td>
     </tr>
   </tbody>
@@ -158,14 +159,15 @@ N times before another owner can lock it.</p>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code data-dev-comment-type="paramref" class="paramref">timeToWait</code>, returns <code>false</code>.
-If <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> is <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.timeout.infinitetimespan">InfiniteTimeSpan</a>, waits forever.</p>
+<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> has elapsed, returns <code>false</code>.
+If <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> is -1ms, waits forever. If it is 0ms, does not wait at all.</p>
 <p>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
 N times before another owner can lock it.</p>
+<p>The lock is automatically released after the server-configured maximum lease time has elapsed.</p>
 </div>
 <a id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync_" data-uid="Hazelcast.DistributedObjects.IKeyLockable`1.TryLockAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IKeyLockable`1.TryLockAsync(`0,System.TimeSpan,System.TimeSpan)">TryLockAsync(TKey, TimeSpan, TimeSpan)</h4>
-<div class="markdown level1 summary"><p>Tries to lock an entry for a given time duration (lease time), with a server-side timeout.</p>
+<div class="markdown level1 summary"><p>Tries to lock an entry for a given time duration (lease time), within a server-side timeout.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -184,7 +186,7 @@ N times before another owner can lock it.</p>
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
       <td><span class="parametername">timeToWait</span></td>
-      <td><p>How long to wait for the lock.</p>
+      <td><p>How long to wait for the lock (-1ms to wait forever; 0ms to not wait at all).</p>
 </td>
     </tr>
     <tr>
@@ -206,11 +208,9 @@ N times before another owner can lock it.</p>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code data-dev-comment-type="paramref" class="paramref">timeToWait</code>, returns <code>false</code>.
-If <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> is <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.timeout.infinitetimespan">InfiniteTimeSpan</a>, waits forever.</p>
-<p>If acquired, the lock is automatically released after the specified .
-If <code data-dev-comment-type="paramref" class="paramref">leaseTime</code> is <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.timeout.infinitetimespan">InfiniteTimeSpan</a>, the lock is never
-released.</p>
+<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> has elapsed, returns <code>false</code>.
+If <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> is -1ms, waits forever. If it is 0ms, does not wait at all.</p>
+<p>The lock is automatically released after the specified <code data-dev-comment-type="paramref" class="paramref">leaseTime</code> has elapsed.</p>
 <p>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
 N times before another owner can lock it.</p>
 </div>
@@ -220,7 +220,8 @@ N times before another owner can lock it.</p>
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

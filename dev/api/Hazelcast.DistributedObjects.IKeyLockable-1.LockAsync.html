@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="LockAsync Method
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -117,9 +117,11 @@
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync__0__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the lock is already owned by another owner, this will waiting until the lock can be acquired.</p>
+<div class="markdown level1 remarks"><p>If the lock is already owned by another owner, this will wait indefinitely until the
+lock can be acquired.</p>
 <p>Locks are re-entrant, but counted: if a key is locked N times, then it should be unlocked
 N times before another thread can lock it.</p>
+<p>The lock is automatically released after the server-configured maximum lease time has elapsed.</p>
 </div>
 <a id="Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync_" data-uid="Hazelcast.DistributedObjects.IKeyLockable`1.LockAsync*"></a>
 <h4 id="Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IKeyLockable`1.LockAsync(`0,System.TimeSpan)">LockAsync(TKey, TimeSpan)</h4>
@@ -158,12 +160,11 @@ N times before another thread can lock it.</p>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync__0_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the lock is already owned by another owner, this will waiting until the lock can be acquired.</p>
+<div class="markdown level1 remarks"><p>If the lock is already owned by another owner, this will wait indefinitely until the
+lock can be acquired.</p>
 <p>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
 N times before another owner can lock it.</p>
-<p>The lock is automatically released after the specified <code data-dev-comment-type="paramref" class="paramref">leaseTime</code>. If
-<code data-dev-comment-type="paramref" class="paramref">leaseTime</code> is <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.timeout.infinitetimespan">InfiniteTimeSpan</a>, the lock is never
-released.</p>
+<p>The lock is automatically released after the specified <code data-dev-comment-type="paramref" class="paramref">leaseTime</code> has elapsed.</p>
 </div>
 </article>
           </div>
@@ -171,7 +172,8 @@ released.</p>
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

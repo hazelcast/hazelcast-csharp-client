@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="ObjectDestroyed Method
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -87,19 +87,19 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_HazelcastClientEventHandlers_ObjectDestroyed_" data-uid="Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed*"></a>
-<h4 id="Hazelcast_HazelcastClientEventHandlers_ObjectDestroyed_System_Action_Hazelcast_IHazelcastClient_Hazelcast_Events_DistributedObjectLifecycleEventArgs__" data-uid="Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed(System.Action{Hazelcast.IHazelcastClient,Hazelcast.Events.DistributedObjectLifecycleEventArgs})">ObjectDestroyed(Action&lt;IHazelcastClient, DistributedObjectLifecycleEventArgs&gt;)</h4>
+<h4 id="Hazelcast_HazelcastClientEventHandlers_ObjectDestroyed_System_Action_Hazelcast_IHazelcastClient_Hazelcast_Events_DistributedObjectDestroyedEventArgs__" data-uid="Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed(System.Action{Hazelcast.IHazelcastClient,Hazelcast.Events.DistributedObjectDestroyedEventArgs})">ObjectDestroyed(Action&lt;IHazelcastClient, DistributedObjectDestroyedEventArgs&gt;)</h4>
 <div class="markdown level1 summary"><p>Adds a handler which runs when a distributed object is destroyed.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public HazelcastClientEventHandlers ObjectDestroyed(Action&lt;IHazelcastClient, DistributedObjectLifecycleEventArgs&gt; handler)</code></pre>
+  <pre><code class="lang-csharp hljs">public HazelcastClientEventHandlers ObjectDestroyed(Action&lt;IHazelcastClient, DistributedObjectDestroyedEventArgs&gt; handler)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>, <a class="xref" href="Hazelcast.Events.DistributedObjectLifecycleEventArgs.html">DistributedObjectLifecycleEventArgs</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>, <a class="xref" href="Hazelcast.Events.DistributedObjectDestroyedEventArgs.html">DistributedObjectDestroyedEventArgs</a>&gt;</td>
       <td><span class="parametername">handler</span></td>
       <td><p>The handler.</p>
 </td>
@@ -117,19 +117,19 @@
   </tbody>
 </table>
 <a id="Hazelcast_HazelcastClientEventHandlers_ObjectDestroyed_" data-uid="Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed*"></a>
-<h4 id="Hazelcast_HazelcastClientEventHandlers_ObjectDestroyed_System_Func_Hazelcast_IHazelcastClient_Hazelcast_Events_DistributedObjectLifecycleEventArgs_System_Threading_Tasks_ValueTask__" data-uid="Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed(System.Func{Hazelcast.IHazelcastClient,Hazelcast.Events.DistributedObjectLifecycleEventArgs,System.Threading.Tasks.ValueTask})">ObjectDestroyed(Func&lt;IHazelcastClient, DistributedObjectLifecycleEventArgs, ValueTask&gt;)</h4>
+<h4 id="Hazelcast_HazelcastClientEventHandlers_ObjectDestroyed_System_Func_Hazelcast_IHazelcastClient_Hazelcast_Events_DistributedObjectDestroyedEventArgs_System_Threading_Tasks_ValueTask__" data-uid="Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed(System.Func{Hazelcast.IHazelcastClient,Hazelcast.Events.DistributedObjectDestroyedEventArgs,System.Threading.Tasks.ValueTask})">ObjectDestroyed(Func&lt;IHazelcastClient, DistributedObjectDestroyedEventArgs, ValueTask&gt;)</h4>
 <div class="markdown level1 summary"><p>Adds a handler which runs when a distributed object is destroyed.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public HazelcastClientEventHandlers ObjectDestroyed(Func&lt;IHazelcastClient, DistributedObjectLifecycleEventArgs, ValueTask&gt; handler)</code></pre>
+  <pre><code class="lang-csharp hljs">public HazelcastClientEventHandlers ObjectDestroyed(Func&lt;IHazelcastClient, DistributedObjectDestroyedEventArgs, ValueTask&gt; handler)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.func-3">Func</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>, <a class="xref" href="Hazelcast.Events.DistributedObjectLifecycleEventArgs.html">DistributedObjectLifecycleEventArgs</a>, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.valuetask">ValueTask</a>&gt;</td>
+      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.func-3">Func</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>, <a class="xref" href="Hazelcast.Events.DistributedObjectDestroyedEventArgs.html">DistributedObjectDestroyedEventArgs</a>, <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.valuetask">ValueTask</a>&gt;</td>
       <td><span class="parametername">handler</span></td>
       <td><p>The handler.</p>
 </td>
@@ -152,7 +152,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="IHQueue&lt;T&gt; Interface
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -98,13 +98,13 @@
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddAsync__0_">IHCollection&lt;T&gt;.AddAsync(T)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddRangeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddRangeAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddRangeAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddAll.html#Hazelcast_DistributedObjects_IHCollection_1_AddAll__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddAll&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAllAsync">IHCollection&lt;T&gt;.GetAllAsync()</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CountAsync">IHCollection&lt;T&gt;.CountAsync()</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetSizeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetSizeAsync">IHCollection&lt;T&gt;.GetSizeAsync()</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHCollection_1_IsEmptyAsync">IHCollection&lt;T&gt;.IsEmptyAsync()</a>
@@ -174,13 +174,6 @@ will not scale by adding more members to the cluster.
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHQueue_1_DequeueAsync" data-uid="Hazelcast.DistributedObjects.IHQueue`1.DequeueAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.DequeueAsync.html#Hazelcast_DistributedObjects_IHQueue_1_DequeueAsync">DequeueAsync()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.</p>
-</td>
-      </tr>
-      <tr>
         <td id="Hazelcast_DistributedObjects_IHQueue_1_DrainToAsync_System_Collections_Generic_ICollection__0__" data-uid="Hazelcast.DistributedObjects.IHQueue`1.DrainToAsync(System.Collections.Generic.ICollection{`0})" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.DrainToAsync.html#Hazelcast_DistributedObjects_IHQueue_1_DrainToAsync_System_Collections_Generic_ICollection__0__">DrainToAsync(ICollection&lt;T&gt;)</a>
         </td>
@@ -195,10 +188,10 @@ will not scale by adding more members to the cluster.
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHQueue_1_EnqueueAsync__0_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.EnqueueAsync(`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.EnqueueAsync.html#Hazelcast_DistributedObjects_IHQueue_1_EnqueueAsync__0_">EnqueueAsync(T)</a>
+        <td id="Hazelcast_DistributedObjects_IHQueue_1_GetElementAsync" data-uid="Hazelcast.DistributedObjects.IHQueue`1.GetElementAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.GetElementAsync.html#Hazelcast_DistributedObjects_IHQueue_1_GetElementAsync">GetElementAsync()</a>
         </td>
-        <td class="markdown level1 summary"><p>Inserts the specified element into this queue, waiting if necessary for space to become available.</p>
+        <td class="markdown level1 summary"><p>Retrieves, but does not remove, the head of this queue, or throws if this queue is empty.</p>
 </td>
       </tr>
       <tr>
@@ -212,28 +205,38 @@ limit.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHQueue_1_TryDequeueAsync_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TryDequeueAsync(System.TimeSpan)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.TryDequeueAsync.html#Hazelcast_DistributedObjects_IHQueue_1_TryDequeueAsync_System_TimeSpan_">TryDequeueAsync(TimeSpan)</a>
+        <td id="Hazelcast_DistributedObjects_IHQueue_1_OfferAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.OfferAsync(`0,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.OfferAsync.html#Hazelcast_DistributedObjects_IHQueue_1_OfferAsync__0_System_TimeSpan_">OfferAsync(T, TimeSpan)</a>
         </td>
-        <td class="markdown level1 summary"><p>Retrieves and removes the head of this queue, waiting up to the
-specified wait time if necessary for an element to become available.</p>
+        <td class="markdown level1 summary"><p>Tries to enqueue an item.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHQueue_1_TryEnqueueAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TryEnqueueAsync(`0,System.TimeSpan)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.TryEnqueueAsync.html#Hazelcast_DistributedObjects_IHQueue_1_TryEnqueueAsync__0_System_TimeSpan_">TryEnqueueAsync(T, TimeSpan)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Inserts the specified element into this queue if it is possible to do
-so immediately without violating capacity restrictions, returning
-<code>true</code> upon success and <code>false</code> if no space is currently
-available.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHQueue_1_TryPeekAsync" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TryPeekAsync" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.TryPeekAsync.html#Hazelcast_DistributedObjects_IHQueue_1_TryPeekAsync">TryPeekAsync()</a>
+        <td id="Hazelcast_DistributedObjects_IHQueue_1_PeekAsync" data-uid="Hazelcast.DistributedObjects.IHQueue`1.PeekAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.PeekAsync.html#Hazelcast_DistributedObjects_IHQueue_1_PeekAsync">PeekAsync()</a>
         </td>
         <td class="markdown level1 summary"><p>Retrieves, but does not remove, the head of this queue, or returns <code>null</code> if this queue is empty.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHQueue_1_PollAsync_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.PollAsync(System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.PollAsync.html#Hazelcast_DistributedObjects_IHQueue_1_PollAsync_System_TimeSpan_">PollAsync(TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Tries to dequeue an item.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHQueue_1_PutAsync__0_" data-uid="Hazelcast.DistributedObjects.IHQueue`1.PutAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.PutAsync.html#Hazelcast_DistributedObjects_IHQueue_1_PutAsync__0_">PutAsync(T)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Enqueues an item.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHQueue_1_TakeAsync" data-uid="Hazelcast.DistributedObjects.IHQueue`1.TakeAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.TakeAsync.html#Hazelcast_DistributedObjects_IHQueue_1_TakeAsync">TakeAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Dequeues the head item.</p>
 </td>
       </tr>
     </tbody>
@@ -244,7 +247,8 @@ available.</p>
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

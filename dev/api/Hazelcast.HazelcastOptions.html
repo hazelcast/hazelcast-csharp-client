@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="HazelcastOptions Class
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -135,33 +135,6 @@
       </tr>
     </tbody>
   </table>
-  <h3 id="fields">Fields
-  </h3>
-  <table class="table table-bordered table-striped table-condensed">
-    <tbody>
-      <tr>
-        <td id="Hazelcast_HazelcastOptions_DefaultClientNamePrefix" data-uid="Hazelcast.HazelcastOptions.DefaultClientNamePrefix" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.DefaultClientNamePrefix.html">DefaultClientNamePrefix</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets the default client name prefix, which is <code>&quot;hz.client_&quot;</code>.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_HazelcastOptions_DefaultClusterName" data-uid="Hazelcast.HazelcastOptions.DefaultClusterName" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.DefaultClusterName.html">DefaultClusterName</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets the default cluster name, which is <code>&quot;dev&quot;</code>.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_HazelcastOptions_Hazelcast" data-uid="Hazelcast.HazelcastOptions.Hazelcast" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.Hazelcast.html">Hazelcast</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets the Hazelcast configuration section name, which is <code>&quot;hazelcast&quot;</code>.</p>
-</td>
-      </tr>
-    </tbody>
-  </table>
   <h3 id="properties">Properties
   </h3>
   <table class="table table-bordered table-striped table-condensed">
@@ -170,105 +143,112 @@
         <td id="Hazelcast_HazelcastOptions_Authentication" data-uid="Hazelcast.HazelcastOptions.Authentication" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Authentication.html#Hazelcast_HazelcastOptions_Authentication">Authentication</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the authentication options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Clustering.AuthenticationOptions.html">AuthenticationOptions</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_ClientName" data-uid="Hazelcast.HazelcastOptions.ClientName" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.ClientName.html#Hazelcast_HazelcastOptions_ClientName">ClientName</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the client name.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_HazelcastOptions_ClientNamePrefix" data-uid="Hazelcast.HazelcastOptions.ClientNamePrefix" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.ClientNamePrefix.html#Hazelcast_HazelcastOptions_ClientNamePrefix">ClientNamePrefix</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets or sets the client name prefix.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the name of the client.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_ClusterName" data-uid="Hazelcast.HazelcastOptions.ClusterName" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.ClusterName.html#Hazelcast_HazelcastOptions_ClusterName">ClusterName</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the cluster name.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the name of the cluster.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Events" data-uid="Hazelcast.HazelcastOptions.Events" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Events.html#Hazelcast_HazelcastOptions_Events">Events</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the events options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Events.EventsOptions.html">EventsOptions</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Heartbeat" data-uid="Hazelcast.HazelcastOptions.Heartbeat" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Heartbeat.html#Hazelcast_HazelcastOptions_Heartbeat">Heartbeat</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the heartbeat options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Clustering.HeartbeatOptions.html">HeartbeatOptions</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Labels" data-uid="Hazelcast.HazelcastOptions.Labels" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Labels.html#Hazelcast_HazelcastOptions_Labels">Labels</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the client labels.</p>
+        <td class="markdown level1 summary"><p>Gets the set of client labels.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_HazelcastOptions_LoadBalancing" data-uid="Hazelcast.HazelcastOptions.LoadBalancing" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.LoadBalancing.html#Hazelcast_HazelcastOptions_LoadBalancing">LoadBalancing</a>
+        <td id="Hazelcast_HazelcastOptions_LoadBalancer" data-uid="Hazelcast.HazelcastOptions.LoadBalancer" class="hz-one-third">
+          <a class="xref" href="Hazelcast.HazelcastOptions.LoadBalancer.html#Hazelcast_HazelcastOptions_LoadBalancer">LoadBalancer</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the load balancing options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.html">SingletonServiceFactory&lt;TService&gt;</a> for the <a class="xref" href="Hazelcast.Clustering.LoadBalancing.ILoadBalancer.html">ILoadBalancer</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_LoggerFactory" data-uid="Hazelcast.HazelcastOptions.LoggerFactory" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.LoggerFactory.html#Hazelcast_HazelcastOptions_LoggerFactory">LoggerFactory</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the service factory for <a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerfactory">ILoggerFactory</a>.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.html">SingletonServiceFactory&lt;TService&gt;</a> for <a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerfactory">ILoggerFactory</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Messaging" data-uid="Hazelcast.HazelcastOptions.Messaging" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Messaging.html#Hazelcast_HazelcastOptions_Messaging">Messaging</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the messaging options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Messaging.MessagingOptions.html">MessagingOptions</a>.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_HazelcastOptions_NearCaching" data-uid="Hazelcast.HazelcastOptions.NearCaching" class="hz-one-third">
-          <a class="xref" href="Hazelcast.HazelcastOptions.NearCaching.html#Hazelcast_HazelcastOptions_NearCaching">NearCaching</a>
+        <td id="Hazelcast_HazelcastOptions_NearCache" data-uid="Hazelcast.HazelcastOptions.NearCache" class="hz-one-third">
+          <a class="xref" href="Hazelcast.HazelcastOptions.NearCache.html#Hazelcast_HazelcastOptions_NearCache">NearCache</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the general Near Caching options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.NearCaching.CommonNearCacheOptions.html">CommonNearCacheOptions</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_HazelcastOptions_NearCaches" data-uid="Hazelcast.HazelcastOptions.NearCaches" class="hz-one-third">
+          <a class="xref" href="Hazelcast.HazelcastOptions.NearCaches.html#Hazelcast_HazelcastOptions_NearCaches">NearCaches</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the dictionary which contains the <a class="xref" href="Hazelcast.NearCaching.NearCacheOptions.html">NearCacheOptions</a> for each near cache.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Networking" data-uid="Hazelcast.HazelcastOptions.Networking" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Networking.html#Hazelcast_HazelcastOptions_Networking">Networking</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the networking options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Networking.NetworkingOptions.html">NetworkingOptions</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_HazelcastOptions_PatternMatcher" data-uid="Hazelcast.HazelcastOptions.PatternMatcher" class="hz-one-third">
+          <a class="xref" href="Hazelcast.HazelcastOptions.PatternMatcher.html#Hazelcast_HazelcastOptions_PatternMatcher">PatternMatcher</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the configuration pattern matcher.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Serialization" data-uid="Hazelcast.HazelcastOptions.Serialization" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Serialization.html#Hazelcast_HazelcastOptions_Serialization">Serialization</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the serialization options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Serialization.SerializationOptions.html">SerializationOptions</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_ServiceProvider" data-uid="Hazelcast.HazelcastOptions.ServiceProvider" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.ServiceProvider.html#Hazelcast_HazelcastOptions_ServiceProvider">ServiceProvider</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the service provider.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iserviceprovider">IServiceProvider</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_HazelcastOptions_Subscribers" data-uid="Hazelcast.HazelcastOptions.Subscribers" class="hz-one-third">
           <a class="xref" href="Hazelcast.HazelcastOptions.Subscribers.html#Hazelcast_HazelcastOptions_Subscribers">Subscribers</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the subscribers.</p>
+        <td class="markdown level1 summary"><p>Gets the list of subscribers.</p>
 </td>
       </tr>
     </tbody>
@@ -333,6 +313,13 @@
         <td class="markdown level1 summary"><p>Builds Hazelcast options.</p>
 </td>
       </tr>
+      <tr>
+        <td id="Hazelcast_HazelcastOptions_GetNearCacheOptions_System_String_" data-uid="Hazelcast.HazelcastOptions.GetNearCacheOptions(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.HazelcastOptions.GetNearCacheOptions.html#Hazelcast_HazelcastOptions_GetNearCacheOptions_System_String_">GetNearCacheOptions(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets options for a near cache.</p>
+</td>
+      </tr>
     </tbody>
   </table>
 </article>
@@ -341,7 +328,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

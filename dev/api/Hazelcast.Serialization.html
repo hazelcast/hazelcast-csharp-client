@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="Hazelcast.Serialization Namespace
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -100,13 +100,13 @@
           <td></td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.JavaClass.html">JavaClass</a></td>
-          <td><p>Class for serializing/deserializing Java Class types</p>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.GlobalSerializerOptions.html">GlobalSerializerOptions</a></td>
+          <td><p>Configures the global serializer.</p>
 </td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.JavaEnum.html">JavaEnum</a></td>
-          <td><p>Class for serializing/deserializing Java enums</p>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.JavaClass.html">JavaClass</a></td>
+          <td><p>Class for serializing/deserializing Java Class types</p>
 </td>
         </tr>
         <tr>
@@ -120,13 +120,9 @@
 </td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.SerializerHooks.html">SerializerHooks</a></td>
-          <td><p>Represents a collection of <a class="xref" href="Hazelcast.Serialization.ISerializerHook-1.html">ISerializerHook&lt;T&gt;</a> types.</p>
-</td>
-        </tr>
-        <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.SerializerOptions.html">SerializerOptions</a></td>
-          <td></td>
+          <td><p>Configures a serializer for a type.</p>
+</td>
         </tr>
       </tbody>
     </table>
@@ -134,16 +130,6 @@
   </h3>
     <table class="table table-bordered table-striped table-condensed">
       <tbody>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IBufferObjectDataInput.html">IBufferObjectDataInput</a></td>
-          <td><p>Extends <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.html">IObjectDataInput</a> with support for a buffer.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IBufferObjectDataOutput.html">IBufferObjectDataOutput</a></td>
-          <td><p>Extends <a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.html">IObjectDataOutput</a> with support for a buffer.</p>
-</td>
-        </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IByteArraySerializer-1.html">IByteArraySerializer&lt;T&gt;</a></td>
           <td><p>For sample usage custom serialization and other way of custom serialization
@@ -159,28 +145,8 @@ Note that read and write methods should be compatible</p>
 </td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IData.html">IData</a></td>
-          <td><p>Represents the basic unit of serialization.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IDataInput.html">IDataInput</a></td>
-          <td><p>Defines a source of data that can be read from, to deserialize an object.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IDataOutput.html">IDataOutput</a></td>
-          <td><p>Defines a destination of data that can be written to, to serialize an object.</p>
-</td>
-        </tr>
-        <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IDataSerializableFactory.html">IDataSerializableFactory</a></td>
           <td><p>Defines a factory that can create instances of classes implementing <a class="xref" href="Hazelcast.Serialization.IIdentifiedDataSerializable.html">IIdentifiedDataSerializable</a>.</p>
-</td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IDataSerializerHook.html">IDataSerializerHook</a></td>
-          <td><p>Provides an <a class="xref" href="Hazelcast.Serialization.IDataSerializableFactory.html">IDataSerializableFactory</a>.</p>
 </td>
         </tr>
         <tr>
@@ -196,22 +162,18 @@ own serialization.</p>
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IObjectDataInput.html">IObjectDataInput</a></td>
-          <td><p>Extends <a class="xref" href="Hazelcast.Serialization.IDataInput.html">IDataInput</a> with support for <a class="xref" href="Hazelcast.Serialization.IData.html">IData</a> and objects.</p>
+          <td><p>Provides decoding methods for primitive and array of primitive types reading from the serialized byte array.</p>
 </td>
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IObjectDataOutput.html">IObjectDataOutput</a></td>
-          <td><p>Extends <a class="xref" href="Hazelcast.Serialization.IDataOutput.html">IDataOutput</a> with support for <a class="xref" href="Hazelcast.Serialization.IData.html">IData</a> and objects.</p>
+          <td><p>Provides encoding methods for primitive and array of primitive types writing to the serialized byte array.</p>
 </td>
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IPortable.html">IPortable</a></td>
           <td><p>Portable provides an alternative serialization method.</p>
 </td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IPortableContext.html">IPortableContext</a></td>
-          <td></td>
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.IPortableFactory.html">IPortableFactory</a></td>
@@ -229,17 +191,8 @@ own serialization.</p>
 </td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.ISerializationService.html">ISerializationService</a></td>
-          <td></td>
-        </tr>
-        <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.ISerializer.html">ISerializer</a></td>
-          <td><p>Base interface of custom serialization interfaces
-<p>
-see
-<a class="xref" href="Hazelcast.Serialization.IByteArraySerializer-1.html">IByteArraySerializer&lt;T&gt;</a>
-see
-<a class="xref" href="Hazelcast.Serialization.IStreamSerializer-1.html">IStreamSerializer&lt;T&gt;</a></p>
+          <td><p>Defines a custom serializer.</p>
 </td>
         </tr>
         <tr>
@@ -276,7 +229,8 @@ to support per class version instead of a global serialization version.</p>
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

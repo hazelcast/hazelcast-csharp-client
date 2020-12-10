@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="Subscribers Property
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -88,7 +88,7 @@
 
 <a id="Hazelcast_HazelcastOptions_Subscribers_" data-uid="Hazelcast.HazelcastOptions.Subscribers*"></a>
 <h4 id="Hazelcast_HazelcastOptions_Subscribers" data-uid="Hazelcast.HazelcastOptions.Subscribers">Subscribers</h4>
-<div class="markdown level1 summary"><p>Gets the subscribers.</p>
+<div class="markdown level1 summary"><p>Gets the list of subscribers.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
@@ -105,13 +105,34 @@
     </tr>
   </tbody>
 </table>
+<h5 id="Hazelcast_HazelcastOptions_Subscribers_remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>Subscribers can be added to the configuration programmatically via the <a class="xref" href="Hazelcast.HazelcastOptions.AddSubscriber.html#Hazelcast_HazelcastOptions_AddSubscriber_Hazelcast_IHazelcastClientEventSubscriber_">AddSubscriber(IHazelcastClientEventSubscriber)</a>
+method or any of its overloads. A subscriber is a class that implements <a class="xref" href="Hazelcast.IHazelcastClientEventSubscriber.html">IHazelcastClientEventSubscriber</a> and subscribes
+the client to events as soon as the client is connected.</p>
+<p>In a configuration file, they are defined as an array of injected types, for instance:
+<pre><code>&quot;subscribers&quot;: [
+  {
+    &quot;typeName&quot;: &quot;My.Subscriber, My.Dll&quot;
+  },
+  {
+    &quot;typeName&quot;: &quot;My.OtherSubscriber, My.dll&quot;,
+    &quot;args&quot;:
+    {
+      &quot;foo&quot;: 33
+    }
+  }
+]</code></pre>
+where <code>typeName</code> is the name of the type, and <code>args</code> is an optional dictionary
+of arguments for the type constructor.</p>
+</div>
 </article>
           </div>
           
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

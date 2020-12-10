@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="SingletonServiceFactory&lt;TService&gt; Class
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -97,6 +97,7 @@
     <div class="level0"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></div>
     <div class="level1"><span class="xref">SingletonServiceFactory&lt;TService&gt;</span></div>
       <div class="level2"><a class="xref" href="Hazelcast.Serialization.FactoryOptions-1.html">FactoryOptions&lt;T&gt;</a></div>
+      <div class="level2"><a class="xref" href="Hazelcast.Serialization.GlobalSerializerOptions.html">GlobalSerializerOptions</a></div>
       <div class="level2"><a class="xref" href="Hazelcast.Serialization.SerializerOptions.html">SerializerOptions</a></div>
   </div>
   <div classs="implements">
@@ -141,6 +142,17 @@
   <div class="markdown level0 remarks"><p>The <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.html">SingletonServiceFactory&lt;TService&gt;</a> class supports defining how
 a service should be created, via its <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.Creator.html#Hazelcast_Core_SingletonServiceFactory_1_Creator">Creator</a> property, and then provides
 a unique instance of that service via its <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.Service.html#Hazelcast_Core_SingletonServiceFactory_1_Service">Service</a> property.</p>
+<p>In a configuration file, it supports a <code>typeName</code> property which is the
+name of the type, and a <code>args</code> property which is a dictionary of arguments for
+the type constructor. For instance:
+<pre><code>&quot;service&quot;:
+{
+  &quot;typeName&quot;: &quot;My.Service,My.dll&quot;,
+  &quot;args&quot;:
+  {
+    &quot;foo&quot;: 33
+  }
+}</code></pre></p>
 </div>
   </div>
   <h3 id="constructors">Constructors
@@ -172,6 +184,13 @@ a unique instance of that service via its <a class="xref" href="Hazelcast.Core.S
           <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.Creator.html#Hazelcast_Core_SingletonServiceFactory_1_Creator">Creator</a>
         </td>
         <td class="markdown level1 summary"><p>Gets or sets the service creator.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Core_SingletonServiceFactory_1_IsConfigured" data-uid="Hazelcast.Core.SingletonServiceFactory`1.IsConfigured" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.IsConfigured.html#Hazelcast_Core_SingletonServiceFactory_1_IsConfigured">IsConfigured</a>
+        </td>
+        <td class="markdown level1 summary"><p>Determines whether this service factory has been configured and can create a service.</p>
 </td>
       </tr>
       <tr>
@@ -222,7 +241,8 @@ a unique instance of that service via its <a class="xref" href="Hazelcast.Core.S
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

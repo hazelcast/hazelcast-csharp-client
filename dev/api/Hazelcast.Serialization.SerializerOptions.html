@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="SerializerOptions Class
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -86,7 +86,8 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.Serialization.html">Hazelcast.Serialization</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 summary"><p>Configures a serializer for a type.</p>
+</div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">public class SerializerOptions : SingletonServiceFactory&lt;ISerializer&gt;, IDisposable</code></pre>
@@ -105,6 +106,9 @@
     <h5>Inherited Members</h5>
     <div>
       <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.Creator.html#Hazelcast_Core_SingletonServiceFactory_1_Creator">SingletonServiceFactory&lt;ISerializer&gt;.Creator</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.IsConfigured.html#Hazelcast_Core_SingletonServiceFactory_1_IsConfigured">SingletonServiceFactory&lt;ISerializer&gt;.IsConfigured</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.Core.SingletonServiceFactory-1.ServiceProvider.html#Hazelcast_Core_SingletonServiceFactory_1_ServiceProvider">SingletonServiceFactory&lt;ISerializer&gt;.ServiceProvider</a>
@@ -155,19 +159,19 @@
         <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Serialization.SerializationOptions.html">SerializationOptions</a> class.</p>
 </td>
       </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_SerializerOptions__ctor_Hazelcast_Serialization_SerializerOptions_System_Boolean_" data-uid="Hazelcast.Serialization.SerializerOptions.#ctor(Hazelcast.Serialization.SerializerOptions,System.Boolean)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.SerializerOptions.-ctor.html#Hazelcast_Serialization_SerializerOptions__ctor_Hazelcast_Serialization_SerializerOptions_System_Boolean_">SerializerOptions(SerializerOptions, Boolean)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Serialization.SerializationOptions.html">SerializationOptions</a> class.</p>
+</td>
+      </tr>
     </tbody>
   </table>
   <h3 id="properties">Properties
   </h3>
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
-      <tr>
-        <td id="Hazelcast_Serialization_SerializerOptions_OverrideClr" data-uid="Hazelcast.Serialization.SerializerOptions.OverrideClr" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Serialization.SerializerOptions.OverrideClr.html#Hazelcast_Serialization_SerializerOptions_OverrideClr">OverrideClr</a>
-        </td>
-        <td class="markdown level1 summary"><p>Whether to fully override (and ignore) the native CLR serialization.</p>
-</td>
-      </tr>
       <tr>
         <td id="Hazelcast_Serialization_SerializerOptions_SerializedType" data-uid="Hazelcast.Serialization.SerializerOptions.SerializedType" class="hz-one-third">
           <a class="xref" href="Hazelcast.Serialization.SerializerOptions.SerializedType.html#Hazelcast_Serialization_SerializerOptions_SerializedType">SerializedType</a>
@@ -183,7 +187,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

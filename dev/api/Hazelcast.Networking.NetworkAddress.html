@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="NetworkAddress Class
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -90,12 +90,16 @@
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class NetworkAddress</code></pre>
+    <pre><code class="lang-csharp hljs">public class NetworkAddress : IEquatable&lt;NetworkAddress&gt;</code></pre>
   </div>
   <div class="inheritance">
     <h5>Inheritance</h5>
     <div class="level0"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></div>
     <div class="level1"><span class="xref">NetworkAddress</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a>&gt;</div>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
@@ -129,26 +133,6 @@
           <a class="xref" href="Hazelcast.Networking.NetworkAddress.-ctor.html#Hazelcast_Networking_NetworkAddress__ctor_System_String_System_Int32_">NetworkAddress(String, Int32)</a>
         </td>
         <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a> class with a hostname and a port.</p>
-</td>
-      </tr>
-    </tbody>
-  </table>
-  <h3 id="fields">Fields
-  </h3>
-  <table class="table table-bordered table-striped table-condensed">
-    <tbody>
-      <tr>
-        <td id="Hazelcast_Networking_NetworkAddress_DefaultPort" data-uid="Hazelcast.Networking.NetworkAddress.DefaultPort" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkAddress.DefaultPort.html">DefaultPort</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets the default Hazelcast server port.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_Networking_NetworkAddress_PortRange" data-uid="Hazelcast.Networking.NetworkAddress.PortRange" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkAddress.PortRange.html">PortRange</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets the port range to scan.</p>
 </td>
       </tr>
     </tbody>
@@ -200,13 +184,6 @@
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Networking_NetworkAddress_Lock" data-uid="Hazelcast.Networking.NetworkAddress.Lock" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkAddress.Lock.html#Hazelcast_Networking_NetworkAddress_Lock">Lock</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets the lock semaphore for this address.</p>
-</td>
-      </tr>
-      <tr>
         <td id="Hazelcast_Networking_NetworkAddress_Port" data-uid="Hazelcast.Networking.NetworkAddress.Port" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkAddress.Port.html#Hazelcast_Networking_NetworkAddress_Port">Port</a>
         </td>
@@ -220,6 +197,12 @@
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
+        <td id="Hazelcast_Networking_NetworkAddress_Equals_Hazelcast_Networking_NetworkAddress_" data-uid="Hazelcast.Networking.NetworkAddress.Equals(Hazelcast.Networking.NetworkAddress)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Networking.NetworkAddress.Equals.html#Hazelcast_Networking_NetworkAddress_Equals_Hazelcast_Networking_NetworkAddress_">Equals(NetworkAddress)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
         <td id="Hazelcast_Networking_NetworkAddress_Equals_System_Object_" data-uid="Hazelcast.Networking.NetworkAddress.Equals(System.Object)" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkAddress.Equals.html#Hazelcast_Networking_NetworkAddress_Equals_System_Object_">Equals(Object)</a>
         </td>
@@ -232,38 +215,10 @@
         <td class="markdown level1 summary"></td>
       </tr>
       <tr>
-        <td id="Hazelcast_Networking_NetworkAddress_GetIPAddressByName_System_String_" data-uid="Hazelcast.Networking.NetworkAddress.GetIPAddressByName(System.String)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkAddress.GetIPAddressByName.html#Hazelcast_Networking_NetworkAddress_GetIPAddressByName_System_String_">GetIPAddressByName(String)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets an IP address by name, via DNS.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_Networking_NetworkAddress_Parse_System_String_" data-uid="Hazelcast.Networking.NetworkAddress.Parse(System.String)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkAddress.Parse.html#Hazelcast_Networking_NetworkAddress_Parse_System_String_">Parse(String)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Parses a string into a <a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a>.</p>
-</td>
-      </tr>
-      <tr>
         <td id="Hazelcast_Networking_NetworkAddress_ToString" data-uid="Hazelcast.Networking.NetworkAddress.ToString" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkAddress.ToString.html#Hazelcast_Networking_NetworkAddress_ToString">ToString()</a>
         </td>
         <td class="markdown level1 summary"></td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_Networking_NetworkAddress_TryParse_System_String_Hazelcast_Networking_NetworkAddress__" data-uid="Hazelcast.Networking.NetworkAddress.TryParse(System.String,Hazelcast.Networking.NetworkAddress@)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkAddress.TryParse.html#Hazelcast_Networking_NetworkAddress_TryParse_System_String_Hazelcast_Networking_NetworkAddress__">TryParse(String, out NetworkAddress)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Tries to parse a string into a <a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a> instance.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_Networking_NetworkAddress_TryParse_System_String_System_Collections_Generic_IEnumerable_Hazelcast_Networking_NetworkAddress___" data-uid="Hazelcast.Networking.NetworkAddress.TryParse(System.String,System.Collections.Generic.IEnumerable{Hazelcast.Networking.NetworkAddress}@)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkAddress.TryParse.html#Hazelcast_Networking_NetworkAddress_TryParse_System_String_System_Collections_Generic_IEnumerable_Hazelcast_Networking_NetworkAddress___">TryParse(String, out IEnumerable&lt;NetworkAddress&gt;)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Tries to parse a string into all possible <a class="xref" href="Hazelcast.Networking.NetworkAddress.html">NetworkAddress</a> instance.</p>
-</td>
       </tr>
     </tbody>
   </table>
@@ -293,7 +248,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

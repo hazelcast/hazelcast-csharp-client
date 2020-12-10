@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="IHList&lt;T&gt; Interface
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -98,13 +98,13 @@
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddAsync__0_">IHCollection&lt;T&gt;.AddAsync(T)</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddRangeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_AddRangeAsync__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddRangeAsync&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.AddAll.html#Hazelcast_DistributedObjects_IHCollection_1_AddAll__1_System_Collections_Generic_ICollection___0__">IHCollection&lt;T&gt;.AddAll&lt;TItem&gt;(ICollection&lt;TItem&gt;)</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetAllAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetAllAsync">IHCollection&lt;T&gt;.GetAllAsync()</a>
     </div>
     <div>
-      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.CountAsync.html#Hazelcast_DistributedObjects_IHCollection_1_CountAsync">IHCollection&lt;T&gt;.CountAsync()</a>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.GetSizeAsync.html#Hazelcast_DistributedObjects_IHCollection_1_GetSizeAsync">IHCollection&lt;T&gt;.GetSizeAsync()</a>
     </div>
     <div>
       <a class="xref" href="Hazelcast.DistributedObjects.IHCollection-1.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHCollection_1_IsEmptyAsync">IHCollection&lt;T&gt;.IsEmptyAsync()</a>
@@ -174,18 +174,21 @@ will not scale by adding more members to the cluster.
   <table class="table table-bordered table-striped table-condensed">
     <tbody>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHList_1_GetAndRemoveAtAsync_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHList`1.GetAndRemoveAtAsync(System.Int32)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetAndRemoveAtAsync.html#Hazelcast_DistributedObjects_IHList_1_GetAndRemoveAtAsync_System_Int32_">GetAndRemoveAtAsync(Int32)</a>
+        <td id="Hazelcast_DistributedObjects_IHList_1_AddAllAsync__1_System_Int32_System_Collections_Generic_ICollection___0__" data-uid="Hazelcast.DistributedObjects.IHList`1.AddAllAsync``1(System.Int32,System.Collections.Generic.ICollection{``0})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.AddAllAsync.html#Hazelcast_DistributedObjects_IHList_1_AddAllAsync__1_System_Int32_System_Collections_Generic_ICollection___0__">AddAllAsync&lt;TItem&gt;(Int32, ICollection&lt;TItem&gt;)</a>
         </td>
-        <td class="markdown level1 summary"><p>Removes the first occurrence of the specified element from this list, if it is present.
-If this list does not contain the element, it is unchanged.</p>
+        <td class="markdown level1 summary"><p>Inserts all of the elements in the specified collection into this
+list at the specified position.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHList_1_GetAndSetAsync_System_Int32__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.GetAndSetAsync(System.Int32,`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetAndSetAsync.html#Hazelcast_DistributedObjects_IHList_1_GetAndSetAsync_System_Int32__0_">GetAndSetAsync(Int32, T)</a>
+        <td id="Hazelcast_DistributedObjects_IHList_1_AddAsync_System_Int32__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.AddAsync(System.Int32,`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.AddAsync.html#Hazelcast_DistributedObjects_IHList_1_AddAsync_System_Int32__0_">AddAsync(Int32, T)</a>
         </td>
-        <td class="markdown level1 summary"><p>Replaces the element at the specified position in this list with the specified element.</p>
+        <td class="markdown level1 summary"><p>Inserts the specified element at the specified position in this list.
+Shifts the element currently at that position
+(if any) and any subsequent elements to the right (adds one to their
+indices).</p>
 </td>
       </tr>
       <tr>
@@ -196,8 +199,8 @@ If this list does not contain the element, it is unchanged.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHList_1_GetRangeAsync_System_Int32_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHList`1.GetRangeAsync(System.Int32,System.Int32)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetRangeAsync.html#Hazelcast_DistributedObjects_IHList_1_GetRangeAsync_System_Int32_System_Int32_">GetRangeAsync(Int32, Int32)</a>
+        <td id="Hazelcast_DistributedObjects_IHList_1_GetSublistAsync_System_Int32_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHList`1.GetSublistAsync(System.Int32,System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.GetSublistAsync.html#Hazelcast_DistributedObjects_IHList_1_GetSublistAsync_System_Int32_System_Int32_">GetSublistAsync(Int32, Int32)</a>
         </td>
         <td class="markdown level1 summary"><p>Returns a view of the portion of this list between the specified
 <code>fromIndex</code>, inclusive, and <code>toIndex</code>, exclusive.</p>
@@ -211,29 +214,26 @@ If this list does not contain the element, it is unchanged.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_DistributedObjects_IHList_1_InsertAsync_System_Int32__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.InsertAsync(System.Int32,`0)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.InsertAsync.html#Hazelcast_DistributedObjects_IHList_1_InsertAsync_System_Int32__0_">InsertAsync(Int32, T)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Inserts the specified element at the specified position in this list.
-Shifts the element currently at that position
-(if any) and any subsequent elements to the right (adds one to their
-indices).</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_DistributedObjects_IHList_1_InsertRangeAsync__1_System_Int32_System_Collections_Generic_ICollection___0__" data-uid="Hazelcast.DistributedObjects.IHList`1.InsertRangeAsync``1(System.Int32,System.Collections.Generic.ICollection{``0})" class="hz-one-third">
-          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.InsertRangeAsync.html#Hazelcast_DistributedObjects_IHList_1_InsertRangeAsync__1_System_Int32_System_Collections_Generic_ICollection___0__">InsertRangeAsync&lt;TItem&gt;(Int32, ICollection&lt;TItem&gt;)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Inserts all of the elements in the specified collection into this
-list at the specified position.</p>
-</td>
-      </tr>
-      <tr>
         <td id="Hazelcast_DistributedObjects_IHList_1_LastIndexOfAsync__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.LastIndexOfAsync(`0)" class="hz-one-third">
           <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.LastIndexOfAsync.html#Hazelcast_DistributedObjects_IHList_1_LastIndexOfAsync__0_">LastIndexOfAsync(T)</a>
         </td>
         <td class="markdown level1 summary"><p>Returns the index of the last occurrence of the specified element
 in this list, or -1 if this list does not contain the element.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHList_1_RemoveAsync_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHList`1.RemoveAsync(System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.RemoveAsync.html#Hazelcast_DistributedObjects_IHList_1_RemoveAsync_System_Int32_">RemoveAsync(Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes the first occurrence of the specified element from this list, if it is present.
+If this list does not contain the element, it is unchanged.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHList_1_Set_System_Int32__0_" data-uid="Hazelcast.DistributedObjects.IHList`1.Set(System.Int32,`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.Set.html#Hazelcast_DistributedObjects_IHList_1_Set_System_Int32__0_">Set(Int32, T)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Replaces the element at the specified position in this list with the specified element.</p>
 </td>
       </tr>
     </tbody>
@@ -244,7 +244,8 @@ in this list, or -1 if this list does not contain the element.</p>
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

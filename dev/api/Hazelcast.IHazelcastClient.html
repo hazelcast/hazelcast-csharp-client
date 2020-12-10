@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="IHazelcastClient Interface
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -184,13 +184,6 @@ await client.DisposeAsync();
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_IHazelcastClient_GetDictionaryAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetDictionaryAsync``2(System.String)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.IHazelcastClient.GetDictionaryAsync.html#Hazelcast_IHazelcastClient_GetDictionaryAsync__2_System_String_">GetDictionaryAsync&lt;TKey, TValue&gt;(String)</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHDictionary-2.html">IHDictionary&lt;TKey, TValue&gt;</a> distributed object.</p>
-</td>
-      </tr>
-      <tr>
         <td id="Hazelcast_IHazelcastClient_GetListAsync__1_System_String_" data-uid="Hazelcast.IHazelcastClient.GetListAsync``1(System.String)" class="hz-one-third">
           <a class="xref" href="Hazelcast.IHazelcastClient.GetListAsync.html#Hazelcast_IHazelcastClient_GetListAsync__1_System_String_">GetListAsync&lt;T&gt;(String)</a>
         </td>
@@ -198,10 +191,17 @@ await client.DisposeAsync();
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_IHazelcastClient_GetMultiDictionaryAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetMultiDictionaryAsync``2(System.String)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.IHazelcastClient.GetMultiDictionaryAsync.html#Hazelcast_IHazelcastClient_GetMultiDictionaryAsync__2_System_String_">GetMultiDictionaryAsync&lt;TKey, TValue&gt;(String)</a>
+        <td id="Hazelcast_IHazelcastClient_GetMapAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetMapAsync``2(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetMapAsync.html#Hazelcast_IHazelcastClient_GetMapAsync__2_System_String_">GetMapAsync&lt;TKey, TValue&gt;(String)</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHMultiDictionary-2.html">IHMultiDictionary&lt;TKey, TValue&gt;</a> distributed object.</p>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetMultiMapAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetMultiMapAsync``2(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetMultiMapAsync.html#Hazelcast_IHazelcastClient_GetMultiMapAsync__2_System_String_">GetMultiMapAsync&lt;TKey, TValue&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHMultiMap-2.html">IHMultiMap&lt;TKey, TValue&gt;</a> distributed object.</p>
 </td>
       </tr>
       <tr>
@@ -212,10 +212,10 @@ await client.DisposeAsync();
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_IHazelcastClient_GetReplicatedDictionaryAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetReplicatedDictionaryAsync``2(System.String)" class="hz-one-third">
-          <a class="xref" href="Hazelcast.IHazelcastClient.GetReplicatedDictionaryAsync.html#Hazelcast_IHazelcastClient_GetReplicatedDictionaryAsync__2_System_String_">GetReplicatedDictionaryAsync&lt;TKey, TValue&gt;(String)</a>
+        <td id="Hazelcast_IHazelcastClient_GetReplicatedMapAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetReplicatedMapAsync``2(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetReplicatedMapAsync.html#Hazelcast_IHazelcastClient_GetReplicatedMapAsync__2_System_String_">GetReplicatedMapAsync&lt;TKey, TValue&gt;(String)</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedDictionary-2.html">IHReplicatedDictionary&lt;TKey, TValue&gt;</a> distributed object.</p>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedMap-2.html">IHReplicatedMap&lt;TKey, TValue&gt;</a> distributed object.</p>
 </td>
       </tr>
       <tr>
@@ -261,7 +261,8 @@ await client.DisposeAsync();
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

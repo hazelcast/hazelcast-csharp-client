@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="DistributedObjectLifecycleEventArgs Class
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -86,16 +86,18 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.Events.html">Hazelcast.Events</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"><p>Represents event data for a cluster object lifecycle event.</p>
+  <div class="markdown level0 summary"><p>Provides a base class for cluster object lifecycle events data.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class DistributedObjectLifecycleEventArgs</code></pre>
+    <pre><code class="lang-csharp hljs">public abstract class DistributedObjectLifecycleEventArgs</code></pre>
   </div>
   <div class="inheritance">
     <h5>Inheritance</h5>
     <div class="level0"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></div>
     <div class="level1"><span class="xref">DistributedObjectLifecycleEventArgs</span></div>
+      <div class="level2"><a class="xref" href="Hazelcast.Events.DistributedObjectCreatedEventArgs.html">DistributedObjectCreatedEventArgs</a></div>
+      <div class="level2"><a class="xref" href="Hazelcast.Events.DistributedObjectDestroyedEventArgs.html">DistributedObjectDestroyedEventArgs</a></div>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
@@ -168,7 +170,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

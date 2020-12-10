@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="NetworkingOptions Class
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -143,21 +143,21 @@
         <td id="Hazelcast_Networking_NetworkingOptions_Addresses" data-uid="Hazelcast.Networking.NetworkingOptions.Addresses" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkingOptions.Addresses.html#Hazelcast_Networking_NetworkingOptions_Addresses">Addresses</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the list initial addresses.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the list of initial addresses.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_Networking_NetworkingOptions_Cloud" data-uid="Hazelcast.Networking.NetworkingOptions.Cloud" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkingOptions.Cloud.html#Hazelcast_Networking_NetworkingOptions_Cloud">Cloud</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the cloud options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Networking.CloudOptions.html">CloudOptions</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_Networking_NetworkingOptions_ConnectionRetry" data-uid="Hazelcast.Networking.NetworkingOptions.ConnectionRetry" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkingOptions.ConnectionRetry.html#Hazelcast_Networking_NetworkingOptions_ConnectionRetry">ConnectionRetry</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the connection retry options.</p>
+        <td class="markdown level1 summary"><p>Gets the connection <a class="xref" href="Hazelcast.Core.RetryOptions.html">RetryOptions</a>.</p>
 </td>
       </tr>
       <tr>
@@ -171,14 +171,14 @@
         <td id="Hazelcast_Networking_NetworkingOptions_ReconnectMode" data-uid="Hazelcast.Networking.NetworkingOptions.ReconnectMode" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkingOptions.ReconnectMode.html#Hazelcast_Networking_NetworkingOptions_ReconnectMode">ReconnectMode</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets or sets the reconnection mode in case the client is disconnected.</p>
+        <td class="markdown level1 summary"><p>Gets or sets the <a class="xref" href="Hazelcast.Networking.NetworkingOptions.ReconnectMode.html#Hazelcast_Networking_NetworkingOptions_ReconnectMode">ReconnectMode</a> in case the client is disconnected.</p>
 </td>
       </tr>
       <tr>
-        <td id="Hazelcast_Networking_NetworkingOptions_RetryOnTargetDisconnected" data-uid="Hazelcast.Networking.NetworkingOptions.RetryOnTargetDisconnected" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkingOptions.RetryOnTargetDisconnected.html#Hazelcast_Networking_NetworkingOptions_RetryOnTargetDisconnected">RetryOnTargetDisconnected</a>
+        <td id="Hazelcast_Networking_NetworkingOptions_RedoOperations" data-uid="Hazelcast.Networking.NetworkingOptions.RedoOperations" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Networking.NetworkingOptions.RedoOperations.html#Hazelcast_Networking_NetworkingOptions_RedoOperations">RedoOperations</a>
         </td>
-        <td class="markdown level1 summary"><p>Whether to redo operations.</p>
+        <td class="markdown level1 summary"><p>Whether to retry operations.</p>
 </td>
       </tr>
       <tr>
@@ -199,22 +199,14 @@
         <td id="Hazelcast_Networking_NetworkingOptions_Socket" data-uid="Hazelcast.Networking.NetworkingOptions.Socket" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkingOptions.Socket.html#Hazelcast_Networking_NetworkingOptions_Socket">Socket</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the socket options.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Networking.SocketOptions.html">SocketOptions</a>.</p>
 </td>
       </tr>
       <tr>
         <td id="Hazelcast_Networking_NetworkingOptions_Ssl" data-uid="Hazelcast.Networking.NetworkingOptions.Ssl" class="hz-one-third">
           <a class="xref" href="Hazelcast.Networking.NetworkingOptions.Ssl.html#Hazelcast_Networking_NetworkingOptions_Ssl">Ssl</a>
         </td>
-        <td class="markdown level1 summary"><p>Gets the SSL options.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="Hazelcast_Networking_NetworkingOptions_WaitForClientMilliseconds" data-uid="Hazelcast.Networking.NetworkingOptions.WaitForClientMilliseconds" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Networking.NetworkingOptions.WaitForClientMilliseconds.html#Hazelcast_Networking_NetworkingOptions_WaitForClientMilliseconds">WaitForClientMilliseconds</a>
-        </td>
-        <td class="markdown level1 summary"><p>Gets or sets the delay to pause for when looking for a client
-to handle cluster view events and no client is available.</p>
+        <td class="markdown level1 summary"><p>Gets the <a class="xref" href="Hazelcast.Networking.SslOptions.html">SslOptions</a>.</p>
 </td>
       </tr>
     </tbody>
@@ -225,7 +217,8 @@ to handle cluster view events and no client is available.</p>
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

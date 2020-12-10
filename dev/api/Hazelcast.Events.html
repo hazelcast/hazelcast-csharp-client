@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="Hazelcast.Events Namespace
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -91,17 +91,23 @@
     <table class="table table-bordered table-striped table-condensed">
       <tbody>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.ClientLifecycleEventArgs.html">ClientLifecycleEventArgs</a></td>
-          <td></td>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.ConnectionClosedEventArgs.html">ConnectionClosedEventArgs</a></td>
+          <td><p>Represents event data for the connection removed event.</p>
+</td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.ConnectionLifecycleEventArgs.html">ConnectionLifecycleEventArgs</a></td>
-          <td><p>Represents event data for connection lifecycle events.</p>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.DistributedObjectCreatedEventArgs.html">DistributedObjectCreatedEventArgs</a></td>
+          <td><p>Represents event data for a cluster object created event.</p>
+</td>
+        </tr>
+        <tr>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.DistributedObjectDestroyedEventArgs.html">DistributedObjectDestroyedEventArgs</a></td>
+          <td><p>Represents event data for a cluster object destroyed event.</p>
 </td>
         </tr>
         <tr>
           <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.DistributedObjectLifecycleEventArgs.html">DistributedObjectLifecycleEventArgs</a></td>
-          <td><p>Represents event data for a cluster object lifecycle event.</p>
+          <td><p>Provides a base class for cluster object lifecycle events data.</p>
 </td>
         </tr>
         <tr>
@@ -110,30 +116,12 @@
 </td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.MemberLifecycleEventArgs.html">MemberLifecycleEventArgs</a></td>
-          <td></td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.PartitionLostEventArgs.html">PartitionLostEventArgs</a></td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-    <h3 id="enums">Enums
-  </h3>
-    <table class="table table-bordered table-striped table-condensed">
-      <tbody>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.ClientLifecycleState.html">ClientLifecycleState</a></td>
-          <td></td>
-        </tr>
-        <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.DistributedObjectLifecycleEventType.html">DistributedObjectLifecycleEventType</a></td>
-          <td><p>Defines the types of object lifecycle events.</p>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.MembersUpdatedEventArgs.html">MembersUpdatedEventArgs</a></td>
+          <td><p>Represents event data for the members updated event.</p>
 </td>
         </tr>
         <tr>
-          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.MemberLifecycleEventType.html">MemberLifecycleEventType</a></td>
+          <td class="hz-one-third"><a class="xref" href="Hazelcast.Events.PartitionLostEventArgs.html">PartitionLostEventArgs</a></td>
           <td></td>
         </tr>
       </tbody>
@@ -144,7 +132,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

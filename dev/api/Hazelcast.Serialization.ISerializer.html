@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="ISerializer Interface
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -86,16 +86,17 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.Serialization.html">Hazelcast.Serialization</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"><p>Base interface of custom serialization interfaces
-<p>
-see
-<a class="xref" href="Hazelcast.Serialization.IByteArraySerializer-1.html">IByteArraySerializer&lt;T&gt;</a>
-see
-<a class="xref" href="Hazelcast.Serialization.IStreamSerializer-1.html">IStreamSerializer&lt;T&gt;</a></p>
+  <div class="markdown level0 summary"><p>Defines a custom serializer.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface ISerializer</code></pre>
+    <pre><code class="lang-csharp hljs">public interface ISerializer : IDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.idisposable.dispose#System_IDisposable_Dispose">IDisposable.Dispose()</a>
+    </div>
   </div>
   </div>
   <h3 id="properties">Properties
@@ -106,19 +107,7 @@ see
         <td id="Hazelcast_Serialization_ISerializer_TypeId" data-uid="Hazelcast.Serialization.ISerializer.TypeId" class="hz-one-third">
           <a class="xref" href="Hazelcast.Serialization.ISerializer.TypeId.html#Hazelcast_Serialization_ISerializer_TypeId">TypeId</a>
         </td>
-        <td class="markdown level1 summary"></td>
-      </tr>
-    </tbody>
-  </table>
-  <h3 id="methods">Methods
-  </h3>
-  <table class="table table-bordered table-striped table-condensed">
-    <tbody>
-      <tr>
-        <td id="Hazelcast_Serialization_ISerializer_Destroy" data-uid="Hazelcast.Serialization.ISerializer.Destroy" class="hz-one-third">
-          <a class="xref" href="Hazelcast.Serialization.ISerializer.Destroy.html#Hazelcast_Serialization_ISerializer_Destroy">Destroy()</a>
-        </td>
-        <td class="markdown level1 summary"><p>Called when instance is shutting down.</p>
+        <td class="markdown level1 summary"><p>Gets the identifier of the serialized type.</p>
 </td>
       </tr>
     </tbody>
@@ -129,7 +118,8 @@ see
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

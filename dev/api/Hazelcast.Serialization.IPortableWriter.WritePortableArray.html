@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="WritePortableArray Method
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -87,13 +87,14 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="Hazelcast_Serialization_IPortableWriter_WritePortableArray_" data-uid="Hazelcast.Serialization.IPortableWriter.WritePortableArray*"></a>
-<h4 id="Hazelcast_Serialization_IPortableWriter_WritePortableArray_System_String_Hazelcast_Serialization_IPortable___" data-uid="Hazelcast.Serialization.IPortableWriter.WritePortableArray(System.String,Hazelcast.Serialization.IPortable[])">WritePortableArray(String, IPortable[])</h4>
+<h4 id="Hazelcast_Serialization_IPortableWriter_WritePortableArray__1_System_String___0___" data-uid="Hazelcast.Serialization.IPortableWriter.WritePortableArray``1(System.String,``0[])">WritePortableArray&lt;TPortable&gt;(String, TPortable[])</h4>
 <div class="markdown level1 summary"><p>Writes a an array of Portables.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">void WritePortableArray(string fieldName, IPortable[] portables)</code></pre>
+  <pre><code class="lang-csharp hljs">void WritePortableArray&lt;TPortable&gt;(string fieldName, TPortable[] portables)
+    where TPortable : IPortable</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -105,14 +106,23 @@
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.Serialization.IPortable.html">IPortable</a>[]</td>
+      <td class="hz-one-fourth">TPortable[]</td>
       <td><span class="parametername">portables</span></td>
       <td><p>portable array to be written</p>
 </td>
     </tr>
   </tbody>
 </table>
-<h5 id="Hazelcast_Serialization_IPortableWriter_WritePortableArray_System_String_Hazelcast_Serialization_IPortable____remarks">Remarks</h5>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TPortable</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_Serialization_IPortableWriter_WritePortableArray__1_System_String___0____remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>Writes a an array of Portables.</p>
 </div>
 <h5 class="exceptions">Exceptions</h5>
@@ -131,7 +141,8 @@
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

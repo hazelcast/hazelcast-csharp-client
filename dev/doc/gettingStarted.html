@@ -8,7 +8,7 @@
     <title>Getting Started | Hazelcast .NET Documentation </title>
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="Getting Started | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -60,11 +60,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -94,13 +94,13 @@ var client = await HazelcastClientFactory.StartNewClientAsync(options);
 // ...
 </code></pre><p>Refer to the <a href="configuration.html">Configuration</a> page for details on the various ways to build an <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> instance, including handling command-line parameters, and to the <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> reference for a list of all the configurable elements.</p>
 <h2 id="distributed-objects">Distributed Objects</h2>
-<p>The client can be used to obtain <em>distributed objects</em> that are managed by the cluster. For instance, the cluster can manage <a class="xref" href="../api/Hazelcast.DistributedObjects.IHDictionary-2.html">IHDictionary&lt;TKey, TValue&gt;</a> objects, which are an asynchronous equivalent of .NET <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary&lt;TKey,TValue&gt;</a>. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.</p>
+<p>The client can be used to obtain <em>distributed objects</em> that are managed by the cluster. For instance, the cluster can manage @Hazelcast.DistributedObjects.IHDictionary`2 objects, which are an asynchronous equivalent of .NET <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary&lt;TKey,TValue&gt;</a>. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.</p>
 <p>For example:</p>
 <pre><code class="lang-csharp">var dict = await client.GetDictionaryAsync&lt;string, string&gt;(&quot;dict-name&quot;);
 await dict.AddOrUpdateAsync(&quot;key&quot;, &quot;value&quot;);
 var value = await dict.GetAsync(&quot;key&quot;);
 await dict.DisposeAsync();
-</code></pre><p>The <a class="xref" href="../api/Hazelcast.IHazelcastClient.GetDictionaryAsync.html">GetDictionaryAsync</a> method returns the existing object with the specified name, or creates a new object with that name on the cluster. That object will continue to live on the cluster after the <a class="xref" href="../api/Hazelcast.DistributedObjects.IHDictionary-2.html">IHDictionary&lt;TKey, TValue&gt;</a> has been disposed. In order to remove the object from the cluster, one must destroy the object.</p>
+</code></pre><p>The @Hazelcast.IHazelcastClient.GetDictionaryAsync* method returns the existing object with the specified name, or creates a new object with that name on the cluster. That object will continue to live on the cluster after the @Hazelcast.DistributedObjects.IHDictionary`2 has been disposed. In order to remove the object from the cluster, one must destroy the object.</p>
 <p>For example:</p>
 <pre><code class="lang-csharp">var dict = await client.GetDictionaryAsync&lt;string, string&gt;(&quot;dict-name&quot;);
 await dict.DestroyAsync();
@@ -112,10 +112,17 @@ await client.DestroyAsync(dict);
 </code></pre><h2 id="transactions">Transactions</h2>
 <p>The client is responsible for creating transactions.</p>
 <p>For example:</p>
-<pre><code class="lang-csharp">var transactionContext = await client.BeginTransactionAsync();
+<pre><code class="lang-csharp">await using (var transaction = await client.BeginTransactionAsync())
+{
+    // ... do transaction work ...
+    transaction.Complete();
+}
+</code></pre><p>Here, the transaction will commit when <code>transaction</code> is disposed, because it has been completed. Had it not been completed, it would have been rolled back. Note that the explicit pattern is also supported, although less recommended:</p>
+<pre><code class="lang-csharp">var transaction = await client.BeginTransactionAsync();
 // ... do transaction work ...
-await transactionContext.CommitAsync();
-await transactionContext.DisposeAsync();
+await transactionContext.CommitAsync();  // commmit, or...
+await transactionContext.DisposeAsync(); // roll back
+await transaction.DisposeAsync();
 </code></pre><p>Refer to the <a href="transactions.md">Transactions</a> page for details.</p>
 <h2 id="events">Events</h2>
 <p>The client exposes client-level events.</p>
@@ -153,7 +160,8 @@ var success = await dict.UnsubscribeAsync(subscriptionId);
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>

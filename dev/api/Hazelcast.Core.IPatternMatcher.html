@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="IPatternMatcher Interface
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.55.0.0">
+    <meta name="generator" content="docfx 2.56.6.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -62,11 +62,11 @@
       <div class="container body-content">
         
         <div id="search-results">
-          <div class="search-list"></div>
+          <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination"></ul>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -86,27 +86,16 @@
   </h1>
   <h6>Namespace: <a class="xref" href="Hazelcast.Core.html">Hazelcast.Core</a></h6>
   <h6>Assembly: Hazelcast.Net.dll</h6>
-  <div class="markdown level0 summary"><p>The IConfigPatternMatcher provides a strategy to match an item name to a configuration pattern.</p>
+  <div class="markdown level0 summary"><p>Provides a strategy to match an item name to a configuration pattern.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">public interface IPatternMatcher</code></pre>
   </div>
   <h5 id="Hazelcast_Core_IPatternMatcher_remarks"><strong>Remarks</strong></h5>
-  <div class="markdown level0 remarks"><p>The IConfigPatternMatcher provides a strategy to match an item name to a configuration pattern.
-<p>
-It is used on each Config.getXXXConfig() and ClientConfig.getXXXConfig() call for map, list, queue, set, executor, topic,
-semaphore etc., so for example <pre><code>itemName</code></pre> is the name of a map and <pre><code>configPatterns</code></pre> are all defined
-map configurations.
-<p>
-If no configuration is found by the matcher it should return <tt>null</tt>. In this case the default config will be used
-for this item then. If multiple configurations are found by the matcher a
-<see cref="!:InvalidConfigurationException"></see>
-should be thrown.
-<p>
-Since Hazelcast 3.5 the default matcher is
-<span class="xref">Hazelcast.Core.MatchingPointPatternMatcher</span>
-.</p>
+  <div class="markdown level0 remarks"><p>A pattern matcher is used to retrieve the configuration of a particular item, based
+upon its name. If no configuration matches, the pattern matcher returns <code>null</code>. If
+multiple configurations match, the pattern matcher throws a <a class="xref" href="Hazelcast.Configuration.ConfigurationException.html">ConfigurationException</a>.</p>
 </div>
   </div>
   <h3 id="methods">Methods
@@ -117,7 +106,7 @@ Since Hazelcast 3.5 the default matcher is
         <td id="Hazelcast_Core_IPatternMatcher_Matches_System_Collections_Generic_IEnumerable_System_String__System_String_" data-uid="Hazelcast.Core.IPatternMatcher.Matches(System.Collections.Generic.IEnumerable{System.String},System.String)" class="hz-one-third">
           <a class="xref" href="Hazelcast.Core.IPatternMatcher.Matches.html#Hazelcast_Core_IPatternMatcher_Matches_System_Collections_Generic_IEnumerable_System_String__System_String_">Matches(IEnumerable&lt;String&gt;, String)</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns the best match for an item name out of a list of configuration patterns.</p>
+        <td class="markdown level1 summary"><p>Gets the best match for an item name out of a list of configuration patterns.</p>
 </td>
       </tr>
     </tbody>
@@ -128,7 +117,8 @@ Since Hazelcast 3.5 the default matcher is
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
-              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+                <h5>In This Article</h5>
+                <div></div>
               </nav>
             </div>
           </div>
