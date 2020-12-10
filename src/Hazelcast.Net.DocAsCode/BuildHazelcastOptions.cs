@@ -154,8 +154,11 @@ namespace Hazelcast.Net.DocAsCode
                     .Replace("\r", "")
                     .Replace("\n", " ");
 
-                if (!string.IsNullOrWhiteSpace(item.Remarks))
-                    summary += "<br>" + FormatRemarks(item.Remarks);
+
+                if (string.IsNullOrWhiteSpace(item.Remarks))
+                    summary = $"<p>{summary}</p>";
+                else
+                    summary = $"<p style=\"margin-bottom: 4px;\">{summary}</p>" + FormatRemarks(item.Remarks);
 
                 //if (item.Examples != null)
                 //{

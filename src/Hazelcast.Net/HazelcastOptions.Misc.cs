@@ -29,9 +29,9 @@ namespace Hazelcast
         // as it would make little sense for our full-async code
 
         /// <summary>
-        /// Gets the service factory for <see cref="ILoggerFactory"/>.
+        /// Gets the <see cref="SingletonServiceFactory{T}"/> for <see cref="ILoggerFactory"/>.
         /// </summary>
-        /// <returns>The service factory for <see cref="ILoggerFactory"/>.</returns>
+        /// <returns>The <see cref="SingletonServiceFactory{T}"/> for <see cref="ILoggerFactory"/>.</returns>
         /// <remarks>
         /// <para>The only option available for logging is the <see cref="ILoggerFactory"/> creator, which can only
         /// be set programmatically. All other logging options (level, etc.) are configured via the
@@ -43,13 +43,13 @@ namespace Hazelcast
         public SingletonServiceFactory<ILoggerFactory> LoggerFactory { get; } = new SingletonServiceFactory<ILoggerFactory>();
 
         /// <summary>
-        /// Gets the serialization options.
+        /// Gets the <see cref="SerializationOptions"/>.
         /// </summary>
         /// <returns>The serialization options.</returns>
         public SerializationOptions Serialization { get; } = new SerializationOptions();
 
         /// <summary>
-        /// Gets the common Near Cache options.
+        /// Gets the <see cref="CommonNearCacheOptions"/>.
         /// </summary>
         /// <returns>The common Near Cache options.</returns>
         public CommonNearCacheOptions NearCache { get; } = new CommonNearCacheOptions();
@@ -57,15 +57,18 @@ namespace Hazelcast
         /// <summary>
         /// Gets or sets the configuration pattern matcher.
         /// </summary>
+        /// <remarks>
+        /// <para>This can only be set programmatically.</para>
+        /// </remarks>
         public IPatternMatcher PatternMatcher { get; set; } = new MatchingPointPatternMatcher();
 
         /// <summary>
-        /// Gets options for Near Caches.
+        /// Gets the dictionary which contains the <see cref="NearCacheOptions"/> for each near cache.
         /// </summary>
         public IDictionary<string, NearCacheOptions> NearCaches { get; } = new Dictionary<string, NearCacheOptions>();
 
         /// <summary>
-        /// Gets options for a Near Cache.
+        /// Gets options for a near cache.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>Options for the Near Cache matching the specified <paramref name="name"/>.</returns>

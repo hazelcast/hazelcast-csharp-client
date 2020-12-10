@@ -25,6 +25,9 @@ using Hazelcast.Networking;
 
 namespace Hazelcast
 {
+    // beware! the IClusterOptions is internal, and therefore its /// documentation
+    // is NOT inherited = do NOT use <inheritdoc /> here but DO duplicate the docs
+
     public partial class HazelcastOptions : IClusterOptions // ClusterName, Subscribers
     {
         private string _clientNamePrefix;
@@ -41,10 +44,20 @@ namespace Hazelcast
         /// <returns>The default client name prefix, which is <c>"hz.client_"</c>.</returns>
         internal const string DefaultClientNamePrefix = "hz.client_";
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets or sets the name of the cluster.
+        /// </summary>
+        /// <remarks>
+        /// <para>This must match the name of the cluster that the client is going to connect to.</para>
+        /// </remarks>
         public string ClusterName { get; set; } = DefaultClusterName;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets or sets the name of the client.
+        /// </summary>
+        /// <remarks>
+        /// <para>This is optional. If no client name is specified, a name will be generated.</para>
+        /// </remarks>
         public string ClientName { get; set; } // null by default
 
         /// <inheritdoc />
@@ -57,13 +70,37 @@ namespace Hazelcast
         /// <inheritdoc />
         int IClusterOptions.WaitForConnectionMilliseconds { get; set; } = 1_000;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the set of client labels.
+        /// </summary>
         public ISet<string> Labels { get; } = new HashSet<string>();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the <see cref="AuthenticationOptions"/>.
+        /// </summary>
         public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the <see cref="SingletonServiceFactory{T}"/> for the <see cref="ILoadBalancer"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>When set in the configuration file, it is defined as an injected type, for instance:
+        /// <code>
+        /// "loadBalancer":
+        /// {
+        ///   "typeName": "My.LoadBalancer",
+        ///   "args":
+        ///   {
+        ///     "foo": 42
+        ///   }
+        /// }
+        /// </code>
+        /// where <c>typeName</c> is the name of the type, and <c>args</c> is an optional dictionary
+        /// of arguments for the type constructor.</para>
+        /// <para>In addition to custom type names, <c>typeName</c> can be any of the
+        /// predefined <c>Random</c>, <c>RoundRobin</c> or <c>Static</c> values.</para>
+        /// <para>The default load balancer is the <see cref="RoundRobinLoadBalancer"/>.</para>
+        /// </remarks>
         [BinderIgnore]
         public SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
             = new SingletonServiceFactory<ILoadBalancer> { Creator = () => new RoundRobinLoadBalancer() };
@@ -100,16 +137,24 @@ namespace Hazelcast
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the <see cref="HeartbeatOptions"/>.
+        /// </summary>
         public HeartbeatOptions Heartbeat { get; } = new HeartbeatOptions();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the <see cref="MessagingOptions"/>.
+        /// </summary>
         public MessagingOptions Messaging { get; } = new MessagingOptions();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the <see cref="NetworkingOptions"/>.
+        /// </summary>
         public NetworkingOptions Networking { get; } = new NetworkingOptions();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the <see cref="EventsOptions"/>.
+        /// </summary>
         public EventsOptions Events { get; } = new EventsOptions();
     }
 }

@@ -84,6 +84,11 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets or sets the SSL protocol.
         /// </summary>
+        /// <remarks>
+        /// <para>The protocol must be a member of the <see cref="SslProtocols"/> enum,
+        /// and currently only <c>Tls</c>, <c>Tls11</c> and <c>Tls12</c> are supported,
+        /// though only the latest is recommended.</para>
+        /// </remarks>
         public SslProtocols Protocol
         {
             get => _sslProtocol;

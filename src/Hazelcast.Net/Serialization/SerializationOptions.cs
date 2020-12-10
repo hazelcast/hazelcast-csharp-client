@@ -105,6 +105,12 @@ namespace Hazelcast.Serialization
 
         #region Class Definitions
 
+        /// <summary>
+        /// Gets the collection of <see cref="IClassDefinition"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>This can only be done programmatically.</para>
+        /// </remarks>
         public ICollection<IClassDefinition> ClassDefinitions { get; } = new HashSet<IClassDefinition>();
 
         #endregion
@@ -112,7 +118,7 @@ namespace Hazelcast.Serialization
         #region Portable Factories
 
         /// <summary>
-        /// Gets the portable factories.
+        /// Gets the collection of <see cref="FactoryOptions{T}"/> of <see cref="IPortableFactory"/>.
         /// </summary>
         [BinderIgnore]
         public ICollection<FactoryOptions<IPortableFactory>> PortableFactories { get; }
@@ -163,6 +169,9 @@ namespace Hazelcast.Serialization
 
         #region Data Serializable Factories
 
+        /// <summary>
+        /// Gets the collection of <see cref="FactoryOptions{T}"/> of <see cref="IDataSerializableFactory"/>.
+        /// </summary>
         [BinderIgnore]
         public ICollection<FactoryOptions<IDataSerializableFactory>> DataSerializableFactories { get; }
 
@@ -212,6 +221,24 @@ namespace Hazelcast.Serialization
 
         #region Serializers
 
+        /// <summary>
+        /// Gets the <see cref="GlobalSerializerOptions"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>When defined in a configuration file, it is defined as an injected type, for instance:
+        /// <code>
+        /// "globalSerializer":
+        /// {
+        ///   "typeName": "My.Serializer",
+        ///   "args":
+        ///   {
+        ///     "foo": 42
+        ///   },
+        ///   "overrideClrSerialization": true
+        /// }
+        /// </code>
+        /// with the additional <c>overrideClrSerialization</c> property.</para>
+        /// </remarks>
         [BinderIgnore]
         public GlobalSerializerOptions GlobalSerializer { get; set; } = new GlobalSerializerOptions();
 
@@ -232,6 +259,12 @@ namespace Hazelcast.Serialization
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
+        /// <summary>
+        /// Gets the collection of <see cref="SerializerOptions"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para></para>
+        /// </remarks>
         [BinderIgnore]
         public ICollection<SerializerOptions> Serializers { get; }
 
