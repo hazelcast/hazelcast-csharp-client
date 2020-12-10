@@ -19,7 +19,12 @@
     <PackageReference Include="Microsoft.DocAsCode.Build.ManagedReference" Version="2.56.5" />
     <PackageReference Include="Microsoft.DocAsCode.Common" Version="2.56.5" />
     <PackageReference Include="Microsoft.DocAsCode.DataContracts.ManagedReference" Version="2.56.5" />
-    <PackageReference Include="System.Composition" Version="5.0.0" />
+
+    <!--
+      beware! do not update this dependency until DocFX says it's OK
+      see https://dotnet.github.io/docfx/tutorial/howto_customize_docfx_flavored_markdown.html
+    -->
+    <PackageReference Include="System.Composition" Version="1.0.31" />
   </ItemGroup>
 
 </Project>

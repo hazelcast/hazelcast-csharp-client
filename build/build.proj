@@ -6,8 +6,8 @@
   <ItemGroup>
 
     <!-- documentation -->
-    <PackageReference Include="DocFX.Console" Version="2.55.0" />
-    <PackageReference Include="memberpage" Version="2.55.0" />
+    <PackageReference Include="DocFX.Console" Version="2.56.6" />
+    <PackageReference Include="memberpage" Version="2.56.6" />
 
     <!-- building -->
     <PackageReference Include="VSWhere" Version="2.8.4" />

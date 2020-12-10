@@ -19,7 +19,7 @@ param (
     # Commands.
     # (make sure it remains in the first position)
     [string[]]
-    $commands = @( "clean", "build", "docsIf", "tests" ),
+    $commands = @( "clean", "build", "docs", "tests" ),
 
     # Whether to test enterprise features.
     [switch]
@@ -150,13 +150,13 @@ foreach ($t in $commands) {
             Write-Output ""
             Write-Output "<commands> is a csv list of:"
             Write-Output "  clean       : cleans the solution"
+            Write-Output "  setver      : sets the new version"
+            Write-Output "  tagver      : tags the new version"
             Write-Output "  build       : builds the solution"
-            Write-Output "  docs        : builds the documentation"
-            Write-Output "  docsIf      : builds the documentation if supported by platform"
-            Write-Output "  docsServe   : serves the documentation (alias: ds)"
-            Write-Output "  docsRelease : builds the documentation release"
+            Write-Output "  docs        : builds the documentation (if supported by platform)"
+            Write-Output "  srvdocs     : serves the documentation"
+            Write-Output "  pubdocs     : publishes the documentation release (if supported by platform)"
             Write-Output "  tests       : runs the tests"
-            Write-Output "  cover       : when running tests, also perform code coverage analysis"
             Write-Output "  nuget       : builds the NuGet package(s)"
             Write-Output "  nupush      : pushes the NuGet package(s)"
             Write-Output "  rc          : runs the remote controller for tests"
@@ -211,19 +211,18 @@ foreach ($t in $commands) {
             exit 0
 		}
         "clean"       { $doClean = $true }
+        "setver"      { $doSetVersion = $true }
+        "tagver"      { $doTagVersion = $true }
         "build"       { $doBuild = $true }
         "docs"        { $doDocs = $true }
-        "docsIf"      { $doDocs = $isWindows }
-        "docsRelease" { $doDocsRelease = $true }
+        "pubdocs"     { $doDocsRelease = $true }
+        "srvdocs"     { $doDocsServe = $true }
         "tests"       { $doTests = $true }
         "nuget"       { $doNuget = $true }
         "nupush"      { $doNupush = $true }
         "rc"          { $doRc = $true }
         "server"      { $doServer = $true }
-        "docsServe"   { $doDocsServe = $true }
-        "ds"          { $doDocsServe = $true }
         "failedtests" { $doFailedTests = $true }
-        "ft"          { $doFailedTests = $true }
         default {
             Die "Unknown command '$($t.Trim())' - use 'help' to list valid commands."
         }
@@ -232,6 +231,8 @@ foreach ($t in $commands) {
 
 # validate the version to build
 $hasVersion = $false
+$versionPrefix = ""
+$versionSuffix = ""
 if (-not [System.String]::IsNullOrWhiteSpace($version)) {
 
     if (-not ($version -match '^(\d+\.\d+\.\d+)(?:\-([a-z0-9\.\-]*))?$')) {
@@ -240,6 +241,11 @@ if (-not [System.String]::IsNullOrWhiteSpace($version)) {
 
     $versionPrefix = $Matches.1
     $versionSuffix = $Matches.2
+
+    $version = $versionPrefix.Trim()
+    if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix)) {
+        $version += "-$($versionSuffix.Trim())"
+    }
     $hasVersion = $true
 }
 
@@ -280,19 +286,34 @@ if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
 # validate commands / platform
 if ($doDocs -and -not $isWindows) {
-    Die "DocFX is not supported on platform '$platform', cannot build documentation."
+    Write-Output "DocFX is not supported on '$platform', cannot build documentation."
+    $doDocs = $false
+}
+if ($doDocsRelease -and -not $isWindows) {
+    Write-Output "DocFX is not supported on '$platform', cannot release documentation."
+    $doDocsRelease = $false
 }
 
-# update version
-if (-not $hasVersion)
+# get current version
+$propsXml = [xml] (gc "$srcDir/Directory.Build.props")
+$currentVersionPrefix = $propsXml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+$currentVersionSuffix = $propsXml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+$currentVersion = $currentVersionPrefix.Trim()
+if (-not [System.String]::IsNullOrWhiteSpace($currentVersionSuffix)) {
+    $currentVersion += "-$($currentVersionSuffix.Trim())"
+}
+
+# set version
+if ($hasVersion)
 {
-    $xml = [xml] (gc "$srcDir/Directory.Build.props")
-    $versionPrefix = $xml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
-    $versionSuffix = $xml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
-    $version = $versionPrefix.Trim()
-    if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix)) {
-        $version += "-$($versionSuffix.Trim())"
-    }
+    $isNewVersion = ($version -ne $currentVersion)
+}
+else
+{
+    $versionPrefix = $currentVersionPrefix
+    $versionSuffix = $currentVersionSuffix
+    $version = $currentVersion
+    $isNewVersion = $false
 }
 $isPreRelease = -not [System.String]::IsNullOrWhiteSpace($versionSuffix)
 
@@ -441,10 +462,10 @@ function ensureNuGet() {
 }
 
 # get a Maven artifact
-function getMvn($repoUrl, $group, $artifact, $version, $classifier, $dest) {
+function getMvn($repoUrl, $group, $artifact, $jversion, $classifier, $dest) {
 
-    if ($version.EndsWith("-SNAPSHOT")) {
-        $url = "$repoUrl/$group/$artifact/$version/maven-metadata.xml"
+    if ($jversion.EndsWith("-SNAPSHOT")) {
+        $url = "$repoUrl/$group/$artifact/$jversion/maven-metadata.xml"
         $response = invokeWebRequest $url
         if ($response.StatusCode -ne 200) {
             Die "GET $url : $($response.StatusCode) $($response.StatusDescription)"
@@ -459,10 +480,10 @@ function getMvn($repoUrl, $group, $artifact, $version, $classifier, $dest) {
         $jarVersion = "-" + $metadata.SelectNodes($xpath)[0].value
     }
     else {
-        $jarVersion = "-" + $version
+        $jarVersion = "-" + $jversion
     }
 
-    $url = "$repoUrl/$group/$artifact/$version/$artifact$jarVersion"
+    $url = "$repoUrl/$group/$artifact/$jversion/$artifact$jarVersion"
     if (![System.String]::IsNullOrWhiteSpace($classifier)) {
         $url += "-$classifier"
     }
@@ -614,6 +635,18 @@ function ensureJar($jar, $repo, $artifact) {
 
 # say hello
 Write-Output "Hazelcast .NET Command Line"
+Write-Output ""
+
+Write-Output "Version"
+$s = $version
+if ($isPreRelease) { $s += ", pre-release" }
+if ($isNewVersion) { $s += ", new version (was $currentVersion)" }
+Write-Output "  Version        : $s"
+$s = ""
+if ($doSetVersion) { $s = "set version" }
+if ($doTagVersion) { if ($s -ne "") { $s += ", " } $s += "tag version" }
+if ($s -eq "") { $s = "none" }
+Write-Output "  Action         : $s"
 Write-Output ""
 
 if ($doBuild) {
@@ -794,12 +827,12 @@ $buildLibs = $buildAssets.Libraries
 $buildLibs.PSObject.Properties.Name | Foreach-Object {
     $p = $_.Split('/')
     $name = $p[0].ToLower()
-    $version = $p[1]
-    if ($name -eq "vswhere") { $vswhereVersion = $version }
-    if ($name -eq "nunit.consolerunner") { $nunitVersion = $version }
-    if ($name -eq "jetbrains.dotcover.commandlinetools") { $dotcoverVersion = $version }
-    if ($name -eq "docfx.console") { $docfxVersion = $version }
-    if ($name -eq "memberpage") { $memberpageVersion = $version }
+    $pversion = $p[1]
+    if ($name -eq "vswhere") { $vswhereVersion = $pversion }
+    if ($name -eq "nunit.consolerunner") { $nunitVersion = $pversion }
+    if ($name -eq "jetbrains.dotcover.commandlinetools") { $dotcoverVersion = $pversion }
+    if ($name -eq "docfx.console") { $docfxVersion = $pversion }
+    if ($name -eq "memberpage") { $memberpageVersion = $pversion }
 }
 
 if ($doBuild -and $isWindows) {
@@ -823,7 +856,7 @@ if ($doDocs -or $doDocsServe) {
 }
 
 # ensure we have git
-if ($doDocsRelease) {
+if ($doDocsRelease -or $doSetVersion -or $doTagVersion) {
     ensureCommand "git"
 }
 
@@ -862,6 +895,50 @@ if ($doTests -or $doRc -or $doServer) {
             "--add-opens",   "java.base/java.io=ALL-UNNAMED" `
         )
 	}
+}
+
+# manage the version
+if ($isNewVersion -and $doSetVersion)
+{
+    Write-Output "Version: new version, update props and commit"
+
+    $text = [System.IO.File]::ReadAllText("$srcDir/Directory.Build.props")
+
+    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+        "\<AssemblyVersion\>.*\</AssemblyVersion\>",
+        "<AssemblyVersion>$versionPrefix</AssemblyVersion>")
+
+    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+        "\<FileVersion\>.*\</FileVersion\>",
+        "<FileVersion>$versionPrefix</FileVersion>")
+
+    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+        "\<VersionPrefix\>.*\</VersionPrefix\>",
+        "<VersionPrefix>$versionPrefix</VersionPrefix>")
+
+    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+        "\<VersionSuffix\>.*\</VersionSuffix\>",
+        "<VersionSuffix>$versionSuffix</VersionSuffix>")
+
+    $utf8bom = New-Object System.Text.UTF8Encoding $true
+    [System.IO.File]::WriteAllText("$srcDir/Directory.Build.props", $text, $utf8bom)
+
+    git add "$srcDir/Directory.Build.props"
+    git commit -m "Version $version"
+}
+
+if ($doTagVersion)
+{
+    git rev-parse "refs/tags/v$version" >$null 2>&1
+    if ($LASTEXITCODE -eq 0)
+    {
+        Write-Output "Version: tag v$version already exists."
+    }
+    else
+    {
+        Write-Output "Version: creating tag v$version"
+        git tag "v$version"
+    }
 }
 
 # build the solution
@@ -932,11 +1009,13 @@ if ($doDocs) {
     # prepare templates
     $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
 
+    # clear plugins
     if (test-path "$docDir/templates/hz/Plugins") {
         remove-item -recurse -force "$docDir/templates/hz/Plugins"
     }
     mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
 
+    # copy our plugin dll
     $target = "net48"
     $pluginDll = "$srcDir/Hazelcast.Net.DocAsCode/bin/$configuration/$target/Hazelcast.Net.DocAsCode.dll"
     if (-not (test-path $pluginDll)) {
@@ -944,18 +1023,25 @@ if ($doDocs) {
     }
     cp $pluginDll "$docDir/templates/hz/Plugins/"
 
+    # copy our plugin dll dependencies
+    # not *everything* needs to be copied, only ... some
+    #cp "$srcDir/Hazelcast.Net.DocAsCode/bin/$configuration/$target/System.*.dll" "$docDir/templates/hz/Plugins/"
+
     # prepare docfx.json
     get-content "$docDir/_docfx.json" |
         foreach-object { $_ -replace "__DEST__", $docDstDir } |
         set-content "$docDir/docfx.json"
 
     # build
+    Write-Output "Docs: Generate metadata..."
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
     if ($LASTEXITCODE) { Die "Error." }
+    Write-Output "Docs: Build..."
     &$docfx build "$docDir/docfx.json" --template $template
     if ($LASTEXITCODE) { Die "Error." }
 
     # post-process
+    Write-Output "Docs: Post-process..."
     if ($docDstDir -eq "dev") {
         $devwarnMessage = "<div id=`"devwarn`">This page documents a development version of the Hazelcast .NET client. " +
                           "Its content is not final and remains subject to changes.</div>"
