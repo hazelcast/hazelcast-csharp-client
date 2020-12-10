@@ -39,12 +39,12 @@ namespace Hazelcast
         /// <summary>
         /// Adds a subscriber.
         /// </summary>
-        /// <param name="on">An action defining event handlers.</param>
+        /// <param name="events">An action defining event handlers.</param>
         /// <returns>The options.</returns>
-        public HazelcastOptions AddSubscriber(Action<HazelcastClientEventHandlers> on)
+        public HazelcastOptions AddSubscriber(Action<HazelcastClientEventHandlers> events)
         {
             Subscribers.Add(new HazelcastClientEventSubscriber((hazelcastClient, cancellationToken)
-                => hazelcastClient.SubscribeAsync(on)));
+                => hazelcastClient.SubscribeAsync(events)));
             return this;
         }
 

@@ -12,22 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
-{
-    public enum ClientLifecycleState
-    {
-        // Active    Connecting
-        // Active    Connected
-        // NotActive Disconnecting
-        // Active    Reconnecting (?)
-        // NotActive Disconnected
-        //
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
 
-        Starting,
-        Started,
-        ShuttingDown,
-        Shutdown,
-        Connected,
-        Disconnected
+namespace Hazelcast
+{
+    internal class MembersUpdatedEventHandler : HazelcastClientEventHandlerBase<MembersUpdatedEventArgs>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MembersUpdatedEventHandler"/> class.
+        /// </summary>
+        /// <param name="handler">An action to execute</param>
+        public MembersUpdatedEventHandler(Func<IHazelcastClient, MembersUpdatedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

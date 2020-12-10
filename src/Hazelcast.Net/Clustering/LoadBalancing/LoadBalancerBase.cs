@@ -22,15 +22,6 @@ namespace Hazelcast.Clustering.LoadBalancing
     /// </summary>
     public abstract class LoadBalancerBase : ILoadBalancer
     {
-        // NOTE
-        // we use a HashSet to keep a de-duplicated set of member identifiers,
-        // and provide an immutable list of member identifiers to classes
-        // inheriting from this base class. this allows for fast reads, but
-        // slowish writes if the list grows. we may want to use different data
-        // structures if performance became a problem here
-
-        private readonly HashSet<Guid> _memberIds = new HashSet<Guid>();
-
         /// <summary>
         /// Gets the members.
         /// </summary>
@@ -47,13 +38,25 @@ namespace Hazelcast.Clustering.LoadBalancing
         {
             if (memberIds == null) throw new ArgumentNullException(nameof(memberIds));
 
-            lock (_memberIds)
-            {
-                _memberIds.Clear();
-                foreach (var memberId in memberIds)
-                    _memberIds.Add(memberId);
-                Members = new List<Guid>(_memberIds);
-            }
+            var distinct = new HashSet<Guid>();
+            var members = new List<Guid>();
+            foreach (var memberId in memberIds)
+                if (distinct.Add(memberId))
+                    members.Add(memberId);
+            Members = members; // atomic reference
+        }
+
+        /// <summary>
+        /// Gets a non-empty (else throws) snapshot of members.
+        /// </summary>
+        protected List<Guid> GetMembersNonEmptySnapshot()
+        {
+            var members = Members; // capture
+
+            if ((members?.Count ?? 0) == 0)
+                throw new InvalidOperationException("The load balancer does not have members.");
+
+            return members;
         }
     }
 }

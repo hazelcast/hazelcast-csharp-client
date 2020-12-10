@@ -33,8 +33,10 @@ namespace Hazelcast.Clustering
         private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
+        private readonly CancellationTokenSource _cancellation;
+        private readonly Task _heartbeating;
+        
         private int _active;
-        private Task _heartbeating;
 
         public Heartbeat(ClusterState clusterState, ClusterMembers clusterMembers, ClusterMessaging clusterMessaging, HeartbeatOptions options, ILoggerFactory loggerFactory)
         {
@@ -55,34 +57,28 @@ namespace Hazelcast.Clustering
                     _timeout, _period.TotalMilliseconds, timeout);
                 _timeout = timeout;
             }
-        }
 
-        public void Start()
-        {
-            if (Interlocked.CompareExchange(ref _active, 1, 0) == 1)
-                throw new InvalidOperationException("Already active.");
-
-            _heartbeating ??= LoopAsync(_clusterState.CancellationToken);
+            _cancellation = new CancellationTokenSource();
+            _heartbeating ??= LoopAsync(_cancellation.Token);
         }
 
         public async ValueTask DisposeAsync()
         {
+            // note: DisposeAsync should not throw (CA1065)
+
             if (Interlocked.CompareExchange(ref _active, 0, 1) == 0)
                 return;
 
+            _cancellation.Cancel();
+
             try
             {
-                await _heartbeating.CAF();
-                _heartbeating = null;
-            }
-            catch (OperationCanceledException)
-            {
-                // expected
+                await _heartbeating.ObserveCanceled().CAF();
             }
             catch (Exception e)
             {
                 // unexpected
-                _logger.LogWarning(e, "Heartbeat has thrown an exception.");
+                _logger.LogWarning(e, "Caught an exception while disposing Heartbeat.");
             }
         }
 
@@ -93,16 +89,12 @@ namespace Hazelcast.Clustering
                 await Task.Delay(_period, cancellationToken).CAF();
                 try
                 {
-                    await RunAsync(cancellationToken).CAF();
-                }
-                catch (OperationCanceledException)
-                {
-                    // expected
+                    await RunAsync(cancellationToken).ObserveCanceled().CAF();
                 }
                 catch (Exception e)
                 {
-                    // RunAsync should *not* throw
-                    _logger.LogWarning(e, "Heartbeat has thrown an exception.");
+                    // unexpected
+                    _logger.LogWarning(e, "Caught exception in Heartbeat.");
                 }
             }
         }
@@ -142,7 +134,7 @@ namespace Hazelcast.Clustering
             if (readElapsed > _timeout && writeElapsed < _period)
             {
                 _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}.", connection.Id);
-                await TerminateConnection(connection).CAF();
+                if (connection.Active) await connection.TerminateAsync().CAF(); // does not throw;
                 return;
             }
 
@@ -167,7 +159,7 @@ namespace Hazelcast.Clustering
                 catch (TaskTimeoutException)
                 {
                     _logger.LogWarning("Heartbeat ping timeout for connection {ConnectionId}.", connection.Id);
-                    await TerminateConnection(connection).CAF();
+                    if (connection.Active) await connection.TerminateAsync().CAF(); // does not throw;
                 }
                 catch (Exception e)
                 {
@@ -175,16 +167,6 @@ namespace Hazelcast.Clustering
                     _logger.LogWarning(e, "Heartbeat has thrown an exception.");
                 }
             }
-        }
-
-        private static async Task TerminateConnection(MemberConnection connection)
-        {
-            if (!connection.Active) return;
-
-            await connection.TerminateAsync().CAF(); // does not throw
-
-            // TODO: original code has reasons for closing connections
-            //connection.Close(reason, new TargetDisconnectedException($"Heartbeat timed out to connection {connection}"));
         }
     }
 }

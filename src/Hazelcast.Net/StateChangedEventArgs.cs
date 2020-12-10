@@ -12,12 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
+namespace Hazelcast
 {
-    public enum MemberLifecycleEventType
+    /// <summary>
+    /// Represents event data for the state changed event.
+    /// </summary>
+    public class StateChangedEventArgs
     {
-        Nothing,
-        Added,
-        Removed
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StateChangedEventArgs"/> class.
+        /// </summary>
+        /// <param name="state"></param>
+        public StateChangedEventArgs(ClientState state)
+        {
+            State = state;
+        }
+
+        /// <summary>
+        /// Gets the new client state.
+        /// </summary>
+        public ClientState State { get; }
     }
 }

@@ -12,36 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Clustering
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
+
+namespace Hazelcast
 {
     /// <summary>
-    /// Defines the possible states if the cluster connection.
+    /// Represents a handler for a connection closed event.
     /// </summary>
-    internal enum ClusterConnectionState
+    internal class ConnectionClosedEventHandler : HazelcastClientEventHandlerBase<ConnectionClosedEventArgs>
     {
         /// <summary>
-        /// Unknown (default).
+        /// Initializes a new instance of the <see cref="ConnectionClosedEventArgs"/> class.
         /// </summary>
-        Unknown = 0,
-
-        /// <summary>
-        /// The cluster has not connected yet.
-        /// </summary>
-        NotConnected,
-
-        /// <summary>
-        /// The cluster is connecting.
-        /// </summary>
-        Connecting,
-
-        /// <summary>
-        /// The cluster is connected.
-        /// </summary>
-        Connected,
-
-        /// <summary>
-        /// The cluster has disconnected and will not reconnect.
-        /// </summary>
-        Disconnected
+        /// <param name="handler">An action to execute.</param>
+        public ConnectionClosedEventHandler(Func<IHazelcastClient, ConnectionClosedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

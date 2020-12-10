@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Events
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
+
+namespace Hazelcast
 {
     /// <summary>
-    /// Defines the types of connection lifecycle events.
+    /// Represents a handler for a connection opened event.
     /// </summary>
-    internal enum ConnectionLifecycleEventType
+    internal class ConnectionOpenedEventHandler : HazelcastClientEventHandlerBase<ConnectionOpenedEventArgs>
     {
         /// <summary>
-        /// A connection was added.
+        /// Initializes a new instance of the <see cref="ConnectionOpenedEventHandler"/> class.
         /// </summary>
-        Added = 1, // zero is for default, make sure we start at 1
-
-        /// <summary>
-        /// A connection was removed.
-        /// </summary>
-        Removed
+        /// <param name="handler">An action to execute.</param>
+        public ConnectionOpenedEventHandler(Func<IHazelcastClient, ConnectionOpenedEventArgs, ValueTask> handler)
+            : base(handler)
+        { }
     }
 }

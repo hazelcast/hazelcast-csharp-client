@@ -46,6 +46,24 @@ namespace System
         /// <param name="task">The task.</param>
         /// <returns>A task with an observed exception.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async ValueTask ObserveException(this ValueTask task)
+        {
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch
+            {
+                // observe the exception
+            }
+        }
+
+        /// <summary>
+        /// Observes the exception of a faulted task.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>A task with an observed exception.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<T> ObserveException<T>(this Task<T> task)
         {
             if (task == null) return default;

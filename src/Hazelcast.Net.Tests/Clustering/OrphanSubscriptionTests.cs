@@ -34,6 +34,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Clustering
 {
     [TestFixture]
+    [Timeout(30_000)]
     public class SubscriptionCollectTests
     {
         private IDisposable HConsoleForTest()

@@ -12,33 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
-
-namespace Hazelcast.Clustering.LoadBalancing
+namespace Hazelcast.Events
 {
     /// <summary>
-    /// Represents a round-robin load balancer.
+    /// Represents event data for the connection removed event.
     /// </summary>
-    /// <remarks>
-    /// <para>A round-robin load balancer returns members one after another.</para>
-    /// </remarks>
-    public class RoundRobinLoadBalancer : LoadBalancerBase
+    public class ConnectionClosedEventArgs
     {
-        private int _index;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionClosedEventArgs"/> class.
+        /// </summary>
+        /// <param name="wasLast">Whether the connection was the last one.</param>
+        public ConnectionClosedEventArgs(bool wasLast)
+        {
+            WasLast = wasLast;
+        }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RoundRobinLoadBalancer"/> class.
+        /// Whether the connection was the last one.
         /// </summary>
-        public RoundRobinLoadBalancer()
-        { }
-
-        /// <inheritdoc />
-        public override Guid GetMember()
-        {
-            var members = GetMembersNonEmptySnapshot();
-            var index = Interlocked.Increment(ref _index);
-            return members[index % members.Count];
-        }
+        /// <returns><c>true</c> if the connection was the last one; otherwise <c>false</c>.</returns>
+        public bool WasLast { get; }
     }
 }

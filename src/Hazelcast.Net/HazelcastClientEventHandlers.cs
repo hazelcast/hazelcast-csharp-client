@@ -73,13 +73,13 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Adds a handler which runs when a member is added.
+        /// Adds a handler which runs when members are updated
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers MemberAdded(Action<IHazelcastClient, MemberLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers MembersUpdated(Action<IHazelcastClient, MembersUpdatedEventArgs> handler)
         {
-            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Added, handler.AsAsync()));
+            Add(new MembersUpdatedEventHandler(handler.AsAsync()));
             return this;
         }
 
@@ -88,31 +88,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers MemberAdded(Func<IHazelcastClient, MemberLifecycleEventArgs, ValueTask> handler)
+        public HazelcastClientEventHandlers MembersUpdated(Func<IHazelcastClient, MembersUpdatedEventArgs, ValueTask> handler)
         {
-            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Added, handler));
-            return this;
-        }
-
-        /// <summary>
-        /// Adds a handler which runs when a member is removed.
-        /// </summary>
-        /// <param name="handler">The handler.</param>
-        /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers MemberRemoved(Action<IHazelcastClient, MemberLifecycleEventArgs> handler)
-        {
-            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Removed, handler.AsAsync()));
-            return this;
-        }
-
-        /// <summary>
-        /// Adds a handler which runs when a member is removed.
-        /// </summary>
-        /// <param name="handler">The handler.</param>
-        /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers MemberRemoved(Func<IHazelcastClient, MemberLifecycleEventArgs, ValueTask> handler)
-        {
-            Add(new MemberLifecycleEventHandler(MemberLifecycleEventType.Removed, handler));
+            Add(new MembersUpdatedEventHandler(handler));
             return this;
         }
 
@@ -121,9 +99,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ObjectCreated(Action<IHazelcastClient, DistributedObjectLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers ObjectCreated(Action<IHazelcastClient, DistributedObjectCreatedEventArgs> handler)
         {
-            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Created, handler.AsAsync()));
+            Add(new DistributedObjectCreatedEventHandler(handler.AsAsync()));
             return this;
         }
 
@@ -132,9 +110,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ObjectCreated(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, ValueTask> handler)
+        public HazelcastClientEventHandlers ObjectCreated(Func<IHazelcastClient, DistributedObjectCreatedEventArgs, ValueTask> handler)
         {
-            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Created, handler));
+            Add(new DistributedObjectCreatedEventHandler(handler));
             return this;
         }
 
@@ -143,9 +121,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ObjectDestroyed(Action<IHazelcastClient, DistributedObjectLifecycleEventArgs> handler)
+        public HazelcastClientEventHandlers ObjectDestroyed(Action<IHazelcastClient, DistributedObjectDestroyedEventArgs> handler)
         {
-            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Destroyed, handler.AsAsync()));
+            Add(new DistributedObjectDestroyedEventHandler(handler.AsAsync()));
             return this;
         }
 
@@ -154,9 +132,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ObjectDestroyed(Func<IHazelcastClient, DistributedObjectLifecycleEventArgs, ValueTask> handler)
+        public HazelcastClientEventHandlers ObjectDestroyed(Func<IHazelcastClient, DistributedObjectDestroyedEventArgs, ValueTask> handler)
         {
-            Add(new DistributedObjectLifecycleEventHandler(DistributedObjectLifecycleEventType.Destroyed, handler));
+            Add(new DistributedObjectDestroyedEventHandler(handler));
             return this;
         }
 
@@ -165,9 +143,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        internal HazelcastClientEventHandlers ConnectionAdded(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
+        internal HazelcastClientEventHandlers ConnectionOpened(Action<IHazelcastClient, ConnectionOpenedEventArgs> handler)
         {
-            Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler.AsAsync()));
+            Add(new ConnectionOpenedEventHandler(handler.AsAsync()));
             return this;
         }
 
@@ -176,9 +154,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        internal HazelcastClientEventHandlers ConnectionAdded(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
+        internal HazelcastClientEventHandlers ConnectionOpened(Func<IHazelcastClient, ConnectionOpenedEventArgs, ValueTask> handler)
         {
-            Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Added, handler));
+            Add(new ConnectionOpenedEventHandler(handler));
             return this;
         }
 
@@ -187,9 +165,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        internal HazelcastClientEventHandlers ConnectionRemoved(Action<IHazelcastClient, ConnectionLifecycleEventArgs> handler)
+        internal HazelcastClientEventHandlers ConnectionClosed(Action<IHazelcastClient, ConnectionClosedEventArgs> handler)
         {
-            Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler.AsAsync()));
+            Add(new ConnectionClosedEventHandler(handler.AsAsync()));
             return this;
         }
 
@@ -198,23 +176,9 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        internal HazelcastClientEventHandlers ConnectionRemoved(Func<IHazelcastClient, ConnectionLifecycleEventArgs, ValueTask> handler)
+        internal HazelcastClientEventHandlers ConnectionClosed(Func<IHazelcastClient, ConnectionClosedEventArgs, ValueTask> handler)
         {
-            Add(new ConnectionLifecycleEventHandler(ConnectionLifecycleEventType.Removed, handler));
-            return this;
-        }
-
-        // TODO: consider having 1 event per state
-        // original code has 1 unique 'StateChanged' event, could we have eg ClientStarting, ClientStarted, etc...?
-
-        /// <summary>
-        /// Adds a handler which runs when the client state changes.
-        /// </summary>
-        /// <param name="handler">The handler.</param>
-        /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ClientStateChanged(Action<IHazelcastClient, ClientLifecycleEventArgs> handler)
-        {
-            Add(new ClientLifecycleEventHandler(handler.AsAsync()));
+            Add(new ConnectionClosedEventHandler(handler));
             return this;
         }
 
@@ -223,9 +187,20 @@ namespace Hazelcast
         /// </summary>
         /// <param name="handler">The handler.</param>
         /// <returns>The handlers.</returns>
-        public HazelcastClientEventHandlers ClientStateChanged(Func<IHazelcastClient, ClientLifecycleEventArgs, ValueTask> handler)
+        public HazelcastClientEventHandlers StateChanged(Action<IHazelcastClient, StateChangedEventArgs> handler)
         {
-            Add(new ClientLifecycleEventHandler(handler));
+            Add(new StateChangedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a handler which runs when the client state changes.
+        /// </summary>
+        /// <param name="handler">The handler.</param>
+        /// <returns>The handlers.</returns>
+        public HazelcastClientEventHandlers StateChanged(Func<IHazelcastClient, StateChangedEventArgs, ValueTask> handler)
+        {
+            Add(new StateChangedEventHandler(handler));
             return this;
         }
     }

@@ -14,16 +14,24 @@
 
 namespace Hazelcast.Events
 {
-    public class ClientLifecycleEventArgs
+    /// <summary>
+    /// Represents event data for the connection added event.
+    /// </summary>
+    internal class ConnectionOpenedEventArgs
     {
-        public ClientLifecycleEventArgs(ClientLifecycleState state)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConnectionOpenedEventArgs"/> class.
+        /// </summary>
+        /// <param name="isFirst">Whether the connection is the first one.</param>
+        public ConnectionOpenedEventArgs(bool isFirst)
         {
-            State = state;
+            IsFirst = isFirst;
         }
 
         /// <summary>
-        /// Gets the new state.
+        /// Whether the connection is the first one.
         /// </summary>
-        public ClientLifecycleState State { get; }
+        /// <returns><c>true</c> if the connection is the first one; otherwise <c>false</c>.</returns>
+        public bool IsFirst { get; }
     }
 }

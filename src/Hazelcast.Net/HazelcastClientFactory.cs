@@ -27,6 +27,7 @@ using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Serialization.DefaultSerializers;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hazelcast
@@ -99,7 +100,7 @@ namespace Hazelcast
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             // every async operations using this client will need a proper async context
-            // and, we must do this in a non-async method for the change to bubble up!
+            // and, we *must* do this in a non-async method for the change to bubble up!
             AsyncContext.Ensure();
 
             return StartNewClientAsyncInternal(options, cancellationToken);
@@ -153,6 +154,28 @@ namespace Hazelcast
             return options;
         }
 
+        // (internal for tests only) creates the serialization service
+        internal static SerializationService CreateSerializationService(SerializationOptions options, ILoggerFactory loggerFactory)
+        {
+            // TODO: refactor serialization service entirely
+            // there should not be a 'builder'
+            // it's all configuration or service
+            var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);
+            serializationServiceBuilder
+                .SetConfig(options)
+                .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
+                .SetVersion(SerializationService.SerializerVersion) // uh? else default is wrong?
+                .AddHook<PredicateDataSerializerHook>() // shouldn't they be configurable?
+                .AddHook<AggregatorDataSerializerHook>()
+                .AddHook<ProjectionDataSerializerHook>()
+                .AddDefinitions(new ConstantSerializerDefinitions())
+                .AddDefinitions(new DefaultSerializerDefinitions())
+                ;
+
+            return serializationServiceBuilder.Build();
+        }
+
+        // creates the client
         private static HazelcastClient CreateClient(HazelcastOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -164,24 +187,7 @@ namespace Hazelcast
             Clock.Initialize(options.Core.Clock);
 
             var loggerFactory = options.LoggerFactory.Service ?? new NullLoggerFactory();
-
-            // TODO: refactor serialization service entirely
-            // there should not be a 'builder'
-            // it's all configuration or service
-            var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);
-            serializationServiceBuilder
-                .SetConfig(options.Serialization)
-                .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
-                .SetVersion(SerializationService.SerializerVersion) // uh? else default is wrong?
-                .AddHook<PredicateDataSerializerHook>() // shouldn't they be configurable?
-                .AddHook<AggregatorDataSerializerHook>()
-                .AddHook<ProjectionDataSerializerHook>()
-                .AddDefinitions(new ConstantSerializerDefinitions())
-                .AddDefinitions(new DefaultSerializerDefinitions())
-                ;
-
-            var serializationService = serializationServiceBuilder.Build();
-
+            var serializationService = CreateSerializationService(options.Serialization, loggerFactory);
             var cluster = new Cluster(options, serializationService, loggerFactory);
             var client = new HazelcastClient(options, cluster, serializationService, loggerFactory);
 

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Events;
 using Hazelcast.Models;
 using Hazelcast.Networking;
@@ -37,27 +38,52 @@ namespace Hazelcast.Tests.Events
         }
 
         [Test]
-        public void ClientLifeCycleEventArgs()
+        public void StateChangedEventArgs()
         {
-            var args = new ClientLifecycleEventArgs(ClientLifecycleState.Shutdown);
+            var args = new StateChangedEventArgs(ClientState.Connected);
 
-            Assert.That(args.State, Is.EqualTo(ClientLifecycleState.Shutdown));
+            Assert.That(args.State, Is.EqualTo(ClientState.Connected));
         }
 
         [Test]
-        public void MemberLifecycleEventArgs()
+        public void MembersUpdatedEventArgs()
         {
-            var memberInfo = new MemberInfo(Guid.NewGuid(), NetworkAddress.Parse("127.0.0.1:88"), new MemberVersion(1, 1, 1), false, new Dictionary<string, string>());
-            var args = new MemberLifecycleEventArgs(memberInfo);
+            var id1 = Guid.NewGuid();
+            var id2 = Guid.NewGuid();
+            var id3 = Guid.NewGuid();
+            var mi1 = new MemberInfo(id1, NetworkAddress.Parse("127.0.0.1:88"), new MemberVersion(1, 1, 1), false, new Dictionary<string, string>());
+            var mi2 = new MemberInfo(id2, NetworkAddress.Parse("127.0.0.1:88"), new MemberVersion(1, 1, 1), false, new Dictionary<string, string>());
+            var mi3 = new MemberInfo(id3, NetworkAddress.Parse("127.0.0.1:88"), new MemberVersion(1, 1, 1), false, new Dictionary<string, string>());
 
-            Assert.That(args.Member, Is.SameAs(memberInfo));
+            var args = new MembersUpdatedEventArgs(new [] { mi1 }, new []{ mi2 }, new [] { mi1, mi3 });
+
+            Assert.That(args.AddedMembers.Count, Is.EqualTo(1));
+            Assert.That(args.AddedMembers, Does.Contain(mi1));
+
+            Assert.That(args.RemovedMembers.Count, Is.EqualTo(1));
+            Assert.That(args.RemovedMembers, Does.Contain(mi2));
+
+            Assert.That(args.Members.Count, Is.EqualTo(2));
+            Assert.That(args.Members, Does.Contain(mi1));
+            Assert.That(args.Members, Does.Contain(mi3));
         }
 
         [Test]
-        public void DistributedObjectLifecycleEventArgs()
+        public void DistributedObjectCreatedEventArgs()
         {
             var memberId = Guid.NewGuid();
-            var args = new DistributedObjectLifecycleEventArgs("serviceName", "name", memberId);
+            var args = new DistributedObjectCreatedEventArgs("serviceName", "name", memberId);
+
+            Assert.That(args.Name, Is.EqualTo("name"));
+            Assert.That(args.ServiceName, Is.EqualTo("serviceName"));
+            Assert.That(args.SourceMemberId, Is.EqualTo(memberId));
+        }
+
+        [Test]
+        public void DistributedObjectDestroyedEventArgs()
+        {
+            var memberId = Guid.NewGuid();
+            var args = new DistributedObjectCreatedEventArgs("serviceName", "name", memberId);
 
             Assert.That(args.Name, Is.EqualTo("name"));
             Assert.That(args.ServiceName, Is.EqualTo("serviceName"));

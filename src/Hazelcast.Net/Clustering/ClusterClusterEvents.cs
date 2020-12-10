@@ -25,16 +25,13 @@ namespace Hazelcast.Clustering
     internal class ClusterClusterEvents : IAsyncDisposable
     {
         private readonly ClusterState _clusterState;
-        private readonly ClusterEvents _clusterEvents;
 
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
 
-        private Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, ValueTask> _onObjectLifeCycleEvent;
-        private Func<PartitionLostEventArgs, ValueTask> _onPartitionLost;
-        private Func<ClientLifecycleState, ValueTask> _onClientLifecycleEvent;
-        private Func<ValueTask> _onConnectionAdded;
-        private Func<ValueTask> _onConnectionRemoved;
+        private Func<DistributedObjectCreatedEventArgs, ValueTask> _objectCreated;
+        private Func<DistributedObjectDestroyedEventArgs, ValueTask> _objectDestroyed;
+        private Func<PartitionLostEventArgs, ValueTask> _partitionLost;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterClusterEvents"/> class.
@@ -45,101 +42,63 @@ namespace Hazelcast.Clustering
         public ClusterClusterEvents(ClusterState clusterState, ClusterMembers clusterMembers, ClusterEvents clusterEvents)
         {
             _clusterState = clusterState;
-            _clusterEvents = clusterEvents;
 
             _objectLifecycleEventSubscription = new ObjectLifecycleEventSubscription(_clusterState, clusterEvents)
             {
-                Handle = (eventType, args) => _onObjectLifeCycleEvent(eventType, args)
+                ObjectCreated = args => _objectCreated.AwaitEach(args),
+                ObjectDestroyed = args => _objectDestroyed.AwaitEach(args)
             };
 
             _partitionLostEventSubscription = new PartitionLostEventSubscription(_clusterState, clusterEvents, clusterMembers)
             {
-                Handle = args => _onPartitionLost(args)
+                PartitionLost = args => _partitionLost.AwaitEach(args)
             };
         }
 
+
+        #region Event Handlers
+
         /// <summary>
-        /// Gets or sets the function that triggers an object lifecycle event.
+        /// Gets or sets the function that triggers when an object is created.
         /// </summary>
-        public Func<DistributedObjectLifecycleEventType, DistributedObjectLifecycleEventArgs, ValueTask> OnObjectLifecycleEvent
+        public Func<DistributedObjectCreatedEventArgs, ValueTask> ObjectCreated
         {
-            get => _onObjectLifeCycleEvent;
+            get => _objectCreated;
             set
             {
-                _clusterState.ThrowIfReadOnlyProperties();
-                _onObjectLifeCycleEvent = value;
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _objectCreated = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the function that triggers when an object is destroyed.
+        /// </summary>
+        public Func<DistributedObjectDestroyedEventArgs, ValueTask> ObjectDestroyed
+        {
+            get => _objectDestroyed;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _objectDestroyed = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the function that triggers a partition list event.
         /// </summary>
-        public Func<PartitionLostEventArgs, ValueTask> OnPartitionLost
+        public Func<PartitionLostEventArgs, ValueTask> PartitionLost
         {
-            get => _onPartitionLost;
+            get => _partitionLost;
             set
             {
-                _clusterState.ThrowIfReadOnlyProperties();
-                _onPartitionLost = value;
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _partitionLost = value;
             }
         }
 
-        /// <summary>
-        /// Gets or sets the function that triggers a member lifecycle event.
-        /// </summary>
-        public Func<MemberLifecycleEventType, MemberLifecycleEventArgs, ValueTask> OnMemberLifecycleEvent
-        {
-            get => _clusterEvents.OnMemberLifecycleEvent;
-            set => _clusterEvents.OnMemberLifecycleEvent = value;
-        }
+        #endregion
 
-        /// <summary>
-        /// Gets or sets the function that triggers a client lifecycle event.
-        /// </summary>
-        public Func<ClientLifecycleState, ValueTask> OnClientLifecycleEvent
-        {
-            get => _onClientLifecycleEvent;
-            set
-            {
-                _clusterState.ThrowIfReadOnlyProperties();
-                _onClientLifecycleEvent = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the function that triggers a partitions updated event.
-        /// </summary>
-        public Func<ValueTask> OnPartitionsUpdated
-        {
-            get => _clusterEvents.OnPartitionsUpdated;
-            set => _clusterEvents.OnPartitionsUpdated = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the function that triggers a connection added event.
-        /// </summary>
-        public Func<ValueTask> OnConnectionAdded
-        {
-            get => _onConnectionAdded;
-            set
-            {
-                _clusterState.ThrowIfReadOnlyProperties();
-                _onConnectionAdded = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the function that triggers a connection removed event.
-        /// </summary>
-        public Func<ValueTask> OnConnectionRemoved
-        {
-            get => _onConnectionRemoved;
-            set
-            {
-                _clusterState.ThrowIfReadOnlyProperties();
-                _onConnectionRemoved = value;
-            }
-        }
 
         /// <summary>
         /// Adds an object lifecycle event subscription.
@@ -164,7 +123,6 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ValueTask<bool> RemovePartitionLostSubscription()
             => _partitionLostEventSubscription.RemoveSubscription();
-
 
 
         /// <inheritdoc />

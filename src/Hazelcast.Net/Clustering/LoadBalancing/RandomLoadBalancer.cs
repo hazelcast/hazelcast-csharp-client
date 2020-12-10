@@ -34,9 +34,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <inheritdoc />
         public override Guid GetMember()
         {
-            // get an immutable list of members, and pick one at random
-            var members = Members;
-            if ((members?.Count ?? 0) == 0) throw new InvalidOperationException("The load balancer does not have members.");
+            var members = GetMembersNonEmptySnapshot();
             return members[RandomProvider.Random.Next(members.Count)];
         }
     }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,10 +29,11 @@ namespace Hazelcast.Examples.Client
             var options = BuildExampleOptions(args, configureOptions: (configuration, options) =>
             {
                 options.AddSubscriber(events => events
-                    .MemberAdded((c, args) =>
+                    .MembersUpdated((c, args) =>
                     {
-                        Console.WriteLine($"Added member: {args.Member.Id}");
-                        memberAdded.Release();
+                        foreach (var added in args.AddedMembers)
+                            Console.WriteLine($"Added member: {added.Id}");
+                        if (args.AddedMembers.Any()) memberAdded.Release();
                     }));
             });
 

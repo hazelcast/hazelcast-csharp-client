@@ -50,7 +50,9 @@ namespace Hazelcast.Benchmarks
             }
 
             var exePath = typeof (Program).Assembly.Location;
-            var slnPath = Path.GetFullPath(Path.Combine(exePath, "../../../.."));
+            var slnPath = Path.GetFullPath(exePath);
+            while (!File.Exists(Path.Combine(slnPath, "Hazelcast.Net.sln")))
+                slnPath = Path.GetFullPath(Path.Combine(slnPath, ".."));
             var artPath = Path.GetFullPath(Path.Combine(slnPath, "temp/benchmarkDotNet"));
 
             if (!Directory.Exists(artPath)) Directory.CreateDirectory(artPath);
@@ -63,6 +65,9 @@ namespace Hazelcast.Benchmarks
                 .AddJob(Job.InProcess); // run in-process (exe name 'hb' is different from csproj name)
 
             BenchmarkRunner.Run(type, config);
+
+            Console.WriteLine("Press a key to exit...");
+            Console.ReadKey(true);
         }
     }
 }

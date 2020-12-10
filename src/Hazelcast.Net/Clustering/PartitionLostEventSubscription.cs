@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Events;
 using Hazelcast.Protocol.Codecs;
 
@@ -41,18 +42,18 @@ namespace Hazelcast.Clustering
                 (message, state) => ClientAddPartitionLostListenerCodec.HandleEventAsync(message, HandleCodecEvent, null, LoggerFactory));
         }
 
-        internal Func<PartitionLostEventArgs, ValueTask> Handle { get; set; }
+        internal Func<PartitionLostEventArgs, ValueTask> PartitionLost { get; set; }
 
         private ValueTask HandleCodecEvent(int partitionId, int lostBackupCount, Guid memberId, object state)
         {
-            if (Handle == null) return default;
+            if (PartitionLost == null) return default;
 
             // TODO: document + avoid hard-coded constants
             const int maxLostBackupCount = 6;
 
             var member = _clusterMembers.GetMember(memberId);
 
-            return Handle(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member));
+            return PartitionLost.AwaitEach(new PartitionLostEventArgs(partitionId, lostBackupCount, lostBackupCount == maxLostBackupCount, member));
         }
     }
 }

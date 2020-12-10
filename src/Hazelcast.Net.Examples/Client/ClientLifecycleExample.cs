@@ -15,7 +15,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Events;
 
 namespace Hazelcast.Examples.Client
 {
@@ -32,10 +31,10 @@ namespace Hazelcast.Examples.Client
 
             // create another Hazelcast client and connect to a server running on localhost
             options.AddSubscriber(on => on
-                .ClientStateChanged((c, eventArgs) =>
+                .StateChanged((c, eventArgs) =>
                 {
                     Console.WriteLine($"State: {eventArgs.State}");
-                    if (eventArgs.State == ClientLifecycleState.Connected)
+                    if (eventArgs.State == ClientState.Connected)
                         connected.Release();
                 }));
             var hz2 = await HazelcastClientFactory.StartNewClientAsync(options);

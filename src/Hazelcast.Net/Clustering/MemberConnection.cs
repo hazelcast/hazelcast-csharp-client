@@ -46,6 +46,7 @@ namespace Hazelcast.Clustering
         private readonly ConcurrentDictionary<long, Invocation> _invocations
             = new ConcurrentDictionary<long, Invocation>();
 
+        private readonly Authenticator _authenticator;
         private readonly MessagingOptions _messagingOptions;
         private readonly SocketOptions _socketOptions;
         private readonly SslOptions _sslOptions;
@@ -55,8 +56,8 @@ namespace Hazelcast.Clustering
         private readonly ILogger _logger;
 
         private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
-        private Action<ClientMessage> _onReceiveEventMessage;
-        private Func<MemberConnection, ValueTask> _onShutdown;
+        private Action<ClientMessage> _receivedEvent;
+        private Func<MemberConnection, ValueTask> _closed;
 
 #pragma warning disable CA2213 // Disposable fields should be disposed - is owned by _messageConnection, which is disposed
         private ClientSocketConnection _socketConnection;
@@ -64,14 +65,13 @@ namespace Hazelcast.Clustering
         private ClientMessageConnection _messageConnection;
         private volatile int _disposed;
 
-        private CancellationTokenSource _bgCancellation;
-        private CancellationTokenSource _bgTaskCancellation;
-        private Task _bgTask;
+        private BackgroundTask _bgTask;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnection"/> class.
         /// </summary>
         /// <param name="address">The network address.</param>
+        /// <param name="authenticator">The authenticator.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="socketOptions">Socket options.</param>
         /// <param name="sslOptions">SSL options.</param>
@@ -83,9 +83,10 @@ namespace Hazelcast.Clustering
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public MemberConnection(NetworkAddress address, MessagingOptions messagingOptions, SocketOptions socketOptions, SslOptions sslOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, SocketOptions socketOptions, SslOptions sslOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
+            _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             _socketOptions = socketOptions ?? throw new ArgumentNullException(nameof(socketOptions));
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
@@ -96,6 +97,38 @@ namespace Hazelcast.Clustering
 
             HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("CLIENT")));
         }
+
+        #region Events
+
+        /// <summary>
+        /// Gets or sets an action that will be executed when the connection receives a message.
+        /// </summary>
+        public Action<ClientMessage> ReceivedEvent
+        {
+            get => _receivedEvent;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _receivedEvent = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets an action that will be executed when the connection has closed.
+        /// </summary>
+        public Func<MemberConnection, ValueTask> Closed
+        {
+            get => _closed;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _closed = value;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Gets the unique identifier of this client.
@@ -108,9 +141,14 @@ namespace Hazelcast.Clustering
         public bool Active => _disposed == 0;
 
         /// <summary>
-        /// Gets the unique identifier of the cluster member that this client is connected to.
+        /// Gets the unique identifier of the cluster member that this connection is connected to.
         /// </summary>
         public Guid MemberId { get; private set; }
+
+        /// <summary>
+        /// Gets the unique identifier of the cluster that this connection is connected to.
+        /// </summary>
+        public Guid ClusterId { get; private set; }
 
         /// <summary>
         /// Gets the network address the client is connected to.
@@ -131,34 +169,6 @@ namespace Hazelcast.Clustering
         /// Gets the date and time when bytes where last written by the client.
         /// </summary>
         public DateTime LastWriteTime => _socketConnection?.LastWriteTime ?? DateTime.MinValue;
-
-        /// <summary>
-        /// Gets or sets an action that will be executed when the client receives a message.
-        /// </summary>
-        public Action<ClientMessage> OnReceiveEventMessage
-        {
-            get => _onReceiveEventMessage;
-            set
-            {
-                if (_readonlyProperties)
-                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
-                _onReceiveEventMessage = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets an action that will be executed when the client shuts down.
-        /// </summary>
-        public Func<MemberConnection, ValueTask> OnShutdown
-        {
-            get => _onShutdown;
-            set
-            {
-                if (_readonlyProperties)
-                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
-                _onShutdown = value;
-            }
-        }
 
         /// <summary>
         /// Adds an invocation.
@@ -184,44 +194,54 @@ namespace Hazelcast.Clustering
             => _invocations.TryRemove(correlationId, out invocation);
 
         /// <summary>
-        /// Notifies the client after authentication has been performed.
-        /// </summary>
-        /// <param name="result">The result of the authentication.</param>
-        public void NotifyAuthenticated(AuthenticationResult result)
-        {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            MemberId = result.MemberId;
-        }
-
-        /// <summary>
         /// Connects the client to the server.
         /// </summary>
+        /// <param name="clusterState">The cluster state.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is connected.</returns>
-        public async ValueTask ConnectAsync(CancellationToken cancellationToken)
+        public async ValueTask<AuthenticationResult> ConnectAsync(ClusterState clusterState, CancellationToken cancellationToken)
         {
             // as soon as we even try to connect, some properties cannot change anymore
             _readonlyProperties = true;
 
-            // MessageConnection is just a wrapper around a true SocketConnection
+            // MessageConnection is just a wrapper around a true SocketConnection, and
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _socketOptions, _sslOptions, _loggerFactory) { OnShutdown = SocketShutdown };
-            _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
+            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _socketOptions, _sslOptions, _loggerFactory)
+                { OnShutdown = OnSocketShutdown };
+
+            _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory)
+                { OnReceiveMessage = ReceiveMessage };
+
             HConsole.Configure(x => x.Set(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]")));
 
+            AuthenticationResult result;
             try
             {
+                // connect
                 await _socketConnection.ConnectAsync(cancellationToken).CAF();
+
+                // send protocol bytes
+                var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CAF();
+                if (!sent) throw new InvalidOperationException("Failed to send protocol bytes.");
+
+                // authenticate (does not return null)
+                result = await _authenticator
+                    .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, cancellationToken)
+                    .CAF();
             }
-            catch (Exception e)
+            catch
             {
-                HConsole.WriteLine(this, "Failed to connect. " + e);
+                await _socketConnection.DisposeAsync().ObserveException().CAF();
+                _socketConnection = null;
+                _messageConnection = null;
                 throw;
             }
 
-            if (!await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CAF())
-                throw new InvalidOperationException("Failed to send protocol bytes.");
+            MemberId = result.MemberId;
+            ClusterId = result.ClusterId;
+
+            return result;
         }
 
         /// <summary>
@@ -229,7 +249,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
-        private void SocketShutdown(SocketConnectionBase connection)
+        private void OnSocketShutdown(SocketConnectionBase connection)
         {
             Terminate();
         }
@@ -294,7 +314,7 @@ namespace Hazelcast.Clustering
             try
             {
                 HConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
-                _onReceiveEventMessage(message);
+                _receivedEvent(message);
             }
             catch (Exception e)
             {
@@ -388,33 +408,38 @@ namespace Hazelcast.Clustering
             // create the invocation
             using var invocation = new Invocation(message, _messagingOptions, this, cancellationToken);
 
-            return await SendAsync(invocation, timeoutMilliseconds, cancellationToken).CAF();
+            return await SendAsync(invocation, timeoutMilliseconds).CAF();
         }
 
         /// <summary>
         /// Sends an invocation message.
         /// </summary>
         /// <param name="invocation">The invocation.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         /// <remarks>
         /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
         /// </remarks>
-        public Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken)
-            => SendAsync(invocation, _messagingOptions.InvocationTimeoutMilliseconds, cancellationToken);
+        public Task<ClientMessage> SendAsync(Invocation invocation)
+            => SendAsync(invocation, _messagingOptions.InvocationTimeoutMilliseconds);
 
         /// <summary>
         /// Sends an invocation message.
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <param name="timeoutMilliseconds">A timeout, in milliseconds.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         /// <remarks>
         /// <para>The operation must complete within the specified operation timeout.</para>
         /// </remarks>
-        public Task<ClientMessage> SendAsync(Invocation invocation, int timeoutMilliseconds, CancellationToken cancellationToken)
-            => TaskEx.RunWithTimeout(SendAsyncInternal, invocation, timeoutMilliseconds, cancellationToken);
+        public Task<ClientMessage> SendAsync(Invocation invocation, int timeoutMilliseconds)
+            => TaskEx.RunWithTimeout(SendAsyncInternal, invocation, timeoutMilliseconds, invocation.CancellationToken);
+
+        // TaskEx.RunWithTimeout invokes SendAsyncInternal with a cancellation token composed
+        // of the original invocation token and the timeout source - and that composed token
+        // will cancel if either the original token cancels, or the timeout is reached.
+        //
+        // Internally, if the invocation monitors its own cancellation token and, if it cancels,
+        // the invocation.Task is canceled too. But that is not the timeout token.
 
         private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
         {
@@ -427,7 +452,8 @@ namespace Hazelcast.Clustering
                                      HConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
 
             // actually send the message
-            bool success;
+            var success = false;
+            var active = true;
             try
             {
                 success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
@@ -435,10 +461,13 @@ namespace Hazelcast.Clustering
             catch
             {
                 RemoveInvocation(invocation);
-                throw;
+                active = Active;
+                if (active) throw;
+
+                // not active anymore: ignore this exception, throw a disconnected exception below
             }
 
-            if (!Active)
+            if (!Active || !active)
             {
                 // if the client is not active anymore, the invocation *may* have been failed
                 // already, but there is a race condition here (what-if the client disposed
@@ -462,45 +491,48 @@ namespace Hazelcast.Clustering
             // and then wait for the response
             try
             {
-                // in case it times out, there's not point cancelling invocation.Task as
-                // it is not a real task but just a task continuation source's task
-                // OTOH it can be cancelled if cancellationToken is cancelled
-                return await invocation.Task.CAF();
+                // we also need to monitor the composite token in case it cancels because
+                // of a timeout (in which case the invocation's own token won't necessarily
+                // cancel) and cancel the invocation Task accordingly, else the 'await'
+                // below might never return.
+                using var reg = cancellationToken.Register(invocation.TrySetCanceled);
+
+                var response = await invocation.Task.CAF();
+                HConsole.WriteLine(this, "Received response.");
+                return response;
             }
-            catch
+            catch (Exception e)
             {
+                HConsole.WriteLine(this, $"Failed ({e}).");
                 RemoveInvocation(invocation);
                 throw;
             }
         }
 
         /// <summary>
-        /// Starts a background task attached to the client.
+        /// Starts a background task attached to the connection.
         /// </summary>
         /// <param name="task">The task factory.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
-        /// <para>There can be only one background task running at a time. This is used to
-        /// install subscriptions on a new client. This method is *not* thread safe and
-        /// expects the caller to handler thread-safety.</para>
+        /// <para>Currently, only one background task at a time is supported, and this is *not*
+        /// thread-safe so it's up to the caller to handle thread-safety.</para>
         /// </remarks>
-        internal void StartBackgroundTask(Func<CancellationToken, Task> task, CancellationToken cancellationToken)
+        internal void StartBackgroundTask(Func<CancellationToken, Task> task)
         {
-            _bgCancellation ??= new CancellationTokenSource();
-            _bgTaskCancellation = CancellationTokenSource.CreateLinkedTokenSource(_bgCancellation.Token, cancellationToken);
-            _bgTask = task(_bgTaskCancellation.Token).ContinueWith(x =>
+            _bgTask = BackgroundTask.Run(async token =>
             {
-                if (x.IsFaulted)
+                try
                 {
-                    _logger.LogWarning("Background task failed, die.");
-                    Terminate();
+                    await task(token).CAF();
+                    _bgTask = null; // self-remove
                 }
-                _bgCancellation.Dispose();
-                _bgCancellation = null;
-                _bgTaskCancellation.Dispose();
-                _bgTaskCancellation = null;
-                return x;
-            }, TaskScheduler.Current);
+                catch
+                {
+                    _logger.LogWarning("Background task failed, terminate the connection.");
+                    _bgTask = null; // self-remove *before* disposing else catch-22
+                    await TerminateAsync().CAF(); // terminate the connection
+                }
+            });
         }
 
         /// <summary>
@@ -508,7 +540,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         public void Terminate()
         {
-            Task.Run(async () => await TerminateAsync().CAF());
+            Task.Run(TerminateAsync);
         }
 
         /// <summary>
@@ -517,66 +549,69 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the client connection has terminated.</returns>
         public async ValueTask TerminateAsync()
         {
-            try
-            {
-                await DisposeAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                // that's all we can do really
-                _logger.LogWarning(e, "Caught an exception while terminating.");
-            }
+            await DisposeAsync().CAF(); // does not throw
         }
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
+            // note: DisposeAsync should not throw (CA1065)
+
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            if (_messageConnection == null)
-                return;
+            if (ClusterId == default)
+            {
+                // the connection was never fully opened
+                await DisposeTransientAsync().CAF(); // does not throw
+            }
+            else
+            {
+                // the connection was fully opened
+                await DisposeOpenedAsync().CAF(); // does not throw
+            }
+        }
 
+        // disposes a connection that was never fully opened
+        private async ValueTask DisposeTransientAsync()
+        {
+            if (_messageConnection != null)
+            {
+                // also disposes the socket connection
+                await _messageConnection.DisposeAsync().CAF(); // does not throw
+            }
+            else if (_socketConnection != null)
+            {
+                await _socketConnection.DisposeAsync().CAF(); // does not throw
+            }
+        }
+
+        // disposes a connection that was fully opened
+        private async ValueTask DisposeOpenedAsync()
+        {
+            // raise event
+            try
+            {
+                await _closed(this).CAF(); // assume it may throw
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Caught an exception while raising Closed.");
+            }
+
+            // stop the background task
             var bgTask = _bgTask;
             if (bgTask != null)
             {
-                _bgCancellation?.Cancel();
-                try
-                {
-                    await bgTask.CAF();
-                }
-                catch { /* ignore - no value */ }
+                await bgTask.CompletedOrCancelAsync(true).CAF(); // does not throw
             }
 
-            _bgCancellation?.Dispose();
-            _bgTaskCancellation?.Dispose();
-
-            try
-            {
-                // message connection disposes the socket connection
-                await _messageConnection.DisposeAsync().CAF();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, $"Caught an exception while disposing {_messageConnection.GetType()}.");
-            }
+            // also disposes the socket connection
+            await _messageConnection.DisposeAsync().CAF(); // does not throw
 
             // shutdown all pending operations
-            // dealing with race conditions in SendAsync
             foreach (var invocation in _invocations.Values)
-                invocation.TrySetException(new TargetDisconnectedException());
-
-            if (_onShutdown == null)
-                return;
-
-            try
-            {
-                await _onShutdown(this).CAF();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Caught an exception while running onShutdown.");
-            }
+                invocation.TrySetException(new TargetDisconnectedException()); // does not throw
         }
     }
 }

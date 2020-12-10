@@ -118,10 +118,9 @@ namespace Hazelcast.Tests.Partitioning
                 { 3, Guid.NewGuid() },
             };
 
-            partitioner.NotifyPartitionView(originClientId, 0, map);
+            Assert.That(partitioner.NotifyPartitionView(originClientId, 0, map));
 
-            // TODO: is this the right exception?
-            Assert.Throws<ConnectionException>(() => partitioner.NotifyPartitionsCount(7));
+            Assert.Throws<InvalidOperationException>(() => partitioner.NotifyPartitionsCount(7));
 
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(map[1]));
             Assert.That(partitioner.GetPartitionOwner(-1), Is.EqualTo(Guid.Empty));
@@ -142,10 +141,10 @@ namespace Hazelcast.Tests.Partitioning
                 { 3, Guid.NewGuid() },
             };
 
-            partitioner.NotifyPartitionView(originClientId, 0, newMap);
+            Assert.That(partitioner.NotifyPartitionView(originClientId, 0, newMap), Is.False);
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(map[1]));
 
-            partitioner.NotifyPartitionView(originClientId, 1, newMap);
+            Assert.That(partitioner.NotifyPartitionView(originClientId, 1, newMap));
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(newMap[1]));
 
             newMap = new Dictionary<int, Guid>
@@ -157,10 +156,10 @@ namespace Hazelcast.Tests.Partitioning
 
             var newOwnerId = Guid.NewGuid();
 
-            partitioner.NotifyPartitionView(newOwnerId, 1, newMap);
+            Assert.That(partitioner.NotifyPartitionView(newOwnerId, 1, newMap));
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(newMap[1]));
 
-            partitioner.NotifyPartitionView(newOwnerId, 1, new Dictionary<int, Guid>());
+            Assert.That(partitioner.NotifyPartitionView(newOwnerId, 1, new Dictionary<int, Guid>()), Is.False);
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(newMap[1]));
         }
 

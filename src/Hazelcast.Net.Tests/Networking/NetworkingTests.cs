@@ -420,52 +420,7 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<ClientNotConnectedException>(async () => await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CAF());
-
-            HConsole.WriteLine(this, "End");
-            await Task.Delay(100).CAF();
-        }
-
-        [Test]
-        [Timeout(10_000)]
-        [Ignore("Requires a real server, obsolete")]
-        public async Task Auth()
-        {
-            // need to start a real server (not the RC thing!)
-
-            //var address = NetworkAddress.Parse("sgay-l4");
-            var address = NetworkAddress.Parse("localhost");
-
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
-            HConsole.WriteLine(this, "Begin");
-
-            HConsole.WriteLine(this, "Start client ");
-            var client1 = new MemberConnection(address, new MessagingOptions(), new SocketOptions(), new SslOptions(), new Int32Sequence(), new Int64Sequence(), new NullLoggerFactory());
-            await client1.ConnectAsync(CancellationToken.None).CAF();
-
-            // RC assigns a GUID but the default cluster name is 'dev'
-            var clusterName = "dev";
-            var username = (string) null; // null
-            var password = (string) null; // null
-            var clientId = Guid.NewGuid();
-            var clientType = "CSP"; // CSharp
-            var serializationVersion = (byte) 0x01;
-            var clientVersion = "4.0";
-            var clientName = "hz.client_0";
-            var labels = new HashSet<string>();
-            var requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, username, password, clientId, clientType, serializationVersion, clientVersion, clientName, labels);
-            HConsole.WriteLine(this, "Send auth request");
-            var invocation = new Invocation(requestMessage, new MessagingOptions(), null, CancellationToken.None);
-            var responseMessage = await client1.SendAsync(invocation, CancellationToken.None).CAF();
-            HConsole.WriteLine(this, "Rcvd auth response " +
-                                     HConsole.Lines(this, 1, responseMessage.Dump()));
-            var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
-
-            var status = (AuthenticationStatus) response.Status;
-            NUnit.Framework.Assert.AreEqual(AuthenticationStatus.Authenticated, status);
-
-            HConsole.WriteLine(this, "Stop client");
-            await client1.DisposeAsync().CAF();
+            Assert.ThrowsAsync<ClientOfflineException>(async () => await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CAF());
 
             HConsole.WriteLine(this, "End");
             await Task.Delay(100).CAF();
