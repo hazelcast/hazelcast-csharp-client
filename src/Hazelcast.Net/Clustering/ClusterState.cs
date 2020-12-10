@@ -170,6 +170,7 @@ namespace Hazelcast.Clustering
         /// should succeed when the cluster is eventually connected.</para>
         /// </remarks>
         public bool IsActive => ClientState == ClientState.Starting ||
+                                ClientState == ClientState.Started ||
                                 ClientState == ClientState.Connected ||
                                 ClientState == ClientState.Disconnected;
 
