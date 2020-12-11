@@ -27,25 +27,35 @@
   <PropertyGroup>
     <Description>Open-source .NET client for Hazelcast, the open-source in-memory distributed computing platform.</Description>
     <PackageProjectUrl>https://hazelcast.github.io/hazelcast-csharp-client/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/hazelcast/hazelcast-csharp-client</RepositoryUrl>
     <PackageTags>hazelcast cache imdg big-data in-memory datagrid clustering scalabilty distributed caching</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <RepositoryType>Git</RepositoryType>
     <PackageIcon>nuget-logo.png</PackageIcon>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <SignAssembly>true</SignAssembly>
     <PublicSign>true</PublicSign>
     <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
+    <RepositoryType>Git</RepositoryType>
+    <RepositoryUrl>https://github.com/hazelcast/hazelcast-csharp-client</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- build symbol package (snupkg) to distribute the PDB containing Source Link -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
     <!-- repository url can be published to nuspec -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
+    <!-- specify the remote name, in case git config contains multiple remotes -->
+    <GitRepositoryRemoteName>hazelcast</GitRepositoryRemoteName>
+
+    <!-- embed source files that are not trakced by git -->
     <!-- building generates some *.AssemblyInfo.cs files that we want to embed -->
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
+    <!-- enable settings that only apply to official builds (deterministic source paths, etc) -->
     <!-- TODO add a Condition="'$(JENKINS_CI)' == 'true'" of some sort + args to the build script? -->
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
