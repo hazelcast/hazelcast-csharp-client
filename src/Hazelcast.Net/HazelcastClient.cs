@@ -150,24 +150,14 @@ namespace Hazelcast
         /// <remarks>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task StartAsync(TimeSpan timeout = default)
+        public async Task StartAsync(TimeSpan timeout = default)
         {
-            var timeoutMs = timeout.RoundedMilliseconds()
-                .ClampToInt32();
+            var timeoutMs = timeout.RoundedMilliseconds().ClampToInt32();
 
             if (timeoutMs == 0) timeoutMs = _options.Networking.ConnectionTimeoutMilliseconds; // default
 
-            var task = TaskEx.RunWithTimeout((c, t) => c.ConnectAsync(t), Cluster, timeoutMs);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            using var cancellation = new CancellationTokenSource();
+            await Cluster.ConnectAsync(cancellation.Token).CfAwait(timeoutMs, cancellation);
         }
 
         /// <summary>

@@ -56,7 +56,7 @@ namespace Hazelcast.Tests.Core
             // Task.Run(Func<Task>) is OK with the task factory throwing immediately
             var task = Task.Run(/*Func<Task>*/ () => throw new Exception("bang"));
 
-            await task.ObserveException();
+            await task.CfAwaitNoThrow();
         }
 
         [Test]
@@ -65,7 +65,7 @@ namespace Hazelcast.Tests.Core
             // BackgroundTask.Run works the same
             var task = BackgroundTask.Run(token => throw new Exception("bang"));
 
-            await task.Task.ObserveException();
+            await task.Task.CfAwaitNoThrow();
         }
 
         [Test]

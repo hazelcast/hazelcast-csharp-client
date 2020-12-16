@@ -64,9 +64,12 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="observeException">Whether to observe exceptions (or throw).</param>
         /// <returns>A task that will complete when the background task has completed.</returns>
-        public Task CompleteAsync(bool observeException)
+        public async Task CompleteAsync(bool observeException)
         {
-            return observeException ? Task.ObserveException() : Task;
+            if (observeException)
+                await Task.CfAwaitNoThrow();
+            else
+                await Task.CfAwait();
         }
 
         /// <summary>
@@ -82,8 +85,10 @@ namespace Hazelcast.Core
             }
 
             // observe all exceptions, or only the canceled exception
-            var task = observeException ? Task.ObserveException() : Task.ObserveCanceled();
-            await task.CfAwait();
+            if (observeException)
+                await Task.CfAwaitNoThrow();
+            else
+                await Task.CfAwaitCanceled();
         }
 
         /// <summary>

@@ -232,7 +232,7 @@ namespace Hazelcast.Clustering
             }
             catch
             {
-                await _socketConnection.DisposeAsync().ObserveException().CfAwait();
+                await _socketConnection.DisposeAsync().CfAwaitNoThrow();
                 _socketConnection = null;
                 _messageConnection = null;
                 throw;
@@ -383,20 +383,7 @@ namespace Hazelcast.Clustering
         /// <remarks>
         /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
         /// </remarks>
-        public Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
-            => SendAsync(message, _messagingOptions.InvocationTimeoutMilliseconds, cancellationToken);
-
-        /// <summary>
-        /// Sends a message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        /// <param name="timeoutMilliseconds">A timeout, in milliseconds.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        /// <remarks>
-        /// <para>The operation must complete within the specified operation timeout.</para>
-        /// </remarks>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, int timeoutMilliseconds, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -408,7 +395,7 @@ namespace Hazelcast.Clustering
             // create the invocation
             using var invocation = new Invocation(message, _messagingOptions, this, cancellationToken);
 
-            return await SendAsync(invocation, timeoutMilliseconds).CfAwait();
+            return await SendAsync(invocation).CfAwait();
         }
 
         /// <summary>
@@ -419,20 +406,12 @@ namespace Hazelcast.Clustering
         /// <remarks>
         /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
         /// </remarks>
-        public Task<ClientMessage> SendAsync(Invocation invocation)
-            => SendAsync(invocation, _messagingOptions.InvocationTimeoutMilliseconds);
-
-        /// <summary>
-        /// Sends an invocation message.
-        /// </summary>
-        /// <param name="invocation">The invocation.</param>
-        /// <param name="timeoutMilliseconds">A timeout, in milliseconds.</param>
-        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        /// <remarks>
-        /// <para>The operation must complete within the specified operation timeout.</para>
-        /// </remarks>
-        public Task<ClientMessage> SendAsync(Invocation invocation, int timeoutMilliseconds)
-            => TaskEx.RunWithTimeout(SendAsyncInternal, invocation, timeoutMilliseconds, invocation.CancellationToken);
+        public async Task<ClientMessage> SendAsync(Invocation invocation)
+        {
+            using var cancellation = new CancellationTokenSource();
+            return await SendAsyncInternal(invocation, cancellation.Token)
+                .CfAwait(_messagingOptions.InvocationTimeoutMilliseconds, cancellation);
+        }
 
         // TaskEx.RunWithTimeout invokes SendAsyncInternal with a cancellation token composed
         // of the original invocation token and the timeout source - and that composed token

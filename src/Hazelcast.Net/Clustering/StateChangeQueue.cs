@@ -112,7 +112,7 @@ namespace Hazelcast.Clustering
                 return;
 
             _cancel.Cancel();
-            await _raising.ObserveCanceled().CfAwait();
+            await _raising.CfAwaitCanceled();
             _cancel.Dispose();
         }
     }

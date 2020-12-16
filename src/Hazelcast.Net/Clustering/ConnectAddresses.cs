@@ -179,7 +179,7 @@ namespace Hazelcast.Clustering
                 return;
 
             _cancel.Cancel();
-            await _connecting.ObserveCanceled().CfAwait();
+            await _connecting.CfAwaitCanceled();
             _cancel.Dispose();
 
             _paused.Dispose();

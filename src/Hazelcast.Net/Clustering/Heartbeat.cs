@@ -73,7 +73,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await _heartbeating.ObserveCanceled().CfAwait();
+                await _heartbeating.CfAwaitCanceled();
             }
             catch (Exception e)
             {
@@ -89,7 +89,7 @@ namespace Hazelcast.Clustering
                 await Task.Delay(_period, cancellationToken).CfAwait();
                 try
                 {
-                    await RunAsync(cancellationToken).ObserveCanceled().CfAwait();
+                    await RunAsync(cancellationToken).CfAwaitCanceled();
                 }
                 catch (Exception e)
                 {
