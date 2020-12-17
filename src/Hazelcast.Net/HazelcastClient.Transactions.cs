@@ -30,7 +30,7 @@ namespace Hazelcast
             options ??= new TransactionOptions();
 
             var transactionContext = new TransactionContext(Cluster, options, SerializationService, _loggerFactory);
-            await transactionContext.BeginAsync().CAF();
+            await transactionContext.BeginAsync().CfAwait();
             return transactionContext;
         }
     }

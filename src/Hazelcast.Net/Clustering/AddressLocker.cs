@@ -80,7 +80,7 @@ namespace Hazelcast.Clustering
         public async Task<IDisposable> LockAsync(NetworkAddress address)
         {
             var lockInfo = GetLockInfo(address);
-            await lockInfo.Semaphore.WaitAsync().CAF();
+            await lockInfo.Semaphore.WaitAsync().CfAwait();
             return lockInfo;
         }
     }

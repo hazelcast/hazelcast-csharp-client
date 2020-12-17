@@ -78,25 +78,25 @@ namespace Hazelcast.Testing.Remote
       }
       public async Task<bool> pingAsync(CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("ping", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("ping", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new pingArgs();
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new pingResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -106,25 +106,25 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> cleanAsync(CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("clean", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("clean", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new cleanArgs();
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new cleanResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -134,25 +134,25 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> exitAsync(CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("exit", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("exit", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new exitArgs();
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new exitResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -162,27 +162,27 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<Cluster> createClusterAsync(string hzVersion, string xmlconfig, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("createCluster", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("createCluster", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new createClusterArgs();
         args.HzVersion = hzVersion;
         args.Xmlconfig = xmlconfig;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new createClusterResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -196,26 +196,26 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<Member> startMemberAsync(string clusterId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("startMember", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("startMember", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new startMemberArgs();
         args.ClusterId = clusterId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new startMemberResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -229,27 +229,27 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> shutdownMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("shutdownMember", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("shutdownMember", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new shutdownMemberArgs();
         args.ClusterId = clusterId;
         args.MemberId = memberId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new shutdownMemberResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -259,27 +259,27 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> terminateMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("terminateMember", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("terminateMember", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new terminateMemberArgs();
         args.ClusterId = clusterId;
         args.MemberId = memberId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new terminateMemberResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -289,27 +289,27 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> suspendMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("suspendMember", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("suspendMember", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new suspendMemberArgs();
         args.ClusterId = clusterId;
         args.MemberId = memberId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new suspendMemberResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -319,27 +319,27 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> resumeMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("resumeMember", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("resumeMember", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new resumeMemberArgs();
         args.ClusterId = clusterId;
         args.MemberId = memberId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new resumeMemberResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -349,26 +349,26 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> shutdownClusterAsync(string clusterId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("shutdownCluster", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("shutdownCluster", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new shutdownClusterArgs();
         args.ClusterId = clusterId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new shutdownClusterResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -378,26 +378,26 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> terminateClusterAsync(string clusterId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("terminateCluster", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("terminateCluster", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new terminateClusterArgs();
         args.ClusterId = clusterId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new terminateClusterResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -407,26 +407,26 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<Cluster> splitMemberFromClusterAsync(string memberId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("splitMemberFromCluster", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("splitMemberFromCluster", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new splitMemberFromClusterArgs();
         args.MemberId = memberId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new splitMemberFromClusterResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -436,27 +436,27 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<Cluster> mergeMemberToClusterAsync(string clusterId, string memberId, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("mergeMemberToCluster", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("mergeMemberToCluster", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new mergeMemberToClusterArgs();
         args.ClusterId = clusterId;
         args.MemberId = memberId;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new mergeMemberToClusterResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -466,28 +466,28 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<Response> executeOnControllerAsync(string clusterId, string script, Lang lang, CancellationToken cancellationToken = default(CancellationToken))
       {
-        await OutputProtocol.WriteMessageBeginAsync(new TMessage("executeOnController", TMessageType.Call, SeqId), cancellationToken).CAF();
+        await OutputProtocol.WriteMessageBeginAsync(new TMessage("executeOnController", TMessageType.Call, SeqId), cancellationToken).CfAwait();
 
         var args = new executeOnControllerArgs();
         args.ClusterId = clusterId;
         args.Script = script;
         args.Lang = lang;
 
-        await args.WriteAsync(OutputProtocol, cancellationToken).CAF();
-        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CAF();
-        await OutputProtocol.Transport.FlushAsync(cancellationToken).CAF();
+        await args.WriteAsync(OutputProtocol, cancellationToken).CfAwait();
+        await OutputProtocol.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await OutputProtocol.Transport.FlushAsync(cancellationToken).CfAwait();
 
-        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CAF();
+        var msg = await InputProtocol.ReadMessageBeginAsync(cancellationToken).CfAwait();
         if (msg.Type == TMessageType.Exception)
         {
-          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CAF();
-          await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+          var x = await TApplicationException.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+          await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
           throw x;
         }
 
         var result = new executeOnControllerResult();
-        await result.ReadAsync(InputProtocol, cancellationToken).CAF();
-        await InputProtocol.ReadMessageEndAsync(cancellationToken).CAF();
+        await result.ReadAsync(InputProtocol, cancellationToken).CfAwait();
+        await InputProtocol.ReadMessageEndAsync(cancellationToken).CfAwait();
         if (result.__isset.success)
         {
           return result.Success;
@@ -527,31 +527,31 @@ namespace Hazelcast.Testing.Remote
 
       public async Task<bool> ProcessAsync(TProtocol iprot, TProtocol oprot)
       {
-        return await ProcessAsync(iprot, oprot, CancellationToken.None).CAF();
+        return await ProcessAsync(iprot, oprot, CancellationToken.None).CfAwait();
       }
 
       public async Task<bool> ProcessAsync(TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         try
         {
-          var msg = await iprot.ReadMessageBeginAsync(cancellationToken).CAF();
+          var msg = await iprot.ReadMessageBeginAsync(cancellationToken).CfAwait();
 
           ProcessFunction fn;
           processMap_.TryGetValue(msg.Name, out fn);
 
           if (fn == null)
           {
-            await TProtocolUtil.SkipAsync(iprot, TType.Struct, cancellationToken).CAF();
-            await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+            await TProtocolUtil.SkipAsync(iprot, TType.Struct, cancellationToken).CfAwait();
+            await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
             var x = new TApplicationException (TApplicationException.ExceptionType.UnknownMethod, "Invalid method name: '" + msg.Name + "'");
-            await oprot.WriteMessageBeginAsync(new TMessage(msg.Name, TMessageType.Exception, msg.SeqID), cancellationToken).CAF();
-            await x.WriteAsync(oprot, cancellationToken).CAF();
-            await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-            await oprot.Transport.FlushAsync(cancellationToken).CAF();
+            await oprot.WriteMessageBeginAsync(new TMessage(msg.Name, TMessageType.Exception, msg.SeqID), cancellationToken).CfAwait();
+            await x.WriteAsync(oprot, cancellationToken).CfAwait();
+            await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+            await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
             return true;
           }
 
-          await fn(msg.SeqID, iprot, oprot, cancellationToken).CAF();
+          await fn(msg.SeqID, iprot, oprot, cancellationToken).CfAwait();
 
         }
         catch (IOException)
@@ -565,14 +565,14 @@ namespace Hazelcast.Testing.Remote
       public async Task ping_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new pingArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new pingResult();
         try
         {
-          result.Success = await _iAsync.pingAsync(cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("ping", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.pingAsync(cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("ping", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -583,24 +583,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("ping", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("ping", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task clean_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new cleanArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new cleanResult();
         try
         {
-          result.Success = await _iAsync.cleanAsync(cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("clean", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.cleanAsync(cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("clean", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -611,24 +611,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("clean", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("clean", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task exit_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new exitArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new exitResult();
         try
         {
-          result.Success = await _iAsync.exitAsync(cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("exit", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.exitAsync(cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("exit", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -639,31 +639,31 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("exit", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("exit", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task createCluster_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new createClusterArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new createClusterResult();
         try
         {
           try
           {
-            result.Success = await _iAsync.createClusterAsync(args.HzVersion, args.Xmlconfig, cancellationToken).CAF();
+            result.Success = await _iAsync.createClusterAsync(args.HzVersion, args.Xmlconfig, cancellationToken).CfAwait();
           }
           catch (ServerException serverException)
           {
             result.ServerException = serverException;
           }
-          await oprot.WriteMessageBeginAsync(new TMessage("createCluster", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("createCluster", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -674,31 +674,31 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("createCluster", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("createCluster", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task startMember_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new startMemberArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new startMemberResult();
         try
         {
           try
           {
-            result.Success = await _iAsync.startMemberAsync(args.ClusterId, cancellationToken).CAF();
+            result.Success = await _iAsync.startMemberAsync(args.ClusterId, cancellationToken).CfAwait();
           }
           catch (ServerException serverException)
           {
             result.ServerException = serverException;
           }
-          await oprot.WriteMessageBeginAsync(new TMessage("startMember", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("startMember", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -709,24 +709,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("startMember", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("startMember", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task shutdownMember_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new shutdownMemberArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new shutdownMemberResult();
         try
         {
-          result.Success = await _iAsync.shutdownMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("shutdownMember", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.shutdownMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("shutdownMember", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -737,24 +737,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("shutdownMember", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("shutdownMember", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task terminateMember_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new terminateMemberArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new terminateMemberResult();
         try
         {
-          result.Success = await _iAsync.terminateMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("terminateMember", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.terminateMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("terminateMember", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -765,24 +765,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("terminateMember", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("terminateMember", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task suspendMember_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new suspendMemberArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new suspendMemberResult();
         try
         {
-          result.Success = await _iAsync.suspendMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("suspendMember", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.suspendMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("suspendMember", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -793,24 +793,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("suspendMember", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("suspendMember", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task resumeMember_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new resumeMemberArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new resumeMemberResult();
         try
         {
-          result.Success = await _iAsync.resumeMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("resumeMember", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.resumeMemberAsync(args.ClusterId, args.MemberId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("resumeMember", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -821,24 +821,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("resumeMember", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("resumeMember", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task shutdownCluster_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new shutdownClusterArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new shutdownClusterResult();
         try
         {
-          result.Success = await _iAsync.shutdownClusterAsync(args.ClusterId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("shutdownCluster", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.shutdownClusterAsync(args.ClusterId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("shutdownCluster", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -849,24 +849,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("shutdownCluster", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("shutdownCluster", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task terminateCluster_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new terminateClusterArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new terminateClusterResult();
         try
         {
-          result.Success = await _iAsync.terminateClusterAsync(args.ClusterId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("terminateCluster", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.terminateClusterAsync(args.ClusterId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("terminateCluster", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -877,24 +877,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("terminateCluster", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("terminateCluster", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task splitMemberFromCluster_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new splitMemberFromClusterArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new splitMemberFromClusterResult();
         try
         {
-          result.Success = await _iAsync.splitMemberFromClusterAsync(args.MemberId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("splitMemberFromCluster", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.splitMemberFromClusterAsync(args.MemberId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("splitMemberFromCluster", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -905,24 +905,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("splitMemberFromCluster", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("splitMemberFromCluster", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task mergeMemberToCluster_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new mergeMemberToClusterArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new mergeMemberToClusterResult();
         try
         {
-          result.Success = await _iAsync.mergeMemberToClusterAsync(args.ClusterId, args.MemberId, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("mergeMemberToCluster", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.mergeMemberToClusterAsync(args.ClusterId, args.MemberId, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("mergeMemberToCluster", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -933,24 +933,24 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("mergeMemberToCluster", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("mergeMemberToCluster", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
       public async Task executeOnController_ProcessAsync(int seqid, TProtocol iprot, TProtocol oprot, CancellationToken cancellationToken)
       {
         var args = new executeOnControllerArgs();
-        await args.ReadAsync(iprot, cancellationToken).CAF();
-        await iprot.ReadMessageEndAsync(cancellationToken).CAF();
+        await args.ReadAsync(iprot, cancellationToken).CfAwait();
+        await iprot.ReadMessageEndAsync(cancellationToken).CfAwait();
         var result = new executeOnControllerResult();
         try
         {
-          result.Success = await _iAsync.executeOnControllerAsync(args.ClusterId, args.Script, args.Lang, cancellationToken).CAF();
-          await oprot.WriteMessageBeginAsync(new TMessage("executeOnController", TMessageType.Reply, seqid), cancellationToken).CAF();
-          await result.WriteAsync(oprot, cancellationToken).CAF();
+          result.Success = await _iAsync.executeOnControllerAsync(args.ClusterId, args.Script, args.Lang, cancellationToken).CfAwait();
+          await oprot.WriteMessageBeginAsync(new TMessage("executeOnController", TMessageType.Reply, seqid), cancellationToken).CfAwait();
+          await result.WriteAsync(oprot, cancellationToken).CfAwait();
         }
         catch (TTransportException)
         {
@@ -961,11 +961,11 @@ namespace Hazelcast.Testing.Remote
           Console.Error.WriteLine("Error occurred in processor:");
           Console.Error.WriteLine(ex.ToString());
           var x = new TApplicationException(TApplicationException.ExceptionType.InternalError," Internal error.");
-          await oprot.WriteMessageBeginAsync(new TMessage("executeOnController", TMessageType.Exception, seqid), cancellationToken).CAF();
-          await x.WriteAsync(oprot, cancellationToken).CAF();
+          await oprot.WriteMessageBeginAsync(new TMessage("executeOnController", TMessageType.Exception, seqid), cancellationToken).CfAwait();
+          await x.WriteAsync(oprot, cancellationToken).CfAwait();
         }
-        await oprot.WriteMessageEndAsync(cancellationToken).CAF();
-        await oprot.Transport.FlushAsync(cancellationToken).CAF();
+        await oprot.WriteMessageEndAsync(cancellationToken).CfAwait();
+        await oprot.Transport.FlushAsync(cancellationToken).CfAwait();
       }
 
     }
@@ -984,10 +984,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -996,14 +996,14 @@ namespace Hazelcast.Testing.Remote
             switch (field.ID)
             {
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1017,9 +1017,9 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("ping_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1085,10 +1085,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -1099,22 +1099,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1128,7 +1128,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("ping_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -1136,12 +1136,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1196,10 +1196,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -1208,14 +1208,14 @@ namespace Hazelcast.Testing.Remote
             switch (field.ID)
             {
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1229,9 +1229,9 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("clean_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1297,10 +1297,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -1311,22 +1311,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1340,7 +1340,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("clean_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -1348,12 +1348,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1408,10 +1408,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -1420,14 +1420,14 @@ namespace Hazelcast.Testing.Remote
             switch (field.ID)
             {
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1441,9 +1441,9 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("exit_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1509,10 +1509,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -1523,22 +1523,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1552,7 +1552,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("exit_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -1560,12 +1560,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1656,10 +1656,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -1670,32 +1670,32 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  HzVersion = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  HzVersion = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 2:
                 if (field.Type == TType.String)
                 {
-                  Xmlconfig = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  Xmlconfig = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1709,28 +1709,28 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("createCluster_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (HzVersion != null && __isset.hzVersion)
           {
             field.Name = "hzVersion";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(HzVersion, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(HzVersion, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (Xmlconfig != null && __isset.xmlconfig)
           {
             field.Name = "xmlconfig";
             field.Type = TType.String;
             field.ID = 2;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(Xmlconfig, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(Xmlconfig, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1831,10 +1831,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -1846,33 +1846,33 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct)
                 {
                   Success = new Cluster();
-                  await Success.ReadAsync(iprot, cancellationToken).CAF();
+                  await Success.ReadAsync(iprot, cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 1:
                 if (field.Type == TType.Struct)
                 {
                   ServerException = new ServerException();
-                  await ServerException.ReadAsync(iprot, cancellationToken).CAF();
+                  await ServerException.ReadAsync(iprot, cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -1886,7 +1886,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("createCluster_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -1896,9 +1896,9 @@ namespace Hazelcast.Testing.Remote
               field.Name = "Success";
               field.Type = TType.Struct;
               field.ID = 0;
-              await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-              await Success.WriteAsync(oprot, cancellationToken).CAF();
-              await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+              await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+              await Success.WriteAsync(oprot, cancellationToken).CfAwait();
+              await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
             }
           }
           else if(this.__isset.serverException)
@@ -1908,13 +1908,13 @@ namespace Hazelcast.Testing.Remote
               field.Name = "ServerException";
               field.Type = TType.Struct;
               field.ID = 1;
-              await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-              await ServerException.WriteAsync(oprot, cancellationToken).CAF();
-              await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+              await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+              await ServerException.WriteAsync(oprot, cancellationToken).CfAwait();
+              await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
             }
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2000,10 +2000,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -2014,22 +2014,22 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2043,19 +2043,19 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("startMember_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2146,10 +2146,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -2161,33 +2161,33 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct)
                 {
                   Success = new Member();
-                  await Success.ReadAsync(iprot, cancellationToken).CAF();
+                  await Success.ReadAsync(iprot, cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 1:
                 if (field.Type == TType.Struct)
                 {
                   ServerException = new ServerException();
-                  await ServerException.ReadAsync(iprot, cancellationToken).CAF();
+                  await ServerException.ReadAsync(iprot, cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2201,7 +2201,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("startMember_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -2211,9 +2211,9 @@ namespace Hazelcast.Testing.Remote
               field.Name = "Success";
               field.Type = TType.Struct;
               field.ID = 0;
-              await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-              await Success.WriteAsync(oprot, cancellationToken).CAF();
-              await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+              await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+              await Success.WriteAsync(oprot, cancellationToken).CfAwait();
+              await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
             }
           }
           else if(this.__isset.serverException)
@@ -2223,13 +2223,13 @@ namespace Hazelcast.Testing.Remote
               field.Name = "ServerException";
               field.Type = TType.Struct;
               field.ID = 1;
-              await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-              await ServerException.WriteAsync(oprot, cancellationToken).CAF();
-              await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+              await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+              await ServerException.WriteAsync(oprot, cancellationToken).CfAwait();
+              await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
             }
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2330,10 +2330,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -2344,32 +2344,32 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 2:
                 if (field.Type == TType.String)
                 {
-                  MemberId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  MemberId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2383,28 +2383,28 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("shutdownMember_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (MemberId != null && __isset.memberId)
           {
             field.Name = "memberId";
             field.Type = TType.String;
             field.ID = 2;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(MemberId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(MemberId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2490,10 +2490,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -2504,22 +2504,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2533,7 +2533,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("shutdownMember_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -2541,12 +2541,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2637,10 +2637,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -2651,32 +2651,32 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 2:
                 if (field.Type == TType.String)
                 {
-                  MemberId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  MemberId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2690,28 +2690,28 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("terminateMember_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (MemberId != null && __isset.memberId)
           {
             field.Name = "memberId";
             field.Type = TType.String;
             field.ID = 2;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(MemberId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(MemberId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2797,10 +2797,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -2811,22 +2811,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2840,7 +2840,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("terminateMember_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -2848,12 +2848,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2944,10 +2944,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -2958,32 +2958,32 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 2:
                 if (field.Type == TType.String)
                 {
-                  MemberId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  MemberId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -2997,28 +2997,28 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("suspendMember_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (MemberId != null && __isset.memberId)
           {
             field.Name = "memberId";
             field.Type = TType.String;
             field.ID = 2;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(MemberId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(MemberId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3104,10 +3104,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -3118,22 +3118,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3147,7 +3147,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("suspendMember_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -3155,12 +3155,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3251,10 +3251,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -3265,32 +3265,32 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 2:
                 if (field.Type == TType.String)
                 {
-                  MemberId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  MemberId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3304,28 +3304,28 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("resumeMember_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (MemberId != null && __isset.memberId)
           {
             field.Name = "memberId";
             field.Type = TType.String;
             field.ID = 2;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(MemberId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(MemberId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3411,10 +3411,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -3425,22 +3425,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3454,7 +3454,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("resumeMember_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -3462,12 +3462,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3543,10 +3543,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -3557,22 +3557,22 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3586,19 +3586,19 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("shutdownCluster_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3674,10 +3674,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -3688,22 +3688,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3717,7 +3717,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("shutdownCluster_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -3725,12 +3725,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3806,10 +3806,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -3820,22 +3820,22 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3849,19 +3849,19 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("terminateCluster_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3937,10 +3937,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -3951,22 +3951,22 @@ namespace Hazelcast.Testing.Remote
               case 0:
                 if (field.Type == TType.Bool)
                 {
-                  Success = await iprot.ReadBoolAsync(cancellationToken).CAF();
+                  Success = await iprot.ReadBoolAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -3980,7 +3980,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("terminateCluster_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -3988,12 +3988,12 @@ namespace Hazelcast.Testing.Remote
             field.Name = "Success";
             field.Type = TType.Bool;
             field.ID = 0;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteBoolAsync(Success, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteBoolAsync(Success, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4069,10 +4069,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -4083,22 +4083,22 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  MemberId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  MemberId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4112,19 +4112,19 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("splitMemberFromCluster_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (MemberId != null && __isset.memberId)
           {
             field.Name = "memberId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(MemberId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(MemberId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4200,10 +4200,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -4215,22 +4215,22 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct)
                 {
                   Success = new Cluster();
-                  await Success.ReadAsync(iprot, cancellationToken).CAF();
+                  await Success.ReadAsync(iprot, cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4244,7 +4244,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("splitMemberFromCluster_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -4254,13 +4254,13 @@ namespace Hazelcast.Testing.Remote
               field.Name = "Success";
               field.Type = TType.Struct;
               field.ID = 0;
-              await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-              await Success.WriteAsync(oprot, cancellationToken).CAF();
-              await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+              await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+              await Success.WriteAsync(oprot, cancellationToken).CfAwait();
+              await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
             }
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4351,10 +4351,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -4365,32 +4365,32 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 2:
                 if (field.Type == TType.String)
                 {
-                  MemberId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  MemberId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4404,28 +4404,28 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("mergeMemberToCluster_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (MemberId != null && __isset.memberId)
           {
             field.Name = "memberId";
             field.Type = TType.String;
             field.ID = 2;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(MemberId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(MemberId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4511,10 +4511,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -4526,22 +4526,22 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct)
                 {
                   Success = new Cluster();
-                  await Success.ReadAsync(iprot, cancellationToken).CAF();
+                  await Success.ReadAsync(iprot, cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4555,7 +4555,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("mergeMemberToCluster_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -4565,13 +4565,13 @@ namespace Hazelcast.Testing.Remote
               field.Name = "Success";
               field.Type = TType.Struct;
               field.ID = 0;
-              await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-              await Success.WriteAsync(oprot, cancellationToken).CAF();
-              await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+              await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+              await Success.WriteAsync(oprot, cancellationToken).CfAwait();
+              await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
             }
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4681,10 +4681,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -4695,42 +4695,42 @@ namespace Hazelcast.Testing.Remote
               case 1:
                 if (field.Type == TType.String)
                 {
-                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  ClusterId = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 2:
                 if (field.Type == TType.String)
                 {
-                  Script = await iprot.ReadStringAsync(cancellationToken).CAF();
+                  Script = await iprot.ReadStringAsync(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               case 3:
                 if (field.Type == TType.I32)
                 {
-                  Lang = (Lang)await iprot.ReadI32Async(cancellationToken).CAF();
+                  Lang = (Lang)await iprot.ReadI32Async(cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4744,37 +4744,37 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("executeOnController_args");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
           if (ClusterId != null && __isset.clusterId)
           {
             field.Name = "clusterId";
             field.Type = TType.String;
             field.ID = 1;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(ClusterId, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(ClusterId, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (Script != null && __isset.script)
           {
             field.Name = "script";
             field.Type = TType.String;
             field.ID = 2;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteStringAsync(Script, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteStringAsync(Script, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
           if (__isset.lang)
           {
             field.Name = "lang";
             field.Type = TType.I32;
             field.ID = 3;
-            await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-            await oprot.WriteI32Async((int)Lang, cancellationToken).CAF();
-            await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+            await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+            await oprot.WriteI32Async((int)Lang, cancellationToken).CfAwait();
+            await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4870,10 +4870,10 @@ namespace Hazelcast.Testing.Remote
         try
         {
           TField field;
-          await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+          await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
           while (true)
           {
-            field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+            field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
             if (field.Type == TType.Stop)
             {
               break;
@@ -4885,22 +4885,22 @@ namespace Hazelcast.Testing.Remote
                 if (field.Type == TType.Struct)
                 {
                   Success = new Response();
-                  await Success.ReadAsync(iprot, cancellationToken).CAF();
+                  await Success.ReadAsync(iprot, cancellationToken).CfAwait();
                 }
                 else
                 {
-                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                  await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 }
                 break;
               default:
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
                 break;
             }
 
-            await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+            await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
           }
 
-          await iprot.ReadStructEndAsync(cancellationToken).CAF();
+          await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {
@@ -4914,7 +4914,7 @@ namespace Hazelcast.Testing.Remote
         try
         {
           var struc = new TStruct("executeOnController_result");
-          await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+          await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
           var field = new TField();
 
           if(this.__isset.success)
@@ -4924,13 +4924,13 @@ namespace Hazelcast.Testing.Remote
               field.Name = "Success";
               field.Type = TType.Struct;
               field.ID = 0;
-              await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-              await Success.WriteAsync(oprot, cancellationToken).CAF();
-              await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+              await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+              await Success.WriteAsync(oprot, cancellationToken).CfAwait();
+              await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
             }
           }
-          await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-          await oprot.WriteStructEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+          await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
         }
         finally
         {

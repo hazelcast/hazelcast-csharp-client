@@ -175,7 +175,7 @@ namespace Hazelcast.Clustering
                         HConsole.WriteLine(this, $"Removed member {member.Id}");
                         removed.Add(member);
                         if (_connections.TryGetValue(member.Id, out var client))
-                            await client.TerminateAsync().CAF(); // TODO: consider dying in the background?
+                            await client.TerminateAsync().CfAwait(); // TODO: consider dying in the background?
                         break;
 
                     case 2: // new but not old = added
@@ -283,7 +283,7 @@ namespace Hazelcast.Clustering
 
                 // no clients => wait for clients
                 // this *may* throw
-                await Task.Delay(_clusterState.Options.WaitForConnectionMilliseconds, cancellationToken).CAF();
+                await Task.Delay(_clusterState.Options.WaitForConnectionMilliseconds, cancellationToken).CfAwait();
             }
 
             // this *will* throw
@@ -335,7 +335,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the first member view event has been received.</returns>
         public async ValueTask WaitForMembersAsync(CancellationToken cancellationToken)
         {
-            await _firstMembersView.WaitAsync(cancellationToken).CAF();
+            await _firstMembersView.WaitAsync(cancellationToken).CfAwait();
             _firstMembersView.Dispose();
             _firstMembersView = null;
         }

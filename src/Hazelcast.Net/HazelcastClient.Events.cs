@@ -48,11 +48,11 @@ namespace Hazelcast
                 {
                     case DistributedObjectCreatedEventHandler _:
                     case DistributedObjectDestroyedEventHandler _:
-                        await Cluster.ClusterEvents.AddObjectLifecycleSubscription().CAF();
+                        await Cluster.ClusterEvents.AddObjectLifecycleSubscription().CfAwait();
                         break;
 
                     case PartitionLostEventHandler _:
-                        await Cluster.ClusterEvents.AddPartitionLostSubscription().CAF();
+                        await Cluster.ClusterEvents.AddPartitionLostSubscription().CfAwait();
                         break;
 
                     case MembersUpdatedEventHandler _ :
@@ -85,9 +85,9 @@ namespace Hazelcast
             {
                 var removed = handler switch
                 {
-                    DistributedObjectCreatedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CAF(),
-                    DistributedObjectDestroyedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CAF(),
-                    PartitionLostEventHandler _ => await Cluster.ClusterEvents.RemovePartitionLostSubscription().CAF(),
+                    DistributedObjectCreatedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CfAwait(),
+                    DistributedObjectDestroyedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CfAwait(),
+                    PartitionLostEventHandler _ => await Cluster.ClusterEvents.RemovePartitionLostSubscription().CfAwait(),
                     MembersUpdatedEventHandler _ => true,
                     PartitionsUpdatedEventHandler _ => true,
                     ConnectionOpenedEventHandler _ => true,
@@ -191,14 +191,14 @@ namespace Hazelcast
                 // FIXME should this be cancelable?
                 var cancellationToken = CancellationToken.None;
                 foreach (var subscriber in _options.Subscribers)
-                    await subscriber.SubscribeAsync(this, cancellationToken).CAF();
+                    await subscriber.SubscribeAsync(this, cancellationToken).CfAwait();
             }
 
             var args = new ConnectionOpenedEventArgs(isFirst);
 
             // trigger ConnectionOpened event
             await ForEachHandler<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args).CAF();
+                (handler, sender, a) => handler.HandleAsync(sender, a), args).CfAwait();
         }
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace Hazelcast
             {
                 try
                 {
-                    await action(handler, this, args).CAF();
+                    await action(handler, this, args).CfAwait();
                 }
                 catch (Exception e)
                 {

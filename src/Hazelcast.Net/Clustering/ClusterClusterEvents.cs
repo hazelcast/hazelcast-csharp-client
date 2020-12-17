@@ -128,8 +128,8 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await _objectLifecycleEventSubscription.DisposeAsync().CAF();
-            await _partitionLostEventSubscription.DisposeAsync().CAF();
+            await _objectLifecycleEventSubscription.DisposeAsync().CfAwait();
+            await _partitionLostEventSubscription.DisposeAsync().CfAwait();
         }
     }
 }

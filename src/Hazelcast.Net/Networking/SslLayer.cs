@@ -49,7 +49,7 @@ namespace Hazelcast.Networking
 
             try
             {
-                await sslStream.AuthenticateAsClientAsync(targetHost, clientCertificates, _options.Protocol, _options.CheckCertificateRevocation).CAF();
+                await sslStream.AuthenticateAsClientAsync(targetHost, clientCertificates, _options.Protocol, _options.CheckCertificateRevocation).CfAwait();
             }
             catch (Exception e)
             {

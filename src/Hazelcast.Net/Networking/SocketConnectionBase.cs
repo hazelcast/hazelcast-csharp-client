@@ -231,7 +231,7 @@ namespace Hazelcast.Networking
             _streamReadCancellationTokenSource.Cancel();
 
             // ensure everything is down by awaiting the other task
-            await (task == _pipeReading ? _pipeWriting : _pipeReading).CAF();
+            await (task == _pipeReading ? _pipeWriting : _pipeReading).CfAwait();
 
             // kill socket and stream
             try
@@ -264,7 +264,7 @@ namespace Hazelcast.Networking
             // send bytes
             try
             {
-                await _stream.WriteAsync(bytes, 0, length, cancellationToken).CAF();
+                await _stream.WriteAsync(bytes, 0, length, cancellationToken).CfAwait();
                 LastWriteTime = DateTime.Now;
             }
             catch (Exception e)
@@ -287,7 +287,7 @@ namespace Hazelcast.Networking
         // virtual for tests
         public virtual async ValueTask FlushAsync()
         {
-            await _stream.FlushAsync().CAF();
+            await _stream.FlushAsync().CfAwait();
         }
 
         /// <summary>
@@ -312,7 +312,7 @@ namespace Hazelcast.Networking
                 try
                 {
                     HConsole.WriteLine(this, "Pipe writer waiting for data");
-                    bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token).CAF();
+                    bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token).CfAwait();
 
                     if (bytesRead == 0)
                     {
@@ -341,7 +341,7 @@ namespace Hazelcast.Networking
                 writer.Advance(bytesRead);
 
                 // make the data available to the PipeReader
-                var result = await writer.FlushAsync().CAF();
+                var result = await writer.FlushAsync().CfAwait();
 
                 if (result.IsCompleted)
                 {
@@ -352,7 +352,7 @@ namespace Hazelcast.Networking
 
             // tell the PipeReader that there's no more data coming
             HConsole.WriteLine(this, "Pipe writer completing");
-            await writer.CompleteAsync().CAF();
+            await writer.CompleteAsync().CfAwait();
         }
 
         /// <summary>
@@ -367,7 +367,7 @@ namespace Hazelcast.Networking
 
             // loop reading data from the pipe
             var state = new ReadPipeState { Reader = reader };
-            while (await ReadPipeLoop0(state).CAF()) { }
+            while (await ReadPipeLoop0(state).CfAwait()) { }
 
             // exception?
             if (state.Failed)
@@ -381,7 +381,7 @@ namespace Hazelcast.Networking
 
             // mark the PipeReader as complete
             HConsole.WriteLine(this, "Pipe reader completing");
-            await reader.CompleteAsync().CAF();
+            await reader.CompleteAsync().CfAwait();
         }
 
         /// <summary>
@@ -394,7 +394,7 @@ namespace Hazelcast.Networking
         {
             // await data from the pipe
             HConsole.WriteLine(this, "Pipe reader awaits data from the pipe");
-            var result = await state.Reader.ReadAsync().CAF();
+            var result = await state.Reader.ReadAsync().CfAwait();
             state.Buffer = result.Buffer;
 
             // no data means it's over
@@ -407,7 +407,7 @@ namespace Hazelcast.Networking
             HConsole.WriteLine(this, $"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
 
             // process data
-            while (await ReadPipeLoop1(state).CAF()) { }
+            while (await ReadPipeLoop1(state).CfAwait()) { }
 
             // tell the PipeReader how much of the buffer we have consumed
             state.Reader.AdvanceTo(state.Buffer.Start, state.Buffer.End);
@@ -448,7 +448,7 @@ namespace Hazelcast.Networking
                 try
                 {
                     HConsole.WriteLine(this, "Pipe reader received prefix");
-                    await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength)).CAF();
+                    await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength)).CfAwait();
                     state.Buffer = state.Buffer.Slice(_prefixLength);
                     _prefixLength = 0;
                 }
@@ -494,7 +494,7 @@ namespace Hazelcast.Networking
             _streamReadCancellationTokenSource.Cancel();
 
             // wait for everything to be down
-            await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown).CAF();
+            await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown).CfAwait();
             HConsole.WriteLine(this, "Pipe is down");
 
             // dispose, ignore exceptions

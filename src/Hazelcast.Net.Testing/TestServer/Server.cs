@@ -96,7 +96,7 @@ namespace Hazelcast.Testing.TestServer
             _listener = new ServerSocketListener(_endpoint, _hcname) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
 
             _open = true;
-            await _listener.StartAsync().CAF();
+            await _listener.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Server started");
         }
@@ -115,7 +115,7 @@ namespace Hazelcast.Testing.TestServer
             {
                 try
                 {
-                    await connection.DisposeAsync().CAF();
+                    await connection.DisposeAsync().CfAwait();
                 }
                 catch { /* ignore */ }
             }
@@ -137,8 +137,8 @@ namespace Hazelcast.Testing.TestServer
             HConsole.WriteLine(this, "Stop server");
 
             // stop accepting new connections
-            await listener.StopAsync().CAF();
-            await listener.DisposeAsync().CAF();
+            await listener.StopAsync().CfAwait();
+            await listener.DisposeAsync().CfAwait();
 
             HConsole.WriteLine(this, "Server stopped");
         }
@@ -170,7 +170,7 @@ namespace Hazelcast.Testing.TestServer
         {
             eventMessage.CorrelationId = correlationId;
             eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-            await connection.SendAsync(eventMessage).CAF();
+            await connection.SendAsync(eventMessage).CfAwait();
         }
 
         private void ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
@@ -208,7 +208,7 @@ namespace Hazelcast.Testing.TestServer
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await StopAsync().CAF();
+            await StopAsync().CfAwait();
         }
     }
 }

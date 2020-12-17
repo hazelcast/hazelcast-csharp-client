@@ -38,7 +38,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 ReadSubscribeResponse, CreateUnsubscribeRequest, ReadUnsubscribeResponse, HandleEventAsync,
                 new SubscriptionState<CollectionItemEventHandlers<T>>(Name, handlers, state));
 
-            await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription).CfAwait();
 
             return subscription.Id;
         }
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
             {
                 if (handler.EventType.HasAll(eventType))
                 {
-                    await handler.HandleAsync(this, member, item, sstate.HandlerState).CAF();
+                    await handler.HandleAsync(this, member, item, sstate.HandlerState).CfAwait();
                 }
             }
         }

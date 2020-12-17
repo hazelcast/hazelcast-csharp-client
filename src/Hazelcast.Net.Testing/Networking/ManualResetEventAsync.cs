@@ -55,7 +55,7 @@ namespace Hazelcast.Testing.Networking
             var cancellationSource = new TaskCompletionSource<object>();
             using var reg = cancellationToken.Register(() => cancellationSource.TrySetResult(null));
 
-            var task = await Task.WhenAny(_completionSource.Task, cancellationSource.Task).CAF();
+            var task = await Task.WhenAny(_completionSource.Task, cancellationSource.Task).CfAwait();
 
             if (task != cancellationSource.Task) return;
 

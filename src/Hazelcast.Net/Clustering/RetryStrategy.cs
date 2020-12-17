@@ -106,7 +106,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await Task.Delay(delay, cancellationToken).CAF();
+                await Task.Delay(delay, cancellationToken).CfAwait();
             }
             catch (OperationCanceledException)
             {

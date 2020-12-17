@@ -33,7 +33,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // all collections are async enumerable,
             // but by default we load the whole items set at once,
             // then iterate in memory
-            var items = await GetAllAsync().CAF();
+            var items = await GetAllAsync().CfAwait();
             foreach (var item in items)
                 yield return item;
         }

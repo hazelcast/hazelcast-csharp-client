@@ -253,7 +253,7 @@ namespace Hazelcast.Clustering
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this?
             var delayMilliseconds = Math.Min(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
-            await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CAF(); // throws if cancelled
+            await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CfAwait(); // throws if cancelled
 
             InitializeNewCompletionSource();
             return true;

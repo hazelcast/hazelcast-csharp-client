@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var timeoutMs = timeToWait.RoundedMilliseconds();
 
             var requestMessage = MapTryRemoveCodec.EncodeRequest(Name, keyData, ContextId, timeoutMs);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapTryRemoveCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -93,7 +93,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected virtual async Task<TValue> GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TValue>(response);
         }
@@ -114,7 +114,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -132,7 +132,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected virtual async Task<bool> RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
         {
             var requestMessage = MapRemoveIfSameCodec.EncodeRequest(Name, keyData, valueData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
             return response;
         }
@@ -152,7 +152,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
 
@@ -169,7 +169,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var predicateData = ToSafeData(predicate);
 
             var requestMessage = MapRemoveAllCodec.EncodeRequest(Name, predicateData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             _ = MapRemoveAllCodec.DecodeResponse(responseMessage);
         }
 
@@ -194,7 +194,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
 
@@ -214,7 +214,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
     }

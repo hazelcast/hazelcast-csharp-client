@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, null, -1, default, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, null, -1, default, cancellation.Token).CfAwait();
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, null, -1, memberId, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, null, -1, memberId, cancellation.Token).CfAwait();
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Hazelcast.Clustering
             if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
 
             using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, memberConnection, -1, default, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, memberConnection, -1, default, cancellation.Token).CfAwait();
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Hazelcast.Clustering
             if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
 
             using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellation.Token).CAF();
+            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellation.Token).CfAwait();
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace Hazelcast.Clustering
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -158,7 +158,7 @@ namespace Hazelcast.Clustering
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -182,7 +182,7 @@ namespace Hazelcast.Clustering
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -214,7 +214,7 @@ namespace Hazelcast.Clustering
                                    targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId, cancellationToken) :
                                    new Invocation(message, _clusterState.Options.Messaging, cancellationToken);
 
-            return await SendAsyncInternal(invocation).CAF();
+            return await SendAsyncInternal(invocation).CfAwait();
         }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace Hazelcast.Clustering
                 {
                     var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
                     var timeoutMs = _clusterState.Options.Messaging.InvocationTimeoutMilliseconds;
-                    return await connection.SendAsync(invocation, timeoutMs).CAF();
+                    return await connection.SendAsync(invocation, timeoutMs).CfAwait();
                 }
                 catch (TaskCanceledException)
                 {
@@ -250,7 +250,7 @@ namespace Hazelcast.Clustering
                     // note that CanRetryAsync may wait (depending on the retry strategy)
                     // and may throw if canceled while waiting - and then the exception is rethrown
                     if (invocation.IsRetryable(exception, _clusterState.Options.Networking.RedoOperations) &&
-                        await invocation.CanRetryAsync(() => _clusterState.GetNextCorrelationId()).CAF())
+                        await invocation.CanRetryAsync(() => _clusterState.GetNextCorrelationId()).CfAwait())
                     {
                         HConsole.WriteLine(this, "Retrying...");
                         continue;

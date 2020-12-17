@@ -49,7 +49,7 @@ namespace Hazelcast.Core
             {
                 foreach (var d in function.GetInvocationList())
                 {
-                    await ((Func<ValueTask>) d)().CAF();
+                    await ((Func<ValueTask>) d)().CfAwait();
                 }
             }
         }
@@ -68,7 +68,7 @@ namespace Hazelcast.Core
             {
                 foreach (var d in function.GetInvocationList())
                 {
-                    await ((Func<T, ValueTask>) d)(arg).CAF();
+                    await ((Func<T, ValueTask>) d)(arg).CfAwait();
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace Hazelcast.Core
             {
                 foreach (var d in function.GetInvocationList())
                 {
-                    await ((Func<T1, T2, ValueTask>) d)(arg1, arg2).CAF();
+                    await ((Func<T1, T2, ValueTask>) d)(arg1, arg2).CfAwait();
                 }
             }
         }
@@ -112,7 +112,7 @@ namespace Hazelcast.Core
             {
                 foreach (var d in function.GetInvocationList())
                 {
-                    await ((Func<T1, T2, T3, ValueTask>) d)(arg1, arg2, arg3).CAF();
+                    await ((Func<T1, T2, T3, ValueTask>) d)(arg1, arg2, arg3).CfAwait();
                 }
             }
         }

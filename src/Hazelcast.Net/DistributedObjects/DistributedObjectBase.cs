@@ -132,7 +132,7 @@ namespace Hazelcast.DistributedObjects
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync()
-            => await _factory.DestroyAsync(this).CAF();
+            => await _factory.DestroyAsync(this).CfAwait();
 
         /// <summary>
         /// Serializes an object to <see cref="IData"/>.
@@ -308,7 +308,7 @@ namespace Hazelcast.DistributedObjects
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 

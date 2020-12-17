@@ -44,7 +44,7 @@ namespace Hazelcast.Core
             {
                 try
                 {
-                    await function(_cancellation.Token).CAF();
+                    await function(_cancellation.Token).CfAwait();
                 }
                 finally
                 {
@@ -83,7 +83,7 @@ namespace Hazelcast.Core
 
             // observe all exceptions, or only the canceled exception
             var task = observeException ? Task.ObserveException() : Task.ObserveCanceled();
-            await task.CAF();
+            await task.CfAwait();
         }
 
         /// <summary>

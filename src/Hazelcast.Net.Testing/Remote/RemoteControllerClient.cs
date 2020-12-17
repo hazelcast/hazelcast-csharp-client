@@ -63,11 +63,11 @@ namespace Hazelcast.Testing.Remote
 
         private async Task<T> WithLock<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken)
         {
-            await _lock.WaitAsync(cancellationToken).CAF();
+            await _lock.WaitAsync(cancellationToken).CfAwait();
             try
             {
                 if (!cancellationToken.IsCancellationRequested)
-                    return await action(cancellationToken).CAF();
+                    return await action(cancellationToken).CfAwait();
                 else
                     return default;
             }
@@ -98,7 +98,7 @@ namespace Hazelcast.Testing.Remote
         /// <inheritdoc />
         public async Task<bool> ExitAsync(CancellationToken cancellationToken = default)
         {
-            var result = await WithLock(exitAsync, cancellationToken).CAF();
+            var result = await WithLock(exitAsync, cancellationToken).CfAwait();
             InputProtocol?.Transport?.Close();
             return result;
         }

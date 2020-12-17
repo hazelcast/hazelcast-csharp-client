@@ -141,7 +141,7 @@ namespace Hazelcast.Clustering
         /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
         public async ValueTask TransitionAsync(ClientState newState)
         {
-            await _lock.WaitAsync(CancellationToken.None).CAF();
+            await _lock.WaitAsync(CancellationToken.None).CfAwait();
 
             try
             {
@@ -296,7 +296,7 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await _stateChangeQueue.DisposeAsync().CAF();
+            await _stateChangeQueue.DisposeAsync().CfAwait();
             _clusterCancellation.Dispose();
             _lock.Dispose();
         }

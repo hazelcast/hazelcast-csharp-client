@@ -62,10 +62,10 @@ namespace Hazelcast.Testing.Remote
       try
       {
         TField field;
-        await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+        await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
         while (true)
         {
-          field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+          field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
           if (field.Type == TType.Stop)
           {
             break;
@@ -76,22 +76,22 @@ namespace Hazelcast.Testing.Remote
             case 1:
               if (field.Type == TType.String)
               {
-                Id = await iprot.ReadStringAsync(cancellationToken).CAF();
+                Id = await iprot.ReadStringAsync(cancellationToken).CfAwait();
               }
               else
               {
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
               }
               break;
             default:
-              await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+              await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
               break;
           }
 
-          await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+          await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
         }
 
-        await iprot.ReadStructEndAsync(cancellationToken).CAF();
+        await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
       }
       finally
       {
@@ -105,19 +105,19 @@ namespace Hazelcast.Testing.Remote
       try
       {
         var struc = new TStruct("Cluster");
-        await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+        await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
         var field = new TField();
         if (Id != null && __isset.id)
         {
           field.Name = "id";
           field.Type = TType.String;
           field.ID = 1;
-          await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-          await oprot.WriteStringAsync(Id, cancellationToken).CAF();
-          await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+          await oprot.WriteStringAsync(Id, cancellationToken).CfAwait();
+          await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
         }
-        await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-        await oprot.WriteStructEndAsync(cancellationToken).CAF();
+        await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+        await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
       }
       finally
       {

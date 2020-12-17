@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 HandleEventAsync,
                 new MapSubscriptionState(mode, Name, handlers, state));
 
-            await Cluster.Events.InstallSubscriptionAsync(subscription, cancellationToken).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription, cancellationToken).CfAwait();
 
             return subscription.Id;
         }
@@ -128,7 +128,7 @@ namespace Hazelcast.DistributedObjects.Impl
                         IMapEventHandler<TKey, TValue, IHMap<TKey, TValue>> mapHandler => mapHandler.HandleAsync(this, member, numberOfAffectedEntries, state),
                         _ => throw new NotSupportedException()
                     };
-                    await task.CAF();
+                    await task.CfAwait();
                 }
             }
         }

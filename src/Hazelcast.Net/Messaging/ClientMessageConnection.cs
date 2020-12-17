@@ -265,7 +265,7 @@ namespace Hazelcast.Messaging
             {
                 try
                 {
-                    await _writer.WaitAsync(cancellationToken).CAF();
+                    await _writer.WaitAsync(cancellationToken).CfAwait();
                 }
                 catch (ObjectDisposedException)
                 {
@@ -289,10 +289,10 @@ namespace Hazelcast.Messaging
                 // last chance - after this line, we will send the full message
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var sentFrames = await SendFramesAsync(message, cancellationToken).CAF();
+                var sentFrames = await SendFramesAsync(message, cancellationToken).CfAwait();
                 if (!sentFrames) return false;
 
-                await _connection.FlushAsync().CAF(); // make sure the message goes out
+                await _connection.FlushAsync().CfAwait(); // make sure the message goes out
             }
             finally
             {
@@ -327,14 +327,14 @@ namespace Hazelcast.Messaging
                     // flush buffer
                     if (length > 0)
                     {
-                        var sent = await _connection.SendAsync(buffer, length, default).CAF();
+                        var sent = await _connection.SendAsync(buffer, length, default).CfAwait();
                         if (!sent) break;
                         length = 0;
                     }
 
                     // send this frame only
                     HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
-                    var sentFrame = await SendFrameAsync(frame, default).CAF();
+                    var sentFrame = await SendFrameAsync(frame, default).CfAwait();
                     if (!sentFrame) break;
                 }
                 else
@@ -345,7 +345,7 @@ namespace Hazelcast.Messaging
                     // if it won't fit in the buffer, flush the buffer
                     if (length + frame.Length > buffer.Length)
                     {
-                        var sent = await _connection.SendAsync(buffer, length, default).CAF();
+                        var sent = await _connection.SendAsync(buffer, length, default).CfAwait();
                         if (!sent) break;
                         length = 0;
                     }
@@ -363,7 +363,7 @@ namespace Hazelcast.Messaging
 
             var allSent = frame == null;
             if (allSent && length > 0)
-                allSent &= await _connection.SendAsync(buffer, length, default).CAF();
+                allSent &= await _connection.SendAsync(buffer, length, default).CfAwait();
 
             if (buffer != null)
                 ArrayPool<byte>.Shared.Return(buffer);
@@ -379,13 +379,13 @@ namespace Hazelcast.Messaging
             var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
             frame.WriteLengthAndFlags(header);
 
-            var sentHeader = await _connection.SendAsync(header, sizeofHeader, cancellationToken).CAF();
+            var sentHeader = await _connection.SendAsync(header, sizeofHeader, cancellationToken).CfAwait();
             ArrayPool<byte>.Shared.Return(header);
 
             if (!sentHeader) return false;
             //if (frame.Length <= sizeofHeader) return true;
 
-            return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CAF();
+            return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />
@@ -393,7 +393,7 @@ namespace Hazelcast.Messaging
         {
             // note: DisposeAsync should not throw (CA1065)
 
-            await _connection.DisposeAsync().CAF(); // does not throw
+            await _connection.DisposeAsync().CfAwait(); // does not throw
             _writer.Dispose();
         }
     }

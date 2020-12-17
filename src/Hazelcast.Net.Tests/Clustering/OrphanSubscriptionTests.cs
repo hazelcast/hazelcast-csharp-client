@@ -196,14 +196,14 @@ namespace Hazelcast.Tests.Clustering
             {
                 response.CorrelationId = msg.CorrelationId;
                 response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await conn.SendAsync(response).CAF();
+                await conn.SendAsync(response).CfAwait();
             }
 
             async Task SendEventAsync(ClientMessage eventMessage, long correlationId)
             {
                 eventMessage.CorrelationId = correlationId;
                 eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await conn.SendAsync(eventMessage).CAF();
+                await conn.SendAsync(eventMessage).CfAwait();
             }
 
             async Task SendErrorAsync(RemoteError error, string message)
@@ -213,7 +213,7 @@ namespace Hazelcast.Tests.Clustering
                         new ErrorHolder(error, "?", message, Enumerable.Empty<StackTraceElement>())
                     };
                 var response = ErrorsServerCodec.EncodeResponse(errorHolders);
-                await SendResponseAsync(response).CAF();
+                await SendResponseAsync(response).CfAwait();
             }
 
             var state = (ServerState) s.State;
@@ -231,7 +231,7 @@ namespace Hazelcast.Tests.Clustering
                         var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
                             0, address, s.MemberId, SerializationService.SerializerVersion,
                             "4.0", partitionsCount, s.ClusterId, false);
-                        await SendResponseAsync(authResponse).CAF();
+                        await SendResponseAsync(authResponse).CfAwait();
                         break;
                     }
 
@@ -241,11 +241,11 @@ namespace Hazelcast.Tests.Clustering
                         HConsole.WriteLine(this, $"(server{state.Id}) AddClusterViewListener");
                         var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(msg);
                         var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await SendResponseAsync(addResponse).CAF();
+                        await SendResponseAsync(addResponse).CfAwait();
 
                         _ = Task.Run(async () =>
                         {
-                            await Task.Delay(500).CAF();
+                            await Task.Delay(500).CfAwait();
 
                             const int membersVersion = 1;
                             var memberVersion = new MemberVersion(4, 0, 0);
@@ -255,9 +255,9 @@ namespace Hazelcast.Tests.Clustering
                                 new MemberInfo(state.MemberIds[0], state.Addresses[0], memberVersion, false, memberAttributes),
                                 new MemberInfo(state.MemberIds[1], state.Addresses[1], memberVersion, false, memberAttributes),
                             });
-                            await SendEventAsync(membersEventMessage, msg.CorrelationId).CAF();
+                            await SendEventAsync(membersEventMessage, msg.CorrelationId).CfAwait();
 
-                            await Task.Delay(500).CAF();
+                            await Task.Delay(500).CfAwait();
 
                             const int partitionsVersion = 1;
                             var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
@@ -265,7 +265,7 @@ namespace Hazelcast.Tests.Clustering
                                 new KeyValuePair<Guid, IList<int>>(state.MemberIds[0], new List<int> { 0 }),
                                 new KeyValuePair<Guid, IList<int>>(state.MemberIds[1], new List<int> { 1 }),
                             });
-                            await SendEventAsync(partitionsEventMessage, msg.CorrelationId).CAF();
+                            await SendEventAsync(partitionsEventMessage, msg.CorrelationId).CfAwait();
                         });
 
                         break;
@@ -277,7 +277,7 @@ namespace Hazelcast.Tests.Clustering
                         HConsole.WriteLine(this, $"(server{state.Id}) CreateProxy");
                         var createRequest = ClientCreateProxyServerCodec.DecodeRequest(msg);
                         var createResponse = ClientCreateProxiesServerCodec.EncodeResponse();
-                        await SendResponseAsync(createResponse).CAF();
+                        await SendResponseAsync(createResponse).CfAwait();
                         break;
                     }
 
@@ -289,7 +289,7 @@ namespace Hazelcast.Tests.Clustering
                         state.Subscribed = true;
                         state.SubscriptionCorrelationId = msg.CorrelationId;
                         var addResponse = MapAddEntryListenerServerCodec.EncodeResponse(state.SubscriptionId);
-                        await SendResponseAsync(addResponse).CAF();
+                        await SendResponseAsync(addResponse).CfAwait();
                         break;
                     }
 
@@ -304,7 +304,7 @@ namespace Hazelcast.Tests.Clustering
                         if (removed) state.Subscribed = false;
                         HConsole.WriteLine(this, $"(server{state.Id}) Subscribed={state.Subscribed}");
                         var removeResponse = MapRemoveEntryListenerServerCodec.EncodeResponse(removed);
-                        await SendResponseAsync(removeResponse).CAF();
+                        await SendResponseAsync(removeResponse).CfAwait();
                         break;
                     }
 
@@ -314,7 +314,7 @@ namespace Hazelcast.Tests.Clustering
                         HConsole.WriteLine(this, $"(server{state.Id}) Set");
                         var setRequest = MapSetServerCodec.DecodeRequest(msg);
                         var setResponse = MapSetServerCodec.EncodeResponse();
-                        await SendResponseAsync(setResponse).CAF();
+                        await SendResponseAsync(setResponse).CfAwait();
 
                         HConsole.WriteLine(this, $"(server{state.Id}) Subscribed={state.Subscribed}");
 
@@ -324,7 +324,7 @@ namespace Hazelcast.Tests.Clustering
                             var key = setRequest.Key;
                             var value = setRequest.Value;
                             var addedEvent = MapAddEntryListenerServerCodec.EncodeEntryEvent(key, value, value, value, (int)MapEventTypes.Added, state.SubscriptionId, 1);
-                            await SendEventAsync(addedEvent, state.SubscriptionCorrelationId).CAF();
+                            await SendEventAsync(addedEvent, state.SubscriptionCorrelationId).CfAwait();
                         }
                         break;
                     }
@@ -334,7 +334,7 @@ namespace Hazelcast.Tests.Clustering
                     {
                         // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
                         var messageName = MessageTypeConstants.GetMessageTypeName(msg.MessageType);
-                        await SendErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{msg.MessageType:X}) not implemented.").CAF();
+                        await SendErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{msg.MessageType:X}) not implemented.").CfAwait();
                         break;
                     }
             }

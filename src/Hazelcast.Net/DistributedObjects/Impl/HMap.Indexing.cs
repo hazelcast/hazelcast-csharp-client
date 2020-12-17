@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
     }

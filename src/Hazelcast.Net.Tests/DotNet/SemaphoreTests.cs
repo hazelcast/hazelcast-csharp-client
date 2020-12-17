@@ -27,13 +27,13 @@ namespace Hazelcast.Tests.DotNet
         {
             var semaphore = new SemaphoreSlim(1);
 
-            await semaphore.WaitAsync().CAF();
+            await semaphore.WaitAsync().CfAwait();
 
             // zero means we could not enter, if we tried
             Assert.AreEqual(0, semaphore.CurrentCount);
 
             // better: either take it immediately, or fail
-            var taken = await semaphore.WaitAsync(0).CAF();
+            var taken = await semaphore.WaitAsync(0).CfAwait();
 
             Assert.IsFalse(taken);
         }

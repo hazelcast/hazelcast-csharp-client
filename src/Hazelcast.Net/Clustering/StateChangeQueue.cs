@@ -89,12 +89,12 @@ namespace Hazelcast.Clustering
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // wait for a state change
-                var state = await _states.ReceiveAsync(cancellationToken).CAF();
+                var state = await _states.ReceiveAsync(cancellationToken).CfAwait();
 
                 // raise event
                 try
                 {
-                    await _stateChanged.AwaitEach(state).CAF();
+                    await _stateChanged.AwaitEach(state).CfAwait();
                 }
                 catch (Exception e)
                 {
@@ -112,7 +112,7 @@ namespace Hazelcast.Clustering
                 return;
 
             _cancel.Cancel();
-            await _raising.ObserveCanceled().CAF();
+            await _raising.ObserveCanceled().CfAwait();
             _cancel.Dispose();
         }
     }

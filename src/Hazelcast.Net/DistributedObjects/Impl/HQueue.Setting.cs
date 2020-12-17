@@ -26,11 +26,11 @@ namespace Hazelcast.DistributedObjects.Impl
         // <inheritdoc />
         // need that one because we are an HCollection - weird?
         // tries to enqueue immediately, does not wait & does not throw
-        public override async Task<bool> AddAsync(T item) => await OfferAsync(item).CAF();
+        public override async Task<bool> AddAsync(T item) => await OfferAsync(item).CfAwait();
 
         // <inheritdoc />
         public async Task<bool> OfferAsync(T item, TimeSpan timeToWait = default)
-            => await TryEnqueueAsync(item, timeToWait, CancellationToken.None).CAF();
+            => await TryEnqueueAsync(item, timeToWait, CancellationToken.None).CfAwait();
 
         // <inheritdoc />
         // was: Put - enqueue, wait indefinitely, may throw
@@ -49,7 +49,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
 
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var timeToWaitMilliseconds = (long)timeToWait.TotalMilliseconds;
             var requestMessage = QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
             return QueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
@@ -70,7 +70,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             var itemsData = ToSafeData(items);
             var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             return QueueAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }

@@ -74,7 +74,7 @@ namespace Hazelcast.Tests.Core
             var task = Task.Run(() => 42);
             Assert.That(task, Is.InstanceOf<Task<int>>());
 
-            var configured = task.CAF();
+            var configured = task.CfAwait();
             Assert.That(GetContinueOnCapturedContext(configured), Is.False);
         }
 
@@ -84,7 +84,7 @@ namespace Hazelcast.Tests.Core
             var task = new ValueTask<int>(42);
             Assert.That(task, Is.InstanceOf<ValueTask<int>>());
 
-            var configured = task.CAF();
+            var configured = task.CfAwait();
             Assert.That(GetContinueOnCapturedContext(configured), Is.False);
         }
 
@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.Core
             var task = Task.Run(() => Task.CompletedTask);
             Assert.That(task, Is.InstanceOf<Task>());
 
-            var configured = task.CAF();
+            var configured = task.CfAwait();
             Assert.That(GetContinueOnCapturedContext(configured), Is.False);
         }
 
@@ -104,7 +104,7 @@ namespace Hazelcast.Tests.Core
             var task = new ValueTask();
             Assert.That(task, Is.InstanceOf<ValueTask>());
 
-            var configured = task.CAF();
+            var configured = task.CfAwait();
             Assert.That(GetContinueOnCapturedContext(configured), Is.False);
         }
 
@@ -150,10 +150,10 @@ namespace Hazelcast.Tests.Core
         public void ArgumentExceptions()
         {
             Task task = null;
-            Assert.Throws<ArgumentNullException>(() => task.CAF());
+            Assert.Throws<ArgumentNullException>(() => task.CfAwait());
 
             Task<int> taskOfT = null;
-            Assert.Throws<ArgumentNullException>(() => taskOfT.CAF());
+            Assert.Throws<ArgumentNullException>(() => taskOfT.CfAwait());
         }
 
         [Test]

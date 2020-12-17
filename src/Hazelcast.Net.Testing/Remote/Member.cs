@@ -92,10 +92,10 @@ namespace Hazelcast.Testing.Remote
       try
       {
         TField field;
-        await iprot.ReadStructBeginAsync(cancellationToken).CAF();
+        await iprot.ReadStructBeginAsync(cancellationToken).CfAwait();
         while (true)
         {
-          field = await iprot.ReadFieldBeginAsync(cancellationToken).CAF();
+          field = await iprot.ReadFieldBeginAsync(cancellationToken).CfAwait();
           if (field.Type == TType.Stop)
           {
             break;
@@ -106,42 +106,42 @@ namespace Hazelcast.Testing.Remote
             case 1:
               if (field.Type == TType.String)
               {
-                Uuid = await iprot.ReadStringAsync(cancellationToken).CAF();
+                Uuid = await iprot.ReadStringAsync(cancellationToken).CfAwait();
               }
               else
               {
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
               }
               break;
             case 2:
               if (field.Type == TType.String)
               {
-                Host = await iprot.ReadStringAsync(cancellationToken).CAF();
+                Host = await iprot.ReadStringAsync(cancellationToken).CfAwait();
               }
               else
               {
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
               }
               break;
             case 3:
               if (field.Type == TType.I32)
               {
-                Port = await iprot.ReadI32Async(cancellationToken).CAF();
+                Port = await iprot.ReadI32Async(cancellationToken).CfAwait();
               }
               else
               {
-                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+                await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
               }
               break;
             default:
-              await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CAF();
+              await TProtocolUtil.SkipAsync(iprot, field.Type, cancellationToken).CfAwait();
               break;
           }
 
-          await iprot.ReadFieldEndAsync(cancellationToken).CAF();
+          await iprot.ReadFieldEndAsync(cancellationToken).CfAwait();
         }
 
-        await iprot.ReadStructEndAsync(cancellationToken).CAF();
+        await iprot.ReadStructEndAsync(cancellationToken).CfAwait();
       }
       finally
       {
@@ -155,37 +155,37 @@ namespace Hazelcast.Testing.Remote
       try
       {
         var struc = new TStruct("Member");
-        await oprot.WriteStructBeginAsync(struc, cancellationToken).CAF();
+        await oprot.WriteStructBeginAsync(struc, cancellationToken).CfAwait();
         var field = new TField();
         if (Uuid != null && __isset.uuid)
         {
           field.Name = "uuid";
           field.Type = TType.String;
           field.ID = 1;
-          await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-          await oprot.WriteStringAsync(Uuid, cancellationToken).CAF();
-          await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+          await oprot.WriteStringAsync(Uuid, cancellationToken).CfAwait();
+          await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
         }
         if (Host != null && __isset.host)
         {
           field.Name = "host";
           field.Type = TType.String;
           field.ID = 2;
-          await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-          await oprot.WriteStringAsync(Host, cancellationToken).CAF();
-          await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+          await oprot.WriteStringAsync(Host, cancellationToken).CfAwait();
+          await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
         }
         if (__isset.port)
         {
           field.Name = "port";
           field.Type = TType.I32;
           field.ID = 3;
-          await oprot.WriteFieldBeginAsync(field, cancellationToken).CAF();
-          await oprot.WriteI32Async(Port, cancellationToken).CAF();
-          await oprot.WriteFieldEndAsync(cancellationToken).CAF();
+          await oprot.WriteFieldBeginAsync(field, cancellationToken).CfAwait();
+          await oprot.WriteI32Async(Port, cancellationToken).CfAwait();
+          await oprot.WriteFieldEndAsync(cancellationToken).CfAwait();
         }
-        await oprot.WriteFieldStopAsync(cancellationToken).CAF();
-        await oprot.WriteStructEndAsync(cancellationToken).CAF();
+        await oprot.WriteFieldStopAsync(cancellationToken).CfAwait();
+        await oprot.WriteStructEndAsync(cancellationToken).CfAwait();
       }
       finally
       {

@@ -112,7 +112,7 @@ namespace Hazelcast
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             var client = CreateClient(options);
-            await client.StartAsync(cancellationToken).CAF();
+            await client.StartAsync(cancellationToken).CfAwait();
             return client;
         }
 
@@ -143,7 +143,7 @@ namespace Hazelcast
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             var client = CreateClient(options);
-            await client.StartAsync(timeout).CAF();
+            await client.StartAsync(timeout).CfAwait();
             return client;
         }
 

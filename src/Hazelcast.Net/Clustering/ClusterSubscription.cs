@@ -182,7 +182,7 @@ namespace Hazelcast.Clustering
         public async ValueTask HandleAsync(ClientMessage eventMessage)
         {
             if (!_active) return;
-            await _eventHandler(eventMessage, State).CAF();
+            await _eventHandler(eventMessage, State).CfAwait();
         }
 
         /// <summary>

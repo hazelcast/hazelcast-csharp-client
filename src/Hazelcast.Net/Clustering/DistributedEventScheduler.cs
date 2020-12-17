@@ -170,7 +170,7 @@ namespace Hazelcast.Clustering
             try
             {
                 HConsole.WriteLine(this, "Execute event handler");
-                await state.Subscription.HandleAsync(state.Message).CAF();
+                await state.Subscription.HandleAsync(state.Message).CfAwait();
             }
             catch (Exception e)
             {
@@ -219,7 +219,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // ReSharper disable once InconsistentlySynchronizedField - _disposed is true, all is safe
-                await Task.WhenAll(_partitionTasks.Values).CAF();
+                await Task.WhenAll(_partitionTasks.Values).CfAwait();
             }
             catch (Exception e)
             {

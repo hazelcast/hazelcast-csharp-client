@@ -61,16 +61,16 @@ namespace Hazelcast.NearCaching
         }
 
         public async ValueTask<NearCache<TValue>> GetOrCreateNearCacheAsync<TValue>(string name, NearCacheOptions options, CancellationToken cancellationToken = default)
-            => new NearCache<TValue>(await GetOrCreateNearCacheAsync(name, options, cancellationToken).CAF());
+            => new NearCache<TValue>(await GetOrCreateNearCacheAsync(name, options, cancellationToken).CfAwait());
 
         public async ValueTask<NearCache> GetOrCreateNearCacheAsync(string name, NearCacheOptions options, CancellationToken cancellationToken = default)
         {
             return await _caches.GetOrAddAsync(name, async (n, token) =>
             {
                 var nearCache = new NearCache(n, _cluster, _serializationService, _loggerFactory, options, GetMaxToleratedMissCount());
-                await InitializeNearCache(nearCache).CAF();
+                await InitializeNearCache(nearCache).CfAwait();
                 return nearCache;
-            }, cancellationToken).CAF();
+            }, cancellationToken).CfAwait();
         }
 
         private int GetMaxToleratedMissCount()
@@ -98,8 +98,8 @@ namespace Hazelcast.NearCaching
             {
                 try
                 {
-                    await RepairGuids(metadata.PartitionUuidList).CAF();
-                    await RepairSequences(metadata.NamePartitionSequenceList).CAF();
+                    await RepairGuids(metadata.PartitionUuidList).CfAwait();
+                    await RepairSequences(metadata.NamePartitionSequenceList).CfAwait();
                 }
                 catch (Exception e)
                 {
@@ -117,7 +117,7 @@ namespace Hazelcast.NearCaching
             foreach (var member in _cluster.Members.LiteMembers)
             {
                 var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id).CAF();
+                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id).CfAwait();
                 var response = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
 
                 yield return (member, response);
@@ -152,7 +152,7 @@ namespace Hazelcast.NearCaching
 
         private async ValueTask InitializeNearCache(NearCache nearCache)
         {
-            await nearCache.InitializeAsync().CAF();
+            await nearCache.InitializeAsync().CfAwait();
 
             if (!nearCache.IsInvalidating)
                 return;
@@ -195,8 +195,8 @@ namespace Hazelcast.NearCaching
 
                 try
                 {
-                    await FixSequenceGaps().CAF();
-                    await RunAntiEntropyIfNeededAsync().CAF();
+                    await FixSequenceGaps().CfAwait();
+                    await RunAntiEntropyIfNeededAsync().CfAwait();
                 }
                 catch (Exception e)
                 {
@@ -207,7 +207,7 @@ namespace Hazelcast.NearCaching
                     return;
 
                 // TODO: this should be a constant
-                await Task.Delay(1000, cancellationToken).CAF();
+                await Task.Delay(1000, cancellationToken).CfAwait();
             }
         }
 
@@ -228,7 +228,7 @@ namespace Hazelcast.NearCaching
             {
                 foreach (var (partitionId, newSequence) in newSequences)
                 {
-                    var (hasCache, cache) = await _caches.TryGetAsync(name).CAF();
+                    var (hasCache, cache) = await _caches.TryGetAsync(name).CfAwait();
                     if (!hasCache) continue;
 
                     cache.RepairingHandler?.UpdateSequence(partitionId, newSequence, true);
@@ -247,7 +247,7 @@ namespace Hazelcast.NearCaching
             var sinceLastRun = Clock.Milliseconds - lastAntiEntropyRunMillis;
             if (sinceLastRun >= _reconciliationIntervalMillis)
             {
-                await FetchMetadataAsync().CAF();
+                await FetchMetadataAsync().CfAwait();
                 Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
             }
         }
@@ -263,7 +263,7 @@ namespace Hazelcast.NearCaching
                 _repairingCancellation.Cancel();
                 try
                 {
-                    await _repairing.CAF();
+                    await _repairing.CfAwait();
                 }
                 catch (OperationCanceledException) { /* expected */ }
 
@@ -273,7 +273,7 @@ namespace Hazelcast.NearCaching
             await foreach (var (name, cache) in _caches)
             {
                 _caches.TryRemove(name); // ok with concurrent dictionary
-                await cache.DisposeAsync().CAF();
+                await cache.DisposeAsync().CfAwait();
             }
         }
     }

@@ -105,7 +105,7 @@ namespace Hazelcast.Transactions
                 throw new InvalidOperationException("Nested transactions are not supported.");
 
             // TODO: think about race conditions?
-            _connection = await _cluster.Members.WaitRandomConnection().CAF();
+            _connection = await _cluster.Members.WaitRandomConnection().CfAwait();
             InTransaction = true;
 
             _threadId = ContextId;
@@ -119,7 +119,7 @@ namespace Hazelcast.Transactions
                 var timeoutMs = _options.Timeout.RoundedMilliseconds(false);
 
                 var requestMessage = TransactionCreateCodec.EncodeRequest(timeoutMs, _options.Durability, (int) _options.Type, ContextId);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CAF();
+                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
                 TransactionId = TransactionCreateCodec.DecodeResponse(responseMessage).Response;
                 State = TransactionState.Active;
             }
@@ -151,7 +151,7 @@ namespace Hazelcast.Transactions
             try
             {
                 var requestMessage = TransactionCommitCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CAF();
+                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
                 _ = TransactionCommitCodec.DecodeResponse(responseMessage);
                 State = TransactionState.Committed;
             }
@@ -189,7 +189,7 @@ namespace Hazelcast.Transactions
             try
             {
                 var requestMessage = TransactionRollbackCodec.EncodeRequest(TransactionId, ContextId);
-                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CAF();
+                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, _connection).CfAwait();
                 _ = TransactionRollbackCodec.DecodeResponse(responseMessage);
                 State = TransactionState.RolledBack;
             }
@@ -215,7 +215,7 @@ namespace Hazelcast.Transactions
         {
             try
             {
-                await _distributedObjectFactory.DisposeAsync().CAF();
+                await _distributedObjectFactory.DisposeAsync().CfAwait();
             }
             catch
             { /* ignore */ } // TODO: log?
@@ -224,7 +224,7 @@ namespace Hazelcast.Transactions
             if (InTransaction)
             {
                 // may throw
-                await (_completed ? CommitAsync() : RollbackAsync()).CAF();
+                await (_completed ? CommitAsync() : RollbackAsync()).CfAwait();
             }
         }
 

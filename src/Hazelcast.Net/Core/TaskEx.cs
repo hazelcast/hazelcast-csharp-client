@@ -75,7 +75,7 @@ namespace Hazelcast.Core
 
             if (timeoutMilliseconds < 0) // infinite
             {
-                await taskAction(cancellationToken).CAF();
+                await taskAction(cancellationToken).CfAwait();
                 return;
             }
 
@@ -84,7 +84,7 @@ namespace Hazelcast.Core
             using var delayCancel = new CancellationTokenSource();
             var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
 
-            await Task.WhenAny(task, delay).CAF();
+            await Task.WhenAny(task, delay).CfAwait();
 
             // if the delay is not completed, cancel it & observe the corresponding exception
             if (!delay.IsCompleted)
@@ -96,7 +96,7 @@ namespace Hazelcast.Core
             // if the task is completed (success or fault...), return
             if (task.IsCompleted)
             {
-                await task.CAF();
+                await task.CfAwait();
                 return;
             }
 
@@ -158,7 +158,7 @@ namespace Hazelcast.Core
 
             if (timeoutMilliseconds < 0) // infinite
             {
-                await taskAction(arg, cancellationToken).CAF();
+                await taskAction(arg, cancellationToken).CfAwait();
                 return;
             }
 
@@ -167,7 +167,7 @@ namespace Hazelcast.Core
             using var delayCancel = new CancellationTokenSource();
             var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
 
-            await Task.WhenAny(task, delay).CAF();
+            await Task.WhenAny(task, delay).CfAwait();
 
             // if the delay is not completed, cancel it & observe the corresponding exception
             if (!delay.IsCompleted)
@@ -179,7 +179,7 @@ namespace Hazelcast.Core
             // if the task is completed (success or fault...), return
             if (task.IsCompleted)
             {
-                await task.CAF(); // might have thrown
+                await task.CfAwait(); // might have thrown
                 return;
             }
 
@@ -238,14 +238,14 @@ namespace Hazelcast.Core
             if (taskAction == null) throw new ArgumentNullException(nameof(taskAction));
 
             if (timeoutMilliseconds < 0) // infinite
-                return await taskAction(cancellationToken).CAF();
+                return await taskAction(cancellationToken).CfAwait();
 
             using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var task = taskAction(cancellation.Token);
             using var delayCancel = new CancellationTokenSource();
             var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
 
-            await Task.WhenAny(task, delay).CAF();
+            await Task.WhenAny(task, delay).CfAwait();
 
             // if the delay is not completed, cancel it & observe the corresponding exception
             if (!delay.IsCompleted)
@@ -256,7 +256,7 @@ namespace Hazelcast.Core
 
             // if the task is completed (success or fault...), return
             if (task.IsCompleted)
-                return await task.CAF();
+                return await task.CfAwait();
 
             // else timeout
             throw CreateTaskTimeoutException(task, cancellation);
@@ -317,14 +317,14 @@ namespace Hazelcast.Core
             if (taskAction == null) throw new ArgumentNullException(nameof(taskAction));
 
             if (timeoutMilliseconds < 0) // infinite
-                return await taskAction(arg, cancellationToken).CAF();
+                return await taskAction(arg, cancellationToken).CfAwait();
 
             using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var task = taskAction(arg, cancellation.Token);
             using var delayCancel = new CancellationTokenSource();
             var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
 
-            await Task.WhenAny(task, delay).CAF();
+            await Task.WhenAny(task, delay).CfAwait();
 
             // if the delay is not completed, cancel it & observe the corresponding exception
             if (!delay.IsCompleted)
@@ -335,7 +335,7 @@ namespace Hazelcast.Core
 
             // if the task is completed (success or fault...), return
             if (task.IsCompleted)
-                return await task.CAF();
+                return await task.CfAwait();
 
             // else, timeout
             throw CreateTaskTimeoutException(task, cancellation);

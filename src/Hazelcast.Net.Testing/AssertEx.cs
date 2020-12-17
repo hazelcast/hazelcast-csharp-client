@@ -75,7 +75,7 @@ namespace Hazelcast.Testing
                 {
                     try
                     {
-                        await action().CAF();
+                        await action().CfAwait();
                         break;
                     }
                     catch (AssertionException e)

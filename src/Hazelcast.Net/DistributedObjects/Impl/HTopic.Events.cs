@@ -40,7 +40,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 HandleEventAsync,
                 new SubscriptionState<TopicEventHandlers<T>>(Name, handlers, state));
 
-            await Cluster.Events.InstallSubscriptionAsync(subscription).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription).CfAwait();
 
             return subscription.Id;
         }
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
             foreach (var handler in sstate.Handlers)
             {
                 // there is only one event type...
-                await handler.HandleAsync(this, member, publishTime, item, state).CAF();
+                await handler.HandleAsync(this, member, publishTime, item, state).CfAwait();
             }
         }
 

@@ -162,7 +162,7 @@ namespace Hazelcast.Tests.Sandbox
             {
                 try
                 {
-                    await method(args).CAF();
+                    await method(args).CfAwait();
                 }
                 catch (Exception e)
                 {

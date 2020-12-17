@@ -137,7 +137,7 @@ namespace Hazelcast.NearCaching
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await DisposeAsyncCore().CAF();
+            await DisposeAsyncCore().CfAwait();
             _entries.Clear();
         }
 
@@ -161,7 +161,7 @@ namespace Hazelcast.NearCaching
         {
             // kick eviction policy if needed
             if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
-                await EvictEntries().CAF();
+                await EvictEntries().CfAwait();
 
             // cannot add if the cache is full
             if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize)
@@ -183,7 +183,7 @@ namespace Hazelcast.NearCaching
 
             try
             {
-                var added = await _entries.TryAddAsync(keyData, CreateEntry).CAF();
+                var added = await _entries.TryAddAsync(keyData, CreateEntry).CfAwait();
                 if (added) Statistics.NotifyEntryAdded();
                 return added;
             }
@@ -205,26 +205,26 @@ namespace Hazelcast.NearCaching
             // if it's in the cache already, return it
             // (and TryGetAsync counts a hit)
             // (otherwise, TryGetAsync counts a miss, so we don't have to do it here)
-            var (hasEntry, valueObject) = await TryGetAsync(keyData).CAF();
+            var (hasEntry, valueObject) = await TryGetAsync(keyData).CfAwait();
             if (hasEntry) return valueObject;
 
             // kick eviction policy if needed
             if (_evictionPolicy != EvictionPolicy.None && _entries.Count >= _maxSize)
-                await EvictEntries().CAF();
+                await EvictEntries().CfAwait();
 
             // if the cache is full, directly return the un-cached value
-            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKeyAsync(keyData).CAF())
-                return Attempt.Fail(ToCachedValue(await valueFactory(keyData).CAF()));
+            if (_evictionPolicy == EvictionPolicy.None && _entries.Count >= _maxSize && !await _entries.ContainsKeyAsync(keyData).CfAwait())
+                return Attempt.Fail(ToCachedValue(await valueFactory(keyData).CfAwait()));
 
             async ValueTask<NearCacheEntry> CreateEntry(IData _, CancellationToken __)
             {
-                var valueData = await valueFactory(keyData).CAF();
+                var valueData = await valueFactory(keyData).CfAwait();
                 var cachedValue = ToCachedValue(valueData);
 
                 return CreateCacheEntry(keyData, cachedValue); // null if cachedValue is null
             }
 
-            var entry = await _entries.GetOrAddAsync(keyData, CreateEntry).CAF();
+            var entry = await _entries.GetOrAddAsync(keyData, CreateEntry).CfAwait();
             if (entry != null) // null if ValueObject would have been null
             {
 
@@ -246,10 +246,10 @@ namespace Hazelcast.NearCaching
         /// <returns>An attempt at getting the value for the specified key.</returns>
         public async ValueTask<Attempt<object>> TryGetAsync(IData keyData, bool hit = true)
         {
-            await ExpireEntries().CAF();
+            await ExpireEntries().CfAwait();
 
             // it is not possible to get a null entry, nor an entry with a null ValueObject
-            var (hasEntry, entry) = await _entries.TryGetAsync(keyData).CAF();
+            var (hasEntry, entry) = await _entries.TryGetAsync(keyData).CfAwait();
 
             if (!hasEntry)
             {
@@ -290,7 +290,7 @@ namespace Hazelcast.NearCaching
         /// <returns>Whether the cache contains an entry with the specified key.</returns>
         public async ValueTask<bool> ContainsKeyAsync(IData keyData, bool hit = true)
         {
-            var (contains, _) = await TryGetAsync(keyData, hit).CAF();
+            var (contains, _) = await TryGetAsync(keyData, hit).CfAwait();
             return contains;
         }
 
@@ -365,7 +365,7 @@ namespace Hazelcast.NearCaching
                 if (Interlocked.CompareExchange(ref _evicting, 1, 0) == 1)
                     return;
 
-                await DoEvictEntries().CAF();
+                await DoEvictEntries().CfAwait();
             }
             finally
             {
@@ -427,7 +427,7 @@ namespace Hazelcast.NearCaching
 
                 _lastExpire = Clock.Milliseconds;
 
-                await DoExpireEntries().CAF();
+                await DoExpireEntries().CfAwait();
             }
             finally
             {

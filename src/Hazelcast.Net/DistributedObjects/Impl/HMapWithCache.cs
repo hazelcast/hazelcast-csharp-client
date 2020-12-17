@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async ValueTask DisposeAsyncCore()
         {
-            await _cache.DisposeAsync().CAF();
+            await _cache.DisposeAsync().CfAwait();
         }
     }
 }

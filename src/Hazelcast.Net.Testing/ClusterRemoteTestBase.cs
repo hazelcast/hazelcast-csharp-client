@@ -28,8 +28,8 @@ namespace Hazelcast.Testing
         public async Task ClusterOneTimeSetUp()
         {
             // create remote client and cluster
-            RcClient = await ConnectToRemoteControllerAsync().CAF();
-            RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CAF();
+            RcClient = await ConnectToRemoteControllerAsync().CfAwait();
+            RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
         }
 
         [OneTimeTearDown]
@@ -39,8 +39,8 @@ namespace Hazelcast.Testing
             if (RcClient != null)
             {
                 if (RcCluster != null)
-                    await RcClient.ShutdownClusterAsync(RcCluster).CAF();
-                await RcClient.ExitAsync().CAF();
+                    await RcClient.ShutdownClusterAsync(RcCluster).CfAwait();
+                await RcClient.ExitAsync().CfAwait();
             }
         }
 

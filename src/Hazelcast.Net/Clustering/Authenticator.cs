@@ -66,7 +66,7 @@ namespace Hazelcast.Clustering
             using var temp = credentialsFactory != null ? null : new DefaultCredentialsFactory();
             credentialsFactory ??= temp;
 
-            var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CAF();
+            var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
             if (result != null) return result;
 
             // result is null, credentials failed but we may want to retry
@@ -75,7 +75,7 @@ namespace Hazelcast.Clustering
                 resettableCredentialsFactory.Reset();
 
                 // try again
-                result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CAF();
+                result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
                 if (result != null) return result;
             }
 
@@ -127,7 +127,7 @@ namespace Hazelcast.Clustering
             cancellationToken.ThrowIfCancellationRequested();
 
             HConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await client.SendAsync(requestMessage, cancellationToken).CfAwait();
             HConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
             HConsole.WriteLine(this, "Auth response is: " + (AuthenticationStatus) response.Status);
