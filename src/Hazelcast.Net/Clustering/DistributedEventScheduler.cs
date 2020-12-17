@@ -29,6 +29,7 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class DistributedEventScheduler : IAsyncDisposable
     {
+        private readonly SimpleObjectPool<Queue> _pool;
         private readonly Dictionary<int, Queue> _queues = new Dictionary<int, Queue>();
         private readonly object _mutex = new object();
         private readonly ILogger _logger;
@@ -44,6 +45,10 @@ namespace Hazelcast.Clustering
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
 
             _logger = loggerFactory.CreateLogger<DistributedEventScheduler>();
+
+            // TODO: how many queues should we retain?
+            const int size = 10;
+            _pool = new SimpleObjectPool<Queue>(() => new Queue(), size);
         }
 
         /// <summary>
@@ -73,12 +78,6 @@ namespace Hazelcast.Clustering
                 lock (_mutex) return _queues.Count;
             }
         }
-
-        // gets a new queue (could pool)
-        private Queue GetQueue() => new Queue();
-
-        // returns an empty queue (could pool)
-        private void Return(Queue queue) { }
 
         // represents a queue and its associated task
         private class Queue
@@ -130,7 +129,7 @@ namespace Hazelcast.Clustering
 
                 if (!_queues.TryGetValue(partitionId, out queue))
                 {
-                    queue = _queues[partitionId] = GetQueue();
+                    queue = _queues[partitionId] = _pool.Get();
                     start = true;
                 }
 
@@ -156,7 +155,7 @@ namespace Hazelcast.Clustering
                         {
                             _queues.Remove(partitionId);
                             queue.Task = null;
-                            Return(queue);
+                            _pool.Return(queue);
                             return;
                         }
                     }
