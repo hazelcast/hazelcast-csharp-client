@@ -15,7 +15,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 using Hazelcast.Core;
 using Hazelcast.Networking;
 using Microsoft.Extensions.Logging;
@@ -27,9 +26,8 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ConnectAddresses : IAsyncDisposable
     {
-        private readonly BufferBlock<NetworkAddress> _addresses = new BufferBlock<NetworkAddress>();
+        private readonly AsyncQueue<NetworkAddress> _addresses = new AsyncQueue<NetworkAddress>();
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
-        private readonly SemaphoreSlim _drained = new SemaphoreSlim(0);
         private readonly SemaphoreSlim _paused = new SemaphoreSlim(0);
         private readonly SemaphoreSlim _resume = new SemaphoreSlim(0);
 
@@ -38,7 +36,6 @@ namespace Hazelcast.Clustering
         private readonly ILogger _logger;
 
         private volatile int _disposed;
-        private volatile bool _draining;
         private volatile bool _pausing;
 
         /// <summary>
@@ -73,33 +70,22 @@ namespace Hazelcast.Clustering
             if (_pausing) throw new InvalidOperationException("Already paused.");
 
             _pausing = true;
-            _addresses.Post(null); // force receive
+            _addresses.TryWrite(null); // force receive
             await _paused.WaitAsync().CfAwait();
         }
 
         /// <summary>
         /// Resumes the task.
         /// </summary>
-        /// <param name="drain">Whether to drain the queue before resuming.</param>
-        /// <returns>A task that will complete when the task has resumed.</returns>
-        public async ValueTask ResumeAsync(bool drain = false)
+        public void Resume(bool drain = false)
         {
             ThrowIfDisposed();
 
             if (!_pausing) throw new InvalidOperationException("Not paused");
 
-            if (drain)
-            {
-                _draining = true;
-                _addresses.Post(null); // force receive
-            }
+            if (drain) _addresses.Drain();
 
             _resume.Release();
-
-            if (drain)
-            {
-                await _drained.WaitAsync().CfAwait();
-            }
         }
 
         /// <summary>
@@ -110,7 +96,7 @@ namespace Hazelcast.Clustering
         {
             ThrowIfDisposed();
 
-            if (_addresses.Post(address)) return;
+            if (_addresses.TryWrite(address)) return;
 
             // that should not happen, but log to be sure
             _logger.LogWarning($"Failed to add an address ({address}).");
@@ -121,33 +107,14 @@ namespace Hazelcast.Clustering
         {
             // TODO: consider throttling?
 
-            await Task.Yield();
-
-            while (true)
+            await foreach (var address in _addresses)
             {
-                // fail fast
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // wait for an address, or the special Drainer or Ignored members
-                var address = await _addresses.ReceiveAsync(cancellationToken).CfAwait();
-
                 // pause
                 if (_pausing)
                 {
                     _paused.Release();
                     await _resume.WaitAsync(cancellationToken).CfAwait();
                     _pausing = false;
-                }
-
-                // drain
-                if (_draining)
-                {
-                    if (_addresses.Count == 0) // drained
-                    {
-                        _draining = false;
-                        _drained.Release();
-                    }
-                    // else just ignore the member (draining the queue)
                 }
 
                 // connect, if not ignored
@@ -164,7 +131,7 @@ namespace Hazelcast.Clustering
                     catch (Exception e)
                     {
                         _logger.LogError(e, "Caught exception while trying to connect an address.");
-                        _addresses.Post(address); // try again
+                        _addresses.TryWrite(address); // try again
                     }
                 }
             }
@@ -178,12 +145,12 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
+            _addresses.Complete();
             _cancel.Cancel();
             await _connecting.CfAwaitCanceled();
             _cancel.Dispose();
 
             _paused.Dispose();
-            _drained.Dispose();
             _resume.Dispose();
         }
     }

@@ -15,7 +15,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
 
@@ -26,8 +25,7 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class StateChangeQueue : IAsyncDisposable
     {
-        private readonly BufferBlock<ClientState> _states = new BufferBlock<ClientState>();
-        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+        private readonly AsyncQueue<ClientState> _states = new AsyncQueue<ClientState>();
         private readonly Task _raising;
         private readonly ILogger _logger;
 
@@ -43,7 +41,7 @@ namespace Hazelcast.Clustering
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<StateChangeQueue>();
 
-            _raising = RaiseEvents(_cancel.Token);
+            _raising = RaiseEvents();
         }
 
         // throws if this instance has been disposed
@@ -72,26 +70,17 @@ namespace Hazelcast.Clustering
         public void Add(ClientState state)
         {
             ThrowIfDisposed();
-            if (_states.Post(state)) return;
+            if (_states.TryWrite(state)) return;
 
             // that should not happen, but log to be sure
             _logger.LogWarning($"Failed to add a state {state}.");
         }
 
         // (background task loop) raises events
-        private async Task RaiseEvents(CancellationToken cancellationToken)
+        private async Task RaiseEvents()
         {
-            await Task.Yield();
-
-            while (true)
+            await foreach (var state in _states)
             {
-                // fail fast
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // wait for a state change
-                var state = await _states.ReceiveAsync(cancellationToken).CfAwait();
-
-                // raise event
                 try
                 {
                     await _stateChanged.AwaitEach(state).CfAwait();
@@ -111,9 +100,8 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            _cancel.Cancel();
-            await _raising.CfAwaitCanceled();
-            _cancel.Dispose();
+            _states.Complete();
+            await _raising.CfAwait();
         }
     }
 }
