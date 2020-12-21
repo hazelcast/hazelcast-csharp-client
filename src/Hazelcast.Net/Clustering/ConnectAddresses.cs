@@ -74,7 +74,7 @@ namespace Hazelcast.Clustering
 
             _pausing = true;
             _addresses.Post(null); // force receive
-            await _paused.WaitAsync().CAF();
+            await _paused.WaitAsync().CfAwait();
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace Hazelcast.Clustering
 
             if (drain)
             {
-                await _drained.WaitAsync().CAF();
+                await _drained.WaitAsync().CfAwait();
             }
         }
 
@@ -129,13 +129,13 @@ namespace Hazelcast.Clustering
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // wait for an address, or the special Drainer or Ignored members
-                var address = await _addresses.ReceiveAsync(cancellationToken).CAF();
+                var address = await _addresses.ReceiveAsync(cancellationToken).CfAwait();
 
                 // pause
                 if (_pausing)
                 {
                     _paused.Release();
-                    await _resume.WaitAsync(cancellationToken).CAF();
+                    await _resume.WaitAsync(cancellationToken).CfAwait();
                     _pausing = false;
                 }
 
@@ -155,7 +155,7 @@ namespace Hazelcast.Clustering
                 {
                     try
                     {
-                        await _connect(address, cancellationToken).CAF();
+                        await _connect(address, cancellationToken).CfAwait();
                     }
                     catch (OperationCanceledException)
                     {
@@ -179,7 +179,7 @@ namespace Hazelcast.Clustering
                 return;
 
             _cancel.Cancel();
-            await _connecting.ObserveCanceled().CAF();
+            await _connecting.ObserveCanceled().CfAwait();
             _cancel.Dispose();
 
             _paused.Dispose();

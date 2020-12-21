@@ -59,13 +59,13 @@ namespace Hazelcast.Core
 
             try
             {
-                var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token)).CAF();
+                var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token)).CfAwait();
 
                 // if the connect task has completed successfully...
                 if (t == tcs.Task)
                 {
                     cancellation.Cancel(); // cancel the delay
-                    await t.CAF(); // may throw
+                    await t.CfAwait(); // may throw
                     return;
                 }
             }
@@ -81,7 +81,7 @@ namespace Hazelcast.Core
             // and then everything will be ok
 
             TryCloseAndDispose(socket);
-            await TryAwait(tcs.Task).CAF();
+            await TryAwait(tcs.Task).CfAwait();
 
             // finally, throw the correct exception
             // favor cancellation over timeout
@@ -107,7 +107,7 @@ namespace Hazelcast.Core
         {
             try
             {
-                await task.CAF();
+                await task.CfAwait();
             }
             catch { /* may happen, don't care */ }
         }

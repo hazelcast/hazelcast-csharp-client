@@ -57,7 +57,7 @@ namespace Hazelcast.Testing
                 var transport = new Thrift.Transport.TFramedTransport(tSocketTransport);
                 if (!transport.IsOpen)
                 {
-                    await transport.OpenAsync().CAF();
+                    await transport.OpenAsync().CfAwait();
                 }
                 var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
                 return RemoteControllerClient.Create(protocol);

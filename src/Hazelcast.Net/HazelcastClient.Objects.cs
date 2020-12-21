@@ -29,7 +29,7 @@ namespace Hazelcast
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)
         {
-            await _distributedOjects.DestroyAsync(o).CAF();
+            await _distributedOjects.DestroyAsync(o).CfAwait();
         }
 
         /// <inheritdoc />
@@ -39,14 +39,14 @@ namespace Hazelcast
             var nearCacheOptions = _options.GetNearCacheOptions(name);
             var nearCache = nearCacheOptions == null
                 ? null
-                : await _nearCacheManager.GetOrCreateNearCacheAsync<TValue>(name, nearCacheOptions).CAF();
+                : await _nearCacheManager.GetOrCreateNearCacheAsync<TValue>(name, nearCacheOptions).CfAwait();
 
             HMap<TKey, TValue> CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
                 => nearCacheOptions == null
                     ? new HMap<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
                     : new HMapWithCache<TKey, TValue>(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
 
-            return await _distributedOjects.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(ServiceNames.Map, name, true, CreateMap).CAF();
+            return await _distributedOjects.GetOrCreateAsync<IHMap<TKey, TValue>, HMap<TKey, TValue>>(ServiceNames.Map, name, true, CreateMap).CfAwait();
         }
 
         /// <inheritdoc />
@@ -65,7 +65,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -83,7 +83,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -101,7 +101,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -119,7 +119,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -137,7 +137,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -155,7 +155,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -173,7 +173,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
     }

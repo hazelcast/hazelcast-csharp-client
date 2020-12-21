@@ -36,7 +36,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
         public override async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
         {
-            var items = await IterateAllAsync().CAF();
+            var items = await IterateAllAsync().CfAwait();
             foreach (var item in items)
                 yield return item;
         }
@@ -44,7 +44,7 @@ namespace Hazelcast.DistributedObjects.Impl
         private async Task<IReadOnlyList<T>> IterateAllAsync()
         {
             var requestMessage = ListIteratorCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = ListIteratorCodec.DecodeResponse(responseMessage).Response;
             return new ReadOnlyLazyList<T>(response, SerializationService);
         }

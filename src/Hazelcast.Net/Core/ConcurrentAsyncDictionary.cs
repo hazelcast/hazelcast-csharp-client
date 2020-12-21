@@ -63,7 +63,7 @@ namespace Hazelcast.Core
             try
             {
                 // await - may throw - meaning the factory has thrown, entry is failed
-                var value = await entry.GetValue(factory, cancellationToken).CAF();
+                var value = await entry.GetValue(factory, cancellationToken).CfAwait();
                 if (value != null) return value;
 
                 // remove the invalid entry (with null value) from the dictionary
@@ -97,7 +97,7 @@ namespace Hazelcast.Core
             try
             {
                 // await - may throw - meaning the factory has thrown, entry is failed
-                var value = await entry.GetValue(factory, cancellationToken).CAF();
+                var value = await entry.GetValue(factory, cancellationToken).CfAwait();
                 if (value != null) return true;
 
                 // remove the invalid entry (with null value) from the dictionary
@@ -122,7 +122,7 @@ namespace Hazelcast.Core
             if (!_dictionary.TryGetValue(key, out var entry)) return Attempt.Failed;
 
             // it is not possible to get a null value
-            return await TryGetEntryValueAsync(entry).CAF();
+            return await TryGetEntryValueAsync(entry).CfAwait();
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace Hazelcast.Core
             if (!_dictionary.TryRemove(key, out var entry)) return Attempt.Failed;
 
             // it is not possible to get a null value
-            return await TryGetEntryValueAsync(entry).CAF();
+            return await TryGetEntryValueAsync(entry).CfAwait();
         }
 
         internal static async ValueTask<Attempt<TValue>> TryGetEntryValueAsync(Entry entry)
@@ -151,7 +151,7 @@ namespace Hazelcast.Core
 
             try
             {
-                var value = await entry.GetValue().CAF();
+                var value = await entry.GetValue().CfAwait();
                 if (value != null) return value;
             }
             catch
@@ -183,7 +183,7 @@ namespace Hazelcast.Core
 
             // a null value is not a value
             // return the attempt at getting the entry value
-            return await TryGetEntryValueAsync(entry).CAF();
+            return await TryGetEntryValueAsync(entry).CfAwait();
         }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace Hazelcast.Core
 
                     try
                     {
-                        var value = entry.HasValue ? entry.Value : await entry.GetValue().CAF();
+                        var value = entry.HasValue ? entry.Value : await entry.GetValue().CfAwait();
                         if (value == null) continue; // skip null values
                         _current = new KeyValuePair<TKey, TValue>(key, value);
                         return true;
@@ -308,7 +308,7 @@ namespace Hazelcast.Core
                     creating = _creating ??= factory(_key, cancellationToken).AsTask();
                 }
 
-                _value = await creating.CAF();
+                _value = await creating.CfAwait();
 
                 lock (_lock)
                 {
@@ -328,7 +328,7 @@ namespace Hazelcast.Core
                     creating = _creating;
                 }
 
-                return await creating.CAF();
+                return await creating.CfAwait();
             }
         }
     }

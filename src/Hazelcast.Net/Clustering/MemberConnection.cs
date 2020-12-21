@@ -219,20 +219,20 @@ namespace Hazelcast.Clustering
             try
             {
                 // connect
-                await _socketConnection.ConnectAsync(cancellationToken).CAF();
+                await _socketConnection.ConnectAsync(cancellationToken).CfAwait();
 
                 // send protocol bytes
-                var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CAF();
+                var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CfAwait();
                 if (!sent) throw new InvalidOperationException("Failed to send protocol bytes.");
 
                 // authenticate (does not return null)
                 result = await _authenticator
                     .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, cancellationToken)
-                    .CAF();
+                    .CfAwait();
             }
             catch
             {
-                await _socketConnection.DisposeAsync().ObserveException().CAF();
+                await _socketConnection.DisposeAsync().ObserveException().CfAwait();
                 _socketConnection = null;
                 _messageConnection = null;
                 throw;
@@ -408,7 +408,7 @@ namespace Hazelcast.Clustering
             // create the invocation
             using var invocation = new Invocation(message, _messagingOptions, this, cancellationToken);
 
-            return await SendAsync(invocation, timeoutMilliseconds).CAF();
+            return await SendAsync(invocation, timeoutMilliseconds).CfAwait();
         }
 
         /// <summary>
@@ -456,7 +456,7 @@ namespace Hazelcast.Clustering
             var active = true;
             try
             {
-                success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CAF();
+                success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
             }
             catch
             {
@@ -497,7 +497,7 @@ namespace Hazelcast.Clustering
                 // below might never return.
                 using var reg = cancellationToken.Register(invocation.TrySetCanceled);
 
-                var response = await invocation.Task.CAF();
+                var response = await invocation.Task.CfAwait();
                 HConsole.WriteLine(this, "Received response.");
                 return response;
             }
@@ -523,14 +523,14 @@ namespace Hazelcast.Clustering
             {
                 try
                 {
-                    await task(token).CAF();
+                    await task(token).CfAwait();
                     _bgTask = null; // self-remove
                 }
                 catch
                 {
                     _logger.LogWarning("Background task failed, terminate the connection.");
                     _bgTask = null; // self-remove *before* disposing else catch-22
-                    await TerminateAsync().CAF(); // terminate the connection
+                    await TerminateAsync().CfAwait(); // terminate the connection
                 }
             });
         }
@@ -549,7 +549,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the client connection has terminated.</returns>
         public async ValueTask TerminateAsync()
         {
-            await DisposeAsync().CAF(); // does not throw
+            await DisposeAsync().CfAwait(); // does not throw
         }
 
         /// <inheritdoc />
@@ -563,12 +563,12 @@ namespace Hazelcast.Clustering
             if (ClusterId == default)
             {
                 // the connection was never fully opened
-                await DisposeTransientAsync().CAF(); // does not throw
+                await DisposeTransientAsync().CfAwait(); // does not throw
             }
             else
             {
                 // the connection was fully opened
-                await DisposeOpenedAsync().CAF(); // does not throw
+                await DisposeOpenedAsync().CfAwait(); // does not throw
             }
         }
 
@@ -578,11 +578,11 @@ namespace Hazelcast.Clustering
             if (_messageConnection != null)
             {
                 // also disposes the socket connection
-                await _messageConnection.DisposeAsync().CAF(); // does not throw
+                await _messageConnection.DisposeAsync().CfAwait(); // does not throw
             }
             else if (_socketConnection != null)
             {
-                await _socketConnection.DisposeAsync().CAF(); // does not throw
+                await _socketConnection.DisposeAsync().CfAwait(); // does not throw
             }
         }
 
@@ -592,7 +592,7 @@ namespace Hazelcast.Clustering
             // raise event
             try
             {
-                await _closed(this).CAF(); // assume it may throw
+                await _closed(this).CfAwait(); // assume it may throw
             }
             catch (Exception e)
             {
@@ -603,11 +603,11 @@ namespace Hazelcast.Clustering
             var bgTask = _bgTask;
             if (bgTask != null)
             {
-                await bgTask.CompletedOrCancelAsync(true).CAF(); // does not throw
+                await bgTask.CompletedOrCancelAsync(true).CfAwait(); // does not throw
             }
 
             // also disposes the socket connection
-            await _messageConnection.DisposeAsync().CAF(); // does not throw
+            await _messageConnection.DisposeAsync().CfAwait(); // does not throw
 
             // shutdown all pending operations
             foreach (var invocation in _invocations.Values)

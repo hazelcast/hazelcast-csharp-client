@@ -69,7 +69,7 @@ namespace Hazelcast
         {
             if (_subscribeAsync != null)
             {
-                await _subscribeAsync(hazelcastClient, cancellationToken).CAF();
+                await _subscribeAsync(hazelcastClient, cancellationToken).CfAwait();
             }
             else
             {
@@ -77,7 +77,7 @@ namespace Hazelcast
                     ? ServiceFactory.CreateInstance<IHazelcastClientEventSubscriber>(_typename, null)
                     : ServiceFactory.CreateInstance<IHazelcastClientEventSubscriber>(_type, null));
 
-                await subscriber.SubscribeAsync(hazelcastClient, cancellationToken).CAF();
+                await subscriber.SubscribeAsync(hazelcastClient, cancellationToken).CfAwait();
             }
         }
     }

@@ -25,7 +25,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             try
             {
-                return await base.ExecuteAsync<TResult>(processorData, keyData, cancellationToken).CAF();
+                return await base.ExecuteAsync<TResult>(processorData, keyData, cancellationToken).CfAwait();
             }
             finally
             {

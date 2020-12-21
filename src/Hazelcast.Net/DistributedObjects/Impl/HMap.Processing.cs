@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -60,7 +60,7 @@ namespace Hazelcast.DistributedObjects.Impl
         protected virtual async Task<TResult> ExecuteAsync<TResult>(IData processorData, IData keyData, CancellationToken cancellationToken)
         {
             var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
             return ToObject<TResult>(response);
         }
@@ -78,7 +78,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var processorData = ToSafeData(processor);
 
             var requestMessage = MapExecuteOnKeysCodec.EncodeRequest(Name, processorData, keysmap.Keys);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapExecuteOnKeysCodec.DecodeResponse(responseMessage).Response;
 
             var result = new Dictionary<TKey, TResult>();
@@ -101,7 +101,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var processorData = ToSafeData(processor);
 
             var requestMessage = MapExecuteOnAllKeysCodec.EncodeRequest(Name, processorData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapExecuteOnAllKeysCodec.DecodeResponse(responseMessage).Response;
 
             var result = new Dictionary<TKey, TResult>();
@@ -120,7 +120,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var (processorData, predicateData) = ToSafeData(processor, predicate);
 
             var requestMessage = MapExecuteWithPredicateCodec.EncodeRequest(Name, processorData, predicateData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapExecuteWithPredicateCodec.DecodeResponse(responseMessage).Response;
 
             var result = new Dictionary<TKey, TResult>();

@@ -46,7 +46,7 @@ namespace Hazelcast.NearCaching
         /// <param name="valueData">The value data.</param>
         /// <returns><c>true</c> if the value could be added; otherwise <c>false</c>.</returns>
         public async ValueTask<bool> TryAddAsync(IData keyData, IData valueData)
-            => await InnerCache.TryAddAsync(keyData, valueData).CAF();
+            => await InnerCache.TryAddAsync(keyData, valueData).CfAwait();
 
         /// <summary>
         /// Tries to get a value from, or add a value to, the cache.
@@ -58,7 +58,7 @@ namespace Hazelcast.NearCaching
         {
             try
             {
-                var (success, valueObject) = await InnerCache.TryGetOrAddAsync(keyData, valueFactory).CAF();
+                var (success, valueObject) = await InnerCache.TryGetOrAddAsync(keyData, valueFactory).CfAwait();
                 var value = ToTValue(valueObject);
                 if (success) return value;
                 return Maybe.None;
@@ -77,7 +77,7 @@ namespace Hazelcast.NearCaching
         /// <returns>An attempt at getting the value from the cache.</returns>
         public async ValueTask<Attempt<TValue>> TryGetAsync(IData keyData)
         {
-            var (success, value) = await InnerCache.TryGetAsync(keyData).CAF();
+            var (success, value) = await InnerCache.TryGetAsync(keyData).CfAwait();
             if (!success) return Attempt.Failed;
 
             return ToTValue(value);
@@ -89,7 +89,7 @@ namespace Hazelcast.NearCaching
         /// <param name="keyData">The key data.</param>
         /// <returns>Whether the cache contains an entry with the specified key.</returns>
         public async ValueTask<bool> ContainsKeyAsync(IData keyData)
-            => await InnerCache.ContainsKeyAsync(keyData).CAF();
+            => await InnerCache.ContainsKeyAsync(keyData).CfAwait();
 
         /// <summary>
         /// Removes an entry from the cache.
@@ -127,7 +127,7 @@ namespace Hazelcast.NearCaching
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await InnerCache.DisposeAsync().CAF();
+            await InnerCache.DisposeAsync().CfAwait();
         }
     }
 }

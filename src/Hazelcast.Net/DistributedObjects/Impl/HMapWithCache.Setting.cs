@@ -31,7 +31,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            await base.SetAsync(keyData, valueData, timeToLive, maxIdle).CAF();
+            await base.SetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
             _cache.Remove(keyData);
         }
 
@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // which would populate the cache with the wrong value - so we clear *after* the value has effectively
             // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
             // eventually all reads will get the correct value
-            var value = await base.GetAndSetAsync(keyData, valueData, timeToLive, maxIdle).CAF();
+            var value = await base.GetAndSetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
             _cache.Remove(keyData);
             return value;
         }
@@ -85,14 +85,14 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
 
         /// <inheritdoc />
         protected override async Task<bool> TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
         {
-            var added = await base.TrySetAsync(keyData, valueData, serverTimeout, cancellationToken).CAF();
+            var added = await base.TrySetAsync(keyData, valueData, serverTimeout, cancellationToken).CfAwait();
             if (added) _cache.Remove(keyData);
             return added;
         }
@@ -110,7 +110,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            return await task.CAF();
+            return await task.CfAwait();
 #endif
         }
 
@@ -127,7 +127,7 @@ namespace Hazelcast.DistributedObjects.Impl
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
     }

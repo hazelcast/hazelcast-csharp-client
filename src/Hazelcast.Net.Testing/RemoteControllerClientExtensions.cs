@@ -61,8 +61,8 @@ namespace Hazelcast.Testing
         /// <returns>Whether the cluster was properly shut down.</returns>
         public static async Task ShutdownClusterDownAsync(this IRemoteControllerClient rc, Cluster cluster)
         {
-            while (!await rc.ShutdownClusterAsync(cluster).CAF())
-                await Task.Delay(1_000).CAF();
+            while (!await rc.ShutdownClusterAsync(cluster).CfAwait())
+                await Task.Delay(1_000).CfAwait();
         }
 
         /// <summary>
@@ -97,17 +97,17 @@ namespace Hazelcast.Testing
                     {
                         partitions.Release();
                     }))
-                .CAF();
+                .CfAwait();
 
-            var member = await rc.StartMemberAsync(cluster).CAF();
-            await added.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
+            var member = await rc.StartMemberAsync(cluster).CfAwait();
+            await added.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
 
             // trigger the partition table creation
-            var map = await client.GetMapAsync<object, object>("default").CAF();
+            var map = await client.GetMapAsync<object, object>("default").CfAwait();
             _ = map.GetAsync(new object());
 
-            await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
-            await clientInternal.UnsubscribeAsync(subscriptionId).CAF();
+            await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
+            await clientInternal.UnsubscribeAsync(subscriptionId).CfAwait();
 
             var partitioner = clientInternal.Cluster.Partitioner;
             var partitionsCount = partitioner.Count;
@@ -150,11 +150,11 @@ namespace Hazelcast.Testing
                     {
                         if (args.RemovedMembers.Count > 0) removed.Release();
                     }))
-                .CAF();
+                .CfAwait();
 
-            await rc.StopMemberAsync(cluster, member).CAF();
-            await removed.WaitAsync(TimeSpan.FromSeconds(120)).CAF();
-            await clientInternal.UnsubscribeAsync(subscriptionId).CAF();
+            await rc.StopMemberAsync(cluster, member).CfAwait();
+            await removed.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
+            await clientInternal.UnsubscribeAsync(subscriptionId).CfAwait();
         }
 
         /// <summary>

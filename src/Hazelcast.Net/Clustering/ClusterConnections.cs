@@ -117,7 +117,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await _connectionOpened.AwaitEach(connection, isFirst, isNewCluster).CAF();
+                await _connectionOpened.AwaitEach(connection, isFirst, isNewCluster).CfAwait();
             }
             catch (Exception e)
             {
@@ -144,7 +144,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await _connectionClosed.AwaitEach(connection, wasLast).CAF();
+                await _connectionClosed.AwaitEach(connection, wasLast).CfAwait();
             }
             catch (Exception e)
             {
@@ -176,7 +176,7 @@ namespace Hazelcast.Clustering
         private async ValueTask OnConnectionClosed(MemberConnection connection)
         {
             // handle them one at a time
-            await _onClosedMutex.WaitAsync().CAF();
+            await _onClosedMutex.WaitAsync().CfAwait();
             try
             {
                 // not a connection anymore
@@ -188,7 +188,7 @@ namespace Hazelcast.Clustering
                 // pause connecting members, so we can figure out whether that one was
                 // the last remaining connection, in a reliable way
                 if (_smartRouting)
-                    await _connectAddresses.PauseAsync().CAF();
+                    await _connectAddresses.PauseAsync().CfAwait();
 
                 // --- thread safety ---
                 // connectAddresses is paused, and we have _onClosedMutex
@@ -206,7 +206,7 @@ namespace Hazelcast.Clustering
                 }
 
                 // report that the connection has been closed
-                await RaiseConnectionClosed(connection, wasLast).CAF(); // does not throw
+                await RaiseConnectionClosed(connection, wasLast).CfAwait(); // does not throw
 
                 if (!wasLast) // then we must be smart routing
                 {
@@ -217,7 +217,7 @@ namespace Hazelcast.Clustering
 
                 // resume, drain queue if that was the last connection
                 if (_smartRouting)
-                    await _connectAddresses.ResumeAsync(wasLast).CAF();
+                    await _connectAddresses.ResumeAsync(wasLast).CfAwait();
 
                 // if there are remaining connections, we can still talk to the cluster
                 if (wasLast) return;
@@ -238,7 +238,7 @@ namespace Hazelcast.Clustering
             {
                 // the cluster is down
                 _logger.LogInformation("Disconnected (down)");
-                await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
+                await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
                 return;
             }
 
@@ -259,7 +259,7 @@ namespace Hazelcast.Clustering
             {
                 case ReconnectMode.DoNotReconnect:
                     // DoNotReconnect = the cluster remains unconnected
-                    await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
+                    await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
                     break;
 
                 case ReconnectMode.ReconnectSync: // TODO: implement ReconnectSync?
@@ -295,15 +295,15 @@ namespace Hazelcast.Clustering
             // properties cannot be changed once connected
             _clusterState.SetPropertiesReadOnly();
 
-            await _clusterState.TransitionAsync(ClientState.Started).CAF();
+            await _clusterState.TransitionAsync(ClientState.Started).CfAwait();
 
             try
             {
                 // establishes the first connection, throws if it fails
-                await ConnectFirstAsync(cancellationToken).CAF();
+                await ConnectFirstAsync(cancellationToken).CfAwait();
 
                 // wait for the members table
-                await _clusterMembers.WaitForMembersAsync(cancellationToken).CAF();
+                await _clusterMembers.WaitForMembersAsync(cancellationToken).CfAwait();
 
                 // and now we have been connected (rejoice)
                 // though nothing guarantees we still are, or will remain for long
@@ -312,7 +312,7 @@ namespace Hazelcast.Clustering
             catch
             {
                 // we *have* retried and failed
-                await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
+                await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
                 throw;
             }
         }
@@ -327,7 +327,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // establishes the first connection, throws if it fails
-                await ConnectFirstAsync(cancellationToken).CAF();
+                await ConnectFirstAsync(cancellationToken).CfAwait();
 
                 // FIXME reconnect, shall we wait for the first member view event?
                 // else we are just hoping that we haven't switched to a new
@@ -340,7 +340,7 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 // we *have* retried and failed
-                await _clusterState.TransitionAsync(ClientState.Shutdown).CAF();
+                await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
 
                 // we are a background task and cannot throw!
                 _logger.LogError(e, "Failed to reconnect.");
@@ -415,7 +415,7 @@ namespace Hazelcast.Clustering
                     tried.Add(address);
 
                     HConsole.WriteLine(this, $"Try to connect to address {address}");
-                    var attempt = await ConnectFirstAsync(address, cancellationToken).CAF(); // does not throw
+                    var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
                     if (attempt)
                     {
                         HConsole.WriteLine(this, $"Connected to connect to address {address}");
@@ -433,7 +433,7 @@ namespace Hazelcast.Clustering
                 try
                 {
                     // try to retry, maybe with a delay - handles cancellation
-                    canRetry = await _connectRetryStrategy.WaitAsync(cancellationToken).CAF();
+                    canRetry = await _connectRetryStrategy.WaitAsync(cancellationToken).CfAwait();
                 }
                 catch (OperationCanceledException) // don't gather the cancel exception
                 {
@@ -478,7 +478,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // this may throw
-                return await ConnectAsync(address, cancellationToken).CAF();
+                return await ConnectAsync(address, cancellationToken).CfAwait();
             }
             catch (Exception e)
             {
@@ -524,7 +524,7 @@ namespace Hazelcast.Clustering
             {
                 // this may throw
 #pragma warning disable CA2000 // Dispose objects before losing scope - returned
-                return await ConnectAsync(address, cancellationToken).CAF();
+                return await ConnectAsync(address, cancellationToken).CfAwait();
 #pragma warning restore CA2000
             }
             catch (Exception e)
@@ -581,12 +581,12 @@ namespace Hazelcast.Clustering
 
             // connect to the server (may throw and that is ok here)
             // note: soon as this returns, the connection can close anytime
-            var result = await connection.ConnectAsync(_clusterState, cancellationToken).CAF();
+            var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
 
             // fail fast
             if (cancellationToken.IsCancellationRequested)
             {
-                await connection.DisposeAsync().CAF(); // does not throw
+                await connection.DisposeAsync().CfAwait(); // does not throw
                 cancellationToken.ThrowIfCancellationRequested(); // throws
             }
 
@@ -597,7 +597,7 @@ namespace Hazelcast.Clustering
             }
             catch (Exception e)
             {
-                await connection.DisposeAsync().CAF(); // does not throw
+                await connection.DisposeAsync().CfAwait(); // does not throw
                 throw new ConnectionException("Failed to open a connection because " +
                                               "the partitions count announced by the member in invalid.", e);
             }
@@ -668,7 +668,7 @@ namespace Hazelcast.Clustering
             }
 
             // connection is opened
-            await RaiseConnectionOpened(connection, isFirst, isNewCluster).CAF();
+            await RaiseConnectionOpened(connection, isFirst, isNewCluster).CfAwait();
 
             return connection;
         }
@@ -681,18 +681,18 @@ namespace Hazelcast.Clustering
 
             // stop and dispose the background task that connects members
             if (_clusterState.IsSmartRouting)
-                await _connectAddresses.DisposeAsync().CAF(); // does not throw
+                await _connectAddresses.DisposeAsync().CfAwait(); // does not throw
 
             // stop and dispose the reconnect task if it's running
             var reconnect = _reconnect;
             if (reconnect != null)
-                await reconnect.CompletedOrCancelAsync(true).CAF();
+                await reconnect.CompletedOrCancelAsync(true).CfAwait();
 
             // trash all connections
             ICollection<MemberConnection> connections;
             lock (_addressConnections) connections = _addressConnections.Values;
             foreach (var x in connections)
-                await x.TerminateAsync().CAF();
+                await x.TerminateAsync().CfAwait();
 
             _onClosedMutex.Dispose();
         }

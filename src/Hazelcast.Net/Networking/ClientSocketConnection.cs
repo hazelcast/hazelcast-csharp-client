@@ -85,7 +85,7 @@ namespace Hazelcast.Networking
 
             // connect to server
             HConsole.WriteLine(this, "Connect to server");
-            await socket.ConnectAsync(_endpoint, _socketOptions.ConnectionTimeoutMilliseconds, cancellationToken).CAF();
+            await socket.ConnectAsync(_endpoint, _socketOptions.ConnectionTimeoutMilliseconds, cancellationToken).CfAwait();
             HConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream
@@ -94,7 +94,7 @@ namespace Hazelcast.Networking
 #pragma warning restore CA2000
             if (_sslOptions.Enabled)
             {
-                stream = await new SslLayer(_sslOptions, _loggerFactory).GetStreamAsync(stream).CAF();
+                stream = await new SslLayer(_sslOptions, _loggerFactory).GetStreamAsync(stream).CfAwait();
             }
 
             // wire the pipe

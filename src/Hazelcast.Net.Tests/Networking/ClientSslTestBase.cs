@@ -63,10 +63,10 @@ namespace Hazelcast.Tests.Networking
             {
                 if (RcCluster != null)
                 {
-                    await RcClient.ShutdownClusterAsync(RcCluster).CAF();
+                    await RcClient.ShutdownClusterAsync(RcCluster).CfAwait();
                     RcCluster = null;
                 }
-                await RcClient.ExitAsync().CAF();
+                await RcClient.ExitAsync().CfAwait();
                 RcClient = null;
             }
         }
@@ -84,7 +84,7 @@ namespace Hazelcast.Tests.Networking
             // terminate & remove cluster
             if (RcCluster != null)
             {
-                await RcClient.ShutdownClusterAsync(RcCluster).CAF();
+                await RcClient.ShutdownClusterAsync(RcCluster).CfAwait();
                 RcCluster = null;
             }
         }

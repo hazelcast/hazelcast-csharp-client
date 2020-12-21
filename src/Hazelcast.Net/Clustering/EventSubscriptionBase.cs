@@ -45,14 +45,14 @@ namespace Hazelcast.Clustering
 
             // accepted race condition, _busy can be disposed here and will throw an ObjectDisposedException
 
-            await _busy.WaitAsync().CAF();
+            await _busy.WaitAsync().CfAwait();
             try
             {
                 _subscriptionsCount++;
                 if (_subscriptionsCount > 1) return;
 
                 var subscription = CreateSubscription();
-                await ClusterEvents.InstallSubscriptionAsync(subscription).CAF();
+                await ClusterEvents.InstallSubscriptionAsync(subscription).CfAwait();
                 _subscriptionId = subscription.Id;
             }
             finally
@@ -67,13 +67,13 @@ namespace Hazelcast.Clustering
 
             // accepted race condition, _busy can be disposed here and will throw an ObjectDisposedException
 
-            await _busy.WaitAsync().CAF();
+            await _busy.WaitAsync().CfAwait();
             try
             {
                 if (_subscriptionsCount == 0) return true; // TODO: should we throw?
                 if (_subscriptionsCount > 1) return true;
 
-                var removed = await ClusterEvents.RemoveSubscriptionAsync(_subscriptionId).CAF();
+                var removed = await ClusterEvents.RemoveSubscriptionAsync(_subscriptionId).CfAwait();
                 if (removed) _subscriptionsCount--;
                 return removed;
             }
@@ -88,13 +88,13 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            await _busy.WaitAsync().CAF();
+            await _busy.WaitAsync().CfAwait();
             try
             {
                 if (_subscriptionsCount == 0) return;
 
                 // remove, ignore result
-                await ClusterEvents.RemoveSubscriptionAsync(_subscriptionId).CAF();
+                await ClusterEvents.RemoveSubscriptionAsync(_subscriptionId).CfAwait();
             }
             finally
             {

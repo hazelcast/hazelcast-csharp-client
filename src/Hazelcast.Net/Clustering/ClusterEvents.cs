@@ -127,7 +127,7 @@ namespace Hazelcast.Clustering
                 if (!connection.Active) continue;
 
                 // this never throws
-                var attempt = await InstallSubscriptionAsync(subscription, connection, cancellationToken).CAF();
+                var attempt = await InstallSubscriptionAsync(subscription, connection, cancellationToken).CfAwait();
 
                 switch (attempt.Value)
                 {
@@ -148,7 +148,7 @@ namespace Hazelcast.Clustering
                     case InstallResult.Failed:
                         // failed: client is active but installing the subscription failed
                         // however, we might have installed it on other clients
-                        await RemoveSubscriptionAsync(subscription, cancellationToken).CAF();
+                        await RemoveSubscriptionAsync(subscription, cancellationToken).CfAwait();
                         throw new HazelcastException("Failed to install subscription (see inner exception).", attempt.Exception);
 
                     default:
@@ -183,7 +183,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // hopefully the client is still active, else this will throw
-                response = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CAF();
+                response = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
             }
             catch (Exception e)
             {
@@ -211,7 +211,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                var unsubscribeResponse = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, connection, cancellationToken).CAF();
+                var unsubscribeResponse = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, connection, cancellationToken).CfAwait();
                 var unsubscribed = subscription.ReadUnsubscribeResponse(unsubscribeResponse);
                 return unsubscribed
                     ? Attempt.Fail(InstallResult.SubscriptionNotActive)
@@ -247,7 +247,7 @@ namespace Hazelcast.Clustering
                     return false; // unknown subscription
             }
 
-            await RemoveSubscriptionAsync(subscription, cancellationToken).CAF();
+            await RemoveSubscriptionAsync(subscription, cancellationToken).CfAwait();
             return true;
         }
 
@@ -263,7 +263,7 @@ namespace Hazelcast.Clustering
             // even if we receive more event messages from the servers
             subscription.Deactivate();
 
-            var allRemoved = await RemoveMemberSubscriptionsAsync(subscription, cancellationToken).CAF();
+            var allRemoved = await RemoveMemberSubscriptionsAsync(subscription, cancellationToken).CfAwait();
 
             // remove the subscription, but if some member-level subscriptions could not
             // be removed, adds the subscription to the list of ghost subscriptions.
@@ -295,7 +295,7 @@ namespace Hazelcast.Clustering
                     // this does
                     // - remove the correlated subscription
                     // - tries to properly unsubscribe from the server
-                    var removed = await RemoveMemberSubscriptionAsync(memberSubscription, cancellationToken).CAF();
+                    var removed = await RemoveMemberSubscriptionAsync(memberSubscription, cancellationToken).CfAwait();
                     if (removed)
                         removedMemberSubscriptions.Add(memberSubscription);
                     else
@@ -334,7 +334,7 @@ namespace Hazelcast.Clustering
 
             // trigger the server-side un-subscribe
             var unsubscribeRequest = memberSubscription.ClusterSubscription.CreateUnsubscribeRequest(memberSubscription.ServerSubscriptionId);
-            var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, memberSubscription.Connection, cancellationToken).CAF();
+            var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, memberSubscription.Connection, cancellationToken).CfAwait();
             var removed = memberSubscription.ClusterSubscription.ReadUnsubscribeResponse(responseMessage);
 
             return removed;
@@ -347,7 +347,7 @@ namespace Hazelcast.Clustering
             HConsole.WriteLine(this, "CollectSubscription starting");
 
             // if canceled, will be awaited properly
-            await Task.Delay(_clusterState.Options.Events.SubscriptionCollectDelay, cancellationToken).CAF();
+            await Task.Delay(_clusterState.Options.Events.SubscriptionCollectDelay, cancellationToken).CfAwait();
 
             while (true)
             {
@@ -370,7 +370,7 @@ namespace Hazelcast.Clustering
 
                     try
                     {
-                        var allRemoved = await RemoveMemberSubscriptionsAsync(subscription, cancellationToken).CAF();
+                        var allRemoved = await RemoveMemberSubscriptionsAsync(subscription, cancellationToken).CfAwait();
                         if (allRemoved || subscription.DeactivateTime < timeLimit)
                             (gone ??= new List<ClusterSubscription>()).Add(subscription);
                     }
@@ -408,7 +408,7 @@ namespace Hazelcast.Clustering
 
                 // else, wait + loop / try again
                 // if canceled, will be awaited properly
-                await Task.Delay(_clusterState.Options.Events.SubscriptionCollectPeriod, cancellationToken).CAF();
+                await Task.Delay(_clusterState.Options.Events.SubscriptionCollectPeriod, cancellationToken).CfAwait();
             }
         }
 
@@ -435,7 +435,7 @@ namespace Hazelcast.Clustering
                 if (!subscription.Active) continue;
 
                 // this never throws
-                var attempt = await InstallSubscriptionAsync(subscription, connection, cancellationToken).CAF();
+                var attempt = await InstallSubscriptionAsync(subscription, connection, cancellationToken).CfAwait();
 
                 switch (attempt.Value)
                 {
@@ -533,12 +533,12 @@ namespace Hazelcast.Clustering
             // cancelled, when the cluster goes down (and never up again)
             while (!cancellationToken.IsCancellationRequested)
             {
-                connection ??= await _clusterMembers.WaitRandomConnection(cancellationToken).CAF();
+                connection ??= await _clusterMembers.WaitRandomConnection(cancellationToken).CfAwait();
 
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end
                 var correlationId = _clusterState.GetNextCorrelationId();
-                if (!await SubscribeToClusterEventsAsync(connection, correlationId, cancellationToken).CAF()) // does not throw
+                if (!await SubscribeToClusterEventsAsync(connection, correlationId, cancellationToken).CfAwait()) // does not throw
                 {
                     // failed => try another client
                     connection = null;
@@ -584,7 +584,7 @@ namespace Hazelcast.Clustering
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
-                _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CAF();
+                _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
                 HConsole.WriteLine(this, "subscribed");
                 return true;
             }
@@ -605,10 +605,10 @@ namespace Hazelcast.Clustering
         /// <param name="state">A state object.</param>
         private async ValueTask HandleCodecMemberViewEvent(int version, ICollection<MemberInfo> members, object state)
         {
-            var eventArgs = await _clusterMembers.NotifyMembersView(version, members).CAF();
+            var eventArgs = await _clusterMembers.NotifyMembersView(version, members).CfAwait();
 
             // raise events (On... does not throw)
-            await _membersUpdated.AwaitEach(eventArgs).CAF();
+            await _membersUpdated.AwaitEach(eventArgs).CfAwait();
         }
 
         /// <summary>
@@ -630,7 +630,7 @@ namespace Hazelcast.Clustering
 
             // raise event
             // On... does not throw
-            await _partitionsUpdated.AwaitEach().CAF();
+            await _partitionsUpdated.AwaitEach().CfAwait();
         }
 
         /// <summary>
@@ -756,10 +756,10 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await _scheduler.DisposeAsync().CAF();
+            await _scheduler.DisposeAsync().CfAwait();
 
-            await _clusterEventsTask.ObserveCanceled().CAF();
-            await _ghostTask.ObserveCanceled().CAF();
+            await _clusterEventsTask.ObserveCanceled().CfAwait();
+            await _ghostTask.ObserveCanceled().CfAwait();
 
             // connection is going down
             // it will be disposed as well as all other connections

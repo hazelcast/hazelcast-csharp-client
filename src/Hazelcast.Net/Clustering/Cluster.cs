@@ -178,7 +178,7 @@ namespace Hazelcast.Clustering
             State.NotifyState(ClientState.ShuttingDown);
 
             // we don't need heartbeat anymore
-            await _heartbeat.DisposeAsync().CAF();
+            await _heartbeat.DisposeAsync().CfAwait();
 
             // ClusterMessaging has nothing to dispose
 
@@ -186,25 +186,25 @@ namespace Hazelcast.Clustering
             // - the events scheduler (always running)
             // - the task that ensures FIXME DOCUMENT
             // - the task that deals with ghost subscriptions (if it's running)
-            await Events.DisposeAsync().CAF();
+            await Events.DisposeAsync().CfAwait();
 
             // ClusterClusterEvents need to shutdown
             // - the two ObjectLifeCycle and PartitionLost subscriptions
-            await ClusterEvents.DisposeAsync().CAF();
+            await ClusterEvents.DisposeAsync().CfAwait();
 
             // now it's time to dispose the connections, ie close all of them
             // and shutdown
             // - the reconnect task (if it's running)
             // - the task that connects members (always running)
-            await Connections.DisposeAsync().CAF();
+            await Connections.DisposeAsync().CfAwait();
 
             // at that point we can get rid of members
-            await Members.DisposeAsync().CAF();
+            await Members.DisposeAsync().CfAwait();
 
             // and finally, of the state itself
             // which will shutdown
             // - the state changed queue (always running)
-            await State.DisposeAsync().CAF();
+            await State.DisposeAsync().CfAwait();
         }
     }
 }

@@ -63,7 +63,7 @@ namespace Hazelcast.NearCaching
             {
                 try
                 {
-                    _subscriptionId = await SubscribeToInvalidationEventsAsync().CAF();
+                    _subscriptionId = await SubscribeToInvalidationEventsAsync().CfAwait();
                     RepairingHandler = new RepairingHandler(Cluster.ClientId, this, _maxToleratedMissCount, Cluster.Partitioner, SerializationService, LoggerFactory);
                     IsInvalidating = true;
                 }
@@ -79,7 +79,7 @@ namespace Hazelcast.NearCaching
         protected override async ValueTask DisposeAsyncCore()
         {
             if (_subscriptionId != default)
-                await Cluster.Events.RemoveSubscriptionAsync(_subscriptionId, CancellationToken.None).CAF();
+                await Cluster.Events.RemoveSubscriptionAsync(_subscriptionId, CancellationToken.None).CfAwait();
         }
 
         /// <inheritdoc />
@@ -132,7 +132,7 @@ namespace Hazelcast.NearCaching
                 (message, state) => MapAddNearCacheInvalidationListenerCodec.HandleEventAsync(message, HandleCodecSingleEvent, HandleCodecBatchEvent, null, LoggerFactory),
                 new EventState { Name = Name });
 
-            await Cluster.Events.InstallSubscriptionAsync(subscription, CancellationToken.None).CAF();
+            await Cluster.Events.InstallSubscriptionAsync(subscription, CancellationToken.None).CfAwait();
             return subscription.Id;
         }
 

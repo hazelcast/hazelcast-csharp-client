@@ -86,7 +86,7 @@ namespace Hazelcast.DistributedObjects
                 if (remote)
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
-                    _ = await _cluster.Messaging.SendAsync(requestMessage, token).CAF();
+                    _ = await _cluster.Messaging.SendAsync(requestMessage, token).CfAwait();
                 }
 
                 x.OnInitialized();
@@ -97,14 +97,14 @@ namespace Hazelcast.DistributedObjects
             // try to get the object - thanks to the concurrent dictionary there will be only 1 task
             // and if several concurrent requests are made, they will all await that same task
 
-            var o = await _objects.GetOrAddAsync(info, CreateAsync, cancellationToken).CAF();
+            var o = await _objects.GetOrAddAsync(info, CreateAsync, cancellationToken).CfAwait();
 
             // race condition: maybe the factory has been disposed and is already disposing
             // objects and will ignore this new object even though it has been added to the
             // dictionary, so take care of it ourselves
             if (_disposed == 1)
             {
-                await o.DisposeAsync().CAF();
+                await o.DisposeAsync().CfAwait();
                 throw new ObjectDisposedException("DistributedObjectFactory");
             }
 
@@ -138,7 +138,7 @@ namespace Hazelcast.DistributedObjects
                 try
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
-                    await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CAF();
+                    await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 }
                 catch (Exception e)
                 {
@@ -168,13 +168,13 @@ namespace Hazelcast.DistributedObjects
             // try to get the object - and then, dispose it
 
             var info = new DistributedObjectInfo(o.ServiceName, o.Name);
-            var attempt = await _objects.TryGetAndRemoveAsync(info).CAF();
+            var attempt = await _objects.TryGetAndRemoveAsync(info).CfAwait();
             if (attempt)
-                await TryDispose(attempt.Value).CAF();
+                await TryDispose(attempt.Value).CfAwait();
 
             // regardless of whether the object was known locally, destroy on server
             var clientMessage = ClientDestroyProxyCodec.EncodeRequest(o.Name, o.ServiceName);
-            var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CAF();
+            var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CfAwait();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }
 
@@ -202,7 +202,7 @@ namespace Hazelcast.DistributedObjects
 
             await foreach (var (_, value) in _objects)
             {
-                await TryDispose(value).CAF();
+                await TryDispose(value).CfAwait();
             }
         }
 
@@ -210,7 +210,7 @@ namespace Hazelcast.DistributedObjects
         {
             try
             {
-                await o.DisposeAsync().CAF();
+                await o.DisposeAsync().CfAwait();
             }
             catch (Exception e)
             {

@@ -26,7 +26,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<T> PeekAsync() // peek, or null
         {
             var requestMessage = QueuePeekCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueuePeekCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -34,7 +34,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         public async Task<T> GetElementAsync()
         {
-            return await PeekAsync().CAF() ?? throw new InvalidOperationException("The queue is empty.");
+            return await PeekAsync().CfAwait() ?? throw new InvalidOperationException("The queue is empty.");
         }
 
         /// <inheritdoc />
@@ -43,7 +43,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var timeToWaitMs = timeToWait.RoundedMilliseconds(); // codec: 0 = zero, -1 = infinite
 
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMs);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueuePollCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -52,7 +52,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<T> TakeAsync()
         {
             var requestMessage = QueueTakeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueTakeCodec.DecodeResponse(responseMessage).Response;
             return ToObject<T>(response);
         }
@@ -61,7 +61,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<int> DrainToAsync(ICollection<T> items)
         {
             var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add(ToObject<T>(itemData));
@@ -72,7 +72,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public async Task<int> DrainToAsync(ICollection<T> items, int maxElements)
         {
             var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, maxElements);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CAF();
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
             foreach (var itemData in response) items.Add(ToObject<T>(itemData));

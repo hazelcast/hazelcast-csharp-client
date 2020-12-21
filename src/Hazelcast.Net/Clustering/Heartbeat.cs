@@ -73,7 +73,7 @@ namespace Hazelcast.Clustering
 
             try
             {
-                await _heartbeating.ObserveCanceled().CAF();
+                await _heartbeating.ObserveCanceled().CfAwait();
             }
             catch (Exception e)
             {
@@ -86,10 +86,10 @@ namespace Hazelcast.Clustering
         {
             while (true)
             {
-                await Task.Delay(_period, cancellationToken).CAF();
+                await Task.Delay(_period, cancellationToken).CfAwait();
                 try
                 {
-                    await RunAsync(cancellationToken).ObserveCanceled().CAF();
+                    await RunAsync(cancellationToken).ObserveCanceled().CfAwait();
                 }
                 catch (Exception e)
                 {
@@ -113,7 +113,7 @@ namespace Hazelcast.Clustering
                 .Select(x => RunAsync(x, now, cancellationToken))
                 .ToList();
 
-            await Task.WhenAll(tasks).CAF(); // may throw in case of cancellation
+            await Task.WhenAll(tasks).CfAwait(); // may throw in case of cancellation
         }
 
         // runs once on a connection to a member
@@ -134,7 +134,7 @@ namespace Hazelcast.Clustering
             if (readElapsed > _timeout && writeElapsed < _period)
             {
                 _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}.", connection.Id);
-                if (connection.Active) await connection.TerminateAsync().CAF(); // does not throw;
+                if (connection.Active) await connection.TerminateAsync().CfAwait(); // does not throw;
                 return;
             }
 
@@ -151,7 +151,7 @@ namespace Hazelcast.Clustering
                     // ping should complete within the default invocation timeout
                     var responseMessage = await _clusterMessaging
                         .SendToMemberAsync(requestMessage, connection, cancellationToken)
-                        .CAF();
+                        .CfAwait();
 
                     // just to be sure everything is ok
                     _ = ClientPingCodec.DecodeResponse(responseMessage);
@@ -159,7 +159,7 @@ namespace Hazelcast.Clustering
                 catch (TaskTimeoutException)
                 {
                     _logger.LogWarning("Heartbeat ping timeout for connection {ConnectionId}.", connection.Id);
-                    if (connection.Active) await connection.TerminateAsync().CAF(); // does not throw;
+                    if (connection.Active) await connection.TerminateAsync().CfAwait(); // does not throw;
                 }
                 catch (Exception e)
                 {

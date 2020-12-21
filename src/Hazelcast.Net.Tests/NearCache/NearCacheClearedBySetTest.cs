@@ -189,14 +189,14 @@ namespace Hazelcast.Tests.NearCache
                 // put new value and update last state
                 // note: the value in the map/Near Cache is *always* larger or equal to valuePut
                 // assertion: valueMap >= valuePut
-                await dictionary.SetAsync(Key, i.ToString()).CAF();
+                await dictionary.SetAsync(Key, i.ToString()).CfAwait();
                 _valuePut = i;
 
                 // ensure we have a value
                 if (i == 1) started.Release();
 
                 // check if we see our last update
-                var valueStr = await dictionary.GetAsync(Key).CAF();
+                var valueStr = await dictionary.GetAsync(Key).CfAwait();
                 if (valueStr == null) continue; // not found
 
                 var valueInt = int.Parse(valueStr);
@@ -206,10 +206,10 @@ namespace Hazelcast.Tests.NearCache
                 Logger.LogWarning($"Err: set {i} but got {valueInt}.");
 
                 // maybe it needs a bit of time?
-                await Task.Delay(200).CAF();
+                await Task.Delay(200).CfAwait();
 
                 // test again and stop if really lost
-                valueStr = await dictionary.GetAsync(Key).CAF();
+                valueStr = await dictionary.GetAsync(Key).CfAwait();
                 valueInt = int.Parse(valueStr);
                 if (valueInt == i) continue; // fixed
 
@@ -232,7 +232,7 @@ namespace Hazelcast.Tests.NearCache
                 n++;
 
                 // get the value
-                var valueStr = await dictionary.GetAsync(Key).CAF();
+                var valueStr = await dictionary.GetAsync(Key).CfAwait();
 
                 // that should never happen!
                 Assert.That(valueStr, Is.Not.Null);
@@ -242,7 +242,7 @@ namespace Hazelcast.Tests.NearCache
                 Assert.AreEqual(valueInt.ToString(), valueStr);
 
                 // slow down
-                await Task.Delay(100).CAF();
+                await Task.Delay(100).CfAwait();
             }
             Logger.LogInformation($"Get task {id} performed {n} operations.");
         }

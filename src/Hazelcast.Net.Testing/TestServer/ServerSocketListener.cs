@@ -167,7 +167,7 @@ namespace Hazelcast.Testing.TestServer
 
             // notify
             if (_onShutdown != null)
-                await _onShutdown(this).CAF();
+                await _onShutdown(this).CfAwait();
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Hazelcast.Testing.TestServer
             HConsole.WriteLine(this, "Stop listener");
 
             _cancellationTokenSource.Cancel();
-            await _listeningThenShutdown.CAF();
+            await _listeningThenShutdown.CfAwait();
 
             HConsole.WriteLine(this, "Stopped listener");
         }
@@ -267,7 +267,7 @@ namespace Hazelcast.Testing.TestServer
             try
             {
                 if (_serverConnection != null)
-                    await _serverConnection.DisposeAsync().CAF();
+                    await _serverConnection.DisposeAsync().CfAwait();
             }
             catch { /* ignore */ }
 

@@ -40,7 +40,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CAF();
+            var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CfAwait();
             if (removed) _cache.Remove(keyData);
             return removed;
         }
@@ -50,7 +50,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             try
             {
-                return await base.GetAndRemoveAsync(keyData, cancellationToken).CAF();
+                return await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
             }
             finally
             {
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             try
             {
-                return await base.RemoveAsync(keyData, valueData, cancellationToken).CAF();
+                return await base.RemoveAsync(keyData, valueData, cancellationToken).CfAwait();
             }
             finally
             {
@@ -90,7 +90,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             try
             {
-                await base.GetAndRemoveAsync(keyData, cancellationToken).CAF();
+                await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
             }
             finally
             {
@@ -103,7 +103,7 @@ namespace Hazelcast.DistributedObjects.Impl
         {
             await base.ClearAsync(cancellationToken)
                 .ContinueWith(_ => _cache.Clear(), default, default, TaskScheduler.Current)
-                .CAF();
+                .CfAwait();
         }
     }
 }

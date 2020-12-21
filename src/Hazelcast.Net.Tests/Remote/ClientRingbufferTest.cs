@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Remote
             {
                 // so with this model, the invocation task
 
-                await rb.ReadManyAsync(0, Capacity + 1, Capacity + 1).CAF();
+                await rb.ReadManyAsync(0, Capacity + 1, Capacity + 1).CfAwait();
             });
         }
 

@@ -36,7 +36,7 @@ namespace Hazelcast.Tests.DotNet
             //source.CancelAfter(2000);
 
             // note: a memory stream is non blocking!
-            var count = await stream.ReadAsync(memory, source.Token).CAF();
+            var count = await stream.ReadAsync(memory, source.Token).CfAwait();
             Console.WriteLine(count);
 
             // should end ok

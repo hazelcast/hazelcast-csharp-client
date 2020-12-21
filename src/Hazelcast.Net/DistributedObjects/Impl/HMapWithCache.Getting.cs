@@ -27,7 +27,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            var fromCache = await _cache.TryGetOrAddAsync(keyData, _ => GetDataAsync(keyData, cancellationToken)).CAF();
+            var fromCache = await _cache.TryGetOrAddAsync(keyData, _ => GetDataAsync(keyData, cancellationToken)).CfAwait();
             return fromCache.ValueOrDefault();
         }
 
@@ -46,7 +46,7 @@ namespace Hazelcast.DistributedObjects.Impl
                     cachedKeys.Clear();
                     foreach (var keyData in partitionKeys)
                     {
-                        var (hasValue, value) = await _cache.TryGetAsync(keyData).CAF();
+                        var (hasValue, value) = await _cache.TryGetAsync(keyData).CfAwait();
                         if (hasValue)
                         {
                             cachedKeys.Add(keyData);
@@ -59,7 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 }
             }
 
-            var entries = await base.GetAllAsync(ownersKeys, cancellationToken).CAF();
+            var entries = await base.GetAllAsync(ownersKeys, cancellationToken).CfAwait();
 
             // 'entries' is a ReadOnlyLazyDictionary that contains values that are lazily
             // deserialized - and since we just fetched the entries, none have been deserialized
@@ -68,7 +68,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             // cache retrieved entries
             foreach (var (key, entry) in entries.Entries)
-                await _cache.TryAddAsync(key, entry.ValueData).CAF();
+                await _cache.TryAddAsync(key, entry.ValueData).CfAwait();
 
             // merge cached entries and retrieved entries
             foreach (var (keyData, valueObject) in cachedValues)
@@ -80,7 +80,7 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <inheritdoc />
         protected override async Task<bool> ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
         {
-            return await _cache.ContainsKeyAsync(keyData).CAF() || await base.ContainsKeyAsync(keyData, cancellationToken).CAF();
+            return await _cache.ContainsKeyAsync(keyData).CfAwait() || await base.ContainsKeyAsync(keyData, cancellationToken).CfAwait();
         }
     }
 }

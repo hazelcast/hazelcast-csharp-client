@@ -166,7 +166,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
 
@@ -186,7 +186,7 @@ namespace Hazelcast
 #if HZ_OPTIMIZE_ASYNC
             return task;
 #else
-            await task.CAF();
+            await task.CfAwait();
 #endif
         }
 
@@ -201,7 +201,7 @@ namespace Hazelcast
 
             try
             {
-                await _nearCacheManager.DisposeAsync().CAF();
+                await _nearCacheManager.DisposeAsync().CfAwait();
             }
             catch (Exception e)
             {
@@ -210,7 +210,7 @@ namespace Hazelcast
 
             try
             {
-                await _distributedOjects.DisposeAsync().CAF();
+                await _distributedOjects.DisposeAsync().CfAwait();
             }
             catch (Exception e)
             {
@@ -219,7 +219,7 @@ namespace Hazelcast
 
             try
             {
-                await Cluster.DisposeAsync().CAF();
+                await Cluster.DisposeAsync().CfAwait();
             }
             catch (Exception e)
             {

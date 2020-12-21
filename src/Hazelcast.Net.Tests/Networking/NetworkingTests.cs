@@ -61,14 +61,14 @@ namespace Hazelcast.Tests.Networking
             {
                 response.CorrelationId = requestMessage.CorrelationId;
                 response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await connection.SendAsync(response).CAF();
+                await connection.SendAsync(response).CfAwait();
             }
 
             async Task SendEventAsync(ClientMessage eventMessage, long correlationId)
             {
                 eventMessage.CorrelationId = correlationId;
                 eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await connection.SendAsync(eventMessage).CAF();
+                await connection.SendAsync(eventMessage).CfAwait();
             }
 
             switch (requestMessage.MessageType)
@@ -80,7 +80,7 @@ namespace Hazelcast.Tests.Networking
                         var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
                             0, server.Address, server.MemberId, SerializationService.SerializerVersion,
                             "4.0", 1, server.ClusterId, false);
-                        await SendResponseAsync(responseMessage).CAF();
+                        await SendResponseAsync(responseMessage).CfAwait();
                         break;
                     }
 
@@ -89,23 +89,23 @@ namespace Hazelcast.Tests.Networking
                     {
                         var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
                         var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await SendResponseAsync(responseMessage).CAF();
+                        await SendResponseAsync(responseMessage).CfAwait();
 
                         _ = Task.Run(async () =>
                         {
-                            await Task.Delay(500).CAF();
+                            await Task.Delay(500).CfAwait();
                             var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
                             {
                             new MemberInfo(server.MemberId, server.Address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
                         });
-                            await SendEventAsync(eventMessage, correlationId).CAF();
+                            await SendEventAsync(eventMessage, correlationId).CfAwait();
                         });
                         break;
                     }
 
                 // handle others
                 default:
-                    await handler(server, connection, requestMessage).CAF();
+                    await handler(server, connection, requestMessage).CfAwait();
                     break;
             }
         }
@@ -139,7 +139,7 @@ namespace Hazelcast.Tests.Networking
             // send in one fragment, set flags
             response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
-            await connection.SendAsync(response).CAF();
+            await connection.SendAsync(response).CfAwait();
             HConsole.WriteLine(this, "Responded");
         }
 
@@ -170,14 +170,14 @@ namespace Hazelcast.Tests.Networking
                     {
                         response.CorrelationId = msg.CorrelationId;
                         response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                        await conn.SendAsync(response).CAF();
+                        await conn.SendAsync(response).CfAwait();
                     }
 
                     async Task EventAsync(ClientMessage eventMessage)
                     {
                         eventMessage.CorrelationId = msg.CorrelationId;
                         eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                        await conn.SendAsync(eventMessage).CAF();
+                        await conn.SendAsync(eventMessage).CfAwait();
                     }
 
                     switch (msg.MessageType)
@@ -188,23 +188,23 @@ namespace Hazelcast.Tests.Networking
                             var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
                                 0, address, Guid.NewGuid(), SerializationService.SerializerVersion,
                                 "4.0", 1, Guid.NewGuid(), false);
-                            await ResponseAsync(authResponse).CAF();
+                            await ResponseAsync(authResponse).CfAwait();
                             break;
 
                         // must handle events
                         case ClientAddClusterViewListenerServerCodec.RequestMessageType:
                             var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(msg);
                             var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                            await ResponseAsync(addResponse).CAF();
+                            await ResponseAsync(addResponse).CfAwait();
 
                             _ = Task.Run(async () =>
                             {
-                                await Task.Delay(500).CAF();
+                                await Task.Delay(500).CfAwait();
                                 var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
                                 {
                                     new MemberInfo(Guid.NewGuid(), address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
                                 });
-                                await EventAsync(eventMessage).CAF();
+                                await EventAsync(eventMessage).CfAwait();
                             });
 
                             break;
@@ -212,11 +212,11 @@ namespace Hazelcast.Tests.Networking
                         default:
                             HConsole.WriteLine(svr, "Respond with error.");
                             var response = CreateErrorMessage(RemoteError.RetryableHazelcast);
-                            await ResponseAsync(response).CAF();
+                            await ResponseAsync(response).CfAwait();
                             break;
                     }
                 }), LoggerFactory);
-            await server.StartAsync().CAF();
+            await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configure: (configuration, options) =>
@@ -229,10 +229,10 @@ namespace Hazelcast.Tests.Networking
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CAF());
+            Assert.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
 
             // TODO dispose the client, the server
-            await server.StopAsync().CAF();
+            await server.StopAsync().CfAwait();
         }
 
         [Test]
@@ -263,9 +263,9 @@ namespace Hazelcast.Tests.Networking
                         response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
                     }
                     response.CorrelationId = msg.CorrelationId;
-                    await conn.SendAsync(response).CAF();
+                    await conn.SendAsync(response).CfAwait();
                 }), LoggerFactory);
-            await server.StartAsync().CAF();
+            await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configure: (configuration, options) =>
@@ -282,7 +282,7 @@ namespace Hazelcast.Tests.Networking
 
             Assert.AreEqual(4, count);
 
-            await server.StopAsync().CAF();
+            await server.StopAsync().CfAwait();
         }
 
         [Test]
@@ -299,14 +299,14 @@ namespace Hazelcast.Tests.Networking
                 => await HandleAsync(xsvr, xconn, xmsg, async (svr, conn, msg) =>
                 {
                     HConsole.WriteLine(svr, "Handle request (slowww...)");
-                    await Task.Delay(10_000).CAF();
+                    await Task.Delay(10_000).CfAwait();
 
                     HConsole.WriteLine(svr, "Respond with success.");
                     var response = ClientPingServerCodec.EncodeResponse();
                     response.CorrelationId = msg.CorrelationId;
-                    await conn.SendAsync(response).CAF();
+                    await conn.SendAsync(response).CfAwait();
                 }), LoggerFactory);
-            await server.StartAsync().CAF();
+            await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
             var options = HazelcastOptions.Build(configure: (configuration, options) =>
@@ -325,7 +325,7 @@ namespace Hazelcast.Tests.Networking
             });
 
             // TODO dispose the client, the server
-            await server.StopAsync().CAF();
+            await server.StopAsync().CfAwait();
         }
 
         [Test]
@@ -344,7 +344,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Start server");
             var server = new Server(address, async (xsvr, xconn, xmsg)
                 => await HandleAsync(xsvr, xconn, xmsg, ReceiveMessage), LoggerFactory);
-            await server.StartAsync().CAF();
+            await server.StartAsync().CfAwait();
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
             {
@@ -356,7 +356,7 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
-            var response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CAF();
+            var response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait();
 
             HConsole.WriteLine(this, "Got response: " + GetText(response));
 
@@ -365,13 +365,13 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Send message 1 to client 2");
             message = CreateMessage("a");
-            response = await client2.Cluster.Messaging.SendAsync(message, CancellationToken.None).CAF();
+            response = await client2.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait();
 
             HConsole.WriteLine(this, "Got response: " + GetText(response));
 
             HConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("foo");
-            response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CAF();
+            response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait();
 
             HConsole.WriteLine(this, "Got response: " + GetText(response));
 
@@ -379,11 +379,11 @@ namespace Hazelcast.Tests.Networking
             //await client1.CloseAsync().CAF();
 
             HConsole.WriteLine(this, "Stop server");
-            await server.StopAsync().CAF();
-            await Task.Delay(1000).CAF();
+            await server.StopAsync().CfAwait();
+            await Task.Delay(1000).CfAwait();
 
             HConsole.WriteLine(this, "End");
-            await Task.Delay(100).CAF();
+            await Task.Delay(100).CfAwait();
         }
 
         [Test]
@@ -398,7 +398,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Start server");
             await using var server = new Server(address, async (xsvr, xconn, xmsg)
                 => await HandleAsync(xsvr, xconn, xmsg, ReceiveMessage), LoggerFactory);
-            await server.StartAsync().CAF();
+            await server.StartAsync().CfAwait();
 
             var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
             {
@@ -410,20 +410,20 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Send message 1 to client 1");
             var message = CreateMessage("ping");
-            var response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CAF();
+            var response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait();
 
             HConsole.WriteLine(this, "Got response: " + GetText(response));
 
             HConsole.WriteLine(this, "Stop server");
-            await server.StopAsync().CAF();
-            await Task.Delay(1000).CAF();
+            await server.StopAsync().CfAwait();
+            await Task.Delay(1000).CfAwait();
 
             HConsole.WriteLine(this, "Send message 2 to client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<ClientOfflineException>(async () => await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CAF());
+            Assert.ThrowsAsync<ClientOfflineException>(async () => await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait());
 
             HConsole.WriteLine(this, "End");
-            await Task.Delay(100).CAF();
+            await Task.Delay(100).CfAwait();
         }
 
         [Test]
@@ -448,16 +448,16 @@ namespace Hazelcast.Tests.Networking
             options.Networking.Addresses.Add("localhost");
 
             var cluster = new Cluster(options, serializationService, new NullLoggerFactory());
-            await cluster.Connections.ConnectAsync(CancellationToken.None).CAF();
+            await cluster.Connections.ConnectAsync(CancellationToken.None).CfAwait();
 
             // now we can send messages...
             //await cluster.SendAsync(new ClientMessage()).CAF();
 
             // events?
-            await Task.Delay(4000).CAF();
+            await Task.Delay(4000).CfAwait();
 
             HConsole.WriteLine(this, "End");
-            await Task.Delay(100).CAF();
+            await Task.Delay(100).CfAwait();
         }
 
         [Test]
@@ -476,15 +476,15 @@ namespace Hazelcast.Tests.Networking
         public async Task SocketTimeout1()
         {
             await using var server = new Server(NetworkAddress.Parse("127.0.0.1:11000"), (svr, connection, message) => new ValueTask(), LoggerFactory);
-            await server.StartAsync().CAF();
+            await server.StartAsync().CfAwait();
 
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
 
             // server is listening, can connect within 1s timeout
-            await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000).CAF();
+            await socket.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000), 1_000).CfAwait();
 
             socket.Close();
-            await server.StopAsync().CAF();
+            await server.StopAsync().CfAwait();
         }
 
         [Test]
@@ -496,7 +496,7 @@ namespace Hazelcast.Tests.Networking
             // server is not listening, connecting results in timeout after 1s
             Assert.ThrowsAsync<TimeoutException>(async () =>
             {
-                await socket.ConnectAsync(NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint, 500).CAF();
+                await socket.ConnectAsync(NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint, 500).CfAwait();
             });
 
             // socket has been properly closed and disposed
@@ -519,7 +519,7 @@ namespace Hazelcast.Tests.Networking
             try
             {
                 var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-                await socket.ConnectAsync(endpoint, 60_000).CAF();
+                await socket.ConnectAsync(endpoint, 60_000).CfAwait();
                 Assert.Fail("Expected an exception.");
             }
             catch (TimeoutException)

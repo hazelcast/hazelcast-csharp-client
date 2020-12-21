@@ -88,7 +88,7 @@ namespace System.IO
                 reg = cancellationToken.Register(() => completion.TrySetCanceled());
 
                 var reading = stream.ReadAsync(bytes, offset, count, cancellationToken);
-                var completed = await Task.WhenAny(reading, completion.Task).CAF();
+                var completed = await Task.WhenAny(reading, completion.Task).CfAwait();
 
                 if (completed != reading)
                 {

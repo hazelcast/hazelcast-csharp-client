@@ -36,7 +36,7 @@ namespace Hazelcast.Core
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
-        public static ConfiguredTaskAwaitable CAF([NotNull] this Task task)
+        public static ConfiguredTaskAwaitable CfAwait([NotNull] this Task task)
         {
             if (task == null) throw new ArgumentNullException(nameof(task));
             return task.ConfigureAwait(false);
@@ -52,7 +52,7 @@ namespace Hazelcast.Core
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
-        public static ConfiguredTaskAwaitable<T> CAF<T>([NotNull] this Task<T> task)
+        public static ConfiguredTaskAwaitable<T> CfAwait<T>([NotNull] this Task<T> task)
         {
             if (task == null) throw new ArgumentNullException(nameof(task));
             return task.ConfigureAwait(false);
@@ -68,7 +68,7 @@ namespace Hazelcast.Core
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
-        public static ConfiguredValueTaskAwaitable CAF(this ValueTask task)
+        public static ConfiguredValueTaskAwaitable CfAwait(this ValueTask task)
             => task.ConfigureAwait(false);
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace Hazelcast.Core
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // ReSharper disable once InconsistentNaming
-        public static ConfiguredValueTaskAwaitable<T> CAF<T>(this ValueTask<T> task)
+        public static ConfiguredValueTaskAwaitable<T> CfAwait<T>(this ValueTask<T> task)
             => task.ConfigureAwait(false);
     }
 }
