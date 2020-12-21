@@ -499,7 +499,7 @@ namespace Hazelcast.Tests.Remote
             await using var client = await CreateAndStartClientAsync(ConfigureClient).CfAwait();
             var map = await client.GetMapAsync<string, int>("map_" + CreateUniqueName()).CfAwait();
 
-            await eventHandled.WaitAsync();
+            await eventHandled.WaitAsync(2000);
             await client.DestroyAsync(map);
         }
     }

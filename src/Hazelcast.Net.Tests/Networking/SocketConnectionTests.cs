@@ -74,7 +74,7 @@ namespace Hazelcast.Tests.Networking
 
             Assert.Throws<InvalidOperationException>(() => connection2.OnReceiveMessageBytes = (x, y) => true);
             Assert.Throws<InvalidOperationException>(() => connection2.OnReceivePrefixBytes = (x, y) => new ValueTask());
-            Assert.Throws<InvalidOperationException>(() => connection2.OnShutdown = x => { });
+            Assert.Throws<InvalidOperationException>(() => connection2.OnShutdown = x => default);
         }
 
         [Test]
@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Networking
             socket.OnReceivePrefixBytes = onReceivePrefixBytes;
             Assert.That(socket.OnReceivePrefixBytes, Is.SameAs(onReceivePrefixBytes));
 
-            Action<SocketConnectionBase> onShutdown = (s) => { };
+            Func<SocketConnectionBase, ValueTask> onShutdown = s => default;
             socket.OnShutdown = onShutdown;
             Assert.That(socket.OnShutdown, Is.SameAs(onShutdown));
 
@@ -227,7 +227,11 @@ namespace Hazelcast.Tests.Networking
             s = new TestSocketConnection(new StreamWrapper(pipe.Stream1) { OnRead = StreamWrapper.Throw })
             {
                 OnReceiveMessageBytes = (s, r) => false,
-                OnShutdown = s => down++
+                OnShutdown = s =>
+                {
+                    down++;
+                    return default;
+                }
             };
             await s.ConnectAsync();
 
@@ -295,7 +299,11 @@ namespace Hazelcast.Tests.Networking
                     return false;
                 },
                 OnReceivePrefixBytes = (s, r) => throw new Exception("bang"),
-                OnShutdown = s => down++
+                OnShutdown = s =>
+                {
+                    down++;
+                    return default;
+                }
             };
 
             HConsole.WriteLine(this, "Connect socket.");
@@ -326,7 +334,11 @@ namespace Hazelcast.Tests.Networking
             var s = new TestSocketConnection(pipe.Stream1)
             {
                 OnReceiveMessageBytes = (s, r) => throw new Exception("bang"),
-                OnShutdown = s => down++
+                OnShutdown = s =>
+                {
+                    down++;
+                    return default;
+                }
             };
 
             HConsole.WriteLine(this, "Connect socket.");
@@ -356,7 +368,11 @@ namespace Hazelcast.Tests.Networking
                     s.Pipe.Writer.Complete();
                     return false;
                 },
-                OnShutdown = sc => down++
+                OnShutdown = sc =>
+                {
+                    down++;
+                    return default;
+                }
             };
 
             HConsole.WriteLine(this, "Connect socket.");

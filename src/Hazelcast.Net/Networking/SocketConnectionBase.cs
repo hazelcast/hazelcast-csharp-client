@@ -36,7 +36,7 @@ namespace Hazelcast.Networking
 
         private Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, bool> _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
-        private Action<SocketConnectionBase> _onShutdown;
+        private Func<SocketConnectionBase, ValueTask> _onShutdown;
         private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
         private Socket _socket;
         private Stream _stream;
@@ -121,7 +121,7 @@ namespace Hazelcast.Networking
         /// <remarks>
         /// <para>The function must be set before the connection is established.</para>
         /// </remarks>
-        public Action<SocketConnectionBase> OnShutdown
+        public Func<SocketConnectionBase, ValueTask> OnShutdown
         {
             get => _onShutdown;
             set
@@ -245,7 +245,7 @@ namespace Hazelcast.Networking
             HConsole.WriteLine(this, "Connection is down");
 
             // notify
-            _onShutdown?.Invoke(this);
+            await _onShutdown.AwaitEach(this).CfAwaitNoThrow();
         }
 
         /// <summary>
@@ -276,7 +276,7 @@ namespace Hazelcast.Networking
                 return false;
             }
 
-            HConsole.WriteLine(this, $"Sent {length} bytes" + HConsole.Lines(this, 1 , bytes.Dump(length)));
+            HConsole.WriteLine(this, 2, $"Sent {length} bytes" + HConsole.Lines(this, 1 , bytes.Dump(length)));
             return true;
         }
 
@@ -311,12 +311,12 @@ namespace Hazelcast.Networking
                 int bytesRead;
                 try
                 {
-                    HConsole.WriteLine(this, "Pipe writer waiting for data");
+                    HConsole.WriteLine(this, 2, "Pipe writer waiting for data");
                     bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token).CfAwait();
 
                     if (bytesRead == 0)
                     {
-                        HConsole.WriteLine(this, "Pipe writer received no data");
+                        HConsole.WriteLine(this, 2, "Pipe writer received no data");
                         break;
                     }
 
@@ -325,7 +325,7 @@ namespace Hazelcast.Networking
                 catch (OperationCanceledException)
                 {
                     // expected - just break
-                    HConsole.WriteLine(this, "Pipe writer has been cancelled");
+                    HConsole.WriteLine(this, 2, "Pipe writer has been cancelled");
                     break;
                 }
                 catch (Exception ex)
@@ -337,7 +337,7 @@ namespace Hazelcast.Networking
                 }
 
                 // tell the PipeWriter how much was read from the network
-                HConsole.WriteLine(this, $"Pipe writer received {bytesRead} bytes");
+                HConsole.WriteLine(this, 2, $"Pipe writer received {bytesRead} bytes");
                 writer.Advance(bytesRead);
 
                 // make the data available to the PipeReader
@@ -393,18 +393,18 @@ namespace Hazelcast.Networking
         private async ValueTask<bool> ReadPipeLoop0(ReadPipeState state)
         {
             // await data from the pipe
-            HConsole.WriteLine(this, "Pipe reader awaits data from the pipe");
+            HConsole.WriteLine(this, 2, "Pipe reader awaits data from the pipe");
             var result = await state.Reader.ReadAsync().CfAwait();
             state.Buffer = result.Buffer;
 
             // no data means it's over
             if (state.Buffer.Length == 0)
             {
-                HConsole.WriteLine(this, "Pipe reader received no data");
+                HConsole.WriteLine(this, 2, "Pipe reader received no data");
                 return false;
             }
 
-            HConsole.WriteLine(this, $"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
+            HConsole.WriteLine(this, 2, $"Pipe reader received data, buffer size is {state.Buffer.Length} bytes");
 
             // process data
             while (await ReadPipeLoop1(state).CfAwait()) { }
@@ -434,20 +434,20 @@ namespace Hazelcast.Networking
         /// and represents whether to continue processing.</returns>
         private async ValueTask<bool> ReadPipeLoop1(ReadPipeState state)
         {
-            HConsole.WriteLine(this, "Pipe reader processes data" + HConsole.Lines(this, 1, state.Buffer.Dump()));
+            HConsole.WriteLine(this, 2, "Pipe reader processes data" + HConsole.Lines(this, 1, state.Buffer.Dump()));
 
             if (_prefixLength > 0)
             {
                 if (state.Buffer.Length < _prefixLength)
                 {
-                    HConsole.WriteLine(this, "Pipe reader has not enough data");
+                    HConsole.WriteLine(this, 2, "Pipe reader has not enough data");
                     return false;
                 }
 
                 // we have a prefix, handle lit
                 try
                 {
-                    HConsole.WriteLine(this, "Pipe reader received prefix");
+                    HConsole.WriteLine(this, 2, "Pipe reader received prefix");
                     await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength)).CfAwait();
                     state.Buffer = state.Buffer.Slice(_prefixLength);
                     _prefixLength = 0;
@@ -461,10 +461,10 @@ namespace Hazelcast.Networking
                     return false;
                 }
 
-                HConsole.WriteLine(this, "Pipe reader processes data");
+                HConsole.WriteLine(this, 2, "Pipe reader processes data");
             }
 
-            HConsole.WriteLine(this, "Handle message bytes" + HConsole.Lines(this, 1, state.Buffer.Dump()));
+            HConsole.WriteLine(this, 2, "Handle message bytes" + HConsole.Lines(this, 1, state.Buffer.Dump()));
             try
             {
                 // handle the bytes (and slice the buffer accordingly)

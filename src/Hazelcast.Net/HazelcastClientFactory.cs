@@ -76,7 +76,7 @@ namespace Hazelcast
             return StartNewClientAsyncInternal(options, cancellationToken);
         }
 
-        // implements the async part of StartNewClientAsync
+        // implements the async part of StartNewClientAsync w/ cancellation
         private static async ValueTask<IHazelcastClient> StartNewClientAsyncInternal(HazelcastOptions options, CancellationToken cancellationToken)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));

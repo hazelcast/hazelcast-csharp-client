@@ -161,7 +161,7 @@ namespace Hazelcast.Tests.Messaging
             var cancellation = new CancellationTokenSource();
             m.OnSending = () => cancellation.Cancel();
 
-            Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
                 await m.SendAsync(new ClientMessage(new Frame(new byte[64], (FrameFlags) ClientMessageFlags.Unfragmented)), cancellation.Token);
             });

@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Hazelcast
 {
     /// <summary>
@@ -23,11 +20,9 @@ namespace Hazelcast
     public interface IHazelcastClientEventSubscriber
     {
         /// <summary>
-        /// Subscribes to events.
+        /// Builds handlers.
         /// </summary>
-        /// <param name="hazelcastClient">The Hazelcast client.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when events have been subscribed to.</returns>
-        Task SubscribeAsync(IHazelcastClient hazelcastClient, CancellationToken cancellationToken);
+        /// <param name="events">An event handlers collection builder.</param>
+        void Build(HazelcastClientEventHandlers events);
     }
 }

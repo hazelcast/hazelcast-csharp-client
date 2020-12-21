@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Testing;
 using Hazelcast.Transactions;
@@ -55,10 +56,6 @@ namespace Hazelcast.Tests.Remote
                 await d2.SetAsync(i, "value");
 
                 await context.CommitAsync();
-
-                // this tests comes from old code and I am not entirely sure what we are testing
-                // only 1 because we should only connect to 1 member in non-smart mode!
-                Assert.AreEqual(1, cm.SnapshotConnections(false).Count);
             }
         }
 
