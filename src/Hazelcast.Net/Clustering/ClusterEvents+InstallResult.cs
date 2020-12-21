@@ -22,39 +22,22 @@ namespace Hazelcast.Clustering
         private enum InstallResult
         {
             /// <summary>
-            /// Unknown (default).
-            /// </summary>
-            Unknown = 0,
-
-            /// <summary>
             /// The subscription was successfully installed on the client.
             /// </summary>
-            Success,
+            Success = 1, // zero is for default
 
             /// <summary>
-            /// Could not install the subscription because it is not active.
+            /// Could not install the subscription because it is not active (do not retry).
             /// </summary>
             SubscriptionNotActive,
 
             /// <summary>
-            /// Could not install the subscription because the client is not active.
+            /// Could not install the subscription because the connection is not active (do not retry).
             /// </summary>
-            ClientNotActive,
+            ConnectionNotActive,
 
             /// <summary>
-            /// Could not install the subscription, server may be confused.
-            /// </summary>
-            /// <remarks>
-            /// <para>A confused server can be a client on which the subscription was installed,
-            /// only to realize that the subscription had been removed in the meantime, but
-            /// we failed to un-install the subscription. So the remote end still has the
-            /// subscription (although we will ignore all events). Probably, something is
-            /// wrong with either the client or the remote end.</para>
-            /// </remarks>
-            ConfusedServer,
-
-            /// <summary>
-            /// Could not install the subscription on the server.
+            /// Could not install the subscription on the member (may want to retry?).
             /// </summary>
             Failed
         }

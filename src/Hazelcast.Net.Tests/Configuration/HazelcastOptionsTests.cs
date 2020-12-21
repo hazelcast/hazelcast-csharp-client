@@ -120,7 +120,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsInstanceOf<HazelcastClientEventSubscriber>(subscriber);
 
             TestSubscriber.Ctored = false;
-            await subscriber.SubscribeAsync(null, CancellationToken.None);
+            subscriber.Build(null);
             Assert.IsTrue(TestSubscriber.Ctored);
 
             var loadBalancer = options.LoadBalancer.Service;
@@ -325,10 +325,9 @@ namespace Hazelcast.Tests.Configuration
         {
             public static bool Ctored { get; set; }
 
-            public Task SubscribeAsync(IHazelcastClient client, CancellationToken cancellationToken)
+            public void Build(HazelcastClientEventHandlers events)
             {
                 Ctored = true;
-                return Task.CompletedTask;
             }
         }
         public class TestCredentialsFactory : ICredentialsFactory

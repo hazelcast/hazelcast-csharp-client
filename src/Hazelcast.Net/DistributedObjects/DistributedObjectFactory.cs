@@ -174,9 +174,14 @@ namespace Hazelcast.DistributedObjects
 
             var ob = (DistributedObjectBase) o; // we *know* all our objects inherit from the base object
             await ob.DestroyingAsync().CfAwait();
+            await DestroyAsync(o.ServiceName, o.Name, cancellationToken).CfAwait();
+        }
 
+        // internal for tests only
+        internal async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken = default)
+        {
             // regardless of whether the object was known locally, destroy on server
-            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(o.Name, o.ServiceName);
+            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
             var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CfAwait();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }
@@ -184,13 +189,16 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Handles a connection to a new cluster.
         /// </summary>
-        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirst, bool isNewCluster)
+        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
         {
             if (!isNewCluster) return default;
 
             // when connecting to a new cluster, re-create the distributed objects there
-            // FIXME should these handlers be cancellable?
-            // FIXME should these handlers be allowed to throw?
+            // FIXME: no cancellation token, but CreateAllAsync should stop if we get disposed
+            // FIXME: CreateAllAsync should not throw
+            // FIXME: can we get disconnected while this runs? and then?
+
+            // ignore the connection, CreateAllAsync sends on random connection
             return CreateAllAsync(default);
         }
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using Hazelcast.Clustering;
 using Hazelcast.Models;
 
 namespace Hazelcast.Events
@@ -28,7 +29,7 @@ namespace Hazelcast.Events
         /// <param name="addedMembers">Added members.</param>
         /// <param name="removedMembers">Removed members.</param>
         /// <param name="members">All members.</param>
-        public MembersUpdatedEventArgs(IReadOnlyCollection<MemberInfo> addedMembers, IReadOnlyCollection<MemberInfo> removedMembers, IReadOnlyCollection<MemberInfo> members)
+        internal MembersUpdatedEventArgs(IReadOnlyCollection<MemberInfo> addedMembers, IReadOnlyCollection<MemberInfo> removedMembers, IReadOnlyCollection<MemberInfo> members)
         {
             AddedMembers = addedMembers;
             RemovedMembers = removedMembers;
@@ -44,7 +45,7 @@ namespace Hazelcast.Events
         /// Gets the removed members.
         /// </summary>
         public IReadOnlyCollection<MemberInfo> RemovedMembers { get; }
-
+        
         /// <summary>
         /// Gets the complete, updated list of members.
         /// </summary>

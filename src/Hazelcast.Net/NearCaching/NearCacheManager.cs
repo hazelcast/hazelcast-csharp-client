@@ -114,7 +114,7 @@ namespace Hazelcast.NearCaching
         /// <param name="names">The names of the caches.</param>
         private async IAsyncEnumerable<(MemberInfo, MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters)> FetchMetadataAsync(ICollection<string> names)
         {
-            foreach (var member in _cluster.Members.LiteMembers)
+            foreach (var member in _cluster.Members.GetMembers(true))
             {
                 var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
                 var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id).CfAwait();

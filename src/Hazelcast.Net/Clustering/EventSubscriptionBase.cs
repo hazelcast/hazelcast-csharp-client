@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
                 if (_subscriptionsCount > 1) return;
 
                 var subscription = CreateSubscription();
-                await ClusterEvents.InstallSubscriptionAsync(subscription).CfAwait();
+                await ClusterEvents.AddSubscriptionAsync(subscription).CfAwait();
                 _subscriptionId = subscription.Id;
             }
             finally

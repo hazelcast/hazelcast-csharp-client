@@ -16,11 +16,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Events;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast
@@ -47,11 +45,11 @@ namespace Hazelcast
                 {
                     case DistributedObjectCreatedEventHandler _:
                     case DistributedObjectDestroyedEventHandler _:
-                        await Cluster.ClusterEvents.AddObjectLifecycleSubscription().CfAwait();
+                        await Cluster.Events.AddObjectLifecycleSubscription().CfAwait();
                         break;
 
                     case PartitionLostEventHandler _:
-                        await Cluster.ClusterEvents.AddPartitionLostSubscription().CfAwait();
+                        await Cluster.Events.AddPartitionLostSubscription().CfAwait();
                         break;
 
                     case MembersUpdatedEventHandler _ :
@@ -84,9 +82,9 @@ namespace Hazelcast
             {
                 var removed = handler switch
                 {
-                    DistributedObjectCreatedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CfAwait(),
-                    DistributedObjectDestroyedEventHandler _ => await Cluster.ClusterEvents.RemoveObjectLifecycleSubscription().CfAwait(),
-                    PartitionLostEventHandler _ => await Cluster.ClusterEvents.RemovePartitionLostSubscription().CfAwait(),
+                    DistributedObjectCreatedEventHandler _ => await Cluster.Events.RemoveObjectLifecycleSubscription().CfAwait(),
+                    DistributedObjectDestroyedEventHandler _ => await Cluster.Events.RemoveObjectLifecycleSubscription().CfAwait(),
+                    PartitionLostEventHandler _ => await Cluster.Events.RemovePartitionLostSubscription().CfAwait(),
                     MembersUpdatedEventHandler _ => true,
                     PartitionsUpdatedEventHandler _ => true,
                     ConnectionOpenedEventHandler _ => true,
@@ -110,108 +108,36 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Handles an object being created.
+        /// Triggers handlers.
         /// </summary>
-        /// <param name="args">The event arguments.</param>
-        public ValueTask OnObjectCreated(DistributedObjectCreatedEventArgs args)
+        /// <typeparam name="THandler">The type of the handlers.</typeparam>
+        /// <returns>A task that will complete when the handlers have been triggered.</returns>
+        /// <remarks>
+        /// <para>Each individual handle executes within a try/catch block and exceptions
+        /// are caught and logged; this method does not throw.</para>
+        /// </remarks>
+        private ValueTask Trigger<THandler>()
+            where THandler : HazelcastClientEventHandlerBase<EventArgs>
         {
-            // triggers ObjectLifecycle event
-            return ForEachHandler<DistributedObjectCreatedEventHandler, DistributedObjectCreatedEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args);
+            return ForEachHandler<THandler, EventArgs>((handler, sender, a) =>
+                handler.HandleAsync(sender, a), EventArgs.Empty);
         }
 
         /// <summary>
-        /// Handles an object being destroyed.
+        /// Triggers handlers.
         /// </summary>
-        /// <param name="args">The event arguments.</param>
-        public ValueTask OnObjectDestroyed(DistributedObjectDestroyedEventArgs args)
+        /// <typeparam name="THandler">The type of the handlers.</typeparam>
+        /// <typeparam name="TArgs">The type of the event arguments.</typeparam>
+        /// <returns>A task that will complete when the handlers have been triggered.</returns>
+        /// <remarks>
+        /// <para>Each individual handle executes within a try/catch block and exceptions
+        /// are caught and logged; this method does not throw.</para>
+        /// </remarks>
+        private ValueTask Trigger<THandler, TArgs>(TArgs args)
+            where THandler : HazelcastClientEventHandlerBase<TArgs>
         {
-            // triggers ObjectLifecycle event
-            return ForEachHandler<DistributedObjectDestroyedEventHandler, DistributedObjectDestroyedEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args);
-        }
-
-        /// <summary>
-        /// Handles an update of the members.
-        /// </summary>
-        /// <param name="args">The event arguments.</param>
-        public ValueTask OnMembersUpdated(MembersUpdatedEventArgs args)
-        {
-            // triggers MemberLifecycle event
-            return ForEachHandler<MembersUpdatedEventHandler, MembersUpdatedEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args);
-        }
-
-        /// <summary>
-        /// Handles a client state change (lifecycle).
-        /// </summary>
-        /// <param name="state">The new state.</param>
-        public ValueTask OnStateChanged(ClientState state)
-        {
-            var args = new StateChangedEventArgs(state);
-
-            // triggers StateChanged event
-            return ForEachHandler<StateChangedEventHandler, StateChangedEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args);
-        }
-
-        /// <summary>
-        /// Handles an update of the partitions.
-        /// </summary>
-        public ValueTask OnPartitionsUpdated()
-        {
-            // triggers PartitionsUpdated event
-            return ForEachHandler<PartitionsUpdatedEventHandler, EventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Handles a lost partition.
-        /// </summary>
-        /// <param name="args">The event arguments.</param>
-        public ValueTask OnPartitionLost(PartitionLostEventArgs args)
-        {
-            // triggers PartitionLost event
-            return ForEachHandler<PartitionLostEventHandler, PartitionLostEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args);
-        }
-
-        /// <summary>
-        /// Handles an opened connection.
-        /// </summary>
-        /// <param name="connection">The connection.</param>
-        /// <param name="isFirst">Whether the connection is the first one.</param>
-        /// <param name="isNewCluster">Whether the cluster is a new/different cluster.</param>
-        public async ValueTask OnConnectionOpened(MemberConnection connection, bool isFirst, bool isNewCluster)
-        {
-            // if it is the first connection, subscribe to events according to options
-            if (isFirst)
-            {
-                // FIXME should this be cancelable?
-                var cancellationToken = CancellationToken.None;
-                foreach (var subscriber in _options.Subscribers)
-                    await subscriber.SubscribeAsync(this, cancellationToken).CfAwait();
-            }
-
-            var args = new ConnectionOpenedEventArgs(isFirst);
-
-            // trigger ConnectionOpened event
-            await ForEachHandler<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args).CfAwait();
-        }
-
-        /// <summary>
-        /// Handles a closed connection.
-        /// </summary>
-        /// <param name="connection">The connection.</param>
-        /// <param name="wasLast">Whether the connection was the last one.</param>
-        public ValueTask OnConnectionClosed(MemberConnection connection, bool wasLast)
-        {
-            var args = new ConnectionClosedEventArgs(wasLast);
-
-            // trigger ConnectionRemoved event
-            return ForEachHandler<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(
-                (handler, sender, a) => handler.HandleAsync(sender, a), args);
+            return ForEachHandler<THandler, TArgs>((handler, sender, a) =>
+                handler.HandleAsync(sender, a), args);
         }
 
         /// <summary>
@@ -221,6 +147,10 @@ namespace Hazelcast
         /// <typeparam name="TArgs">The type of the event data.</typeparam>
         /// <param name="action">The trigger action.</param>
         /// <param name="args">Event data.</param>
+        /// <remarks>
+        /// <para>Each individual handle executes within a try/catch block and exceptions
+        /// are caught and logged; this method does not throw.</para>
+        /// </remarks>
         private async ValueTask ForEachHandler<THandler, TArgs>(Func<THandler, IHazelcastClient, TArgs, ValueTask> action, TArgs args)
         {
             // TODO: consider running on background threads + limiting concurrency

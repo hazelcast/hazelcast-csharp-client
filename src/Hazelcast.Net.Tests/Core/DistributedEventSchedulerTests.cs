@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Testing;
+using Hazelcast.Testing.Logging;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
@@ -73,7 +75,12 @@ namespace Hazelcast.Tests.Core
         {
             // this test verifies that the scheduler works as expected
 
-            using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            using var _ = HConsole.Capture(consoleOptions => consoleOptions
+                .Set(x => x.Quiet())
+                .Set<DistributedEventScheduler>(x => x.Verbose())
+                .Set(this, x => x.Verbose().SetPrefix("TEST")));
+
+            using var loggerFactory = LoggerFactory.Create(builder => builder.AddHConsole());
             var logger = loggerFactory.CreateLogger("TEST");
             var scheduler = new DistributedEventScheduler(loggerFactory);
 
@@ -85,7 +92,7 @@ namespace Hazelcast.Tests.Core
             var maxConcurentCount = 0;
             var concurrentLock = new object();
 
-            scheduler.OnError += (sender, args) =>
+            scheduler.HandlerError += (sender, args) =>
             {
                 Interlocked.Increment(ref exceptionCount);
                 var message = "An event handler has thrown: " + args.Exception.Message;
@@ -94,12 +101,12 @@ namespace Hazelcast.Tests.Core
                     args.Handled = true;
                     message += " (handling)";
                 }
-                logger.LogWarning(message);
+                HConsole.WriteLine(this, "WARN: " + message);
             };
 
             var s = new ClusterSubscription(async (clientMessage, state) =>
             {
-                logger.LogInformation($"Handling event for partition: {clientMessage.PartitionId}, sequence: {clientMessage.CorrelationId}");
+                HConsole.WriteLine(this, $"Handling event for partition: {clientMessage.PartitionId}, sequence: {clientMessage.CorrelationId}");
 
                 lock (pe)
                 {
@@ -119,7 +126,7 @@ namespace Hazelcast.Tests.Core
                 }
 
                 if (clientMessage.CorrelationId % 10 == 0) throw new Exception($"Throwing for partition: {clientMessage.PartitionId} sequence: {clientMessage.CorrelationId}");
-                logger.LogInformation($"Handled event for partition: {clientMessage.PartitionId} sequence: {clientMessage.CorrelationId}");
+                HConsole.WriteLine(this, $"Handled event for partition: {clientMessage.PartitionId} sequence: {clientMessage.CorrelationId}");
             });
 
             for (var i = 0; i < 50; i++)
@@ -135,9 +142,14 @@ namespace Hazelcast.Tests.Core
                 Assert.That(scheduler.Add(s, m), Is.True);
             }
 
-            await Task.Delay(3000); // make sure everything is completed
-            Debugger.Break();
+            // make sure everything is completed
+            // (disposing aborts all queues)
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(scheduler.Count, Is.EqualTo(0));
+            }, 8000, 200);
 
+            // aborts the scheduler & all current queues!
             await scheduler.DisposeAsync();
 
             // the exceptions have triggered the OnError handler

@@ -39,6 +39,12 @@ namespace Hazelcast
             await _distributedOjects.DestroyAsync(o).CfAwait();
         }
 
+        // (internal for tests only)
+        internal async ValueTask DestroyAsync(string serviceName, string name)
+        {
+            await _distributedOjects.DestroyAsync(serviceName, name).CfAwait();
+        }
+
         /// <inheritdoc />
         public async Task<IHMap<TKey, TValue>> GetMapAsync<TKey, TValue>(string name)
         {

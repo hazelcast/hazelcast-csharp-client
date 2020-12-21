@@ -229,7 +229,7 @@ namespace Hazelcast.Tests.Networking
             var message = ClientPingServerCodec.EncodeRequest();
 
             var token = new CancellationTokenSource(3_000).Token;
-            Assert.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
+            await AssertEx.ThrowsAsync<TaskCanceledException>(async () => await client.Cluster.Messaging.SendAsync(message, token).CfAwait());
 
             // TODO dispose the client, the server
             await server.StopAsync().CfAwait();
@@ -287,22 +287,36 @@ namespace Hazelcast.Tests.Networking
 
         [Test]
         [Timeout(20_000)]
-        public async Task TimeoutsIfServerIsTooSlow()
+        public async Task TimeoutsAfterMultipleRetries()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
+            using var _ = HConsole.Capture(consoleOptions => consoleOptions
+                .ClearAll()
+                .Set(x => x.Verbose())
+                .Set(this, x => x.SetPrefix("TEST"))
+                .Set<AsyncContext>(x => x.Quiet())
+                .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
             await using var server = new Server(address, async (xsvr, xconn, xmsg)
                 => await HandleAsync(xsvr, xconn, xmsg, async (svr, conn, msg) =>
                 {
-                    HConsole.WriteLine(svr, "Handle request (slowww...)");
-                    await Task.Delay(10_000).CfAwait();
+                    HConsole.WriteLine(svr, "Handle request (wait...)");
+                    await Task.Delay(500).CfAwait();
 
-                    HConsole.WriteLine(svr, "Respond with success.");
-                    var response = ClientPingServerCodec.EncodeResponse();
+                    HConsole.WriteLine(svr, "Respond with error.");
+                    var response = ErrorsServerCodec.EncodeResponse(new[]
+                    {
+                        // make sure the error is retryable
+                        new ErrorHolder(RemoteError.RetryableHazelcast, "classname", "message", Enumerable.Empty<StackTraceElement>())
+                    });
+
+                    //HConsole.WriteLine(svr, "Respond with success.");
+                    //var response = ClientPingServerCodec.EncodeResponse();
+
                     response.CorrelationId = msg.CorrelationId;
                     await conn.SendAsync(response).CfAwait();
                 }), LoggerFactory);
@@ -312,19 +326,22 @@ namespace Hazelcast.Tests.Networking
             var options = HazelcastOptions.Build(configure: (configuration, options) =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
+                options.Messaging.RetryTimeoutSeconds = 3; // default value is 120s
             });
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
-            Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            // note: the error only happens *after* the server has responded
+            // we could wait for the response for ever
+            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
             {
-                var token = new CancellationTokenSource(3_000).Token;
-                await client.Cluster.Messaging.SendAsync(message, token); // default is 120s
+                // server will respond w/ error every 500ms and client will retry
+                // until the 3s retry timeout (options above) is reached
+                await client.Cluster.Messaging.SendAsync(message).CfAwait();
             });
 
-            // TODO dispose the client, the server
             await server.StopAsync().CfAwait();
         }
 

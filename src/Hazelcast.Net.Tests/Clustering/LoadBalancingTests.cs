@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Clustering
             var lb = new RandomLoadBalancer();
 
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
 
             lb.SetMembers(memberIds);
             Assert.That(lb.Count, Is.EqualTo(3));
@@ -86,7 +86,7 @@ namespace Hazelcast.Tests.Clustering
 
             lb.SetMembers(new Guid[0]);
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace Hazelcast.Tests.Clustering
             var lb = new RoundRobinLoadBalancer();
 
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
 
             lb.SetMembers(memberIds);
             Assert.That(lb.Count, Is.EqualTo(3));
@@ -120,7 +120,7 @@ namespace Hazelcast.Tests.Clustering
 
             lb.SetMembers(new Guid[0]);
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
         }
 
         [Test]
