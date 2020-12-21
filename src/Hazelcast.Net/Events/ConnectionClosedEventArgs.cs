@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Clustering;
+
 namespace Hazelcast.Events
 {
     /// <summary>
-    /// Represents event data for the connection removed event.
+    /// Represents event data for the connection closed event.
     /// </summary>
-    public class ConnectionClosedEventArgs
+    internal class ConnectionClosedEventArgs
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectionClosedEventArgs"/> class.
         /// </summary>
-        /// <param name="wasLast">Whether the connection was the last one.</param>
-        public ConnectionClosedEventArgs(bool wasLast)
+        /// <param name="connection">The connection that was closed.</param>
+        public ConnectionClosedEventArgs(MemberConnection connection)
         {
-            WasLast = wasLast;
+            Connection = connection;
         }
 
         /// <summary>
-        /// Whether the connection was the last one.
+        /// Gets the connection that was closed.
         /// </summary>
-        /// <returns><c>true</c> if the connection was the last one; otherwise <c>false</c>.</returns>
-        public bool WasLast { get; }
+        public MemberConnection Connection { get; }
     }
 }

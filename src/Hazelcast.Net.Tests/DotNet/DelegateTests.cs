@@ -75,5 +75,43 @@ namespace Hazelcast.Tests.DotNet
 
             Assert.That(x, Is.EqualTo("hello-world-again"));
         }
+
+        [Test]
+        public void MulticastFunctionTest()
+        {
+            Func<string, string> f;
+
+            f = s => s + "-world";
+            f += s => s + "-again";
+
+            Assert.That(f("hello"), Is.EqualTo("hello-again"));
+
+            var x = "hello";
+            foreach (var d in f.GetInvocationList())
+            {
+                x = ((Func<string, string>) d)(x);
+            }
+
+            Assert.That(x, Is.EqualTo("hello-world-again"));
+        }
+
+        [Test]
+        public void NullTest()
+        {
+            Func<string, string> f = null;
+
+            Assert.Throws<NullReferenceException>(() =>
+            {
+                var x = f("hello");
+            });
+
+            Assert.Throws<NullReferenceException>(() =>
+            {
+                var x = f.GetInvocationList();
+            });
+
+            var y = f?.Invoke("hello");
+            Assert.That(y, Is.Null);
+        }
     }
 }

@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,61 +14,61 @@
 
 using System;
 using System.Runtime.Serialization;
-using Hazelcast.Configuration;
 
 namespace Hazelcast.Exceptions
 {
     /// <summary>
-    /// Represents the exception that is thrown when the target of an invocation disconnects.
+    /// Represents the exception that is thrown when the target of an invocation is not reachable.
     /// </summary>
     [Serializable]
-    public sealed class TargetDisconnectedException : TargetUnreachableException
+    public class TargetUnreachableException : HazelcastException
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class.
+        /// Initializes a new instance of the <see cref="TargetUnreachableException"/> class.
         /// </summary>
-        public TargetDisconnectedException()
-            : base(ExceptionMessages.TargetDisconnectedException)
+        public TargetUnreachableException()
+            : base(ExceptionMessages.TargetUnreachableException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="TargetUnreachableException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public TargetDisconnectedException(string message)
+        public TargetUnreachableException(string message)
             : base(message)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="TargetUnreachableException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public TargetDisconnectedException(Exception innerException)
-            : base(ExceptionMessages.TargetDisconnectedException, innerException)
+        public TargetUnreachableException(Exception innerException)
+            : base(ExceptionMessages.TargetUnreachableException, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="TargetUnreachableException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
-        public TargetDisconnectedException(string message, Exception innerException)
+        public TargetUnreachableException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="TargetUnreachableException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        private TargetDisconnectedException(SerializationInfo info, StreamingContext context)
+        protected TargetUnreachableException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+
     }
 }

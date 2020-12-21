@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 using Hazelcast.Events;
 
 namespace Hazelcast.Clustering
@@ -22,10 +21,8 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Provides the cluster-level events management service for a cluster.
     /// </summary>
-    internal class ClusterClusterEvents : IAsyncDisposable
+    internal partial class ClusterEvents
     {
-        private readonly ClusterState _clusterState;
-
         private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
         private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
 
@@ -33,30 +30,8 @@ namespace Hazelcast.Clustering
         private Func<DistributedObjectDestroyedEventArgs, ValueTask> _objectDestroyed;
         private Func<PartitionLostEventArgs, ValueTask> _partitionLost;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClusterClusterEvents"/> class.
-        /// </summary>
-        /// <param name="clusterState">The cluster state.</param>
-        /// <param name="clusterMembers">The cluster members.</param>
-        /// <param name="clusterEvents">The cluster events.</param>
-        public ClusterClusterEvents(ClusterState clusterState, ClusterMembers clusterMembers, ClusterEvents clusterEvents)
-        {
-            _clusterState = clusterState;
-
-            _objectLifecycleEventSubscription = new ObjectLifecycleEventSubscription(_clusterState, clusterEvents)
-            {
-                ObjectCreated = args => _objectCreated.AwaitEach(args),
-                ObjectDestroyed = args => _objectDestroyed.AwaitEach(args)
-            };
-
-            _partitionLostEventSubscription = new PartitionLostEventSubscription(_clusterState, clusterEvents, clusterMembers)
-            {
-                PartitionLost = args => _partitionLost.AwaitEach(args)
-            };
-        }
-
-
-        #region Event Handlers
+        
+        #region Event
 
         /// <summary>
         /// Gets or sets the function that triggers when an object is created.
@@ -123,13 +98,5 @@ namespace Hazelcast.Clustering
         /// </summary>
         public ValueTask<bool> RemovePartitionLostSubscription()
             => _partitionLostEventSubscription.RemoveSubscription();
-
-
-        /// <inheritdoc />
-        public async ValueTask DisposeAsync()
-        {
-            await _objectLifecycleEventSubscription.DisposeAsync().CfAwait();
-            await _partitionLostEventSubscription.DisposeAsync().CfAwait();
-        }
     }
 }

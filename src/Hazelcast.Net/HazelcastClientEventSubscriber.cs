@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 
@@ -22,7 +20,7 @@ namespace Hazelcast
 {
     internal class HazelcastClientEventSubscriber : IHazelcastClientEventSubscriber
     {
-        private readonly Func<IHazelcastClient, CancellationToken, Task> _subscribeAsync;
+        private readonly Action<HazelcastClientEventHandlers> _build;
         private readonly Type _type;
         private readonly string _typename;
         private readonly IHazelcastClientEventSubscriber _subscriber;
@@ -30,10 +28,10 @@ namespace Hazelcast
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastClientEventSubscriber"/> class.
         /// </summary>
-        /// <param name="subscribeAsync">A subscribe method.</param>
-        public HazelcastClientEventSubscriber(Func<IHazelcastClient, CancellationToken, Task> subscribeAsync)
+        /// <param name="build">A build method.</param>
+        public HazelcastClientEventSubscriber(Action<HazelcastClientEventHandlers> build)
         {
-            _subscribeAsync = subscribeAsync ?? throw new ArgumentNullException(nameof(subscribeAsync));
+            _build = build ?? throw new ArgumentNullException(nameof(build));
         }
 
         /// <summary>
@@ -65,11 +63,11 @@ namespace Hazelcast
         }
 
         /// <inheritdoc />
-        public async Task SubscribeAsync(IHazelcastClient hazelcastClient, CancellationToken cancellationToken)
+        public void Build(HazelcastClientEventHandlers events)
         {
-            if (_subscribeAsync != null)
+            if (_build != null)
             {
-                await _subscribeAsync(hazelcastClient, cancellationToken).CfAwait();
+                _build(events);
             }
             else
             {
@@ -77,7 +75,7 @@ namespace Hazelcast
                     ? ServiceFactory.CreateInstance<IHazelcastClientEventSubscriber>(_typename, null)
                     : ServiceFactory.CreateInstance<IHazelcastClientEventSubscriber>(_type, null));
 
-                await subscriber.SubscribeAsync(hazelcastClient, cancellationToken).CfAwait();
+                subscriber.Build(events);
             }
         }
     }

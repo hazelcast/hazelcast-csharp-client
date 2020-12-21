@@ -95,7 +95,7 @@ namespace Hazelcast.Messaging
         private bool ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference<ReadOnlySequence<byte>> bufferReference)
         {
             var bytes = bufferReference.Buffer;
-            HConsole.WriteLine(this, $"Received {bytes.Length} bytes");
+            HConsole.WriteLine(this, 2, $"Received {bytes.Length} bytes");
 
             if (_bytesLength < 0)
             {
@@ -118,12 +118,12 @@ namespace Hazelcast.Messaging
 
                 if (_currentMessage == null)
                 {
-                    HConsole.WriteLine(this, $"Add {_currentFrame} to new fragment");
+                    HConsole.WriteLine(this, 2, $"Add {_currentFrame} to new fragment");
                     _currentMessage = new ClientMessage(_currentFrame);
                 }
                 else
                 {
-                    HConsole.WriteLine(this, $"Add {_currentFrame} to current fragment");
+                    HConsole.WriteLine(this, 2, $"Add {_currentFrame} to current fragment");
                     _currentMessage.Append(_currentFrame);
                 }
             }
@@ -146,7 +146,7 @@ namespace Hazelcast.Messaging
             bufferReference.Buffer = bytes;
 
             _bytesLength = -1;
-            HConsole.WriteLine(this, $"Frame is complete");
+            HConsole.WriteLine(this, 2, $"Frame is complete");
 
             // we now have a fully assembled message
             // don't test _currentFrame.IsFinal, adding the frame to a message has messed it
@@ -289,7 +289,7 @@ namespace Hazelcast.Messaging
                 // last chance - after this line, we will send the full message
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var sentFrames = await SendFramesAsync(message, cancellationToken).CfAwait();
+                var sentFrames = await SendFramesAsync(message).CfAwait();
                 if (!sentFrames) return false;
 
                 await _connection.FlushAsync().CfAwait(); // make sure the message goes out
@@ -302,7 +302,7 @@ namespace Hazelcast.Messaging
             return true;
         }
 
-        private async ValueTask<bool> SendFramesAsync(ClientMessage message, CancellationToken cancellationToken)
+        private async ValueTask<bool> SendFramesAsync(ClientMessage message)
         {
             byte[] buffer = null;
             var length = 0;
@@ -327,14 +327,14 @@ namespace Hazelcast.Messaging
                     // flush buffer
                     if (length > 0)
                     {
-                        var sent = await _connection.SendAsync(buffer, length, default).CfAwait();
+                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
                         if (!sent) break;
                         length = 0;
                     }
 
                     // send this frame only
-                    HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
-                    var sentFrame = await SendFrameAsync(frame, default).CfAwait();
+                    HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
+                    var sentFrame = await SendFrameAsync(frame).CfAwait();
                     if (!sentFrame) break;
                 }
                 else
@@ -345,13 +345,13 @@ namespace Hazelcast.Messaging
                     // if it won't fit in the buffer, flush the buffer
                     if (length + frame.Length > buffer.Length)
                     {
-                        var sent = await _connection.SendAsync(buffer, length, default).CfAwait();
+                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
                         if (!sent) break;
                         length = 0;
                     }
 
                     // copy frame to buffer
-                    HConsole.WriteLine(this, $"Send frame ({frame.Length} bytes)");
+                    HConsole.WriteLine(this, 2, $"Send frame ({frame.Length} bytes)");
                     frame.WriteLengthAndFlags(buffer, length);
                     if (frame.Length > sizeofHeader)
                         frame.Bytes.CopyTo(buffer, length + sizeofHeader);
@@ -363,7 +363,7 @@ namespace Hazelcast.Messaging
 
             var allSent = frame == null;
             if (allSent && length > 0)
-                allSent &= await _connection.SendAsync(buffer, length, default).CfAwait();
+                allSent &= await _connection.SendAsync(buffer, length).CfAwait();
 
             if (buffer != null)
                 ArrayPool<byte>.Shared.Return(buffer);
@@ -372,20 +372,20 @@ namespace Hazelcast.Messaging
         }
 
         // this is only for large frames
-        private async ValueTask<bool> SendFrameAsync(Frame frame, CancellationToken cancellationToken)
+        private async ValueTask<bool> SendFrameAsync(Frame frame)
         {
             const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
 
             var header = ArrayPool<byte>.Shared.Rent(sizeofHeader);
             frame.WriteLengthAndFlags(header);
 
-            var sentHeader = await _connection.SendAsync(header, sizeofHeader, cancellationToken).CfAwait();
+            var sentHeader = await _connection.SendAsync(header, sizeofHeader).CfAwait();
             ArrayPool<byte>.Shared.Return(header);
 
             if (!sentHeader) return false;
             //if (frame.Length <= sizeofHeader) return true;
 
-            return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length, cancellationToken).CfAwait();
+            return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length).CfAwait();
         }
 
         /// <inheritdoc />

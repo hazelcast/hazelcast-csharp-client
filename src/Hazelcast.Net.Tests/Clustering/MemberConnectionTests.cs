@@ -114,7 +114,7 @@ namespace Hazelcast.Tests.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // SendAsync then creates the invocation
-            var invocation = new Invocation(message, options.Messaging, token);
+            var invocation = new Invocation(message, options.Messaging);
 
             // don't send: server does not answer to pings, and we would wait forever
 
@@ -128,7 +128,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
                 {
-                    await invocation.WaitRetryAsync(correlationIdSequence.GetNext);
+                    await invocation.WaitRetryAsync(correlationIdSequence.GetNext, CancellationToken.None);
                 });
             }, 4000, 200);
 

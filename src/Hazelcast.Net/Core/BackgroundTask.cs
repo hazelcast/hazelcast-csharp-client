@@ -57,7 +57,10 @@ namespace Hazelcast.Core
             });
         }
 
-        public Task Task { get; }
+        /// <summary>
+        /// (internal for tests only) Gets the executing task.
+        /// </summary>
+        internal Task Task { get; }
 
         /// <summary>
         /// Completes the background task.
@@ -84,7 +87,6 @@ namespace Hazelcast.Core
                 if (!_completed) _cancellation.Cancel();
             }
 
-            // observe all exceptions, or only the canceled exception
             if (observeException)
                 await Task.CfAwaitNoThrow();
             else

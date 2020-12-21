@@ -54,7 +54,7 @@ namespace Hazelcast.Clustering.LoadBalancing
             => _memberId;
 
         /// <inheritdoc />
-        public override void NotifyMembers(IEnumerable<Guid> memberIds)
+        public override void SetMembers(IEnumerable<Guid> memberIds)
         { }
     }
 }
