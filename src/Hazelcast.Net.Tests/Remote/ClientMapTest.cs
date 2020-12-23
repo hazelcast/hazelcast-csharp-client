@@ -62,9 +62,10 @@ namespace Hazelcast.Tests.Remote
                 return id;
             }
 
-            public async Task SetId(int id)
+            public Task SetId(int id)
             {
                 this.id = id;
+                return Task.CompletedTask;
             }
         }
 

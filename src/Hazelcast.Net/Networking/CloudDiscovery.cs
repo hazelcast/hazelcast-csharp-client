@@ -46,14 +46,14 @@ namespace Hazelcast.Networking
             if (string.IsNullOrWhiteSpace(discoveryToken)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(discoveryToken));
             if (cloudBaseUrl == null) throw new ArgumentNullException(nameof(cloudBaseUrl));
 
+            _defaultPort = defaultPort;
             _endpointUrl = new Uri(cloudBaseUrl, CloudUrlPath + discoveryToken);
             _connectionTimeoutMilliseconds = connectionTimeoutMilliseconds;
             _logger = loggerFactory?.CreateLogger<CloudDiscovery>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         /// <summary>
-        /// (internal for tests only)
-        /// Sets the response.
+        /// (internal for tests only) Sets the constant response for tests.
         /// </summary>
         internal static void SetResponse(string response)
         {
