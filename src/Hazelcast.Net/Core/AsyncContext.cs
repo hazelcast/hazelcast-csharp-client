@@ -99,7 +99,7 @@ namespace Hazelcast.Core
         /// (internal for tests only)
         /// Ensures that a context exists.
         /// </summary>
-        internal static void EnsureNew()
+        internal static void EnsureNew() // FIXME rename RequireNew() and make it public
         {
             Current.Value = new AsyncContext();
         }
