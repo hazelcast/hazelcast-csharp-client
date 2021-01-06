@@ -96,10 +96,9 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// (internal for tests only)
-        /// Ensures that a context exists.
+        /// Requires a new context.
         /// </summary>
-        internal static void EnsureNew() // FIXME rename RequireNew() and make it public
+        public static void RequireNew()
         {
             Current.Value = new AsyncContext();
         }
@@ -116,7 +115,7 @@ namespace Hazelcast.Core
 
             ExecutionContext.Run(ec, state =>
             {
-                EnsureNew(); // force a new context
+                RequireNew(); // require a new context
                 ((Workload) state).Start();
             }, workload);
 
