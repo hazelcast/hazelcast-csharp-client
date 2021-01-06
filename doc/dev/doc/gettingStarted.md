@@ -2,7 +2,7 @@
 
 ## Hazelcast client
 
-The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static @Hazelcast.HazelcastClientFactory. After it has been used, it needs to be disposed in order to properly release its resources.
+The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static @Hazelcast.HazelcastClientFactory. After it has been used, it needs to be disposed in order to properly close all connections to servers, and release resources.
 
 For example:
 
@@ -12,10 +12,9 @@ var client = await HazelcastClientFactory.StartNewClientAsync();
 await client.DisposeAsync();
 ```
 
-A client is a heavy enough, multi-threaded object. Although a factory can create several, independent clients, it is recommended to store and reuse the client instance. It is *not* recommended to frequently create and dispose clients, as that could have an impact on performances.
+A client is a heavy enough, multi-threaded object. Although a factory can create several, independent clients, it is recommended to store and reuse the client instance, as much as possible.
 
-Here, the client is configured by default, which means by configuration files and environment variables. For more control, the client can be initialized with an @Hazelcast.HazelcastOptions instance, which represents the complete set of options of the Hazelcast
-client. In fact, the above example is equivalent to:
+Here, the client is configured by default, which means by configuration files and environment variables. For more control, the client can be initialized with an @Hazelcast.HazelcastOptions instance, which represents the complete set of options of the Hazelcast client. In fact, the above example is equivalent to:
 
 ```csharp
 var options = HazelcastOptions.Build();
@@ -34,42 +33,36 @@ See the [Logging](logging.md) documentation for details.
 
 ## Distributed Objects
 
-The client can be used to obtain *distributed objects* that are managed by the cluster. For instance, the cluster can manage @Hazelcast.DistributedObjects.IHDictionary`2 objects, which are an asynchronous equivalent of .NET @System.Collections.Generic.IDictionary`2. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.
+The client can be used to obtain *distributed objects* that are managed by the cluster. For instance, the cluster can manage @Hazelcast.DistributedObjects.IHMap`2 objects, which are an asynchronous equivalent of .NET @System.Collections.Generic.IDictionary`2. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.
 
 For example:
 
 ```csharp
-var dict = await client.GetDictionaryAsync<string, string>("dict-name");
-await dict.AddOrUpdateAsync("key", "value");
-var value = await dict.GetAsync("key");
-await dict.DisposeAsync();
+var map = await client.GetMapAsync<string, string>("map-name");
+await map.SetAsync("key", "value");
+var value = await map.GetAsync("key");
+await map.DisposeAsync();
 ```
 
-The @Hazelcast.IHazelcastClient.GetDictionaryAsync* method returns the existing object with the specified name, or creates a new object with that name on the cluster. That object will continue to live on the cluster after the @Hazelcast.DistributedObjects.IHDictionary`2 has been disposed. In order to remove the object from the cluster, one must destroy the object.
+The @Hazelcast.IHazelcastClient.GetMapAsync* method returns the existing object with the specified name, or creates a new object with that name on the cluster. That object will continue to live on the cluster after the @Hazelcast.DistributedObjects.IHMap`2 has been disposed. In order to remove the object from the cluster, one must destroy the object.
 
 For example:
 
 ```csharp
-var dict = await client.GetDictionaryAsync<string, string>("dict-name");
-await dict.DestroyAsync();
+var map = await client.GetMapAsync<string, string>("dict-name");
+await map.DestroyAsync();
 ```
 
 or 
 
 ```csharp
-var dict = await client.GetDictionaryAsync<string, string>("dict-name");
-await client.DestroyAsync(dict);
-```
-
-It is also possible to destroy objects with their name, and their corresponding *service name*:
-
-```csharp
-await client.DestroyAsync(HDictionary.ServiceName, "dict-name");
+var map = await client.GetMapAsync<string, string>("dict-name");
+await client.DestroyAsync(map);
 ```
 
 ## Transactions
 
-The client is responsible for creating transactions.
+The client is responsible for creating transactions. Transactions by default follow the Microsoft's transaction pattern: they must be disposed, and commit or roll back depending on whether they have been completed.
 
 For example:
 
@@ -81,7 +74,7 @@ await using (var transaction = await client.BeginTransactionAsync())
 }
 ```
 
-Here, the transaction will commit when `transaction` is disposed, because it has been completed. Had it not been completed, it would have been rolled back. Note that the explicit pattern is also supported, although less recommended:
+Here, the transaction will commit when `transaction` is disposed, because it has been completed. Had it not been completed, it would have rolled back. Note that the explicit pattern is also supported, although less recommended:
 
 ```csharp
 var transaction = await client.BeginTransactionAsync();
