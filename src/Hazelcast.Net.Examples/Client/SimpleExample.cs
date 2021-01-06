@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class SimpleExample : ExampleBase
+    public class SimpleExample
     {
         //
         // this is a complete example of a simple console application where

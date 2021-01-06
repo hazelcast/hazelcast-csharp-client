@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class MemberLifecycleExample : ExampleBase
+    public class MemberLifecycleExample
     {
         public static async Task Main(string[] args)
         {
