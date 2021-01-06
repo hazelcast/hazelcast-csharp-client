@@ -53,12 +53,16 @@ namespace Hazelcast.Examples.WebSite
     }
 
     // ReSharper disable once UnusedMember.Global
-    public class IdentifiedDataSerializableExample : ExampleBase
+    public class IdentifiedDataSerializableExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            var options = BuildExampleOptions(args);
             options.Serialization.AddDataSerializableFactory(SampleDataSerializableFactory.FactoryId, new SampleDataSerializableFactory());
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         }

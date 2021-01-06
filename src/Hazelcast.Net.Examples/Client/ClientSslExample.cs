@@ -13,16 +13,20 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class ClientSslExample : ExampleBase
+    public class ClientSslExample
     {
-        public async Task Run(params string[] args)
+        public static async Task Main(params string[] args)
         {
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // server certificate will be validated by OS,
             // signed certificates will just work,

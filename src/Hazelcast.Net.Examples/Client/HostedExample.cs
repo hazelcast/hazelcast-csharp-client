@@ -25,7 +25,7 @@ using Microsoft.Extensions.Options;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class HostedExample : ExampleBase
+    public class HostedExample
     {
         //
         // this is a complete example of a hosted service using dependency injection
@@ -59,7 +59,7 @@ namespace Hazelcast.Examples.Client
         //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
         //
 
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
             // runs until stopped with Ctrl+C
             //await CreateHostBuilder(args).Build().RunAsync();

@@ -17,12 +17,17 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.WebSite
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapExample : ExampleBase
+    public class MapExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = await HazelcastClientFactory.StartNewClientAsync(BuildExampleOptions(args));
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get distributed map from cluster
             await using var map = await client.GetMapAsync<string, string>("my-distributed-map");

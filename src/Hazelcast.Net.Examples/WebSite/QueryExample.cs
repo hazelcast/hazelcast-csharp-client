@@ -21,7 +21,7 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Examples.WebSite
 {
     // ReSharper disable once UnusedMember.Global
-    public class QueryExample : ExampleBase
+    public class QueryExample
     {
         public class User : IPortable
         {
@@ -74,10 +74,14 @@ namespace Hazelcast.Examples.WebSite
             }
         }
 
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            var options = BuildExampleOptions(args);
             options.Serialization.AddPortableFactory(PortableFactory.FactoryId, new PortableFactory());
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 

@@ -21,12 +21,14 @@ using Hazelcast.NearCaching;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    internal class MapNearCacheExample : ExampleBase
+    internal class MapNearCacheExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
-            // creates the example options
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // configure NearCache
             options.NearCaches["nearcache-map-*"] = new NearCacheOptions

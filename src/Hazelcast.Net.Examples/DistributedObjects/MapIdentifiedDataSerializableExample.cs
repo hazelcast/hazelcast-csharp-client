@@ -19,12 +19,14 @@ using Hazelcast.Examples.Models;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapIdentifiedDataSerializableExample : ExampleBase
+    public class MapIdentifiedDataSerializableExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
-            // creates the example options
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // customize options for this example
             options.Serialization.AddDataSerializableFactory(

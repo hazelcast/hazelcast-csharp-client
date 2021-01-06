@@ -25,9 +25,9 @@ namespace Hazelcast.Examples
 {
     public class Program
     {
-        private static readonly List<(string, Exception)> _exceptions
+        private static readonly List<(string, Exception)> Exceptions
             = new List<(string, Exception)>();
-        private static readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> _unobservedExceptions
+        private static readonly ConcurrentQueue<UnobservedTaskExceptionEventArgs> UnobservedExceptions
             = new ConcurrentQueue<UnobservedTaskExceptionEventArgs>();
         private static bool _collectUnobservedExceptions;
 
@@ -93,13 +93,13 @@ namespace Hazelcast.Examples
                 await TryRunExampleAsync(type, args);
             }
 
-            if (_exceptions.Count > 0)
+            if (Exceptions.Count > 0)
             {
                 var color = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine();
                 Console.WriteLine("The following examples have failed:");
-                foreach (var (name, exception) in _exceptions)
+                foreach (var (name, exception) in Exceptions)
                 {
                     Console.WriteLine($"-{name} ({exception.GetType()}{ClientExceptionCode(exception)})");
                 }
@@ -113,7 +113,7 @@ namespace Hazelcast.Examples
         private static void InitializeUnobservedExceptions()
         {
             // make sure the queue is empty
-            while (_unobservedExceptions.TryDequeue(out _))
+            while (UnobservedExceptions.TryDequeue(out _))
             { }
 
             // handle unobserved exceptions
@@ -136,12 +136,12 @@ namespace Hazelcast.Examples
             GC.WaitForPendingFinalizers();
 
             // check for unobserved exceptions and report
-            var failed = false;
-            while (_unobservedExceptions.TryDequeue(out var args))
+            //var failed = false;
+            while (UnobservedExceptions.TryDequeue(out _))
             {
                 //var innerException = args.Exception.Flatten().InnerException;
                 // log?
-                failed = true;
+                //failed = true;
             }
 
             // remove handler
@@ -154,11 +154,11 @@ namespace Hazelcast.Examples
             if (_collectUnobservedExceptions)
             {
                 message = "Unobserved";
-                _unobservedExceptions.Enqueue(args);
+                UnobservedExceptions.Enqueue(args);
             }
             else
             {
-                message = $"Leftover unobserved";
+                message = "Leftover unobserved";
             }
             Console.WriteLine($"{message} Task Exception from {sender}\n{args.Exception}");
             args.SetObserved();
@@ -179,7 +179,7 @@ namespace Hazelcast.Examples
             }
             catch (Exception e)
             {
-                _exceptions.Add((type.Name, e));
+                Exceptions.Add((type.Name, e));
 
                 var color = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.DarkRed;
@@ -195,29 +195,17 @@ namespace Hazelcast.Examples
 
         private static async Task RunExampleAsync(Type type, string[] args)
         {
-            object example;
-            try
-            {
-                example = Activator.CreateInstance(type);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error: could not instantiate example {type.Name}.");
-                Console.WriteLine($"Exception: {e}");
-                return;
-            }
-
-            var method = type.GetMethod("Run", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            var method = type.GetMethod("Main", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             if (method == null)
             {
-                Console.WriteLine($"Error: could not find instance method {type.Name}.Run.");
+                Console.WriteLine($"Error: could not find static method {type.Name}.Main.");
                 return;
             }
 
             var methodParameters = method.GetParameters();
             if (methodParameters.Length > 1)
             {
-                Console.WriteLine($"Error: method {type.Name}.Run has an invalid number of parameters.");
+                Console.WriteLine($"Error: method {type.Name}.Main has an invalid number of parameters.");
                 return;
             }
 
@@ -226,7 +214,7 @@ namespace Hazelcast.Examples
             {
                 if (methodParameters[0].ParameterType != typeof (string[]))
                 {
-                    Console.WriteLine($"Error: method {type.Name}.Run has an invalid parameter type.");
+                    Console.WriteLine($"Error: method {type.Name}.Main has an invalid parameter type.");
                     return;
                 }
 
@@ -236,21 +224,21 @@ namespace Hazelcast.Examples
 
             if (method.ReturnType == typeof(Task))
             {
-                var task = (Task) method.Invoke(example, parameters);
+                var task = (Task) method.Invoke(null, parameters);
                 if (task == null)
                 {
-                    Console.WriteLine($"Error: method {type.Name}.Run returned a null task.");
+                    Console.WriteLine($"Error: method {type.Name}.Main returned a null task.");
                     return;
                 }
                 await task;
             }
             else if (method.ReturnType != typeof(void))
             {
-                Console.WriteLine($"Error: method {type.Name}.Run has an invalid return type.");
+                Console.WriteLine($"Error: method {type.Name}.Main has an invalid return type.");
             }
             else
             {
-                method.Invoke(example, parameters);
+                method.Invoke(null, parameters);
             }
         }
     }

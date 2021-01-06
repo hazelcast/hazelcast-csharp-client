@@ -23,15 +23,20 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class ClientStatisticsExample
     {
-        public async Task Run()
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // enable client statistics
             // set the statistics send period, default value is 3 seconds
+            // FIXME meh??
             Environment.SetEnvironmentVariable("hazelcast.client.statistics.enabled", "true");
             Environment.SetEnvironmentVariable("hazelcast.client.statistics.period.seconds", "3");
 
             // create an Hazelcast client and connect to a server running on localhost
-            var options = HazelcastOptions.Build();
             options.NearCaches["myMap"] = new NearCacheOptions
             {
                 MaxSize = 1000,

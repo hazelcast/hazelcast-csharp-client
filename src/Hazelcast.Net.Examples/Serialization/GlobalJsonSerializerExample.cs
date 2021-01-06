@@ -21,12 +21,14 @@ using Newtonsoft.Json;
 namespace Hazelcast.Examples.Serialization
 {
     // ReSharper disable once UnusedMember.Global
-    public class GlobalJsonSerializerExample : ExampleBase
+    public class GlobalJsonSerializerExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
-            // creates the example options
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // register the global json serializer
             options.Serialization.GlobalSerializer.Creator = () => new GlobalJsonSerializer();
