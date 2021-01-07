@@ -26,6 +26,12 @@ var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
 Refer to the [Configuration](configuration.md) page for details on the various ways to build an @Hazelcast.HazelcastOptions instance, including handling command-line parameters, and to the @Hazelcast.HazelcastOptions reference for a list of all the configurable elements.
 
+## Logging
+
+The Hazelcast .NET client uses the logging abstractions proposed by the [Microsoft.Extensions.Logging](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging) namespace. By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.
+
+See the [Logging](logging.md) documentation for details.
+
 ## Distributed Objects
 
 The client can be used to obtain *distributed objects* that are managed by the cluster. For instance, the cluster can manage @Hazelcast.DistributedObjects.IHDictionary`2 objects, which are an asynchronous equivalent of .NET @System.Collections.Generic.IDictionary`2. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.

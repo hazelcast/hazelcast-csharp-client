@@ -33,3 +33,9 @@ Or manually added to the project as a package reference:
 ```
 <PackageReference Include="Hazelcast.NET" Version="4.0.0" />
 ```
+
+## Notes
+
+The Hazelcast .NET client uses the logging abstractions proposed by the [Microsoft.Extensions.Logging](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging) namespace. By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.
+
+See the [Logging](logging.md) documentation for details.
