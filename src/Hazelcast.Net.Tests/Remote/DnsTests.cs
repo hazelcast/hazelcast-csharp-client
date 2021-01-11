@@ -40,8 +40,7 @@ namespace Hazelcast.Tests.Remote
         {
             using var _ = HConsoleForTest();
 
-            // FIXME RESTORE THIS LINE
-            //using var altDns = HDns.Override(new AltDns(2));
+            using var altDns = HDns.Override(new AltDns(2));
 
             await using var client = await CreateAndStartClientAsync();
 

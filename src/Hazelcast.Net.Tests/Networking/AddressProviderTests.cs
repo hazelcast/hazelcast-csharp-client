@@ -94,24 +94,31 @@ namespace Hazelcast.Tests.Networking
             options.Addresses.Clear();
 
             CloudDiscovery.SetResponse(@"[
+    { ""private-address"":""192.0.0.6:5788"", ""public-address"":""192.147.0.6"" },
     { ""private-address"":""192.0.0.7"", ""public-address"":""192.147.0.7"" },
-    { ""private-address"":""192.0.0.8"", ""public-address"":""192.147.0.8"" },
+    { ""private-address"":""192.0.0.8:5777"", ""public-address"":""192.147.0.8:5703"" },
     { ""private-address"":""192.0.0.9"", ""public-address"":""192.147.0.9:5707"" },
 ]");
+
+            static void AssertMap(AddressProvider ap, string priv, string pub)
+                => Assert.That(ap.Map(NetworkAddress.Parse(priv)), Is.EqualTo(NetworkAddress.Parse(pub)));
 
             try
             {
                 var addressProvider = new AddressProvider(options, loggerFactory);
 
-                Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.7")), Is.EqualTo(new NetworkAddress("192.147.0.7")));
-                Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.8")), Is.EqualTo(new NetworkAddress("192.147.0.8")));
-                Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.9", 5707)), Is.EqualTo(new NetworkAddress("192.147.0.9", 5707)));
+                AssertMap(addressProvider, "192.0.0.6:5788", "192.147.0.6:5701");
+                AssertMap(addressProvider, "192.0.0.7:5701", "192.147.0.7:5701");
+                AssertMap(addressProvider, "192.0.0.8:5777", "192.147.0.8:5703");
+                AssertMap(addressProvider, "192.0.0.9:5707", "192.147.0.9:5707");
+
                 Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);
 
-                Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(3));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.7")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.8")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.9", 5707)));
+                Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(4));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.6:5788")));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.7:5701")));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.8:5777")));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.9:5707")));
 
                 addressProvider = new AddressProvider(options, loggerFactory);
                 Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);

@@ -56,7 +56,7 @@ param (
 
     # Test selector
     # Is a simplified version of $testFilter which ends up adding a test filter as
-    # "name == /$framework.$test/"
+    # "name =~ /$framework.$test/"
     [string]
     $test,
 
@@ -366,7 +366,7 @@ if(!($enterprise)) {
 }
 if (-not [System.String]::IsNullOrWhiteSpace($test)) {
     if (-not [System.String]::IsNullOrWhiteSpace($testFilter)) { $testFilter += " && " } else { $testFilter = "" }
-    $testFilter += "name == /<FRAMEWORK>.$test/"
+    $testFilter += "name =~ /$test/"
 }
 
 # determine tests name
@@ -876,7 +876,7 @@ if ($doTests -or $doRc -or $doServer) {
     $v = $v.SubString($p0+1,$p1-$p0-1)
 
     Write-Output ""
-    Write-Output "Running Java v$v"
+    Write-Output "Detected Java v$v"
 
     if (-not $v.StartsWith("1.8")) {
         # starting with Java 9 ... weird things can happen

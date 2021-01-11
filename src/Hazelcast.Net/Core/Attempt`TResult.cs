@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#nullable enable
+// have to comment this out, C# 8 will not allow us to write TResult?
+// without specifying whether TResult is a class or a struct
+// TODO: uncomment + make exception Exception? eventually (requires C# 9)
+//#nullable enable
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -49,7 +52,7 @@ namespace Hazelcast.Core
         /// <param name="success">Whether the attempt succeeded.</param>
         /// <param name="value">The optional value of the result.</param>
         /// <param name="exception">An optional captured exception.</param>
-        internal Attempt(bool success, TResult value = default, Exception? exception = default)
+        internal Attempt(bool success, TResult value = default, Exception exception = default)
         {
             Success = success;
             Value = value;
@@ -59,9 +62,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Represents a failed attempt with no result and no exception.
         /// </summary>
-#pragma warning disable CA1000 // Do not declare static members on generic types - fine here
         public static Attempt<TResult> Failed => new Attempt<TResult>(false); // no such thing as 'struct' singletons!
-#pragma warning restore CA1000 // Do not declare static members on generic types
 
         /// <summary>
         /// Gets a value indicating whether the attempt succeeded.
@@ -103,7 +104,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets a captured exception.
         /// </summary>
-        public Exception? Exception { get; }
+        public Exception Exception { get; }
 
         /// <summary>
         /// Gets a value indicating whether the attempt contains an exception.
@@ -128,11 +129,7 @@ namespace Hazelcast.Core
         /// Implicitly converts a non-generic attempt into a generic one.
         /// </summary>
         /// <param name="attempt">The attempt.</param>
-#pragma warning disable IDE0060 // Remove unused parameter - needed for implicit conversion
-#pragma warning disable CA1801 // Review unused parameters
         public static implicit operator Attempt<TResult>(Attempt attempt)
-#pragma warning restore CA1801
-#pragma warning restore IDE0060
             => new Attempt<TResult>(attempt.Success);
 
         /// <summary>
