@@ -135,14 +135,12 @@ namespace Hazelcast.Examples
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            // check for unobserved exceptions and report
-            //var failed = false;
-            while (UnobservedExceptions.TryDequeue(out _))
-            {
-                //var innerException = args.Exception.Flatten().InnerException;
-                // log?
-                //failed = true;
-            }
+            // clear unobserved exceptions
+#if NETCOREAPP
+            UnobservedExceptions.Clear();
+#else
+            while (UnobservedExceptions.TryDequeue(out _)) { }
+#endif
 
             // remove handler
             TaskScheduler.UnobservedTaskException -= UnobservedTaskException;

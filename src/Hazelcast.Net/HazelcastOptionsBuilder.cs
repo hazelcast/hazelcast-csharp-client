@@ -64,7 +64,7 @@ namespace Hazelcast
         /// <param name="filePath">The file path.</param>
         /// <returns>This options builder.</returns>
         /// <remarks>
-        /// <para>By default, when not provided, the options file is searched in searched in the
+        /// <para>By default, when not provided, the options file is searched in the
         /// default .NET configuration location, which usually is where the application resides.</para>
         /// </remarks>
         public HazelcastOptionsBuilder WithFilePath(string filePath)
