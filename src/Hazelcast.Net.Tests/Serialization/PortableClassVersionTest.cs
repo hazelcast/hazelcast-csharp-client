@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ namespace Hazelcast.Tests.Serialization
         {
             var portableV1 = new NamedPortable("portable-v1", 111);
             var dataV1 = serializationService.ToData(portableV1);
-            
+
             // serialize new portable version
             var portableV2 = new NamedPortableV2("portable-v2", 123, 500);
             var dataV2 = serializationService2.ToData(portableV2);

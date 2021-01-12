@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
@@ -59,7 +58,7 @@ namespace Hazelcast.Tests.Serialization
                 () => new ComplexDataSerializable()//3
             });
         }
-        
+
         internal static IClassDefinition CreateNamedPortableClassDefinition(int portableVersion)
         {
             var builder = new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
@@ -198,7 +197,7 @@ namespace Hazelcast.Tests.Serialization
             {
                 nn[i] = new NamedPortable("named-portable-" + i, i);
             }
-            
+
             NamedPortable np = nn[0];
             var data = ss.ToData(np);
             Assert.AreEqual(np, ss.ToObject(data));

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ namespace Hazelcast.Core
 
         public static byte ReadByteL(this byte[] bytes, int position)
             => bytes.ReadByte(position);
-        
+
         private static Guid ReadGuid(this byte[] bytes, int position)
         {
             // read the 'empty' bool
@@ -93,7 +93,7 @@ namespace Hazelcast.Core
 
             return v.Value;
         }
-        
+
         private static void WriteGuid(this byte[] bytes, int position, Guid value)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));

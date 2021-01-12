@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ namespace Hazelcast
         public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
 
         /// <summary>
-        /// Gets the <see cref="SingletonServiceFactory{T}"/> for the <see cref="ILoadBalancer"/>.
+        /// Gets the <see cref="SingletonServiceFactory{TService}"/> for the <see cref="ILoadBalancer"/>.
         /// </summary>
         /// <remarks>
         /// <para>When set in the configuration file, it is defined as an injected type, for instance:

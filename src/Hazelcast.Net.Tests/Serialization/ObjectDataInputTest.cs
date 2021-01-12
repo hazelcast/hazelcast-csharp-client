@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -225,7 +225,7 @@ namespace Hazelcast.Tests.Serialization
             var theZeroLenghtArray = _input.ReadDoubleArray();
             Assert.AreEqual(new double[0], theZeroLenghtArray);
         }
-        
+
         [Test]
         public virtual void TestReadDoublePosition()
         {
@@ -343,7 +343,7 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(new int[0], theZeroLenghtArray);
             Assert.AreEqual(new[] {1}, bytes);
         }
-        
+
         [Test]
         public virtual void TestReadIntPosition()
         {

@@ -35,6 +35,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Win32", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.DocAsCode", "src\Hazelcast.Net.DocAsCode\Hazelcast.Net.DocAsCode.csproj", "{FE505BEF-9319-4F93-A9D2-16CB721DBE44}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{D974DFA3-D12C-4D97-9886-43A94FDA79D1}"
+	ProjectSection(SolutionItems) = preProject
+		doc\_docfx.json = doc\_docfx.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +88,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{25300DF5-472C-4D9B-898A-820577F2F9C7} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
+		{D974DFA3-D12C-4D97-9886-43A94FDA79D1} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}
