@@ -47,9 +47,10 @@ namespace Hazelcast
             Subscribers = new List<IHazelcastClientEventSubscriber>(other.Subscribers);
             Labels = new HashSet<string>(other.Labels);
             LoggerFactory = other.LoggerFactory.Clone();
+            PatternMatcher = other.PatternMatcher;
 
             ((IClusterOptions) this).ClientNamePrefix = ((IClusterOptions) other).ClientNamePrefix;
-
+            
             Core = other.Core.Clone();
             Heartbeat = other.Heartbeat.Clone();
             Networking = other.Networking.Clone();
@@ -57,6 +58,7 @@ namespace Hazelcast
             LoadBalancer = other.LoadBalancer.Clone();
             Serialization = other.Serialization.Clone();
             Messaging = other.Messaging.Clone();
+            Events = other.Events.Clone();
 
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.Select(kvp

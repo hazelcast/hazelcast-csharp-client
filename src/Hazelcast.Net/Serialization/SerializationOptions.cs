@@ -78,7 +78,7 @@ namespace Hazelcast.Serialization
             ValidateClassDefinitions = other.ValidateClassDefinitions;
             PortableVersion = other.PortableVersion;
 
-            ClassDefinitions = new List<IClassDefinition>(other.ClassDefinitions);
+            ClassDefinitions = new HashSet<IClassDefinition>(other.ClassDefinitions);
             PortableFactories = new List<FactoryOptions<IPortableFactory>>(other.PortableFactories);
             DataSerializableFactories = new List<FactoryOptions<IDataSerializableFactory>>(other.DataSerializableFactories);
 

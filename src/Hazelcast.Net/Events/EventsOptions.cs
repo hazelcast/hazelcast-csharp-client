@@ -51,5 +51,14 @@ namespace Hazelcast.Events
         /// Gets or sets the subscription collection timeout, after which a subscription is considered dead and removed.
         /// </summary>
         public TimeSpan SubscriptionCollectTimeout { get; set; } = TimeSpan.FromMinutes(4);
+
+        /// <summary>
+        /// Clones the options.
+        /// </summary>
+        /// <returns>The cloned options.</returns>
+        public EventsOptions Clone()
+        {
+            return new EventsOptions(this);
+        }
     }
 }
