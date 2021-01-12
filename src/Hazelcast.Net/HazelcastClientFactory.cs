@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregation;
@@ -21,8 +20,8 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
-using Hazelcast.Query;
 using Hazelcast.Projection;
+using Hazelcast.Query;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Serialization.DefaultSerializers;
@@ -82,7 +81,7 @@ namespace Hazelcast
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <exception cref="TaskTimeoutException">Failed to connect within the specified timeout.</exception>
         /// <remarks>
-        /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], IEnumerable{KeyValuePair{string, string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
+        /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{string,string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
         /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
         /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
         /// </remarks>

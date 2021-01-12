@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -171,7 +171,7 @@ namespace Hazelcast.Tests.Serialization
         {
             // the first 4 byte of type id, 4 byte string length and last 4 byte of partition hashCode
             var endianness = _serializationService.Endianness;
-            
+
             var bytes = new byte[3 * BytesExtensions.SizeOfInt + input.Length];
             var pos = 0;
             bytes.WriteInt(pos, 0, endianness);

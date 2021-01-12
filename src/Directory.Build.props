@@ -39,7 +39,7 @@
     <Authors>Hazelcast, Inc.</Authors>
     <Product>Hazelcast .NET Client</Product>
     <Company>Hazelcast, Inc.</Company>
-    <Copyright>Copyright (C) 2008-2020 Hazelcast, Inc.</Copyright>
+    <Copyright>Copyright (C) 2008-2021 Hazelcast, Inc.</Copyright>
     <Title>Hazelcast .NET Client</Title>
 
     <!-- https://devblogs.microsoft.com/nuget/managing-package-owners/ -->
