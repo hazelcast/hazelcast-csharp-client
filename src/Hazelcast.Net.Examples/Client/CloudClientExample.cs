@@ -20,10 +20,14 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class CloudClientExample
     {
-        public async Task Run()
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a Cloud server
-            var options = HazelcastOptions.Build();
             options.Networking.Cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 

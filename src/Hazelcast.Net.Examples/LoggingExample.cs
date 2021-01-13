@@ -18,14 +18,15 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Examples
 {
     // ReSharper disable once UnusedMember.Global
-    public class LoggingExample : ExampleBase
+    public class LoggingExample
     {
-        public void Run(params string[] args)
+        public static void Main(string[] args)
         {
-            var options = BuildExampleOptions(args, keyValues: new Dictionary<string, string>
-            {
-                { "Logging:LogLevel:Hazelcast.Examples.LoggingExample.B", "Information" }
-            });
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .With("Logging:LogLevel:Hazelcast.Examples.LoggingExample.B", "Information")
+                .Build();
 
             var loggerFactory = options.LoggerFactory.Service;
 

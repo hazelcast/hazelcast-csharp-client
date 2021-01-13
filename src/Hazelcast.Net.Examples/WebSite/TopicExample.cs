@@ -19,17 +19,22 @@ using Hazelcast.DistributedObjects;
 namespace Hazelcast.Examples.WebSite
 {
     // ReSharper disable once UnusedMember.Global
-    public class TopicExample : ExampleBase
+    public class TopicExample
     {
         private static void OnMessage(IHTopic<string> sender, TopicMessageEventArgs<string> args)
         {
             Console.WriteLine($"Got message " + args.Payload);
         }
 
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = await HazelcastClientFactory.StartNewClientAsync(BuildExampleOptions(args));
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get distributed topic from cluster
             await using var topic = await client.GetTopicAsync<string>("my-distributed-topic");

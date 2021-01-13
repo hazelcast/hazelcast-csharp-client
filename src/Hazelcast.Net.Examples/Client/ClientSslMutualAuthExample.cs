@@ -18,11 +18,14 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class ClientSslMutualAuthExample : ExampleBase
+    public class ClientSslMutualAuthExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // server certificate will be validated by OS,
             // signed certificates will just work,

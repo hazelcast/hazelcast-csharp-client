@@ -15,6 +15,7 @@
     <SignAssembly>true</SignAssembly>
     <PublicSign>true</PublicSign>
     <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
+    <StartupObject>Hazelcast.Examples.Program</StartupObject>
   </PropertyGroup>
 
   <PropertyGroup>

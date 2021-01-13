@@ -18,12 +18,17 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.WebSite
 {
     // ReSharper disable once UnusedMember.Global
-    public class QueueExample : ExampleBase
+    public class QueueExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = await HazelcastClientFactory.StartNewClientAsync(BuildExampleOptions(args));
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // Get a Blocking Queue called "my-distributed-queue"
             var queue = await client.GetQueueAsync<string>("my-distributed-queue");

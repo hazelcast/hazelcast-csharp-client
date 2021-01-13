@@ -21,10 +21,14 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class ClientLifecycleExample
     {
-        public async Task Run(params string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            var options = HazelcastOptions.Build(args);
             var hz1 = await HazelcastClientFactory.StartNewClientAsync(options);
 
             var connected = new SemaphoreSlim(0);

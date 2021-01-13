@@ -20,22 +20,24 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class MemberLifecycleExample : ExampleBase
+    public class MemberLifecycleExample
     {
-        public async Task Run(params string[] args)
+        public static async Task Main(string[] args)
         {
             var memberAdded = new SemaphoreSlim(0);
 
-            var options = BuildExampleOptions(args, configureOptions: (configuration, options) =>
-            {
-                options.AddSubscriber(events => events
-                    .MembersUpdated((c, args) =>
-                    {
-                        foreach (var added in args.AddedMembers)
-                            Console.WriteLine($"Added member: {added.Id}");
-                        if (args.AddedMembers.Any()) memberAdded.Release();
-                    }));
-            });
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
+            options.AddSubscriber(events => events
+                .MembersUpdated((c, eventArgs) =>
+                {
+                    foreach (var added in eventArgs.AddedMembers)
+                        Console.WriteLine($"Added member: {added.Id}");
+                    if (eventArgs.AddedMembers.Any()) memberAdded.Release();
+                }));
 
             // create an Hazelcast client and connect to a server running on localhost
             var hz = await HazelcastClientFactory.StartNewClientAsync(options);

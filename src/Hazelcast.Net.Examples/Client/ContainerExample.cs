@@ -24,7 +24,7 @@ using Microsoft.Extensions.Options;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class ContainerExample : ExampleBase
+    public class ContainerExample
     {
         //
         // this is a complete example of a console application using dependency injection
@@ -59,7 +59,7 @@ namespace Hazelcast.Examples.Client
         //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
         //
 
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
             // create a service collection
             var services = new ServiceCollection();
@@ -95,7 +95,7 @@ namespace Hazelcast.Examples.Client
             await using var serviceProvider = services.BuildServiceProvider();
 
             // gets the worker from the container, and run
-            var a = serviceProvider.GetService<Worker>();
+            var a = serviceProvider.GetRequiredService<Worker>();
             await a.RunAsync();
         }
 

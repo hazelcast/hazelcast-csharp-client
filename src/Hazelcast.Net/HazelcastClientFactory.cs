@@ -179,6 +179,9 @@ namespace Hazelcast
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
+            // clone the options - we don't want any change to the original options to impact this client
+            options = options.Clone();
+
             // this ensures that the clock is correctly configured before anything else
             // happens - remember the clock is static - so we are doing it here - and
             // the clock will actually initialize once

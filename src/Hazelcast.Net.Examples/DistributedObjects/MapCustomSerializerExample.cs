@@ -21,12 +21,14 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapCustomSerializerExample : ExampleBase
+    public class MapCustomSerializerExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
-            // creates the example options
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // customize options for this example
             options.Serialization.Serializers.Add(new SerializerOptions

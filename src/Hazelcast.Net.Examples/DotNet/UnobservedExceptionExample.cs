@@ -19,9 +19,9 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.DotNet
 {
     // ReSharper disable once UnusedMember.Global
-    public class UnobservedExceptionExample : ExampleBase
+    public class UnobservedExceptionExample
     {
-        public void Run()
+        public static void Main()
         {
             // this example is expected to FAIL because of an unobserved exception
 

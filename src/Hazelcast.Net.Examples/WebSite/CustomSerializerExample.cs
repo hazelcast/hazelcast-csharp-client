@@ -48,12 +48,16 @@ namespace Hazelcast.Examples.WebSite
     }
 
     // ReSharper disable once UnusedMember.Global
-    public class CustomSerializerExample : ExampleBase
+    public class CustomSerializerExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            var options = BuildExampleOptions(args);
             options.Serialization.Serializers.Add(new SerializerOptions
             {
                 SerializedType = typeof(CustomSerializableType),

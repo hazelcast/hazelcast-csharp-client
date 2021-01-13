@@ -52,6 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ExpectedObjects\ExpectedObjects.csproj" />
     <ProjectReference Include="..\Hazelcast.Net.Testing\Hazelcast.Net.Testing.csproj" />
     <ProjectReference Include="..\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj" />
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />

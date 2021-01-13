@@ -19,6 +19,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ExpectedObjects;
 using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Configuration;
@@ -285,9 +286,23 @@ namespace Hazelcast.Tests.Configuration
         public void Clone()
         {
             var options = ReadResource(Resources.HazelcastOptions);
+            
+            // TODO: find a way to ensure that *everything* is non-default
+
+            options.Networking.Addresses.Add("127.0.0.1:11001");
+            options.Networking.Addresses.Add("127.0.0.1:11002");
+            options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4);
+            options.Events.SubscriptionCollectPeriod = TimeSpan.FromSeconds(5);
+            options.Events.SubscriptionCollectTimeout = TimeSpan.FromSeconds(6);
+
+            // clone
             var clone = options.Clone();
 
-            Assert.That(clone.Core.Clock.OffsetMilliseconds, Is.EqualTo(options.Core.Clock.OffsetMilliseconds));
+            // use the ExpectedObject to perform a complete comparison of the clone
+            options.ToExpectedObject(config => config
+                    // factories. OwnsService is not cloned
+                    .IgnoreRelativePath("OwnsService"))
+                .ShouldEqual(clone);
         }
 
         [Test]

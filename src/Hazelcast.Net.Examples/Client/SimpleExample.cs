@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Examples.Client
 {
     // ReSharper disable once UnusedMember.Global
-    public class SimpleExample : ExampleBase
+    public class SimpleExample
     {
         //
         // this is a complete example of a simple console application where
@@ -55,22 +55,16 @@ namespace Hazelcast.Examples.Client
         //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
         //
 
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
             // build options
-            var options = HazelcastOptions.Build(args);
-
-            // build a console logger factory from scratch
-            var loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddConsole();
-            });
-
-            // and register the logger factory in the options
-            options.LoggerFactory.Creator = () => loggerFactory;
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // create a logger, a client factory and a client
-            var logger = loggerFactory.CreateLogger<Worker>();
+            var logger = options.LoggerFactory.Service.CreateLogger<Worker>();
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options); // disposed when method exits
 
             // create the worker, and run

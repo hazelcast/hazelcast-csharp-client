@@ -32,7 +32,7 @@ namespace Hazelcast.NearCaching
         {
             ReconciliationIntervalSeconds = other.ReconciliationIntervalSeconds;
             MinReconciliationIntervalSeconds = other.MinReconciliationIntervalSeconds;
-            MaxToleratedMissCount = other.ReconciliationIntervalSeconds;
+            MaxToleratedMissCount = other.MaxToleratedMissCount;
         }
 
         /// <summary>

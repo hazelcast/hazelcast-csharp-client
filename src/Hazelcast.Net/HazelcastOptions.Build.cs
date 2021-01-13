@@ -38,6 +38,14 @@ namespace Hazelcast
         /// <param name="environmentName">Optional environment name.</param>
         /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
+        /// <remarks>
+        /// <para>When <paramref name="optionsFilePath"/> is not provided, the options file is searched in the
+        /// default .NET configuration location, which usually is where the application resides.</para>
+        /// <para>When <paramref name="optionsFileName"/> is not provided, the name is "hazelcast".</para>
+        /// <para>When <paramref name="environmentName"/> is not provided, it is determined the standard .NET way,
+        /// i.e. from the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> variables and,
+        /// if not specified, defaults to "Production".</para>
+        /// </remarks>
         public static HazelcastOptions Build(string[] args = null, IEnumerable<KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configure = null)
         {
             return Build(builder =>
@@ -48,12 +56,12 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// Builds Hazelcast options.
+        /// (internal for tests only) Builds Hazelcast options.
         /// </summary>
         /// <param name="setup">An <see cref="IConfigurationBuilder"/> setup delegate.</param>
         /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
-        public static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure = null)
+        internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure = null)
         {
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
@@ -65,15 +73,20 @@ namespace Hazelcast
         }
 
         /// <summary>
-        /// (internal for tests only)
-        /// Builds Hazelcast options.
+        /// (internal for tests only) Builds Hazelcast options, using an alternate key.
         /// </summary>
+        /// <param name="setup">An <see cref="IConfigurationBuilder"/> setup delegate.</param>
+        /// <param name="configure">An <see cref="HazelcastOptions"/> configuration delegate.</param>
+        /// <param name="altKey">An alternate key.</param>
+        /// <returns>Hazelcast options.</returns>
+        /// <remarks>
+        /// <para>This is used in tests only and not meant to be public. If <paramref name="altKey"/> is not
+        /// <c>null</c>, options starting with that key will bind after those starting with "hazelcast" and
+        /// override them. This allows one json file to contain several configuration sets, which is
+        /// convenient for instance when using the "user secrets" during tests.</para>
+        /// </remarks>
         internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure, string altKey)
         {
-            // build hazelcast options, optionally binding alternate keys for tests
-            // this allows 1 json file to contain several configuration sets, and that
-            // is convenient when using the "user secrets" during tests.
-
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
             var builder = new ConfigurationBuilder();
@@ -83,16 +96,11 @@ namespace Hazelcast
             return Build(configuration, configure, altKey);
         }
 
-        /// <summary>
-        /// Builds Hazelcast options.
-        /// </summary>
-        /// <param name="configuration">An <see cref="IConfiguration"/> instance.</param>
-        /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
-        /// <returns>Hazelcast options.</returns>
-        public static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure = null)
+        // builds options, no alternate keys
+        private static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure = null)
             => Build(configuration, configure, null);
 
-        // build options, optionally binding alternate keys
+        // builds options, optionally binding alternate keys
         private static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure, string altKey)
         {
             // must HzBind here and not simply Bind because we use our custom

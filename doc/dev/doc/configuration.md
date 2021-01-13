@@ -2,7 +2,7 @@
 
 Configuration follows the [Microsoft.Extensions.Configuration](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration)
 patterns. The Hazelcast client configuration is represented by the @Hazelcast.HazelcastOptions class. When simply instantiated, this
-class contains the default options:
+class contains the default options (i.e. it does not even read the options file):
 ```csharp
 var options = new HazelcastOptions();
 ```
@@ -13,8 +13,8 @@ To get an overview of all the different configuration options, refer to the [Opt
 
 ### Simple Environment
 
-In a simple, non-hosted environment without dependency injection, options need to be *built* using one of the
-@Hazelcast.HazelcastOptions.Build* methods. 
+In a simple, non-hosted environment without dependency injection, options need to be *built* using the
+@Hazelcast.HazelcastOptions.Build methods. 
 
 ```csharp
 public class Program
@@ -28,8 +28,19 @@ public class Program
 }
 ```
 
-This will determine the application environment (`<env>`) from the `DOTNET_ENVIRONMENT` and `ASPNETCORE_ENVIRONMENT` variables (or,
-if not specified, default to `Production`), and then gather configuration keys from the following ordered sources:
+Alternatively, a fluent builder is available:
+
+```csharp
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var options = new HazelcastOptionsBuilder.With(args).Build();
+    }
+}
+```
+
+This will determine the application environment (`<env>`) from the `DOTNET_ENVIRONMENT` and `ASPNETCORE_ENVIRONMENT` variables (or, if not specified, default to `Production`), and then gather configuration keys from the following ordered sources:
 
 * `appsettings.json` file
 * `appsettings.<env>.json` file
@@ -41,11 +52,10 @@ if not specified, default to `Production`), and then gather configuration keys f
 * Hazelcast-specific command line arguments (using dot separator, e.g. `hazelcast.clientName`)
 * Optional in-memory key/values
 
-The Hazelcast-specific sources for environment variables and command line arguments only exist to support the non-standard
-dot separator, and complement the original sources.
+The Hazelcast-specific sources for environment variables and command line arguments only exist to support the non-standard dot separator, and complement the original sources.
 
-Overloads of the @Hazelcast.HazelcastOptions.Build* method support overriding the name and location of the `hazelcast.json` and
-`hazelcast.<env>.json` files, overriding the `<env>` environment name, and providing optional in-memory key/values.
+The @Hazelcast.HazelcastOptions.Build method supports overriding the name and location of the `hazelcast.json` and
+`hazelcast.<env>.json` files, overriding the `<env>` environment name, and providing optional in-memory key/values. This can also be achived, in a more fluent way, with the @HazelcastOptionsBuilder.
 
 Every Hazelcast option can therefore be specified via the traditional .NET Core methods. For instance, specifying one
 cluster server address can be done via the following Json fragment in any of the Json files:
@@ -86,23 +96,50 @@ var options = HazelcastOptions.Build(args, new[]
 });
 ```
 
+This is where the fluent @HazelcastOptionsBuilder may be more convenient:
+
+```csharp
+var options = new HazelcastOptionsBuilder.With("hazelcast.networking.addresses.0", "server:port").Build();
+```
+
 ### Container Environment
 
-In a container environment, one can rely on dependency injection to manage configuration. An @Microsoft.Extensions.Configuration.IConfiguration
-must be created, in order to add Hazelcast to the services:
+In a container environment, one can rely on dependency injection to manage configuration. An @Microsoft.Extensions.Configuration.IConfiguration must be created, in order to add Hazelcast to the services:
 
 ```csharp
 var configuration = new ConfigurationBuilder()
-    .AddDefaults(args) // add default configuration (appsettings.json, etc)
-    .AddHazelcast(args) // add Hazelcast-specific configuration
+    // add default configuration (appsettings.json, etc)
+    .AddDefaults(args)
+    // add Hazelcast-specific configuration
+    .AddHazelcast(args)
     .Build();
 
+// create the service collection
 var services = new ServiceCollection();
-services.AddHazelcast(configuration);
+
+// add Hazelcast-specific services
+services.AddHazelcast(configuration); 
 ```
 
-Configuration keys will be gathered from the same sources and in the same order as before, and options as well as the 
-@Hazelcast.HazelcastClientFactory will be registered in the service container, and available via dependency injection.
+Configuration keys will be gathered from the same sources and in the same order as before, and options will be registered in the service container, and available via dependency injection:
+
+```csharp
+public class MyService
+{
+    private readonly HazelcastOptions _options;
+
+    public MyService(IOptions<HazelcastOptions> ioptions)
+    {
+        _options = ioptions.Value;
+    }
+
+    public async Task DoSomethingAsync()
+    {
+        await using var client = HazelcastClientFactory.StartNewClientAsync(options);
+        // ...
+    }
+}
+```
 
 Also, the traditional Microsoft Dependency Injection patterns are supported:
 
@@ -113,17 +150,17 @@ services.Configure<HazelcastOptions>(options =>
 });
 ```
 
+Note: the required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).
+
 ### Hosted Environment
 
-In a .NET Core hosted environment (see [.NET Generic Host](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host)),
-the host supplies the @Microsoft.Extensions.Configuration.IConfiguration instance, and manages dependency injection. All that is needed
-is to tell the host how to handle the Hazelcast-specific configuration (e.g. `hazelcast.json`), and to add Hazelcast to services.
+In a .NET Core hosted environment (see [.NET Generic Host](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host)), the host supplies the @Microsoft.Extensions.Configuration.IConfiguration instance, and manages dependency injection. All that is needed is to tell the host how to handle the Hazelcast-specific configuration (e.g. `hazelcast.json`), and to add Hazelcast to services.
 
 For example:
 
 ```csharp
 Host.CreateDefaultBuilder(args)
-    .ConfigureHostConfiguration(builder =>
+    .ConfigureAppConfiguration((hostingContext, builder) =>
     {
         builder.AddHazelcast(args);
     })
@@ -133,5 +170,6 @@ Host.CreateDefaultBuilder(args)
     });
 ```
 
-Configuration keys will be gathered from the same sources and in the same order as before, and options as well as the 
-@Hazelcast.HazelcastClientFactory will be registered in the service container, and available via dependency injection.
+Just as with the previous container environment, configuration keys will be gathered from the same sources and in the same order as before, and options will be registered in the service container, and available via dependency injection
+
+Note: the required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).

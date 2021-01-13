@@ -19,12 +19,14 @@ using Hazelcast.Core;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapJsonExample : ExampleBase
+    public class MapJsonExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
-            // creates the example options
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);

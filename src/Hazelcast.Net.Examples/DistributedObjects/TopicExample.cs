@@ -19,11 +19,14 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class TopicExample : ExampleBase
+    public class TopicExample
     {
-        public async Task Run(params string[] args)
+        public static async Task Main(string[] args)
         {
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);

@@ -17,15 +17,17 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.DistributedObjects
 {
     // ReSharper disable once UnusedMember.Global
-    public class MapLockExample : ExampleBase
+    public class MapLockExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
             // uncomment and enable HzConsole to see the context changes
             //HzConsole.Configure<AsyncContext>(config => { config.SetMaxLevel(0); });
 
-            // creates the example options
-            var options = BuildExampleOptions(args);
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
 
             // in a dependency-injection-based application, the logger factory would be
             // provided by the container, and disposed when the container is disposed. we

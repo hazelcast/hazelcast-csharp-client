@@ -20,17 +20,21 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class CloudClientSslExample
     {
-        public async Task Run()
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a Cloud server
-            var options = HazelcastOptions.Build();
             var cloud = options.Networking.Cloud;
             cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
 
             var ssl = options.Networking.Ssl;
             ssl.Enabled = true;
             //ssl.ValidateCertificateChain = false;
-            ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH"; // downloaded from CLoud console
+            ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH"; // downloaded from Cloud console
 
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 

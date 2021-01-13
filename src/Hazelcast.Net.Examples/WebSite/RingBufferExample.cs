@@ -18,12 +18,17 @@ using System.Threading.Tasks;
 namespace Hazelcast.Examples.WebSite
 {
     // ReSharper disable once UnusedMember.Global
-    public class RingBufferExample : ExampleBase
+    public class RingBufferExample
     {
-        public async Task Run(string[] args)
+        public static async Task Main(string[] args)
         {
+            var options = new HazelcastOptionsBuilder()
+                .With(args)
+                .WithConsoleLogger()
+                .Build();
+
             // create an Hazelcast client and connect to a server running on localhost
-            await using var client = await HazelcastClientFactory.StartNewClientAsync(BuildExampleOptions(args));
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             await using var rb = await client.GetRingBufferAsync<long>("rb");
 
