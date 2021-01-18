@@ -29,85 +29,77 @@ namespace Hazelcast.Tests.DotNet
     {
         // https://stackoverflow.com/questions/19481964/calling-taskcompletionsource-setresult-in-a-non-blocking-manner
         // http://blog.stephencleary.com/2012/12/dont-block-in-asynchronous-code.html
-
+        //
         // taskCompletionSource.SetResult() scheduled with .ExecuteSynchronously = duh, beware!
 
-        [Test]
-        public async Task CompletionSourceCompletesResultSynchronously()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task CompletionSourceCompletesResultAsynchronously(bool runAsync)
         {
             var steps = new Steps();
+            var control = new SemaphoreSlim(0);
 
-            steps.Add("start");
+            steps.Add("main.start");
 
-            var taskCompletionSource = new TaskCompletionSource<int>();
+            var options = runAsync ? TaskCreationOptions.RunContinuationsAsynchronously : TaskCreationOptions.None;
+            var taskCompletionSource = new TaskCompletionSource<int>(options);
             var task = Task.Run(async () =>
             {
                 steps.Add("task.start");
+
+                // some delay to ensure we do not SetResult before awaiting the task completion source,
+                // thus forcing the await on that task to actually await asynchronously
+                await control.WaitAsync().CfAwait();
                 await Task.Delay(2000).CfAwait();
+                
                 steps.Add("task.complete");
-                taskCompletionSource.SetResult(42); // this is NOT fire-and-forget !!
+                taskCompletionSource.SetResult(42);
+                steps.Add("task.continue");
+
+                // keep running for a while - on the same thread!
+                //await Task.Delay(200).CfAwait();
+                Thread.Sleep(200);
+                
                 steps.Add("task.end");
             });
 
-            steps.Add("wait");
+            steps.Add("main.wait");
+            control.Release();
             await taskCompletionSource.Task.CfAwait();
-            steps.Add("end");
+            steps.Add("main.resume");
 
-            await Task.Delay(100).CfAwait();
+            // keep running for a while - on the same thread!
+            //await Task.Delay(200).CfAwait();
+            Thread.Sleep(200);
+            
+            steps.Add("main.continue");
+            
+            await Task.Yield();
+            await task.CfAwait();
+
+            steps.Add("main.end");
 
             Console.WriteLine(steps);
 
-            var threadSetResult = steps.GetThreadId("task.complete");
-            var threadCompleted = steps.GetThreadId("end");
-            Assert.AreEqual(threadCompleted, threadSetResult);
+            // task.complete and task.continue always run on same thread
+            // task.complete and main.wait always run on different threads
+            steps.AssertSameThread("task.complete", "task.continue");
+            steps.AssertNotSameThread("task.complete", "main.wait");
 
-            var indexTaskEnd = steps.GetIndex("task.end");
-            var indexEnd = steps.GetIndex("end");
-            Assert.Greater(indexTaskEnd, indexEnd);
+            // task.complete and main.resume
+            if (runAsync)
+                steps.AssertNotSameThread("task.complete", "main.resume"); // run on different threads
+            else
+                steps.AssertSameThread("task.complete", "main.resume"); // run on same thread
+
+            if (runAsync)
+                steps.AssertOrder("task.continue", "main.resume"); // main.resume after task.continue since different thread
+            else
+                steps.AssertOrder("main.resume", "task.continue"); // main.resume before task.continue since same thread
+            
+            steps.AssertOrder("main.resume", "main.end");
         }
-
-        [Test]
-        public async Task CompletionSourceCompletesResultAsynchronously()
-        {
-            var steps = new Steps();
-
-            var ev = new ManualResetEventSlim();
-
-            steps.Add("start");
-
-            var taskCompletionSource = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var task = Task.Run(async () =>
-            {
-                await Task.Yield();
-                steps.Add("task.start");
-                ev.Wait();
-                steps.Add("task.complete");
-                taskCompletionSource.SetResult(42); // this is NOT fire-and-forget !!
-                steps.Add("task.end");
-            });
-
-            steps.Add("wait");
-            await Task.Delay(200).CfAwait();
-            ev.Set();
-            await taskCompletionSource.Task.CfAwait();
-            steps.Add("end");
-
-            await Task.Delay(100).CfAwait();
-
-            Console.WriteLine(steps);
-
-            var threadSetResult = steps.GetThreadId("task.complete");
-            var threadTaskEnd = steps.GetThreadId("task.end");
-            Assert.AreEqual(threadTaskEnd, threadSetResult);
-
-            var threadTaskCompleted = steps.GetThreadId("wait");
-            Assert.AreNotEqual(threadSetResult, threadTaskCompleted);
-
-            var indexTaskEnd = steps.GetIndex("task.end");
-            var indexEnd = steps.GetIndex("end");
-            Assert.Less(indexTaskEnd, indexEnd);
-        }
-
+        
         [Test]
         public async Task CompletionSourceTest()
         {
@@ -339,13 +331,36 @@ namespace Hazelcast.Tests.DotNet
 
                 return -1;
             }
+            
+            public void AssertSameThread(string step1, string step2)
+            {
+                var thread1 = GetThreadId(step1);
+                var thread2 = GetThreadId(step2);
+                Assert.That(thread1, Is.EqualTo(thread2), () => $"{step1} thread {thread1} != {step2} thread {thread2}");
+            }
+
+            public void AssertNotSameThread(string step1, string step2)
+            {
+                var thread1 = GetThreadId(step1);
+                var thread2 = GetThreadId(step2);
+                Assert.That(thread1, Is.Not.EqualTo(thread2), () => $"{step1} thread {thread1} == {step2} thread {thread2}");
+            }
+            
+            public void AssertOrder(string step1, string step2)
+            {
+                var index1 = GetIndex(step1);
+                var index2 = GetIndex(step2);
+                Assert.That(index1, Is.LessThan(index2), () => $"{step1} at {index1} comes after {step2} at {index2}");
+            }
 
             public override string ToString()
             {
                 var text = new StringBuilder();
+                var i = 0;
                 foreach (var step in _steps)
                 {
                     if (text.Length > 0) text.Append(Environment.NewLine);
+                    text.Append($"{i++:00} ");
                     text.Append(step);
                 }
 
@@ -592,6 +607,114 @@ namespace Hazelcast.Tests.DotNet
             source.Cancel();
             token.Register(() => i++);
             Assert.That(i, Is.EqualTo(1));
+        }
+
+        private class AsyncThing
+        {
+            private static AsyncLocal<AsyncThing> _current = new AsyncLocal<AsyncThing>();
+            private static int _idSequence;
+            private int _id;
+
+            private AsyncThing()
+            {
+                _id = _idSequence++;
+            }
+
+            public int Id => _id;
+
+            public static bool HasCurrent => _current.Value != null;
+
+            public static AsyncThing Current => _current.Value;
+
+            public static void Ensure()
+            {
+                if (_current.Value == null) _current.Value = new AsyncThing();
+            }
+
+            public static IDisposable New()
+            {
+                var current = _current.Value;
+                var used = new UsedAsyncThing(current);
+                _current.Value = new AsyncThing();
+                return used;
+            }
+
+            private class UsedAsyncThing : IDisposable
+            {
+                private readonly AsyncThing _asyncThing;
+
+                public UsedAsyncThing(AsyncThing asyncThing)
+                {
+                    _asyncThing = asyncThing;
+                }
+
+                public void Dispose()
+                {
+                    _current.Value = _asyncThing;
+                }
+            }
+        }
+
+        [Test]
+        public async Task AsyncLocalTest()
+        {
+            Assert.That(AsyncThing.HasCurrent, Is.False);
+            AsyncThing.Ensure();
+            Assert.That(AsyncThing.HasCurrent);
+            var id1 = AsyncThing.Current.Id;
+            var id1a = await GetAsyncThingId().ConfigureAwait(false);
+
+            int id2, id2a;
+            var sem = new SemaphoreSlim(0);
+            Task<int> task;
+            using (AsyncThing.New())
+            {
+                id2 = AsyncThing.Current.Id;
+                id2a = await GetAsyncThingId().ConfigureAwait(false);
+
+                task = LongGetAsyncThingId(sem);
+            }
+
+            var id3 = AsyncThing.Current.Id;
+            var id3a = await GetAsyncThingId().ConfigureAwait(false);
+
+            sem.Release();
+            var id4 = await task.ConfigureAwait(false);
+
+            Assert.That(id1, Is.Not.EqualTo(id2));
+
+            Assert.That(id1, Is.EqualTo(id3));
+
+            Assert.That(id1, Is.EqualTo(id1a));
+            Assert.That(id2, Is.EqualTo(id2a));
+            Assert.That(id3, Is.EqualTo(id3a));
+
+            Assert.That(id4, Is.EqualTo(id2));
+
+            int id5, id5a;
+            task = LongGetAsyncThingId(sem);
+            using (AsyncThing.New())
+            {
+                id5 = AsyncThing.Current.Id;
+                sem.Release();
+                id5a = await task;
+            }
+
+            Assert.That(id5, Is.Not.EqualTo(id4)); // different, in a new
+            Assert.That(id5a, Is.EqualTo(id1)); // captured when task was started
+        }
+
+        public async Task<int> GetAsyncThingId()
+        {
+            await Task.Yield();
+            return AsyncThing.Current.Id;
+        }
+
+        public async Task<int> LongGetAsyncThingId(SemaphoreSlim sem)
+        {
+            await Task.Yield();
+            await sem.WaitAsync().ConfigureAwait(false);
+            return AsyncThing.Current.Id;
         }
     }
 }
