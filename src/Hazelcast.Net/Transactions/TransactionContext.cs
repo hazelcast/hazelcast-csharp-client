@@ -75,7 +75,7 @@ namespace Hazelcast.Transactions
         /// identifier anymore - it is attached to the async context so it can flow with
         /// async operations.
         /// </remarks>
-        private static long ContextId => AsyncContext.CurrentContext.Id;
+        private static long ContextId => AsyncContext.Current.Id;
 
         /// <summary>
         /// Gets or sets a value indicating whether the current asynchronous context is in a transaction.
@@ -89,8 +89,8 @@ namespace Hazelcast.Transactions
             // a confusion of concerns, and maybe a separate AsyncLocal would be more 'pure', but this is
             // simple enough.
 
-            get => AsyncContext.CurrentContext.InTransaction;
-            set => AsyncContext.CurrentContext.InTransaction = value;
+            get => AsyncContext.Current.InTransaction;
+            set => AsyncContext.Current.InTransaction = value;
         }
 
         /// <summary>

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -39,9 +40,9 @@ namespace Hazelcast.Tests.Core
         {
             Assert.That(AsyncContext.HasCurrent, Is.False);
 
-            var context = AsyncContext.CurrentContext;
+            var context = AsyncContext.Current;
             Assert.That(context, Is.Not.Null);
-            Assert.That(AsyncContext.CurrentContext, Is.SameAs(context));
+            Assert.That(AsyncContext.Current, Is.SameAs(context));
             Assert.That(AsyncContext.HasCurrent, Is.True);
         }
 
@@ -50,8 +51,8 @@ namespace Hazelcast.Tests.Core
         {
             Assert.That(AsyncContext.HasCurrent, Is.False);
 
-            var id1 = await Task.Run(() => AsyncContext.CurrentContext.Id);
-            var id2 = await Task.Run(() => AsyncContext.CurrentContext.Id);
+            var id1 = await Task.Run(() => AsyncContext.Current.Id);
+            var id2 = await Task.Run(() => AsyncContext.Current.Id);
 
             Assert.That(id1, Is.EqualTo(1));
             Assert.That(id2, Is.EqualTo(2));
@@ -62,52 +63,25 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task FlowsWithAsync()
         {
-            Assert.That(AsyncContext.CurrentContext.Id, Is.EqualTo(1));
+            Assert.That(AsyncContext.Current.Id, Is.EqualTo(1));
 
-            var id1 = await Task.Run(() => AsyncContext.CurrentContext.Id);
-            var id2 = await Task.Run(() => AsyncContext.CurrentContext.Id);
+            var id1 = await Task.Run(() => AsyncContext.Current.Id);
+            var id2 = await Task.Run(() => AsyncContext.Current.Id);
 
             Assert.That(id1, Is.EqualTo(1));
             Assert.That(id2, Is.EqualTo(1));
 
-            Assert.That(AsyncContext.CurrentContext.Id, Is.EqualTo(1));
-        }
-
-        [Test]
-        public async Task WithNewContext()
-        {
-            Assert.That(AsyncContext.CurrentContext.Id, Is.EqualTo(1));
-
-            var id1 = await Task.Run(() => AsyncContext.CurrentContext.Id);
-            var id2 = await AsyncContext.RunWithNew(() => Task.FromResult(AsyncContext.CurrentContext.Id));
-            var id3 = await AsyncContext.RunWithNew(() => Task.Run(() => AsyncContext.CurrentContext.Id));
-            var id4 = await AsyncContext.RunWithNew(token => Task.Run(() => AsyncContext.CurrentContext.Id, token), CancellationToken.None);
-            var id5 = await Task.Run(() => AsyncContext.CurrentContext.Id);
-
-            Assert.That(id1, Is.EqualTo(1));
-            Assert.That(id2, Is.EqualTo(2));
-            Assert.That(id3, Is.EqualTo(3));
-            Assert.That(id4, Is.EqualTo(4));
-            Assert.That(id5, Is.EqualTo(1));
-
-            Assert.That(AsyncContext.CurrentContext.Id, Is.EqualTo(1));
-        }
-
-        [Test]
-        public async Task WithNewContextExceptions()
-        {
-            await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await AsyncContext.RunWithNew(null));
-            await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await AsyncContext.RunWithNew(null, default));
+            Assert.That(AsyncContext.Current.Id, Is.EqualTo(1));
         }
 
         [Test]
         public void InTransaction()
         {
             AsyncContext.Ensure();
-            AsyncContext.CurrentContext.InTransaction = true;
-            Assert.That(AsyncContext.CurrentContext.InTransaction, Is.True);
-            AsyncContext.CurrentContext.InTransaction = false;
-            Assert.That(AsyncContext.CurrentContext.InTransaction, Is.False);
+            AsyncContext.Current.InTransaction = true;
+            Assert.That(AsyncContext.Current.InTransaction, Is.True);
+            AsyncContext.Current.InTransaction = false;
+            Assert.That(AsyncContext.Current.InTransaction, Is.False);
         }
 
         [Test]
@@ -123,8 +97,8 @@ namespace Hazelcast.Tests.Core
                 .ContinueWith(x =>
                 {
                     x1 = x.Result;
-                    x2 = AsyncContext.CurrentContext.Id;
-                    Console.WriteLine($"-x2: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+                    x2 = AsyncContext.Current.Id;
+                    Console.WriteLine($"-x2: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
                 })
                 .ContinueWith(async x => x3 = await AsyncContextWhenAsyncSub("x3"));
 
@@ -139,13 +113,13 @@ namespace Hazelcast.Tests.Core
             Console.WriteLine("If we ensure a context (as HazelcastClient does) then we have a context that flows.");
 
             // first time we get a context = creates a context
-            var z1 = AsyncContext.CurrentContext.Id;
-            Console.WriteLine($"-z1: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+            var z1 = AsyncContext.Current.Id;
+            Console.WriteLine($"-z1: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
 
             await Task.Yield();
 
-            var z2 = AsyncContext.CurrentContext.Id;
-            Console.WriteLine($"-z2: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+            var z2 = AsyncContext.Current.Id;
+            Console.WriteLine($"-z2: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
 
             Assert.Greater(z1, x3);
             Assert.AreEqual(z1, z2);
@@ -157,31 +131,35 @@ namespace Hazelcast.Tests.Core
 
             long c1 = 0, c2 = 0, c4 = 0;
 
-            var cx = await AsyncContext.RunWithNew(async () =>
-            {
-                return await AsyncContextWhenAsyncSub("c1").ContinueWith(async x =>
+            long cx;
+            using (AsyncContext.New())
+            { 
+                cx = await AsyncContextWhenAsyncSub("c1").ContinueWith(async x =>
                 {
                     c1 = x.Result;
                     c2 = await AsyncContextWhenAsyncSub("c2");
                     return c2;
                 }).Unwrap();
-            });
+            };
 
             await Task.Delay(500); // complete above code
             Console.WriteLine("-cx: [  ] " + cx);
             Console.WriteLine("--");
 
             Task<long> task = null;
-            await AsyncContext.RunWithNew(() => task = AsyncContextWhenAsyncSub("c3"));
+            using (AsyncContext.New())
+            {
+                task = AsyncContextWhenAsyncSub("c3");
+            }
 
             Console.WriteLine("--");
             var c3 = await task;
 
-            _ = AsyncContext.RunWithNew(async () =>
+            using (AsyncContext.New())
             {
                 await Task.Delay(100);
                 c4 = await AsyncContextWhenAsyncSub("c4");
-            });
+            };
 
             await Task.Delay(500); // complete above code
 
@@ -194,8 +172,8 @@ namespace Hazelcast.Tests.Core
             Console.WriteLine("--");
 
             Console.WriteLine("This operation is still in the same context");
-            var z3 = AsyncContext.CurrentContext.Id;
-            Console.WriteLine($"-z3: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+            var z3 = AsyncContext.Current.Id;
+            Console.WriteLine($"-z3: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
             Assert.AreEqual(z1, z3);
 
             await Task.Delay(500);
@@ -203,26 +181,56 @@ namespace Hazelcast.Tests.Core
 
         private static async Task<long> AsyncContextWhenAsyncSub(string n)
         {
-            var id = AsyncContext.CurrentContext.Id;
-            Console.WriteLine($">{n}: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+            var id = AsyncContext.Current.Id;
+            Console.WriteLine($">{n}: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
 
             async Task F(long i)
             {
-                Assert.AreEqual(i, AsyncContext.CurrentContext.Id);
-                Console.WriteLine($">{n}:   [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+                Assert.AreEqual(i, AsyncContext.Current.Id);
+                Console.WriteLine($">{n}:   [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
                 await Task.Delay(10);
-                Assert.AreEqual(i, AsyncContext.CurrentContext.Id);
-                Console.WriteLine($">{n}:   [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+                Assert.AreEqual(i, AsyncContext.Current.Id);
+                Console.WriteLine($">{n}:   [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
             }
 
             await Task.Delay(10);
             await F(id);
             await Task.Delay(10);
 
-            Assert.AreEqual(id, AsyncContext.CurrentContext.Id);
-            Console.WriteLine($">{n}: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.CurrentContext.Id}");
+            Assert.AreEqual(id, AsyncContext.Current.Id);
+            Console.WriteLine($">{n}: [{Thread.CurrentThread.ManagedThreadId:00}] {AsyncContext.Current.Id}");
 
             return id;
+        }
+
+        [Test]
+        public async Task Test()
+        {
+            bool stop = false;
+            var id = AsyncContext.Current.Id;
+
+            // context is captured by the task and does *not* change
+            var task = GetIds();
+
+            using (AsyncContext.New())
+            {
+                await Task.Delay(1000);
+            }
+
+            stop = true;
+            var ids = await task;
+            foreach (var i in ids) Assert.That(i, Is.EqualTo(id));
+
+            async Task<List<long>> GetIds()
+            {
+                var list = new List<long>();
+                while (!stop)
+                {
+                    list.Add(AsyncContext.Current.Id);
+                    await Task.Delay(100).CfAwait();
+                }
+                return list;
+            }
         }
     }
 }

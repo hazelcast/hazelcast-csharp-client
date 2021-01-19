@@ -113,7 +113,7 @@ namespace Hazelcast.DistributedObjects
         /// identifier anymore - it is attached to the async context so it can flow with
         /// async operations.
         /// </remarks>
-        protected static long ContextId => AsyncContext.CurrentContext.Id;
+        protected static long ContextId => AsyncContext.Current.Id;
 
         /// <summary>
         /// Gets the serialization service.
