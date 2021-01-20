@@ -57,7 +57,7 @@ namespace Hazelcast.Testing
         {
             // creating the client via an async method means we may not have a context - ensure here
             // (before each test)
-            AsyncContext.EnsureNew();
+            AsyncContext.RequireNew();
         }
 
         [TearDown]

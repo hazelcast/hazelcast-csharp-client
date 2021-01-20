@@ -68,10 +68,10 @@ namespace Hazelcast.Tests.Remote
 
             await dictionary.LockAsync("key1");
 
-            await AsyncContext.RunWithNew(async () =>
+            using (AsyncContext.New())
             {
                 await dictionary.ForceUnlockAsync("key1");
-            });
+            };
 
             Assert.IsFalse(await dictionary.IsLockedAsync("key1"));
         }
@@ -176,10 +176,11 @@ namespace Hazelcast.Tests.Remote
 
             await dictionary.LockAsync("key1");
 
-            var locked = await AsyncContext.RunWithNew(async () =>
+            bool locked;
+            using (AsyncContext.New())
             {
-                return await dictionary.TryLockAsync("key1");
-            });
+                locked = await dictionary.TryLockAsync("key1");
+            };
 
             Assert.That(locked, Is.False);
 
@@ -195,14 +196,14 @@ namespace Hazelcast.Tests.Remote
             await dictionary.LockAsync("key1", TimeSpan.FromSeconds(1));
 
             var count = 0;
-            await AsyncContext.RunWithNew(async () =>
+            using (AsyncContext.New())
             {
                 if (!await dictionary.TryLockAsync("key1"))
                     Interlocked.Increment(ref count);
 
                 if (await dictionary.TryLockAsync("key1", TimeSpan.FromSeconds(2)))
                     Interlocked.Increment(ref count);
-            });
+            };
 
             Assert.That(count, Is.EqualTo(2));
             await dictionary.ForceUnlockAsync("key1");
@@ -269,16 +270,16 @@ namespace Hazelcast.Tests.Remote
             Assert.IsTrue(await dictionary.TryLockAsync("key1", TimeSpan.FromMilliseconds(200)));
             Assert.IsTrue(await dictionary.IsLockedAsync("key1"));
 
-            var contextId = AsyncContext.CurrentContext.Id;
+            var contextId = AsyncContext.Current.Id;
             var otherContextId = contextId;
 
-            var (wasLocked, locked) = await AsyncContext.RunWithNew(async () =>
+            bool wasLocked, locked;
+            using (AsyncContext.New())
             {
-                otherContextId = AsyncContext.CurrentContext.Id;
-                var wasLocked = await dictionary.IsLockedAsync("key1");
-                var locked = await dictionary.TryLockAsync("key1", TimeSpan.FromMilliseconds(200));
-                return (wasLocked, locked);
-            });
+                otherContextId = AsyncContext.Current.Id;
+                wasLocked = await dictionary.IsLockedAsync("key1");
+                locked = await dictionary.TryLockAsync("key1", TimeSpan.FromMilliseconds(200));
+            }
 
             Assert.That(contextId, Is.Not.EqualTo(otherContextId));
             Assert.That(wasLocked);
@@ -286,11 +287,15 @@ namespace Hazelcast.Tests.Remote
 
             Assert.IsTrue(await dictionary.IsLockedAsync("key1"));
 
-            var locking = AsyncContext.RunWithNew(async () =>
+            Task<bool> locking;
+            using (AsyncContext.New())
             {
-                otherContextId = AsyncContext.CurrentContext.Id;
-                return await dictionary.TryLockAsync("key1", TimeSpan.FromSeconds(20));
-            });
+                locking = Task.Run(async () =>
+                {
+                    otherContextId = AsyncContext.Current.Id;
+                    return await dictionary.TryLockAsync("key1", TimeSpan.FromSeconds(20));
+                });
+            }
             Assert.That(contextId, Is.Not.EqualTo(otherContextId));
 
             await Task.Delay(100);
