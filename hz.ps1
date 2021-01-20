@@ -16,10 +16,15 @@
 
 param (
 
-    # Commands.
-    # (make sure it remains in the first position)
-    [string[]]
-    $commands = @( "clean", "build", "docs", "tests" ),
+    # [Parameter] arguments:
+    # ref: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-7.1
+    # Mandatory
+    # Position
+    # ParameterSetName
+    # ValueFromPipeline
+    # ValueFromPipelineByPropertyName
+    # ValueFromRemainingArguments
+    # HelpMessages
 
     # Whether to test enterprise features.
     [switch]
@@ -78,7 +83,16 @@ param (
 
     [alias("nr")]
     [switch]
-    $noRestore # don't restore NuGet packages (assume they are there already)
+    $noRestore, # don't restore NuGet packages (assume they are there already)
+
+    [alias("d")]
+    [string]
+    $defineConstants, # define additional build constants
+
+    # Commands.
+    [Parameter(ValueFromRemainingArguments, Position=0)]
+    [string[]]
+    $commands = @( "clean", "build", "docs", "tests" )
 )
 
 # die - PowerShell display of errors is a pain
@@ -96,6 +110,12 @@ function Die($message) {
 # PowerShell can be weird at times ;(
 if ($commands.Length -eq 1 -and $commands[0].Contains(',')) {
     $commands = $commands[0].Replace(" ", "").Split(',')
+}
+
+# process define constants - it's a mess
+# see https://github.com/dotnet/sdk/issues/9562
+if (![string]::IsNullOrWhiteSpace($defineConstants)) {
+    $defineConstants = $defineConstants.Replace(",", ";")
 }
 
 # clear rogue environment variable
@@ -141,6 +161,9 @@ if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
 
 # validate commands and define actions ($doXxx)
 foreach ($t in $commands) {
+    if ($t.Trim().StartsWith("-")) {
+        Die "Unknown argument '$($t.Trim())' - use 'help' to list valid arguments."
+    }
     switch ($t.Trim().ToLower()) {
         "help" {
             Write-Output "Hazelcast .NET Command Line"
@@ -637,6 +660,23 @@ function ensureJar($jar, $repo, $artifact) {
 Write-Output "Hazelcast .NET Command Line"
 Write-Output ""
 
+# ensure we have git
+ensureCommand "git"
+Write-Output ""
+
+# validate git submodules
+foreach ($x in (git submodule status))
+{
+    if ($x.StartsWith("-"))
+    {
+        Write-Output "ERROR: some Git submodules are missing, please ensure that submodules"
+        Write-Output "are initialized and updated. You can initialize and update all submodules"
+        Write-Output "at once with `"git submodule update --init`"."
+        Write-Output ""
+        exit
+    }
+}
+
 Write-Output "Version"
 $s = $version
 if ($isPreRelease) { $s += ", pre-release" }
@@ -654,6 +694,7 @@ if ($doBuild) {
     Write-Output "  Platform       : $platform"
     Write-Output "  Commands       : $commands"
     Write-Output "  Configuration  : $configuration"
+    Write-Output "  Define         : $defineConstants"
     Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $sign"
@@ -812,7 +853,7 @@ if ($noRestore) {
 }
 else {
     Write-Output ""
-    Write-Output "Restore NuGet packages for building and testing..."
+    Write-Output "Restore NuGet packages..."
     if ($isWindows) {
         &$nuget restore "$buildDir/build.proj" -Verbosity Quiet
     }
@@ -822,7 +863,7 @@ else {
 }
 
 # get the required packages version (as specified in build.proj)
-$buildAssets = (get-content "$buildDir/obj/project.assets.json" | ConvertTo-Json | ConvertFrom-Json).Value | ConvertFrom-Json
+$buildAssets = (get-content "$buildDir/obj/project.assets.json" -raw) | ConvertFrom-Json
 $buildLibs = $buildAssets.Libraries
 $buildLibs.PSObject.Properties.Name | Foreach-Object {
     $p = $_.Split('/')
@@ -853,11 +894,6 @@ if ($doBuild -and $sign) {
 if ($doDocs -or $doDocsServe) {
     ensureDocFx
     ensureMemberPage
-}
-
-# ensure we have git
-if ($doDocsRelease -or $doSetVersion -or $doTagVersion) {
-    ensureCommand "git"
 }
 
 # ensure Java and Maven for tests
@@ -944,6 +980,13 @@ if ($doTagVersion)
 # build the solution
 # on Windows, build with MsBuild - else use dotnet
 if ($doBuild) {
+
+    # process define constants - it's a mess
+    # see https://github.com/dotnet/sdk/issues/9562
+    if (![string]::IsNullOrWhiteSpace($defineConstants)) {
+        $defineConstants = $defineConstants.Replace(";", "%3B") # escape ';'
+    }
+
     Write-Output ""
     Write-Output "Build solution..."
     if ($isWindows) {
@@ -953,6 +996,10 @@ if ($doBuild) {
             "/target:`"Restore;Build`""
             #/p:TargetFramework=$framework
         )
+
+        if (![string]::IsNullOrWhiteSpace($defineConstants)) {
+            $msBuildArgs += "/p:DefineUserConstants=`"$defineConstants`""
+        }
 
         if ($signAssembly) {
             $msBuildArgs += "/p:SignAssembly=true"
@@ -975,11 +1022,22 @@ if ($doBuild) {
             "-c", "$configuration"
             # "-f", "$framework"
         )
+
+        if (![string]::IsNullOrWhiteSpace($defineConstants)) {
+            $buildArgs += "/p:DefineUserConstants=`"$defineConstants`""
+        }
+
+        if ($signAssembly) {
+            $msBuildArgs += "/p:SignAssembly=true"
+            $msBuildArgs += "/p:PublicSign=false"
+            $msBuildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
+        }
+
         if ($hasVersion) {
-            $packArgs += "/p:AssemblyVersion=$versionPrefix"
-            $packArgs += "/p:FileVersion=$versionPrefix"
-            $packArgs += "/p:VersionPrefix=$versionPrefix"
-            $packArgs += "/p:VersionSuffix=$versionSuffix"
+            $msBuildArgs += "/p:AssemblyVersion=$versionPrefix"
+            $msBuildArgs += "/p:FileVersion=$versionPrefix"
+            $msBuildArgs += "/p:VersionPrefix=$versionPrefix"
+            $msBuildArgs += "/p:VersionSuffix=$versionSuffix"
         }
 
         dotnet build $buildArgs
@@ -1504,12 +1562,14 @@ if ($doNuget) {
         "-o", "$tmpDir\output", `
         "-c", "$configuration"
     )
+
     if ($hasVersion) {
         $packArgs += "/p:AssemblyVersion=$versionPrefix"
         $packArgs += "/p:FileVersion=$versionPrefix"
         $packArgs += "/p:VersionPrefix=$versionPrefix"
         $packArgs += "/p:VersionSuffix=$versionSuffix"
     }
+
     &dotnet pack $packArgs
 }
 
