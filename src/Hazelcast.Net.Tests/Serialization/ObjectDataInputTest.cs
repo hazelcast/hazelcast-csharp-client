@@ -466,7 +466,7 @@ namespace Hazelcast.Tests.Serialization
                 unchecked((byte) (-1)), unchecked((byte) (-1)), unchecked((byte) (-1))
             };
             _input.Initialize(bytes1, 0);
-            var theZeroLenghtArray = _input.ReadUTF();
+            var theZeroLenghtArray = _input.ReadString();
             Assert.AreEqual(new string[0], theZeroLenghtArray);
         }
 

@@ -32,12 +32,12 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            _className = input.ReadUTF();
+            _className = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(_className);
+            output.WriteString(_className);
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

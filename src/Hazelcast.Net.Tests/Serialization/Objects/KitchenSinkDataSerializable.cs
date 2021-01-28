@@ -73,8 +73,8 @@ namespace Hazelcast.Tests.Serialization.Objects
             //output.WriteObject(PortableArray);
             output.WriteInt(Chars.Length);
             output.WriteChars(Chars);
-            output.WriteUTF(String);
-            output.WriteUTFArray(StringArray);
+            output.WriteString(String);
+            output.WriteStringArray(StringArray);
             output.WriteObject(DateTime);
         }
 
@@ -105,8 +105,8 @@ namespace Hazelcast.Tests.Serialization.Objects
             //Portable = input.ReadObject<IPortable>();
             //input.ReadObject(PortableArray);
             Chars = new string(input.ReadCharArray());
-            String = input.ReadUTF();
-            StringArray = input.ReadUTFArray();
+            String = input.ReadString();
+            StringArray = input.ReadStringArray();
             DateTime = input.ReadObject<DateTime>();
         }
 

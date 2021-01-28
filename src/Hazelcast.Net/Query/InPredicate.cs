@@ -35,7 +35,7 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            _attributeName = input.ReadUTF();
+            _attributeName = input.ReadString();
             var size = input.ReadInt();
             _values = new object[size];
             for (var i = 0; i < size; i++)
@@ -46,7 +46,7 @@ namespace Hazelcast.Query
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(_attributeName);
+            output.WriteString(_attributeName);
             output.WriteInt(_values.Length);
             foreach (var value in _values)
             {

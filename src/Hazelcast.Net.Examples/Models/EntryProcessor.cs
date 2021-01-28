@@ -36,12 +36,12 @@ namespace Hazelcast.Examples.Models
 
         public void ReadData(IObjectDataInput input)
         {
-            value = input.ReadUTF();
+            value = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(value);
+            output.WriteString(value);
         }
 
         public int FactoryId => EntryProcessorDataSerializableFactory.FactoryId;

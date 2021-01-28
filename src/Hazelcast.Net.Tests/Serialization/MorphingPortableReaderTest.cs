@@ -307,15 +307,15 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestReadUTF()
         {
-            var aString = reader.ReadUTF("string");
+            var aString = reader.ReadString("string");
             Assert.AreEqual("test", aString);
-            Assert.IsNull(reader.ReadUTF("NO SUCH FIELD"));
+            Assert.IsNull(reader.ReadString("NO SUCH FIELD"));
         }
 
         [Test]
         public void TestReadUTF_IncompatibleClass()
         {
-            Assert.Throws<InvalidPortableFieldException>(() => { reader.ReadUTF("byte"); });
+            Assert.Throws<InvalidPortableFieldException>(() => { reader.ReadString("byte"); });
         }
     }
 }

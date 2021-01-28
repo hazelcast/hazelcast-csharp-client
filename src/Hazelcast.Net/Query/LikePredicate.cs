@@ -33,14 +33,14 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            AttributeName = input.ReadUTF();
-            Expression = input.ReadUTF();
+            AttributeName = input.ReadString();
+            Expression = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(AttributeName);
-            output.WriteUTF(Expression);
+            output.WriteString(AttributeName);
+            output.WriteString(Expression);
         }
 
         public int FactoryId => FactoryIds.PredicateFactoryId;

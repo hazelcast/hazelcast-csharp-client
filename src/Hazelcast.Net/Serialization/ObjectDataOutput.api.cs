@@ -90,7 +90,7 @@ namespace Hazelcast.Serialization
             _position += BytesExtensions.SizeOfDouble;
         }
 
-        public void WriteUTF(string value)
+        public void WriteString(string value)
         {
             var byteCount = value != null ? Encoding.UTF8.GetByteCount(value) : BytesExtensions.SizeOfNullArray;
             WriteInt(byteCount);
@@ -230,7 +230,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        public void WriteUTFArray(string[] values)
+        public void WriteStringArray(string[] values)
         {
             var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
             WriteInt(length);
@@ -238,7 +238,7 @@ namespace Hazelcast.Serialization
 
             foreach (var value in values)
             {
-                WriteUTF(value);
+                WriteString(value);
             }
         }
 

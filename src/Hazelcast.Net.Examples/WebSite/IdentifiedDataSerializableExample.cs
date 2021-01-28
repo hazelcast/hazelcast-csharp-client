@@ -27,13 +27,13 @@ namespace Hazelcast.Examples.WebSite
         public void ReadData(IObjectDataInput input)
         {
             Id = input.ReadInt();
-            Name = input.ReadUTF();
+            Name = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
             output.WriteInt(Id);
-            output.WriteUTF(Name);
+            output.WriteString(Name);
         }
 
         public int FactoryId => SampleDataSerializableFactory.FactoryId;

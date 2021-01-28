@@ -23,13 +23,13 @@ namespace Hazelcast.Serialization.DefaultSerializers
         /// <exception cref="System.IO.IOException"></exception>
         public override HazelcastJsonValue Read(IObjectDataInput input)
         {
-            return new HazelcastJsonValue(input.ReadUTF());
+            return new HazelcastJsonValue(input.ReadString());
         }
 
         /// <exception cref="System.IO.IOException"></exception>
         public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
         {
-            output.WriteUTF(obj.ToString());
+            output.WriteString(obj.ToString());
         }
     }
 }

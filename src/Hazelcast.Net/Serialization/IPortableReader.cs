@@ -146,11 +146,11 @@ namespace Hazelcast.Serialization
         /// <param name="fieldName">name of the field</param>
         /// <returns>the utf string value read</returns>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
-        string ReadUTF(string fieldName);
+        string ReadString(string fieldName);
 
         /// <param name="fieldName">name of the field</param>
         /// <returns>the string array value read</returns>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
-        string[] ReadUTFArray(string fieldName);
+        string[] ReadStringArray(string fieldName);
     }
 }

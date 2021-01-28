@@ -79,12 +79,12 @@ namespace Hazelcast.Examples.Serialization
             {
                 var json = JsonConvert.SerializeObject(obj, obj.GetType(), Formatting.Indented,
                     new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
-                output.WriteUTF(json);
+                output.WriteString(json);
             }
 
             public object Read(IObjectDataInput input)
             {
-                var json = input.ReadUTF();
+                var json = input.ReadString();
                 var deserializeObject =
                     JsonConvert.DeserializeObject(json, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
                 return deserializeObject;

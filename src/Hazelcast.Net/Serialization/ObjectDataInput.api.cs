@@ -102,7 +102,7 @@ namespace Hazelcast.Serialization
             return value;
         }
 
-        public string ReadUTF()
+        public string ReadString()
         {
             var numberOfBytes = ReadInt();
             if (numberOfBytes == BytesExtensions.SizeOfNullArray) return null;
@@ -249,7 +249,7 @@ namespace Hazelcast.Serialization
             return values;
         }
 
-        public string[] ReadUTFArray()
+        public string[] ReadStringArray()
         {
             var length = ReadInt();
             if (length == BytesExtensions.SizeOfNullArray) return null;
@@ -260,7 +260,7 @@ namespace Hazelcast.Serialization
             var values = new string[length];
             for (var i = 0; i < length; i++)
             {
-                values[i] = ReadUTF();
+                values[i] = ReadString();
             }
 
             return values;

@@ -103,10 +103,10 @@ namespace Hazelcast.Tests.Serialization
         public void TestNullStringEncodeDecode2()
         {
             var objectDataOutput = _serializationService.CreateObjectDataOutput(256);
-            objectDataOutput.WriteUTF(null);
+            objectDataOutput.WriteString(null);
             var bytes = objectDataOutput.ToByteArray();
             var objectDataInput = _serializationService.CreateObjectDataInput(bytes);
-            var decodedStr = objectDataInput.ReadUTF();
+            var decodedStr = objectDataInput.ReadString();
             Assert.IsNull(decodedStr);
         }
 

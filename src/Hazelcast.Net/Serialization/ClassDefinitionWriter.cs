@@ -43,9 +43,9 @@ namespace Hazelcast.Serialization
             _builder.AddLongField(fieldName);
         }
 
-        public void WriteUTF(string fieldName, string str)
+        public void WriteString(string fieldName, string str)
         {
-            _builder.AddUTFField(fieldName);
+            _builder.AddStringField(fieldName);
         }
 
         /// <exception cref="System.IO.IOException"></exception>
@@ -133,9 +133,9 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public void WriteUTFArray(string fieldName, string[] strings)
+        public void WriteStringArray(string fieldName, string[] strings)
         {
-            _builder.AddUTFArrayField(fieldName);
+            _builder.AddStringArrayField(fieldName);
         }
 
         /// <exception cref="System.IO.IOException"></exception>

@@ -189,7 +189,7 @@ namespace Hazelcast.Tests.Serialization
                 output.WriteInt(list.Count);
                 foreach (var o in list)
                 {
-                    output.WriteUTF(o);
+                    output.WriteString(o);
                 }
             }
         }
@@ -200,7 +200,7 @@ namespace Hazelcast.Tests.Serialization
             List<string> list = new List<string>(size);
             for (int i = 0; i < size; i++)
             {
-                list.Add(input.ReadUTF());
+                list.Add(input.ReadString());
             }
             return list;
         }

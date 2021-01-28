@@ -155,13 +155,13 @@ namespace Hazelcast.Tests.Networking
             {
                 return new User
                 {
-                    Name = input.ReadUTF()
+                    Name = input.ReadString()
                 };
             }
 
             public void Write(IObjectDataOutput output, User obj)
             {
-                output.WriteUTF(obj.Name);
+                output.WriteString(obj.Name);
             }
 
             public void Dispose()

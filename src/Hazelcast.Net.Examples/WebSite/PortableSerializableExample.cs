@@ -36,14 +36,14 @@ namespace Hazelcast.Examples.WebSite
             public void WritePortable(IPortableWriter writer)
             {
                 writer.WriteInt("id", Id);
-                writer.WriteUTF("name", Name);
+                writer.WriteString("name", Name);
                 writer.WriteLong("lastOrder", LastOrder.ToFileTimeUtc());
             }
 
             public void ReadPortable(IPortableReader reader)
             {
                 Id = reader.ReadInt("id");
-                Name = reader.ReadUTF("name");
+                Name = reader.ReadString("name");
                 LastOrder = DateTime.FromFileTimeUtc(reader.ReadLong("lastOrder"));
             }
         }

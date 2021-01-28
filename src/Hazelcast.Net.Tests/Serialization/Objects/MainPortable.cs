@@ -62,7 +62,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             writer.WriteLong("l", l);
             writer.WriteFloat("f", f);
             writer.WriteDouble("d", d);
-            writer.WriteUTF("str", str);
+            writer.WriteString("str", str);
             if (p != null)
             {
                 writer.WritePortable("p", p);
@@ -84,7 +84,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             l = reader.ReadLong("l");
             f = reader.ReadFloat("f");
             d = reader.ReadDouble("d");
-            str = reader.ReadUTF("str");
+            str = reader.ReadString("str");
             p = reader.ReadPortable<InnerPortable>("p");
         }
 
