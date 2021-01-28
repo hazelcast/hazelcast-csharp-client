@@ -60,7 +60,7 @@ namespace Hazelcast.Tests.Clustering
             await Task.Delay(500);
             Assert.That(addresses.Count, Is.EqualTo(2));
 
-            await connectAddresses.ResumeAsync();
+            connectAddresses.Resume();
 
             await Task.Delay(500);
             Assert.That(addresses.Count, Is.EqualTo(3));
@@ -89,7 +89,7 @@ namespace Hazelcast.Tests.Clustering
             await Task.Delay(500);
             Assert.That(addresses.Count, Is.EqualTo(4));
 
-            await connectAddresses.ResumeAsync();
+            connectAddresses.Resume();
 
             await Task.Delay(500);
             Assert.That(addresses.Count, Is.EqualTo(5));
@@ -98,7 +98,7 @@ namespace Hazelcast.Tests.Clustering
             // -- can drain empty
 
             await connectAddresses.PauseAsync();
-            await connectAddresses.ResumeAsync(true);
+            connectAddresses.Resume(true);
 
             // -- can drain non-empty
 
@@ -113,7 +113,7 @@ namespace Hazelcast.Tests.Clustering
             mutex.Release();
             await pausing;
 
-            await connectAddresses.ResumeAsync(true);
+            connectAddresses.Resume(true);
 
             Assert.That(addresses.Count, Is.EqualTo(6));
             Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:6")));

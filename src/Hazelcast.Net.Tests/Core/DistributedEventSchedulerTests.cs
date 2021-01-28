@@ -155,7 +155,7 @@ namespace Hazelcast.Tests.Core
             Assert.That(maxConcurentCount, Is.GreaterThan(1));
 
             // all tasks are gone
-            Assert.That(scheduler.PartitionTasksCount, Is.EqualTo(0));
+            Assert.That(scheduler.Count, Is.EqualTo(0));
         }
     }
 }

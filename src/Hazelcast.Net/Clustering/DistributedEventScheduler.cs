@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -27,13 +29,12 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class DistributedEventScheduler : IAsyncDisposable
     {
-        private readonly Dictionary<int, Task> _partitionTasks = new Dictionary<int, Task>();
-        private readonly Func<Task, object, Task> _continueWithHandler;
-        private readonly Action<Task, object> _removeAfterUse;
+        private readonly SimpleObjectPool<Queue> _pool;
+        private readonly Dictionary<int, Queue> _queues = new Dictionary<int, Queue>();
         private readonly object _mutex = new object();
         private readonly ILogger _logger;
-        private bool _disposed;
         private int _exceptionCount, _unhandledExceptionCount;
+        private volatile bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedEventScheduler"/> class.
@@ -41,17 +42,14 @@ namespace Hazelcast.Clustering
         /// <param name="loggerFactory">A logger factory.</param>
         public DistributedEventScheduler(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory?.CreateLogger<DistributedEventScheduler>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
 
-            _continueWithHandler = ContinueWithHandler;
-            _removeAfterUse = RemoveAfterUse;
+            _logger = loggerFactory.CreateLogger<DistributedEventScheduler>();
+
+            // TODO: how many queues should we retain?
+            const int size = 10;
+            _pool = new SimpleObjectPool<Queue>(() => new Queue(), size);
         }
-
-        /// <summary>
-        /// (internal for tests only)
-        /// Gets the partition tasks count.
-        /// </summary>
-        internal int PartitionTasksCount => _partitionTasks.Count;
 
         /// <summary>
         /// Triggers when an event handler throws an exception.
@@ -70,6 +68,41 @@ namespace Hazelcast.Clustering
         public int UnhandledExceptionCount => _unhandledExceptionCount;
 
         /// <summary>
+        /// (internal for tests only)
+        /// Gets the partition tasks count.
+        /// </summary>
+        internal int Count
+        {
+            get
+            {
+                lock (_mutex) return _queues.Count;
+            }
+        }
+
+        // represents a queue and its associated task
+        private class Queue
+        {
+            // might read & write concurrently = concurrent queue
+            private readonly ConcurrentQueue<EventData> _items = new ConcurrentQueue<EventData>();
+
+            public void Enqueue(EventData eventData) => _items.Enqueue(eventData);
+
+            public bool TryDequeue(out EventData eventData) => _items.TryDequeue(out eventData);
+
+            public Task Task { get; set; }
+        }
+
+        // represents a queued event
+        private class EventData
+        {
+            public int PartitionId { get; set; }
+
+            public ClusterSubscription Subscription { get; set; }
+
+            public ClientMessage Message { get; set; }
+        }
+
+        /// <summary>
         /// Adds an event.
         /// </summary>
         /// <param name="subscription">The event subscription.</param>
@@ -78,107 +111,74 @@ namespace Hazelcast.Clustering
         /// does not accept events anymore, because it has been disposed), <c>false</c>.</returns>
         public bool Add(ClusterSubscription subscription, ClientMessage eventMessage)
         {
-            if (subscription == null) throw new ArgumentNullException(nameof(subscription));
-            if (eventMessage == null) throw new ArgumentNullException(nameof(eventMessage));
-
             var partitionId = eventMessage.PartitionId;
-            var state = new State { Subscription = subscription, Message = eventMessage, PartitionId = partitionId };
+            var start = false;
 
-            // the factories in ConcurrentDictionary.AddOrUpdate are *not* thread-safe, i.e. in order
-            // to run with minimal locking, the ConcurrentDictionary may run the two of them, or one
-            // of them multiple times, and only guarantees that one single unique value ends up in the
-            // dictionary - in our case, that would be a problem, since the factories spawn tasks.
-            //
-            // a traditional way around this consists in having the factories return Lazy<Task> so
-            // that AddOrUpdate returns a Lazy<Task> and one single unique task is created when getting
-            // the .Value of that lazy. however this (a) adds another layer of locking, (b) implies
-            // captures since Lazy<T> does not have a constructor that accept factory arguments, etc.
-            //
-            // this is annoying - so we are going with a normal dictionary and a global lock for now.
-            //
-            // ideas:
-            // avoid creating a Lazy per task, but manage a per-partition lock (so we only lock the
-            // partition, not the whole dictionary) - yet that would mean a concurrent dictionary of
-            // locks, etc?
-
-            /*
-            _lock.EnterReadLock();
-            try
+            var data = new EventData
             {
-                if (_disposed) return false;
+                PartitionId = partitionId,
+                Subscription = subscription,
+                Message = eventMessage
+            };
 
-                _ = _partitionTasks
-                    .AddOrUpdate(partitionId, CreateFirstTask, AppendNextTask, state)
-                    .ContinueWith(_clearAfterUse, state, default, TaskContinuationOptions.None, TaskScheduler.Current);
-
-                return true;
-            }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
-            */
-
-            Task task;
+            Queue queue;
 
             lock (_mutex)
             {
                 if (_disposed) return false;
 
-                if (!_partitionTasks.TryGetValue(partitionId, out task))
-                    task = Task.CompletedTask;
+                if (!_queues.TryGetValue(partitionId, out queue))
+                {
+                    queue = _queues[partitionId] = _pool.Get();
+                    start = true;
+                }
 
-                task = AddContinuation(task, state);
-                _partitionTasks[partitionId] = task;
+                queue.Enqueue(data);
             }
 
-            task.ContinueWith(_removeAfterUse, state, default, TaskContinuationOptions.None, TaskScheduler.Current);
+            if (start)
+            {
+                queue.Task = Handle(partitionId, queue);
+            }
             return true;
         }
 
-        private class State // captures things once
+        private async Task Handle(int partitionId, Queue queue)
         {
-            public ClusterSubscription Subscription { get; set; }
+            while (true)
+            {
+                if (!queue.TryDequeue(out var eventData))
+                {
+                    lock (_mutex)
+                    {
+                        if (!queue.TryDequeue(out eventData))
+                        {
+                            _queues.Remove(partitionId);
+                            queue.Task = null;
+                            _pool.Return(queue);
+                            return;
+                        }
+                    }
+                }
 
-            public ClientMessage Message { get; set; }
-
-            public int PartitionId { get; set; }
+                await Handle(eventData); // does not throw
+            }
         }
 
-        private Task AddContinuation(Task task, State state)
-            => task.ContinueWith(_continueWithHandler, state, default, TaskContinuationOptions.None, TaskScheduler.Current).Unwrap();
-
-        /*
-        private Task CreateFirstTask(int _, State state)
-            => AddContinuation(Task.CompletedTask, state);
-
-        private Task AppendNextTask(int _, Task task, State state)
-            => AddContinuation(task, state);
-        */
-
-        private void RemoveAfterUse(Task task, object stateObject)
+        private async Task Handle(EventData eventData)
         {
-            var state = (State) stateObject;
-
-            lock (_mutex) _partitionTasks.TryRemove(state.PartitionId, task);
-        }
-
-        private async Task ContinueWithHandler(Task task, object stateObject)
-        {
-            var state = (State) stateObject;
-
             try
             {
                 HConsole.WriteLine(this, "Execute event handler");
-                await state.Subscription.HandleAsync(state.Message).CfAwait();
+                await eventData.Subscription.HandleAsync(eventData.Message).CfAwait();
             }
             catch (Exception e)
             {
                 HConsole.WriteLine(this, "Handler has thrown.");
 
                 Interlocked.Increment(ref _exceptionCount);
-                var args = new DistributedEventExceptionEventArgs(e, state.Message);
-                var correlationId = state.Message.CorrelationId;
+                var args = new DistributedEventExceptionEventArgs(e, eventData.Message);
+                var correlationId = eventData.Message.CorrelationId;
 
                 try
                 {
@@ -202,34 +202,15 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            lock (_mutex) _disposed = true;
+            Task[] tasks;
 
-            /*
-            _lock.EnterWriteLock();
-            try
+            lock (_mutex)
             {
                 _disposed = true;
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
-            */
-
-            try
-            {
-                // ReSharper disable once InconsistentlySynchronizedField - _disposed is true, all is safe
-                await Task.WhenAll(_partitionTasks.Values).CfAwait();
-            }
-            catch (Exception e)
-            {
-                // this should never happen, but better be safe
-                _logger.LogError(e, "Caught an exception while disposing.");
+                tasks = _queues.Values.Select(x => x.Task).ToArray();
             }
 
-            /*
-            _lock.Dispose();
-            */
+            await Task.WhenAll(tasks).CfAwait();
         }
     }
 }

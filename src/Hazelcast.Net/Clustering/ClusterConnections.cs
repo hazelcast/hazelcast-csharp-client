@@ -217,7 +217,9 @@ namespace Hazelcast.Clustering
 
                 // resume, drain queue if that was the last connection
                 if (_smartRouting)
-                    await _connectAddresses.ResumeAsync(wasLast).CfAwait();
+                {
+                    _connectAddresses.Resume(wasLast);
+                }
 
                 // if there are remaining connections, we can still talk to the cluster
                 if (wasLast) return;

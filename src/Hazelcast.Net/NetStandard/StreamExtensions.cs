@@ -92,7 +92,7 @@ namespace System.IO
 
                 if (completed != reading)
                 {
-                    _ = reading.ObserveException();
+                    reading.ObserveException();
                     throw new TaskCanceledException();
                 }
 

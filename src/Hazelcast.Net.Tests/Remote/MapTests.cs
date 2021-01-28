@@ -44,9 +44,6 @@ namespace Hazelcast.Tests.Remote
 
             var count = await map.GetSizeAsync().CfAwait();
             Assert.AreEqual(1, count);
-
-            value = await TaskEx.RunWithTimeout(t=> map.GetAsync("key"), TimeSpan.FromSeconds(30)).CfAwait();
-            Assert.AreEqual(43, value);
         }
 
         [Test]
@@ -66,7 +63,7 @@ namespace Hazelcast.Tests.Remote
             // in case of a TaskTimeoutException - map.SetAsync() will keep running in the
             // background, its exception will be observed, but the end result (whether the
             // value was actually set or not) is unspecified.
-            await TaskEx.RunWithTimeout(t => map.SetAsync("key", 43), TimeSpan.FromSeconds(12)).CfAwait();
+            await map.SetAsync("key", 43).CfAwait(TimeSpan.FromSeconds(12));
 
             var value = await map.GetAsync("key").CfAwait();
             Assert.AreEqual(43, value);

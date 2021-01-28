@@ -113,11 +113,10 @@ namespace Hazelcast.Tests.Clustering
 
             // SendAsync then creates the invocation
             var invocation = new Invocation(message, options.Messaging, token);
-            var timeout = 200; // ms
 
             // but sending will timeout since the server does not answer to pings
             await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
-                await memberConnection.SendAsync(invocation, timeout));
+                await memberConnection.SendAsync(invocation));
 
             // the invocation is gone now
             Assert.That(invocation.Task.IsCompleted);

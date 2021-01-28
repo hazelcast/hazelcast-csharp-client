@@ -233,8 +233,7 @@ namespace Hazelcast.Clustering
                 try
                 {
                     var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
-                    var timeoutMs = _clusterState.Options.Messaging.InvocationTimeoutMilliseconds;
-                    return await connection.SendAsync(invocation, timeoutMs).CfAwait();
+                    return await connection.SendAsync(invocation).CfAwait();
                 }
                 catch (TaskCanceledException)
                 {

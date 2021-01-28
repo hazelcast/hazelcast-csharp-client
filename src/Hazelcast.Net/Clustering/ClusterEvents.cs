@@ -529,6 +529,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when a new client has been assigned to handle cluster events.</returns>
         private async Task SetClusterEventsConnectionAsync(MemberConnection connection, CancellationToken cancellationToken)
         {
+            // TODO: throttle
+            
             // this will only exit once a client is assigned, or the task is
             // cancelled, when the cluster goes down (and never up again)
             while (!cancellationToken.IsCancellationRequested)
@@ -540,6 +542,11 @@ namespace Hazelcast.Clustering
                 var correlationId = _clusterState.GetNextCorrelationId();
                 if (!await SubscribeToClusterEventsAsync(connection, correlationId, cancellationToken).CfAwait()) // does not throw
                 {
+                    // FIXME tests fail
+                    // because of ClientOfflineException in ClusterMessaging.SendToMember
+                    // ClusterState.GetLinkedCancellation -> ClientOfflineException
+                    // but, if it's offline, how come we have a connection from WaitRandomConnection?!
+                    
                     // failed => try another client
                     connection = null;
                     continue;
@@ -758,8 +765,8 @@ namespace Hazelcast.Clustering
         {
             await _scheduler.DisposeAsync().CfAwait();
 
-            await _clusterEventsTask.ObserveCanceled().CfAwait();
-            await _ghostTask.ObserveCanceled().CfAwait();
+            await _clusterEventsTask.MaybeNull().CfAwaitCanceled();
+            await _ghostTask.MaybeNull().CfAwaitCanceled();
 
             // connection is going down
             // it will be disposed as well as all other connections

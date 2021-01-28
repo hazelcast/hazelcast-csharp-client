@@ -58,7 +58,8 @@ namespace Hazelcast.Exceptions
         /// <para>This constructor method is provided to comply with CA1032 and ensure that the
         /// exception class is a good .NET citizen. It is not meant to be used in code.</para>
         /// </remarks>
-        public TaskTimeoutException(string message) : base(message)
+        public TaskTimeoutException(string message) 
+            : base(message)
         { }
 
         /// <summary>
@@ -72,7 +73,8 @@ namespace Hazelcast.Exceptions
         /// <para>This constructor method is provided to comply with CA1032 and ensure that the
         /// exception class is a good .NET citizen. It is not meant to be used in code.</para>
         /// </remarks>
-        public TaskTimeoutException(string message, Exception innerException) : base(message, innerException)
+        public TaskTimeoutException(string message, Exception innerException) 
+            : base(message, innerException)
         { }
 
         /// <summary>
