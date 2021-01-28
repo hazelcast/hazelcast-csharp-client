@@ -87,7 +87,7 @@ namespace Hazelcast.Tests.Remote
             options.Heartbeat.TimeoutMilliseconds = 4_000; // cannot be < period!
             options.Heartbeat.PeriodMilliseconds = 3_000;
 
-            await using var client = await HazelcastClientFactory.StartNewClientAsync(options, CreateAndStartClientTimeout);
+            await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             await Task.Delay(3_000);
             Assert.That(client.IsActive);

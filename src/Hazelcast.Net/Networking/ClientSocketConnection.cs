@@ -33,7 +33,7 @@ namespace Hazelcast.Networking
     internal class ClientSocketConnection : SocketConnectionBase
     {
         private readonly IPEndPoint _endpoint;
-        private readonly SocketOptions _socketOptions;
+        private readonly NetworkingOptions _options;
         private readonly SslOptions _sslOptions;
         private readonly ILoggerFactory _loggerFactory;
 
@@ -42,15 +42,15 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="endpoint">The socket endpoint.</param>
-        /// <param name="options">Socket options.</param>
+        /// <param name="options">Networking options.</param>
         /// <param name="sslOptions">SSL options.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         /// <param name="prefixLength">An optional prefix length.</param>
-        public ClientSocketConnection(int id, IPEndPoint endpoint, SocketOptions options, SslOptions sslOptions, ILoggerFactory loggerFactory, int prefixLength = 0)
+        public ClientSocketConnection(int id, IPEndPoint endpoint, NetworkingOptions options, SslOptions sslOptions, ILoggerFactory loggerFactory, int prefixLength = 0)
             : base(id, prefixLength)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
-            _socketOptions = options ?? throw new ArgumentNullException(nameof(options));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
@@ -75,17 +75,17 @@ namespace Hazelcast.Networking
 
             // create the socket
             var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, _socketOptions.KeepAlive);
-            socket.NoDelay = _socketOptions.TcpNoDelay;
-            socket.ReceiveBufferSize = socket.SendBufferSize = _socketOptions.BufferSizeKiB * 1024;
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, _options.Socket.KeepAlive);
+            socket.NoDelay = _options.Socket.TcpNoDelay;
+            socket.ReceiveBufferSize = socket.SendBufferSize = _options.Socket.BufferSizeKiB * 1024;
 
-            socket.LingerState = _socketOptions.LingerSeconds > 0
-                ? new LingerOption(true, _socketOptions.LingerSeconds)
+            socket.LingerState = _options.Socket.LingerSeconds > 0
+                ? new LingerOption(true, _options.Socket.LingerSeconds)
                 : new LingerOption(false, 1);
 
             // connect to server
             HConsole.WriteLine(this, "Connect to server");
-            await socket.ConnectAsync(_endpoint, _socketOptions.ConnectionTimeoutMilliseconds, cancellationToken).CfAwait();
+            await socket.ConnectAsync(_endpoint, _options.TimeoutMilliseconds, cancellationToken).CfAwait();
             HConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream

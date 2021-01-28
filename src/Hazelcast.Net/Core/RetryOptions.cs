@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Clustering;
-
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Represents a <see cref="RetryStrategy"/> configuration.
+    /// Represents the configuration for the retry strategy.
     /// </summary>
     public class RetryOptions
     {
@@ -35,12 +33,12 @@ namespace Hazelcast.Core
             InitialBackoffMilliseconds = other.InitialBackoffMilliseconds;
             MaxBackoffMilliseconds = other.MaxBackoffMilliseconds;
             Multiplier = other.Multiplier;
-            ClusterConnectionTimeoutMilliseconds = other.ClusterConnectionTimeoutMilliseconds;
+            TimeoutMilliseconds = other.TimeoutMilliseconds;
             Jitter = other.Jitter;
         }
 
         /// <summary>
-        /// Gets or sets the back-off time in milliseconds.
+        /// Gets or sets the initial back-off time in milliseconds.
         /// </summary>
         public int InitialBackoffMilliseconds { get; set; } = 1000;
 
@@ -55,9 +53,9 @@ namespace Hazelcast.Core
         public double Multiplier { get; set; } = 1;
 
         /// <summary>
-        /// Gets or sets the cluster connection timeout in milliseconds.
+        /// Gets or sets the timeout in milliseconds.
         /// </summary>
-        public long ClusterConnectionTimeoutMilliseconds { get; set; } = 20*1000;
+        public long TimeoutMilliseconds { get; set; } = 20*1000;
 
         /// <summary>
         /// Gets or sets the jitter.

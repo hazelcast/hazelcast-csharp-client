@@ -77,7 +77,7 @@ namespace Hazelcast.Tests.Clustering
             ISequence<long> correlationIdSequence = new Int64Sequence();
 
             var memberConnection = new MemberConnection(address, authenticator,
-                options.Messaging, options.Networking.Socket, options.Networking.Ssl,
+                options.Messaging, options.Networking, options.Networking.Ssl,
                 connectionIdSequence, correlationIdSequence,
                 loggerFactory);
 

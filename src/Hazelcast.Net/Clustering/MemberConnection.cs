@@ -48,7 +48,7 @@ namespace Hazelcast.Clustering
 
         private readonly Authenticator _authenticator;
         private readonly MessagingOptions _messagingOptions;
-        private readonly SocketOptions _socketOptions;
+        private readonly NetworkingOptions _networkingOptions;
         private readonly SslOptions _sslOptions;
         private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
@@ -73,7 +73,7 @@ namespace Hazelcast.Clustering
         /// <param name="address">The network address.</param>
         /// <param name="authenticator">The authenticator.</param>
         /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="socketOptions">Socket options.</param>
+        /// <param name="networkingOptions">Networking options.</param>
         /// <param name="sslOptions">SSL options.</param>
         /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
@@ -83,12 +83,12 @@ namespace Hazelcast.Clustering
         /// sequence of unique connection identifiers. This can be convenient for tests, where
         /// using unique identifiers across all clients can simplify debugging.</para>
         /// </remarks>
-        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, SocketOptions socketOptions, SslOptions sslOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
-            _socketOptions = socketOptions ?? throw new ArgumentNullException(nameof(socketOptions));
+            _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
             _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
@@ -207,7 +207,7 @@ namespace Hazelcast.Clustering
             // MessageConnection is just a wrapper around a true SocketConnection, and
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _socketOptions, _sslOptions, _loggerFactory)
+            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _networkingOptions, _sslOptions, _loggerFactory)
                 { OnShutdown = OnSocketShutdown };
 
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory)
@@ -403,14 +403,12 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        /// <remarks>
-        /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
-        /// </remarks>
         public async Task<ClientMessage> SendAsync(Invocation invocation)
         {
-            using var cancellation = new CancellationTokenSource();
-            return await SendAsyncInternal(invocation, cancellation.Token)
-                .CfAwait(_messagingOptions.InvocationTimeoutMilliseconds, cancellation);
+            // this cannot be canceled, it will wait for a response forever, until either the
+            // server responds, or the connection is closed, or something happens - but there
+            // is no timeout
+            return await SendAsyncInternal(invocation, CancellationToken.None);
         }
 
         // TaskEx.RunWithTimeout invokes SendAsyncInternal with a cancellation token composed

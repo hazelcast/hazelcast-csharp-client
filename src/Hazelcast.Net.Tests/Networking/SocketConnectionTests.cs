@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Networking
         public async Task Exceptions()
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1:5701").IPEndPoint;
-            var options = new SocketOptions();
+            var options = new NetworkingOptions();
 
             await using var connection = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory(), 3);
 
@@ -81,7 +81,7 @@ namespace Hazelcast.Tests.Networking
         public async Task ConnectAsyncSuccess()
         {
             var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
-            var options = new SocketOptions();
+            var options = new NetworkingOptions();
 
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
@@ -128,7 +128,8 @@ namespace Hazelcast.Tests.Networking
         public async Task ConnectAsyncSuccessDontLinger()
         {
             var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
-            var options = new SocketOptions { LingerSeconds = 0 };
+            var options = new NetworkingOptions();
+            options.Socket.LingerSeconds = 0;
 
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
@@ -155,7 +156,7 @@ namespace Hazelcast.Tests.Networking
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
             await server.StartAsync();
 
-            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new SocketOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 

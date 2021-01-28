@@ -37,7 +37,6 @@ namespace Hazelcast.Networking
             ShuffleAddresses = other.ShuffleAddresses;
             SmartRouting = other.SmartRouting;
             RedoOperations = other.RedoOperations;
-            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
             ReconnectMode = other.ReconnectMode;
 
             Ssl = other.Ssl.Clone();
@@ -98,16 +97,6 @@ namespace Hazelcast.Networking
         public bool RedoOperations { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the connection timeout.
-        /// </summary>
-        /// <remarks>
-        /// <para>Specifies the Hazelcast client connection timeout, i.e. the maximum amount of time
-        /// the Hazelcast can spend trying to establish a connection to the cluster. See <see cref="SocketOptions"/>
-        /// for specifying the individual socket connection timeout.</para>
-        /// </remarks>
-        public int ConnectionTimeoutMilliseconds { get; set; } = 60_000;
-
-        /// <summary>
         /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
         /// </summary>
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
@@ -130,7 +119,16 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets the connection <see cref="RetryOptions"/>.
         /// </summary>
+        /// <remarks>
+        /// <para>Specifies the Hazelcast client connection parameters, including the timeout, i.e. the maximum
+        /// amount of time that the Hazelcast client can spend trying to establish a connection to the cluster
+        /// before failing. See <see cref="SocketOptions"/> for specifying the individual socket parameters,
+        /// including the individual socket connection timeout.</para>
+        /// </remarks>
         public RetryOptions ConnectionRetry { get; } = new RetryOptions();
+
+        // FIXME document
+        public int TimeoutMilliseconds { get; set; } = 30_000;
 
         /// <summary>
         /// Clones the options.

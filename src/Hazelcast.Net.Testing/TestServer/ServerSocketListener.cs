@@ -178,8 +178,9 @@ namespace Hazelcast.Testing.TestServer
         {
             HConsole.WriteLine(this, "Stop listener");
 
-            _cancellationTokenSource.Cancel();
-            await _listeningThenShutdown.CfAwait();
+            _cancellationTokenSource?.Cancel();
+            if (_listeningThenShutdown != null)
+                await _listeningThenShutdown.CfAwait();
 
             HConsole.WriteLine(this, "Stopped listener");
         }

@@ -144,25 +144,6 @@ namespace Hazelcast
         /// <summary>
         /// Starts the client by connecting to the remote cluster.
         /// </summary>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>A task that will complete when the client is connected.</returns>
-        /// <exception cref="TaskTimeoutException">Failed to connect within the specified timeout.</exception>
-        /// <remarks>
-        /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
-        /// </remarks>
-        public async Task StartAsync(TimeSpan timeout = default)
-        {
-            var timeoutMs = timeout.RoundedMilliseconds().ClampToInt32();
-
-            if (timeoutMs == 0) timeoutMs = _options.Networking.ConnectionTimeoutMilliseconds; // default
-
-            using var cancellation = new CancellationTokenSource();
-            await Cluster.ConnectAsync(cancellation.Token).CfAwait(timeoutMs, cancellation);
-        }
-
-        /// <summary>
-        /// Starts the client by connecting to the remote cluster.
-        /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is connected.</returns>
         public

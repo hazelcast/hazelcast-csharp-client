@@ -147,7 +147,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(5, options.MaxFastInvocationCount);
 
             Assert.AreEqual(1001, options.MinRetryDelayMilliseconds);
-            Assert.AreEqual(1003, options.InvocationTimeoutMilliseconds);
         }
 
         [Test]
@@ -170,7 +169,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsFalse(options.ShuffleAddresses);
             Assert.IsFalse(options.SmartRouting);
             Assert.IsFalse(options.RedoOperations);
-            Assert.AreEqual(1000, options.ConnectionTimeoutMilliseconds);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
             Assert.IsFalse(options.ShuffleAddresses);
 
@@ -205,7 +203,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(1000, retryOptions.InitialBackoffMilliseconds);
             Assert.AreEqual(1001, retryOptions.MaxBackoffMilliseconds);
             Assert.AreEqual(1002, retryOptions.Multiplier);
-            Assert.AreEqual(1003, retryOptions.ClusterConnectionTimeoutMilliseconds);
+            Assert.AreEqual(1003, retryOptions.TimeoutMilliseconds);
             Assert.AreEqual(1004, retryOptions.Jitter);
         }
 

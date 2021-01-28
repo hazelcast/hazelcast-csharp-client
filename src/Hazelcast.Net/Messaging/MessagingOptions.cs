@@ -32,7 +32,7 @@ namespace Hazelcast.Messaging
         {
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
-            InvocationTimeoutMilliseconds = other.InvocationTimeoutMilliseconds;
+            RetryTimeoutSeconds = other.RetryTimeoutSeconds;
         }
 
         /// <summary>
@@ -48,7 +48,13 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets or sets the invocation timeout.
         /// </summary>
-        public int InvocationTimeoutMilliseconds { get; set; } = 120_000;
+        /// <remarks>
+        /// <para>The <see cref="RetryTimeoutSeconds"/> is a soft timeout that prevents
+        /// retrying an invocation for too long in case it fails. It does *not* controls
+        /// the duration of a single try, and does *not* abort it. And invocation single
+        /// try can run for as long as the connection that supports it remains open.</para>
+        /// </remarks>
+        public int RetryTimeoutSeconds { get; set; } = 120;
 
         /// <summary>
         /// Clones the options.

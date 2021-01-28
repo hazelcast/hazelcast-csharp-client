@@ -58,11 +58,6 @@ namespace Hazelcast.Testing
         protected virtual string ConfigurationSecretsKey { get; } = HazelcastOptions.Hazelcast;
 
         /// <summary>
-        /// Gets the timeout for creating and opening a client.
-        /// </summary>
-        protected virtual TimeSpan CreateAndStartClientTimeout { get; } = TimeSpan.FromSeconds(60);
-
-        /// <summary>
         /// Creates a client.
         /// </summary>
         /// <returns>A client.</returns>
@@ -70,7 +65,7 @@ namespace Hazelcast.Testing
         {
             Logger.LogInformation("Create new client");
 
-            var client = await HazelcastClientFactory.StartNewClientAsync(CreateHazelcastOptions(), CreateAndStartClientTimeout).CfAwait();
+            var client = await HazelcastClientFactory.StartNewClientAsync(CreateHazelcastOptions()).CfAwait();
             return client;
         }
 
@@ -84,7 +79,7 @@ namespace Hazelcast.Testing
 
             var options = CreateHazelcastOptions();
             configure(options);
-            var client = await HazelcastClientFactory.StartNewClientAsync(options, CreateAndStartClientTimeout).CfAwait();
+            var client = await HazelcastClientFactory.StartNewClientAsync(options).CfAwait();
             return client;
         }
 
