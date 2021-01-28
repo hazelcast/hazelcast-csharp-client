@@ -32,7 +32,6 @@ namespace Hazelcast.Messaging
         {
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
-            InvocationTimeoutMilliseconds = other.InvocationTimeoutMilliseconds;
         }
 
         /// <summary>
@@ -44,11 +43,6 @@ namespace Hazelcast.Messaging
         /// Gets or sets the min retry delay.
         /// </summary>
         public int MinRetryDelayMilliseconds { get; set; } = 1_000;
-
-        /// <summary>
-        /// Gets or sets the invocation timeout.
-        /// </summary>
-        public int InvocationTimeoutMilliseconds { get; set; } = 120_000;
 
         /// <summary>
         /// Clones the options.

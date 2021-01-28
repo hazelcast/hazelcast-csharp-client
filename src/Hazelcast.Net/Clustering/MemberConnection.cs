@@ -403,14 +403,12 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
-        /// <remarks>
-        /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
-        /// </remarks>
         public async Task<ClientMessage> SendAsync(Invocation invocation)
         {
-            using var cancellation = new CancellationTokenSource();
-            return await SendAsyncInternal(invocation, cancellation.Token)
-                .CfAwait(_messagingOptions.InvocationTimeoutMilliseconds, cancellation);
+            // this cannot be canceled, it will wait for a response forever, until either the
+            // server responds, or the connection is closed, or something happens - but there
+            // is no timeout
+            return await SendAsyncInternal(invocation, CancellationToken.None);
         }
 
         // TaskEx.RunWithTimeout invokes SendAsyncInternal with a cancellation token composed
