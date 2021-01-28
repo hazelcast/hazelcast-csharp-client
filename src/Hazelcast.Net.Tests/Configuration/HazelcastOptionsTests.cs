@@ -147,7 +147,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(5, options.MaxFastInvocationCount);
 
             Assert.AreEqual(1001, options.MinRetryDelayMilliseconds);
-            Assert.AreEqual(1003, options.InvocationTimeoutMilliseconds);
         }
 
         [Test]
