@@ -103,9 +103,10 @@ namespace Hazelcast.Networking
         /// <remarks>
         /// <para>Specifies the Hazelcast client connection timeout, i.e. the maximum amount of time
         /// the Hazelcast can spend trying to establish a connection to the cluster. See <see cref="SocketOptions"/>
-        /// for specifying the individual socket connection timeout.</para>
+        /// for specifying the individual socket connection timeout. By default, the timeout value
+        /// is <c>-1</c>, meaning an infinite timeout.</para>
         /// </remarks>
-        public int ConnectionTimeoutMilliseconds { get; set; } = 60_000;
+        public int ConnectionTimeoutMilliseconds { get; set; } = -1;
 
         /// <summary>
         /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
