@@ -245,11 +245,18 @@ namespace Hazelcast.Clustering
                     // if it's just temp disconnected, retry
                     _clusterState.ThrowIfNotActive(exception);
 
+                    // if the invocation is not retryable, throw
+                    if (!invocation.IsRetryable(exception, _clusterState.Options.Networking.RedoOperations))
+                        throw;
+
+                    // else, wait for retrying
+                    await invocation.WaitRetryAsync(() => _clusterState.GetNextCorrelationId()).CfAwait();
+
                     // if it's retryable, and can be retried (no timeout etc), retry
                     // note that CanRetryAsync may wait (depending on the retry strategy)
                     // and may throw if canceled while waiting - and then the exception is rethrown
                     if (invocation.IsRetryable(exception, _clusterState.Options.Networking.RedoOperations) &&
-                        await invocation.CanRetryAsync(() => _clusterState.GetNextCorrelationId()).CfAwait())
+                        await invocation.WaitRetryAsync(() => _clusterState.GetNextCorrelationId()).CfAwait())
                     {
                         HConsole.WriteLine(this, "Retrying...");
                         continue;

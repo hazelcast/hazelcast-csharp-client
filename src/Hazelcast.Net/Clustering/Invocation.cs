@@ -197,7 +197,7 @@ namespace Hazelcast.Clustering
         /// <returns>true if the invocation should be retried; otherwise false.</returns>
         /// <remarks>
         /// <para>If it is determined that the invocation should be retried, it does not necessarily
-        /// mean that it can be retried, and that will be determined by <see cref="CanRetryAsync"/>.</para>
+        /// mean that it can be retried, and that will be determined by <see cref="WaitRetryAsync"/>.</para>
         /// </remarks>
         public bool IsRetryable(Exception exception, bool retryOnTargetDisconnected)
         {
@@ -227,17 +227,16 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="correlationIdProvider">A correlation identifier provider.</param>
         /// <returns>true if the invocation can be retried; otherwise false.</returns>
-        public async ValueTask<bool> CanRetryAsync(Func<long> correlationIdProvider)
+        public ValueTask WaitRetryAsync(Func<long> correlationIdProvider)
         {
             if (correlationIdProvider == null) throw new ArgumentNullException(nameof(correlationIdProvider));
 
             // fast fail on cancel
-            if (_cancellationToken.IsCancellationRequested) 
-                return false;
+            _cancellationToken.ThrowIfCancellationRequested();
 
             // fast fail on timeout
             if (Clock.Milliseconds - StartTime > _messagingOptions.RetryTimeoutSeconds * 1000)
-                return false;
+                throw new TaskTimeoutException();
 
             _attemptsCount += 1;
 
@@ -248,9 +247,14 @@ namespace Hazelcast.Clustering
             if (_attemptsCount <= _messagingOptions.MaxFastInvocationCount)
             {
                 InitializeNewCompletionSource();
-                return true;
+                return default;
             }
 
+            return WaitRetryAsync2();
+        }
+
+        private async ValueTask WaitRetryAsync2()
+        {
             // otherwise, slow retry (delay)
 
             // implement some rudimentary increasing delay based on the number of attempts
@@ -260,7 +264,6 @@ namespace Hazelcast.Clustering
             await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CfAwait(); // throws if cancelled
 
             InitializeNewCompletionSource();
-            return true;
         }
 
         private void InitializeNewCompletionSource()
