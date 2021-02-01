@@ -63,7 +63,7 @@ namespace Hazelcast.Tests.Serialization
         {
             var builder = new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
                 SerializationTestsConstants.NAMED_PORTABLE, portableVersion);
-            builder.AddUTFField("name");
+            builder.AddStringField("name");
             builder.AddIntField("myint");
             return builder.Build();
         }
@@ -121,7 +121,7 @@ namespace Hazelcast.Tests.Serialization
 
             public void WritePortable(IPortableWriter writer)
             {
-                writer.WriteUTF("shortString", shortString);
+                writer.WriteString("shortString", shortString);
             }
 
             public void ReadPortable(IPortableReader reader)
@@ -237,7 +237,7 @@ namespace Hazelcast.Tests.Serialization
                 .ClassDefinitions.Add(
                     new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
                             SerializationTestsConstants.NAMED_PORTABLE, portableVersion)
-                        .AddUTFField("name").AddIntField("myint").Build());
+                        .AddStringField("name").AddIntField("myint").Build());
 
             var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
                 .SetConfig(serializationConfig)

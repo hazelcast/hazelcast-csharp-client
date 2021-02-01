@@ -176,13 +176,13 @@ namespace Hazelcast.Serialization
         /// <param name="fieldName">name of the field</param>
         /// <param name="value">utf string value to be written</param>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
-        void WriteUTF(string fieldName, string value);
+        void WriteString(string fieldName, string value);
 
         /// <summary>Writes a primitive string-array.</summary>
         /// <remarks>Writes a primitive string-array.</remarks>
         /// <param name="fieldName">name of the field</param>
         /// <param name="strings">string array to be written</param>
         /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
-        void WriteUTFArray(string fieldName, string[] strings);
+        void WriteStringArray(string fieldName, string[] strings);
     }
 }

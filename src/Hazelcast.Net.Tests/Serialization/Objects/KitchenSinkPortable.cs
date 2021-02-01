@@ -65,8 +65,8 @@ namespace Hazelcast.Tests.Serialization.Objects
             writer.WriteFloatArray("floatArray", FloatArray);
             writer.WriteDouble("double", Double);
             writer.WriteDoubleArray("doubleArray", DoubleArray);
-            writer.WriteUTF("string", String);
-            writer.WriteUTFArray("stringArray", StringArray);
+            writer.WriteString("string", String);
+            writer.WriteStringArray("stringArray", StringArray);
         }
 
         public void ReadPortable(IPortableReader reader)
@@ -87,8 +87,8 @@ namespace Hazelcast.Tests.Serialization.Objects
             FloatArray = reader.ReadFloatArray("floatArray");
             Double = reader.ReadDouble("double");
             DoubleArray = reader.ReadDoubleArray("doubleArray");
-            String = reader.ReadUTF("string");
-            StringArray = reader.ReadUTFArray("stringArray");
+            String = reader.ReadString("string");
+            StringArray = reader.ReadStringArray("stringArray");
         }
 
         public override bool Equals(object obj)

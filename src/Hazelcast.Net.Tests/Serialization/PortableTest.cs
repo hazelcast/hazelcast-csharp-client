@@ -82,12 +82,12 @@ namespace Hazelcast.Tests.Serialization
 
             public void ReadPortable(IPortableReader reader)
             {
-                name = reader.ReadUTF("name");
+                name = reader.ReadString("name");
             }
 
             public void WritePortable(IPortableWriter writer)
             {
-                writer.WriteUTF("name", name);
+                writer.WriteString("name", name);
             }
 
             public override bool Equals(object obj)

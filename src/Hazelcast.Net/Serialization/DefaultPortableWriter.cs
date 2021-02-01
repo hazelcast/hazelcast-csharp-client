@@ -59,10 +59,10 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException" />
-        public virtual void WriteUTF(string fieldName, string str)
+        public virtual void WriteString(string fieldName, string str)
         {
             SetPosition(fieldName, FieldType.Utf);
-            _out.WriteUTF(str);
+            _out.WriteString(str);
         }
 
         /// <exception cref="System.IO.IOException" />
@@ -188,10 +188,10 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException" />
-        public virtual void WriteUTFArray(string fieldName, string[] values)
+        public virtual void WriteStringArray(string fieldName, string[] values)
         {
             SetPosition(fieldName, FieldType.UtfArray);
-            _out.WriteUTFArray(values);
+            _out.WriteStringArray(values);
         }
 
         /// <exception cref="System.IO.IOException" />

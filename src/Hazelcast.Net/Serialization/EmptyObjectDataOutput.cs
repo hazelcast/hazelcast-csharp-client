@@ -44,7 +44,7 @@ namespace Hazelcast.Serialization
 
         public void WriteDouble(double v) { }
 
-        public void WriteUTF(string s) { }
+        public void WriteString(string s) { }
 
         public void WriteChars(string s) { }
 
@@ -66,7 +66,7 @@ namespace Hazelcast.Serialization
 
         public void WriteDoubleArray(double[] values) { }
 
-        public void WriteUTFArray(string[] values) { }
+        public void WriteStringArray(string[] values) { }
 
         public void WriteObject(object value) { }
 

@@ -35,7 +35,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             var input = reader.GetRawDataInput();
             k = input.ReadInt();
             l = reader.ReadLong("l");
-            s = input.ReadUTF();
+            s = input.ReadString();
             p = reader.ReadPortable<NamedPortable>("p");
             sds = input.ReadObject<ByteArrayDataSerializable>();
         }

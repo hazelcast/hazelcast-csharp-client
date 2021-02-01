@@ -164,7 +164,7 @@ namespace Hazelcast.Query
             output.WriteObject(Comparer);
             output.WriteInt(Page);
             output.WriteInt(PageSize);
-            output.WriteUTF(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
+            output.WriteString(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
             output.WriteInt(AnchorList.Count);
             foreach (var (key, anchorEntry) in AnchorList)
             {

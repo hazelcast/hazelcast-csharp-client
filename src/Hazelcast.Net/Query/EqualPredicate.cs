@@ -34,13 +34,13 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            AttributeName = input.ReadUTF();
+            AttributeName = input.ReadString();
             Value = input.ReadObject<object>();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(AttributeName);
+            output.WriteString(AttributeName);
             output.WriteObject(Value);
         }
 

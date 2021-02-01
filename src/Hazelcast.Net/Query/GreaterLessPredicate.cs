@@ -38,7 +38,7 @@ namespace Hazelcast.Query
 
         public void ReadData(IObjectDataInput input)
         {
-            _attributeName = input.ReadUTF();
+            _attributeName = input.ReadString();
             _value = input.ReadObject<object>();
             _equal = input.ReadBoolean();
             _less = input.ReadBoolean();
@@ -46,7 +46,7 @@ namespace Hazelcast.Query
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteUTF(_attributeName);
+            output.WriteString(_attributeName);
             output.WriteObject(_value);
             output.WriteBoolean(_equal);
             output.WriteBoolean(_less);

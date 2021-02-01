@@ -34,7 +34,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             writer.WriteLong("l", l);
             var output = writer.GetRawDataOutput();
             output.WriteInt(k);
-            output.WriteUTF(s);
+            output.WriteString(s);
             writer.WriteCharArray("c", c);
             output.WriteObject(sds);
             writer.WritePortable("p", p);

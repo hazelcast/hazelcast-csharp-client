@@ -114,7 +114,7 @@ namespace Hazelcast.Tests.Serialization
         /// <exception cref="System.IO.IOException" />
         public virtual void ReadPortable(IPortableReader reader)
         {
-            street = reader.ReadUTF("street");
+            street = reader.ReadString("street");
             no = reader.ReadInt("no");
         }
 
@@ -122,7 +122,7 @@ namespace Hazelcast.Tests.Serialization
         public virtual void WritePortable(IPortableWriter writer)
         {
             writer.WriteInt("no", no);
-            writer.WriteUTF("street", street);
+            writer.WriteString("street", street);
         }
 
         public override bool Equals(object obj)
@@ -163,7 +163,7 @@ namespace Hazelcast.Tests.Serialization
 
         public virtual void WriteData(IObjectDataOutput @out)
         {
-            @out.WriteUTF(street);
+            @out.WriteString(street);
             @out.WriteInt(no);
         }
 
@@ -173,7 +173,7 @@ namespace Hazelcast.Tests.Serialization
 
         public virtual void ReadData(IObjectDataInput @in)
         {
-            street = @in.ReadUTF();
+            street = @in.ReadString();
             no = @in.ReadInt();
         }
 
@@ -229,7 +229,7 @@ namespace Hazelcast.Tests.Serialization
         /// <exception cref="System.IO.IOException" />
         public virtual void ReadPortable(IPortableReader reader)
         {
-            name = reader.ReadUTF("name");
+            name = reader.ReadString("name");
             address = reader.ReadPortable<PortableAddress>("address");
             height = reader.ReadLong("height");
             age = reader.ReadInt("age");
@@ -240,7 +240,7 @@ namespace Hazelcast.Tests.Serialization
         {
             writer.WriteLong("height", height);
             writer.WriteInt("age", age);
-            writer.WriteUTF("name", name);
+            writer.WriteString("name", name);
             writer.WritePortable("address", address);
         }
 
@@ -294,7 +294,7 @@ namespace Hazelcast.Tests.Serialization
         /// <exception cref="System.IO.IOException" />
         public virtual void WriteData(IObjectDataOutput @out)
         {
-            @out.WriteUTF(name);
+            @out.WriteString(name);
             @out.WriteObject(address);
             @out.WriteInt(age);
             @out.WriteLong(height);
@@ -308,7 +308,7 @@ namespace Hazelcast.Tests.Serialization
         /// <exception cref="System.IO.IOException" />
         public virtual void ReadData(IObjectDataInput @in)
         {
-            name = @in.ReadUTF();
+            name = @in.ReadString();
             address = @in.ReadObject<Address>();
             age = @in.ReadInt();
             height = @in.ReadLong();

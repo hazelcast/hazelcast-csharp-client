@@ -92,14 +92,14 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
-        public virtual string ReadUTF(string fieldName)
+        public virtual string ReadString(string fieldName)
         {
             var currentPos = _in.Position;
             try
             {
                 var pos = ReadPosition(fieldName, FieldType.Utf);
                 _in.Position = pos;
-                return _in.ReadUTF();
+                return _in.ReadString();
             }
             finally
             {
@@ -278,14 +278,14 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"/>
-        public virtual string[] ReadUTFArray(string fieldName)
+        public virtual string[] ReadStringArray(string fieldName)
         {
             var currentPos = _in.Position;
             try
             {
                 var pos = ReadPosition(fieldName, FieldType.UtfArray);
                 _in.Position = pos;
-                return _in.ReadUTFArray();
+                return _in.ReadStringArray();
             }
             finally
             {

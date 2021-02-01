@@ -20,12 +20,12 @@ namespace Hazelcast.Serialization.DefaultSerializers
 
         public override JavaClass Read(IObjectDataInput input)
         {
-            return new JavaClass(input.ReadUTF());
+            return new JavaClass(input.ReadString());
         }
 
         public override void Write(IObjectDataOutput output, JavaClass obj)
         {
-            output.WriteUTF(obj.Name);
+            output.WriteString(obj.Name);
         }
     }
 }

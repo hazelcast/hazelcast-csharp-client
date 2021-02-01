@@ -90,7 +90,7 @@ namespace Hazelcast.Serialization
         /// Writes a <c>string</c> value in UTF-8 encoding to this serialization output
         /// </summary>
         /// <param name="value">the value to be encoded</param>
-        void WriteUTF(string value);
+        void WriteString(string value);
 
         /// <summary>
         /// Writes each <c>char</c> of the <paramref name="value"/> with <see cref="WriteChar"/> method to this serialization output
@@ -167,7 +167,7 @@ namespace Hazelcast.Serialization
         /// Writes the <c>string[]</c> to this serialization output
         /// </summary>
         /// <param name="values">the value to be encoded</param>
-        void WriteUTFArray(string[] values);
+        void WriteStringArray(string[] values);
 
         /// <summary>
         /// Writes an object to this serialization output using hazelcast serialization

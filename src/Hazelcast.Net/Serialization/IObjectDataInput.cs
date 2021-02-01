@@ -90,7 +90,7 @@ namespace Hazelcast.Serialization
         /// Reads and return a UTF-8 encoded string
         /// </summary>
         /// <returns></returns>
-        string ReadUTF();
+        string ReadString();
 
         /// <summary>
         /// Reads and return a bool array
@@ -144,7 +144,7 @@ namespace Hazelcast.Serialization
         /// Reads and return utf-8 encoded string array
         /// </summary>
         /// <returns>string array</returns>
-        string[] ReadUTFArray();
+        string[] ReadStringArray();
 
         /// <summary>
         /// Reads and return the object

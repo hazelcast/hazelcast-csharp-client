@@ -192,14 +192,14 @@ namespace Hazelcast.Serialization
             return this;
         }
 
-        public ClassDefinitionBuilder AddUTFArrayField(string fieldName)
+        public ClassDefinitionBuilder AddStringArrayField(string fieldName)
         {
             Check();
             _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.UtfArray, _version));
             return this;
         }
 
-        public ClassDefinitionBuilder AddUTFField(string fieldName)
+        public ClassDefinitionBuilder AddStringField(string fieldName)
         {
             Check();
             _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Utf, _version));

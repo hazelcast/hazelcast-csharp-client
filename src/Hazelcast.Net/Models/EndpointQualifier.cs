@@ -30,7 +30,7 @@ namespace Hazelcast.Models
             if (input == null) throw new ArgumentNullException(nameof(input));
 
             Type = (ProtocolType) input.ReadInt();
-            Identifier = input.ReadUTF();
+            Identifier = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
@@ -38,7 +38,7 @@ namespace Hazelcast.Models
             if (output == null) throw new ArgumentNullException(nameof(output));
 
             output.WriteInt((int) Type);
-            output.WriteUTF(Identifier);
+            output.WriteString(Identifier);
         }
 
         public int FactoryId => 0; // ClusterDataSerializerHook.F_ID

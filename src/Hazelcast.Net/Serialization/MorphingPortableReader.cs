@@ -402,7 +402,7 @@ namespace Hazelcast.Serialization
         }
 
         /// <exception cref="System.IO.IOException"></exception>
-        public override string ReadUTF(string fieldName)
+        public override string ReadString(string fieldName)
         {
             var fd = Cd.GetField(fieldName);
             if (fd == null)
@@ -413,7 +413,7 @@ namespace Hazelcast.Serialization
             {
                 throw new InvalidPortableFieldException();
             }
-            return base.ReadUTF(fieldName);
+            return base.ReadString(fieldName);
         }
     }
 }

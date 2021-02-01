@@ -48,14 +48,14 @@ namespace Hazelcast.Examples.WebSite
 
             public void ReadPortable(IPortableReader reader)
             {
-                _username = reader.ReadUTF("username");
+                _username = reader.ReadString("username");
                 _age = reader.ReadInt("age");
                 _active = reader.ReadBoolean("active");
             }
 
             public void WritePortable(IPortableWriter writer)
             {
-                writer.WriteUTF("username", _username);
+                writer.WriteString("username", _username);
                 writer.WriteInt("age", _age);
                 writer.WriteBoolean("active", _active);
             }

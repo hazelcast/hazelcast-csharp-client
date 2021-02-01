@@ -36,14 +36,14 @@ namespace Hazelcast.Tests.Serialization.Objects
 
         public virtual void WritePortable(IPortableWriter writer)
         {
-            writer.WriteUTF("name", name);
+            writer.WriteString("name", name);
             writer.WriteInt("myint", k);
         }
 
         public virtual void ReadPortable(IPortableReader reader)
         {
             k = reader.ReadInt("myint");
-            name = reader.ReadUTF("name");
+            name = reader.ReadString("name");
         }
 
         public override bool Equals(object obj)

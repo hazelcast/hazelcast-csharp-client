@@ -60,7 +60,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             writer.WriteLong("long", aLong);
             writer.WriteFloat("float", aFloat);
             writer.WriteDouble("double", aDouble);
-            writer.WriteUTF("string", aString);
+            writer.WriteString("string", aString);
         }
 
         /// <exception cref="System.IO.IOException"/>
@@ -74,7 +74,7 @@ namespace Hazelcast.Tests.Serialization.Objects
             aLong = reader.ReadLong("long");
             aFloat = reader.ReadFloat("float");
             aDouble = reader.ReadDouble("double");
-            aString = reader.ReadUTF("string");
+            aString = reader.ReadString("string");
         }
     }
 }

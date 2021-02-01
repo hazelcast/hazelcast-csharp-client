@@ -34,7 +34,7 @@ namespace Hazelcast.Examples.WebSite
 
         public void ReadData(IObjectDataInput input)
         {
-            _value = input.ReadUTF();
+            _value = input.ReadString();
         }
 
         public void WriteData(IObjectDataOutput output)
