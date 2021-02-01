@@ -38,6 +38,7 @@ namespace Hazelcast.Networking
             SmartRouting = other.SmartRouting;
             RedoOperations = other.RedoOperations;
             ReconnectMode = other.ReconnectMode;
+            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
 
             Ssl = other.Ssl.Clone();
             Cloud = other.Cloud.Clone();
