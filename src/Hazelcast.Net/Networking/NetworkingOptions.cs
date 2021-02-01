@@ -117,7 +117,7 @@ namespace Hazelcast.Networking
         public SocketOptions Socket { get; } = new SocketOptions();
 
         /// <summary>
-        /// Gets the connection <see cref="RetryOptions"/>.
+        /// Gets the connection <see cref="ConnectionRetryOptions"/>.
         /// </summary>
         /// <remarks>
         /// <para>Specifies the Hazelcast client connection parameters, including the timeout, i.e. the maximum
@@ -125,10 +125,16 @@ namespace Hazelcast.Networking
         /// before failing. See <see cref="SocketOptions"/> for specifying the individual socket parameters,
         /// including the individual socket connection timeout.</para>
         /// </remarks>
-        public RetryOptions ConnectionRetry { get; } = new RetryOptions();
+        public ConnectionRetryOptions ConnectionRetry { get; } = new ConnectionRetryOptions();
 
-        // FIXME document
-        public int TimeoutMilliseconds { get; set; } = 30_000;
+        /// <summary>
+        /// Gets or sets the connection timeout.
+        /// </summary>
+        /// <remarks>
+        /// <para>This timeout is used in various places. It is the connection timeout for each individual
+        /// socket. It is also the timeout for cloud discovery.</para>
+        /// </remarks>
+        public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
 
         /// <summary>
         /// Clones the options.

@@ -85,7 +85,7 @@ namespace Hazelcast.Networking
 
             // connect to server
             HConsole.WriteLine(this, "Connect to server");
-            await socket.ConnectAsync(_endpoint, _options.TimeoutMilliseconds, cancellationToken).CfAwait();
+            await socket.ConnectAsync(_endpoint, _options.ConnectionTimeoutMilliseconds, cancellationToken).CfAwait();
             HConsole.WriteLine(this, "Connected to server");
 
             // use a stream, because we may use SSL and require an SslStream

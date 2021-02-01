@@ -44,12 +44,12 @@ namespace Hazelcast.Clustering
         /// <param name="action">The description of the action.</param>
         /// <param name="options">Configuration.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public RetryStrategy(string action, RetryOptions options, ILoggerFactory loggerFactory)
+        public RetryStrategy(string action, ConnectionRetryOptions options, ILoggerFactory loggerFactory)
             : this(action,
                 (options ?? throw new ArgumentNullException(nameof(options))).InitialBackoffMilliseconds,
                 options.MaxBackoffMilliseconds,
                 options.Multiplier,
-                options.TimeoutMilliseconds,
+                options.ConnectionTimeoutMilliseconds,
                 options.Jitter,
                 loggerFactory)
         { }

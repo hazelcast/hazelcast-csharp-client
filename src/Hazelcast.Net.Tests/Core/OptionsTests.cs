@@ -55,18 +55,18 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void RetryOptions()
         {
-            var options = new RetryOptions
+            var options = new ConnectionRetryOptions
             {
-                TimeoutMilliseconds = 100,
+                ConnectionTimeoutMilliseconds = 100,
                 InitialBackoffMilliseconds = 200,
                 Jitter = 2.2,
                 MaxBackoffMilliseconds = 300,
                 Multiplier = 3.3
             };
 
-            static void AssertOptions(RetryOptions o)
+            static void AssertOptions(ConnectionRetryOptions o)
             {
-                Assert.That(o.TimeoutMilliseconds, Is.EqualTo(100));
+                Assert.That(o.ConnectionTimeoutMilliseconds, Is.EqualTo(100));
                 Assert.That(o.InitialBackoffMilliseconds, Is.EqualTo(200));
                 Assert.That(o.Jitter, Is.EqualTo(2.2));
                 Assert.That(o.MaxBackoffMilliseconds, Is.EqualTo(300));
@@ -78,7 +78,7 @@ namespace Hazelcast.Tests.Core
             var clone = options.Clone();
             AssertOptions(clone);
 
-            clone.TimeoutMilliseconds = 0;
+            clone.ConnectionTimeoutMilliseconds = 0;
             clone.InitialBackoffMilliseconds = 0;
             clone.Jitter = 0;
             clone.MaxBackoffMilliseconds = 0;
