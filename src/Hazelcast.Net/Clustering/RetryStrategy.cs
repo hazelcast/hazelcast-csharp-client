@@ -88,7 +88,7 @@ namespace Hazelcast.Clustering
 
             var elapsed = (int) (DateTime.UtcNow - _begin).TotalMilliseconds;
 
-            if (elapsed > _timeoutMilliseconds)
+            if (_timeoutMilliseconds > 0 && elapsed > _timeoutMilliseconds)
             {
                 _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {_timeoutMilliseconds} ms, giving up.");
                 return false;

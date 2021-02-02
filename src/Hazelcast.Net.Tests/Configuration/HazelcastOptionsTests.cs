@@ -203,7 +203,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(1000, retryOptions.InitialBackoffMilliseconds);
             Assert.AreEqual(1001, retryOptions.MaxBackoffMilliseconds);
             Assert.AreEqual(1002, retryOptions.Multiplier);
-            Assert.AreEqual(-1, retryOptions.ClusterConnectionTimeoutMilliseconds);
+            Assert.AreEqual(1003, retryOptions.ClusterConnectionTimeoutMilliseconds);
             Assert.AreEqual(1004, retryOptions.Jitter);
         }
 
