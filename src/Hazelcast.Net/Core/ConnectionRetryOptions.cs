@@ -33,7 +33,7 @@ namespace Hazelcast.Core
             InitialBackoffMilliseconds = other.InitialBackoffMilliseconds;
             MaxBackoffMilliseconds = other.MaxBackoffMilliseconds;
             Multiplier = other.Multiplier;
-            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
+            ClusterConnectionTimeoutMilliseconds = other.ClusterConnectionTimeoutMilliseconds;
             Jitter = other.Jitter;
         }
 
@@ -55,7 +55,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets or sets the timeout in milliseconds.
         /// </summary>
-        public long ConnectionTimeoutMilliseconds { get; set; } = -1; // infinite
+        public long ClusterConnectionTimeoutMilliseconds { get; set; } = -1; // infinite
 
         /// <summary>
         /// Gets or sets the jitter.

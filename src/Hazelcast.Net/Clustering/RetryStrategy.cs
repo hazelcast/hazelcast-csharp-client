@@ -49,7 +49,7 @@ namespace Hazelcast.Clustering
                 (options ?? throw new ArgumentNullException(nameof(options))).InitialBackoffMilliseconds,
                 options.MaxBackoffMilliseconds,
                 options.Multiplier,
-                options.ConnectionTimeoutMilliseconds,
+                options.ClusterConnectionTimeoutMilliseconds,
                 options.Jitter,
                 loggerFactory)
         { }

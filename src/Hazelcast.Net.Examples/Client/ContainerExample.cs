@@ -83,7 +83,7 @@ namespace Hazelcast.Examples.Client
             // configure hazelcast (can do it multiple times..)
             services.Configure<HazelcastOptions>(options =>
             {
-                options.Networking.ConnectionTimeoutMilliseconds = 45_000;
+                options.Networking.ClusterConnectionTimeoutMilliseconds = 45_000;
             });
 
             // add the worker - which uses the factory to get a client (async)

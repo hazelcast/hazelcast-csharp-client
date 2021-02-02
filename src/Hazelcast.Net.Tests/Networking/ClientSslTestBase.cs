@@ -113,7 +113,7 @@ namespace Hazelcast.Tests.Networking
             if (failFast)
             {
                 // default value is 20s but if we know we are going to fail, no point trying again and again
-                options.Networking.ConnectionRetry.ConnectionTimeoutMilliseconds = 2_000;
+                options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 2_000;
             }
 
             if (enableSsl && clientCertificate != null)
