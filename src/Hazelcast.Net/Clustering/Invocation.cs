@@ -39,10 +39,8 @@ namespace Hazelcast.Clustering
         // but how can we be sure it will never change?
         //
         // reference: https://stackoverflow.com/questions/9927434/impure-method-is-called-for-readonly-field
-#pragma warning disable IDE0044 // Add readonly modifier
-        private CancellationTokenRegistration _registration;
-#pragma warning restore IDE0044 // Add readonly modifier
 
+        private /*readonly*/ CancellationTokenRegistration _registration;
         private TaskCompletionSource<ClientMessage> _completionSource;
         private int _attemptsCount; // number of times this invocation has been attempted
 
@@ -199,7 +197,7 @@ namespace Hazelcast.Clustering
         /// <returns>true if the invocation should be retried; otherwise false.</returns>
         /// <remarks>
         /// <para>If it is determined that the invocation should be retried, it does not necessarily
-        /// mean that it can be retried, and that will be determined by <see cref="CanRetryAsync"/>.</para>
+        /// mean that it can be retried, and that will be determined by <see cref="WaitRetryAsync"/>.</para>
         /// </remarks>
         public bool IsRetryable(Exception exception, bool retryOnTargetDisconnected)
         {
@@ -209,12 +207,12 @@ namespace Hazelcast.Clustering
                     return TargetClientConnection == null; // not bound to a client
 
                 case SocketException _:
-                case RemoteException cpe when cpe.Retryable:
+                case RemoteException { Retryable: true }:
                     return true;
 
                 // target disconnected protocol error is not automatically retryable,
                 // because we need to perform more checks on the client and message
-                case RemoteException cpe when cpe.Error == RemoteError.TargetDisconnected:
+                case RemoteException { Error: RemoteError.TargetDisconnected }:
                 case TargetDisconnectedException _:
                     return TargetClientConnection == null && // not bound to a client
                            (RequestMessage.IsRetryable || retryOnTargetDisconnected);
@@ -229,34 +227,43 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="correlationIdProvider">A correlation identifier provider.</param>
         /// <returns>true if the invocation can be retried; otherwise false.</returns>
-        public async ValueTask<bool> CanRetryAsync(Func<long> correlationIdProvider)
+        public ValueTask WaitRetryAsync(Func<long> correlationIdProvider)
         {
             if (correlationIdProvider == null) throw new ArgumentNullException(nameof(correlationIdProvider));
 
-            if (_cancellationToken.IsCancellationRequested) return false;
+            // fast fail on cancel
+            _cancellationToken.ThrowIfCancellationRequested();
+
+            // fast fail on timeout
+            if (Clock.Milliseconds - StartTime > _messagingOptions.RetryTimeoutSeconds * 1000)
+                throw new TaskTimeoutException();
 
             _attemptsCount += 1;
 
             // we are going to return true, either immediately or after a delay, prepare
             RequestMessage.CorrelationId = CorrelationId = correlationIdProvider();
 
-            // fast retry (no delay)
+            // fast retry (no delay) the first attempts
             if (_attemptsCount <= _messagingOptions.MaxFastInvocationCount)
             {
                 InitializeNewCompletionSource();
-                return true;
+                return default;
             }
 
+            return WaitRetryAsync2();
+        }
+
+        private async ValueTask WaitRetryAsync2()
+        {
             // otherwise, slow retry (delay)
 
             // implement some rudimentary increasing delay based on the number of attempts
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
-            // we *may* want to tweak this?
+            // we *may* want to tweak this? and use an IRetryStrategy?
             var delayMilliseconds = Math.Min(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
             await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CfAwait(); // throws if cancelled
 
             InitializeNewCompletionSource();
-            return true;
         }
 
         private void InitializeNewCompletionSource()

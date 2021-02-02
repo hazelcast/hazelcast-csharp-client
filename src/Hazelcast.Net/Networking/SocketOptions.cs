@@ -34,7 +34,6 @@ namespace Hazelcast.Networking
             KeepAlive = other.KeepAlive;
             LingerSeconds = other.LingerSeconds;
             TcpNoDelay = other.TcpNoDelay;
-            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
         }
 
         /// <summary>
@@ -60,11 +59,6 @@ namespace Hazelcast.Networking
         /// Whether the socket is using the Nagle algorithm.
         /// </summary>
         public bool TcpNoDelay { get; set; }
-
-        /// <summary>
-        /// The socket connection timeout.
-        /// </summary>
-        public int ConnectionTimeoutMilliseconds { get; set; } = 30_000;
 
         /// <summary>
         /// Clones the options.

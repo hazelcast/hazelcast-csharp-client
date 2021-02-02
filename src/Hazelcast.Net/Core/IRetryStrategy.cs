@@ -23,13 +23,10 @@ namespace Hazelcast.Core
     internal interface IRetryStrategy
     {
         /// <summary>
-        /// Waits before retrying.
+        /// Determines whether it is possible to retry, optionally waiting for some time.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>Whether it is ok to retry.</returns>
-        /// <remarks>
-        /// <para>Returns false when the timeout has been reached.</para>
-        /// </remarks>
+        /// <returns><c>true</c> if it is possible to retry; otherwise <c>false</c>.</returns>
         ValueTask<bool> WaitAsync(CancellationToken cancellationToken);
 
         /// <summary>

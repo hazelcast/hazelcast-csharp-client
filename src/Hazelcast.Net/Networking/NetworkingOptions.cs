@@ -37,8 +37,8 @@ namespace Hazelcast.Networking
             ShuffleAddresses = other.ShuffleAddresses;
             SmartRouting = other.SmartRouting;
             RedoOperations = other.RedoOperations;
-            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
             ReconnectMode = other.ReconnectMode;
+            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
 
             Ssl = other.Ssl.Clone();
             Cloud = other.Cloud.Clone();
@@ -98,16 +98,6 @@ namespace Hazelcast.Networking
         public bool RedoOperations { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the connection timeout.
-        /// </summary>
-        /// <remarks>
-        /// <para>Specifies the Hazelcast client connection timeout, i.e. the maximum amount of time
-        /// the Hazelcast can spend trying to establish a connection to the cluster. See <see cref="SocketOptions"/>
-        /// for specifying the individual socket connection timeout.</para>
-        /// </remarks>
-        public int ConnectionTimeoutMilliseconds { get; set; } = 60_000;
-
-        /// <summary>
         /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
         /// </summary>
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
@@ -128,9 +118,24 @@ namespace Hazelcast.Networking
         public SocketOptions Socket { get; } = new SocketOptions();
 
         /// <summary>
-        /// Gets the connection <see cref="RetryOptions"/>.
+        /// Gets the connection <see cref="ConnectionRetryOptions"/>.
         /// </summary>
-        public RetryOptions ConnectionRetry { get; } = new RetryOptions();
+        /// <remarks>
+        /// <para>Specifies the Hazelcast client connection parameters, including the timeout, i.e. the maximum
+        /// amount of time that the Hazelcast client can spend trying to establish a connection to the cluster
+        /// before failing. See <see cref="SocketOptions"/> for specifying the individual socket parameters,
+        /// including the individual socket connection timeout.</para>
+        /// </remarks>
+        public ConnectionRetryOptions ConnectionRetry { get; } = new ConnectionRetryOptions();
+
+        /// <summary>
+        /// Gets or sets the connection timeout.
+        /// </summary>
+        /// <remarks>
+        /// <para>This timeout is used in various places. It is the connection timeout for each individual
+        /// socket. It is also the timeout for cloud discovery.</para>
+        /// </remarks>
+        public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
 
         /// <summary>
         /// Clones the options.

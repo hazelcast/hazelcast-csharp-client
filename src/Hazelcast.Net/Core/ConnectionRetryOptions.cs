@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Clustering;
-
 namespace Hazelcast.Core
 {
     /// <summary>
-    /// Represents a <see cref="RetryStrategy"/> configuration.
+    /// Represents the configuration for the retry strategy.
     /// </summary>
-    public class RetryOptions
+    public class ConnectionRetryOptions
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RetryOptions"/> class.
+        /// Initializes a new instance of the <see cref="ConnectionRetryOptions"/> class.
         /// </summary>
-        public RetryOptions()
+        public ConnectionRetryOptions()
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RetryOptions"/> class.
+        /// Initializes a new instance of the <see cref="ConnectionRetryOptions"/> class.
         /// </summary>
-        private RetryOptions(RetryOptions other)
+        private ConnectionRetryOptions(ConnectionRetryOptions other)
         {
             InitialBackoffMilliseconds = other.InitialBackoffMilliseconds;
             MaxBackoffMilliseconds = other.MaxBackoffMilliseconds;
@@ -40,7 +38,7 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Gets or sets the back-off time in milliseconds.
+        /// Gets or sets the initial back-off time in milliseconds.
         /// </summary>
         public int InitialBackoffMilliseconds { get; set; } = 1000;
 
@@ -55,9 +53,9 @@ namespace Hazelcast.Core
         public double Multiplier { get; set; } = 1;
 
         /// <summary>
-        /// Gets or sets the cluster connection timeout in milliseconds.
+        /// Gets or sets the timeout in milliseconds.
         /// </summary>
-        public long ClusterConnectionTimeoutMilliseconds { get; set; } = 20*1000;
+        public long ClusterConnectionTimeoutMilliseconds { get; set; } = -1; // infinite
 
         /// <summary>
         /// Gets or sets the jitter.
@@ -67,6 +65,6 @@ namespace Hazelcast.Core
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal RetryOptions Clone() => new RetryOptions(this);
+        internal ConnectionRetryOptions Clone() => new ConnectionRetryOptions(this);
     }
 }

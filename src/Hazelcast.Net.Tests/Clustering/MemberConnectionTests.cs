@@ -53,6 +53,8 @@ namespace Hazelcast.Tests.Clustering
             using var _ = HConsoleForTest();
 
             var options = HazelcastOptions.Build();
+            options.Messaging.RetryTimeoutSeconds = 1;
+
             var loggerFactory = new NullLoggerFactory();
 
             var address = NetworkAddress.Parse("127.0.0.1:11000");
@@ -77,7 +79,7 @@ namespace Hazelcast.Tests.Clustering
             ISequence<long> correlationIdSequence = new Int64Sequence();
 
             var memberConnection = new MemberConnection(address, authenticator,
-                options.Messaging, options.Networking.Socket, options.Networking.Ssl,
+                options.Messaging, options.Networking, options.Networking.Ssl,
                 connectionIdSequence, correlationIdSequence,
                 loggerFactory);
 
@@ -98,10 +100,10 @@ namespace Hazelcast.Tests.Clustering
 
             // so far, so good
             // now, try something that will timeout
+            // 
             //
-            // send async without a timeout uses the timeout in messagingOptions.OperationTimeoutMilliseconds
-            // the invocation is created with the timeout passed to SendAsync
-            // TODO: shall we just reuse it then to avoid confusion?
+            // send async without a timeout uses the timeout in messagingOptions.RetryTimeoutSeconds
+            // in order to determine whether to retry again and again
 
             var token = new CancellationToken();
 
@@ -114,12 +116,21 @@ namespace Hazelcast.Tests.Clustering
             // SendAsync then creates the invocation
             var invocation = new Invocation(message, options.Messaging, token);
 
-            // but sending will timeout since the server does not answer to pings
-            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
-                await memberConnection.SendAsync(invocation));
+            // don't send: server does not answer to pings, and we would wait forever
 
-            // the invocation is gone now
-            Assert.That(invocation.Task.IsCompleted);
+            //await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
+            //    await memberConnection.SendAsync(invocation));
+            //
+            //Assert.That(invocation.Task.IsCompleted);
+
+            // OTOH we can try to retry...
+            await AssertEx.SucceedsEventually(async () =>
+            {
+                await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
+                {
+                    await invocation.WaitRetryAsync(correlationIdSequence.GetNext);
+                });
+            }, 4000, 200);
 
             await memberConnection.DisposeAsync();
 

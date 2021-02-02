@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using Hazelcast.Aggregation;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Projection;
 using Hazelcast.Query;
@@ -39,62 +38,34 @@ namespace Hazelcast
         /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with the automatic options.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <param name="cancellationToken">An optional cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
         /// <para>Options are built via HazelcastOptions.Build method.</para>
         /// </remarks>
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(CancellationToken cancellationToken)
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(CancellationToken cancellationToken = default)
             => StartNewClientAsync(HazelcastOptions.Build(), cancellationToken);
 
         /// <summary>
-        /// Starts a new <see cref="IHazelcastClient"/> instance with the automatic options.
-        /// </summary>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        /// <exception cref="TaskTimeoutException">Failed to connect within the specified timeout.</exception>
-        /// <remarks>
-        /// <para>Options are built via HazelcastOptions.Build method.</para>
-        /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
-        /// </remarks>
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(TimeSpan timeout = default)
-            => StartNewClientAsync(HazelcastOptions.Build(), timeout);
-
-        /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with configured options.
         /// </summary>
         /// <param name="configure">A <see cref="HazelcastOptions"/> configuration delegate.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <param name="cancellationToken">A optional cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
         /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{string,string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
         /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
         /// </remarks>
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastOptions> configure, CancellationToken cancellationToken)
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastOptions> configure, CancellationToken cancellationToken = default)
             => StartNewClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
-
-        /// <summary>
-        /// Starts a new <see cref="IHazelcastClient"/> instance with configured options.
-        /// </summary>
-        /// <param name="configure">A <see cref="HazelcastOptions"/> configuration delegate.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        /// <exception cref="TaskTimeoutException">Failed to connect within the specified timeout.</exception>
-        /// <remarks>
-        /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{string,string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
-        /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
-        /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
-        /// </remarks>
-        public static ValueTask <IHazelcastClient> StartNewClientAsync(Action<HazelcastOptions> configure, TimeSpan timeout = default)
-            => StartNewClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), timeout);
 
         /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with options.
         /// </summary>
         /// <param name="options">Options.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <param name="cancellationToken">A optional cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken)
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -112,37 +83,6 @@ namespace Hazelcast
 
             var client = CreateClient(options);
             await client.StartAsync(cancellationToken).CfAwait();
-            return client;
-        }
-
-        /// <summary>
-        /// Starts a new <see cref="IHazelcastClient"/> instance with options.
-        /// </summary>
-        /// <param name="options">Options.</param>
-        /// <param name="timeout">A timeout.</param>
-        /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
-        /// <exception cref="TaskTimeoutException">Failed to connect within the specified timeout.</exception>
-        /// <remarks>
-        /// <para>If the timeout is omitted, then the timeout configured in the options is used.</para>
-        /// </remarks>
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, TimeSpan timeout = default)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            // every async operations using this client will need a proper async context
-            // and, we must do this in a non-async method for the change to bubble up!
-            AsyncContext.Ensure();
-
-            return StartNewClientAsyncInternal(options, timeout);
-        }
-
-        // implements the async part of StartNewClientAsync
-        private static async ValueTask<IHazelcastClient> StartNewClientAsyncInternal(HazelcastOptions options, TimeSpan timeout = default)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            var client = CreateClient(options);
-            await client.StartAsync(timeout).CfAwait();
             return client;
         }
 

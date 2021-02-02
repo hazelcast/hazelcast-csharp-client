@@ -20,6 +20,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
+    [Timeout(4_000)]
     public class ClientTests : SingleMemberRemoteTestBase
     {
         [Test]
@@ -30,7 +31,7 @@ namespace Hazelcast.Tests.Remote
             //using var _ = HConsole.Capture(options => options
             //    .Set(x => x.SetLevel(1)));
 
-            var client = await HazelcastClientFactory.StartNewClientAsync(CreateHazelcastOptions(), TimeSpan.FromSeconds(2));
+            var client = await HazelcastClientFactory.StartNewClientAsync(CreateHazelcastOptions());
 
             await client.DisposeAsync();
         }

@@ -150,7 +150,7 @@ services.Configure<HazelcastOptions>(options =>
 });
 ```
 
-Note: the required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).
+Note: The required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).
 
 ### Hosted Environment
 
@@ -172,4 +172,4 @@ Host.CreateDefaultBuilder(args)
 
 Just as with the previous container environment, configuration keys will be gathered from the same sources and in the same order as before, and options will be registered in the service container, and available via dependency injection
 
-Note: the required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).
+Note: The required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).

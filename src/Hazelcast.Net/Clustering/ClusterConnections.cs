@@ -574,7 +574,7 @@ namespace Hazelcast.Clustering
             address = _addressProvider.Map(address);
 
             // create the connection to the member
-            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking.Socket, _clusterState.Options.Networking.Ssl, _clusterState.ConnectionIdSequence, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.ConnectionIdSequence, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
             {
                 Closed = OnConnectionClosed
             };
