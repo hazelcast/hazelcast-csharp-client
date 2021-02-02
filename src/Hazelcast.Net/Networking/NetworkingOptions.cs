@@ -38,7 +38,7 @@ namespace Hazelcast.Networking
             SmartRouting = other.SmartRouting;
             RedoOperations = other.RedoOperations;
             ReconnectMode = other.ReconnectMode;
-            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
+            ClusterConnectionTimeoutMilliseconds = other.ClusterConnectionTimeoutMilliseconds;
 
             Ssl = other.Ssl.Clone();
             Cloud = other.Cloud.Clone();
@@ -129,13 +129,13 @@ namespace Hazelcast.Networking
         public ConnectionRetryOptions ConnectionRetry { get; } = new ConnectionRetryOptions();
 
         /// <summary>
-        /// Gets or sets the connection timeout.
+        /// Gets or sets the cluster connection timeout.
         /// </summary>
         /// <remarks>
         /// <para>This timeout is used in various places. It is the connection timeout for each individual
         /// socket. It is also the timeout for cloud discovery.</para>
         /// </remarks>
-        public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
+        public int ClusterConnectionTimeoutMilliseconds { get; set; } = 5_000;
 
         /// <summary>
         /// Clones the options.
