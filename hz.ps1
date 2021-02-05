@@ -374,7 +374,7 @@ $testName = "<FRAMEWORK>.{C}.{m}{a}"
 
  # do not cover tests themselves, nor the testing plumbing
 if (-not [System.String]::IsNullOrWhiteSpace($coverageFilter)) { $coverageFilter += ";" }
-$coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing"
+$coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing;-:ExpectedObjects"
 
 # set server version (to filter tests)
 $env:HAZELCAST_SERVER_VERSION=$server.TrimEnd("-SNAPSHOT")

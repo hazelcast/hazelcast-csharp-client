@@ -17,9 +17,9 @@ The Hazelcast .NET solution is Open Source, released under the [Apache License 2
 
 ## Versions
 
-The stable Hazelcast .NET Client version is version 3. See [this branch](https://github.com/hazelcast/hazelcast-csharp-client/tree/3.12.z) for more information about version 3 of the client.
+The stable Hazelcast .NET Client version is version 4.0 (this version).
 
-The next version of the Hazelcast .NET Client is version 4.0, which is currently in *beta* stage.
+See [this branch](https://github.com/hazelcast/hazelcast-csharp-client/tree/3.12.z) for more information about version 3 of the client.
 
 ## Code Samples
 
