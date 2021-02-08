@@ -177,12 +177,12 @@
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Count.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Count.html",
     "title": "Count Property | Hazelcast .NET Documentation",
-    "keywords": "Count Property Count Gets the number of members. Declaration public virtual int Count { get; } Property Value Int32 Implements ILoadBalancer.Count"
+    "keywords": "Count Property Count Declaration public virtual int Count { get; } Property Value Int32 Implements ILoadBalancer.Count"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.GetMember.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public abstract Guid GetMember() Returns Guid The unique identifier of the selected member. Implements ILoadBalancer.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public abstract Guid GetMember() Returns Guid Implements ILoadBalancer.GetMember()"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.GetMembersNonEmptySnapshot.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.GetMembersNonEmptySnapshot.html",
@@ -192,7 +192,7 @@
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.html",
     "title": "LoadBalancerBase Class | Hazelcast .NET Documentation",
-    "keywords": "LoadBalancerBase Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Provides a base class for load balancers. public abstract class LoadBalancerBase : ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer RoundRobinLoadBalancer StaticLoadBalancer Implements ILoadBalancer Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Properties Count Gets the number of members. Members Gets the members. Methods GetMember() Selects a member. GetMembersNonEmptySnapshot() Gets a non-empty (else throws) snapshot of members. NotifyMembers(IEnumerable<Guid>) Notifies the load balancer of a new set of members."
+    "keywords": "LoadBalancerBase Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Provides a base class for load balancers. public abstract class LoadBalancerBase : ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer RoundRobinLoadBalancer StaticLoadBalancer Implements ILoadBalancer Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Properties Count Members Gets the members. Methods GetMember() GetMembersNonEmptySnapshot() Gets a non-empty (else throws) snapshot of members. NotifyMembers(IEnumerable<Guid>)"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Members.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Members.html",
@@ -202,7 +202,7 @@
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.NotifyMembers.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.NotifyMembers.html",
     "title": "NotifyMembers Method | Hazelcast .NET Documentation",
-    "keywords": "NotifyMembers Method NotifyMembers(IEnumerable<Guid>) Notifies the load balancer of a new set of members. Declaration public virtual void NotifyMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds The identifiers of the members. Implements ILoadBalancer.NotifyMembers(IEnumerable<Guid>) Remarks The new set of members fully replace existing members."
+    "keywords": "NotifyMembers Method NotifyMembers(IEnumerable<Guid>) Declaration public virtual void NotifyMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds Implements ILoadBalancer.NotifyMembers(IEnumerable<Guid>)"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.-ctor.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.-ctor.html",
@@ -212,12 +212,12 @@
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.GetMember.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public override Guid GetMember() Returns Guid The unique identifier of the selected member. Overrides LoadBalancerBase.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public override Guid GetMember() Returns Guid Overrides LoadBalancerBase.GetMember()"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.html",
     "title": "RandomLoadBalancer Class | Hazelcast .NET Documentation",
-    "keywords": "RandomLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a random load balancer. public class RandomLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.NotifyMembers(IEnumerable<Guid>) LoadBalancerBase.GetMembersNonEmptySnapshot() Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A random load balancer returns random members. Constructors RandomLoadBalancer() Initializes a new instance of the RandomLoadBalancer class. Methods GetMember() Selects a member."
+    "keywords": "RandomLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a random load balancer. public class RandomLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.NotifyMembers(IEnumerable<Guid>) LoadBalancerBase.GetMembersNonEmptySnapshot() Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A random load balancer returns random members. Constructors RandomLoadBalancer() Initializes a new instance of the RandomLoadBalancer class. Methods GetMember()"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.-ctor.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.-ctor.html",
@@ -227,17 +227,17 @@
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.GetMember.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public override Guid GetMember() Returns Guid The unique identifier of the selected member. Overrides LoadBalancerBase.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public override Guid GetMember() Returns Guid Overrides LoadBalancerBase.GetMember()"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.html",
     "title": "RoundRobinLoadBalancer Class | Hazelcast .NET Documentation",
-    "keywords": "RoundRobinLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a round-robin load balancer. public class RoundRobinLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RoundRobinLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.NotifyMembers(IEnumerable<Guid>) LoadBalancerBase.GetMembersNonEmptySnapshot() Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A round-robin load balancer returns members one after another. Constructors RoundRobinLoadBalancer() Initializes a new instance of the RoundRobinLoadBalancer class. Methods GetMember() Selects a member."
+    "keywords": "RoundRobinLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a round-robin load balancer. public class RoundRobinLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RoundRobinLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.NotifyMembers(IEnumerable<Guid>) LoadBalancerBase.GetMembersNonEmptySnapshot() Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A round-robin load balancer returns members one after another. Constructors RoundRobinLoadBalancer() Initializes a new instance of the RoundRobinLoadBalancer class. Methods GetMember()"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.Count.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.Count.html",
     "title": "Count Property | Hazelcast .NET Documentation",
-    "keywords": "Count Property Count Gets the number of members. Declaration public override int Count { get; } Property Value Int32 Overrides LoadBalancerBase.Count"
+    "keywords": "Count Property Count Declaration public override int Count { get; } Property Value Int32 Overrides LoadBalancerBase.Count"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.-ctor.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.-ctor.html",
@@ -247,17 +247,17 @@
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.GetMember.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public override Guid GetMember() Returns Guid The unique identifier of the selected member. Overrides LoadBalancerBase.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public override Guid GetMember() Returns Guid Overrides LoadBalancerBase.GetMember()"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.html",
     "title": "StaticLoadBalancer Class | Hazelcast .NET Documentation",
-    "keywords": "StaticLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a static load balancer. public class StaticLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase StaticLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.GetMembersNonEmptySnapshot() Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A static load balancer knows only one member and always return that member. Constructors StaticLoadBalancer(IReadOnlyDictionary<String, String>) Initializes a new instance of the RandomLoadBalancer class. StaticLoadBalancer(Guid) Initializes a new instance of the StaticLoadBalancer class. Properties Count Gets the number of members. Methods GetMember() Selects a member. NotifyMembers(IEnumerable<Guid>) Notifies the load balancer of a new set of members."
+    "keywords": "StaticLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a static load balancer. public class StaticLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase StaticLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.GetMembersNonEmptySnapshot() Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A static load balancer knows only one member and always return that member. Constructors StaticLoadBalancer(IReadOnlyDictionary<String, String>) Initializes a new instance of the RandomLoadBalancer class. StaticLoadBalancer(Guid) Initializes a new instance of the StaticLoadBalancer class. Properties Count Methods GetMember() NotifyMembers(IEnumerable<Guid>)"
   },
   "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.NotifyMembers.html": {
     "href": "4.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.NotifyMembers.html",
     "title": "NotifyMembers Method | Hazelcast .NET Documentation",
-    "keywords": "NotifyMembers Method NotifyMembers(IEnumerable<Guid>) Notifies the load balancer of a new set of members. Declaration public override void NotifyMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds The identifiers of the members. Overrides LoadBalancerBase.NotifyMembers(IEnumerable<Guid>) Remarks The new set of members fully replace existing members."
+    "keywords": "NotifyMembers Method NotifyMembers(IEnumerable<Guid>) Declaration public override void NotifyMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds Overrides LoadBalancerBase.NotifyMembers(IEnumerable<Guid>)"
   },
   "4.0.0/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.AddDefaults.html": {
     "href": "4.0.0/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.AddDefaults.html",
@@ -3322,12 +3322,12 @@
   "4.0.0/api/Hazelcast.Security.StaticCredentialsFactory.html": {
     "href": "4.0.0/api/Hazelcast.Security.StaticCredentialsFactory.html",
     "title": "StaticCredentialsFactory Class | Hazelcast .NET Documentation",
-    "keywords": "StaticCredentialsFactory Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Provides an implementation of ICredentialsFactory that returns a static ICredentials instance. public class StaticCredentialsFactory : ICredentialsFactory, IDisposable Inheritance Object StaticCredentialsFactory Implements ICredentialsFactory IDisposable Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Constructors StaticCredentialsFactory(ICredentials) Initializes a new instance of the StaticCredentialsFactory class. Methods Dispose() Dispose(Boolean) Disposes resources. NewCredentials() Creates and returns a new ICredentials object."
+    "keywords": "StaticCredentialsFactory Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Provides an implementation of ICredentialsFactory that returns a static ICredentials instance. public class StaticCredentialsFactory : ICredentialsFactory, IDisposable Inheritance Object StaticCredentialsFactory Implements ICredentialsFactory IDisposable Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Constructors StaticCredentialsFactory(ICredentials) Initializes a new instance of the StaticCredentialsFactory class. Methods Dispose() Dispose(Boolean) Disposes resources. NewCredentials()"
   },
   "4.0.0/api/Hazelcast.Security.StaticCredentialsFactory.NewCredentials.html": {
     "href": "4.0.0/api/Hazelcast.Security.StaticCredentialsFactory.NewCredentials.html",
     "title": "NewCredentials Method | Hazelcast .NET Documentation",
-    "keywords": "NewCredentials Method NewCredentials() Creates and returns a new ICredentials object. Declaration public ICredentials NewCredentials() Returns ICredentials The new credentials object. Implements ICredentialsFactory.NewCredentials() Remarks This method is invoked any time a new connection is authenticated."
+    "keywords": "NewCredentials Method NewCredentials() Declaration public ICredentials NewCredentials() Returns ICredentials Implements ICredentialsFactory.NewCredentials()"
   },
   "4.0.0/api/Hazelcast.Security.TokenCredentials.-ctor.html": {
     "href": "4.0.0/api/Hazelcast.Security.TokenCredentials.-ctor.html",
@@ -3342,12 +3342,12 @@
   "4.0.0/api/Hazelcast.Security.TokenCredentials.html": {
     "href": "4.0.0/api/Hazelcast.Security.TokenCredentials.html",
     "title": "TokenCredentials Class | Hazelcast .NET Documentation",
-    "keywords": "TokenCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements ITokenCredentials for simple token-based protocols. [Serializable] public class TokenCredentials : ITokenCredentials, ICredentials Inheritance Object TokenCredentials KerberosCredentials Implements ITokenCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Constructors TokenCredentials(Byte[]) Initializes a new instance of the TokenCredentials class with a token. Properties Name Gets the name of the entity. Methods GetToken() Gets the token representing the credentials. ToString()"
+    "keywords": "TokenCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements ITokenCredentials for simple token-based protocols. [Serializable] public class TokenCredentials : ITokenCredentials, ICredentials Inheritance Object TokenCredentials KerberosCredentials Implements ITokenCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Constructors TokenCredentials(Byte[]) Initializes a new instance of the TokenCredentials class with a token. Properties Name Methods GetToken() Gets the token representing the credentials. ToString()"
   },
   "4.0.0/api/Hazelcast.Security.TokenCredentials.Name.html": {
     "href": "4.0.0/api/Hazelcast.Security.TokenCredentials.Name.html",
     "title": "Name Property | Hazelcast .NET Documentation",
-    "keywords": "Name Property Name Gets the name of the entity. Declaration public string Name { get; } Property Value String Implements ICredentials.Name"
+    "keywords": "Name Property Name Declaration public string Name { get; } Property Value String Implements ICredentials.Name"
   },
   "4.0.0/api/Hazelcast.Security.TokenCredentials.ToString.html": {
     "href": "4.0.0/api/Hazelcast.Security.TokenCredentials.ToString.html",
@@ -3357,17 +3357,17 @@
   "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.html": {
     "href": "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.html",
     "title": "UsernamePasswordCredentials Class | Hazelcast .NET Documentation",
-    "keywords": "UsernamePasswordCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements IPasswordCredentials . [Serializable] public class UsernamePasswordCredentials : IPasswordCredentials, ICredentials Inheritance Object UsernamePasswordCredentials Implements IPasswordCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Properties Name Gets the name of the entity. Password Gets the password. Methods ToString()"
+    "keywords": "UsernamePasswordCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements IPasswordCredentials . [Serializable] public class UsernamePasswordCredentials : IPasswordCredentials, ICredentials Inheritance Object UsernamePasswordCredentials Implements IPasswordCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Properties Name Password Methods ToString()"
   },
   "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Name.html": {
     "href": "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Name.html",
     "title": "Name Property | Hazelcast .NET Documentation",
-    "keywords": "Name Property Name Gets the name of the entity. Declaration public string Name { get; set; } Property Value String Implements ICredentials.Name"
+    "keywords": "Name Property Name Declaration public string Name { get; set; } Property Value String Implements ICredentials.Name"
   },
   "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Password.html": {
     "href": "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Password.html",
     "title": "Password Property | Hazelcast .NET Documentation",
-    "keywords": "Password Property Password Gets the password. Declaration public string Password { get; set; } Property Value String Implements IPasswordCredentials.Password"
+    "keywords": "Password Property Password Declaration public string Password { get; set; } Property Value String Implements IPasswordCredentials.Password"
   },
   "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.ToString.html": {
     "href": "4.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.ToString.html",
@@ -4592,12 +4592,12 @@
   "api-index.html": {
     "href": "api-index.html",
     "title": "API | Hazelcast .NET Documentation",
-    "keywords": "API This section contains the full public API reference documentation, generated from source-code-level comments, and complemented with additional content. Use the navigation to the left to browse namespaces and members. For extra details, including all code comments, you may want to browse the source code itself. API reference is available for the following versions: 4.0.0 development 3.12.3 3.12.2"
+    "keywords": "API This section contains the full public API reference documentation, generated from source-code-level comments, and complemented with additional content. Use the navigation to the left to browse namespaces and members. For extra details, including all code comments, you may want to browse the source code itself. API reference is available for the following versions: development 4.0.0 3.12.3 3.12.2"
   },
   "doc-index.html": {
     "href": "doc-index.html",
     "title": "Documentation | Hazelcast .NET Documentation",
-    "keywords": "Documentation This section contains the complete documentation for the Hazelcast .NET solution, with examples, guides and FAQ. Hazelcast .NET only provides a client-side implementation, and needs to connect to a fully configured Hazelcast cluster. Refer to the Hazelcast IMDG Reference Manual for a complete documentation of the server side of Hazelcast. The Hazelcast .NET solution is Open Source, released under the Apache License 2.0 , and welcomes contributions. The project lives on GitHub . This section also documents how to obtain the source code, build the solution, interact with the community, and contribute. It also documents the internals of the solution, which can be useful for contributors. Documentation is available for the following versions: 4.0.0 development"
+    "keywords": "Documentation This section contains the complete documentation for the Hazelcast .NET solution, with examples, guides and FAQ. Hazelcast .NET only provides a client-side implementation, and needs to connect to a fully configured Hazelcast cluster. Refer to the Hazelcast IMDG Reference Manual for a complete documentation of the server side of Hazelcast. The Hazelcast .NET solution is Open Source, released under the Apache License 2.0 , and welcomes contributions. The project lives on GitHub . This section also documents how to obtain the source code, build the solution, interact with the community, and contribute. It also documents the internals of the solution, which can be useful for contributors. Documentation is available for the following versions: development 4.0.0"
   },
   "index.html": {
     "href": "index.html",
