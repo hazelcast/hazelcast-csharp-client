@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IndexOptions Class
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IndexOptions Class
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.56.6.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Models.IndexOptions">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_Models_IndexOptions" data-uid="Hazelcast.Models.IndexOptions" class="text-break">IndexOptions Class
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.Models.html">Hazelcast.Models</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Configuration of an index.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class IndexOptions</code></pre>
+  </div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></div>
+    <div class="level1"><span class="xref">IndexOptions</span></div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.equals#System_Object_Equals_System_Object_">Object.Equals(Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.equals#System_Object_Equals_System_Object_System_Object_">Object.Equals(Object, Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.gethashcode#System_Object_GetHashCode">Object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.gettype#System_Object_GetType">Object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.memberwiseclone#System_Object_MemberwiseClone">Object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.referenceequals#System_Object_ReferenceEquals_System_Object_System_Object_">Object.ReferenceEquals(Object, Object)</a>
+    </div>
+  </div>
+  <h5 id="Hazelcast_Models_IndexOptions_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Hazelcast support three types of indexes: sorted, hash and bitmap indexes. They can be
+created on one or more attributes, specified by their name.</p>
+<p>Sorted indexes can be used with equality and range predicates and have logarithmic
+search time.</p>
+<p>Hash indexes can be used with equality predicates and have constant search time assuming
+the hash function of the indexed field disperses the elements properly.</p>
+<p>Bitmap indexes (to be completed).</p>
+</div>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions__ctor" data-uid="Hazelcast.Models.IndexOptions.#ctor" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.-ctor.html#Hazelcast_Models_IndexOptions__ctor">IndexOptions()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.IndexOptions.html">IndexOptions</a> class.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions__ctor_System_Collections_Generic_IEnumerable_System_String__" data-uid="Hazelcast.Models.IndexOptions.#ctor(System.Collections.Generic.IEnumerable{System.String})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.-ctor.html#Hazelcast_Models_IndexOptions__ctor_System_Collections_Generic_IEnumerable_System_String__">IndexOptions(IEnumerable&lt;String&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Models.IndexOptions.html">IndexOptions</a> class.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="fields">Fields
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_DefaultType" data-uid="Hazelcast.Models.IndexOptions.DefaultType" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.DefaultType.html">DefaultType</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_Attributes" data-uid="Hazelcast.Models.IndexOptions.Attributes" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.Attributes.html#Hazelcast_Models_IndexOptions_Attributes">Attributes</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the indexed attributes.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_BitmapIndexOptions" data-uid="Hazelcast.Models.IndexOptions.BitmapIndexOptions" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.BitmapIndexOptions.html#Hazelcast_Models_IndexOptions_BitmapIndexOptions">BitmapIndexOptions</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the bitmap index options.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_Name" data-uid="Hazelcast.Models.IndexOptions.Name" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.Name.html#Hazelcast_Models_IndexOptions_Name">Name</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the name of the index.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_Type" data-uid="Hazelcast.Models.IndexOptions.Type" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.Type.html#Hazelcast_Models_IndexOptions_Type">Type</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the type of the index.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_AddAttribute_System_String_" data-uid="Hazelcast.Models.IndexOptions.AddAttribute(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.AddAttribute.html#Hazelcast_Models_IndexOptions_AddAttribute_System_String_">AddAttribute(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an indexed attribute.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_AddAttributes_System_String___" data-uid="Hazelcast.Models.IndexOptions.AddAttributes(System.String[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.AddAttributes.html#Hazelcast_Models_IndexOptions_AddAttributes_System_String___">AddAttributes(String[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds indexed attributes.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IndexOptions_ToString" data-uid="Hazelcast.Models.IndexOptions.ToString" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IndexOptions.ToString.html#Hazelcast_Models_IndexOptions_ToString">ToString()</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
