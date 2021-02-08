@@ -8,4 +8,5 @@ The Hazelcast .NET solution is Open Source, released under the [Apache License 2
 
 Documentation is available for the following versions:
 
-* [4.0.0 development](dev/doc/index.md)
+* [development](dev/doc/index.md)
+* [4.0.0](4.0.0/doc/index.md)
