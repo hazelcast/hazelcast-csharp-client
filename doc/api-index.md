@@ -7,6 +7,6 @@ For extra details, including all code comments, you may want to browse the [sour
 API reference is available for the following versions:
 
 * [development](dev/api/index.md)
-* [4.0.0](4.0.0/api/index.md)
+* [4.0.0](4.0.0/api/index.html)
 * [3.12.3](3.12.3/index.html)
 * [3.12.2](3.12.2/index.html)
