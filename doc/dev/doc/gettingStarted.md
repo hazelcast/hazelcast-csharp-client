@@ -94,7 +94,7 @@ For example:
 
 ```csharp
 var subscriptionId = await client.SubscribeAsync(events => events
-    .ClientStateChanged((sender, args) => {
+    .StateChanged((sender, args) => {
         Console.WriteLine($"Client state changed to: {args.State}.")
     })
 );

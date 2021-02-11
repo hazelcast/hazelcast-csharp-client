@@ -2,9 +2,13 @@
 
 Version 4 of the Hazelcast .NET client has been massively refactored in order to benefit from the asynchronous features of the C# language. For instance, its low-level networking stack relies on Microsoft's [System.IO.Pipelines](https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines) library. This is the high-performance library that is used, for instance, to power the Kestrel web server. It is constantly improved, as it is the foundation of all high-performance networking in .NET Core 3.x (and the upcoming .NET Core 5.x).
 
+The *concepts* however have not changed much.
+
+## Threading, Async and Tasks
+
 Threading has been greatly simplified and now entirely relies on the async/await pattern. In the current version of the code, all tasks run on the default task scheduler, and there is no limit on, for instance, the amount of concurrent tasks. All tasks run on the default .NET ThreadPool and the default Task scheduler. Depending on feedback, we could consider using custom Task schedulers and/or thread pools.
 
-The *concepts* however have not changed much.
+
 
 ## Configuration
 
@@ -28,25 +32,41 @@ This also means that the same logging mechanism can be used by the various libra
 
 ## Locking
 
-TODO: move "locking" to its own page?
-
-Due to the systematic usage of `async`/`await` asynchronous patterns, the code for one operation can be executed by many different threads (basically, each time an operation is put on hold by an await, it can switch to another thread). Therefore, using the actual thread identifier as a "lock owner" for locking purpose is not possible.
-
-The "lock owner" is represented by an `AsyncContext`, a class which relies upon the .NET built-in `AsyncLocal<T>` type to maintain values that flow with the asynchronous operation, i.e. are transferred to the new thread when an operation resumes after awaiting. Therefore, when an operation acquires a lock, it owns the lock until it releases it, no matter what thread executes the operation. The AsyncContext uses a sequential number to ensure the uniqueness of the "thread identifier".
-
-In order to start a new, independent task (equivalent to starting a new thread in non `async`/`await` code), one need to explicitly start the code in a new context:
+Previous versions of the Hazelcast .NET Client attached locks to threads, in a way similar to the thread-based model that .NET provides with, for instance, the `lock` statement. Due to the systematic usage of `async`/`await` asynchronous patterns, this is not applicable anymore, and is replaced with a new model based upon an `AsyncContext` class. In order to execute work in a new context (which would correspond to executing work on a different thread for previous versions), one has to use a new context:
 
 ```csharp
-// runs in the same context
+// executes in the same, current context
 await DoSomethingAsync(...);
 
-// runs in a new context
-await TaskEx.RunWithNewContext(() => DoSomethingAsync(...));
+using (AsyncContext.New())
+{
+    // executes in a new context
+    await DoSomethingAsync(...);
+}
 ```
+
+Refer to the [Locking](locking.md) page for details.
 
 ## Events
 
-(to be completed)
+In previous versions, the Hazelcast .NET Client use *listeners* to handle events. Current versions move to a handler-based model closer to the C# `event` model, though with a different syntax for adding and removing handlers, due to the asynchronous nature of these operations. For instance:
+
+```csharp
+// subscribe
+var id = await client.SubscribeAsync(events => events
+    .MembersUpdated((sender, args) => HandleMembersUpdated(sender, args)));
+
+// handle
+private void HandleMembersUpdated(IHazelcastClient client, MembersUpdatedEventArgs args)
+{
+    ...
+}
+
+// unsubscribe
+await client.UnsubscribeAsync(id);
+```
+
+Refer to the [Events](events.md) page for details.
 
 ## Dependency Injection
 
