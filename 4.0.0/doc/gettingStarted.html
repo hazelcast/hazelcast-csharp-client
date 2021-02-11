@@ -128,7 +128,7 @@ await transaction.DisposeAsync();
 <p>The client exposes client-level events.</p>
 <p>For example:</p>
 <pre><code class="lang-csharp">var subscriptionId = await client.SubscribeAsync(events =&gt; events
-    .ClientStateChanged((sender, args) =&gt; {
+    .StateChanged((sender, args) =&gt; {
         Console.WriteLine($&quot;Client state changed to: {args.State}.&quot;)
     })
 );
