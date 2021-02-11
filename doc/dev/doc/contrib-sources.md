@@ -3,8 +3,10 @@
 The source code for Hazelcast .NET is published on GitHub at [Hazelcast .NET](https://github.com/hazelcast/hazelcast-csharp-client). Clone the repository to get the development branch:
 
 ```sh
-git clone https://github.com/hazelcast/hazelcast-csharp-client.git 
+git clone --recurse-submodules https://github.com/hazelcast/hazelcast-csharp-client.git 
 ```
+
+Note that the repository relies on Git [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules), and therefore the `--recurse-submodules` is required.
 
 Development takes place in the `master` branch.
 
