@@ -89,6 +89,10 @@ param (
     [string]
     $defineConstants, # define additional build constants
 
+    [alias("cp")]
+    [string]
+    $classpath, # additional classpath for rc/server
+
     # Commands.
     [Parameter(ValueFromRemainingArguments, Position=0)]
     [string[]]
@@ -990,31 +994,12 @@ if ($doBuild) {
     Write-Output ""
     Write-Output "Build solution..."
     if ($isWindows) {
-        $msBuildArgs = @(
+        $buildArgs = @(
             "$slnRoot/Hazelcast.Net.sln", `
             "/p:Configuration=$configuration", `
             "/target:`"Restore;Build`""
             #/p:TargetFramework=$framework
         )
-
-        if (![string]::IsNullOrWhiteSpace($defineConstants)) {
-            $msBuildArgs += "/p:DefineUserConstants=`"$defineConstants`""
-        }
-
-        if ($signAssembly) {
-            $msBuildArgs += "/p:SignAssembly=true"
-            $msBuildArgs += "/p:PublicSign=false"
-            $msBuildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
-        }
-
-        if ($hasVersion) {
-            $msBuildArgs += "/p:AssemblyVersion=$versionPrefix"
-            $msBuildArgs += "/p:FileVersion=$versionPrefix"
-            $msBuildArgs += "/p:VersionPrefix=$versionPrefix"
-            $msBuildArgs += "/p:VersionSuffix=$versionSuffix"
-        }
-
-        &$msBuild $msBuildArgs
     }
     else {
         $buildArgs = @(
@@ -1022,24 +1007,29 @@ if ($doBuild) {
             "-c", "$configuration"
             # "-f", "$framework"
         )
+    }
 
-        if (![string]::IsNullOrWhiteSpace($defineConstants)) {
-            $buildArgs += "/p:DefineUserConstants=`"$defineConstants`""
-        }
+    if (![string]::IsNullOrWhiteSpace($defineConstants)) {
+        $buildArgs += "/p:DefineUserConstants=`"$defineConstants`""
+    }
 
-        if ($signAssembly) {
-            $msBuildArgs += "/p:SignAssembly=true"
-            $msBuildArgs += "/p:PublicSign=false"
-            $msBuildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
-        }
+    if ($signAssembly) {
+        $buildArgs += "/p:SignAssembly=true"
+        $buildArgs += "/p:PublicSign=false"
+        $buildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
+    }
 
-        if ($hasVersion) {
-            $msBuildArgs += "/p:AssemblyVersion=$versionPrefix"
-            $msBuildArgs += "/p:FileVersion=$versionPrefix"
-            $msBuildArgs += "/p:VersionPrefix=$versionPrefix"
-            $msBuildArgs += "/p:VersionSuffix=$versionSuffix"
-        }
+    if ($hasVersion) {
+        $buildArgs += "/p:AssemblyVersion=$versionPrefix"
+        $buildArgs += "/p:FileVersion=$versionPrefix"
+        $buildArgs += "/p:VersionPrefix=$versionPrefix"
+        $buildArgs += "/p:VersionSuffix=$versionSuffix"
+    }
 
+    if ($isWindows) {
+        &$msBuild $buildArgs
+    }
+    else {
         dotnet build $buildArgs
     }
 
@@ -1175,6 +1165,7 @@ function StartRemoteController() {
 
     Write-Output ""
     Write-Output "Starting Remote Controller..."
+    Write-Output "ClassPath: $classpath"
 
     # start the remote controller
     $args = @(
@@ -1213,6 +1204,7 @@ function StartServer() {
 
     Write-Output ""
     Write-Output "Starting Server..."
+    Write-Output "ClassPath: $classpath"
 
     # depending on server version, different starter class
     $mainClass = "com.hazelcast.core.server.HazelcastMemberStarter" # 4.0
@@ -1420,7 +1412,6 @@ if ($doTests -or $doRc -or $doServer) {
     Write-Output ""
     Write-Output "Prepare server/rc..."
     if (-not (test-path "$tmpDir/lib")) { mkdir "$tmpDir/lib" >$null }
-    [string]$classpath=""
 
     # ensure we have the remote controller + hazelcast test jar
     ensureJar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
