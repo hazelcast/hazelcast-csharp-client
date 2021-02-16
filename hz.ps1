@@ -30,7 +30,7 @@ param (
     [switch]
     $enterprise = $false,
 
-    # The Hazelcast server version.
+    # The Hazelcast default server version.
     [string]
     $server = "4.1",
 
