@@ -135,6 +135,12 @@ namespace Hazelcast.DistributedObjects
             => await _factory.DestroyAsync(this).CfAwait();
 
         /// <summary>
+        /// Performs required operations when destroying an object (but before it is destroyed).
+        /// </summary>
+        /// <returns>A task that will complete when done.</returns>
+        protected internal virtual ValueTask DestroyingAsync() => default;
+
+        /// <summary>
         /// Serializes an object to <see cref="IData"/>.
         /// </summary>
         /// <param name="o">The object.</param>

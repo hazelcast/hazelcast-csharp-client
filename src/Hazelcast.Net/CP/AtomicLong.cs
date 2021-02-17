@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -30,70 +31,56 @@ namespace Hazelcast.CP
         /// Initializes a new instance of the <see cref="AtomicLong"/> class.
         /// </summary>
         /// <param name="name">The unique name.</param>
+        /// <param name="groupId">The CP group identifier.</param>
         /// <param name="factory">The distributed objects factory.</param>
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        public AtomicLong(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+        public AtomicLong(string name, RaftGroupId groupId, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
             : base(ServiceNames.AtomicLong, name, factory, cluster, serializationService, loggerFactory)
-        { }
+        {
+            GroupId = groupId;
+        }
 
-        // java:
-        //public AtomicLongProxy(NodeEngine nodeEngine, RaftGroupId groupId, String proxyName, String objectName)
-        //{
-        //    RaftService service = nodeEngine.getService(RaftService.SERVICE_NAME);
-        //    this.invocationManager = service.getInvocationManager();
-        //    this.groupId = groupId;
-        //    this.proxyName = proxyName;
-        //    this.objectName = objectName;
-        //}
-
-        // need:
-        // RaftGroupId
-        //  CPGroupId
-        // RaftService
-        //  NodeEngine
-        // AddAndGetOp, CompareAndSetOp, GetAndAddOp, GetAndSetOp
-        //  AbstractAtomicLongOp
-        //   RaftOp
-        //  AtomicLongService... tons of things - which are server, which are client?!
-        // NodeEngine
-        //
-        // => FIXME: determine the dependencies, evaluate the implementation cost
-        // also: revisit NDepend for cycles?
+        /// <summary>
+        /// Gets the CP group identifier.
+        /// </summary>
+        public RaftGroupId GroupId { get; }
 
         /// <inheritdoc />
-        public Task<long> AddAndGetAsync(long value)
+        public async Task<long> AddAndGetAsync(long value)
         {
-            // java:
-            //RaftOp op = new AddAndGetOp(objectName, delta);
-            //return delta == 0 ? invocationManager.query(groupId, op, LINEARIZABLE) : invocationManager.invoke(groupId, op);
-            throw new NotImplementedException(); // FIXME not implemented
+            var requestMessage = AtomicLongAddAndGetCodec.EncodeRequest(GroupId, Name, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongAddAndGetCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
         /// <inheritdoc />
-        public Task<bool> CompareAndSetAsync(long comparand, long value)
+        public async Task<bool> CompareAndSetAsync(long comparand, long value)
         {
-            // java:
-            //return invocationManager.invoke(groupId, new CompareAndSetOp(objectName, expect, update));
-            throw new NotImplementedException(); // FIXME not implemented
+            var requestMessage = AtomicLongCompareAndSetCodec.EncodeRequest(GroupId, Name, comparand, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongCompareAndSetCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
         /// <inheritdoc />
-        public Task<long> GetAndAddAsync(long value)
+        public async Task<long> GetAndAddAsync(long value)
         {
-            // java:
-            //RaftOp op = new GetAndAddOp(objectName, delta);
-            //return delta == 0 ? invocationManager.query(groupId, op, LINEARIZABLE) : invocationManager.invoke(groupId, op);
-            throw new NotImplementedException(); // FIXME not implemented
+            var requestMessage = AtomicLongGetAndAddCodec.EncodeRequest(GroupId, Name, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongGetAndAddCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
         /// <inheritdoc />
-        public Task<long> GetAndSetAsync(long value)
+        public async Task<long> GetAndSetAsync(long value)
         {
-            // java:
-            //return invocationManager.invoke(groupId, new GetAndSetOp(objectName, newValue));
-            throw new NotImplementedException(); // FIXME not implemented
+            var requestMessage = AtomicLongGetAndSetCodec.EncodeRequest(GroupId, Name, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongGetAndSetCodec.DecodeResponse(responseMessage).Response;
+            return response;
         }
 
         /// <inheritdoc />
@@ -103,7 +90,13 @@ namespace Hazelcast.CP
         public Task<long> GetAndDecrementAsync() => GetAndAddAsync(-1);
 
         /// <inheritdoc />
-        public Task<long> GetAsync() => GetAndAddAsync(0);
+        public async Task<long> GetAsync()
+        {
+            var requestMessage = AtomicLongGetCodec.EncodeRequest(GroupId, Name);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongGetCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
 
         /// <inheritdoc />
         public Task<long> IncrementAndGetAsync() => AddAndGetAsync(+1);
@@ -113,5 +106,13 @@ namespace Hazelcast.CP
 
         /// <inheritdoc />
         public Task SetAsync(long value) => GetAndSetAsync(value);
+
+        /// <inheritdoc />
+        protected internal override async ValueTask DestroyingAsync()
+        {
+            var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(GroupId, ServiceName, Name);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
+        }
     }
 }
