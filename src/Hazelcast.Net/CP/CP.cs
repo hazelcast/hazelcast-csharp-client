@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.Messaging;
+using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.CP
@@ -41,25 +41,34 @@ namespace Hazelcast.CP
             _distributedOjects = distributedOjects;
         }
 
+        // NOTES
+        //
+        // Java CP objects are managed by CPSubsystemImpl and created through ClientRaftProxyFactory
+        // which is a simplified factory, which does not cache AtomicLong, AtomicRef, and CountDownLatch,
+        // and sort-of caches (?) FencedLock and Semaphore.
+        //
+        // These objects are therefore IDistributedObject but *not* DistributedObjectBase, and *not*
+        // managed by the DistributedObjectFactory.
+        //
+        // The are destroyed via ClientProxy.destroy, which is getContext().getProxyManager().destroyProxy(this),
+        // which means they are destroyed by ProxyManager aka DistributedObjectFactory, which would try to
+        // remove them from cache (always missing) and end up doing proxy.destroyLocally() which eventually
+        // calls into the object's onDestroy() method.
+        //
+        // But... this is convoluted? For now, our objects inherit from CPObjectBase which is simpler than
+        // DistributedObjectBase, they do not hit DistributedObjectFactory at all, and implement their
+        // own destroy method.
+
         /// <inheritdoc />
         public async Task<IAtomicLong> GetAtomicLongAsync(string name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            var (groupName, objectName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName, objectName).CfAwait();
 
-            var proxyName = TrimDefaultGroupName(name);
-            var objectName = GetProxyObjectName(proxyName);
-            var groupId = await GetGroupIdAsync(proxyName, objectName).CfAwait();
-
-            // TODO: GetOrCreateAsync w/ state object to avoid capturing
-
-            return await _distributedOjects.GetOrCreateAsync<IAtomicLong, AtomicLong>(ServiceNames.AtomicLong, name, true,
-                (n, f, c, sr, lf)
-                    => new AtomicLong(n, groupId, f, c, sr, lf));
+            return new AtomicLong(objectName, groupId, _distributedOjects, _cluster, null, null);
         }
 
         // see: ClientRaftProxyFactory.java
-
-        // FIXME what about the equivalent DESTROY codec?
 
         private async Task<RaftGroupId> GetGroupIdAsync(string proxyName, string objectName)
         {
@@ -71,82 +80,43 @@ namespace Hazelcast.CP
 
         // see: RaftService.java
 
-        private const string DefaultGroupName = "default";
-        private const string MetaDataGroupName = "METADATA";
+        internal const string DefaultGroupName = "default";
+        internal const string MetaDataGroupName = "METADATA";
 
-        public static string TrimDefaultGroupName(string name)
+        public static (string groupName, string objectName) ParseName(string name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty);
 
             name = name.Trim();
-            var i = name.IndexOf('@', StringComparison.OrdinalIgnoreCase);
-
-            if (i == -1)
-                return name;
-
-            i++;
-
-            if (name.IndexOf('@', i) >= 0)
-                throw new ArgumentException("Custom CP group name must be specified at most once.", nameof(name));
-
-            var groupName = name[i..].Trim();
-            return groupName.Equals(DefaultGroupName, StringComparison.OrdinalIgnoreCase) 
-                ? name.Substring(0, i - 1) 
-                : name;
-        }
-
-        public static string GetProxyGroupName(string name)
-        {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-
-            name = name.Trim();
-            var i = name.IndexOf('@', StringComparison.OrdinalIgnoreCase);
-
-            if (i == -1)
-                return DefaultGroupName;
-
-            if (i >= name.Length - 1)
-                throw new ArgumentException("Custom CP group name cannot be empty string.", nameof(name));
-
-            i++;
-
-            if (name.IndexOf('@', i) >= 0)
-                throw new ArgumentException("Custom CP group name must be specified at most once.", nameof(name));
-
-            var groupName = name[(i + 1)..].Trim();
+            var pos = name.IndexOf('@', StringComparison.OrdinalIgnoreCase);
+            
+            string groupName;
+            if (pos < 0)
+            {
+                groupName = DefaultGroupName;
+            }
+            else
+            {
+                groupName = name.Substring(pos + 1).Trim();
+                if (groupName.Equals(DefaultGroupName, StringComparison.OrdinalIgnoreCase))
+                    groupName = DefaultGroupName;
+            }
 
             if (groupName.Length == 0)
-                throw new ArgumentException("Custom CP group name cannot be empty string.", nameof(name));
+                throw new ArgumentException("CP group name cannot be an empty string.", nameof(name));
+
+            if (groupName.Contains("@"))
+                throw new ArgumentException("CP group name must be specified at most once.", nameof(name));
 
             if (groupName.Equals(MetaDataGroupName, StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("CCP data structures cannot run on the METADATA CP group.", nameof(name));
+                throw new NotSupportedException("CP data structures cannot run on the METADATA CP group.");
 
-            return groupName.Equals(DefaultGroupName, StringComparison.OrdinalIgnoreCase) ? DefaultGroupName : groupName;
-        }
-
-        public static string GetProxyObjectName(string name)
-        {
-            if (name == null) throw new ArgumentNullException(nameof(name));
-
-            name = name.Trim();
-            var i = name.IndexOf('@', StringComparison.OrdinalIgnoreCase);
-            
-            if (i == -1)
-                return name;
-
-            if (i >= name.Length - 1) 
-                throw new ArgumentException("Object name cannot be empty string.", nameof(name));
-
-            if (name.IndexOf('@', i + 1) >= 0) 
-                throw new ArgumentException("Custom CP group name must be specified at most once.", nameof(name));
-
-            var objectName = name.Substring(0, i).Trim();
+            var objectName = pos < 0 ? name : name.Substring(0, pos).Trim();
 
             if (objectName.Length == 0)
                 throw new ArgumentException("Object name cannot be empty string.", nameof(name));
 
-            return objectName;
+            return (groupName, objectName);
         }
-
     }
 }

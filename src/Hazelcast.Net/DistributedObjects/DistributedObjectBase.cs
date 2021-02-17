@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectBase"/> class.
         /// </summary>
-        /// <param name="serviceName">the name of the service managing this object.</param>
+        /// <param name="serviceName">The name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="factory">The distributed object factory.</param>
         /// <param name="cluster">A cluster.</param>

@@ -25,7 +25,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Provides the <see cref="IAtomicLong"/> implementation.
     /// </summary>
-    internal class AtomicLong : DistributedObjectBase, IAtomicLong
+    internal class AtomicLong : CPObjectBase, IAtomicLong
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AtomicLong"/> class.
@@ -37,7 +37,7 @@ namespace Hazelcast.CP
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">The logger factory.</param>
         public AtomicLong(string name, RaftGroupId groupId, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(ServiceNames.AtomicLong, name, factory, cluster, serializationService, loggerFactory)
+            : base(ServiceNames.AtomicLong, name, cluster)
         {
             GroupId = groupId;
         }
@@ -108,7 +108,7 @@ namespace Hazelcast.CP
         public Task SetAsync(long value) => GetAndSetAsync(value);
 
         /// <inheritdoc />
-        protected internal override async ValueTask DestroyingAsync()
+        public override async ValueTask DestroyAsync()
         {
             var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(GroupId, ServiceName, Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
