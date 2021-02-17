@@ -15,6 +15,7 @@
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Serialization;
@@ -25,6 +26,12 @@ namespace Hazelcast
     internal partial class HazelcastClient // Distributed Objects
     {
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
+        private ICP _cp;
+
+        /// <summary>
+        /// Gets the CP subsystem.
+        /// </summary>
+        public ICP CP => _cp ??= new CP.CP(_distributedOjects);
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)

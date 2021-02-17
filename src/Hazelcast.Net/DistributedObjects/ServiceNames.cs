@@ -58,5 +58,10 @@ namespace Hazelcast.DistributedObjects
         /// The name of the set service.
         /// </summary>
         public const string Set = "hz:impl:setService";
+
+        /// <summary>
+        /// The name of the raft atomic long service.
+        /// </summary>
+        public const string AtomicLong = ":hz:raft:atomicLongService";
     }
 }
