@@ -13,14 +13,13 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
-using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.CP
 {
     /// <summary>
     /// Defines a redundant and highly-available distributed atomic <c>long</c>.
     /// </summary>
-    public interface IAtomicLong : IDistributedObject
+    public interface IAtomicLong : ICPDistributedObject
     {
         /// <summary>
         /// Adds the specified value to the current value, and returns the updated value.

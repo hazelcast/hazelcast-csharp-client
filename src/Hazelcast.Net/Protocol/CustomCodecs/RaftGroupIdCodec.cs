@@ -42,7 +42,7 @@ namespace Hazelcast.Protocol.CustomCodecs
         private const int IdFieldOffset = SeedFieldOffset + BytesExtensions.SizeOfLong;
         private const int InitialFrameSize = IdFieldOffset + BytesExtensions.SizeOfLong;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.CP.RaftGroupId raftGroupId)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.CP.CPGroupId raftGroupId)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
@@ -56,7 +56,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.CP.RaftGroupId Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.CP.CPGroupId Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
@@ -68,7 +68,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             var name = StringCodec.Decode(iterator);
 
             iterator.SkipToStructEnd();
-            return new Hazelcast.CP.RaftGroupId(name, seed, id);
+            return new Hazelcast.CP.CPGroupId(name, seed, id);
         }
     }
 }

@@ -95,11 +95,11 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// ID of the CP group that contains the CP object
             ///</summary>
-            public Hazelcast.CP.RaftGroupId GroupId { get; set; }
+            public Hazelcast.CP.CPGroupId GroupId { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(Hazelcast.CP.RaftGroupId groupId)
+        public static ClientMessage EncodeResponse(Hazelcast.CP.CPGroupId groupId)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);

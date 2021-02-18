@@ -14,25 +14,26 @@
 
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.CP
 {
     /// <summary>
     /// Provides a base class to CP distributed objects.
     /// </summary>
-    internal abstract class CPObjectBase : IDistributedObject
+    internal abstract class CPDistributedObjectBase : ICPDistributedObject
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="CPObjectBase"/> class.
+        /// Initializes a new instance of the <see cref="CPDistributedObjectBase"/> class.
         /// </summary>
         /// <param name="serviceName">The name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
+        /// <param name="groupId">The CP group identifier of the object.</param>
         /// <param name="cluster">A cluster.</param>
-        protected CPObjectBase(string serviceName, string name, Cluster cluster)
+        protected CPDistributedObjectBase(string serviceName, string name, CPGroupId groupId, Cluster cluster)
         {
             ServiceName = serviceName;
             Name = name;
+            CPGroupId = groupId;
             Cluster = cluster;
         }
 
@@ -41,6 +42,11 @@ namespace Hazelcast.CP
 
         /// <inheritdoc />
         public string Name { get; }
+
+        /// <inheritdoc />
+        public ICPGroupId GroupId => CPGroupId;
+
+        protected CPGroupId CPGroupId { get;}
 
         /// <inheritdoc />
         public string PartitionKey => null;

@@ -60,7 +60,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// CP group id of this IAtomicReference instance.
             ///</summary>
-            public Hazelcast.CP.RaftGroupId GroupId { get; set; }
+            public Hazelcast.CP.CPGroupId GroupId { get; set; }
 
             /// <summary>
             /// Name of this IAtomicReference instance.
@@ -74,7 +74,7 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.CP.RaftGroupId groupId, string name, IData @value)
+        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name, IData @value)
         {
             var clientMessage = new ClientMessage
             {

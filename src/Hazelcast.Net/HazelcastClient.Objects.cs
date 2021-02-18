@@ -31,7 +31,7 @@ namespace Hazelcast
         /// <summary>
         /// Gets the CP subsystem.
         /// </summary>
-        public ICPSubsystem CPSubsystem => _icpSubsystem ??= new CP.CPSubsystem(Cluster, _distributedOjects);
+        public ICPSubsystem CPSubsystem => _icpSubsystem ??= new CPSubsystem(Cluster);
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)

@@ -16,7 +16,6 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
 
@@ -28,17 +27,14 @@ namespace Hazelcast.CP
     internal class CPSubsystem : ICPSubsystem
     {
         private readonly Cluster _cluster;
-        private readonly DistributedObjectFactory _distributedOjects;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
         /// </summary>
         /// <param name="cluster">The cluster.</param>
-        /// <param name="distributedOjects">The distributed objects factory.</param>
-        public CPSubsystem(Cluster cluster, DistributedObjectFactory distributedOjects)
+        public CPSubsystem(Cluster cluster)
         {
             _cluster = cluster;
-            _distributedOjects = distributedOjects;
         }
 
         // NOTES
@@ -65,12 +61,12 @@ namespace Hazelcast.CP
             var (groupName, objectName) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName, objectName).CfAwait();
 
-            return new AtomicLong(objectName, groupId, _distributedOjects, _cluster, null, null);
+            return new AtomicLong(objectName, groupId, _cluster);
         }
 
         // see: ClientRaftProxyFactory.java
 
-        private async Task<RaftGroupId> GetGroupIdAsync(string proxyName, string objectName)
+        private async Task<CPGroupId> GetGroupIdAsync(string proxyName, string objectName)
         {
             var requestMessage = CPGroupCreateCPGroupCodec.EncodeRequest(proxyName);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();

@@ -60,7 +60,7 @@ namespace Hazelcast.Protocol.Codecs
             /// <summary>
             /// CP group id of this distributed object
             ///</summary>
-            public Hazelcast.CP.RaftGroupId GroupId { get; set; }
+            public Hazelcast.CP.CPGroupId GroupId { get; set; }
 
             /// <summary>
             /// The service of this distributed object
@@ -74,7 +74,7 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.CP.RaftGroupId groupId, string serviceName, string objectName)
+        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string serviceName, string objectName)
         {
             var clientMessage = new ClientMessage
             {
