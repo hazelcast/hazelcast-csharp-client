@@ -62,6 +62,7 @@ param (
     # Test selector
     # Is a simplified version of $testFilter which ends up adding a test filter as
     # "name =~ /$framework.$test/"
+    [alias("t")]
     [string]
     $test,
 
@@ -96,7 +97,7 @@ param (
     # Commands.
     [Parameter(ValueFromRemainingArguments, Position=0)]
     [string[]]
-    $commands = @( "clean", "build", "docs", "tests" )
+    $commands = @( "help" )
 )
 
 # die - PowerShell display of errors is a pain
@@ -165,78 +166,111 @@ if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
 
 # validate commands and define actions ($doXxx)
 foreach ($t in $commands) {
+
     if ($t.Trim().StartsWith("-")) {
-        Die "Unknown argument '$($t.Trim())' - use 'help' to list valid arguments."
+        Die "Unknown option '$($t.Trim())' - use 'help' to list valid options."
     }
+
     switch ($t.Trim().ToLower()) {
         "help" {
             Write-Output "Hazelcast .NET Command Line"
             Write-Output "PowerShell $psVersion"
             Write-Output ""
-            Write-Output "usage hz.[ps1|sh] [<option>] [<commands>]"
+            Write-Output "usage hz.[ps1|sh] [<options>] [<commands>]"
+            Write-Output ""
+            Write-Output "When no command is specified, the script displays this documentation."
+            Write-Output ""
             Write-Output ""
             Write-Output "<commands> is a csv list of:"
-            Write-Output "  clean       : cleans the solution"
-            Write-Output "  setver      : sets the new version"
-            Write-Output "  tagver      : tags the new version"
-            Write-Output "  build       : builds the solution"
-            Write-Output "  docs        : builds the documentation (if supported by platform)"
-            Write-Output "  srvdocs     : serves the documentation"
-            Write-Output "  pubdocs     : publishes the documentation release (if supported by platform)"
-            Write-Output "  tests       : runs the tests"
-            Write-Output "  nuget       : builds the NuGet package(s)"
-            Write-Output "  nupush      : pushes the NuGet package(s)"
-            Write-Output "  rc          : runs the remote controller for tests"
-            Write-Output "  server      : runs a server for tests"
+            Write-Output ""
+            Write-Output "  clean : cleans the solution"
+            Write-Output ""
+            Write-Output "  setver : sets the new version"
+            Write-Output "        Updates the version in src/Directory.Build.props with the version specified via"
+            Write-Output "        the -version option. If this option is missing, has no effect."
+            Write-Output ""
+            Write-Output "  tagver : tags the new version"
+            Write-Output "        Creates the vX.Y.Z tag corresponding to the version in src/Directory.Build.props"
+            Write-Output "        or the version specified via the -version option, if any."
+            Write-Output ""
+            Write-Output "  build : builds the solution"
+            Write-Output ""
+            Write-Output "  docs : builds the documentation (if supported by platform)"
+            Write-Output "        Building the documentation is not supported on non-Windows platforms as DocFX is not"
+            Write-Output "        supported on .NET Core yet."
+            Write-Output ""
+            Write-Output "  srvdocs : serves the documentation"
+            Write-Output ""
+            Write-Output "  pubdocs : publishes the documentation release (if supported by platform)"
+            Write-Output "        The documentation still needs to be pushed to GitHub manually."
+            Write-Output ""
+            Write-Output "  tests : runs the tests"
+            Write-Output ""
+            Write-Output "  nuget : builds the NuGet package(s)"
+            Write-Output ""
+            Write-Output "  nupush : pushes the NuGet package(s)"
+            Write-Output "        Pushing the NuGet packages requires a NuGet API key, which must be supplied via the"
+            Write-Output "        NUGET_API_KEY environment variable."
+            Write-Output ""
+            Write-Output "  rc : runs the remote controller for tests"
+            Write-Output ""
+            Write-Output "  server : runs a server for tests"
+            Write-Output ""
             Write-Output "  failedTests : details failed tests (alias: ft)"
             Write-Output ""
-            Write-Output "When no command is specified, the script does 'clean,build,docsIf,tests'. Note that"
-            Write-Output "building the documentation is not supported on non-Windows platforms as DocFX is not"
-            Write-Output "supported on .NET Core yet."
+            Write-Output "  codecs : build the codecs files"
             Write-Output ""
-            Write-Output "<options> is:"
-            Write-Output "  -enterprise                    : whether to run enterprise tests"
-            Write-Output "  -sign                          : whether to sign assemblies"
-            Write-Output "  -cover                         : whether to do test coverage"
-            Write-Output "  -server <version>              : the server version for tests"
-            Write-Output "  -framework <version>           : the framework to build (default is all, alias: -f)"
-            Write-Output "  -configuration <configuration> : the build configuration (default is Release, alias: -c)"
-            Write-Output "  -testFilter <filter>           : a test filter (default is all, alias: -tf)"
-            Write-Output "  -coverageFilter <filter>       : a coverage filter (default is all, alias: -cf)"
-            Write-Output "  -test <name>                   : a simplified test filter"
-            Write-Output "  -version <version>             : the version to build"
             Write-Output ""
-            Write-Output "Server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or"
-            Write-Output "4.1-SNAPSHOT. Server JARs are automatically downloaded for tests."
+            Write-Output "<options> are:"
             Write-Output ""
-            Write-Output "Framework <version> must match a valid .NET target framework moniker, e.g. net462"
-            Write-Output "or netcoreapp3.1. Check the project files (.csproj) for supported versions."
+            Write-Output "  -enterprise : whether to run enterprise tests"
+            Write-Output "        Running enterprise tests require an enterprise key, which can be supplied either"
+            Write-Output "        via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key"
+            Write-Output "        file."
             Write-Output ""
-            Write-Output "The <version> to build must be a valid SemVer version such as 3.2.1 or 6.7.8-preview.2,"
-            Write-Output "if no value is specified then the version is obtained from src/Directory.Build.props."
+            Write-Output "  -sign : whether to sign assemblies (when building)"
+            Write-Output "        Signing assemblies requires the private signing key in build/hazelcast.snk file."
             Write-Output ""
-            Write-Output "Configuration is Release by default but can be forced to Debug."
+            Write-Output "  -cover : whether to do test coverage (when running tests)"
             Write-Output ""
-            Write-Output "Signing assemblies requires the private signing key in build/hazelcast.snk file."
+            Write-Output "  -server <version> : the server version for tests (when running tests, or rc, or server)"
+            Write-Output "        Server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or"
+            Write-Output "        4.1-SNAPSHOT. Server JARs are automatically downloaded."
             Write-Output ""
-            Write-Output "Running enterprise tests require an enterprise key, which can be supplied either"
-            Write-Output "via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key"
-            Write-Output "file."
+            Write-Output "  -framework <version> : the framework to build (default is all, alias: -f)"
+            Write-Output "        Framework <version> must match a valid .NET target framework moniker, e.g. net462"
+            Write-Output "        or netcoreapp3.1. Check the project files (.csproj) for supported versions."
             Write-Output ""
-            Write-Output "Pushing the NuGet packages requires a NuGet API key, via the NUGET_API_KEY"
-            Write-Output "environment variable."
+            Write-Output "  -configuration <configuration> : the build configuration (when building, alias: -c)"
+            Write-Output "        Configuration is 'Release' by default but can be forced to be 'Debug'."
             Write-Output ""
-            Write-Output "Test <filter> can be used to filter the tests to run, it must respect the NUnit test"
-            Write-Output "selection language, which is detailed at:"
-            Write-Output "https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html"
-            Write-Output "Example: -tf `"test == /Hazelcast.Tests.NearCache.NearCacheRecoversFromDistortionsTest/`""
+            Write-Output "  -testFilter <filter> : a test filter (when running tests, default is all, alias: -tf)"
+            Write-Output "        Test <filter> can be used to filter the tests to run, it must respect the NUnit test"
+            Write-Output "        selection language, which is detailed at:"
+            Write-Output "        https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html"
+            Write-Output "        Example: -tf `"test == /Hazelcast.Tests.NearCache.NearCacheRecoversFromDistortionsTest/`""
             Write-Output ""
-            Write-Output "Coverage <filter> can be used to filter the tests to cover, it must respect the"
-            Write-Output "dotCover language, which is detailed at:"
-            Write-Output "https://www.jetbrains.com/help/dotcover/Running_Coverage_Analysis_from_the_Command_LIne.html#filters"
+            Write-Output "  -coverageFilter <filter> : a coverage filter (when running tests, default is all, alias: -cf)"
+            Write-Output "        Coverage <filter> can be used to filter the tests to cover, it must respect the"
+            Write-Output "        dotCover language, which is detailed at:"
+            Write-Output "        https://www.jetbrains.com/help/dotcover/Running_Coverage_Analysis_from_the_Command_LIne.html#filters"
+            Write-Output ""
+            Write-Output "  -test <name> : a simplified test filter (when running tests, alias: -t)"
+            Write-Output "        The simplified test <name> filter which is equivalent to the full `"name =~ /<name>/`" filter."
+            Write-Output ""
+            Write-Output "  -version <version> : the version to build (when building, or setting/tagging the version)"
+            Write-Output "        The <version> to build must be a valid SemVer version such as 3.2.1 or 6.7.8-preview.2,"
+            Write-Output "        if no value is specified then the version is obtained from src/Directory.Build.props."
+            Write-Output ""
+            Write-Output "  -defineConstants <constants> : define additional build constants (when building, alias: d)"
+            Write-Output ""
+            Write-Output "  -classPath <classpath> : define an additional classpath (alias: cp)."
+            Write-Output "        The classpath is appended to the RC or server classpath."
+            Write-Output ""
             Write-Output ""
             exit 0
 		}
+
         "clean"       { $doClean = $true }
         "setver"      { $doSetVersion = $true }
         "tagver"      { $doTagVersion = $true }
@@ -250,9 +284,9 @@ foreach ($t in $commands) {
         "rc"          { $doRc = $true }
         "server"      { $doServer = $true }
         "failedtests" { $doFailedTests = $true }
-        default {
-            Die "Unknown command '$($t.Trim())' - use 'help' to list valid commands."
-        }
+        "codecs"      { $doCodecs = $true }
+
+        default { Die "Unknown command '$($t.Trim())' - use 'help' to list valid commands." }
     }
 }
 
@@ -660,6 +694,17 @@ function ensureJar($jar, $repo, $artifact) {
     $script:classpath = $classpath
 }
 
+# clear source file
+function clrSrc($file) {
+    $txt = get-content $file -raw
+    $txt = $txt.Replace("`r`n", "`n"); # crlf to lf
+    $txt = $txt.Replace("`r", "`n"); # including single cr
+    $txt = [System.Text.RegularExpressions.Regex]::Replace($txt, "[ `t]+$", "", [System.Text.RegularExpressions.RegexOptions]::Multiline); # trailing spaces
+    $txt = $txt.TrimEnd("`n") + "`n"; # end file with one single lf
+    $txt = $txt.Replace("`n", [System.Environment]::NewLine); # lf to actual system newline (as expected by Git)
+    set-content $file $txt -noNewLine
+}
+
 # say hello
 Write-Output "Hazelcast .NET Command Line"
 Write-Output ""
@@ -692,6 +737,13 @@ if ($doTagVersion) { if ($s -ne "") { $s += ", " } $s += "tag version" }
 if ($s -eq "") { $s = "none" }
 Write-Output "  Action         : $s"
 Write-Output ""
+
+if ($doCodecs) {
+    Write-Output "Codecs"
+    Write-Output "  Source         : protocol/cs"
+    Write-Output "  Filters        : protocol/cs/__init__.py"
+    Write-Output ""
+}
 
 if ($doBuild) {
     Write-Output "Build"
@@ -887,6 +939,11 @@ if ($doBuild -and $isWindows) {
     ensureMsBuild
 }
 
+# ensure we have python for protocol
+if ($doCodecs) {
+    ensureCommand "python"
+}
+
 # ensure we can sign
 if ($doBuild -and $sign) {
     if (!(test-path "$buildDir\hazelcast.snk")) {
@@ -979,6 +1036,40 @@ if ($doTagVersion)
         Write-Output "Version: creating tag v$version"
         git tag "v$version"
     }
+}
+
+# generate codecs
+if ($doCodecs) {
+
+    # note: codec files contain the client-side methods, along with the
+    # server-side methods enclosed in '#if SERVER_CODEC' blocks. files are
+    # copied to the client project, which uses them raw, and linked into
+    # the testing projects, which defines SERVER_CODEC.
+
+    # wipe existing codecs from the C# and protocol repositories
+    Write-Output "Clear codecs"
+    rm -force $srcDir/Hazelcast.Net/Protocol/Codecs/*.cs
+    rm -force $srcDir/Hazelcast.Net/Protocol/CustomCodecs/*.cs
+    rm -force -recurse $slnRoot/protocol/output/cs
+
+    Write-Output "Generate codecs"
+    python $slnRoot/protocol/generator.py -l cs --no-binary
+
+    # copy generated codecs to the C# repository
+    Write-Output "Copy codecs"
+    cp $slnRoot/protocol/output/cs/src/Hazelcast.Net/Protocol/Codecs/*.cs $srcDir/Hazelcast.Net/Protocol/Codecs/
+    cp $slnRoot/protocol/output/cs/src/Hazelcast.Net/Protocol/CustomCodecs/*.cs $srcDir/Hazelcast.Net/Protocol/CustomCodecs/
+
+    # normalize codecs FIXME platform?
+    Write-Output "Normalize codecs"
+    foreach ($file in $(ls $srcDir/Hazelcast.Net/Protocol/Codecs/*.cs)) {
+        clrSrc $file
+    }
+    foreach ($file in $(ls $srcDir/Hazelcast.Net/Protocol/CustomCodecs/*.cs)) {
+        clrSrc $file
+    }
+
+    Write-Output ""
 }
 
 # build the solution
