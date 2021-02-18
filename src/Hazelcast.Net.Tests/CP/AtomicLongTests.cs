@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.CP
         [Test]
         public async Task Test()
         {
-            var along = await Client.CP.GetAtomicLongAsync("along");
+            var along = await Client.CPSubsystem.GetAtomicLongAsync("along");
 
             await along.SetAsync(1);
             Assert.That(await along.GetAsync(), Is.EqualTo(1));

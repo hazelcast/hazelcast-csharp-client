@@ -23,19 +23,19 @@ using Hazelcast.Protocol.Codecs;
 namespace Hazelcast.CP
 {
     /// <summary>
-    /// Provides the <see cref="ICP"/> implementation.
+    /// Provides the <see cref="ICPSubsystem"/> implementation.
     /// </summary>
-    internal class CP : ICP
+    internal class CPSubsystem : ICPSubsystem
     {
         private readonly Cluster _cluster;
         private readonly DistributedObjectFactory _distributedOjects;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CP"/> class.
+        /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
         /// </summary>
         /// <param name="cluster">The cluster.</param>
         /// <param name="distributedOjects">The distributed objects factory.</param>
-        public CP(Cluster cluster, DistributedObjectFactory distributedOjects)
+        public CPSubsystem(Cluster cluster, DistributedObjectFactory distributedOjects)
         {
             _cluster = cluster;
             _distributedOjects = distributedOjects;

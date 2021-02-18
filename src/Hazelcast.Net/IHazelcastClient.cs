@@ -57,7 +57,7 @@ namespace Hazelcast
         /// <summary>
         /// Gets the CP subsystem.
         /// </summary>
-        ICP CP { get; }
+        ICPSubsystem CPSubsystem { get; }
 
         // TODO: consider implementing client.ClusterId
         /*

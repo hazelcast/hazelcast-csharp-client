@@ -26,12 +26,12 @@ namespace Hazelcast
     internal partial class HazelcastClient // Distributed Objects
     {
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
-        private ICP _cp;
+        private ICPSubsystem _icpSubsystem;
 
         /// <summary>
         /// Gets the CP subsystem.
         /// </summary>
-        public ICP CP => _cp ??= new CP.CP(Cluster, _distributedOjects);
+        public ICPSubsystem CPSubsystem => _icpSubsystem ??= new CP.CPSubsystem(Cluster, _distributedOjects);
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)

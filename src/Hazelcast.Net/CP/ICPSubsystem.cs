@@ -19,7 +19,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Defines the CP subsystem.
     /// </summary>
-    public interface ICP
+    public interface ICPSubsystem
     {
         /// <summary>
         /// Gets an <see cref="IAtomicLong"/> distributed object.

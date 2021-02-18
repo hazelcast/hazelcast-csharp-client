@@ -13,35 +13,34 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.CP;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.CP
 {
-    using CP = Hazelcast.CP.CP;
-
     [TestFixture]
     public class CPTests
     {
         [Test]
         public void ParseName()
         {
-            Assert.That(CP.ParseName("foo"), Is.EqualTo((CP.DefaultGroupName, "foo")));
-            Assert.That(CP.ParseName("foo@bar"), Is.EqualTo(("bar", "foo")));
-            Assert.That(CP.ParseName("   foo   @   bar   "), Is.EqualTo(("bar", "foo")));
-            Assert.That(CP.ParseName("foo@" + CP.DefaultGroupName), Is.EqualTo((CP.DefaultGroupName, "foo")));
-            Assert.That(CP.ParseName("foo@" + CP.DefaultGroupName.ToLower()), Is.EqualTo((CP.DefaultGroupName, "foo")));
-            Assert.That(CP.ParseName("foo@" + CP.DefaultGroupName.ToUpper()), Is.EqualTo((CP.DefaultGroupName, "foo")));
+            Assert.That(CPSubsystem.ParseName("foo"), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
+            Assert.That(CPSubsystem.ParseName("foo@bar"), Is.EqualTo(("bar", "foo")));
+            Assert.That(CPSubsystem.ParseName("   foo   @   bar   "), Is.EqualTo(("bar", "foo")));
+            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
+            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName.ToLower()), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
+            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName.ToUpper()), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
 
-            Assert.Throws<NotSupportedException>(() => CP.ParseName("foo@" + CP.MetaDataGroupName));
+            Assert.Throws<NotSupportedException>(() => CPSubsystem.ParseName("foo@" + CPSubsystem.MetaDataGroupName));
 
-            Assert.Throws<ArgumentException>(() => CP.ParseName(null));
-            Assert.Throws<ArgumentException>(() => CP.ParseName(""));
-            Assert.Throws<ArgumentException>(() => CP.ParseName("     "));
+            Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName(null));
+            Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName(""));
+            Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("     "));
 
-            Assert.Throws<ArgumentException>(() => CP.ParseName("@bar"));
-            Assert.Throws<ArgumentException>(() => CP.ParseName("foo@"));
-            Assert.Throws<ArgumentException>(() => CP.ParseName("foo@@bar"));
-            Assert.Throws<ArgumentException>(() => CP.ParseName("foo@bar@bar"));
+            Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("@bar"));
+            Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("foo@"));
+            Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("foo@@bar"));
+            Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("foo@bar@bar"));
         }
     }
 }
