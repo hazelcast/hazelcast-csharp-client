@@ -32,7 +32,7 @@ param (
 
     # The Hazelcast server version.
     [string]
-    $server = "4.0",
+    $server = "4.1",
 
     # Target framework(s).
     [Alias("f")]
@@ -93,6 +93,13 @@ param (
     [alias("cp")]
     [string]
     $classpath, # additional classpath for rc/server
+
+    [alias("repro")]
+    [switch]
+    $reproducible,
+
+    [string]
+    $serverConfig,
 
     # Commands.
     [Parameter(ValueFromRemainingArguments, Position=0)]
@@ -228,6 +235,7 @@ foreach ($t in $commands) {
             Write-Output "  server : runs a server for tests"
             Write-Output ""
             Write-Output "  failedTests : details failed tests (alias: ft)"
+            Write-Output "  codecs      : build the codecs files"
             Write-Output ""
             Write-Output "  codecs : build the codecs files"
             Write-Output ""
@@ -356,6 +364,10 @@ $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
+if ([string]::IsNullOrWhiteSpace($serverConfig)) {
+    $serverConfig = "$buildDir/hazelcast-$hzVersion.xml"
+}
+
 # validate commands / platform
 if ($doDocs -and -not $isWindows) {
     Write-Output "DocFX is not supported on '$platform', cannot build documentation."
@@ -477,8 +489,7 @@ function ensureCommand($command) {
         Die "Command '$command' is missing."
     }
     else {
-        Write-Output "Detected $command"
-        Write-Output "  at '$($r.Source)'"
+        Write-Output "Detected $command at '$($r.Source)'"
     }
 }
 
@@ -523,8 +534,7 @@ function ensureNuGet() {
             Write-Output "  -> $nuget"
         }
         else {
-            Write-Output "Detected NuGet"
-            Write-Output "  at '$nuget'"
+            Write-Output "Detected NuGet at '$nuget'"
         }
     }
     elseif (-not (test-path $nuget))
@@ -566,117 +576,27 @@ function getMvn($repoUrl, $group, $artifact, $jversion, $classifier, $dest) {
     }
 }
 
-# ensure we have vswhere -> $script:vswhere
-function ensureVsWhere() {
-    Write-Output ""
-    Write-Output "Detected VsWhere"
-    $v = $vswhereVersion
-    Write-Output "  v$v"
-    $dir = "$userHome/.nuget/packages/vswhere/$v"
-    $vswhere = "$dir/tools/vswhere.exe"
-    Write-Output "  at '$vswhere'"
-
-    $script:vswhere = $vswhere
-}
-
-# find MsBuild -> $script:msBuild
-function ensureMsBuild() {
-    $vsPath = ""
-    $vsVer = ""
-    $msBuild = ""
-
-    $vsMajor = $hzVsMajor
-
-    $vsPaths = new-object System.Collections.Generic.List[System.String]
-    $vsVersions = new-object System.Collections.Generic.List[System.Version]
-    $vsNames = new-object System.Collections.Generic.List[System.String]
-
-    Write-Output ""
-
-    # parse vswhere output
-    $params = @()
-    if ($hzVsPreview) { $params += "-prerelease" }
-    &$vswhere @params | ForEach-Object {
-        if ($_.StartsWith("installationPath:")) { $vsPaths.Add($_.SubString("installationPath:".Length).Trim()) }
-        if ($_.StartsWith("installationVersion:")) { $vsVersions.Add([System.Version]::Parse($_.SubString("installationVersion:".Length).Trim())) }
-        if ($_.StartsWith("displayName:")) { $vsNames.Add($_.SubString("displayName:".Length).Trim()) }
-    }
-
-    # get higest version lower than or equal to vsMajor
-    $vsIx1 = -1
-    $vsIx2 = -1
-    $vsVersion = [System.Version]::Parse("0.0.0.0")
-    $vsVersions | ForEach-Object {
-
-        $vsIx1 = $vsIx1 + 1
-        Write-Output "Detected $($vsNames[$vsIx1]) ($_)"
-        Write-Output "  at '$($vsPaths[$vsIx1])'"
-
-        if ($_.Major -le $vsMajor -and $_ -gt $vsVersion) {
-            $vsVersion = $_
-            $vsIx2 = $vsIx1
-        }
-    }
-    if ($vsIx2 -ge 0) {
-        $vsPath = $vsPaths[$vsIx2]
-        $vsName = $vsNames[$vsIx2]
-
-        if ($vsVersion.Major -eq 16) {
-            $msBuild = "$vsPath/MSBuild/Current/Bin/MsBuild.exe"
-        }
-        elseif ($vsVersion.Major -eq 15) {
-            $msBuild = "$vsPath/MSBuild/$($vsVersion.Major).0/Bin/MsBuild.exe"
-        }
-    }
-
-    gci 'C:/Program Files (x86)/Microsoft Visual Studio/*/BuildTools/MSBuild/*/Bin/MSBuild.exe' | ForEach-Object {
-        $msBuildVersion = &$_ -nologo -version
-        $msBuildVersion = [System.Version]::Parse($msBuildVersion)
-        $msBuildExe = $_.FullName.Replace('\', '/')
-        $toolsPath = $msBuildExe.SubString(0, $msBuildExe.IndexOf("/MSBuild/"))
-        $toolsYear = $msBuildExe.SubString('C:/Program Files (x86)/Microsoft Visual Studio/'.Length, 4)
-        Write-Output "Detected BuildTools $toolsYear ($msBuildVersion)"
-        Write-Output "  at '$toolsPath'"
-
-        if ($msBuildVersion.Major -le $vsMajor -and $msBuildVersion -gt $vsVersion)  {
-            $msBuild = $msBuildExe
-            $vsVersion = $msBuildVersion
-            $vsName = "BuildTools "
-        }
-    }
-
-    if (-not (test-path $msBuild)) {
-        Die "Failed to locate MsBuild.exe."
-    }
-    else {
-        Write-Output "Selecting $vsName ($vsVersion)"
-        Write-Output "  at '$msBuild'"
-    }
-
-    $script:msBuild = $msBuild
-}
-
 # ensure docfx -> $script:docfx
 function ensureDocFx() {
-    Write-Output ""
-    Write-Output "Detected DocFX"
     $v = $docfxVersion
     Write-Output "  v$v"
     $dir = "$userHome/.nuget/packages/docfx.console/$v"
     $docfx = "$dir/tools/docfx.exe"
-    Write-Output "  at '$docfx'"
+
+    Write-Output ""
+    Write-Output "Detected DocFX at '$docfx'"
 
     $script:docfx = $docfx
 }
 
 # ensure memberpage
 function ensureMemberPage() {
-    Write-Output ""
-    Write-Output "Detected DocFX MemberPage"
     $v = $memberpageVersion
     Write-Output "  v$v"
     $dir = "$userHome/.nuget/packages/memberpage/$v"
-    Write-Output "  -> $dir"
+
+    Write-Output ""
+    Write-Output "Detected DocFX MemberPage at $dir"
 }
 
 function ensureJar($jar, $repo, $artifact) {
@@ -803,7 +723,7 @@ if ($doServer) {
     Write-Output "Server"
     Write-Output "  Server version : $server"
     Write-Output "  Enterprise     : $enterprise"
-    Write-Output "  Configuration  : $buildDir/hazelcast-$hzVersion.xml"
+    Write-Output "  Configuration  : $serverConfig"
     Write-Output "  Logging to     : $tmpDir/server"
     Write-Output ""
 }
@@ -891,22 +811,47 @@ if ($isWindows) {
     ensureNuGet
 }
 
+function getSdk($sdks, $v) {
+    # trust dotnet to return the sdks ordered by version, so last is the highest version
+    return ($sdks `
+        | select-string -pattern "^$v" `
+        | foreach-object { $_.ToString().Split(' ')[0] } `
+        | select-string -notMatch -pattern "-" `
+        | select -last 1).ToString()
+}
+
 # ensure we have dotnet for build and tests
 if ($doBuild -or -$doTests) {
   ensureCommand "dotnet"
+  $dotnetVersion = (&dotnet --version)
+  Write-Host "  Version $dotnetVersion"
   $sdks = (&dotnet --list-sdks)
-  $v21 = ($sdks | select-string -pattern "^2\.1" | foreach-object { $_.ToString().Split(' ')[0] } | select -last 1)
+
+  $v21 = getSdk $sdks "2.1"
   if ($v21 -eq $null) {
         Write-Host ""
         Write-Host "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 2.1.x"
   }
-  $v31 = ($sdks | select-string -pattern "^3\.1" | foreach-object { $_.ToString().Split(' ')[0] } | select -last 1)
+  $v31 = getSdk $sdks "3.1"
   if ($v31 -eq $null) {
         Write-Host ""
         Write-Host "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 3.1.x"
   }
+  $v50 = getSdk $sdks "5.0"
+  #if ($v50 -eq $null) {
+  #      Write-Host ""
+  #      Write-Host "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
+  #      Die "Could not find dotnet SDK version 5.0.x"
+  #}
+  #if ($v50 -lt "5.0.200") {
+  #      Write-Host ""
+  #      Write-Host "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
+  #      Die "Could not find dotnet SDK version 5.0.200+"
+  #}
+
+  Write-Host "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50"
 }
 
 # use NuGet to ensure we have the required packages for building and testing
@@ -917,12 +862,7 @@ if ($noRestore) {
 else {
     Write-Output ""
     Write-Output "Restore NuGet packages..."
-    if ($isWindows) {
-        &$nuget restore "$buildDir/build.proj" -Verbosity Quiet
-    }
-    else {
-        dotnet restore "$buildDir/build.proj"
-    }
+    dotnet restore "$buildDir/build.proj"
 }
 
 # get the required packages version (as specified in build.proj)
@@ -937,13 +877,6 @@ $buildLibs.PSObject.Properties.Name | Foreach-Object {
     if ($name -eq "jetbrains.dotcover.commandlinetools") { $dotcoverVersion = $pversion }
     if ($name -eq "docfx.console") { $docfxVersion = $pversion }
     if ($name -eq "memberpage") { $memberpageVersion = $pversion }
-}
-
-if ($doBuild -and $isWindows) {
-    $vswhere = ""
-    ensureVsWhere
-    $msBuild = ""
-    ensureMsBuild
 }
 
 # ensure we have python for protocol
@@ -1076,30 +1009,28 @@ if ($doBuild) {
 
     Write-Output ""
     Write-Output "Build solution..."
-    if ($isWindows) {
-        $buildArgs = @(
-            "$slnRoot/Hazelcast.Net.sln", `
-            "/p:Configuration=$configuration", `
-            "/target:`"Restore;Build`""
-            #/p:TargetFramework=$framework
-        )
+    $buildArgs = @(
+        "$slnRoot/Hazelcast.Net.sln", `
+        "-c", "$configuration"
+        # "-f", "$framework"
+    )
+
+    if ($reproducible) {
+        $buildArgs += "/p:ContinuousIntegrationBuild=true"
     }
-    else {
-        $buildArgs = @(
-            "$slnRoot/Hazelcast.Net.sln", `
-            "-c", "$configuration"
-            # "-f", "$framework"
-        )
+
+    if ($sign) {
+        $buildArgs += "/p:ASSEMBLY_SIGNING=true"
+        $buildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
+        
+        if (![string]::IsNullOrWhiteSpace($defineConstants)) {
+            $defineConstants += ";"
+        }
+        $defineConstants += "ASSEMBLY_SIGNING"
     }
 
     if (![string]::IsNullOrWhiteSpace($defineConstants)) {
         $buildArgs += "/p:DefineUserConstants=`"$defineConstants`""
-    }
-
-    if ($signAssembly) {
-        $buildArgs += "/p:SignAssembly=true"
-        $buildArgs += "/p:PublicSign=false"
-        $buildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
     }
 
     if ($hasVersion) {
@@ -1109,12 +1040,10 @@ if ($doBuild) {
         $buildArgs += "/p:VersionSuffix=$versionSuffix"
     }
 
-    if ($isWindows) {
-        &$msBuild $buildArgs
-    }
-    else {
-        dotnet build $buildArgs
-    }
+    Write-Output ""
+    Write-Output "> dotnet build $buildArgs"
+    Write-Output ""
+    dotnet build $buildArgs
 
     # if it failed, we can stop here
     if ($LASTEXITCODE) {
@@ -1248,7 +1177,7 @@ function StartRemoteController() {
 
     Write-Output ""
     Write-Output "Starting Remote Controller..."
-    Write-Output "ClassPath: $classpath"
+    Write-Output "ClassPath: $script:classpath"
 
     # start the remote controller
     $args = @(
@@ -1281,13 +1210,13 @@ function StartServer() {
     if (-not (test-path "$tmpDir/server")) { mkdir "$tmpDir/server" >$null }
 
     # ensure we have a configuration file
-    if (!(test-path "$buildDir/hazelcast-$hzVersion.xml")) {
-        Die "Missing server configuration file $buildDir/hazelcast-$hzVersion.xml"
+    if (!(test-path "$serverConfig")) {
+        Die "Missing server configuration file $serverConfig"
     }
 
     Write-Output ""
     Write-Output "Starting Server..."
-    Write-Output "ClassPath: $classpath"
+    Write-Output "ClassPath: $script:classpath"
 
     # depending on server version, different starter class
     $mainClass = "com.hazelcast.core.server.HazelcastMemberStarter" # 4.0
@@ -1299,7 +1228,7 @@ function StartServer() {
     $args = @(
         "-Dhazelcast.enterprise.license.key=$enterpriseKey",
         "-cp", "$script:classpath",
-        "-Dhazelcast.config=$buildDir/hazelcast-$hzVersion.xml",
+        "-Dhazelcast.config=$serverConfig",
         "-server", "-Xms2g", "-Xmx2g", "-Dhazelcast.multicast.group=224.206.1.1", "-Djava.net.preferIPv4Stack=true",
         "$mainClass"
     )
@@ -1622,20 +1551,18 @@ if ($doNuget -and -not $testsSuccess) {
     $doNuget = $false
 }
 
-if ($doNuget) {
-    Write-Output ""
-    Write-Output "Build NuGet packages..."
-
-    # creates the nupkg (which contains Hazelcast.Net.dll)
-    # creates the snupkg (which contains Hazelcast.Net.pdb with source code reference)
-    # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-pack
-
+function packNuget($name)
+{
     $packArgs = @(
-        "$srcDir\Hazelcast.Net\Hazelcast.Net.csproj", `
+        "$srcDir\$name\$name.csproj", `
         "--no-build", "--nologo", `
         "-o", "$tmpDir\output", `
-        "-c", "$configuration"
+        "-c", "$configuration"        
     )
+
+    if ($reproducible) {
+        $packArgs += "/p:ContinuousIntegrationBuild=true"
+    }
 
     if ($hasVersion) {
         $packArgs += "/p:AssemblyVersion=$versionPrefix"
@@ -1645,6 +1572,17 @@ if ($doNuget) {
     }
 
     &dotnet pack $packArgs
+}
+
+if ($doNuget) {
+    Write-Output ""
+    Write-Output "Build NuGet packages..."
+
+    # creates the nupkg (which contains dll)
+    # creates the snupkg (which contains pdb with source code reference)
+    # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-pack
+
+    packNuGet("Hazelcast.Net")
 }
 
 if ($doNupush -and -not $testsSuccess) {
