@@ -1057,24 +1057,9 @@ if ($doCodecs) {
     Write-Output "Clear codecs"
     rm -force $srcDir/Hazelcast.Net/Protocol/Codecs/*.cs
     rm -force $srcDir/Hazelcast.Net/Protocol/CustomCodecs/*.cs
-    rm -force -recurse $slnRoot/protocol/output/cs
 
     Write-Output "Generate codecs"
-    python $slnRoot/protocol/generator.py -l cs --no-binary
-
-    # copy generated codecs to the C# repository
-    Write-Output "Copy codecs"
-    cp $slnRoot/protocol/output/cs/src/Hazelcast.Net/Protocol/Codecs/*.cs $srcDir/Hazelcast.Net/Protocol/Codecs/
-    cp $slnRoot/protocol/output/cs/src/Hazelcast.Net/Protocol/CustomCodecs/*.cs $srcDir/Hazelcast.Net/Protocol/CustomCodecs/
-
-    # normalize codecs FIXME platform?
-    Write-Output "Normalize codecs"
-    foreach ($file in $(ls $srcDir/Hazelcast.Net/Protocol/Codecs/*.cs)) {
-        clrSrc $file
-    }
-    foreach ($file in $(ls $srcDir/Hazelcast.Net/Protocol/CustomCodecs/*.cs)) {
-        clrSrc $file
-    }
+    python $slnRoot/protocol/generator.py -l cs --no-binary -r $slnRoot
 
     Write-Output ""
 }
