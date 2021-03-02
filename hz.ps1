@@ -110,11 +110,17 @@ function Die($message) {
     Exit
 }
 
+# say hello
+Write-Output "Hazelcast .NET Command Line"
+
 # process commands
-# in case it was passed by a script and not processed as an array
-# PowerShell can be weird at times ;(
+# command can come as a string[1] containing "a b c", or containing "a, b, c",
+# or as a real string[n] ... PowerShell can be weird at times ;(
 if ($commands.Length -eq 1 -and $commands[0].Contains(',')) {
-    $commands = $commands[0].Replace(" ", "").Split(',')
+    $commands[0] = $commands[0].Replace(",", " ")
+}
+if ($commands.Length -eq 1 -and $commands[0].Contains(' ')) {
+    $commands = $commands[0].Split(" ", [StringSplitOptions]::RemoveEmptyEntries)
 }
 
 # process define constants - it's a mess
@@ -141,6 +147,7 @@ $env:FrameworkPathOverride=""
 $psVersion = (get-host | select-object Version).Version
 $minVersion = [System.Version]::Parse("5.1.0.0")
 if ($psVersion -lt $minVersion) {
+    Write-Output ""
     Write-Output "This script requires at least version $($minVersion.Major).$($minVersion.Minor) of PowerShell, but you seem to be running version $($psVersion.Major).$($psVersion.Minor)."
 
     try {
@@ -163,6 +170,10 @@ if ($isLinux) { $platform = "linux" }
 if ($isWindows) { $platform = "windows" }
 if ($isMacOS) { $platform = "macOS" }
 if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
+
+# report
+Write-Output "PS $psVersion on $platform"
+Write-Output ""
 
 # validate commands and define actions ($doXxx)
 foreach ($t in $commands) {
@@ -704,10 +715,6 @@ function clrSrc($file) {
     $txt = $txt.Replace("`n", [System.Environment]::NewLine); # lf to actual system newline (as expected by Git)
     set-content $file $txt -noNewLine
 }
-
-# say hello
-Write-Output "Hazelcast .NET Command Line"
-Write-Output ""
 
 # ensure we have git
 ensureCommand "git"
