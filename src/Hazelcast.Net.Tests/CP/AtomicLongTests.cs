@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -22,31 +24,138 @@ namespace Hazelcast.Tests.CP
     public class AtomicLongTests : SingleMemberClientRemoteTestBase
     {
         [Test]
-        public async Task Test()
+        public async Task Get()
         {
-            var along = await Client.CPSubsystem.GetAtomicLongAsync("along");
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            Assert.That(await along.GetAsync(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public async Task SetAndGet()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
 
             await along.SetAsync(1);
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
+        }
 
+        [Test]
+        public async Task IncrementAndGet()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.SetAsync(1);
+            Assert.That(await along.GetAsync(), Is.EqualTo(1));
             Assert.That(await along.IncrementAndGetAsync(), Is.EqualTo(2));
-            Assert.That(await along.GetAndIncrementAsync(), Is.EqualTo(2));
-            Assert.That(await along.GetAsync(), Is.EqualTo(3));
+            Assert.That(await along.GetAsync(), Is.EqualTo(2));
+        }
 
-            Assert.That(await along.DecrementAndGetAsync(), Is.EqualTo(2));
+        [Test]
+        public async Task GetAndIncrement()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.SetAsync(1);
+            Assert.That(await along.GetAsync(), Is.EqualTo(1));
+            Assert.That(await along.GetAndIncrementAsync(), Is.EqualTo(1));
+            Assert.That(await along.GetAsync(), Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task DecrementAndGet()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.SetAsync(2);
+            Assert.That(await along.GetAsync(), Is.EqualTo(2));
+            Assert.That(await along.DecrementAndGetAsync(), Is.EqualTo(1));
+            Assert.That(await along.GetAsync(), Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task GetAndDecrement()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.SetAsync(2);
+            Assert.That(await along.GetAsync(), Is.EqualTo(2));
             Assert.That(await along.GetAndDecrementAsync(), Is.EqualTo(2));
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
+        }
 
-            Assert.That(await along.GetAndAddAsync(9), Is.EqualTo(1));
-            Assert.That(await along.AddAndGetAsync(9), Is.EqualTo(19));
-            Assert.That(await along.GetAsync(), Is.EqualTo(19));
+        [Test]
+        public async Task AddAndGet()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
 
-            Assert.That(await along.CompareAndSetAsync(1, 20), Is.False);
-            Assert.That(await along.CompareAndSetAsync(19, 20), Is.True);
-            Assert.That(await along.GetAsync(), Is.EqualTo(20));
+            await along.SetAsync(1);
+            Assert.That(await along.GetAsync(), Is.EqualTo(1));
+            Assert.That(await along.AddAndGetAsync(3), Is.EqualTo(4));
+            Assert.That(await along.GetAsync(), Is.EqualTo(4));
+        }
+
+        [Test]
+        public async Task GetAndAdd()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.SetAsync(1);
+            Assert.That(await along.GetAsync(), Is.EqualTo(1));
+            Assert.That(await along.GetAndAddAsync(3), Is.EqualTo(1));
+            Assert.That(await along.GetAsync(), Is.EqualTo(4));
+        }
+
+        [TestCase(2, 3, false)]
+        [TestCase(1, 3, true)]
+        public async Task CompareAndSet(int comparand, int value, bool result)
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.SetAsync(1);
+            Assert.That(await along.GetAsync(), Is.EqualTo(1));
+            Assert.That(await along.CompareAndSetAsync(comparand, value), Is.EqualTo(result));
+            Assert.That(await along.GetAsync(), Is.EqualTo(result ? value : 1));
+        }
+
+        [Test]
+        public async Task GetAndSet()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.SetAsync(1);
+            Assert.That(await along.GetAsync(), Is.EqualTo(1));
+            Assert.That(await along.GetAndSetAsync(3), Is.EqualTo(1));
+            Assert.That(await along.GetAsync(), Is.EqualTo(3));
+        }
+
+        [Test]
+        public async Task Name()
+        {
+            var name = CreateUniqueName();
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(name);
+
+            Assert.That(along.Name, Is.EqualTo(name));
+        }
+
+        [Test]
+        public async Task MultipleDestroy()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
 
             await along.DestroyAsync();
-            await along.DisposeAsync();
+            await along.DestroyAsync();
+        }
+
+        [Test]
+        public async Task AfterDestroy()
+        {
+            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+
+            await along.DestroyAsync();
+
+            var e = await AssertEx.ThrowsAsync<RemoteException>(async () => await along.SetAsync(1));
+            Assert.That(e.Error, Is.EqualTo(RemoteError.DistributedObjectDestroyed));
         }
     }
 }
