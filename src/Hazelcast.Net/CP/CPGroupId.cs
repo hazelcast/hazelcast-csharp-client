@@ -16,9 +16,9 @@ using System;
 
 namespace Hazelcast.CP
 {
-    internal sealed class RaftGroupId : IEquatable<RaftGroupId>
+    internal sealed class CPGroupId : ICPGroupId, IEquatable<CPGroupId>
     {
-        public RaftGroupId(string name, long seed, long commitIndex)
+        public CPGroupId(string name, long seed, long commitIndex)
         {
             Name = name;
             Seed = seed;
@@ -31,7 +31,7 @@ namespace Hazelcast.CP
 
         public string Name { get; }
 
-        public bool Equals(RaftGroupId other)
+        public bool Equals(CPGroupId other)
         {
             if (other is null) return false;
             return ReferenceEquals(this, other) || EqualsN(this, other);
@@ -40,10 +40,10 @@ namespace Hazelcast.CP
         public override bool Equals(object other)
         {
             if (ReferenceEquals(this, other)) return true;
-            return other is RaftGroupId thing && EqualsN(this, thing);
+            return other is CPGroupId thing && EqualsN(this, thing);
         }
 
-        public static bool Equals(RaftGroupId left, RaftGroupId right)
+        public static bool Equals(CPGroupId left, CPGroupId right)
         {
             if (ReferenceEquals(left, right)) return true;
             if (left is null || right is null) return false;
@@ -61,11 +61,11 @@ namespace Hazelcast.CP
             }
         }
 
-        public static bool operator ==(RaftGroupId left, RaftGroupId right) => Equals(left, right);
+        public static bool operator ==(CPGroupId left, CPGroupId right) => Equals(left, right);
 
-        public static bool operator !=(RaftGroupId left, RaftGroupId right) => !Equals(left, right);
+        public static bool operator !=(CPGroupId left, CPGroupId right) => !Equals(left, right);
 
-        private static bool EqualsN(RaftGroupId left, RaftGroupId right)
+        private static bool EqualsN(CPGroupId left, CPGroupId right)
             => left.Id == right.Id &&
                left.Seed == right.Seed &&
                left.Name == right.Name;

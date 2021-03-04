@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
 using Hazelcast.Transactions;
@@ -52,6 +53,11 @@ namespace Hazelcast
         /// option value. Alternatively, it is "dev" by default.</para>
         /// </remarks>
         string ClusterName { get; }
+
+        /// <summary>
+        /// Gets the CP subsystem.
+        /// </summary>
+        ICPSubsystem CPSubsystem { get; }
 
         // TODO: consider implementing client.ClusterId
         /*

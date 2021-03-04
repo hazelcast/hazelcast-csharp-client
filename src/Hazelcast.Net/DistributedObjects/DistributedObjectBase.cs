@@ -42,7 +42,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectBase"/> class.
         /// </summary>
-        /// <param name="serviceName">the name of the service managing this object.</param>
+        /// <param name="serviceName">The name of the service managing this object.</param>
         /// <param name="name">The unique name of the object.</param>
         /// <param name="factory">The distributed object factory.</param>
         /// <param name="cluster">A cluster.</param>
@@ -133,6 +133,12 @@ namespace Hazelcast.DistributedObjects
         /// <inheritdoc />
         public async ValueTask DestroyAsync()
             => await _factory.DestroyAsync(this).CfAwait();
+
+        /// <summary>
+        /// Performs required operations when destroying an object (but before it is destroyed).
+        /// </summary>
+        /// <returns>A task that will complete when done.</returns>
+        protected internal virtual ValueTask DestroyingAsync() => default;
 
         /// <summary>
         /// Serializes an object to <see cref="IData"/>.

@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;

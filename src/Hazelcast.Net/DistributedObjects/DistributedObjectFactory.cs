@@ -172,6 +172,9 @@ namespace Hazelcast.DistributedObjects
             if (attempt)
                 await TryDispose(attempt.Value).CfAwait();
 
+            var ob = (DistributedObjectBase) o; // we *know* all our objects inherit from the base object
+            await ob.DestroyingAsync().CfAwait();
+
             // regardless of whether the object was known locally, destroy on server
             var clientMessage = ClientDestroyProxyCodec.EncodeRequest(o.Name, o.ServiceName);
             var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CfAwait();
