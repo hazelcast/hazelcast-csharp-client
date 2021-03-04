@@ -7,15 +7,9 @@
     <Description>A testing library for creating Expected Objects</Description>
     <PackageTags>bdd tdd testing</PackageTags>
     <PackageProjectUrl>https://github.com/derekgreer/expectedObjects/</PackageProjectUrl>
-	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/derekgreer/expectedObjects/</RepositoryUrl>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>

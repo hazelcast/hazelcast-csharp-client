@@ -13,8 +13,18 @@
 // limitations under the License.
 
 using System.Runtime.CompilerServices;
-using Hazelcast;
 using NUnit.Framework;
 
-[assembly: NonTestAssembly]
+#if ASSEMBLY_SIGNING
+
+using Hazelcast;
+
 [assembly: InternalsVisibleTo("Hazelcast.Net.Tests, PublicKey=" + AssemblySigning.PublicKey)]
+
+#else
+
+[assembly: InternalsVisibleTo("Hazelcast.Net.Tests")]
+
+#endif
+
+[assembly: NonTestAssembly]

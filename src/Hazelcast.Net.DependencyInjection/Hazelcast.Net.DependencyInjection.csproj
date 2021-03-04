@@ -5,10 +5,8 @@
     <RootNamespace>Hazelcast.DependencyInjection</RootNamespace>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
     <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

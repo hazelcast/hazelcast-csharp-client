@@ -13,15 +13,27 @@
 // limitations under the License.
 
 using System.Runtime.CompilerServices;
-using Hazelcast;
 
 // NOTE: do NOT make this assembly visible to Hazelcast.Net.Examples, as
 // the whole point of examples is to show how *users* can use the library!
+
+#if ASSEMBLY_SIGNING
+
+using Hazelcast;
 
 [assembly: InternalsVisibleTo("Hazelcast.Net.Tests, PublicKey=" + AssemblySigning.PublicKey)]
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing, PublicKey=" + AssemblySigning.PublicKey)]
 [assembly: InternalsVisibleTo("hb, PublicKey=" + AssemblySigning.PublicKey)]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection, PublicKey=" + AssemblySigning.PublicKey)]
+
+#else
+
+[assembly: InternalsVisibleTo("Hazelcast.Net.Tests")]
+[assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
+[assembly: InternalsVisibleTo("hb")]
+[assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
+
+#endif
 
 // We propose to accept that the code is not CLS Compliant anymore (remove
 // the CLSCompliant attribute), i.e. to stop actively indicating that the
