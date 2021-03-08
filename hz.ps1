@@ -32,7 +32,7 @@ param (
 
     # The Hazelcast default server version.
     [string]
-    $server = "4.1",
+    $server = "4.0",
 
     # Target framework(s).
     [Alias("f")]
