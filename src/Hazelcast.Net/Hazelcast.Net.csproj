@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <RootNamespace>Hazelcast</RootNamespace>
-    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <!--
@@ -30,9 +29,10 @@
     <PackageTags>hazelcast cache imdg big-data in-memory datagrid clustering scalabilty distributed caching</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageIcon>nuget-logo.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
     <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -55,17 +55,7 @@
     <!-- building generates some *.AssemblyInfo.cs files that we want to embed -->
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
 
-    <!-- enable settings that only apply to official builds (deterministic source paths, etc) -->
-    <!-- TODO add a Condition="'$(JENKINS_CI)' == 'true'" of some sort + args to the build script? -->
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants)</DefineConstants>
+    <!-- ContinuousIntegrationBuild is set via a dotnet pack option -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -82,23 +72,6 @@
     <ProjectReference Include="..\Hazelcast.Net.JetBrainsAnnotations\Hazelcast.Net.JetBrainsAnnotations.csproj" PrivateAssets="All" />
   </ItemGroup>
 
-  <!--
-  <ItemGroup>
-    <None Include="nuget-logo.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
-  -->
-
-  <!-- required for building net462+ -->
-  <!--
-  <ItemGroup>
-    <Reference Include="System.IdentityModel" />
-    <Reference Include="System.IdentityModel.Selectors" />
-  </ItemGroup>
-  -->
-
   <ItemGroup>
     <Compile Update="Core\BytesExtensions.*.cs">
         <DependentUpon>BytesExtensions.cs</DependentUpon>
@@ -109,16 +82,11 @@
     <Compile Update="Clustering\Cluster+*.cs">
         <DependentUpon>Cluster.cs</DependentUpon>
     </Compile>
-    <Compile Update="Configuration\Binding\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
+    <Compile Update="DistributedObjects\IHMap.*.cs">
+        <DependentUpon>IHMap.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\IHDictionary.*.cs">
-        <DependentUpon>IHDictionary.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHReplicatedDictionary.*.cs">
-        <DependentUpon>IHReplicatedDictionary.cs</DependentUpon>
+    <Compile Update="DistributedObjects\IHReplicatedMap.*.cs">
+        <DependentUpon>IHReplicatedMap.cs</DependentUpon>
     </Compile>
     <Compile Update="Networking\SocketConnectionBase+*.cs">
         <DependentUpon>SocketConnectionBase.cs</DependentUpon>
@@ -141,20 +109,20 @@
     <Compile Update="DistributedObjects\Impl\HList.*.cs">
       <DependentUpon>HList.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionary.*.cs">
-      <DependentUpon>HDictionary.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HMap.*.cs">
+      <DependentUpon>HMap.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HDictionaryWithCache.*.cs">
-      <DependentUpon>HDictionaryWithCache.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HMapWithCache.*.cs">
+      <DependentUpon>HMapWithCache.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HMultiDictionary.*.cs">
-      <DependentUpon>HMultiDictionary.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HMultiMap.*.cs">
+      <DependentUpon>HMultiMap.cs</DependentUpon>
     </Compile>
     <Compile Update="DistributedObjects\Impl\HQueue.*.cs">
       <DependentUpon>HQueue.cs</DependentUpon>
     </Compile>
-    <Compile Update="DistributedObjects\Impl\HReplicatedDictionary.*.cs">
-      <DependentUpon>HReplicatedDictionary.cs</DependentUpon>
+    <Compile Update="DistributedObjects\Impl\HReplicatedMap.*.cs">
+      <DependentUpon>HReplicatedMap.cs</DependentUpon>
     </Compile>
     <Compile Update="DistributedObjects\Impl\HRingBuffer.*.cs">
       <DependentUpon>HRingBuffer.cs</DependentUpon>
@@ -174,6 +142,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Configuration\Binding\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Update="Configuration\Binding\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -181,82 +157,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="nuget-logo.png">
+    <None Include="..\nuget-logo.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="DistributedObjects\IHMap.Setting.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.Removing.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.Processing.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.Intercepting.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.Indexing.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.Getting.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.Events.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.Caching.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\IHMap.AggrProj.cs">
-      <DependentUpon>IHMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMapWithCache.Setting.cs">
-      <DependentUpon>HMapWithCache.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMapWithCache.Removing.cs">
-      <DependentUpon>HMapWithCache.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMapWithCache.Processing.cs">
-      <DependentUpon>HMapWithCache.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMapWithCache.Getting.cs">
-      <DependentUpon>HMapWithCache.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Setting.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Removing.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Processing.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Locking.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Intercepting.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Indexing.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Getting.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Events.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.Caching.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
-    <Compile Update="DistributedObjects\Impl\HMap.AggrProj.cs">
-      <DependentUpon>HMap.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
 
 </Project>

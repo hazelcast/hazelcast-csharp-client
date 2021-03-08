@@ -3,9 +3,10 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <RootNamespace>Hazelcast</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
     <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>

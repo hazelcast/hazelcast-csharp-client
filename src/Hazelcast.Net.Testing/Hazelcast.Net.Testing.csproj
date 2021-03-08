@@ -10,16 +10,13 @@
 
   <PropertyGroup>
     <RootNamespace>Hazelcast.Testing</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
     <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);SERVER_CODEC</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup>
     <DefineConstants>$(DefineConstants);SERVER_CODEC</DefineConstants>
   </PropertyGroup>
 

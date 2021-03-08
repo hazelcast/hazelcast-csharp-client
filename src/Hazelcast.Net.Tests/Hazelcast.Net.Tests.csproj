@@ -12,17 +12,10 @@
     <IsPackable>false</IsPackable>
     <RootNamespace>Hazelcast.Tests</RootNamespace>
     <UserSecretsId>7aab0d14-5061-42a3-a706-fe9f428ea22c</UserSecretsId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
     <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\public.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -56,6 +49,7 @@
     <ProjectReference Include="..\Hazelcast.Net.Testing\Hazelcast.Net.Testing.csproj" />
     <ProjectReference Include="..\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj" />
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
+    <ProjectReference Include="..\Hazelcast.Net.AspNetProviders.Shared\Hazelcast.Net.AspNetProviders.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

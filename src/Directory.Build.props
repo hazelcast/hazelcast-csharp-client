@@ -19,13 +19,22 @@
     <DefineConstants>$(DefineUserConstants)</DefineConstants>
   </PropertyGroup>
 
+  <!-- misc project options -->
   <PropertyGroup>
+    <NeutralLanguage>en</NeutralLanguage>
     <LangVersion>8.0</LangVersion>
     <!--<Nullable>enable</Nullable>-->
   </PropertyGroup>
 
+  <!-- assembly signing -->
   <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+    <PublicSign>false</PublicSign>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
 
+  <!-- versioning and packaging -->
+  <PropertyGroup>
     <!--
     https://cezarypiatek.github.io/post/setting-assembly-and-package-metadata/
     <Version>4.0.0-alpha.2</Version>
@@ -44,7 +53,6 @@
 
     <!-- https://devblogs.microsoft.com/nuget/managing-package-owners/ -->
     <Owners>Hazelcast, Inc.</Owners>
-
   </PropertyGroup>
 
 </Project>
