@@ -1106,10 +1106,12 @@ if ($doDocs) {
         $devwarnMessage = "<div id=`"devwarn`">This page documents a development version of the Hazelcast .NET client. " +
                           "Its content is not final and remains subject to changes.</div>"
         $devwarnClass = "devwarn"
+        $devdoc = "<li>development / in-progress version <a href=`"dev/doc/index.html`">$version</a></li>"
     }
     else {
         $devwarnMessage = ""
         $devwarnClass = ""
+        $devdoc = ""
     }
 
     get-childitem -recurse -path "$tmpDir/docfx.out/$docDstDir" -filter *.html |
@@ -1118,6 +1120,14 @@ if ($doDocs) {
             $text = $text `
                 -replace "<!-- DEVWARN -->", $devwarnMessage `
                 -replace "DEVWARN", $devwarnClass
+            set-content -path $_ -value $text
+        }
+
+    get-childitem -path "$tmpDir/docfx.out" -filter "*-index.html" |
+        foreach-object {
+            $text = get-content -path $_
+            $text = $text `
+                -replace "<li><!--DEVDOC--></li>", $devdoc
             set-content -path $_ -value $text
         }
 }
