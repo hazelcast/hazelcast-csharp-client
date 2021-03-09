@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Events | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Events | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.56.6.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="events">Events</h1>
+
+<p>Events in the Hazelcast .NET Client rely on a handler-based model close to the C# <code>event</code> model, though with a different syntax for adding and removing handlers, due to the asynchronous nature of these operations. Indeed, the following code has limitations:</p>
+<pre><code class="lang-csharp">thing.Updated += OnThingUpdated;
+thing.Deleted += OnThingDeleted;
+</code></pre><p>Here,</p>
+<ul>
+<li>The two operations are distinct, whereas Hazelcast supports subscriptions that handle multiple events at once;</li>
+<li>The subscription (<code>+=</code> operation) is synchronous, whereas Hazelcast needs to notify the members of the subscription;</li>
+<li>The handlers (e.g. <code>OnThingUpdated</code>) are synchronous.</li>
+</ul>
+<p>To overcome these limitations, the Hazelcast .NET Client uses the following syntax:</p>
+<pre><code class="lang-csharp">var id = await thing.SubscribeAsync(events =&gt; events
+    .Updated(OnThingUpdated)
+    .Deleted(OnThingDeleted));
+</code></pre><p>Here, the handlers can be synchronous, for instance:</p>
+<pre><code class="lang-csharp">private void OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{ 
+    ...
+}
+</code></pre><p>But they can also be asynchronous, for instance:</p>
+<pre><code class="lang-csharp">private async ValueTask OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{
+    await ...
+}
+</code></pre><p>In the example, the two events are subscribed <em>at once</em> and that subscription is represented by the returned <code>id</code>, which is a <code>Guid</code>. The two events can only be unsubscribed <em>at once</em> too, by passing this <code>id</code>:</p>
+<pre><code class="lang-csharp">await thing.UnsubscribeAsync(id);
+</code></pre><h2 id="client-events">Client Events</h2>
+<p>The <code>IHazelcastClient</code> exposes the following events:</p>
+<ul>
+<li><code>StateChanged</code> triggers when the client state changes (TODO: link to client lifecycle doc)</li>
+<li><code>PartitionLost</code> triggers when (TODO: complete)</li>
+<li><code>PartitionsUpdated</code> triggers when the partitions table is updated</li>
+<li><code>MembersUpdated</code> triggers when the members list is updated</li>
+<li><code>ObjectCreated</code> triggers when a distributed object is created</li>
+<li><code>ObjectDestroyed</code> triggers when a distributed object is destroyed</li>
+</ul>
+<p>TODO: detail each event args</p>
+<h2 id="distributed-objects-events">Distributed Objects Events</h2>
+<p>TODO: complete</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
