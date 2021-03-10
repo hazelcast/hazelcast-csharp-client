@@ -82,10 +82,44 @@
 
 <p>Distributed objects are managed by an Hazelcast cluster, and accessed via the Hazelcast .NET client. Currently, the client supports the following distributed objects:</p>
 <ul>
-<li><a href="hdictionary.md">HDictionary</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.org/docs/latest/manual/html-single/#map">Map</a></li>
-<li><a href="hlist.md">HList</a> - a distributed list store corresponding to a cluster-side <a href="https://docs.hazelcast.org/docs/latest/manual/html-single/#list">List</a></li>
+<li><a href="hmap.html">HMap</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/map.html">Map</a></li>
+<li><a href="hmap.html">HMultiMap</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/multimap.html">MultiMap</a></li>
+<li><a href="hmap.html">HReplicatedMap</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/replicated-map.html">ReplicatedMap</a></li>
+<li><a href="hlist.html">HList</a> - a distributed list store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/list.html">List</a></li>
+<li><a href="hqueue.html">HQueue</a> - a distributed queue store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/queue.html">Queue</a></li>
+<li><a href="hringbuffer.html">HRingBuffer</a> - a distributed ring-buffer corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/ringbuffer.html">Map</a></li>
+<li><a href="hset.html">HSet</a> - a distributed set store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/set.html">Set</a></li>
+<li><a href="htopic.html">HTopic</a> - a distributed message-publishing store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/topic.html">Topic</a></li>
 </ul>
-<p>(to be completed)</p>
+<p>Distributed objects are obtained from the Hazelcast .NET Client and are fully identified by their unique name. If an object of the specified type and with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;);
+</code></pre><p>Distributed objects should be disposed when not used, in order to release their resources. Note that this only releases <em>client-side</em> resources, but the actual data remain available on the cluster for further usage.</p>
+<p>In order to wipe a distributed object entirely from the cluster, the object needs to be destroyed:</p>
+<pre><code class="lang-csharp">await map.DestroyAsync();
+</code></pre><h2 id="transactions">Transactions</h2>
+<p>In a transaction context, <em>transactional</em> versions of some distributed objects can be retrieved:</p>
+<ul>
+<li><code>HTxList</code> - a transactional version of an <code>HList</code> object</li>
+<li><code>HTxMap</code> - a transactional version of an <code>HMap</code> object</li>
+<li><code>HTxMultiMap</code> - a transactional version of an <code>HMultiMap</code> object</li>
+<li><code>HTxQueue</code> - a transactional version of an <code>HQueue</code> object</li>
+<li><code>HTxSet</code> - a transactional version of an <code>HSet</code> object</li>
+</ul>
+<p>For instance:</p>
+<pre><code class="lang-csharp">using (var tx = await client.BeginTransactionAsync())
+{
+    using (var txmap = await tx.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;))
+    {
+        // ...    
+    }
+
+    tx.Complete();
+}
+</code></pre><p>Transactional objects expose a subset of the methods of the original object, which are performed in a transactional way and are either commited (if the transaction is completed) or rolled back. Refer to the <a href="transactions.md">Transactions</a> page for more details.</p>
+<h2 id="object-names-and-types">Object Names and Types</h2>
+<p>The name of a distributed object is unique accross its type: there can only be one <code>HMap</code> object named <code>&quot;my_map&quot;</code>, but there can also be an <code>HList</code> object named <code>&quot;my-map&quot;</code>.</p>
+<p>&quot;Type&quot;, here, means the <em>generic definition</em> of the type, e.g. <code>HMap&lt;,&gt;</code> or <code>HList&lt;&gt;</code> and <em>not</em> the complete type (e.g. <code>HList&lt;string&gt;</code>).</p>
+<p>This means that there is, in reality, one unique <code>HMap&lt;,&gt;</code> object named <code>&quot;my-map&quot;</code>, and that <code>client.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;)</code> would refer to the exact same object as <code>client.GetMap&lt;int, int&gt;(&quot;my-map&quot;)</code>. The consequences of refering to an object with different types are not specified: it <em>may</em> work if types can be implicitly casted, and will <em>not</em> work if they cannot. This is not recommended.</p>
 </article>
           </div>
           
@@ -107,7 +141,7 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            Copyright &copy; 2010-2020 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
             
           </div>
         </div>

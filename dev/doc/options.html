@@ -180,8 +180,8 @@
 <td><p>Gets or sets the min retry delay.</p></td>
 </tr>
 <tr>
-<td><a class="xref" href="../api/Hazelcast.Messaging.MessagingOptions.InvocationTimeoutMilliseconds.html#Hazelcast_Messaging_MessagingOptions_InvocationTimeoutMilliseconds">InvocationTimeoutMilliseconds</a></td>
-<td><p>Gets or sets the invocation timeout.</p></td>
+<td><a class="xref" href="../api/Hazelcast.Messaging.MessagingOptions.RetryTimeoutSeconds.html#Hazelcast_Messaging_MessagingOptions_RetryTimeoutSeconds">RetryTimeoutSeconds</a></td>
+<td><p style="margin-bottom: 4px;">Gets or sets the invocation timeout.</p> <p>The <a class="xref" href="../api/Hazelcast.Messaging.MessagingOptions.RetryTimeoutSeconds.html#Hazelcast_Messaging_MessagingOptions_RetryTimeoutSeconds">RetryTimeoutSeconds</a> is a soft timeout that prevents retrying an invocation for too long in case it fails. It does <em>not</em> controls the duration of a single try, and does <em>not</em> abort it. And invocation single try can run for as long as the connection that supports it remains open.</p></td>
 </tr>
 </tbody>
 </table>
@@ -212,12 +212,12 @@
 <td><p style="margin-bottom: 4px;">Whether to retry operations.</p> <p>While sending the requests to related members, operations can fail due to various reasons. Read-only operations are retried by default. If you want to enable retry for the other operations, set this property to <code>true</code>.</p> <p>Note that it is not clear whether the operation is performed or not. For idempotent operations this is harmless, but for non idempotent ones retrying can cause undesirable effects. Also note that the redo can perform on any member.</p></td>
 </tr>
 <tr>
-<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.html#Hazelcast_Networking_NetworkingOptions_ConnectionTimeoutMilliseconds">ConnectionTimeoutMilliseconds</a></td>
-<td><p style="margin-bottom: 4px;">Gets or sets the connection timeout.</p> <p>Specifies the Hazelcast client connection timeout, i.e. the maximum amount of time the Hazelcast can spend trying to establish a connection to the cluster. See <a class="xref" href="../api/Hazelcast.Networking.SocketOptions.html">SocketOptions</a> for specifying the individual socket connection timeout.</p></td>
-</tr>
-<tr>
 <td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ReconnectMode.html#Hazelcast_Networking_NetworkingOptions_ReconnectMode">ReconnectMode</a></td>
 <td><p>Gets or sets the <a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ReconnectMode.html#Hazelcast_Networking_NetworkingOptions_ReconnectMode">ReconnectMode</a> in case the client is disconnected.</p></td>
+</tr>
+<tr>
+<td><a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.html#Hazelcast_Networking_NetworkingOptions_ConnectionTimeoutMilliseconds">ConnectionTimeoutMilliseconds</a></td>
+<td><p style="margin-bottom: 4px;">Gets or sets the connection timeout.</p> <p>This timeout is used in various places. It is the connection timeout for each individual socket. It is also the timeout for cloud discovery.</p></td>
 </tr>
 </tbody>
 </table>
@@ -307,14 +307,10 @@
 <td><a class="xref" href="../api/Hazelcast.Networking.SocketOptions.TcpNoDelay.html#Hazelcast_Networking_SocketOptions_TcpNoDelay">TcpNoDelay</a></td>
 <td><p>Whether the socket is using the Nagle algorithm.</p></td>
 </tr>
-<tr>
-<td><a class="xref" href="../api/Hazelcast.Networking.SocketOptions.ConnectionTimeoutMilliseconds.html#Hazelcast_Networking_SocketOptions_ConnectionTimeoutMilliseconds">ConnectionTimeoutMilliseconds</a></td>
-<td><p>The socket connection timeout.</p></td>
-</tr>
 </tbody>
 </table>
 <h3 id="connectionretry">ConnectionRetry</h3>
-<p>Access <a class="xref" href="../api/Hazelcast.Core.RetryOptions.html">RetryOptions</a> via options.Networking.<a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ConnectionRetry.html#Hazelcast_Networking_NetworkingOptions_ConnectionRetry">ConnectionRetry</a>.</p>
+<p>Access <a class="xref" href="../api/Hazelcast.Core.ConnectionRetryOptions.html">ConnectionRetryOptions</a> via options.Networking.<a class="xref" href="../api/Hazelcast.Networking.NetworkingOptions.ConnectionRetry.html#Hazelcast_Networking_NetworkingOptions_ConnectionRetry">ConnectionRetry</a>.</p>
 <table>
 <thead>
 <tr>
@@ -324,23 +320,23 @@
 </thead>
 <tbody>
 <tr>
-<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.InitialBackoffMilliseconds.html#Hazelcast_Core_RetryOptions_InitialBackoffMilliseconds">InitialBackoffMilliseconds</a></td>
-<td><p>Gets or sets the back-off time in milliseconds.</p></td>
+<td><a class="xref" href="../api/Hazelcast.Core.ConnectionRetryOptions.InitialBackoffMilliseconds.html#Hazelcast_Core_ConnectionRetryOptions_InitialBackoffMilliseconds">InitialBackoffMilliseconds</a></td>
+<td><p>Gets or sets the initial back-off time in milliseconds.</p></td>
 </tr>
 <tr>
-<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.MaxBackoffMilliseconds.html#Hazelcast_Core_RetryOptions_MaxBackoffMilliseconds">MaxBackoffMilliseconds</a></td>
+<td><a class="xref" href="../api/Hazelcast.Core.ConnectionRetryOptions.MaxBackoffMilliseconds.html#Hazelcast_Core_ConnectionRetryOptions_MaxBackoffMilliseconds">MaxBackoffMilliseconds</a></td>
 <td><p>Gets or sets the maximum back-off time in milliseconds.</p></td>
 </tr>
 <tr>
-<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.Multiplier.html#Hazelcast_Core_RetryOptions_Multiplier">Multiplier</a></td>
+<td><a class="xref" href="../api/Hazelcast.Core.ConnectionRetryOptions.Multiplier.html#Hazelcast_Core_ConnectionRetryOptions_Multiplier">Multiplier</a></td>
 <td><p>Gets or sets the multiplier.</p></td>
 </tr>
 <tr>
-<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.ClusterConnectionTimeoutMilliseconds.html#Hazelcast_Core_RetryOptions_ClusterConnectionTimeoutMilliseconds">ClusterConnectionTimeoutMilliseconds</a></td>
-<td><p>Gets or sets the cluster connection timeout in milliseconds.</p></td>
+<td><a class="xref" href="../api/Hazelcast.Core.ConnectionRetryOptions.ClusterConnectionTimeoutMilliseconds.html#Hazelcast_Core_ConnectionRetryOptions_ClusterConnectionTimeoutMilliseconds">ClusterConnectionTimeoutMilliseconds</a></td>
+<td><p>Gets or sets the timeout in milliseconds.</p></td>
 </tr>
 <tr>
-<td><a class="xref" href="../api/Hazelcast.Core.RetryOptions.Jitter.html#Hazelcast_Core_RetryOptions_Jitter">Jitter</a></td>
+<td><a class="xref" href="../api/Hazelcast.Core.ConnectionRetryOptions.Jitter.html#Hazelcast_Core_ConnectionRetryOptions_Jitter">Jitter</a></td>
 <td><p>Gets or sets the jitter.</p></td>
 </tr>
 </tbody>
@@ -472,7 +468,7 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            Copyright &copy; 2010-2020 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
             
           </div>
         </div>

@@ -147,78 +147,14 @@
     </tr>
   </tbody>
 </table>
-<a id="Hazelcast_HazelcastOptions_Build_" data-uid="Hazelcast.HazelcastOptions.Build*"></a>
-<h4 id="Hazelcast_HazelcastOptions_Build_System_Action_Microsoft_Extensions_Configuration_IConfigurationBuilder__System_Action_Microsoft_Extensions_Configuration_IConfiguration_Hazelcast_HazelcastOptions__" data-uid="Hazelcast.HazelcastOptions.Build(System.Action{Microsoft.Extensions.Configuration.IConfigurationBuilder},System.Action{Microsoft.Extensions.Configuration.IConfiguration,Hazelcast.HazelcastOptions})">Build(Action&lt;IConfigurationBuilder&gt;, Action&lt;IConfiguration, HazelcastOptions&gt;)</h4>
-<div class="markdown level1 summary"><p>Builds Hazelcast options.</p>
+<h5 id="Hazelcast_HazelcastOptions_Build_System_String___System_Collections_Generic_IEnumerable_System_Collections_Generic_KeyValuePair_System_String_System_String___System_String_System_String_System_String_System_Action_Microsoft_Extensions_Configuration_IConfiguration_Hazelcast_HazelcastOptions___remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>When <code data-dev-comment-type="paramref" class="paramref">optionsFilePath</code> is not provided, the options file is searched in the
+default .NET configuration location, which usually is where the application resides.</p>
+<p>When <code data-dev-comment-type="paramref" class="paramref">optionsFileName</code> is not provided, the name is &quot;hazelcast&quot;.</p>
+<p>When <code data-dev-comment-type="paramref" class="paramref">environmentName</code> is not provided, it is determined the standard .NET way,
+i.e. from the <code>DOTNET_ENVIRONMENT</code> and <code>ASPNETCORE_ENVIRONMENT</code> variables and,
+if not specified, defaults to &quot;Production&quot;.</p>
 </div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static HazelcastOptions Build(Action&lt;IConfigurationBuilder&gt; setup, Action&lt;IConfiguration, HazelcastOptions&gt; configure = null)</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.configuration.iconfigurationbuilder">IConfigurationBuilder</a>&gt;</td>
-      <td><span class="parametername">setup</span></td>
-      <td><p>An <a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.configuration.iconfigurationbuilder">IConfigurationBuilder</a> setup delegate.</p>
-</td>
-    </tr>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.configuration.iconfiguration">IConfiguration</a>, <a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a>&gt;</td>
-      <td><span class="parametername">configure</span></td>
-      <td><p>Optional <a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a> configuration delegate.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a></td>
-      <td><p>Hazelcast options.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<a id="Hazelcast_HazelcastOptions_Build_" data-uid="Hazelcast.HazelcastOptions.Build*"></a>
-<h4 id="Hazelcast_HazelcastOptions_Build_Microsoft_Extensions_Configuration_IConfiguration_System_Action_Microsoft_Extensions_Configuration_IConfiguration_Hazelcast_HazelcastOptions__" data-uid="Hazelcast.HazelcastOptions.Build(Microsoft.Extensions.Configuration.IConfiguration,System.Action{Microsoft.Extensions.Configuration.IConfiguration,Hazelcast.HazelcastOptions})">Build(IConfiguration, Action&lt;IConfiguration, HazelcastOptions&gt;)</h4>
-<div class="markdown level1 summary"><p>Builds Hazelcast options.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static HazelcastOptions Build(IConfiguration configuration, Action&lt;IConfiguration, HazelcastOptions&gt; configure = null)</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.configuration.iconfiguration">IConfiguration</a></td>
-      <td><span class="parametername">configuration</span></td>
-      <td><p>An <a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.configuration.iconfiguration">IConfiguration</a> instance.</p>
-</td>
-    </tr>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-2">Action</a>&lt;<a class="xref" href="https://docs.microsoft.com/dotnet/api/microsoft.extensions.configuration.iconfiguration">IConfiguration</a>, <a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a>&gt;</td>
-      <td><span class="parametername">configure</span></td>
-      <td><p>Optional <a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a> configuration delegate.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a></td>
-      <td><p>Hazelcast options.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
 </article>
           </div>
           
@@ -240,7 +176,7 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            Copyright &copy; 2010-2020 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
             
           </div>
         </div>

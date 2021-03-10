@@ -93,7 +93,7 @@
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(CancellationToken cancellationToken)</code></pre>
+  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(CancellationToken cancellationToken = default(CancellationToken))</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -101,7 +101,7 @@
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></td>
       <td><span class="parametername">cancellationToken</span></td>
-      <td><p>A cancellation token.</p>
+      <td><p>An optional cancellation token.</p>
 </td>
     </tr>
   </tbody>
@@ -120,57 +120,13 @@
 <div class="markdown level1 remarks"><p>Options are built via HazelcastOptions.Build method.</p>
 </div>
 <a id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync*"></a>
-<h4 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_System_TimeSpan_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync(System.TimeSpan)">StartNewClientAsync(TimeSpan)</h4>
-<div class="markdown level1 summary"><p>Starts a new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance with the automatic options.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(TimeSpan timeout = default(TimeSpan))</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
-      <td><span class="parametername">timeout</span></td>
-      <td><p>A timeout.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1">ValueTask</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>&gt;</td>
-      <td><p>A new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>Options are built via HazelcastOptions.Build method.</p>
-<p>If the timeout is omitted, then the timeout configured in the options is used.</p>
-</div>
-<h5 class="exceptions">Exceptions</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="Hazelcast.Exceptions.TaskTimeoutException.html">TaskTimeoutException</a></td>
-      <td><p>Failed to connect within the specified timeout.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<a id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync*"></a>
 <h4 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_System_Action_Hazelcast_HazelcastOptions__System_Threading_CancellationToken_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync(System.Action{Hazelcast.HazelcastOptions},System.Threading.CancellationToken)">StartNewClientAsync(Action&lt;HazelcastOptions&gt;, CancellationToken)</h4>
 <div class="markdown level1 summary"><p>Starts a new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance with configured options.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(Action&lt;HazelcastOptions&gt; configure, CancellationToken cancellationToken)</code></pre>
+  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(Action&lt;HazelcastOptions&gt; configure, CancellationToken cancellationToken = default(CancellationToken))</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -184,7 +140,7 @@
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></td>
       <td><span class="parametername">cancellationToken</span></td>
-      <td><p>A cancellation token.</p>
+      <td><p>A optional cancellation token.</p>
 </td>
     </tr>
   </tbody>
@@ -204,64 +160,13 @@
 method and passed to the <code data-dev-comment-type="paramref" class="paramref">configure</code> method, where they can be refined and adjusted, before being used to create the client.</p>
 </div>
 <a id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync*"></a>
-<h4 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_System_Action_Hazelcast_HazelcastOptions__System_TimeSpan_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync(System.Action{Hazelcast.HazelcastOptions},System.TimeSpan)">StartNewClientAsync(Action&lt;HazelcastOptions&gt;, TimeSpan)</h4>
-<div class="markdown level1 summary"><p>Starts a new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance with configured options.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(Action&lt;HazelcastOptions&gt; configure, TimeSpan timeout = default(TimeSpan))</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.action-1">Action</a>&lt;<a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a>&gt;</td>
-      <td><span class="parametername">configure</span></td>
-      <td><p>A <a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a> configuration delegate.</p>
-</td>
-    </tr>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
-      <td><span class="parametername">timeout</span></td>
-      <td><p>A timeout.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1">ValueTask</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>&gt;</td>
-      <td><p>A new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_System_Action_Hazelcast_HazelcastOptions__System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>Options are built via the <a class="xref" href="Hazelcast.HazelcastOptions.Build.html#Hazelcast_HazelcastOptions_Build_System_String___System_Collections_Generic_IEnumerable_System_Collections_Generic_KeyValuePair_System_String_System_String___System_String_System_String_System_String_System_Action_Microsoft_Extensions_Configuration_IConfiguration_Hazelcast_HazelcastOptions__">Build(String[], IEnumerable&lt;KeyValuePair&lt;String, String&gt;&gt;, String, String, String, Action&lt;IConfiguration, HazelcastOptions&gt;)</a>
-method and passed to the <code data-dev-comment-type="paramref" class="paramref">configure</code> method, where they can be refined and adjusted, before being used to create the client.</p>
-<p>If the timeout is omitted, then the timeout configured in the options is used.</p>
-</div>
-<h5 class="exceptions">Exceptions</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="Hazelcast.Exceptions.TaskTimeoutException.html">TaskTimeoutException</a></td>
-      <td><p>Failed to connect within the specified timeout.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<a id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync*"></a>
 <h4 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_Hazelcast_HazelcastOptions_System_Threading_CancellationToken_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync(Hazelcast.HazelcastOptions,System.Threading.CancellationToken)">StartNewClientAsync(HazelcastOptions, CancellationToken)</h4>
 <div class="markdown level1 summary"><p>Starts a new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance with options.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="decalaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken)</code></pre>
+  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken = default(CancellationToken))</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-striped table-condensed">
@@ -275,7 +180,7 @@ method and passed to the <code data-dev-comment-type="paramref" class="paramref"
     <tr>
       <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></td>
       <td><span class="parametername">cancellationToken</span></td>
-      <td><p>A cancellation token.</p>
+      <td><p>A optional cancellation token.</p>
 </td>
     </tr>
   </tbody>
@@ -286,55 +191,6 @@ method and passed to the <code data-dev-comment-type="paramref" class="paramref"
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1">ValueTask</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>&gt;</td>
       <td><p>A new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<a id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync*"></a>
-<h4 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_Hazelcast_HazelcastOptions_System_TimeSpan_" data-uid="Hazelcast.HazelcastClientFactory.StartNewClientAsync(Hazelcast.HazelcastOptions,System.TimeSpan)">StartNewClientAsync(HazelcastOptions, TimeSpan)</h4>
-<div class="markdown level1 summary"><p>Starts a new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance with options.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="decalaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(HazelcastOptions options, TimeSpan timeout = default(TimeSpan))</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.HazelcastOptions.html">HazelcastOptions</a></td>
-      <td><span class="parametername">options</span></td>
-      <td><p>Options.</p>
-</td>
-    </tr>
-    <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
-      <td><span class="parametername">timeout</span></td>
-      <td><p>A timeout.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1">ValueTask</a>&lt;<a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a>&gt;</td>
-      <td><p>A new <a class="xref" href="Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance.</p>
-</td>
-    </tr>
-  </tbody>
-</table>
-<h5 id="Hazelcast_HazelcastClientFactory_StartNewClientAsync_Hazelcast_HazelcastOptions_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the timeout is omitted, then the timeout configured in the options is used.</p>
-</div>
-<h5 class="exceptions">Exceptions</h5>
-<table class="table table-bordered table-striped table-condensed">
-  <tbody>
-    <tr>
-      <td class="hz-one-third"><a class="xref" href="Hazelcast.Exceptions.TaskTimeoutException.html">TaskTimeoutException</a></td>
-      <td><p>Failed to connect within the specified timeout.</p>
 </td>
     </tr>
   </tbody>
@@ -360,7 +216,7 @@ method and passed to the <code data-dev-comment-type="paramref" class="paramref"
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            Copyright &copy; 2010-2020 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
             
           </div>
         </div>

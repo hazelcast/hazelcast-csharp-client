@@ -81,43 +81,43 @@
 <h1 id="getting-started">Getting Started</h1>
 
 <h2 id="hazelcast-client">Hazelcast client</h2>
-<p>The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static <a class="xref" href="../api/Hazelcast.HazelcastClientFactory.html">HazelcastClientFactory</a>. After it has been used, it needs to be disposed in order to properly release its resources.</p>
+<p>The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static <a class="xref" href="../api/Hazelcast.HazelcastClientFactory.html">HazelcastClientFactory</a>. After it has been used, it needs to be disposed in order to properly close all connections to servers, and release resources.</p>
 <p>For example:</p>
 <pre><code class="lang-csharp">var client = await HazelcastClientFactory.StartNewClientAsync();
 // ... use the client ...
 await client.DisposeAsync();
-</code></pre><p>A client is a heavy enough, multi-threaded object. Although a factory can create several, independent clients, it is recommended to store and reuse the client instance. It is <em>not</em> recommended to frequently create and dispose clients, as that could have an impact on performances.</p>
-<p>Here, the client is configured by default, which means by configuration files and environment variables. For more control, the client can be initialized with an <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> instance, which represents the complete set of options of the Hazelcast
-client. In fact, the above example is equivalent to:</p>
+</code></pre><p>A client is a heavy enough, multi-threaded object. Although a factory can create several, independent clients, it is recommended to store and reuse the client instance, as much as possible.</p>
+<p>Here, the client is configured by default, which means by configuration files and environment variables. For more control, the client can be initialized with an <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> instance, which represents the complete set of options of the Hazelcast client. In fact, the above example is equivalent to:</p>
 <pre><code class="lang-csharp">var options = HazelcastOptions.Build();
 var client = await HazelcastClientFactory.StartNewClientAsync(options);
 // ...
 </code></pre><p>Refer to the <a href="configuration.html">Configuration</a> page for details on the various ways to build an <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> instance, including handling command-line parameters, and to the <a class="xref" href="../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> reference for a list of all the configurable elements.</p>
+<h2 id="logging">Logging</h2>
+<p>The Hazelcast .NET client uses the logging abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">Microsoft.Extensions.Logging</a> namespace. By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.</p>
+<p>See the <a href="logging.html">Logging</a> documentation for details.</p>
 <h2 id="distributed-objects">Distributed Objects</h2>
-<p>The client can be used to obtain <em>distributed objects</em> that are managed by the cluster. For instance, the cluster can manage @Hazelcast.DistributedObjects.IHDictionary`2 objects, which are an asynchronous equivalent of .NET <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary&lt;TKey,TValue&gt;</a>. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.</p>
+<p>The client can be used to obtain <em>distributed objects</em> that are managed by the cluster. For instance, the cluster can manage <a class="xref" href="../api/Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a> objects, which are an asynchronous equivalent of .NET <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary&lt;TKey,TValue&gt;</a>. Each object is identified by a unique name, which is used to retrieve the object. Finally, distributed objects need to be disposed after usage, to ensure they release their resources.</p>
 <p>For example:</p>
-<pre><code class="lang-csharp">var dict = await client.GetDictionaryAsync&lt;string, string&gt;(&quot;dict-name&quot;);
-await dict.AddOrUpdateAsync(&quot;key&quot;, &quot;value&quot;);
-var value = await dict.GetAsync(&quot;key&quot;);
-await dict.DisposeAsync();
-</code></pre><p>The @Hazelcast.IHazelcastClient.GetDictionaryAsync* method returns the existing object with the specified name, or creates a new object with that name on the cluster. That object will continue to live on the cluster after the @Hazelcast.DistributedObjects.IHDictionary`2 has been disposed. In order to remove the object from the cluster, one must destroy the object.</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;map-name&quot;);
+await map.SetAsync(&quot;key&quot;, &quot;value&quot;);
+var value = await map.GetAsync(&quot;key&quot;);
+await map.DisposeAsync();
+</code></pre><p>The <a class="xref" href="../api/Hazelcast.IHazelcastClient.GetMapAsync.html">GetMapAsync</a> method returns the existing object with the specified name, or creates a new object with that name on the cluster. That object will continue to live on the cluster after the <a class="xref" href="../api/Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a> has been disposed. In order to remove the object from the cluster, one must destroy the object.</p>
 <p>For example:</p>
-<pre><code class="lang-csharp">var dict = await client.GetDictionaryAsync&lt;string, string&gt;(&quot;dict-name&quot;);
-await dict.DestroyAsync();
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;dict-name&quot;);
+await map.DestroyAsync();
 </code></pre><p>or </p>
-<pre><code class="lang-csharp">var dict = await client.GetDictionaryAsync&lt;string, string&gt;(&quot;dict-name&quot;);
-await client.DestroyAsync(dict);
-</code></pre><p>It is also possible to destroy objects with their name, and their corresponding <em>service name</em>:</p>
-<pre><code class="lang-csharp">await client.DestroyAsync(HDictionary.ServiceName, &quot;dict-name&quot;);
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;dict-name&quot;);
+await client.DestroyAsync(map);
 </code></pre><h2 id="transactions">Transactions</h2>
-<p>The client is responsible for creating transactions.</p>
+<p>The client is responsible for creating transactions. Transactions by default follow the Microsoft&#39;s transaction pattern: they must be disposed, and commit or roll back depending on whether they have been completed.</p>
 <p>For example:</p>
 <pre><code class="lang-csharp">await using (var transaction = await client.BeginTransactionAsync())
 {
     // ... do transaction work ...
     transaction.Complete();
 }
-</code></pre><p>Here, the transaction will commit when <code>transaction</code> is disposed, because it has been completed. Had it not been completed, it would have been rolled back. Note that the explicit pattern is also supported, although less recommended:</p>
+</code></pre><p>Here, the transaction will commit when <code>transaction</code> is disposed, because it has been completed. Had it not been completed, it would have rolled back. Note that the explicit pattern is also supported, although less recommended:</p>
 <pre><code class="lang-csharp">var transaction = await client.BeginTransactionAsync();
 // ... do transaction work ...
 await transactionContext.CommitAsync();  // commmit, or...
@@ -128,7 +128,7 @@ await transaction.DisposeAsync();
 <p>The client exposes client-level events.</p>
 <p>For example:</p>
 <pre><code class="lang-csharp">var subscriptionId = await client.SubscribeAsync(events =&gt; events
-    .ClientStateChanged((sender, args) =&gt; {
+    .StateChanged((sender, args) =&gt; {
         Console.WriteLine($&quot;Client state changed to: {args.State}.&quot;)
     })
 );
@@ -175,7 +175,7 @@ var success = await dict.UnsubscribeAsync(subscriptionId);
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            Copyright &copy; 2010-2020 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
             
           </div>
         </div>
