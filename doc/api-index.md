@@ -7,7 +7,7 @@ For extra details, including all code comments, you may want to browse the [sour
 # Current version
 
 * **[4.0.1](4.0.1/api/index.html)**
-* <!--DEVDOC-->
+* <!--DEVDOC_API-->
 
 ### Previous versions
 
