@@ -7,7 +7,7 @@
   "api-index.html": {
     "href": "api-index.html",
     "title": "API | Hazelcast .NET Documentation",
-    "keywords": "API This section contains the full public API reference documentation, generated from source-code-level comments, and complemented with additional content. Use the navigation to the left to browse namespaces and members. For extra details, including all code comments, you may want to browse the source code itself. Current version 4.0.0 <!--DEVDOC--> Previous versions 3.12.3 3.12.2"
+    "keywords": "API This section contains the full public API reference documentation, generated from source-code-level comments, and complemented with additional content. Use the navigation to the left to browse namespaces and members. For extra details, including all code comments, you may want to browse the source code itself. Current version 4.0.0 <!--DEVDOC_API--> Previous versions 3.12.3 3.12.2"
   },
   "dev/api/Hazelcast.Aggregation.Aggregators.BigIntegerSum.html": {
     "href": "dev/api/Hazelcast.Aggregation.Aggregators.BigIntegerSum.html",
@@ -4742,7 +4742,7 @@
   "doc-index.html": {
     "href": "doc-index.html",
     "title": "Documentation | Hazelcast .NET Documentation",
-    "keywords": "Documentation This section contains the complete documentation for the Hazelcast .NET solution, with examples, guides and FAQ. Hazelcast .NET only provides a client-side implementation, and needs to connect to a fully configured Hazelcast cluster. Refer to the Hazelcast IMDG Reference Manual for a complete documentation of the server side of Hazelcast. The Hazelcast .NET solution is Open Source, released under the Apache License 2.0 , and welcomes contributions. The project lives on GitHub . This section also documents how to obtain the source code, build the solution, interact with the community, and contribute. It also documents the internals of the solution, which can be useful for contributors. Current version 4.0.0 <!--DEVDOC--> Previous versions -"
+    "keywords": "Documentation This section contains the complete documentation for the Hazelcast .NET solution, with examples, guides and FAQ. Hazelcast .NET only provides a client-side implementation, and needs to connect to a fully configured Hazelcast cluster. Refer to the Hazelcast IMDG Reference Manual for a complete documentation of the server side of Hazelcast. The Hazelcast .NET solution is Open Source, released under the Apache License 2.0 , and welcomes contributions. The project lives on GitHub . This section also documents how to obtain the source code, build the solution, interact with the community, and contribute. It also documents the internals of the solution, which can be useful for contributors. Current version 4.0.0 <!--DEVDOC_DOC--> Previous versions (none)"
   },
   "index.html": {
     "href": "index.html",
