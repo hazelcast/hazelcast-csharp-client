@@ -5,23 +5,23 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Documentation | Hazelcast .NET Documentation </title>
+    <title>CP SubSystem | Hazelcast .NET Documentation </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Documentation | Hazelcast .NET Documentation ">
+    <meta name="title" content="CP SubSystem | Hazelcast .NET Documentation ">
     <meta name="generator" content="docfx 2.56.6.0">
     
-    <link rel="shortcut icon" href="images/favicon.png">
-    <link rel="stylesheet" href="styles/docfx.vendor.css">
-    <link rel="stylesheet" href="styles/docfx.css">
-    <link rel="stylesheet" href="styles/main.css">
-    <meta property="docfx:navrel" content="toc.html">
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
     <meta property="docfx:tocrel" content="toc.html">
     
-    <meta property="docfx:rel" content="">
+    <meta property="docfx:rel" content="../../">
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper" class="DEVWARN">
+    <div id="wrapper" class="">
       <header>
         
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -34,8 +34,8 @@
                 <span class="icon-bar"></span>
               </button>
               
-              <a class="navbar-brand" href="index.html">
-                <img id="logo" src="images/hazelcast-logo.png" alt="">
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
                 <span>Hazelcast .NET</span>
               </a>
             </div>
@@ -48,7 +48,7 @@
             </div>
           </div>
         </nav>
-        <!-- DEVWARN -->        
+                
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
             <ul class="breadcrumb">
@@ -68,23 +68,24 @@
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
-        <div class="article row grid">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="documentation">Documentation</h1>
+<h1 id="cp-subsystem">CP SubSystem</h1>
 
-<p>This section contains the complete documentation for the Hazelcast .NET solution, with examples, guides and FAQ.</p>
-<p>Hazelcast .NET only provides a client-side implementation, and needs to connect to a fully configured Hazelcast cluster. Refer to the <a href="https://docs.hazelcast.org/docs/latest/manual/html-single/">Hazelcast IMDG Reference Manual</a> for a complete documentation of the server side of Hazelcast.</p>
-<p>The Hazelcast .NET solution is Open Source, released under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>, and welcomes contributions. The project lives on <a href="https://github.com/hazelcast/hazelcast-csharp-client">GitHub</a>. This section also documents how to obtain the source code, build the solution, interact with the community, and  contribute. It also documents the internals of the solution, which can be useful for contributors.</p>
-<h3 id="current-version">Current version</h3>
-<ul>
-<li><strong><a href="4.0.1/doc/index.html">4.0.1</a></strong></li>
-
-</ul>
-<h3 id="previous-versions">Previous versions</h3>
-<ul>
-<li><a href="4.0.0/doc/index.html">4.0.0</a></li>
-</ul>
+<div class="WARNING"><h5>Warning</h5><p>The CP SubSystem operates in the unsafe mode by default without the strong consistency guarantee. See the CP Subsystem Unsafe Mode section for more information. You should set a positive number to the CP member count configuration to enable CP Subsystem and use it with the strong consistency guarantee. See the CP Subsystem Configuration section for details.</p>
+</div>
+<div class="NOTE"><h5>Note</h5><p>See the original Java client <a href="https://docs.hazelcast.com/imdg/latest/cp-subsystem/cp-subsystem.html">CP SubSystem</a> documentation for more details.</p>
+</div>
+<p>The CP SubSystem is a component of a Hazelcast cluster that builds a strongly consistent layer for a set of distributed data structures. Its APIs can be used for implementing distributed coordination use cases, such as leader election, distributed locking, synchronization, and metadata management. It is accessed via the <code>IHazelcastClient.CPSubSystem</code> property. Its data structures are CP with respect to the <a href="http://awoc.wolski.fi/dlib/big-data/Brewer_podc_keynote_2000.pdf">CAP principle</a>, i.e., they always maintain <a href="https://aphyr.com/posts/313-strong-consistency-models">linearizability</a> and prefer consistency over availability during network partitions. Besides network partitions, the CP SubSystem withstands server and client failures.</p>
+<p>Currently, the C# client CP SubSystem only implements the <a href="atomiclong.html">AtomicLong</a> service.</p>
 </article>
           </div>
           
@@ -113,8 +114,8 @@
       </footer>
     </div>
     
-    <script type="text/javascript" src="styles/docfx.vendor.js"></script>
-    <script type="text/javascript" src="styles/docfx.js"></script>
-    <script type="text/javascript" src="styles/main.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
   </body>
 </html>
