@@ -64,7 +64,9 @@ namespace Hazelcast.DistributedObjects
         /// <param name="index">index index of the element to replace</param>
         /// <param name="item">element to be stored at the specified position</param>
         /// <returns>The element previously at the specified position</returns>
+#pragma warning disable CA1716 // Identifiers should not match keywords - here, yes
         Task<T> Set(int index, T item);
+#pragma warning restore CA1716
 
         //Getting
 

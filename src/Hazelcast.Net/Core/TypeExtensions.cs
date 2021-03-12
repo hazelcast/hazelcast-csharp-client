@@ -65,7 +65,7 @@ namespace Hazelcast.Core
             if (!fqn)
             {
                 var pos = name.LastIndexOf('.');
-                if (pos >= 0) name = name.Substring(pos + 1);
+                if (pos >= 0) name = name[(pos + 1)..];
             }
             return name.Replace('+', '.');
         }

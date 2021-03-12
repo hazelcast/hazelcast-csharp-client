@@ -162,6 +162,8 @@ namespace Hazelcast.Clustering
 
             // wait until the events queue is drained
             await _raising.CfAwait();
+
+            await _states.DisposeAsync().CfAwait();
         }
     }
 }

@@ -59,14 +59,14 @@ namespace Hazelcast.CP
         public async Task<IAtomicLong> GetAtomicLongAsync(string name)
         {
             var (groupName, objectName) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName, objectName).CfAwait();
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
             return new AtomicLong(objectName, groupId, _cluster);
         }
 
         // see: ClientRaftProxyFactory.java
 
-        private async Task<CPGroupId> GetGroupIdAsync(string proxyName, string objectName)
+        private async Task<CPGroupId> GetGroupIdAsync(string proxyName)
         {
             var requestMessage = CPGroupCreateCPGroupCodec.EncodeRequest(proxyName);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
@@ -93,7 +93,7 @@ namespace Hazelcast.CP
             }
             else
             {
-                groupName = name.Substring(pos + 1).Trim();
+                groupName = name[(pos + 1)..].Trim();
                 if (groupName.Equals(DefaultGroupName, StringComparison.OrdinalIgnoreCase))
                     groupName = DefaultGroupName;
             }
@@ -101,7 +101,11 @@ namespace Hazelcast.CP
             if (groupName.Length == 0)
                 throw new ArgumentException("CP group name cannot be an empty string.", nameof(name));
 
+#if NETSTANDARD2_1
+            if (groupName.Contains("@", StringComparison.OrdinalIgnoreCase))
+#else
             if (groupName.Contains("@"))
+#endif
                 throw new ArgumentException("CP group name must be specified at most once.", nameof(name));
 
             if (groupName.Equals(MetaDataGroupName, StringComparison.OrdinalIgnoreCase))

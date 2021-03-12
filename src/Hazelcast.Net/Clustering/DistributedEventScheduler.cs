@@ -183,7 +183,7 @@ namespace Hazelcast.Clustering
                     }
                 }
 
-                await Handle(eventData); // does not throw
+                await Handle(eventData).CfAwait(); // does not throw
             }
         }
 

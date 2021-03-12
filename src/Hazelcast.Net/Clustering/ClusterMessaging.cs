@@ -207,9 +207,9 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            using var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
-                                   targetPartitionId >= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
-                                   targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
+            var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
+                             targetPartitionId >= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
+                             targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
                                    new Invocation(message, _clusterState.Options.Messaging);
 
             return await SendAsyncInternal(invocation, cancellationToken).CfAwait();

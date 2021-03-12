@@ -179,12 +179,12 @@ namespace Hazelcast.Clustering
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             // change state to Starting if it is zero aka New
-            var changed = await State.ChangeStateAndWait(ClientState.Starting, 0 /* ClientState.New */);
+            var changed = await State.ChangeStateAndWait(ClientState.Starting, 0 /* ClientState.New */).CfAwait();
             if (!changed)
                 throw new ConnectionException("Failed to connected (aborted).");
 
             // connect
-            await Connections.ConnectAsync(cancellationToken);
+            await Connections.ConnectAsync(cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />

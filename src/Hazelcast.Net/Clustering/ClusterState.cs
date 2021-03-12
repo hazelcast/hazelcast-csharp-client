@@ -299,7 +299,7 @@ namespace Hazelcast.Clustering
             }
 
             ClientState state;
-            try { state  = await wait.Task; } catch {  state = 0; }
+            try { state  = await wait.Task.CfAwait(); } catch {  state = 0; }
 
             reg.Dispose();
  
@@ -353,57 +353,6 @@ namespace Hazelcast.Clustering
         public void RequestShutdown()
         {
             _shutdownRequested?.Invoke();
-        }
-
-        // FIXME: what do we need for cancellation?
-
-        /// <summary>
-        /// Gets the cluster general <see cref="CancellationToken"/>.
-        /// </summary>
-        public CancellationToken CancellationToken => _clusterCancellation.Token;
-
-        /// <summary>
-        /// Cancels the cluster general <see cref="CancellationToken"/>.
-        /// </summary>
-        public void CancelOperations()
-        {
-            _clusterCancellation.Cancel();
-        }
-
-        /// <summary>
-        /// Gets a <see cref="CancellationTokenSource"/> obtained by linking the cluster general
-        /// cancellation with the supplied <paramref name="cancellationToken"/>.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <param name="throwIfNotActive">Whether to throw immediately if the cluster is not connected.</param>
-        /// <returns>A new <see cref="CancellationTokenSource"/>obtained by linking the cluster general
-        /// cancellation with the supplied <paramref name="cancellationToken"/>.</returns>
-        /// <remarks>
-        /// <para>The called must ensure that the returned <see cref="CancellationTokenSource"/> is
-        /// eventually disposed.</para>
-        /// </remarks>
-        public CancellationTokenSource GetLinkedCancellation(CancellationToken cancellationToken, bool throwIfNotActive = true)
-        {
-            // fail fast
-            if (throwIfNotActive) ThrowIfNotActive();
-
-            // note: that is a bad idea - what we return will be disposed, and we certainly do not
-            // want the main _clusterCancellation to be disposed! plus, LinkedWith invoked with
-            // a default CancellationToken will lead to practically doing nothing anyways
-            //
-            // succeed fast
-            //if (cancellationToken == default) return _clusterCancellation;
-
-            // still, there is a race condition - a chance that the _clusterCancellation
-            // is gone by the time we use it = handle the situation here
-            try
-            {
-                return _clusterCancellation.LinkedWith(cancellationToken);
-            }
-            catch
-            {
-                throw new ClientOfflineException(ClientState);
-            }
         }
 
         /// <summary>

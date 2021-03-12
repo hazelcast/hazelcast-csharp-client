@@ -64,16 +64,14 @@ namespace Hazelcast.Tests.Serialization
 
         private class Child : IPortable
         {
-            private string name;
+            private string _name;
 
             public Child()
-            {
-
-            }
+            { }
 
             public Child(string name)
             {
-                this.name = name;
+                _name = name;
             }
 
             public int ClassId => 2;
@@ -82,43 +80,42 @@ namespace Hazelcast.Tests.Serialization
 
             public void ReadPortable(IPortableReader reader)
             {
-                name = reader.ReadString("name");
+                _name = reader.ReadString("name");
             }
 
             public void WritePortable(IPortableWriter writer)
             {
-                writer.WriteString("name", name);
+                writer.WriteString("name", _name);
             }
 
             public override bool Equals(object obj)
             {
-                if(ReferenceEquals(this, obj))
-                {
+                if (ReferenceEquals(this, obj))
                     return true;
-                }
 
-                if (obj == null || !GetType().Equals(obj.GetType()))
-                {
+                if (!(obj is Child child))
                     return false;
-                }
 
-                Child child = (Child)obj;
-                return name != null ? name.Equals(child.name) : child.name == null;
+                return _name == child._name;
+            }
+
+            public override int GetHashCode()
+            {
+                // ReSharper disable once NonReadonlyMemberInGetHashCode
+                return _name.GetHashCode();
             }
         }
 
         private class Parent : IPortable
         {
-            private Child child;
+            private Child _child;
 
             public Parent()
-            {
-
-            }
+            { }
 
             public Parent(Child child)
             {
-                this.child = child;
+                _child = child;
             }
 
             public int ClassId => 1;
@@ -127,25 +124,29 @@ namespace Hazelcast.Tests.Serialization
 
             public void ReadPortable(IPortableReader reader)
             {
-                child = reader.ReadPortable<Child>("child");
+                _child = reader.ReadPortable<Child>("child");
             }
 
             public void WritePortable(IPortableWriter writer)
             {
-                writer.WritePortable("child", child);
+                writer.WritePortable("child", _child);
             }
 
             public override bool Equals(object obj)
             {
-                if(ReferenceEquals(this, obj))
-                {
+                if (ReferenceEquals(this, obj))
                     return true;
-                }
-                if(obj == null || !GetType().Equals(obj.GetType())){
+
+                if (!(obj is Parent parent))
                     return false;
-                }
-                Parent parent = (Parent)obj;
-                return child != null ? child.Equals(parent.child) : parent.child == null;
+
+                return _child.Equals(parent._child);
+            }
+
+            public override int GetHashCode()
+            {
+                // ReSharper disable once NonReadonlyMemberInGetHashCode
+                return _child.GetHashCode();
             }
         }
     }

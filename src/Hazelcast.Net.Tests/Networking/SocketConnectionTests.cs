@@ -328,7 +328,6 @@ namespace Hazelcast.Tests.Networking
             //using var _ = EnableHConsoleForTest();
 
             var pipe = new MemoryPipe();
-            var count = 0L;
             var down = 0;
 
             var s = new TestSocketConnection(pipe.Stream1)
@@ -357,7 +356,6 @@ namespace Hazelcast.Tests.Networking
             //using var _ = EnableHConsoleForTest();
 
             var pipe = new MemoryPipe();
-            var count = 0L;
             var down = 0;
 
             TestSocketConnection s = null;

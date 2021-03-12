@@ -30,7 +30,10 @@ namespace Hazelcast.Query
         public InPredicate(string attributeName, params object[] values)
         {
             _attributeName = attributeName;
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             _values = values ?? throw new ArgumentNullException(nameof(values));
+#pragma warning restore CA1508 // Avoid dead conditional code
         }
 
         public void ReadData(IObjectDataInput input)

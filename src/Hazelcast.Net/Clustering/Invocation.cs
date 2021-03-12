@@ -28,7 +28,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents an ongoing server invocation.
     /// </summary>
-    internal class Invocation : IDisposable
+    internal class Invocation
     {
         private readonly MessagingOptions _messagingOptions;
 
@@ -254,9 +254,5 @@ namespace Hazelcast.Clustering
             // with messages
             _completionSource = new TaskCompletionSource<ClientMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
-
-        /// <inheritdoc />
-        public void Dispose()
-        { }
     }
 }

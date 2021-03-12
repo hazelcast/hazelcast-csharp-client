@@ -25,7 +25,10 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Gets the members.
         /// </summary>
+        // TODO: this should be a ReadOnlyCollection<Guid> (breaking)
+#pragma warning disable CA1002 // Do not expose generic lists
         protected List<Guid> Members { get; private set; }
+#pragma warning restore CA1002
 
         /// <inheritdoc />
         public virtual int Count => Members?.Count ?? 0;

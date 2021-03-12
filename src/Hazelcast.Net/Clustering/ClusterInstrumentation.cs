@@ -30,9 +30,9 @@ namespace Hazelcast.Clustering
 
         public int ExceptionsInEventHandlersCount => _exceptionsInEventHandlersCount;
 
-// work-in-progress, not using all parameters for now
-#pragma warning disable CA1801 // Review unused parameters
+        // work-in-progress, not using all parameters for now
 #pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable CA1801 // Review unused parameters
 
         internal void CountMissedEvent(ClientMessage message)
             => Interlocked.Increment(ref _missedEventsCount);

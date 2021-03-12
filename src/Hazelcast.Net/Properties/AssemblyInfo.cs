@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 // NOTE: do NOT make this assembly visible to Hazelcast.Net.Examples, as
@@ -50,3 +51,6 @@ using Hazelcast;
 //
 // TODO: write for instance VB+F# examples just to be sure
 //[assembly: CLSCompliant(true)]
+
+[assembly: SuppressMessage("Microsoft.Design", "CA1014:MarkAssembliesWithClsCompliant", Justification="Intentional")]
+
