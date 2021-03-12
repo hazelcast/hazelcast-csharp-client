@@ -127,18 +127,17 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>This is used when connecting to a new cluster.</para>
         /// </remarks>
-        public async ValueTask CreateAllAsync(CancellationToken cancellationToken)
+        public async ValueTask CreateAllAsync(MemberConnection connection)
         {
             await foreach (var (key, _) in _objects)
             {
-                // if the cluster goes down, we want to stop everything
-                // but each invocation is non-cancellable
-                cancellationToken.ThrowIfCancellationRequested();
+                // if the connection goes down, stop
+                if (!connection.Active) return;
 
                 try
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
-                    await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+                    await _cluster.Messaging.SendToMemberAsync(requestMessage, connection).CfAwait();
                 }
                 catch (Exception e)
                 {
@@ -189,17 +188,25 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Handles a connection to a new cluster.
         /// </summary>
+#pragma warning disable IDE0060 // Remove unused parameters
+#pragma warning disable CA1801 // Review unused parameters
+        // unused parameters are required, this is an event handler
         public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+#pragma warning restore CA1801
+#pragma warning restore IDE0060
         {
             if (!isNewCluster) return default;
 
             // when connecting to a new cluster, re-create the distributed objects there
-            // FIXME: no cancellation token, but CreateAllAsync should stop if we get disposed
-            // FIXME: CreateAllAsync should not throw
-            // FIXME: can we get disconnected while this runs? and then?
+            // this *may* take, but we cannot really use a new cluster before everything
+            // has been set up correctly (so we cannot really run this in a background task).
+            //
+            // if this is a new cluster, then this is a "first" connection and there are
+            // no other connections yet. we should be able to run CreateAllAsync on the
+            // connection, else something is wrong - CreateAllAsync stops if the connection
+            // becomes non-active (and does not throw)
 
-            // ignore the connection, CreateAllAsync sends on random connection
-            return CreateAllAsync(default);
+            return CreateAllAsync(connection);
         }
 
         /// <inheritdoc />

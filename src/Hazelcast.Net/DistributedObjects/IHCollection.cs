@@ -28,7 +28,9 @@ namespace Hazelcast.DistributedObjects
     /// </para>
     /// </remarks>
     /// <typeparam name="T">The type of the items in the collection</typeparam>
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - that *is* a collection
     public interface IHCollection<T> : IDistributedObject, IAsyncEnumerable<T>
+#pragma warning restore CA1711
     {
         //setting
 

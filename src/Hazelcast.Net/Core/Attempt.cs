@@ -21,9 +21,7 @@ namespace Hazelcast.Core
     /// <summary>
     /// Creates instances of the <see cref="Attempt{TResult}"/> struct.
     /// </summary>
-#pragma warning disable CA1815 // Override equals and operator equals on value types - not meant to be compared
     internal readonly struct Attempt
-#pragma warning disable CA1815
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Attempt"/> struct.

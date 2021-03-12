@@ -28,10 +28,10 @@ namespace Hazelcast.Serialization
 
         public string Name { get; }
 
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, other)) return true;
-            return other is JavaClass thing && EqualsN(this, thing);
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is JavaClass thing && EqualsN(this, thing);
         }
 
         protected bool Equals(JavaClass other)

@@ -9,7 +9,6 @@ indent_style = space
 [*.xml]
 indent_size = 2
 
-
 # C# files analysis
 [*.cs]
 #dotnet_code_quality.CA2000.excluded_symbol_names = T:Hazelcast.DistributedObjects.Implementation.Queue.Queue`1
@@ -21,5 +20,6 @@ dotnet_diagnostic.CA1031.severity = none # Do not catch general exception types
 dotnet_diagnostic.CA1040.severity = none # Avoid empty interfaces
 dotnet_diagnostic.CA2225.severity = none # Operator overloads have named alternates
 
+dotnet_diagnostic.ZB1002.severity = warning # FIXME!
 
 #

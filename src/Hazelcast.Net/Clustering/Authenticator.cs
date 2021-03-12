@@ -127,7 +127,7 @@ namespace Hazelcast.Clustering
             cancellationToken.ThrowIfCancellationRequested();
 
             HConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var responseMessage = await client.SendAsync(requestMessage).CfAwait();
             HConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
             HConsole.WriteLine(this, "Auth response is: " + (AuthenticationStatus) response.Status);

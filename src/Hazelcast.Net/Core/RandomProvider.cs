@@ -35,6 +35,7 @@ namespace Hazelcast.Core
         private static readonly object GlobalLock = new object();
         private static readonly ThreadLocal<Random> ThreadRandom = new ThreadLocal<Random>(NewRandom);
 
+
         /// <summary>
         /// Creates a new random for a thread.
         /// </summary>

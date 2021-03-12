@@ -337,12 +337,11 @@ namespace Hazelcast.Clustering
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         /// <remarks>
         /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
         /// </remarks>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendAsync(ClientMessage message)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -352,7 +351,7 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            using var invocation = new Invocation(message, _messagingOptions, this);
+            var invocation = new Invocation(message, _messagingOptions, this);
 
             // and send
             return await SendAsync(invocation).CfAwait();
@@ -368,7 +367,7 @@ namespace Hazelcast.Clustering
             // this cannot be canceled, it will wait for a response forever, until either the
             // server responds, or the connection is closed, or something happens - but there
             // is no timeout
-            return await SendAsyncInternal(invocation, CancellationToken.None);
+            return await SendAsyncInternal(invocation, CancellationToken.None).CfAwait();
         }
 
         private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
@@ -425,6 +424,9 @@ namespace Hazelcast.Clustering
             try
             {
                 // propagate the cancellationToken to the invocation
+#if NETSTANDARD2_1
+                await
+#endif
                 using var reg = cancellationToken.Register(invocation.TrySetCanceled);
 
                 var response = await invocation.Task.CfAwait();
@@ -479,8 +481,10 @@ namespace Hazelcast.Clustering
             await DisposeInnerConnectionAsync().CfAwait();
 
             _logger.LogDebug($"Connection {Id.ToShortString()} closed and disposed.");
-            
+
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - DisposeAsync too!
             GC.SuppressFinalize(this);
+#pragma warning restore CA1816
         }
 
         private async Task DisposeInnerConnectionAsync()

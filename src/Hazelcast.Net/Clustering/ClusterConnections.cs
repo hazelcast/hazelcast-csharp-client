@@ -87,20 +87,26 @@ namespace Hazelcast.Clustering
         {
             await foreach(var (member, token) in memberConnectionQueue.WithCancellation(cancellationToken))
             {
-                var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token);
                 Exception exception = null;
+                var wasCanceled = false;
 
                 HConsole.WriteLine(this, $"Ensure a connection for member {member.Id.ToShortString()} (at {member.Address})");
-                try
+
+                using (var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token))
                 {
-                    var attempt = await EnsureConnectionAsync(member, source.Token);
-                    if (attempt) continue;
-                }
-                catch (OperationCanceledException)
-                { }
-                catch (Exception e)
-                {
-                    exception = e;
+                    try
+                    {
+                        var attempt = await EnsureConnectionAsync(member, source.Token).CfAwait();
+                        if (attempt) continue;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        wasCanceled = true;
+                    }
+                    catch (Exception e)
+                    {
+                        exception = e;
+                    }
                 }
 
                 if (_disposed > 0)
@@ -109,7 +115,7 @@ namespace Hazelcast.Clustering
                     continue;
                 }
 
-                var details = source.IsCancellationRequested ? "canceled" : "failed";
+                var details = wasCanceled ? "canceled" : "failed";
                 _logger.LogWarning(exception, $"Could not connect to member at {member.Address}: {details}.");
 
                 memberConnectionQueue.Add(member);
@@ -282,19 +288,20 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when connected.</returns>
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            // FIXME: cancellations?
-            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken, false);
+            using var cancellation = _cancel.LinkedWith(cancellationToken);
             cancellationToken = cancellation.Token;
 
             // properties cannot be changed once connected
             _clusterState.SetPropertiesReadOnly();
 
             // we have started, and are now trying to connect
-            if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting))
+            if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting).CfAwait())
                 throw new ConnectionException("Failed to connect (aborted).");
 
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // establishes the first connection, throws if it fails
                 await ConnectFirstAsync(cancellationToken).CfAwait();
 
@@ -481,6 +488,7 @@ namespace Hazelcast.Clustering
                 $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
         }
 
+
         /// <summary>
         /// Opens a first connection to an address (no other connections).
         /// </summary>
@@ -499,7 +507,12 @@ namespace Hazelcast.Clustering
             try
             {
                 // this may throw
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                // "The allocating method does not have dispose ownership; that is, the responsibility
+                // to dispose the object is transferred to another object or wrapper that's created
+                // in the method and returned to the caller." - here: the Attempt<>.
                 return await ConnectAsync(address, cancellationToken).CfAwait();
+#pragma warning restore CA2000
             }
             catch (Exception e)
             {
@@ -519,31 +532,38 @@ namespace Hazelcast.Clustering
         /// </remarks>
         private async Task<Attempt<MemberConnection>> EnsureConnectionAsync(MemberInfo member, CancellationToken cancellationToken)
         {
-            // if we already have a client for that address, return the client
-            // if it is active, or fail if it is not - cannot open yet another
-            // client to that same address, we'll have to wait for the inactive
-            // connection to be removed.
-            if (_connections.TryGetValue(member.Id, out var connection))
-            {
-                var active = connection.Active;
-                HConsole.WriteLine(this, $"Found {(active?"":"non-")}active connection for member {member.Id} (at {connection.Address})");
-                return Attempt.If(active, connection);
-            }
-
-            // ConnectMembers invokes EnsureConnectionAsync sequentially, and is suspended
-            // whenever we need to connect the very first address, therefore each address
-            // can only be connected once at a time = no need for locks here
-
-            // exit now if canceled
-            if (cancellationToken.IsCancellationRequested)
-                return Attempt.Fail<MemberConnection>();
-
-            // else actually connect
+            // everything in one try...catch block, else the CA2000 analyzer
+            // gets confused in methods that invoke this method
             try
             {
+                // if we already have a client for that address, return the client
+                // if it is active, or fail if it is not - cannot open yet another
+                // client to that same address, we'll have to wait for the inactive
+                // connection to be removed.
+                if (_connections.TryGetValue(member.Id, out var connection))
+                {
+                    var active = connection.Active;
+                    HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection for member {member.Id} (at {connection.Address})");
+                    return Attempt.If(active, connection);
+                }
+
+                // ConnectMembers invokes EnsureConnectionAsync sequentially, and is suspended
+                // whenever we need to connect the very first address, therefore each address
+                // can only be connected once at a time = no need for locks here
+
+                // exit now if canceled
+                if (cancellationToken.IsCancellationRequested)
+                    return Attempt.Fail<MemberConnection>();
+
+                // else actually connect
                 // this may throw
                 HConsole.WriteLine(this, $"Open connection to {member.Address}");
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                // "The allocating method does not have dispose ownership; that is, the responsibility
+                // to dispose the object is transferred to another object or wrapper that's created
+                // in the method and returned to the caller." - here: the Attempt<>.
                 return await ConnectAsync(member.Address, cancellationToken).CfAwait();
+#pragma warning restore CA2000
             }
             catch (Exception e)
             {
@@ -563,7 +583,11 @@ namespace Hazelcast.Clustering
                 if (attribute != null)
                 {
                     var version = attribute.InformationalVersion;
+#if NETSTANDARD2_1
+                    var pos = version.IndexOf('+', StringComparison.OrdinalIgnoreCase);
+#else
                     var pos = version.IndexOf('+');
+#endif
                     if (pos > 0 && version.Length > pos + 7)
                         version = version.Substring(0, pos + 7);
                     _clientVersion = version;
@@ -669,7 +693,7 @@ namespace Hazelcast.Clustering
             {
                 if (_disposed == 0)
                 {
-                    isFirst = _connections.Count == 0;
+                    isFirst = _connections.IsEmpty;
                     isFirstEver = isFirst && _clusterId == default;
                     accepted = true;
 
@@ -677,7 +701,7 @@ namespace Hazelcast.Clustering
                     isNewCluster = _clusterId != connection.ClusterId;
                     if (isNewCluster)
                     {
-                        if (_connections.Count > 0)
+                        if (!_connections.IsEmpty)
                         {
                             _logger.LogWarning($"Cannot accept a connection to cluster {connection.ClusterId} which is not the current cluster ({_clusterId}).");
                             accepted = false;

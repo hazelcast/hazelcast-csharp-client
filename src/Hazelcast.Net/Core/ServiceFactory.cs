@@ -47,7 +47,10 @@ namespace Hazelcast.Core
         /// </remarks>
         public static T CreateInstance<T>(IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
 
             try
             {
@@ -76,7 +79,10 @@ namespace Hazelcast.Core
         public static T CreateInstance<T>(Type type, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
 
             try
             {
@@ -105,7 +111,10 @@ namespace Hazelcast.Core
         public static T CreateInstance<T>(string typeName, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
 
             try
             {
@@ -133,7 +142,10 @@ namespace Hazelcast.Core
         public static object CreateInstance(Type type, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
 
             try
             {
@@ -161,7 +173,10 @@ namespace Hazelcast.Core
         public static object CreateInstance(string typeName, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
 
             try
             {
@@ -173,6 +188,7 @@ namespace Hazelcast.Core
             }
         }
 
+
         /// <summary>
         /// (internal for tests only)
         /// Casts an object.
@@ -180,6 +196,7 @@ namespace Hazelcast.Core
         internal static T As<T>(object o)
         {
             // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
+            // ReSharper disable once ConvertSwitchStatementToSwitchExpression
             switch (o)
             {
                 case T t:
@@ -206,9 +223,12 @@ namespace Hazelcast.Core
         internal static object CreateInstanceInternal(Type type, IDictionary<string, string> stringArgs, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
 
-            // fast: use the empty ctor if no args (will throw if it does not exist)
+                // fast: use the empty ctor if no args (will throw if it does not exist)
             if ((stringArgs == null || stringArgs.Count == 0) && paramArgs.Length == 0)
                 return Activator.CreateInstance(type);
 

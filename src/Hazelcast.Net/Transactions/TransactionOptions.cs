@@ -21,7 +21,9 @@ namespace Hazelcast.Transactions
     {
         private int _durability = 1;
 
+#pragma warning disable CA1008 // Enums should have zero value - no, "default" is not a valid value
         public enum TransactionType
+#pragma warning restore CA1008
         {
             /// <summary>
             /// Commits the transaction in two distinct phases.

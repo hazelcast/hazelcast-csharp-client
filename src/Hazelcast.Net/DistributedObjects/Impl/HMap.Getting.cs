@@ -370,7 +370,19 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
-            => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.Target as PagingPredicate;
+        {
+            // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
+            // ReSharper disable once ConvertSwitchStatementToSwitchExpression
+            switch (predicate)
+            {
+                case PagingPredicate paging:
+                    return paging;
+                case PartitionPredicate partition:
+                    return partition.Target as PagingPredicate;
+                default:
+                    return null;
+            }
+        }
 
         public async IAsyncEnumerator<KeyValuePair<TKey, TValue>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {

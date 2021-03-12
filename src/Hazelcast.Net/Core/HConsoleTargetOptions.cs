@@ -265,7 +265,7 @@ namespace Hazelcast.Core
             get
             {
 #if HZ_CONSOLE
-                var timestamp = TimeStampEnabled ? (DateTime.Now - TimeStampOrigin).ToString("hhmmss\\.fff\\ ") : "";
+                var timestamp = TimeStampEnabled ? (DateTime.Now - TimeStampOrigin).ToString("hhmmss\\.fff\\ ", CultureInfo.InvariantCulture) : "";
                 return $"{timestamp}{new string(' ', Indent)}[{Thread.CurrentThread.ManagedThreadId:00}] {Prefix}: ";
 #else
                 return "";

@@ -23,7 +23,8 @@ namespace Hazelcast.Networking
     /// </summary>
     public class SslOptions
     {
-        private SslProtocols _sslProtocol = SslProtocols.Tls12;
+        // default is none, to let the system select the best option
+        private SslProtocols _sslProtocol = SslProtocols.None;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SslOptions"/> class.
@@ -101,7 +102,12 @@ namespace Hazelcast.Networking
                     case SslProtocols.Tls:
                     case SslProtocols.Tls11:
 #pragma warning restore CA5397
+#pragma warning disable CA5398 // Avoid hardcoded SslProtocols values - well, here, yes
                     case SslProtocols.Tls12:
+#pragma warning restore CA5398
+                        _sslProtocol = value;
+                        break;
+                    case SslProtocols.None:
                         _sslProtocol = value;
                         break;
                     default:
