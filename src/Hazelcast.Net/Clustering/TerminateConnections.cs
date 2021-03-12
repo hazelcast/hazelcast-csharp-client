@@ -88,6 +88,8 @@ namespace Hazelcast.Clustering
             _cancel.Cancel();
             await _terminating.CfAwaitCanceled();
             _cancel.Dispose();
+
+            await _connections.DisposeAsync().CfAwait();
         }
     }
 }

@@ -21,7 +21,9 @@ namespace Hazelcast.DistributedObjects
     /// Specifies a topic event handler.
     /// </summary>
     /// <typeparam name="T">The topic objects type.</typeparam>
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public interface ITopicEventHandler<T>
+#pragma warning restore CA1711
     {
         /// <summary>
         /// Handles an event.

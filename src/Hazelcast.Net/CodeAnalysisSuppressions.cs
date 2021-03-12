@@ -14,11 +14,14 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-#if CODE_ANALYSIS
-
-// this file contains assembly-level SuppressMessage attributes for NDepend,
+// this file contains assembly-level suppression directives for NDepend,
 // they will be compiled into the assembly only if CODE_ANALYSIS is defined
 // and should not be compiled into the final Release version that ships.
+//
+// this file also contains assembly-level suppression directives for the
+// compiler (to deal with some warnings) that are always compiled.
+
+#if CODE_ANALYSIS
 
 // scope can be: deep module namespace type method field
 // and also: namespaceAndDescendants
@@ -58,7 +61,7 @@ using System.Diagnostics.CodeAnalysis;
 // Unfortunately, NDepend uses e.g. 'method' scope which is not OK
 #pragma warning disable IDE0076 // Invalid global 'SuppressMessageAttribute'
 
-#region General
+#region NDepend / General
 
 // NDepend complains about 'public' methods in an 'internal' class
 // but even NDepend documentation mentions that not everyone agrees
@@ -70,7 +73,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #endregion
 
-#region Accepted Checks
+#region NDepend / Accepted Checks
 
 // We use System.Random in our RandomProvider and don't expect it
 // to be used for anything security-related, so, suppress
@@ -115,7 +118,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #endregion
 
-#region Codecs
+#region NDepend / Codecs
 
 // TODO: we should use all codecs, or mark them individually
 // and so, we should not mark them all as "not dead code"
@@ -136,7 +139,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #endregion
 
-#region Types Not Dead
+#region NDepend / Types Not Dead
 
 [assembly: SuppressMessage(NDepend.Category, NDepend.Check.PotentiallyDeadTypes,
     Target = "Hazelcast.AssemblySigning",
@@ -144,7 +147,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #endregion
 
-#region System
+#region NDepend / System
 
 // suppress issues with our System.* extensions for dealing with netstandard versions
 // each namespace needs its rule
@@ -173,7 +176,7 @@ using System.Diagnostics.CodeAnalysis;
     Target = /*~N:*/ "System.Diagnostics.CodeAnalysis",
     Scope = "namespaceAndDescendants",
     Justification = NDepend.Justification.Accepted)]
-[assembly:SuppressMessage(NDepend.Category, "",
+[assembly: SuppressMessage(NDepend.Category, "",
     Target = /*~N:*/ "System.Runtime.CompilerServices",
     Scope = "namespaceAndDescendants",
     Justification = "Imported code.")]
@@ -190,6 +193,115 @@ using System.Diagnostics.CodeAnalysis;
 #endif
 
 #endregion
+
+#endif
+
+#region Accepted Checks
+
+[assembly: SuppressMessage("Security", "CA5394:Do not use insecure randomness",
+    //Scope = "all",
+    Justification = "Not used for security purposes.")]
+
+// TODO: all our event args should inherit from EventArgs (breaking)
+// (and, Target cannot contain wildcards)
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.Events.DistributedObjectCreatedEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.Events.DistributedObjectDestroyedEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.Events.MembersUpdatedEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.Events.PartitionLostEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.Events.DistributedObjectLifecycleEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.CollectionItemEventArgs`1",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapClearedEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEvictedEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryEvictedEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryAddedEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryExpiredEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryInvalidatedEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryLoadedEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryMergedEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryRemovedEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs`2",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.TopicMessageEventArgs`1",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.StateChangedEventArgs",
+    Justification = Analysis.Justification.CA1711_EventArgs)]
+
+// nothing we can do about these
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.ITopicEventHandler`1",
+    Justification = Analysis.Justification.CA1711_EventHandler)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.IMapEventHandler`3",
+    Justification = Analysis.Justification.CA1711_EventHandler)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.IMapEntryEventHandler`3",
+    Justification = Analysis.Justification.CA1711_EventHandler)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.ICollectionItemEventHandler`1",
+    Justification = Analysis.Justification.CA1711_EventHandler)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.IHazelcastClientEventHandler",
+    Justification = Analysis.Justification.CA1711_EventHandler)]
+
+#endregion
+
+// ReSharper disable once CheckNamespace
+internal static class Analysis
+{
+    public const string Naming = "Naming";
+    public const string Style = "Style";
+
+    // ReSharper disable InconsistentNaming
+    public const string CA1711 = "CA1711:Identifiers should not have incorrect suffix";
+    public const string IDE0066 = "IDE0066:Convert switch statement to expression";
+    // ReSharper restore InconsistentNaming
+
+    public static class Scope
+    {
+        public const string Type = "type";
+    }
+
+    public static class Justification
+    {
+        // ReSharper disable InconsistentNaming
+        public const string CA1711_EventArgs = "Our event args should inherit from System.EventArgs but this is a breaking change";
+        public const string CA1711_EventHandler = "Our event handlers cannot be true event-handler delegates.";
+        // ReSharper restore InconsistentNaming
+    }
+}
 
 // ReSharper disable once CheckNamespace
 internal static class NDepend
@@ -221,5 +333,3 @@ internal static class NDepend
         public const string TypeNotDead = "Not dead.";
     }
 }
-
-#endif

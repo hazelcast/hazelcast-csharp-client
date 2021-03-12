@@ -95,9 +95,18 @@ namespace System
 
         private static uint GenerateGlobalSeed()
         {
-            // code above is from net core 3.1, probably excellent
-            // but we don't have GetRandomBytes etc... this will be enough
+            // netcore 3.1 does:
+            //    uint result;
+            //    Interop.GetRandomBytes((byte*)&result, sizeof(uint));
+            //    return result;
+            //
+            // but that requires the unsafe flag, and we don't have GetRandomBytes,
+            // etc - enough to use the Random class (and probably ends up using
+            // the same code anyways) - we're not doing security here
+
+#pragma warning disable CA5394 // Do not use insecure randomness
             return Convert.ToUInt32(new Random().Next());
+#pragma warning restore CA5394
         }
 
         public static int Combine<T1>(T1 value1)

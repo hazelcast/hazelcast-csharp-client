@@ -36,7 +36,6 @@ namespace Hazelcast.Clustering
 
         private readonly ILogger _logger;
 
-        private readonly CancellationTokenRegistration _reg;
         private volatile bool _disposed;
         private CancellationTokenSource _itemCancel;
         private int _suspend;
@@ -155,7 +154,7 @@ namespace Hazelcast.Clustering
                 {
                     // this is blocking and returns true once a member is available,
                     // or false if the queue enumerator is complete (no more members)
-                    if (!await _queueEnumerator.MoveNextAsync())
+                    if (!await _queueEnumerator.MoveNextAsync().CfAwait())
                         return false;
 
                     var member = _queueEnumerator.Current;
@@ -210,13 +209,13 @@ namespace Hazelcast.Clustering
         }
 
         /// <inheritdoc />
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
             // note: DisposeAsync should not throw (CA1065)
 
             lock (_mutex)
             {
-                if (_disposed) return default;
+                if (_disposed) return;
                 _disposed = true;
             }
 
@@ -230,8 +229,9 @@ namespace Hazelcast.Clustering
             // and the caller should dispose the enumerator
 
             _resume.Dispose();
+            _enumerate.Dispose();
 
-            return default;
+            await _members.DisposeAsync().CfAwait();
         }
     }
 }

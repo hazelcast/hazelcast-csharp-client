@@ -84,7 +84,7 @@ namespace Hazelcast.Partitioning
         /// <returns>A random partition identifier.</returns>
         public int GetRandomPartitionId()
         {
-            return RandomProvider.Random.Next(Count);
+            return RandomProvider.Next(Count);
         }
 
         /// <summary>

@@ -21,7 +21,9 @@ namespace Hazelcast.DistributedObjects
     /// Represents event data for the <see cref="CollectionItemEventTypes"/> events.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public sealed class CollectionItemEventArgs<T> : EventArgsBase
+#pragma warning restore CA1711 
     {
         private readonly Lazy<T> _item;
 

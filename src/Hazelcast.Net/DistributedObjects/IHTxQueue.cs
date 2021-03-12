@@ -18,7 +18,9 @@ using System.Threading.Tasks;
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>Transactional implementation of Queue</summary>
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - that *is* a queue
     public interface IHTxQueue<TItem> : ITransactionalObject
+#pragma warning restore CA1711
     {
         Task<bool> OfferAsync(TItem item);
 

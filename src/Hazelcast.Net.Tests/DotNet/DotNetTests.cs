@@ -25,5 +25,19 @@ namespace Hazelcast.Tests.DotNet
         {
             Assert.AreEqual(TimeSpan.Zero, default(TimeSpan));
         }
+
+        [Test]
+        public void ParamsArgs()
+        {
+            ParamsArgsMethod(false);
+            ParamsArgsMethod(false, "a", "b");
+            ParamsArgsMethod(false, (string)null);
+            ParamsArgsMethod(true, null);
+        }
+
+        private static void ParamsArgsMethod(bool isnull, params object[] objects)
+        {
+            Assert.That(objects, isnull ? Is.Null : Is.Not.Null);
+        }
     }
 }

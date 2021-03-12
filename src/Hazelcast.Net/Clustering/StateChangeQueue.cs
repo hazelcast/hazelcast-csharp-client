@@ -93,7 +93,7 @@ namespace Hazelcast.Clustering
             var completion = new TaskCompletionSource<object>();
             do
             {
-                marker = -RandomProvider.Random.Next();
+                marker = -RandomProvider.Next();
             } while (marker < 0 && !_markers.TryAdd(marker, completion));
 
             // queue the state
@@ -162,6 +162,8 @@ namespace Hazelcast.Clustering
 
             // wait until the events queue is drained
             await _raising.CfAwait();
+
+            await _states.DisposeAsync().CfAwait();
         }
     }
 }

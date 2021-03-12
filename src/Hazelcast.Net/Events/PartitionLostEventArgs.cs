@@ -16,7 +16,9 @@ using Hazelcast.Models;
 
 namespace Hazelcast.Events
 {
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public class PartitionLostEventArgs
+#pragma warning restore CA1711
     {
         public PartitionLostEventArgs(int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
         {

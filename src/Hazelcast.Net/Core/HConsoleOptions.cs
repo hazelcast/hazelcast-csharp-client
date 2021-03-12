@@ -13,7 +13,13 @@
 // limitations under the License.
 
 using System;
+
+#if HZ_CONSOLE
 using System.Collections.Generic;
+#else
+// ReSharper disable UnusedTypeParameter
+#pragma warning disable CA1801 // Review unused parameters
+#endif
 
 namespace Hazelcast.Core
 {
@@ -199,3 +205,5 @@ namespace Hazelcast.Core
 #endif
     }
 }
+
+#pragma warning restore CA1801 // Review unused parameters

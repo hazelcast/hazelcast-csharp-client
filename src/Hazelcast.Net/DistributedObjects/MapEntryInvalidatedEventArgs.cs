@@ -17,7 +17,9 @@ using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public sealed class MapEntryInvalidatedEventArgs<TKey, TValue> : MapEntryEventArgsBase<TKey>
+#pragma warning restore CA1711
     {
         public MapEntryInvalidatedEventArgs(MemberInfo member, Lazy<TKey> key, object state)
             : base(member, key, state)

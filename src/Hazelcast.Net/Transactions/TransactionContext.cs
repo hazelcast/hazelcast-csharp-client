@@ -32,9 +32,12 @@ namespace Hazelcast.Transactions
         private readonly object _inTransactionMutex = new object();
 
         private long _threadId; // the "threadId", i.e. async context, which owns the transaction
-        private long _startTime; // the start time of the transaction
-        private MemberConnection _connection; // the client supporting the transaction
+        //private long _startTime; // the start time of the transaction
         private bool _completed; // whether the transaction has been completed
+
+#pragma warning disable CA2213 // Disposable fields should be disposed - well, no
+        private MemberConnection _connection; // the client supporting the transaction
+#pragma warning restore CA2213
 
         // TODO transactions need some TLC
         // how is two-phases commit supposed to work? is it all server-side (and then, why
@@ -102,7 +105,7 @@ namespace Hazelcast.Transactions
             if (_connection == null) throw _cluster.State.ThrowClientOfflineException();
 
             _threadId = ContextId;
-            _startTime = Clock.Milliseconds;
+            //_startTime = Clock.Milliseconds;
 
             HConsole.WriteLine(this, $"Begin transaction on context #{ContextId}");
 
@@ -120,7 +123,7 @@ namespace Hazelcast.Transactions
             {
                 lock (_inTransactionMutex) asyncContext.InTransaction = false;
                 _threadId = 0;
-                _startTime = 0;
+                //_startTime = 0;
                 TransactionId = default;
                 State = TransactionState.None;
                 throw;

@@ -361,7 +361,7 @@ namespace Hazelcast.Clustering
 
                 // remove from the server
                 // and, if it fails, enqueue for collection
-                if (await RemoveSubscriptionAsync(memberSubscription, cancellationToken))
+                if (await RemoveSubscriptionAsync(memberSubscription, cancellationToken).CfAwait())
                     subscription.Remove(memberSubscription);
                 else
                     CollectSubscription(memberSubscription);
@@ -765,7 +765,12 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Handles a connection being opened.
         /// </summary>
+#pragma warning disable IDE0060 // Remove unused parameters
+#pragma warning disable CA1801 // Review unused parameters
+        // unused parameters are required, this is an event handler
         public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+#pragma warning restore CA1801
+#pragma warning restore IDE0060
         {
             // atomically add the connection and capture known subscriptions
             List<ClusterSubscription> subscriptions;

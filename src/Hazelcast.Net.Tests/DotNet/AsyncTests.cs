@@ -619,7 +619,6 @@ namespace Hazelcast.Tests.DotNet
             {
                 _id = _idSequence++;
             }
-
             public int Id => _id;
 
             public static bool HasCurrent => _current.Value != null;
@@ -715,6 +714,43 @@ namespace Hazelcast.Tests.DotNet
             await Task.Yield();
             await sem.WaitAsync().ConfigureAwait(false);
             return AsyncThing.Current.Id;
+        }
+
+        [Test]
+        public void DisposeCancellationSourceTest()
+        {
+            var cancel = new CancellationTokenSource();
+            var token = cancel.Token;
+            token.ThrowIfCancellationRequested();
+
+            cancel.Cancel();
+            Assert.Throws<OperationCanceledException>(() => token.ThrowIfCancellationRequested());
+
+            // can dispose the source and still use the token
+            cancel.Dispose();
+            Assert.Throws<OperationCanceledException>(() => token.ThrowIfCancellationRequested());
+
+            cancel = new CancellationTokenSource();
+            token = cancel.Token;
+
+            // can dispose the source and still use the token
+            cancel.Dispose();
+            token.ThrowIfCancellationRequested();
+
+            var cancel1 = new CancellationTokenSource();
+            var cancel2 = new CancellationTokenSource();
+            var token2 = cancel2.Token;
+
+            cancel = cancel1.LinkedWith(token2);
+            token = cancel.Token;
+
+            // can dispose the source that was linked, and still use the token
+            cancel1.Dispose();
+
+            token.ThrowIfCancellationRequested();
+
+            cancel2.Cancel();
+            Assert.Throws<OperationCanceledException>(() => token.ThrowIfCancellationRequested());
         }
     }
 }

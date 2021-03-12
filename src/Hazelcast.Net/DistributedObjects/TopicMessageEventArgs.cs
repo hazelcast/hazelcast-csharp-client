@@ -20,7 +20,9 @@ namespace Hazelcast.DistributedObjects
     /// Represents event data for the <see cref="TopicEventTypes.Message"/> event.
     /// </summary>
     /// <typeparam name="T">The topic object type.</typeparam>
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public sealed class TopicMessageEventArgs<T> : EventArgsBase
+#pragma warning restore CA1711
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TopicMessageEventArgs{T}"/> class.
