@@ -26,3 +26,5 @@ $RECYCLE.BIN/
 
 build/enterprise.key
 build/hazelcast-*.xml
+
+/_ReSharper.Caches
