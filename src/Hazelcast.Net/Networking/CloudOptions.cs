@@ -33,7 +33,7 @@ namespace Hazelcast.Networking
         private CloudOptions(CloudOptions other)
         {
             DiscoveryToken = other.DiscoveryToken;
-            UrlBase = other.UrlBase;
+            Url = other.Url;
         }
 
         /// <summary>
@@ -47,9 +47,9 @@ namespace Hazelcast.Networking
         public string DiscoveryToken { get; set; }
 
         /// <summary>
-        /// Gets or sets the cloud url base.
+        /// Gets or sets the cloud url.
         /// </summary>
-        internal Uri UrlBase { get; set; } = new Uri("https://coordinator.hazelcast.cloud");
+        public Uri Url { get; set; } = new Uri("https://coordinator.hazelcast.cloud");
 
         /// <summary>
         /// Clones the options.

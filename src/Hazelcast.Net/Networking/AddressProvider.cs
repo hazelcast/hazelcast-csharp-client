@@ -52,7 +52,7 @@ namespace Hazelcast.Networking
 
                 // initialize cloud discovery
                 var token = cloudConfiguration.DiscoveryToken;
-                var urlBase = cloudConfiguration.UrlBase;
+                var urlBase = cloudConfiguration.Url;
                 var connectionTimeoutMilliseconds = networkingOptions.ConnectionTimeoutMilliseconds;
                 connectionTimeoutMilliseconds = connectionTimeoutMilliseconds == 0 ? int.MaxValue : connectionTimeoutMilliseconds;
                 var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, networkingOptions.DefaultPort, loggerFactory);
