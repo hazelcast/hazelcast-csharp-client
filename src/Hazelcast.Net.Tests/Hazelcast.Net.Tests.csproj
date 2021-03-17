@@ -49,7 +49,6 @@
     <ProjectReference Include="..\Hazelcast.Net.Testing\Hazelcast.Net.Testing.csproj" />
     <ProjectReference Include="..\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj" />
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
-    <ProjectReference Include="..\Hazelcast.Net.AspNetProviders.Shared\Hazelcast.Net.AspNetProviders.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
