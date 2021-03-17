@@ -33,7 +33,7 @@ namespace Hazelcast.Testing.Protocol
         public static ClientMessage EncodeResponse(IEnumerable<ErrorHolder> errorHolders)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[InitialFrameSize]);
+            var initialFrame = new Frame(new byte[InitialFrameSize], (FrameFlags)ClientMessageFlags.Unfragmented);
             clientMessage.Append(initialFrame);
             clientMessage.MessageType = ExceptionMessageType;
             ListMultiFrameCodec.Encode(clientMessage, errorHolders, ErrorHolderCodec.Encode);

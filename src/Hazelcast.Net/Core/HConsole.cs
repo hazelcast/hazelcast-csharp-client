@@ -36,7 +36,12 @@ namespace Hazelcast.Core
     /// in heavy multi-threaded code, therefore this console writes to a <see cref="StringBuilder"/>
     /// which can be rendered with the <see cref="WriteAndClear"/> method.</para>
     /// </remarks>
-    internal static class HConsole
+#if HZ_CONSOLE_PUBLIC
+    public
+#else
+    internal 
+#endif
+    static class HConsole
     {
 #if HZ_CONSOLE
         internal static readonly HConsoleOptions Options = new HConsoleOptions();
