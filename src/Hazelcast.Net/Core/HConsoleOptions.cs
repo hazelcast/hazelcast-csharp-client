@@ -20,7 +20,12 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents the options for the console.
     /// </summary>
-    internal class HConsoleOptions
+#if HZ_CONSOLE_PUBLIC
+    public
+#else
+    internal
+#endif
+    class HConsoleOptions
     {
 #if HZ_CONSOLE
         private readonly Dictionary<object, HConsoleTargetOptions> _targetConfigs = new Dictionary<object, HConsoleTargetOptions>();
@@ -67,6 +72,19 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (type == null) throw new ArgumentNullException(nameof(type));
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            if (!_typeConfigs.TryGetValue(type, out var info))
+                info = _typeConfigs[type] = new HConsoleTargetOptions();
+            configure(info);
+#endif
+            return this;
+        }
+
+        public HConsoleOptions Set(string typename, Action<HConsoleTargetOptions> configure)
+        {
+#if HZ_CONSOLE
+            var type = Type.GetType(typename);
+            if (type == null) throw new ArgumentException("Invalid type name.", nameof(typename));
             if (configure == null) throw new ArgumentNullException(nameof(configure));
             if (!_typeConfigs.TryGetValue(type, out var info))
                 info = _typeConfigs[type] = new HConsoleTargetOptions();

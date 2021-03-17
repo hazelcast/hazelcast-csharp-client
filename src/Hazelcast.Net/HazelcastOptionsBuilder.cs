@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Configuration;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Configuration;
 
@@ -29,7 +30,9 @@ namespace Hazelcast
         private string _optionsFilePath;
         private string _optionsFileName;
         private string _environmentName;
+        private string _altKey;
         private List<Action<IConfiguration, HazelcastOptions>> _configureActions;
+        private List<Action<IConfigurationBuilder>> _setups;
 
         /// <summary>
         /// Sets the command-line arguments to use when building the options.
@@ -110,6 +113,19 @@ namespace Hazelcast
         }
 
         /// <summary>
+        /// Sets the alternate key for options.
+        /// </summary>
+        /// <param name="key">The alternate key.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder WithAltKey(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
+
+            _altKey = key;
+            return this;
+        }
+
+        /// <summary>
         /// Adds an <see cref="HazelcastOptions"/> configuration delegate.
         /// </summary>
         /// <param name="configure">The delegate.</param>
@@ -123,12 +139,37 @@ namespace Hazelcast
             return this;
         }
 
-        private void ConfigureActions(IConfiguration configuration, HazelcastOptions options)
+        /// <summary>
+        /// Adds an <see cref="IConfigurationBuilder"/> configuration delegate.
+        /// </summary>
+        /// <param name="setup">The delegate.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder With(Action<IConfigurationBuilder> setup)
+        {
+            if (setup == null) throw new ArgumentNullException(nameof(setup));
+
+            _setups ??= new List<Action<IConfigurationBuilder>>();
+            _setups.Add(setup);
+            return this;
+        }
+
+        private void Configure(IConfiguration configuration, HazelcastOptions options)
         {
             if (_configureActions == null) return;
 
             foreach (var configure in _configureActions)
                 configure(configuration, options);
+        }
+
+        private void Setup(IConfigurationBuilder builder)
+        {
+            builder.AddDefaults(_args, _environmentName);
+            builder.AddHazelcast(_args, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
+
+            if (_setups == null) return;
+
+            foreach (var setup in _setups)
+                setup(builder);
         }
 
         /// <summary>
@@ -137,7 +178,7 @@ namespace Hazelcast
         /// <returns>The options.</returns>
         public HazelcastOptions Build()
         {
-            return HazelcastOptions.Build(_args, _keyValues, _optionsFilePath, _optionsFileName, _environmentName, ConfigureActions);
+            return HazelcastOptions.Build(Setup, Configure, _altKey);
         }
     }
 }
