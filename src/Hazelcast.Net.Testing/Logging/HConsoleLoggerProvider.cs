@@ -28,6 +28,10 @@ namespace Hazelcast.Testing.Logging
         public HConsoleLoggerProvider(TestingLoggerOptions options = null)
         {
             _options = options ?? new TestingLoggerOptions();
+
+#if HZ_CONSOLE && HZ_INTERNALS
+            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x => x.SetPrefix("LOG")));
+#endif
         }
 
         public ILogger CreateLogger(string categoryName)
@@ -38,7 +42,9 @@ namespace Hazelcast.Testing.Logging
 
         public void WriteLog(LogMessageEntry entry)
         {
-            HConsole.WriteLine(this, $"{entry.TimeStamp}{entry.LevelString}{entry.Message}");
+#if HZ_CONSOLE && HZ_INTERNALS
+            HConsole.WriteLine(this, $"{entry.TimeStamp}{entry.LevelString}{entry.Message.TrimEnd('\r', '\n')}");
+#endif
         }
 
         public void Dispose()

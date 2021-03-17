@@ -44,7 +44,7 @@ namespace Hazelcast.Testing
                         action();
                         break;
                     }
-                    catch (AssertionException e)
+                    catch (Exception e)
                     {
                         caught = e;
                     }
@@ -78,7 +78,7 @@ namespace Hazelcast.Testing
                         await action().CfAwait();
                         break;
                     }
-                    catch (AssertionException e)
+                    catch (Exception e)
                     {
                         caught = e;
                     }

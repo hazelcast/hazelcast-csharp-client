@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants>$(DefineConstants);SERVER_CODEC</DefineConstants>
+    <DefineConstants>$(DefineConstants);SERVER_CODEC;HZ_INTERNALS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
