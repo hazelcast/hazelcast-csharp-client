@@ -24,11 +24,12 @@ namespace Hazelcast.Core
     /// and one single sequential consumer.
     /// </summary>
     /// <typeparam name="T">The type of the items.</typeparam>
-    internal sealed class AsyncQueue<T> : IAsyncEnumerable<T>, IAsyncEnumerator<T>
+    internal sealed class AsyncQueue<T> : IAsyncEnumerable<T>
     {
         private readonly ConcurrentQueue<T> _items = new ConcurrentQueue<T>();
         private readonly object _lock = new object();
         private TaskCompletionSource<bool> _waiting;
+        private CancellationTokenRegistration _reg;
         private T _current;
         private bool _completed;
 
@@ -72,10 +73,11 @@ namespace Hazelcast.Core
                     _current = item;
                     waiting = _waiting;
                     _waiting = null;
+                    _reg.Dispose();
                 }
             }
 
-            waiting?.SetResult(true);
+            waiting?.TrySetResult(true);
             return true;
         }
 
@@ -94,6 +96,7 @@ namespace Hazelcast.Core
                 _completed = true;
                 waiting = _waiting;
                 _waiting = null;
+                _reg.Dispose();
             }
 
             waiting?.SetResult(false);
@@ -107,8 +110,9 @@ namespace Hazelcast.Core
         /// <summary>
         /// Waits for an item to become available.
         /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns><c>true</c> if an item is available; otherwise (the queue is complete) <c>false</c>.</returns>
-        public ValueTask<bool> WaitAsync()
+        public ValueTask<bool> WaitAsync(CancellationToken cancellationToken = default)
         {
             if (_items.TryDequeue(out _current))
                 return new ValueTask<bool>(true);
@@ -122,6 +126,7 @@ namespace Hazelcast.Core
                     return new ValueTask<bool>(false);
 
                 _waiting = new TaskCompletionSource<bool>();
+                _reg = cancellationToken.Register(() => _waiting.TrySetCanceled());
                 return new ValueTask<bool>(_waiting.Task);
             }
         }
@@ -138,17 +143,30 @@ namespace Hazelcast.Core
         // ---- IAsyncEnumerable ----
 
         /// <inheritdoc />
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) => this;
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) 
+            => new AsyncEnumerator(this, cancellationToken);
 
         // ---- IAsyncEnumerator ----
 
-        /// <inheritdoc />
-        public ValueTask<bool> MoveNextAsync() => WaitAsync();
+        private class AsyncEnumerator : IAsyncEnumerator<T>
+        {
+            private readonly AsyncQueue<T> _queue;
+            private readonly CancellationToken _cancellationToken;
 
-        /// <inheritdoc />
-        public T Current => _current;
+            public AsyncEnumerator(AsyncQueue<T> queue, CancellationToken cancellationToken)
+            {
+                _queue = queue;
+                _cancellationToken = cancellationToken;
+            }
 
-        /// <inheritdoc />
-        public ValueTask DisposeAsync() => default;
+            /// <inheritdoc />
+            public ValueTask<bool> MoveNextAsync() => _queue.WaitAsync(_cancellationToken);
+
+            /// <inheritdoc />
+            public T Current => _queue._current;
+
+            /// <inheritdoc />
+            public ValueTask DisposeAsync() => default;
+        }
     }
 }

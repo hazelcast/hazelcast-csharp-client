@@ -51,5 +51,20 @@ namespace Hazelcast.Core
         /// </remarks>
         public static bool HasAny<T>(this T value, T flags) where T : Enum
             => ((int) (IConvertible) value & (int) (IConvertible) flags) > 0;
+
+        /// <summary>
+        /// Determines whether one or more bit fields are not set in the current instance.
+        /// </summary>
+        /// <typeparam name="T">The type of the enumeration.</typeparam>
+        /// <param name="value">This instance value.</param>
+        /// <param name="flags">An enumeration value.</param>
+        /// <returns><c>true</c> if none of the bit field or bit fields that are set in flag are also set in the current instance; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>This extension methods works for enumerations backed by an <see cref="int"/> value, or any smaller value.
+        /// No test is performed on <c>value.GetTypeCode()</c> and therefore results for enumerations backed, by example,
+        /// by a <see cref="long"/> are unspecified.</para>
+        /// </remarks>
+        public static bool HasNone<T>(this T value, T flags) where T : Enum
+            => ((int) (IConvertible) value & (int) (IConvertible) flags) == 0;
     }
 }

@@ -24,9 +24,9 @@ namespace Hazelcast.Partitioning
         private readonly object _partitionsLock = new object();
         private PartitionTable _partitions;
 
-        public Partitioner()
+        static Partitioner()
         {
-            HConsole.Configure(options => options.Set(this, x=> x.SetPrefix("PART")));
+            HConsole.Configure(consoleOptions => consoleOptions.Set<Partitioner>(targetOptions => targetOptions.SetPrefix("PART")));
         }
 
         /// <summary>

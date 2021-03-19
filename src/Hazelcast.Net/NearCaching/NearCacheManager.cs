@@ -31,7 +31,7 @@ namespace Hazelcast.NearCaching
     // this is 'above' the cluster, not part of it, but it uses the cluster
     // = can have a ref to the cluster?
 
-    internal class NearCacheManager : IAsyncDisposable
+    internal class NearCacheManager : IAsyncEnumerable<NearCache>, IAsyncDisposable
     {
         private readonly ILogger _logger;
 
@@ -250,6 +250,12 @@ namespace Hazelcast.NearCaching
                 await FetchMetadataAsync().CfAwait();
                 Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
             }
+        }
+
+        /// <inheritdoc />
+        public async IAsyncEnumerator<NearCache> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
+        {
+            await foreach (var entry in _caches) yield return entry.Value;
         }
 
         /// <inheritdoc />

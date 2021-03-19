@@ -77,6 +77,11 @@ namespace Hazelcast.Clustering
         private readonly object _collectMutex = new object();
         private Task _collectTask; // the task that collects ghost subscriptions
 
+        static ClusterEvents()
+        {
+            HConsole.Configure(consoleOptions => consoleOptions.Set<ClusterEvents>(targetOptions => targetOptions.SetPrefix("CLUST.EVTS")));
+        }
+
         public ClusterEvents(ClusterState clusterState, ClusterMessaging clusterMessaging, TerminateConnections terminateConnections, ClusterMembers clusterMembers)
         {
             _clusterState = clusterState;
@@ -97,8 +102,6 @@ namespace Hazelcast.Clustering
             {
                 PartitionLost = args => _partitionLost.AwaitEach(args)
             };
-
-            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("EVENTS")));
         }
 
         /// <summary>

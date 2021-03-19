@@ -154,7 +154,11 @@ namespace Hazelcast.Clustering
                 {
                     // this is blocking and returns true once a member is available,
                     // or false if the queue enumerator is complete (no more members)
-                    if (!await _queueEnumerator.MoveNextAsync().CfAwait())
+                    //if (!await _queueEnumerator.MoveNextAsync().CfAwait())
+                    HConsole.WriteLine(this, "DEBUG: before");
+                    var z = await _queueEnumerator.MoveNextAsync().CfAwait(); // <<< FIXME THIS is where we wait for ages
+                    HConsole.WriteLine(this, "DEBUG: after");
+                    if (!z)
                         return false;
 
                     var member = _queueEnumerator.Current;
@@ -230,8 +234,6 @@ namespace Hazelcast.Clustering
 
             _resume.Dispose();
             _enumerate.Dispose();
-
-            await _members.DisposeAsync().CfAwait();
         }
     }
 }
