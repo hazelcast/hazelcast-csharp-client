@@ -151,6 +151,16 @@ namespace Hazelcast.Clustering
         public IPEndPoint LocalEndPoint => _socketConnection.LocalEndPoint;
 
         /// <summary>
+        /// Gets the authentication principal.
+        /// </summary>
+        public string Principal { get; private set; }
+
+        /// <summary>
+        /// Gets the date and time when the connection was established.
+        /// </summary>
+        public DateTimeOffset ConnectTime { get; private set; }
+
+        /// <summary>
         /// Gets the date and time when bytes where last read by the client.
         /// </summary>
         public DateTime LastReadTime => _socketConnection?.LastReadTime ?? DateTime.MinValue;
@@ -206,6 +216,8 @@ namespace Hazelcast.Clustering
 
             MemberId = result.MemberId;
             ClusterId = result.ClusterId;
+            ConnectTime = DateTimeOffset.Now;
+            Principal = result.Principal;
             
             bool disposed;
             lock (_mutex)

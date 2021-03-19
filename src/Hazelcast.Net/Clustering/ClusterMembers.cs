@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.LoadBalancing;
@@ -32,8 +33,8 @@ namespace Hazelcast.Clustering
     {
         private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
-        private readonly ILoadBalancer _loadBalancer;
         private readonly ILogger _logger;
+        private readonly ILoadBalancer _loadBalancer;
 
         private readonly TerminateConnections _terminateConnections;
         private readonly MemberConnectionQueue _memberConnectionQueue;
@@ -53,24 +54,26 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="ClusterMembers"/> class.
         /// </summary>
         /// <param name="clusterState">The cluster state.</param>
-        /// <param name="memberConnectionQueue">The connect members queue.</param>
         /// <param name="terminateConnections">The terminate connections task.</param>
-        public ClusterMembers(ClusterState clusterState, MemberConnectionQueue memberConnectionQueue, TerminateConnections terminateConnections)
+        public ClusterMembers(ClusterState clusterState, TerminateConnections terminateConnections)
         {
             HConsole.Configure(x => x.Configure<ClusterMembers>().SetPrefix("CLUST.MBRS"));
 
             _clusterState = clusterState;
-            _memberConnectionQueue = memberConnectionQueue; // can be null when not smart routing
             _terminateConnections = terminateConnections;
             _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
-            _logger = clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
+
+            _logger = _clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
 
             _members = new MemberTable();
+
+            // members to connect
+            if (clusterState.IsSmartRouting) _memberConnectionQueue = new MemberConnectionQueue(clusterState.LoggerFactory);
         }
 
-        
+
         #region Event Handlers
-        
+
         /// <summary>
         /// Adds a connection.
         /// </summary>
@@ -225,7 +228,7 @@ namespace Hazelcast.Clustering
             // replace the table
             var previous = _members;
             var table = new MemberTable(version, members);
-            _members = table;
+            lock (_mutex) _members = table;
 
             // notify the load balancer of the new list of members
             // (the load balancer can always return a member that is not a member
@@ -250,6 +253,28 @@ namespace Hazelcast.Clustering
                 foreach (var m in members)
                     if (diff.ContainsKey(m)) diff[m] += 2;
                     else diff[m] = 2;
+            }
+
+            // log, if the members have changed (one of them at least is not 3=unchanged)
+            if (_logger.IsEnabled(LogLevel.Information) && diff.Any(d => d.Value != 3))
+            {
+                var msg = new StringBuilder();
+                msg.Append("Members [");
+                msg.Append(table.Count);
+                msg.AppendLine("] {");
+                foreach (var member in table.Members)
+                {
+                    msg.Append("    ");
+                    msg.Append(member.Address);
+                    msg.Append(" - ");
+                    msg.Append(member.Id);
+                    if (diff.TryGetValue(member, out var d) && d == 2)
+                        msg.Append(" - new");
+                    msg.AppendLine();
+                }
+                msg.Append('}');
+
+                _logger.LogInformation(msg.ToString());
             }
 
             // process changes, gather events
@@ -369,6 +394,26 @@ namespace Hazelcast.Clustering
 
 
         /// <summary>
+        /// Enumerates the members to connect.
+        /// </summary>
+        public IAsyncEnumerable<(MemberInfo, CancellationToken)> MembersToConnect
+            => _memberConnectionQueue;
+
+        /// <summary>
+        /// Reports that a member failed to connect.
+        /// </summary>
+        /// <param name="member">The member that failed to connect.</param>
+        public void FailedToConnect(MemberInfo member)
+        {
+            lock (_mutex)
+            {
+                if (_members.ContainsMember(member.Id))
+                    _memberConnectionQueue.Add(member);
+            }
+        }
+
+
+        /// <summary>
         /// Gets a connection to a random member.
         /// </summary>
         /// <returns>A random client connection if available; otherwise <c>null</c>.</returns>
@@ -426,6 +471,18 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Gets the oldest active connection.
+        /// </summary>
+        /// <returns>The oldest active connection, or <c>null</c> if no connection is active.</returns>
+        public MemberConnection GetOldestConnection()
+        {
+            return _connections.Values
+                .Where(x => x.Active)
+                .OrderBy(x => x.ConnectTime)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
         /// Tries to get a connection for a member.
         /// </summary>
         /// <param name="memberId">The identifier of the member.</param>
@@ -463,6 +520,9 @@ namespace Hazelcast.Clustering
 
 
         /// <inheritdoc />
-        public ValueTask DisposeAsync() => default;
+        public async ValueTask DisposeAsync()
+        {
+            await _memberConnectionQueue.DisposeAsync().CfAwait();
+        }
     }
 }

@@ -32,7 +32,8 @@ namespace Hazelcast.Models
         /// <param name="failoverSupported">Whether fail-over is supported.</param>
         /// <param name="partitionCount">The partition count.</param>
         /// <param name="serializationVersion">The serialization version.</param>
-        public AuthenticationResult(Guid clusterId, Guid memberId, NetworkAddress memberAddress, string serverVersion, bool failoverSupported, int partitionCount, byte serializationVersion)
+        /// <param name="principal">The principal that was used to authenticate.</param>
+        public AuthenticationResult(Guid clusterId, Guid memberId, NetworkAddress memberAddress, string serverVersion, bool failoverSupported, int partitionCount, byte serializationVersion, string principal)
         {
             ClusterId = clusterId;
             MemberId = memberId;
@@ -41,6 +42,7 @@ namespace Hazelcast.Models
             FailoverSupported = failoverSupported;
             PartitionCount = partitionCount;
             SerializationVersion = serializationVersion;
+            Principal = principal;
         }
 
         /// <summary>
@@ -52,6 +54,11 @@ namespace Hazelcast.Models
         /// Gets the unique identifier of the member.
         /// </summary>
         public Guid MemberId { get; }
+
+        /// <summary>
+        /// Gets the name of the principal that was used to authenticate.
+        /// </summary>
+        public string Principal { get; }
 
         /// <summary>
         /// Gets the network address of the member.

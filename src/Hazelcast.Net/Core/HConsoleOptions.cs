@@ -214,5 +214,3 @@ namespace Hazelcast.Core
 #endif
     }
 }
-
-#pragma warning restore CA1801 // Review unused parameters
