@@ -135,7 +135,7 @@ namespace Hazelcast.Clustering
             return (AuthenticationStatus) response.Status switch
             {
                 AuthenticationStatus.Authenticated
-                    => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion),
+                    => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion, credentials.Name),
 
                 AuthenticationStatus.CredentialsFailed
                     => null, // could want to retry

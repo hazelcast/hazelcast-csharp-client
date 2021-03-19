@@ -62,12 +62,11 @@ namespace Hazelcast.Clustering
             };
 
             // create components
-            if (State.IsSmartRouting) _memberConnectionQueue = new MemberConnectionQueue(loggerFactory);
             _terminateConnections = new TerminateConnections(loggerFactory);
-            Members = new ClusterMembers(State, _memberConnectionQueue, _terminateConnections);
+            Members = new ClusterMembers(State, _terminateConnections);
             Messaging = new ClusterMessaging(State, Members);
             Events = new ClusterEvents(State, Messaging, _terminateConnections, Members);
-            Connections = new ClusterConnections(State, Members, _memberConnectionQueue, serializationService);
+            Connections = new ClusterConnections(State, Members, serializationService);
             _heartbeat = new Heartbeat(State, Messaging, options.Heartbeat, _terminateConnections);
 
             // wire components
@@ -244,6 +243,7 @@ namespace Hazelcast.Clustering
             await Connections.DisposeAsync().CfAwait();
 
             // connections are gone, we are down
+            HConsole.WriteLine(this, "Connections disposed, down");
             await State.ChangeStateAndWait(ClientState.Shutdown).CfAwait();
 
             // at that point we can get rid of members

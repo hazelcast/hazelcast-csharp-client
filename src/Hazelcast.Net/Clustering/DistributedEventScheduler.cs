@@ -43,6 +43,11 @@ namespace Hazelcast.Clustering
         private int _exceptionCount, _unhandledExceptionCount;
         private volatile bool _disposed;
 
+        static DistributedEventScheduler()
+        {
+            HConsole.Configure(consoleOptions => consoleOptions.Set<DistributedEventScheduler>(targetOptions => targetOptions.SetPrefix("EVTS.SCHED")));
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedEventScheduler"/> class.
         /// </summary>
