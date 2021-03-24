@@ -63,7 +63,11 @@ namespace Hazelcast
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
 
             if (options.Metrics.Enabled)
-                _metricsPublisher = new MetricsPublisher(cluster, _nearCacheManager, options.Metrics, loggerFactory);
+            {
+                _metricsPublisher = new MetricsPublisher(cluster, options.Metrics, loggerFactory);
+                _metricsPublisher.AddSource(new ClientMetricSource(cluster, loggerFactory));
+                _metricsPublisher.AddSource(_nearCacheManager);
+            }
 
             // wire components
             WireComponents();

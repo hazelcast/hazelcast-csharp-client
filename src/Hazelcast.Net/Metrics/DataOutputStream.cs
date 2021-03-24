@@ -17,6 +17,8 @@ using System.IO;
 
 namespace Hazelcast.Metrics
 {
+    // a minimal port of Java's DataOutputStream to be used in MetricsCompressor,
+    // because MetricsCompressor needs to send things in a Java-expected way
     internal class DataOutputStream
     {
         private readonly Stream _stream;
@@ -87,7 +89,8 @@ namespace Hazelcast.Metrics
 
         public void WriteString(string s, int offset, int count)
         {
-            for (var i = offset; i < count; i++)
+            var bound = offset + count;
+            for (var i = offset; i < bound; i++)
                 WriteChar(s[i]);
         }
     }

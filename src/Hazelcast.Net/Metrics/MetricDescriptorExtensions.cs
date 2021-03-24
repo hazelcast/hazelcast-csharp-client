@@ -12,20 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace Hazelcast.Metrics
 {
-    internal class LiveStat : StatBase
+    internal static class MetricDescriptorExtensions
     {
-        private readonly Func<string> _producer;
+        public static Metric<T> WithValue<T>(this MetricDescriptor<T> descriptor, T value)
+            => Metric.Create(descriptor, value);
 
-        public LiveStat(string prefix, string name, Func<string> producer)
-            : base(prefix, name)
-        {
-            _producer = producer;
-        }
+        public static Metric<T> WithoutValue<T>(this MetricDescriptor<T> descriptor)
+            => Metric.Create(descriptor, EmptyValue<T>());
 
-        public override string GetValue() => _producer();
+        private static T EmptyValue<T>()
+            => typeof (T) == typeof (string) ? (T) (object) "" : default;
     }
 }

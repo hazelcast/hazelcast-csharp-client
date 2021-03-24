@@ -12,18 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace Hazelcast.Metrics
 {
-    internal class StaticStat : StatBase
+    // a source of metrics
+    internal interface IMetricSource
     {
-        private readonly string _value;
-
-        public StaticStat(string prefix, string name, string value)
-            : base(prefix, name)
-        {
-            _value = value;
-        }
-
-        public override string GetValue() => _value;
+        IEnumerable<Metric> PublishMetrics();
     }
 }

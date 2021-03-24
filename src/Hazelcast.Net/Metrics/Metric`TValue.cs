@@ -12,14 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Globalization;
+
 namespace Hazelcast.Metrics
 {
-    internal interface IStat
+    // a metric with its value
+    internal class Metric<TValue> : Metric
     {
-        string Prefix { get; }
+        public TValue Value { get; set; }
 
-        string Name { get; }
-
-        string GetValue();
+        public override string StringValue
+        {
+            get
+            {
+                var value = Value;
+                switch (value)
+                {
+                    // beware! it is important to serialize values in the Java-expected way!
+                    case double d: return d.ToString(CultureInfo.InvariantCulture);
+                    case null: return "";
+                    default: return value.ToString();
+                }
+            }
+        }
     }
 }

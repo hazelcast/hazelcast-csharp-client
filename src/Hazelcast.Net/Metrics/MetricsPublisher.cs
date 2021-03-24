@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -25,20 +24,21 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Metrics
 {
+    // the metric publishing service
     internal class MetricsPublisher : IAsyncDisposable
     {
         private readonly Cluster _cluster;
-        private readonly NearCacheManager _nearCaches;
         private readonly MetricsOptions _options;
         private readonly ILogger _logger;
+        private readonly List<IMetricSource> _metricSources = new List<IMetricSource>();
+        private readonly List<IMetricAsyncSource> _metricAsyncSources = new List<IMetricAsyncSource>();
 
         private readonly CancellationTokenSource _cancel;
         private readonly Task _publishing;
 
-        public MetricsPublisher(Cluster cluster, NearCacheManager nearCaches, MetricsOptions options, ILoggerFactory loggerFactory)
+        public MetricsPublisher(Cluster cluster, MetricsOptions options, ILoggerFactory loggerFactory)
         {
             _cluster = cluster;
-            _nearCaches = nearCaches;
             _options = options;
             _logger = loggerFactory.CreateLogger<MetricsPublisher>();
 
@@ -48,6 +48,12 @@ namespace Hazelcast.Metrics
 
             _logger.LogDebug($"Publishing metrics every {_options.PeriodSeconds}s");
         }
+
+        public void AddSource(IMetricSource source)
+            => _metricSources.Add(source);
+
+        public void AddSource(IMetricAsyncSource source)
+            => _metricAsyncSources.Add(source);
 
         private async Task PublishAsync(CancellationToken cancellationToken)
         {
@@ -69,6 +75,7 @@ namespace Hazelcast.Metrics
             }
         }
 
+
         private async Task SendMetricsAsync(CancellationToken cancellationToken)
         {
             // the Java client gets these from a random connection
@@ -81,60 +88,40 @@ namespace Hazelcast.Metrics
             }
 
             var timestamp = Clock.Milliseconds;
-            var stats = new List<IStat>();
+            var metrics = new List<Metric> { ClientMetricSource.MetricDescriptors.LastStatisticsCollectionTime.WithValue(timestamp) };
 
-            // these are the stats currently sent by the Java v4 client
+            foreach (var metricSource in _metricSources)
+                metrics.AddRange(metricSource.PublishMetrics());
 
-            // FIXME how are "gauge" working in Java?!
+            foreach (var metricSource in _metricAsyncSources)
+                await foreach (var metric in metricSource.PublishMetrics())
+                    metrics.Add(metric);
 
-            stats.AddStat("lastStatisticsCollectionTime", timestamp);
-            stats.AddStat("enterprise", false);
-            stats.AddStat("clientType", "CSHARP");
-            stats.AddStat("clientVersion", ClientVersion.Version);
-            stats.AddStat("clientName", _cluster.ClientName);
-
-            stats.AddStat("clusterConnectionTimestamp", Clock.ToEpoch(connection.ConnectTime.UtcDateTime)); // TODO: ToEpoch supports DateTimeOffset
-            stats.AddStat("clientAddress", connection.LocalEndPoint.Address);
-            stats.AddStat("credentials.principal", connection.Principal);
-
-            // these are the os values copied from v3, TODO: can we do better?
-            stats.AddStat("os.committedVirtualMemorySize", () => Process.GetCurrentProcess().VirtualMemorySize64);
-            stats.AddEmptyStat("os.freePhysicalMemorySize");
-            stats.AddEmptyStat("os.freeSwapSpaceSize");
-            stats.AddEmptyStat("os.maxFileDescriptorCount");
-            stats.AddStat("os.openFileDescriptorCount", () => Process.GetCurrentProcess().HandleCount);
-            stats.AddStat("os.processCpuTime", () => (long) Process.GetCurrentProcess().TotalProcessorTime.TotalMilliseconds * 1000000);
-            stats.AddEmptyStat("os.systemLoadAverage"); // double value, everything else is long
-            stats.AddEmptyStat("os.totalPhysicalMemorySize");
-            stats.AddEmptyStat("os.totalSwapSpaceSize");
-
-            // these are the runtime values copied from v3, TODO: can we do better?
-            stats.AddStat("runtime.availableProcessors", () => Environment.ProcessorCount);
-            stats.AddEmptyStat("runtime.freeMemory");
-            stats.AddStat("runtime.maxMemory", () => Process.GetCurrentProcess().MaxWorkingSet.ToInt64());
-            stats.AddStat("runtime.totalMemory", () => Process.GetCurrentProcess().WorkingSet64);
-            stats.AddStat("runtime.uptime", () => (long) (DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds);
-            stats.AddStat("runtime.usedMemory", () => Process.GetCurrentProcess().WorkingSet64);
-
-            // this was in v3, not in Java v4
-            //stats.AddEmptyStat("executionService.userExecutorQueueSize");
-
-            await foreach (var nearCache in _nearCaches)
-                stats.AddStats(nearCache);
-
-            //metricsRegistry.Collect(metricsCollector);
-            //var metrics = metricsCollector.GetBytes();
-
-            var metrics = Array.Empty<byte>();
+            // TODO add NearCache manager as a metric source! - except, then, the souce can be async!
+            //await foreach (var nearCache in _nearCaches)
+            //    metrics.AddRange(nearCache.Statistics.PublishMetrics());
 
             if (cancellationToken.IsCancellationRequested) return; // last chance to cancel
 
             try
             {
+                byte[] bytes;
+                using (var compressor = new MetricsCompressor())
+                {
+                    foreach (var metric in metrics)
+                        compressor.Append(metric);
+                    bytes = compressor.GetBytesAndReset(); // FIXME should we, like, recycle it?
+                }
+
+                if (cancellationToken.IsCancellationRequested) return;
+
+                var text = metrics.Serialize();
+
+                if (cancellationToken.IsCancellationRequested) return;
+
                 // non-cancelable
-                var sstats = stats.Serialize();
-                _logger.LogDebug("Send stats: " + sstats);
-                await SendMetricsAsync(timestamp, sstats, metrics).CfAwait();
+                _logger.LogDebug("Send stats:\n    " + text.Replace(",", ",\n    "));
+                await SendMetricsAsync(timestamp, text, bytes).CfAwait();
             }
             catch (Exception e)
             {

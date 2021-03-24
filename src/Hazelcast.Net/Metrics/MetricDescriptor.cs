@@ -16,15 +16,27 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Metrics
 {
-    internal class MetricDescriptor
+    // a metric descriptor for values of a given type
+    internal class MetricDescriptor<TValue> : IMetricDescriptor
     {
         private IDictionary<string, string> _tags;
+
+        public MetricDescriptor(string name)
+        {
+            Name = name;
+        }
+
+        public MetricDescriptor(string prefix, string name)
+            : this(name)
+        {
+            Prefix = prefix;
+        }
 
         public string Prefix { get; set; }
 
         public string Name { get; set; }
 
-        public string DiscriminatorName { get; set; }
+        public string DiscriminatorKey { get; set; }
 
         public string DiscriminatorValue { get; set; }
 
@@ -32,6 +44,27 @@ namespace Hazelcast.Metrics
 
         public IDictionary<string, string> Tags => _tags ??= new Dictionary<string, string>();
 
-        // excluded targets - not supported
+        public int TagCount => _tags?.Count ?? 0;
+
+        public MetricDescriptor<TValue> WithUnit(MetricUnit unit)
+        {
+            Unit = unit;
+            return this;
+        }
+
+        public MetricDescriptor<TValue> WithDiscriminator(string key, string value)
+        {
+            DiscriminatorKey = key;
+            DiscriminatorValue = value;
+            return this;
+        }
+
+        public MetricDescriptor<TValue> WithTag(string key, string value)
+        {
+            Tags[key] = value;
+            return this;
+        }
+
+        // "excluded targets" are not supported
     }
 }

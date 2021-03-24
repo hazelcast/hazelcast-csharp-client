@@ -12,20 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace Hazelcast.Metrics
 {
-    internal abstract class StatBase : IStat
+    // an asynchronous source of metrics
+    internal interface IMetricAsyncSource
     {
-        protected StatBase(string prefix, string name)
-        {
-            Prefix = prefix;
-            Name = name;
-        }
-
-        public string Prefix { get; }
-
-        public string Name { get; }
-
-        public abstract string GetValue();
+        IAsyncEnumerable<Metric> PublishMetrics();
     }
 }
