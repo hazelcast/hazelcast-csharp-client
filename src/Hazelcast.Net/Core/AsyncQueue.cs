@@ -99,7 +99,7 @@ namespace Hazelcast.Core
                 _reg.Dispose();
             }
 
-            waiting?.SetResult(false);
+            waiting?.TrySetResult(false);
         }
 
         // there is going to be only 1 reader pumping items out and processing them

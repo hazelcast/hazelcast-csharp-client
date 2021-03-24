@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Linq.Expressions;
+using System.Reflection.Emit;
 
 namespace Hazelcast.Core
 {
@@ -34,8 +36,11 @@ namespace Hazelcast.Core
         /// by a <see cref="long"/> are unspecified.</para>
         /// <para>This is a convenient replacement for <see cref="Enum.HasFlag"/> which is way slower.</para>
         /// </remarks>
-        public static bool HasAll<T>(this T value, T flags) where T : Enum
-            => ((int) (IConvertible) value & (int) (IConvertible) flags) == (int) (IConvertible) flags;
+        public static bool HasAll<T>(this T value, T flags) where T : struct, Enum
+        {
+            var cflags = Converter<T>.ToLong(flags);
+            return (Converter<T>.ToLong(value) & cflags) == cflags;
+        }
 
         /// <summary>
         /// Determines whether one or more bit fields are set in the current instance.
@@ -44,13 +49,8 @@ namespace Hazelcast.Core
         /// <param name="value">This instance value.</param>
         /// <param name="flags">An enumeration value.</param>
         /// <returns><c>true</c> if any of the bit field or bit fields that are set in flag are also set in the current instance; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>This extension methods works for enumerations backed by an <see cref="int"/> value, or any smaller value.
-        /// No test is performed on <c>value.GetTypeCode()</c> and therefore results for enumerations backed, by example,
-        /// by a <see cref="long"/> are unspecified.</para>
-        /// </remarks>
-        public static bool HasAny<T>(this T value, T flags) where T : Enum
-            => ((int) (IConvertible) value & (int) (IConvertible) flags) > 0;
+        public static bool HasAny<T>(this T value, T flags) where T : struct, Enum
+            => (Converter<T>.ToLong(value) & Converter<T>.ToLong(flags)) > 0;
 
         /// <summary>
         /// Determines whether one or more bit fields are not set in the current instance.
@@ -59,12 +59,47 @@ namespace Hazelcast.Core
         /// <param name="value">This instance value.</param>
         /// <param name="flags">An enumeration value.</param>
         /// <returns><c>true</c> if none of the bit field or bit fields that are set in flag are also set in the current instance; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>This extension methods works for enumerations backed by an <see cref="int"/> value, or any smaller value.
-        /// No test is performed on <c>value.GetTypeCode()</c> and therefore results for enumerations backed, by example,
-        /// by a <see cref="long"/> are unspecified.</para>
-        /// </remarks>
-        public static bool HasNone<T>(this T value, T flags) where T : Enum
-            => ((int) (IConvertible) value & (int) (IConvertible) flags) == 0;
+        public static bool HasNone<T>(this T value, T flags) where T : struct, Enum
+            => (Converter<T>.ToLong(value) & Converter<T>.ToLong(flags)) == 0;
+
+        // An enum declaration may explicitly declare an underlying type of byte, sbyte, short, ushort, int, uint, long or ulong.
+        // see https://devblogs.microsoft.com/premier-developer/dissecting-new-generics-constraints-in-c-7-3/
+        //
+        // var i = (int) enumValue is fine & fast, as long as we are not using generics
+        // we *could* write extensions for all our enums, that's be fast code but... tedious?
+        // = (int) (IConvertible) enumValue -> implies boxing/unboxing
+        // code below is a good compromise
+
+        private static class Converter<TEnum> where TEnum : struct, Enum
+        {
+            public static readonly Func<TEnum, long> ToLong = CreateToLong();
+
+            private static Func<TEnum, long> CreateToLong()
+            {
+                var parameter = Expression.Parameter(typeof (TEnum));
+                //var convert = Expression.ConvertChecked(parameter, typeof (long));
+                var convert = Expression.Convert(parameter, typeof(long));
+                return Expression.Lambda<Func<TEnum, long>>(convert, parameter).Compile();
+
+                // code below would work in NetStandard 2.1 but only benchmarking could determine whether it's worth it
+
+                /*
+                var method = new DynamicMethod(
+                    name: "ConvertToLong",
+                    returnType: typeof(long),
+                    parameterTypes: new[] { typeof(TEnum) },
+                    m: typeof(EnumExtensions).Module,
+                    skipVisibility: true);
+
+                ILGenerator ilGen = method.GetILGenerator();
+
+                ilGen.Emit(OpCodes.Ldarg_0);
+                ilGen.Emit(OpCodes.Conv_I8);
+                ilGen.Emit(OpCodes.Ret);
+
+                return (Func<TEnum, long>) method.CreateDelegate(typeof(Func<TEnum, long>));
+                */
+            }
+        }
     }
 }
