@@ -40,10 +40,10 @@
     <Version>4.0.0-alpha.2</Version>
     -->
 
-    <AssemblyVersion>4.0.1</AssemblyVersion>
-    <FileVersion>4.0.1</FileVersion>
-    <VersionPrefix>4.0.1</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
+    <AssemblyVersion>4.0.2</AssemblyVersion>
+    <FileVersion>4.0.2</FileVersion>
+    <VersionPrefix>4.0.2</VersionPrefix>
+    <VersionSuffix>preview.1</VersionSuffix>
 
     <Authors>Hazelcast, Inc.</Authors>
     <Product>Hazelcast .NET Client</Product>
