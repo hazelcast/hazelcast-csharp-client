@@ -286,6 +286,8 @@ foreach ($t in $commands) {
             Write-Output "  -classPath <classpath> : define an additional classpath (alias: cp)."
             Write-Output "        The classpath is appended to the RC or server classpath."
             Write-Output ""
+            Write-Output "  -reproducible : mark the build as reproducible (alias: repro)"
+            Write-Output ""
             Write-Output ""
             exit 0
 		}
