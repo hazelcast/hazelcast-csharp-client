@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,6 +53,12 @@ namespace Hazelcast.Clustering
             _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
             _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
 
+            if (options.PeriodMilliseconds < 0)
+            {
+                _logger.LogInformation("Heartbeat is disabled (period < 0)");
+                return;
+            }
+
             // sanity checks
             if (_timeout <= _period)
             {
@@ -60,6 +67,10 @@ namespace Hazelcast.Clustering
                     _timeout, _period.TotalMilliseconds, timeout);
                 _timeout = timeout;
             }
+
+            _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout", 
+                _period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture), 
+                _timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture));
 
             HConsole.Configure(options => options.Set(this, x => x.SetPrefix("HB")));
 
