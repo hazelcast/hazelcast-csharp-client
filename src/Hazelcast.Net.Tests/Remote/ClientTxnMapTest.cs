@@ -135,7 +135,7 @@ namespace Hazelcast.Tests.Remote
 
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            var ttlMillis = 100;
+            var ttlMillis = 1000;
             Assert.That(await txDictionary.PutAsync("key1", "value1", TimeSpan.FromMilliseconds(ttlMillis)), Is.Null);
             Assert.That(await txDictionary.GetAsync("key1"), Is.EqualTo("value1"));
 
