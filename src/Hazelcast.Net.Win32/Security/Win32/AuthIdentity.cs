@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 namespace Hazelcast.Security.Win32
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct AuthIdentity
+    internal struct AuthIdentity
     {
         [MarshalAs(UnmanagedType.LPWStr)]
         public string User;

@@ -23,7 +23,7 @@ using System;
 
 namespace Hazelcast.Security.Win32
 {
-    public enum ContextStatus
+    internal enum ContextStatus
     {
         RequiresContinuation,
         Accepted,
@@ -57,7 +57,7 @@ namespace Hazelcast.Security.Win32
         UnverifiedTargetName = 0x20000000
     }
 
-    public enum SecStatus : uint
+    internal enum SecStatus : uint
     {
         SEC_E_OK = 0x0,
         SEC_E_ERROR = 0x80000000,
@@ -86,7 +86,7 @@ namespace Hazelcast.Security.Win32
         SEC_I_RENEGOTIATE = 0x00090321
     }
 
-    public enum SecurityContextAttribute
+    internal enum SecurityContextAttribute
     {
         SECPKG_ATTR_SIZES = 0,
         SECPKG_ATTR_NAMES = 1,

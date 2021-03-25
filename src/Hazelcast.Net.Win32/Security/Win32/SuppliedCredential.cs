@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 
 namespace Hazelcast.Security.Win32
 {
-    public class SuppliedCredential : Credential
+    internal class SuppliedCredential : Credential
     {
         private readonly AuthIdentity _auth;
 
