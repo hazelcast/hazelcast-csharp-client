@@ -260,7 +260,7 @@ namespace Hazelcast.Clustering
             // implement some rudimentary increasing delay based on the number of attempts
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this? and use an IRetryStrategy?
-            var delayMilliseconds = Math.Min(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
+            var delayMilliseconds = Math.Max(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
             await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CfAwait(); // throws if cancelled
 
             InitializeNewCompletionSource();
