@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,5 +31,16 @@ namespace Hazelcast.CP
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IAtomicLong> GetAtomicLongAsync(string name);
+
+        /// <summary>
+        /// Gets an <see cref="IAtomicRef{T}"/> distributed object.
+        /// </summary>
+        /// <param name="name">The unique name of the atomic reference.</param>
+        /// <returns>The atomic reference that was retrieved or created.</returns>
+        /// <remarks>
+        /// <para>If an object with the specified <paramref name="name"/> does not
+        /// exist already in the cluster, a new object is created.</para>
+        /// </remarks>
+        Task<IAtomicRef<T>> GetAtomicRefAsync<T>(string name) where T: class;
     }
 }
