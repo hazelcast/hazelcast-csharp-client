@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.CP;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
@@ -153,6 +154,16 @@ namespace Hazelcast.Tests.CP
             await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
 
             await along.DestroyAsync();
+
+            var e = await AssertEx.ThrowsAsync<RemoteException>(async () => await along.SetAsync(1));
+            Assert.That(e.Error, Is.EqualTo(RemoteError.DistributedObjectDestroyed));
+        }
+
+        [Test]
+        public async Task AfterUsing()
+        {
+            IAtomicLong along;
+            await using (along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName())) { }
 
             var e = await AssertEx.ThrowsAsync<RemoteException>(async () => await along.SetAsync(1));
             Assert.That(e.Error, Is.EqualTo(RemoteError.DistributedObjectDestroyed));
