@@ -196,7 +196,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual("token", cloudOptions.DiscoveryToken);
 
             // constant
-            Assert.AreEqual(new Uri("https://coordinator.hazelcast.cloud/"), cloudOptions.UrlBase);
+            Assert.AreEqual(new Uri("https://coordinator.hazelcast.cloud/"), cloudOptions.Url);
 
             var socketOptions = options.Socket;
             Assert.AreEqual(1000, socketOptions.BufferSizeKiB);
