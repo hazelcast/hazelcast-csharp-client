@@ -68,12 +68,12 @@ namespace Hazelcast.CP
             return new AtomicLong(objectName, groupId, _cluster);
         }
 
-        public async Task<IAtomicRef<T>> GetAtomicRefAsync<T>(string name) where T: class
+        public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name) where T: class
         {
             var (groupName, objectName) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName, objectName).CfAwait();
 
-            return new AtomicRef<T>(objectName, groupId, _cluster, _serializationService);
+            return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
         }
 
         // see: ClientRaftProxyFactory.java

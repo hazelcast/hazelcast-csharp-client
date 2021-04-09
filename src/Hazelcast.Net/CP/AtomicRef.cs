@@ -8,17 +8,17 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.CP
 {
-    internal class AtomicRef<T>: CPDistributedObjectBase, IAtomicRef<T>
+    internal class AtomicReference<T>: CPDistributedObjectBase, IAtomicReference<T>
         where T: class
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AtomicRef{T}"/> class.
+        /// Initializes a new instance of the <see cref="AtomicReference{T}"/> class.
         /// </summary>
         /// <param name="name">The unique name.</param>
         /// <param name="groupId">The CP group identifier.</param>
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The serialization service.</param>
-        public AtomicRef(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
+        public AtomicReference(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
             : base(ServiceNames.AtomicLong, name, groupId, cluster)
         {
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));

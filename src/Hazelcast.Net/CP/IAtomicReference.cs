@@ -2,7 +2,7 @@
 
 namespace Hazelcast.CP
 {
-    public interface IAtomicRef<T>: ICPDistributedObject
+    public interface IAtomicReference<T>: ICPDistributedObject
         where T: class
     {
         /// <summary>
