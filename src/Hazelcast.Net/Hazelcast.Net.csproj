@@ -59,6 +59,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetZip" Version="1.15.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="5.0.0" />

@@ -21,10 +21,11 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Events;
-using Hazelcast.Models;
+using Hazelcast.Metrics;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
+using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast
 {
@@ -39,6 +40,7 @@ namespace Hazelcast
 
         private readonly DistributedObjectFactory _distributedOjects;
         private readonly NearCacheManager _nearCacheManager;
+        private readonly MetricsPublisher _metricsPublisher;
 
         private int _disposed;
 
@@ -59,6 +61,13 @@ namespace Hazelcast
 
             _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
+
+            if (options.Metrics.Enabled)
+            {
+                _metricsPublisher = new MetricsPublisher(cluster, options.Metrics, loggerFactory);
+                _metricsPublisher.AddSource(new ClientMetricSource(cluster, loggerFactory));
+                _metricsPublisher.AddSource(_nearCacheManager);
+            }
 
             // wire components
             WireComponents();
@@ -165,6 +174,15 @@ namespace Hazelcast
 
             // order is important, must dispose the cluster last, as it will tear down
             // connections that may be required by other things being disposed
+
+            try
+            {
+                if (_metricsPublisher != null) await _metricsPublisher.DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Caught exception while disposing the metrics publisher.");
+            }
 
             try
             {
