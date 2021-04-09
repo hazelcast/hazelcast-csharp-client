@@ -39,7 +39,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Whether Hazelcast Cloud is enabled.
         /// </summary>
-        internal bool Enabled => !string.IsNullOrWhiteSpace(DiscoveryToken);
+        public bool Enabled => !string.IsNullOrWhiteSpace(DiscoveryToken);
 
         /// <summary>
         /// Gets or sets the discovery token of the cluster.
