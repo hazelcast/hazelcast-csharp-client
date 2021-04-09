@@ -299,7 +299,7 @@ namespace Hazelcast.Tests.Remote
             var value = await map.GetAsync("key").CfAwait();
             Assert.AreEqual(42, value);
 
-            await Task.Delay(1000); // wait for 1 second
+            await Task.Delay(1500); // wait for 1.5 second
 
             Assert.That(await map.GetAsync("key"), Is.Zero);
 
