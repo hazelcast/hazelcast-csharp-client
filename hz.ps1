@@ -499,6 +499,12 @@ function invokeWebRequest($url, $dest) {
         $args.OutFile = $dest
         $args.PassThru = $true
     }
+    
+    # "Indicates that the cmdlet uses the response object for HTML content without Document
+    # Object Model (DOM) parsing. This parameter is required when Internet Explorer is not
+    # installed on the computers, such as on a Server Core installation of a Windows Server
+    # operating system."
+    $args.UseBasicParsing = $true
 
     $pp = $progressPreference
     $progressPreference = 'SilentlyContinue'
