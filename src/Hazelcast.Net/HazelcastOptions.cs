@@ -18,6 +18,7 @@ using System.Linq;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.Metrics;
 using Hazelcast.NearCaching;
 
 namespace Hazelcast
@@ -59,6 +60,7 @@ namespace Hazelcast
             Serialization = other.Serialization.Clone();
             Messaging = other.Messaging.Clone();
             Events = other.Events.Clone();
+            Metrics = other.Metrics.Clone();
 
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.Select(kvp
@@ -83,6 +85,11 @@ namespace Hazelcast
         /// <returns>The core options.</returns>
         [BinderIgnore(false)]
         internal CoreOptions Core { get; } = new CoreOptions();
+
+        /// <summary>
+        /// Gets the metrics options.
+        /// </summary>
+        public MetricsOptions Metrics { get; } = new MetricsOptions();
 
         /// <summary>
         /// Clones the options.

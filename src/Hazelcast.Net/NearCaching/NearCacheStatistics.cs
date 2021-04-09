@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Threading;
 using Hazelcast.Core;
+using Hazelcast.Metrics;
 
 namespace Hazelcast.NearCaching
 {
-    internal class NearCacheStatistics
+    internal class NearCacheStatistics : IMetricSource
     {
+        private readonly MetricDescriptors _metricDescriptors;
+
         private long _evictions;
         private long _expirations;
         private long _hits;
@@ -29,9 +33,11 @@ namespace Hazelcast.NearCaching
         /// <summary>
         /// Initializes a new instance of the <see cref="NearCacheStatistics"/> class.
         /// </summary>
-        public NearCacheStatistics()
+        /// <param name="name">The name of the cache.</param>
+        public NearCacheStatistics(string name)
         {
             CreationTime = Clock.Milliseconds;
+            _metricDescriptors = new MetricDescriptors(name);
         }
 
         /// <summary>
@@ -135,6 +141,68 @@ namespace Hazelcast.NearCaching
         public void NotifyStaleRead()
         {
             Interlocked.Increment(ref _staleReads);
+        }
+
+
+        private class MetricDescriptors
+        {
+            public MetricDescriptors(string name)
+            {
+                var prefix = "nc" + EnumerableOfMetricsExtensions.NameSeparator + name.TrimStart('/');
+
+                CreationTime = new MetricDescriptor<long>(prefix, "creationTime");
+                Evictions = new MetricDescriptor<long>(prefix, "evictions");
+                Hits = new MetricDescriptor<long>(prefix, "hits");
+                Misses = new MetricDescriptor<long>(prefix, "misses");
+                EntryCount = new MetricDescriptor<long>(prefix, "ownedEntryCount");
+                Expirations = new MetricDescriptor<long>(prefix, "expirations");
+                Invalidations = new MetricDescriptor<long>(prefix, "invalidations");
+                InvalidationRequests = new MetricDescriptor<long>(prefix, "invalidationRequests");
+                OwnedEntryMemoryCost = new MetricDescriptor<long>(prefix, "ownedEntryMemoryCost");
+
+                LastPersistenceDuration = new MetricDescriptor<long>(prefix, "lastPersistenceDuration");
+                LastPersistenceKeyCount = new MetricDescriptor<long>(prefix, "lastPersistenceKeyCount");
+                LastPersistenceTime = new MetricDescriptor<long>(prefix, "lastPersistenceTime");
+                LastPersistenceWrittenBytes = new MetricDescriptor<long>(prefix, "lastPersistenceWrittenBytes");
+            }
+
+            public readonly MetricDescriptor<long> CreationTime;
+            public readonly MetricDescriptor<long> Evictions;
+            public readonly MetricDescriptor<long> Hits;
+            public readonly MetricDescriptor<long> Misses;
+            public readonly MetricDescriptor<long> EntryCount;
+            public readonly MetricDescriptor<long> Expirations;
+            public readonly MetricDescriptor<long> Invalidations;
+            public readonly MetricDescriptor<long> InvalidationRequests;
+            public readonly MetricDescriptor<long> OwnedEntryMemoryCost;
+
+            public readonly MetricDescriptor<long> LastPersistenceDuration;
+            public readonly MetricDescriptor<long> LastPersistenceKeyCount;
+            public readonly MetricDescriptor<long> LastPersistenceTime;
+            public readonly MetricDescriptor<long> LastPersistenceWrittenBytes;
+        }
+
+        public IEnumerable<Metric> PublishMetrics()
+        {
+            // these are the stats currently sent by the Java v4 client
+
+            yield return _metricDescriptors.CreationTime.WithValue(CreationTime);
+            yield return _metricDescriptors.Evictions.WithValue(Evictions);
+            yield return _metricDescriptors.Hits.WithValue(Hits);
+            yield return _metricDescriptors.Misses.WithValue(Misses);
+            yield return _metricDescriptors.EntryCount.WithValue(EntryCount);
+            yield return _metricDescriptors.Expirations.WithValue(Expirations);
+
+            yield return _metricDescriptors.Invalidations.WithoutValue();
+            yield return _metricDescriptors.InvalidationRequests.WithoutValue();
+            yield return _metricDescriptors.OwnedEntryMemoryCost.WithoutValue();
+
+            yield return _metricDescriptors.LastPersistenceDuration.WithoutValue();
+            yield return _metricDescriptors.LastPersistenceKeyCount.WithoutValue();
+            yield return _metricDescriptors.LastPersistenceTime.WithoutValue();
+            yield return _metricDescriptors.LastPersistenceWrittenBytes.WithoutValue();
+
+            // TODO: "lastPersistenceFailure") if ... ?
         }
     }
 }
