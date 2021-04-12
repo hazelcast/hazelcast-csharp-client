@@ -19,7 +19,7 @@ namespace Hazelcast.CP
         /// <param name="cluster">The cluster.</param>
         /// <param name="serializationService">The serialization service.</param>
         public AtomicReference(string name, CPGroupId groupId, Cluster cluster, SerializationService serializationService)
-            : base(ServiceNames.AtomicLong, name, groupId, cluster)
+            : base(ServiceNames.AtomicRef, name, groupId, cluster)
         {
             SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
         }
