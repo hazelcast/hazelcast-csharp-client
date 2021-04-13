@@ -20,7 +20,7 @@ namespace Hazelcast.DistributedObjects
     /// <summary>
     /// Defines the base contract for all Hazelcast distributed objects.
     /// </summary>
-    public interface IDistributedObject : IAsyncDisposable
+    public interface IDistributedObject : IAsyncDisposable, IDisposable
     {
         /// <summary>
         /// Gets the name of the service managing this object.
