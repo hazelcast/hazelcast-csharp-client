@@ -80,10 +80,10 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="kerberos">Kerberos</h1>
 
-<p>The Hazelcast .NET client supports Kerberos as an authentication mechanism, on the Windows platform. Kerberos is not supported on other platforms at the moment. This can allow Windows client to transparently authenticate, with permissions being managed at Active Directory level.</p>
-<p>Kerberos support requires the Enterprise version of the server, release 4.1 or above.</p>
+<p>The Hazelcast .NET client supports Kerberos as an authentication mechanism, on the Windows platform. Kerberos is not supported by the Hazelcast .NET Client on other platforms at the moment. The Hazelcast .NET Client must connect to a server that supports Kerberos authentication: Kerberos is supported by Hazelcast servers starting with version 4.1, as an Enterprise feature.</p>
+<p>Kerberos authentication allows Windows clients to transparently authenticate, with permissions being managed through server-level integration to LDAP-based authorization.</p>
 <h2 id="client-configuration">Client Configuration</h2>
-<p>Kerberos support for Windows is provided in a separate <a href="https://www.nuget.org/packages/Hazelcast.Net.Win32/">Hazelcast.Net.Win32</a> NuGet package, which needs to be installed alongside the main <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.Net</a> package.</p>
+<p>Kerberos support for the Hazelcast .NET Client is provided in a separate <a href="https://www.nuget.org/packages/Hazelcast.Net.Win32/">Hazelcast.Net.Win32</a> NuGet package, which needs to be installed alongside the main <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.Net</a> package.</p>
 <p>Kerberos authentication can be activated via the configuration file, or via code. In both cases, you will need to know the Service Principal Name (a.k.a. <code>spn</code> - &quot;<code>hz/cluster1234</code>&quot; in the examples below) corresponding to the Hazelcast cluster.</p>
 <p>Configuration file:</p>
 <pre><code class="lang-json">&quot;hazelcast&quot;: {
@@ -94,12 +94,77 @@
     }
 }
 </code></pre><p>Code:</p>
-<pre><code class="lang-csharp">var client = HazelcastClientFactory.CreateClient(options =&gt; {
-    options.Authentication.ConfigureKerberosCredentials(&quot;hz/cluster1234&quot;);
-});
-</code></pre><h2 id="server-configuration">Server Configuration</h2>
-<p>Until there is a 4.1 release, see <a href="https://docs.hazelcast.org/docs/latest-dev/manual/html-single/index.html#kerberos-authentication-type">this page</a> for documentation.</p>
-</article>
+<pre><code class="lang-csharp">HazelcastOptions options;
+options.Authentication.ConfigureKerberosCredentials(&quot;hz/cluster1234&quot;);
+</code></pre><p>In both cases, the Hazelcast .NET Client transparently negociates authentication with the server.</p>
+<h2 id="server-configuration">Server Configuration</h2>
+<p>Server security configuration (starting with 4.1) is documented in the <a href="https://docs.hazelcast.com/imdg/latest/security/security.html">Security</a> section of the main Hazelcast documentation, and Kerberos authentication is documented in the <a href="https://docs.hazelcast.com/imdg/latest/security/security-realms.html#kerberos-authentication">Security Reams</a> sub-section.</p>
+<p>The Kerberos support in Hazelcast has 2 configuration parts: identity and authentication. The identity part is responsible for retrieving the service ticket from Kerberos KDC (Key Distribution Center). The authentication part verifies the service tickets.</p>
+<p>The following XML fragment can be used as an example of a working server configuration. However, it is recommended to read the completed documentation in order to fully understand the security aspects of Kerberos.</p>
+<pre><code class="lang-xml">&lt;realm name=&quot;kerberosRealm&quot;&gt;
+    &lt;authentication&gt;
+        &lt;kerberos&gt;
+            &lt;security-realm&gt;krb5Acceptor&lt;/security-realm&gt;
+
+            &lt;!-- relax flags check because .NET tokens have too many things --&gt;
+            &lt;relax-flags-check&gt;true&lt;/relax-flags-check&gt;
+
+            &lt;!-- permissions via LDAP --&gt;
+            &lt;ldap&gt;
+                &lt;!-- LDAP server --&gt;
+                &lt;url&gt;ldap://server19.hz.local/&lt;/url&gt;
+
+                &lt;!-- LDAP auth --&gt;
+                &lt;system-user-dn&gt;CN=Administrateur,CN=Users,DC=hz,DC=local&lt;/system-user-dn&gt;
+                &lt;system-user-password&gt;******&lt;/system-user-password&gt;
+
+                &lt;!-- no need to auth the user, it&#39;s been done already by Kerberos --&gt;
+                &lt;skip-authentication&gt;true&lt;/skip-authentication&gt;
+
+                &lt;!-- find the user in AD (ensure UPN is set in AD!) --&gt;
+                &lt;user-context&gt;CN=Users,DC=hz,DC=local&lt;/user-context&gt;
+                &lt;user-search-scope&gt;subtree&lt;/user-search-scope&gt;
+                &lt;user-filter&gt;(userPrincipalName={login})&lt;/user-filter&gt;
+
+                &lt;!-- map one attribute to a role --&gt;
+                &lt;!--
+                &lt;role-mapping-mode&gt;attribute&lt;/role-mapping-mode&gt;
+                &lt;role-mapping-attribute&gt;cn&lt;/role-mapping-attribute&gt;
+                --&gt;
+
+                &lt;!-- map roles via groups --&gt;
+                &lt;role-mapping-mode&gt;reverse&lt;/role-mapping-mode&gt;
+                &lt;role-context&gt;CN=Users,DC=hz,DC=local&lt;/role-context&gt;
+                &lt;role-search-scope&gt;subtree&lt;/role-search-scope&gt;
+                &lt;role-filter&gt;(member={memberDN})&lt;/role-filter&gt;
+                &lt;role-recursion-max-depth&gt;4&lt;/role-recursion-max-depth&gt;
+                &lt;role-name-attribute&gt;cn&lt;/role-name-attribute&gt;
+            &lt;/ldap&gt;
+        &lt;/kerberos&gt;
+    &lt;/authentication&gt;
+&lt;/realm&gt;
+&lt;realm name=&quot;krb5Acceptor&quot;&gt;
+    &lt;authentication&gt;
+        &lt;jaas&gt;
+            &lt;login-module class-name=&quot;com.sun.security.auth.module.Krb5LoginModule&quot; usage=&quot;REQUIRED&quot;&gt;
+                &lt;properties&gt;
+                    &lt;property name=&quot;isInitiator&quot;&gt;false&lt;/property&gt;
+                    &lt;property name=&quot;useTicketCache&quot;&gt;false&lt;/property&gt;
+                    &lt;property name=&quot;doNotPrompt&quot;&gt;true&lt;/property&gt;
+                    &lt;property name=&quot;useKeyTab&quot;&gt;true&lt;/property&gt;
+                    &lt;property name=&quot;storeKey&quot;&gt;true&lt;/property&gt;
+
+                    &lt;!-- the service principal --&gt;
+                    &lt;property name=&quot;principal&quot;&gt;hz/cluster1234@HZ.LOCAL&lt;/property&gt;
+
+                    &lt;!-- on Windows, be sure to use the proper Windows paths with backslashes, not slashes! --&gt;
+                    &lt;property name=&quot;keyTab&quot;&gt;path\to\hzcluster1234.keytab&lt;/property&gt;
+                &lt;/properties&gt;
+            &lt;/login-module&gt;
+        &lt;/jaas&gt;
+    &lt;/authentication&gt;
+&lt;/realm&gt;
+</code></pre></article>
           </div>
           
           <div class="hidden-sm col-md-2" role="complementary">
