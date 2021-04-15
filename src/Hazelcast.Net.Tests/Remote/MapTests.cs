@@ -14,10 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Hazelcast.Tests.Serialization.Objects;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -501,6 +504,66 @@ namespace Hazelcast.Tests.Remote
 
             await eventHandled.WaitAsync(2000);
             await client.DestroyAsync(map);
+        }
+
+        [Test]
+        [Timeout(TestTimeoutMilliseconds)]
+        public async Task CustomTypes()
+        {
+            await using var client = await CreateAndStartClientAsync(options =>
+            {
+                options.Serialization.Serializers.Add(new SerializerOptions
+                {
+                    SerializedType = typeof(MyClass),
+                    Creator = () => new MyClassSerializer()
+                });
+            }).CfAwait();
+
+            var map = await client.GetMapAsync<string, MyClass>("map_" + CreateUniqueName()).CfAwait();
+            await using var _ = DestroyAndDispose(map);
+
+            await map.SetAsync("key", new MyClass { Name = "value1" }).CfAwait();
+            await map.SetAsync("key", new MyClass { Name = "value2" }).CfAwait();
+
+            var value = await map.GetAsync("key").CfAwait();
+            Assert.That(value, Is.Not.Null);
+            Assert.That(value.Name, Is.EqualTo("value2"));
+
+            var map2 = await client.GetMapAsync<MyClass, string>("map2_" + CreateUniqueName()).CfAwait();
+            await using var _2 = DestroyAndDispose(map2);
+
+            await map2.SetAsync(new MyClass { Name = "name1" }, "value1").CfAwait();
+            await map2.SetAsync(new MyClass { Name = "name2" }, "value2").CfAwait();
+            Assert.That(await map2.GetSizeAsync().CfAwait(), Is.EqualTo(2));
+
+            await map2.SetAsync(new MyClass { Name = "name2" }, "value3").CfAwait();
+            Assert.That(await map2.GetSizeAsync().CfAwait(), Is.EqualTo(2));
+
+            var value2 = await map2.GetAsync(new MyClass { Name = "name2" }).CfAwait();
+            Assert.That(value2, Is.EqualTo("value3"));
+        }
+
+        public class MyClassSerializer : IByteArraySerializer<MyClass>
+        {
+            public void Dispose()
+            { }
+
+            public int TypeId => 665142;
+
+            public MyClass Read(byte[] buffer)
+            {
+                return new MyClass { Name = Encoding.UTF8.GetString(buffer) };
+            }
+
+            public byte[] Write(MyClass obj)
+            {
+                return Encoding.UTF8.GetBytes(obj.Name);
+            }
+        }
+
+        public class MyClass
+        {
+            public string Name { get; set; }
         }
     }
 }
