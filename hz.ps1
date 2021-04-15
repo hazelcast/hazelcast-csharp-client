@@ -286,6 +286,8 @@ foreach ($t in $commands) {
             Write-Output "  -classPath <classpath> : define an additional classpath (alias: cp)."
             Write-Output "        The classpath is appended to the RC or server classpath."
             Write-Output ""
+            Write-Output "  -reproducible : mark the build as reproducible (alias: repro)"
+            Write-Output ""
             Write-Output ""
             exit 0
 		}
@@ -1596,6 +1598,7 @@ if ($doNuget) {
     # https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-pack
 
     packNuGet("Hazelcast.Net")
+    packNuGet("Hazelcast.Net.Win32")
 }
 
 if ($doNupush -and -not $testsSuccess) {
@@ -1609,6 +1612,7 @@ if ($doNupush) {
     Write-Output "Push NuGet packages..."
 
     &$nuget push "$tmpDir\output\Hazelcast.Net.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
+    &$nuget push "$tmpDir\output\Hazelcast.Net.Win32.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
 }
 
 Write-Output ""
