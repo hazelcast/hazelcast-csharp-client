@@ -24,7 +24,7 @@ namespace Hazelcast.Exceptions
     /// <remarks>
     /// <para>The <see cref="State"/> property provides the <see cref="ClientState"/> of the client
     /// at the time the exception was thrown. The client may be either not connected at all, in which
-    /// case retrying an operation will not succeed. Or, it may be  temporarily disconnected and trying
+    /// case retrying an operation will not succeed. Or, it may be temporarily disconnected and trying
     /// to reconnect, in which case retrying an operation may eventually succeed.</para>
     /// </remarks>
     [Serializable]
