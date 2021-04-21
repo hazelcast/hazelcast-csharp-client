@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if HZ_CONSOLE
 using System;
+#if HZ_CONSOLE
 using System.Globalization;
 using System.Threading;
 #else
@@ -37,6 +37,7 @@ namespace Hazelcast.Core
         private bool _hasIndent;
         private bool _hasPrefix;
         private bool _hasLevel;
+        private bool _hasTimeStamp;
 #endif
 
 #if HZ_CONSOLE
@@ -50,6 +51,7 @@ namespace Hazelcast.Core
            if (_hasIndent) clone.SetIndent(Indent);
            if (_hasPrefix) clone.SetPrefix(Prefix);
            if (_hasLevel) clone.SetLevel(Level);
+           if (_hasTimeStamp) clone.EnableTimeStamp(TimeStampEnabled, TimeStampOrigin);
            return clone;
        }
 
@@ -59,7 +61,8 @@ namespace Hazelcast.Core
         public static HConsoleTargetOptions Default { get; } = new HConsoleTargetOptions()
            .SetPrefix(default)
            .SetLevel(-1)
-           .SetIndent(0);
+           .SetIndent(0)
+           .EnableTimeStamp(false);
 #endif
 
         /// <summary>
@@ -145,6 +148,36 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Enables or disables timestamp.
+        /// </summary>
+        /// <param name="enableTimeStamp">Whether to enable timestamps.</param>
+        /// <param name="origin">An optional timestamp origin.</param>
+        /// <returns>This configuration object.</returns>
+        public HConsoleTargetOptions EnableTimeStamp(bool enableTimeStamp = true, DateTime origin = default)
+        {
+#if HZ_CONSOLE
+            TimeStampEnabled = enableTimeStamp;
+            TimeStampOrigin = origin;
+            _hasTimeStamp = true;
+#endif
+            return this;
+        }
+
+        /// <summary>
+        /// Clears timestamp.
+        /// </summary>
+        /// <returns>This configuration object.</returns>
+        public HConsoleTargetOptions ClearTimeStamp()
+        {
+#if HZ_CONSOLE
+            TimeStampEnabled = false;
+            TimeStampOrigin = default;
+            _hasTimeStamp = false;
+#endif
+            return this;
+        }
+
+        /// <summary>
         /// Sets the log level to -1 (never writes).
         /// </summary>
         /// <returns>This configuration object.</returns>
@@ -185,6 +218,16 @@ namespace Hazelcast.Core
         /// Gets the log level.
         /// </summary>
         public int Level { get; private set; }
+
+        /// <summary>
+        /// Whether to enable timestamps.
+        /// </summary>
+        public bool TimeStampEnabled { get; private set; }
+
+        /// <summary>
+        /// Gets the timestamps origin.
+        /// </summary>
+        public DateTime TimeStampOrigin { get; private set; }
 #endif
 
         /// <summary>
@@ -209,6 +252,7 @@ namespace Hazelcast.Core
             if (!_hasIndent && config._hasIndent) SetIndent(config.Indent);
             if (!_hasPrefix && config._hasPrefix) SetPrefix(config.Prefix);
             if (!_hasLevel && config._hasLevel) SetLevel(config.Level);
+            if (!_hasTimeStamp && config._hasTimeStamp) EnableTimeStamp(config.TimeStampEnabled, config.TimeStampOrigin);
             return this;
         }
 #endif
@@ -217,11 +261,17 @@ namespace Hazelcast.Core
         /// Gets the formatted prefix (with thread identifier etc).
         /// </summary>
         public string FormattedPrefix
+        {
+            get
+            {
 #if HZ_CONSOLE
-            => $"{new string(' ', Indent)}[{Thread.CurrentThread.ManagedThreadId:00}] {Prefix}: ";
+                var timestamp = TimeStampEnabled ? (DateTime.Now - TimeStampOrigin).ToString("hhmmss\\.fff\\ ") : "";
+                return $"{timestamp}{new string(' ', Indent)}[{Thread.CurrentThread.ManagedThreadId:00}] {Prefix}: ";
 #else
-            => "";
+                return "";
 #endif
+            }
+        }
 
         /// <summary>
         /// Determines whether a log level should be ignored.

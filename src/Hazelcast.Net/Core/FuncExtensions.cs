@@ -36,13 +36,16 @@ namespace Hazelcast.Core
         // however, for tasks, what we really want is to run and await each entry in
         // sequence, and that cannot be done by simply invoking the delegate, we have
         // to get the invocation list and handle the calls
-
+        
         /// <summary>
         /// Awaits each entries of an async function delegate.
         /// </summary>
         /// <param name="function">The function delegate.</param>
         /// <returns>A task that will complete when each entries in <paramref name="function"/>
         /// has been executed and awaited.</returns>
+        /// <remarks>
+        /// <para>If one entry of the delegate throws, execution stops and the remaining entries are ignored.</para>
+        /// </remarks>
         public static async ValueTask AwaitEach(this Func<ValueTask> function)
         {
             if (function != null)
@@ -62,6 +65,9 @@ namespace Hazelcast.Core
         /// <param name="arg">An argument for the function.</param>
         /// <returns>A task that will complete when each entries in <paramref name="function"/>
         /// has been executed and awaited.</returns>
+        /// <remarks>
+        /// <para>If one entry of the delegate throws, execution stops and the remaining entries are ignored.</para>
+        /// </remarks>
         public static async ValueTask AwaitEach<T>(this Func<T, ValueTask> function, T arg)
         {
             if (function != null)
@@ -83,6 +89,9 @@ namespace Hazelcast.Core
         /// <param name="arg2">The second argument for the function.</param>
         /// <returns>A task that will complete when each entries in <paramref name="function"/>
         /// has been executed and awaited.</returns>
+        /// <remarks>
+        /// <para>If one entry of the delegate throws, execution stops and the remaining entries are ignored.</para>
+        /// </remarks>
         public static async ValueTask AwaitEach<T1, T2>(this Func<T1, T2,ValueTask> function, T1 arg1, T2 arg2)
         {
             if (function != null)
@@ -106,6 +115,9 @@ namespace Hazelcast.Core
         /// <param name="arg3">The third argument for the function.</param>
         /// <returns>A task that will complete when each entries in <paramref name="function"/>
         /// has been executed and awaited.</returns>
+        /// <remarks>
+        /// <para>If one entry of the delegate throws, execution stops and the remaining entries are ignored.</para>
+        /// </remarks>
         public static async ValueTask AwaitEach<T1, T2, T3>(this Func<T1, T2, T3, ValueTask> function, T1 arg1, T2 arg2, T3 arg3)
         {
             if (function != null)
@@ -113,6 +125,34 @@ namespace Hazelcast.Core
                 foreach (var d in function.GetInvocationList())
                 {
                     await ((Func<T1, T2, T3, ValueTask>) d)(arg1, arg2, arg3).CfAwait();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Awaits each entries of an async function delegate.
+        /// </summary>
+        /// <typeparam name="T1">The type of the first argument.</typeparam>
+        /// <typeparam name="T2">The type of the second argument.</typeparam>
+        /// <typeparam name="T3">The type of the third argument.</typeparam>
+        /// <typeparam name="T4">The type of the fourth argument.</typeparam>
+        /// <param name="function">The function delegate.</param>
+        /// <param name="arg1">The first argument for the function.</param>
+        /// <param name="arg2">The second argument for the function.</param>
+        /// <param name="arg3">The third argument for the function.</param>
+        /// <param name="arg4">The fourth argument for the function.</param>
+        /// <returns>A task that will complete when each entries in <paramref name="function"/>
+        /// has been executed and awaited.</returns>
+        /// <remarks>
+        /// <para>If one entry of the delegate throws, execution stops and the remaining entries are ignored.</para>
+        /// </remarks>
+        public static async ValueTask AwaitEach<T1, T2, T3, T4>(this Func<T1, T2, T3, T4, ValueTask> function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        {
+            if (function != null)
+            {
+                foreach (var d in function.GetInvocationList())
+                {
+                    await ((Func<T1, T2, T3, T4, ValueTask>)d)(arg1, arg2, arg3, arg4).CfAwait();
                 }
             }
         }
