@@ -501,6 +501,17 @@ function invokeWebRequest($url, $dest) {
         $args.OutFile = $dest
         $args.PassThru = $true
     }
+    
+    # "Indicates that the cmdlet uses the response object for HTML content without Document
+    # Object Model (DOM) parsing. This parameter is required when Internet Explorer is not
+    # installed on the computers, such as on a Server Core installation of a Windows Server
+    # operating system."
+    #
+    # "This parameter has been deprecated. Beginning with PowerShell 6.0.0, all Web requests
+    # use basic parsing only. This parameter is included for backwards compatibility only 
+    # and any use of it has no effect on the operation of the cmdlet."
+    #
+    $args.UseBasicParsing = $true # PS 5 requires this
 
     $pp = $progressPreference
     $progressPreference = 'SilentlyContinue'
