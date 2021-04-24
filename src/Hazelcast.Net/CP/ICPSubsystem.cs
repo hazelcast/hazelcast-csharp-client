@@ -41,6 +41,6 @@ namespace Hazelcast.CP
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name) where T: class;
+        Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name);
     }
 }

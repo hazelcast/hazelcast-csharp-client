@@ -3,7 +3,6 @@
 namespace Hazelcast.CP
 {
     public interface IAtomicReference<T>: ICPDistributedObject
-        where T: class
     {
         /// <summary>
         /// Compares the value for equality and, if equal, replaces the current value.

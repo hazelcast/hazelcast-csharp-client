@@ -9,7 +9,6 @@ using Hazelcast.Serialization;
 namespace Hazelcast.CP
 {
     internal class AtomicReference<T>: CPDistributedObjectBase, IAtomicReference<T>
-        where T: class
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AtomicReference{T}"/> class.
@@ -62,10 +61,21 @@ namespace Hazelcast.CP
         }
 
         /// <inheritdoc />
-        public Task<bool> IsNullAsync() => ContainsAsync(null);
+        public async Task<bool> IsNullAsync()
+        {
+            var requestMessage = AtomicRefContainsCodec.EncodeRequest(CPGroupId, Name, null);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicRefContainsCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
 
         /// <inheritdoc />
-        public Task ClearAsync() => SetAsync(null);
+        public async Task ClearAsync()
+        {
+            var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, null, returnOldValue: false);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicRefSetCodec.DecodeResponse(responseMessage).Response;
+        }
 
         /// <inheritdoc />
         public async Task<bool> ContainsAsync(T value)
