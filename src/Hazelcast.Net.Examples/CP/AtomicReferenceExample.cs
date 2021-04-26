@@ -17,7 +17,7 @@ namespace Hazelcast.Examples.CP
             // create a Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
-            // get the CP AtomicRef from the cluster
+            // get the CP AtomicReference from the cluster
             await using var aref = await client.CPSubsystem.GetAtomicReferenceAsync<string>($"atomicref-example-{Guid.NewGuid()}");
             Console.WriteLine($"Initial value: {await aref.GetAsync()}, is default: {await aref.IsNullAsync()}");
 
@@ -34,7 +34,7 @@ namespace Hazelcast.Examples.CP
             await aref.ClearAsync();
             Console.WriteLine($"Value after clear: {await aref.GetAsync()}, is default: {await aref.IsNullAsync()}");
 
-            // destroy the AtomicLong
+            // destroy the AtomicReference
             await aref.DestroyAsync();
         }
 
