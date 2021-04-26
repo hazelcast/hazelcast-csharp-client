@@ -23,43 +23,42 @@ using System.Text;
 using System.Globalization;
 #endif
 
+// About HConsole
+//
+// HConsole is a console / logging / debugging utility that is used for advanced tracing and troubleshooting. In
+// addition, it supports heavy multi-threaded usage, whereas the default System.Console can become somewhat
+// erratic in such situations.
+//
+// Every member of the HConsole class and its related configuration classes is marked [Conditional("HZ_CONSOLE")]
+// which means that references to these members are NOT even compiled when the HZ_CONSOLE symbol is not defined.
+//
+// Therefore, HConsole has ZERO overhead on Release builds execution.
+//
+// In order for the code to compile, parts of the HConsole system (such as the class itself) MUST exist, regardless
+// of the HZ_CONSOLE symbol. However, since no calls to the members will actually be compiled, their body can be
+// stripped. Note that some members that return values cannot be marked [Conditional] - however, they are always
+// invoked from within a [Conditional] member, which means they will practically never be invoked either.
+//
+// The entire HConsole system is internal. However, the HZ_CONSOLE_PUBLIC symbol can be defined at assembly level
+// in order to publicly expose the system, which can be convenient for some troubleshooting tasks.
+
 namespace Hazelcast.Core
 {
     /// <summary>
     /// Provides a console for troubleshooting.
     /// </summary>
-    /// <remarks>
-    /// <para>To enable the console, define HZ_CONSOLE. Otherwise, none of the console
-    /// method invocations will be compiled (thanks to <see cref="ConditionalAttribute"/>)
-    /// and therefore the impact on actual (production) code will be null.</para>
-    /// <para>The original <see cref="Console"/> can become somewhat erratic when used
-    /// in heavy multi-threaded code, therefore this console writes to a <see cref="StringBuilder"/>
-    /// which can be rendered with the <see cref="WriteAndClear"/> method.</para>
-    /// </remarks>
-    internal static class HConsole
+#if HZ_CONSOLE_PUBLIC
+    public
+#else
+    internal 
+#endif
+    static class HConsole
     {
 #if HZ_CONSOLE
         internal static readonly HConsoleOptions Options = new HConsoleOptions();
         private static readonly StringBuilder TextBuilder = new StringBuilder();
         private static readonly object TextBuilderLock = new object();
 #endif
-
-        // NOTES
-        //
-        // The HConsoleConfiguration class *must* exist regardless of the HZ_CONSOLE define, as
-        // it is exposed by the methods below, so that the code can compile,
-        // and even though these methods may not be compiled (see below).
-        // However, to reduce its weight, we can simplify the class body when
-        // HZ_CONSOLE is not defined.
-        //
-        // Methods below *must* exist regardless of the HZ_CONSOLE define, so that
-        // the code can compile, but due to the [Conditional] attributes, their
-        // invocations will *not* be compiled = zero cost.
-        // Nevertheless, to reduce their weight, we can simplify their bodies
-        // when HZ_CONSOLE is not defined.
-        // The 'Lines' method cannot be marked [Conditional] because it returns
-        // a non-void value. However, it should always be invoked from within
-        // a call to WriteLine, which will *not* be compiled anyways.
 
         /// <summary>
         /// Gets the text.

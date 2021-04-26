@@ -18,6 +18,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.Logging
 {
+    /// <summary>
+    /// Represents a logger provider that logs to a <see cref="StringBuilder"/>.
+    /// </summary>
     public class StringBuilderLoggerProvider : ITestingLoggerProvider
     {
         private readonly ConcurrentDictionary<string, ILogger> _loggers = new ConcurrentDictionary<string, ILogger>();

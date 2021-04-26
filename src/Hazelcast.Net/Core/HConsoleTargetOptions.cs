@@ -26,7 +26,12 @@ namespace Hazelcast.Core
     /// <summary>
     /// Represents the options for a target.
     /// </summary>
-    internal sealed class HConsoleTargetOptions
+#if HZ_CONSOLE_PUBLIC
+    public
+#else
+    internal
+#endif
+    sealed class HConsoleTargetOptions
     {
 #if HZ_CONSOLE
         private bool _hasIndent;

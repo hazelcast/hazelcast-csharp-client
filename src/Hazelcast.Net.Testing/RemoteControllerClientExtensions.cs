@@ -82,6 +82,10 @@ namespace Hazelcast.Testing
         /// <param name="cluster">The cluster.</param>
         /// <param name="expectedPartitionOwnersCount">The expected number of partition owners.</param>
         /// <returns>The new member.</returns>
+        /// <remarks>
+        /// <para>This only works if the <see cref="IHazelcastClient"/> remains connected, i.e. when starting an
+        /// additional member in a cluster that already runs at least one member.</para>
+        /// </remarks>
         public static async Task<Member> StartMemberWaitAddedAsync(this IRemoteControllerClient rc, IHazelcastClient client, Cluster cluster, int expectedPartitionOwnersCount)
         {
             var clientInternal = (HazelcastClient) client;
@@ -140,6 +144,10 @@ namespace Hazelcast.Testing
         /// <param name="client">The Hazelcast client.</param>
         /// <param name="cluster">The cluster.</param>
         /// <param name="member">The member.</param>
+        /// <remarks>
+        /// <para>This only works if the <see cref="IHazelcastClient"/> remains connected, i.e. when stopping
+        /// a member in a cluster that runs other members in order to keep the client connected.</para>
+        /// </remarks>
         public static async Task StopMemberWaitRemovedAsync(this IRemoteControllerClient rc, IHazelcastClient client, Cluster cluster, Member member)
         {
             var clientInternal = (HazelcastClient) client;
@@ -154,6 +162,36 @@ namespace Hazelcast.Testing
 
             await rc.StopMemberAsync(cluster, member).CfAwait();
             await removed.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
+            await clientInternal.UnsubscribeAsync(subscriptionId).CfAwait();
+        }
+
+        /// <summary>
+        /// Shuts a member down and wait until its connection closes.
+        /// </summary>
+        /// <param name="rc">The remote controller.</param>
+        /// <param name="client">The Hazelcast client.</param>
+        /// <param name="cluster">The cluster.</param>
+        /// <param name="member">The member.</param>
+        /// <remarks>
+        /// <para>This works even if the member is the last member of the cluster.</para>
+        /// </remarks>
+        public static async Task StopMemberWaitClosedAsync(this IRemoteControllerClient rc, IHazelcastClient client, Cluster cluster, Member member)
+        {
+            var clientInternal = (HazelcastClient) client;
+            var closed = new SemaphoreSlim(0);
+
+            var memberId = new Guid(member.Uuid);
+            var subscriptionId = await clientInternal.SubscribeAsync(on => on
+                    .ConnectionClosed((sender, args) =>
+                    {
+                        // we don't have this yet, so just trust it's the ok connection
+                        //if (args.Connection.MemberId == memberId) closed.Release();
+                        closed.Release();
+                    }))
+                .CfAwait();
+
+            await rc.StopMemberAsync(cluster, member).CfAwait();
+            await closed.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
             await clientInternal.UnsubscribeAsync(subscriptionId).CfAwait();
         }
 
