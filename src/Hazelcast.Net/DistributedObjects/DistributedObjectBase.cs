@@ -343,11 +343,5 @@ namespace Hazelcast.DistributedObjects
         {
             return $"ServiceName = '{ServiceName}', Name = '{Name}', Type = '{GetType().ToCsString()}'";
         }
-
-        /// <inheritdoc />
-        /// <remarks>
-        /// Synchronously calls <see cref="DisposeAsync"/> method. It is recommended to use that method in async context.
-        /// </remarks>
-        public void Dispose() => DisposeAsync().GetAwaiter().GetResult();
     }
 }

@@ -56,17 +56,13 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public abstract ValueTask DestroyAsync();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Frees resources used by this instance.
+        /// </summary>
         /// <remarks>
-        /// Doesn't do anything for now, but some cleanup may be implemented later. <para />
+        /// Doesn't do anything for now, but some cleanup may be implemented later. <para/>
         /// As such it is recommended to wrap object usage into <code>using</code> statement for better compatibility with future versions.
         /// </remarks>
         public ValueTask DisposeAsync() => default;
-
-        /// <inheritdoc />
-        /// <remarks>
-        /// Synchronously calls <see cref="DisposeAsync"/> method. It is recommended to use that method in async context.
-        /// </remarks>
-        public void Dispose() => DisposeAsync().GetAwaiter().GetResult();
     }
 }
