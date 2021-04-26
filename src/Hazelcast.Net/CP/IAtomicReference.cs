@@ -16,6 +16,10 @@ namespace Hazelcast.CP
         /// Gets the current value.
         /// </summary>
         /// <returns>The current value.</returns>
+        /// <remarks>
+        /// If <see cref="T"/> is a struct, method will return <c>default(T)</c> when reference is not set.
+        /// You can make it return <c>null</c> instead by using <see cref="System.Nullable{T}"/>.
+        /// </remarks>
         Task<T> GetAsync();
 
         /// <summary>
@@ -29,6 +33,10 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="value">The value to set.</param>
         /// <returns>The original value.</returns>
+        /// <remarks>
+        /// If <see cref="T"/> is a struct, method will return <c>default(T)</c> when reference is not set.
+        /// You can make it return <c>null</c> instead by using <see cref="System.Nullable{T}"/>.
+        /// </remarks>
         Task<T> GetAndSetAsync(T value);
 
         /// <summary>
@@ -45,9 +53,8 @@ namespace Hazelcast.CP
         /// <summary>
         /// Checks if the reference contains the value.
         /// </summary>
-        /// <param name="value">The value to check (is allowed to be <c>null</c>).</param>
-        /// <returns>Value the value to check (is allowed to be <c>null</c>).</returns>
-        /// <remarks><c>true</c> if the value is found, <c>false</c> otherwise.</remarks>
+        /// <param name="value">The value to check (can be <c>null</c>).</param>
+        /// <returns>Whether the reference contains the value specified.</returns>
         Task<bool> ContainsAsync(T value);
     }
 }
