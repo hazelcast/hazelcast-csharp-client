@@ -34,7 +34,8 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <inheritdoc />
         public override Guid GetMember()
         {
-            var members = GetMembersNonEmptySnapshot();
+            var members = Members;
+            if (members == null || members.Count == 0) return default;
             return members[RandomProvider.Random.Next(members.Count)];
         }
     }

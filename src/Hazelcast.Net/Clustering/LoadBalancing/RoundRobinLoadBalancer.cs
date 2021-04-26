@@ -36,7 +36,8 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <inheritdoc />
         public override Guid GetMember()
         {
-            var members = GetMembersNonEmptySnapshot();
+            var members = Members;
+            if (members == null || members.Count == 0) return default;
             var index = Interlocked.Increment(ref _index);
             return members[index % members.Count];
         }

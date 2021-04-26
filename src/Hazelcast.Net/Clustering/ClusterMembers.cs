@@ -158,7 +158,7 @@ namespace Hazelcast.Clustering
             _memberTable = table;
 
             // notify the load balancer of the new list of members
-            _loadBalancer.NotifyMembers(members.Select(x => x.Id));
+            _loadBalancer.SetMembers(members.Select(x => x.Id));
 
             // signal once
             if (Interlocked.CompareExchange(ref _firstMembersViewed, 1, 0) == 0)

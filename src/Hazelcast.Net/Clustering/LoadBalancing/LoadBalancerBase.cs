@@ -34,7 +34,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         public abstract Guid GetMember();
 
         /// <inheritdoc />
-        public virtual void NotifyMembers(IEnumerable<Guid> memberIds)
+        public virtual void SetMembers(IEnumerable<Guid> memberIds)
         {
             if (memberIds == null) throw new ArgumentNullException(nameof(memberIds));
 
@@ -44,19 +44,6 @@ namespace Hazelcast.Clustering.LoadBalancing
                 if (distinct.Add(memberId))
                     members.Add(memberId);
             Members = members; // atomic reference
-        }
-
-        /// <summary>
-        /// Gets a non-empty (else throws) snapshot of members.
-        /// </summary>
-        protected List<Guid> GetMembersNonEmptySnapshot()
-        {
-            var members = Members; // capture
-
-            if ((members?.Count ?? 0) == 0)
-                throw new InvalidOperationException("The load balancer does not have members.");
-
-            return members;
         }
     }
 }
