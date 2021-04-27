@@ -376,6 +376,10 @@ namespace Hazelcast.Core
             // so, the methods below use ConfigureAwait(false) to create the
             // correct ConfiguredTaskAwaitable.ConfiguredTaskAwaiter, and get
             // it to complete as expected.
+            //
+            // references:
+            // https://github.com/dotnet/runtime/issues/22144
+            // https://github.com/dotnet/runtime/issues/27723
 
             /// <summary>
             /// Schedules the continuation onto the <see cref="Task"/> associated with this <see cref="TaskAwaiter"/>.
