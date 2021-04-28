@@ -306,5 +306,21 @@ namespace Hazelcast.Core
             return "";
 #endif
         }
+
+        /// <summary>
+        /// Gets the level of a source object.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        /// <returns>The level for the source object.</returns>
+        public static int Level(object source)
+        {
+#if HZ_CONSOLE
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var info = Options.Get(source);
+            return info.Level;
+#else
+            return 0;
+#endif
+        }
     }
 }

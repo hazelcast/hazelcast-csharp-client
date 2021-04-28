@@ -302,6 +302,7 @@ namespace Hazelcast.Clustering
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                HConsole.WriteLine(this, $"{_clusterState.ClientName} connecting");
 
                 // establishes the first connection, throws if it fails
                 await ConnectFirstAsync(cancellationToken).CfAwait();
@@ -311,6 +312,8 @@ namespace Hazelcast.Clustering
                 // which in turn should change the state to Connected - unless something
                 // goes wrong
                 var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
+
+                HConsole.WriteLine(this, $"{_clusterState.ClientName} connected");
 
                 if (!connected)
                     throw new ConnectionException("Failed to connect.");
@@ -434,11 +437,12 @@ namespace Hazelcast.Clustering
 
                         tried.Add(address);
 
-                        HConsole.WriteLine(this, $"Try to connect to address {address}");
+                        HConsole.WriteLine(this, $"Try to connect {_clusterState.ClientName} to server at {address}");
                         var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
                         if (attempt)
                         {
-                            HConsole.WriteLine(this, $"Connected to address {address}");
+                            var connection = attempt.Value;
+                            HConsole.WriteLine(this, $"Connected {_clusterState.ClientName} via {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {address}");
                             return; // successful exit, a first connection has been opened
                         }
 
@@ -537,6 +541,8 @@ namespace Hazelcast.Clustering
         /// </remarks>
         private async Task<Attempt<MemberConnection>> EnsureConnectionAsync(MemberInfo member, CancellationToken cancellationToken)
         {
+            HConsole.WriteLine(this, $"Ensure {_clusterState.ClientName} is connected to server at {address}");
+            
             // everything in one try...catch block, else the CA2000 analyzer
             // gets confused in methods that invoke this method
             try
@@ -548,7 +554,7 @@ namespace Hazelcast.Clustering
                 if (_connections.TryGetValue(member.Id, out var connection))
                 {
                     var active = connection.Active;
-                HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection for member {member.Id} (at {connection.Address})");
+                    HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection from {_clusterState.ClientName} to member {member.Id} at {connection.Address}");
                     return Attempt.If(active, connection);
                 }
 
@@ -559,10 +565,9 @@ namespace Hazelcast.Clustering
                 // exit now if canceled
                 if (cancellationToken.IsCancellationRequested)
                     return Attempt.Fail<MemberConnection>();
-
                 // else actually connect
                 // this may throw
-                HConsole.WriteLine(this, $"Open connection to {member.Address}");
+                HConsole.WriteLine(this, $"{_clusterState.ClientName} not connected to server at {address}, connecting");
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 // "The allocating method does not have dispose ownership; that is, the responsibility
                 // to dispose the object is transferred to another object or wrapper that's created
@@ -643,7 +648,7 @@ namespace Hazelcast.Clustering
             address = _addressProvider.Map(address);
 
             // create the connection to the member
-            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.ConnectionIdSequence, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
             {
                 Closed = OnConnectionClosed
             };

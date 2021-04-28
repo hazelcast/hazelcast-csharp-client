@@ -26,8 +26,9 @@ namespace Hazelcast.Messaging
         /// Dumps a client message into a readable string.
         /// </summary>
         /// <param name="message">The client message.</param>
+        /// <param name="level">Verbosity level.</param>
         /// <returns>A readable string representation of the message.</returns>
-        public static string Dump(this ClientMessage message)
+        public static string Dump(this ClientMessage message, int level)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 #if DEBUG
@@ -40,7 +41,7 @@ namespace Hazelcast.Messaging
             if (message.MessageType == 0)
             {
                 prefix = "EXCEPTION";
-                text.AppendLine(prefix);
+                text.Append(prefix);
             }
             else
             {
@@ -50,24 +51,29 @@ namespace Hazelcast.Messaging
 
                 var name = message.OperationName ?? MessageTypeConstants.GetMessageTypeName(message.MessageType);
 
-                text.AppendLine($"{prefix} [{message.CorrelationId}]");
-                text.AppendLine($"TYPE 0x{message.MessageType:x} {name}");
+                text.AppendLine($"{prefix}  corr: {message.CorrelationId}");
+                text.Append($"TYPE 0x{message.MessageType:x} {name}");
             }
 
             if (prefix == "REQUEST")
             {
                 if (message.FirstFrame.Length >= FrameFields.SizeOf.LengthAndFlags + FrameFields.Offset.PartitionId + FrameFields.SizeOf.PartitionId)
-                    text.AppendLine($"PARTID {message.PartitionId}");
+                {
+                    text.AppendLine();
+                    text.Append($"PARTID {message.PartitionId}");
+                }
             }
 
-            var frame = message.FirstFrame;
-            while (frame != null)
+            if (level >= 2)
             {
-                text.Append($"FRAME ");
-                text.Append(frame);
-                frame = frame.Next;
-                if (frame != null)
+                var frame = message.FirstFrame;
+                while (frame != null)
+                {
                     text.AppendLine();
+                    text.Append("FRAME ");
+                    text.Append(frame);
+                    frame = frame.Next;
+                }
             }
 
             //text.Append("\u001b[0m");

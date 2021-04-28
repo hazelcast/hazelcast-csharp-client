@@ -75,12 +75,11 @@ namespace Hazelcast.Tests.Clustering
             var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService);
 
-            ISequence<int> connectionIdSequence = new Int32Sequence();
             ISequence<long> correlationIdSequence = new Int64Sequence();
 
             var memberConnection = new MemberConnection(address, authenticator,
                 options.Messaging, options.Networking, options.Networking.Ssl,
-                connectionIdSequence, correlationIdSequence,
+                correlationIdSequence,
                 loggerFactory);
 
             var memberConnectionHasClosed = false;

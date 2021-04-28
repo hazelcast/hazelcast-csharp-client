@@ -235,7 +235,7 @@ namespace Hazelcast.Testing.TestServer
             try
             {
                 // we now have a connection
-                _serverConnection = new ServerSocketConnection(_connectionIdSequence.GetNext(), handler, _hcname);
+                _serverConnection = new ServerSocketConnection(Guid.NewGuid(), handler, _hcname);
                 _onAcceptConnection(_serverConnection);
             }
             catch (Exception e)

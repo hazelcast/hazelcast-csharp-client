@@ -152,10 +152,10 @@ namespace Hazelcast.Messaging
             // don't test _currentFrame.IsFinal, adding the frame to a message has messed it
             if (!_finalFrame) return true;
 
-            HConsole.WriteLine(this, "Frame is final");
+            HConsole.WriteLine(this, 2, "Frame is final");
             var message = _currentMessage;
             _currentMessage = null;
-            HConsole.WriteLine(this, "Handle fragment");
+            HConsole.WriteLine(this, 2, "Handle fragment");
             ReceiveFragmentAsync(message);
 
             return true;

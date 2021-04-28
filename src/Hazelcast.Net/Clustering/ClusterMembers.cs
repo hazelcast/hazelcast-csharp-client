@@ -65,7 +65,7 @@ namespace Hazelcast.Clustering
             _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
             _logger = clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
 
-            // just make sure it is never null and we don't have to null-check everywhere
+            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x=> x.SetPrefix("CLUST.MBRS")));
             _members = new MemberTable();
         }
 

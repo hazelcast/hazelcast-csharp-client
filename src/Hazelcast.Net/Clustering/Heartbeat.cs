@@ -66,6 +66,7 @@ namespace Hazelcast.Clustering
             _cancel = new CancellationTokenSource();
             _heartbeating = BeatAsync(_cancel.Token);
             _active = 1;
+            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x => x.SetPrefix("HEARTBEAT")));
         }
 
         /// <summary>
@@ -165,7 +166,7 @@ namespace Hazelcast.Clustering
             var readElapsed = now - connection.LastReadTime;
             var writeElapsed = now - connection.LastWriteTime;
 
-            HConsole.WriteLine(this, $"Heartbeat on {connection.Id.ToShortString()}, " +
+            HConsole.WriteLine(this, $"Heartbeat {_clusterState.ClientName} on {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {connection.Address}, " +
                                      $"written {(int)writeElapsed.TotalSeconds}s ago, " +
                                      $"read {(int)readElapsed.TotalSeconds}s ago");
 

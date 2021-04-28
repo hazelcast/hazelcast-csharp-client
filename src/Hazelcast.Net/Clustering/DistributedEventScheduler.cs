@@ -57,7 +57,7 @@ namespace Hazelcast.Clustering
             const int size = 10;
             _pool = new SimpleObjectPool<Queue>(() => new Queue(), size);
 
-            HConsole.Configure(x => x.Configure<DistributedEventScheduler>().SetPrefix("SCHEDULER"));
+            HConsole.Configure(x => x.Configure<DistributedEventScheduler>().SetPrefix("EVENTS"));
         }
 
         /// <summary>
