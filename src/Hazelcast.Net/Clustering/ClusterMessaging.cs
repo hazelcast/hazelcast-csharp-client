@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering
             _clusterState = clusterState;
             _clusterMembers = clusterMembers;
 
-            HConsole.Configure(hoptions => hoptions.Set(this, x => x.SetPrefix("MSGING")));
+            HConsole.Configure(x => x.Configure<ClusterMessaging>().SetPrefix("MSGING"));
         }
 
         /// <summary>

@@ -57,7 +57,7 @@ namespace Hazelcast.Clustering
         /// <param name="terminateConnections">The terminate connections task.</param>
         public ClusterMembers(ClusterState clusterState, MemberConnectionQueue memberConnectionQueue, TerminateConnections terminateConnections)
         {
-            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("MEMBERS")));
+            HConsole.Configure(x => x.Configure<ClusterMembers>().SetPrefix("MEMBERS"));
 
             _clusterState = clusterState;
             _memberConnectionQueue = memberConnectionQueue; // can be null when not smart routing

@@ -77,7 +77,7 @@ namespace Hazelcast.Clustering
 
             _clusterState.StateChanged += OnStateChanged;
             
-            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("CCNX")));
+            HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
         }
 
         #region Connect Members

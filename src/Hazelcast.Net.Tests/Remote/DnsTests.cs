@@ -30,10 +30,10 @@ namespace Hazelcast.Tests.Remote
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<AsyncContext>(x => x.Quiet())
-                .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
         [Test]
         public async Task SingleFailureAtAddressResolutionShouldNotBlowUpClient()
@@ -83,7 +83,7 @@ namespace Hazelcast.Tests.Remote
             public AltDns(int failAt)
             {
                 _failAt = failAt;
-                HConsole.Configure(consoleOptions => consoleOptions.Set(this, x => x.SetPrefix("ADNS")));
+                HConsole.Configure(x => x.Configure(this).SetPrefix("ADNS"));
             }
 
             public int Count { get; private set; }

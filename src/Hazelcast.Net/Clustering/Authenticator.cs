@@ -43,7 +43,7 @@ namespace Hazelcast.Clustering
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("AUTH")));
+            HConsole.Configure(x => x.Configure<Authenticator>().SetIndent(4).SetPrefix("AUTH"));
         }
 
         /// <summary>

@@ -42,10 +42,10 @@ namespace Hazelcast.Tests.Clustering
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<AsyncContext>(x => x.Quiet())
-                .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
         [Test]
         public async Task Test()

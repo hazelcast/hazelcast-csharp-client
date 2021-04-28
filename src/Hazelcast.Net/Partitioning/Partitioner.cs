@@ -26,7 +26,7 @@ namespace Hazelcast.Partitioning
 
         public Partitioner()
         {
-            HConsole.Configure(options => options.Set(this, x=> x.SetPrefix("PART")));
+            HConsole.Configure(x => x.Configure<Partitioner>().SetPrefix("PART"));
         }
 
         /// <summary>

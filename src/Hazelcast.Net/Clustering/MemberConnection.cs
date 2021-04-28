@@ -93,7 +93,7 @@ namespace Hazelcast.Clustering
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("CLIENT")));
+            HConsole.Configure(x => x.Configure<MemberConnection>().SetIndent(4).SetPrefix("CLIENT"));
         }
 
         #region Events
@@ -188,7 +188,7 @@ namespace Hazelcast.Clustering
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory)
                 { OnReceiveMessage = ReceiveMessage };
 
-            HConsole.Configure(x => x.Set(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]")));
+            HConsole.Configure(x => x.Configure(_messageConnection).SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]"));
 
             AuthenticationResult result;
             try

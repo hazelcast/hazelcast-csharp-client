@@ -98,7 +98,7 @@ namespace Hazelcast.Clustering
                 PartitionLost = args => _partitionLost.AwaitEach(args)
             };
 
-            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("EVENTS")));
+            HConsole.Configure(x => x.Configure<ClusterEvents>().SetPrefix("EVENTS"));
         }
 
         /// <summary>

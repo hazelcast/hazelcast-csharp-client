@@ -32,12 +32,8 @@ namespace Hazelcast.Tests.Remote
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                //.Set(x => x.Verbose())
-                //.Set(this, x => x.SetPrefix("TEST"))
-                //.Set<AsyncContext>(x => x.Quiet())
-                //.Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET"))
-                .Set(x => x.Quiet())
-                .Set<HConsoleLoggerProvider>(x => x.Verbose())
+                .Configure().SetMinLevel()
+                .Configure<HConsoleLoggerProvider>().SetMaxLevel()
             );
 
         [Test]

@@ -50,8 +50,7 @@ namespace Hazelcast.Testing.TestServer
             _endpoint = endpoint;
             _hcname = hcname;
 
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(24).SetPrefix("LISTENER".Dot(hcname))));
+            HConsole.Configure(x => x.Configure(this).SetIndent(24).SetPrefix("LISTENER".Dot(hcname)));
         }
 
         /// <summary>

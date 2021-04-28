@@ -43,10 +43,10 @@ namespace Hazelcast.Tests.Clustering
             using var _ = HConsole.Capture(consoleOptions =>
                 consoleOptions
                     .ClearAll()
-                    .Set(x => x.SetLevel(1).EnableTimeStamp(origin: DateTime.Now))
-                    .Set(this, x => x.SetPrefix("TEST"))
-                    .Set<AsyncContext>(x => x.Quiet())
-                    .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+                    .Configure().SetLevel(1).EnableTimeStamp(origin: DateTime.Now)
+                    .Configure(this).SetPrefix("TEST")
+                    .Configure<AsyncContext>().SetMinLevel()
+                    .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
             for (var i = 0; i < RunCount; i++)
             {

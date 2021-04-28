@@ -43,8 +43,7 @@ namespace Hazelcast.Testing.TestServer
             _acceptingSocket = socket ?? throw new ArgumentNullException(nameof(socket));
 
             var prefix = "CONN.SERVER".Dot(hcname);
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(32).SetPrefix($"{prefix} [{id}]")));
+            HConsole.Configure(x => x.Configure(this).SetIndent(32).SetPrefix($"{prefix} [{id}]"));
         }
 
         /// <summary>

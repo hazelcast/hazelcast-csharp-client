@@ -43,9 +43,9 @@ namespace Hazelcast.Tests.Networking
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET"));
 
         [Test]
         public async Task Exceptions()

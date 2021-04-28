@@ -76,9 +76,9 @@ namespace Hazelcast.Tests.Core
             // this test verifies that the scheduler works as expected
 
             using var _ = HConsole.Capture(consoleOptions => consoleOptions
-                .Set(x => x.Quiet())
-                .Set<DistributedEventScheduler>(x => x.Verbose())
-                .Set(this, x => x.Verbose().SetPrefix("TEST")));
+                .Configure().SetMinLevel()
+                .Configure<DistributedEventScheduler>().SetMaxLevel()
+                .Configure(this).SetMaxLevel().SetPrefix("TEST"));
 
             using var loggerFactory = LoggerFactory.Create(builder => builder.AddHConsole());
             var logger = loggerFactory.CreateLogger("TEST");
