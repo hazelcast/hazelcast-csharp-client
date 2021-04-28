@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.CP
 {
@@ -27,14 +28,17 @@ namespace Hazelcast.CP
     internal class CPSubsystem : ICPSubsystem
     {
         private readonly Cluster _cluster;
+        private readonly SerializationService _serializationService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
         /// </summary>
         /// <param name="cluster">The cluster.</param>
-        public CPSubsystem(Cluster cluster)
+        /// <param name="serializationService">The serialization service.</param>
+        public CPSubsystem(Cluster cluster, SerializationService serializationService)
         {
             _cluster = cluster;
+            _serializationService = serializationService;
         }
 
         // NOTES
@@ -64,6 +68,14 @@ namespace Hazelcast.CP
             return new AtomicLong(objectName, groupId, _cluster);
         }
 
+        public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name)
+        {
+            var (groupName, objectName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName, objectName).CfAwait();
+
+            return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
+        }
+
         // see: ClientRaftProxyFactory.java
 
         private async Task<CPGroupId> GetGroupIdAsync(string proxyName, string objectName)
@@ -85,7 +97,7 @@ namespace Hazelcast.CP
 
             name = name.Trim();
             var pos = name.IndexOf('@', StringComparison.OrdinalIgnoreCase);
-            
+
             string groupName;
             if (pos < 0)
             {
