@@ -107,6 +107,8 @@ namespace Hazelcast.Clustering
                 _logger.LogWarning(e, "Caught an exception while disposing Heartbeat.");
             }
 
+            _cancel.Dispose();
+
             HConsole.WriteLine(this, "Stopped.");
         }
 

@@ -128,7 +128,8 @@ namespace Hazelcast.Tests.Clustering
             {
                 await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
                 {
-                    await invocation.WaitRetryAsync(correlationIdSequence.GetNext, CancellationToken.None);
+                    // ReSharper disable once MethodSupportsCancellation
+                    await invocation.WaitRetryAsync(correlationIdSequence.GetNext);
                 });
             }, 4000, 200);
 

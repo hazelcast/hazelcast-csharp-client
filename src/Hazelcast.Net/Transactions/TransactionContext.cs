@@ -99,7 +99,7 @@ namespace Hazelcast.Transactions
             }
 
             _connection = _cluster.Members.GetRandomConnection();
-            if (_connection == null) _cluster.State.ThrowClientOfflineException();
+            if (_connection == null) throw _cluster.State.ThrowClientOfflineException();
 
             _threadId = ContextId;
             _startTime = Clock.Milliseconds;

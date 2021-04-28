@@ -37,7 +37,7 @@ namespace Hazelcast.Tests.Clustering
         private const int InvocationTimeoutMinutes = 4; // default is 2' but ... not always enough
 
         [Test]
-        [Timeout(RunCount * MinutesPerRun * 60 *1000)]
+        [Timeout(RunCount * MinutesPerRun * 60 * 1000)]
         public async Task Test()
         {
             using var _ = HConsole.Capture(consoleOptions =>

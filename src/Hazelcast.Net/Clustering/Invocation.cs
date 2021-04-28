@@ -207,7 +207,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="correlationIdProvider">A correlation identifier provider.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        public ValueTask WaitRetryAsync(Func<long> correlationIdProvider, CancellationToken cancellationToken)
+        public ValueTask WaitRetryAsync(Func<long> correlationIdProvider, CancellationToken cancellationToken = default)
         {
             if (correlationIdProvider == null) throw new ArgumentNullException(nameof(correlationIdProvider));
 

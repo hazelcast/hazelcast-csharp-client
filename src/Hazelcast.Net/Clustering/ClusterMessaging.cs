@@ -289,9 +289,8 @@ namespace Hazelcast.Clustering
             if (connection != null)
                 return connection;
 
-            // fail - won't return
-            _clusterState.ThrowClientOfflineException();
-            return null; // never reached
+            // fail
+            throw _clusterState.ThrowClientOfflineException();
         }
     }
 }

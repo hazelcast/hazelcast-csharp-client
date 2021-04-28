@@ -335,7 +335,7 @@ namespace Hazelcast.Clustering
 
         #endregion
 
-        public void ThrowClientOfflineException()
+        public Exception ThrowClientOfflineException()
         {
             // due to a race condition between ClusterMembers potentially removing all its connections,
             // and ClusterConnections figuring we are now disconnected and changing the state, the state
@@ -343,7 +343,7 @@ namespace Hazelcast.Clustering
 
             var clientState = ClientState;
             if (clientState == ClientState.Connected) clientState = ClientState.Disconnected;
-            throw new ClientOfflineException(clientState);
+            return new ClientOfflineException(clientState);
 
         }
 

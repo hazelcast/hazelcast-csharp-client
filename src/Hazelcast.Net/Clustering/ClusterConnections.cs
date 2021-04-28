@@ -87,32 +87,40 @@ namespace Hazelcast.Clustering
         {
             await foreach(var (member, token) in memberConnectionQueue.WithCancellation(cancellationToken))
             {
-                var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token);
+                var attempt = Attempt<MemberConnection>.Failed;
+                bool canceled;
                 Exception exception = null;
 
                 HConsole.WriteLine(this, $"Ensure a connection for member {member.Id.ToShortString()} (at {member.Address})");
-                try
+                using (var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token))
                 {
-                    var attempt = await EnsureConnectionAsync(member, source.Token);
-                    if (attempt) continue;
+                    try
+                    {
+                        attempt = await EnsureConnectionAsync(member, source.Token).CfAwait();
+                    }
+                    catch (OperationCanceledException)
+                    { }
+                    catch (Exception e)
+                    {
+                        exception = e;
+                    }
+
+                    canceled = source.IsCancellationRequested;
                 }
-                catch (OperationCanceledException)
-                { }
-                catch (Exception e)
-                {
-                    exception = e;
-                }
+
+                if (attempt) continue;
 
                 if (_disposed > 0)
                 {
                     _logger.LogWarning($"Could not connect to member at {member.Address}: shutting down.");
-                    continue;
                 }
+                else
+                {
+                    var details = canceled ? "canceled" : "failed";
+                    _logger.LogWarning(exception, $"Could not connect to member at {member.Address}: {details}.");
 
-                var details = source.IsCancellationRequested ? "canceled" : "failed";
-                _logger.LogWarning(exception, $"Could not connect to member at {member.Address}: {details}.");
-
-                memberConnectionQueue.Add(member);
+                    memberConnectionQueue.Add(member);
+                }
             }
         }
 
@@ -290,7 +298,7 @@ namespace Hazelcast.Clustering
             _clusterState.SetPropertiesReadOnly();
 
             // we have started, and are now trying to connect
-            if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting))
+            if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting).CfAwait())
                 throw new ConnectionException("Failed to connect (aborted).");
 
             try
@@ -340,6 +348,10 @@ namespace Hazelcast.Clustering
                 {
                     // we are a background task and cannot throw!
                     _logger.LogError("Failed to reconnect.");
+                }
+                else
+                {
+                    _logger.LogDebug("Reconnected");
                 }
 
                 // we have been reconnected (rejoice) - of course, nothing guarantees that it
@@ -526,7 +538,7 @@ namespace Hazelcast.Clustering
             if (_connections.TryGetValue(member.Id, out var connection))
             {
                 var active = connection.Active;
-                HConsole.WriteLine(this, $"Found {(active?"":"non-")}active connection for member {member.Id} (at {connection.Address})");
+                HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection for member {member.Id} (at {connection.Address})");
                 return Attempt.If(active, connection);
             }
 
@@ -591,7 +603,7 @@ namespace Hazelcast.Clustering
             // disposing the connection *will* run OnConnectionClosed which will
             // remove the connection from all the places it needs to be removed from
             await connection.DisposeAsync().CfAwait();
-            throw new ConnectionException("Connection was no accepted.");
+            throw new ConnectionException("Connection was not accepted.");
         }
 
         private static async ValueTask ThrowCanceled(MemberConnection connection)

@@ -159,16 +159,16 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Removes a client subscription.
+        /// Removes a member subscription.
         /// </summary>
-        /// <param name="connection">The client.</param>
+        /// <param name="connection">The connection.</param>
         /// <param name="memberSubscription">The client subscription.</param>
-        /// <returns>Whether a client subscription was removed.</returns>
+        /// <returns>Whether the member subscription was removed.</returns>
         public bool TryRemove(MemberConnection connection, out MemberSubscription memberSubscription)
             => _memberSubscriptions.TryRemove(connection, out memberSubscription);
 
         /// <summary>
-        /// Removes a client subscription.
+        /// Removes a member subscription.
         /// </summary>
         /// <param name="memberSubscription">The client subscription.</param>
         public void Remove(MemberSubscription memberSubscription)
