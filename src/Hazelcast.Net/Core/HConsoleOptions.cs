@@ -19,6 +19,7 @@ using System.Collections.Generic;
 #else
 // ReSharper disable UnusedTypeParameter
 #pragma warning disable CA1801 // Review unused parameters
+#pragma warning disable CA1822 // Mark members as static
 #endif
 
 namespace Hazelcast.Core

@@ -316,7 +316,7 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (source == null) throw new ArgumentNullException(nameof(source));
-            var info = Options.Get(source);
+            var info = Options.GetOptions(source);
             return info.Level;
 #else
             return 0;

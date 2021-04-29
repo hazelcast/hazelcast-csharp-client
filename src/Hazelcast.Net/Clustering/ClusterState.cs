@@ -48,7 +48,7 @@ namespace Hazelcast.Clustering
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
 
-            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x => x.SetPrefix("CLUST.STATE")));
+            HConsole.Configure(x=> x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
         }
 
         #region Events

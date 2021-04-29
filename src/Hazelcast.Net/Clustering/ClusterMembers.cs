@@ -57,7 +57,7 @@ namespace Hazelcast.Clustering
         /// <param name="terminateConnections">The terminate connections task.</param>
         public ClusterMembers(ClusterState clusterState, MemberConnectionQueue memberConnectionQueue, TerminateConnections terminateConnections)
         {
-            HConsole.Configure(x => x.Configure<ClusterMembers>().SetPrefix("MEMBERS"));
+            HConsole.Configure(x => x.Configure<ClusterMembers>().SetPrefix("CLUST.MBRS"));
 
             _clusterState = clusterState;
             _memberConnectionQueue = memberConnectionQueue; // can be null when not smart routing
@@ -65,7 +65,6 @@ namespace Hazelcast.Clustering
             _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
             _logger = clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
 
-            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x=> x.SetPrefix("CLUST.MBRS")));
             _members = new MemberTable();
         }
 

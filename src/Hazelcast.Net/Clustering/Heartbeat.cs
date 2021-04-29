@@ -30,6 +30,7 @@ namespace Hazelcast.Clustering
         private readonly TimeSpan _timeout;
 
         private readonly TerminateConnections _terminateConnections;
+        private readonly ClusterState _clusterState;
         private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
@@ -43,7 +44,7 @@ namespace Hazelcast.Clustering
 
         public Heartbeat(ClusterState clusterState, ClusterMessaging clusterMessaging, HeartbeatOptions options, TerminateConnections terminateConnections)
         {
-            if (clusterState == null) throw new ArgumentNullException(nameof(clusterState));
+            _clusterState = clusterState ?? throw new ArgumentNullException(nameof(clusterState));
             _clusterMessaging = clusterMessaging ?? throw new ArgumentNullException(nameof(clusterMessaging));
             _terminateConnections = terminateConnections;
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -66,7 +67,6 @@ namespace Hazelcast.Clustering
             _cancel = new CancellationTokenSource();
             _heartbeating = BeatAsync(_cancel.Token);
             _active = 1;
-            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x => x.SetPrefix("HEARTBEAT")));
         }
 
         /// <summary>

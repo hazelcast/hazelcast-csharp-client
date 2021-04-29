@@ -541,7 +541,7 @@ namespace Hazelcast.Clustering
         /// </remarks>
         private async Task<Attempt<MemberConnection>> EnsureConnectionAsync(MemberInfo member, CancellationToken cancellationToken)
         {
-            HConsole.WriteLine(this, $"Ensure {_clusterState.ClientName} is connected to server at {address}");
+            HConsole.WriteLine(this, $"Ensure {_clusterState.ClientName} is connected to {member.Id.ToShortString()} at {member.Address}");
             
             // everything in one try...catch block, else the CA2000 analyzer
             // gets confused in methods that invoke this method
@@ -554,7 +554,7 @@ namespace Hazelcast.Clustering
                 if (_connections.TryGetValue(member.Id, out var connection))
                 {
                     var active = connection.Active;
-                    HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection from {_clusterState.ClientName} to member {member.Id} at {connection.Address}");
+                    HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from {_clusterState.ClientName} to {member.Id.ToShortString()} at {connection.Address}");
                     return Attempt.If(active, connection);
                 }
 
@@ -567,7 +567,7 @@ namespace Hazelcast.Clustering
                     return Attempt.Fail<MemberConnection>();
                 // else actually connect
                 // this may throw
-                HConsole.WriteLine(this, $"{_clusterState.ClientName} not connected to server at {address}, connecting");
+                HConsole.WriteLine(this, $"{_clusterState.ClientName} not connected to {member.Id.ToShortString()} at {member.Address}, connecting");
 #pragma warning disable CA2000 // Dispose objects before losing scope
                 // "The allocating method does not have dispose ownership; that is, the responsibility
                 // to dispose the object is transferred to another object or wrapper that's created

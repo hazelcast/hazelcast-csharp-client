@@ -13,7 +13,12 @@
 // limitations under the License.
 
 using System;
+
+#if DEBUG
 using System.Text;
+#else
+#pragma warning disable CA1801 // Review unused parameters
+#endif
 
 namespace Hazelcast.Messaging
 {

@@ -17,7 +17,7 @@ using System;
 using System.Globalization;
 using System.Threading;
 #else
-#pragma warning disable CA1801 // Review unused parameters
+#pragma warning disable CA1801 // Review unused parameters0
 #pragma warning disable CA1822 // Mark members as static
 #endif
 
