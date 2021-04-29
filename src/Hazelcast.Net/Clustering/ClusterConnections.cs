@@ -108,8 +108,6 @@ namespace Hazelcast.Clustering
                     canceled = source.IsCancellationRequested;
                 }
 
-                if (attempt) continue;
-
                 if (_disposed > 0)
                 {
                     _logger.LogWarning($"Could not connect to member at {member.Address}: shutting down.");
