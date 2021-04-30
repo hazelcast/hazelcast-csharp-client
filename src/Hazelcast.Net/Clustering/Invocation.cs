@@ -31,16 +31,7 @@ namespace Hazelcast.Clustering
     internal class Invocation : IDisposable
     {
         private readonly MessagingOptions _messagingOptions;
-        private readonly CancellationToken _cancellationToken;
 
-        // do NOT make that field readonly - we don't want to call Dispose()
-        // on a copy of the readonly variable - if may be that it would work
-        // as expected with the current implementation of CancellationTokenRegistration
-        // but how can we be sure it will never change?
-        //
-        // reference: https://stackoverflow.com/questions/9927434/impure-method-is-called-for-readonly-field
-
-        private /*readonly*/ CancellationTokenRegistration _registration;
         private TaskCompletionSource<ClientMessage> _completionSource;
         private int _attemptsCount; // number of times this invocation has been attempted
 
@@ -49,15 +40,12 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="requestMessage">The request message.</param>
         /// <param name="messagingOptions">Messaging options.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, CancellationToken cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions)
         {
             RequestMessage = requestMessage ?? throw new ArgumentNullException(nameof(requestMessage));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             CorrelationId = requestMessage.CorrelationId;
-            _cancellationToken = cancellationToken;
             InitializeNewCompletionSource();
-            _registration = _cancellationToken.Register(TrySetCanceled); // must dispose to de-register!
             _attemptsCount = 1;
             StartTime = Clock.Milliseconds;
         }
@@ -68,13 +56,12 @@ namespace Hazelcast.Clustering
         /// <param name="requestMessage">The request message.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="targetClientConnection">An optional client connection, that the invocation is bound to.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>When an invocation is bound to a client, it will only be sent to that client,
         /// and it cannot and will not be retried if the client dies.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, MemberConnection targetClientConnection, CancellationToken cancellationToken)
-            : this(requestMessage, messagingOptions, cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, MemberConnection targetClientConnection)
+            : this(requestMessage, messagingOptions)
         {
             TargetClientConnection = targetClientConnection ?? throw new ArgumentNullException(nameof(targetClientConnection));
         }
@@ -85,12 +72,11 @@ namespace Hazelcast.Clustering
         /// <param name="requestMessage">The request message.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="partitionId">The identifier of the target partition.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>If the target partition cannot be mapped to an available member, another random member will be used.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, int partitionId, CancellationToken cancellationToken)
-            : this(requestMessage, messagingOptions, cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, int partitionId)
+            : this(requestMessage, messagingOptions)
         {
             if (partitionId < 0) throw new ArgumentException("Must be a positive integer.", nameof(partitionId));
             TargetPartitionId = partitionId;
@@ -102,21 +88,15 @@ namespace Hazelcast.Clustering
         /// <param name="requestMessage">The request message.</param>
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="targetMemberId">The identifier of the target member.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>
         /// <para>If the target member is not available, another random member will be used.</para>
         /// </remarks>
-        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, Guid targetMemberId, CancellationToken cancellationToken)
-            : this(requestMessage, messagingOptions, cancellationToken)
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, Guid targetMemberId)
+            : this(requestMessage, messagingOptions)
         {
             if (targetMemberId == default) throw new ArgumentException("Must be a non-default Guid.", nameof(targetMemberId));
             TargetMemberId = targetMemberId;
         }
-
-        /// <summary>
-        /// Gets the invocation cancellation token.
-        /// </summary>
-        public CancellationToken CancellationToken => _cancellationToken;
 
         /// <summary>
         /// Gets the request message.
@@ -213,7 +193,7 @@ namespace Hazelcast.Clustering
                 // target disconnected protocol error is not automatically retryable,
                 // because we need to perform more checks on the client and message
                 case RemoteException { Error: RemoteError.TargetDisconnected }:
-                case TargetDisconnectedException _:
+                case TargetUnreachableException _:
                     return TargetClientConnection == null && // not bound to a client
                            (RequestMessage.IsRetryable || retryOnTargetDisconnected);
 
@@ -226,17 +206,17 @@ namespace Hazelcast.Clustering
         /// Determines whether to retry the invocation with a new correlation identifier.
         /// </summary>
         /// <param name="correlationIdProvider">A correlation identifier provider.</param>
-        /// <returns>true if the invocation can be retried; otherwise false.</returns>
-        public ValueTask WaitRetryAsync(Func<long> correlationIdProvider)
+        /// <param name="cancellationToken">A cancellation token.</param>
+        public ValueTask WaitRetryAsync(Func<long> correlationIdProvider, CancellationToken cancellationToken = default)
         {
             if (correlationIdProvider == null) throw new ArgumentNullException(nameof(correlationIdProvider));
 
             // fast fail on cancel
-            _cancellationToken.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
 
             // fast fail on timeout
             if (Clock.Milliseconds - StartTime > _messagingOptions.RetryTimeoutSeconds * 1000)
-                throw new TaskTimeoutException();
+                throw new TaskTimeoutException($"Cannot retry the invocation: timeout ({_messagingOptions.RetryTimeoutSeconds}s).");
 
             _attemptsCount += 1;
 
@@ -250,10 +230,10 @@ namespace Hazelcast.Clustering
                 return default;
             }
 
-            return WaitRetryAsync2();
+            return WaitRetryAsync2(cancellationToken);
         }
 
-        private async ValueTask WaitRetryAsync2()
+        private async ValueTask WaitRetryAsync2(CancellationToken cancellationToken)
         {
             // otherwise, slow retry (delay)
 
@@ -261,21 +241,22 @@ namespace Hazelcast.Clustering
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
             // we *may* want to tweak this? and use an IRetryStrategy?
             var delayMilliseconds = Math.Max(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
-            await System.Threading.Tasks.Task.Delay(delayMilliseconds, _cancellationToken).CfAwait(); // throws if cancelled
+            await System.Threading.Tasks.Task.Delay(delayMilliseconds, cancellationToken).CfAwait(); // throws if cancelled
 
             InitializeNewCompletionSource();
         }
 
         private void InitializeNewCompletionSource()
         {
-            _completionSource = new TaskCompletionSource<ClientMessage>();
-            if (_cancellationToken.IsCancellationRequested) TrySetCanceled();
+            // set options to RunContinuationsAsynchronously so that when the response message
+            // is received and we set the result of the completion source, the code waiting on
+            // the response runs asynchronously on a new task while the networking code proceeds
+            // with messages
+            _completionSource = new TaskCompletionSource<ClientMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         /// <inheritdoc />
         public void Dispose()
-        {
-            _registration.Dispose(); // de-register!
-        }
+        { }
     }
 }

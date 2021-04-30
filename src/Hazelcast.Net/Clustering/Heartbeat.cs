@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,24 +29,26 @@ namespace Hazelcast.Clustering
         private readonly TimeSpan _period;
         private readonly TimeSpan _timeout;
 
-        private readonly ClusterState _clusterState;
-        private readonly ClusterMembers _clusterMembers;
+        private readonly TerminateConnections _terminateConnections;
         private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
-        private readonly CancellationTokenSource _cancellation;
+        private readonly CancellationTokenSource _cancel;
         private readonly Task _heartbeating;
+
+        private readonly HashSet<MemberConnection> _connections = new HashSet<MemberConnection>();
+        private readonly object _mutex = new object();
 
         private int _active;
 
-        public Heartbeat(ClusterState clusterState, ClusterMembers clusterMembers, ClusterMessaging clusterMessaging, HeartbeatOptions options, ILoggerFactory loggerFactory)
+        public Heartbeat(ClusterState clusterState, ClusterMessaging clusterMessaging, HeartbeatOptions options, TerminateConnections terminateConnections)
         {
-            _clusterState = clusterState ?? throw new ArgumentNullException(nameof(clusterState));
-            _clusterMembers = clusterMembers ?? throw new ArgumentNullException(nameof(clusterMembers));
+            if (clusterState == null) throw new ArgumentNullException(nameof(clusterState));
             _clusterMessaging = clusterMessaging ?? throw new ArgumentNullException(nameof(clusterMessaging));
+            _terminateConnections = terminateConnections;
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _logger = loggerFactory?.CreateLogger<Heartbeat>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
+            _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>();
             _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
             _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
 
@@ -58,8 +61,29 @@ namespace Hazelcast.Clustering
                 _timeout = timeout;
             }
 
-            _cancellation = new CancellationTokenSource();
-            _heartbeating ??= LoopAsync(_cancellation.Token);
+            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("HB")));
+
+            _cancel = new CancellationTokenSource();
+            _heartbeating = BeatAsync(_cancel.Token);
+            _active = 1;
+        }
+
+        /// <summary>
+        /// Adds a connection.
+        /// </summary>
+        /// <param name="connection">The connection to add.</param>
+        public void AddConnection(MemberConnection connection)
+        {
+            lock (_mutex) { if (connection.Active) _connections.Add(connection); }
+        }
+
+        /// <summary>
+        /// Removes a connection.
+        /// </summary>
+        /// <param name="connection">The connection to remove.</param>
+        public void RemoveConnection(MemberConnection connection)
+        {
+            lock (_mutex) _connections.Remove(connection);
         }
 
         public async ValueTask DisposeAsync()
@@ -69,7 +93,9 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _active, 0, 1) == 0)
                 return;
 
-            _cancellation.Cancel();
+            HConsole.WriteLine(this, "Stopping...");
+
+            _cancel.Cancel();
 
             try
             {
@@ -80,22 +106,20 @@ namespace Hazelcast.Clustering
                 // unexpected
                 _logger.LogWarning(e, "Caught an exception while disposing Heartbeat.");
             }
+
+            _cancel.Dispose();
+
+            HConsole.WriteLine(this, "Stopped.");
         }
 
-        private async Task LoopAsync(CancellationToken cancellationToken)
+        private async Task BeatAsync(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(_period, cancellationToken).CfAwait();
-                try
-                {
-                    await RunAsync(cancellationToken).CfAwaitCanceled();
-                }
-                catch (Exception e)
-                {
-                    // unexpected
-                    _logger.LogWarning(e, "Caught exception in Heartbeat.");
-                }
+                if (cancellationToken.IsCancellationRequested) break;
+                HConsole.WriteLine(this, $"Run with period={(int)_period.TotalSeconds}s, timeout={(int)_timeout.TotalSeconds}s");
+                await RunAsync(cancellationToken).CfAwait();
             }
         }
 
@@ -105,26 +129,45 @@ namespace Hazelcast.Clustering
             _logger.LogDebug("Run heartbeat");
 
             var now = DateTime.Now; // now, or utcNow, but *must* be same as what is used in socket connection base!
-            var connections = _clusterMembers.SnapshotConnections(true);
+            const int maxTasks = 4; // max 4 at a time TODO: consider making it an option?
+            
+            // run for each member
+            var tasks = new List<Task>();
 
-            // start one task per member
-            // TODO: throttle?
-            var tasks = connections
-                .Select(x => RunAsync(x, now, cancellationToken))
-                .ToList();
+            // capture and enumerate connections
+            List<MemberConnection> connections;
+            lock (_mutex) connections = new List<MemberConnection>(_connections);
+            using var connectionsEnumerator = connections.Where(x => x.Active).GetEnumerator();
+            
+            void StartCurrent()
+            {
+                var connection = connectionsEnumerator.Current;
+                if (connection != null && connection.Active)
+                    tasks.Add(RunAsync(connection, now, cancellationToken));
+            }
 
-            await Task.WhenAll(tasks).CfAwait(); // may throw in case of cancellation
+            // start maxTasks tasks
+            while (tasks.Count < maxTasks && connectionsEnumerator.MoveNext() && !cancellationToken.IsCancellationRequested) StartCurrent();
+
+            // each time a task completes, replace it with another task
+            while (tasks.Count > 0)
+            {
+                var task = await Task.WhenAny(tasks).CfAwait();
+                tasks.Remove(task);
+
+                if (connectionsEnumerator.MoveNext() && !cancellationToken.IsCancellationRequested) StartCurrent();
+            }
         }
 
         // runs once on a connection to a member
         private async Task RunAsync(MemberConnection connection, DateTime now, CancellationToken cancellationToken)
         {
-            // must ensure that timeout > interval ?!
-
             var readElapsed = now - connection.LastReadTime;
             var writeElapsed = now - connection.LastWriteTime;
 
-            HConsole.WriteLine(this, $"Heartbeat on {connection.Id.ToShortString()}, written {(long)(now - connection.LastWriteTime).TotalMilliseconds}ms ago, read {(long)(now - connection.LastReadTime).TotalMilliseconds}ms ago");
+            HConsole.WriteLine(this, $"Heartbeat on {connection.Id.ToShortString()}, " +
+                                     $"written {(int)writeElapsed.TotalSeconds}s ago, " +
+                                     $"read {(int)readElapsed.TotalSeconds}s ago");
 
             // make sure we read from the client at least every 'timeout',
             // which is greater than the interval, so we *should* have
@@ -133,16 +176,16 @@ namespace Hazelcast.Clustering
 
             if (readElapsed > _timeout && writeElapsed < _period)
             {
-                _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}.", connection.Id);
-                if (connection.Active) await connection.TerminateAsync().CfAwait(); // does not throw;
+                _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
+                if (connection.Active) _terminateConnections.Add(connection);
                 return;
             }
 
-            // make sure we write to the client at least every 'interval',
+            // make sure we write to the client at least every 'period',
             // this should trigger a read when we receive the response
             if (writeElapsed > _period)
             {
-                _logger.LogDebug("Ping client {ClientId}", connection.Id);
+                _logger.LogDebug("Ping client {ClientId}", connection.Id.ToShortString());
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
 
@@ -156,15 +199,19 @@ namespace Hazelcast.Clustering
                     // just to be sure everything is ok
                     _ = ClientPingCodec.DecodeResponse(responseMessage);
                 }
+                catch (ClientOfflineException)
+                {
+                    // down
+                }
                 catch (TaskTimeoutException)
                 {
-                    _logger.LogWarning("Heartbeat ping timeout for connection {ConnectionId}.", connection.Id);
-                    if (connection.Active) await connection.TerminateAsync().CfAwait(); // does not throw;
+                    _logger.LogWarning("Heartbeat ping timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
+                    if (connection.Active) _terminateConnections.Add(connection);
                 }
                 catch (Exception e)
                 {
                     // unexpected
-                    _logger.LogWarning(e, "Heartbeat has thrown an exception.");
+                    _logger.LogWarning(e, "Heartbeat has thrown an exception, but will continue.");
                 }
             }
         }

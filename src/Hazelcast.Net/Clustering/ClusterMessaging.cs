@@ -39,6 +39,8 @@ namespace Hazelcast.Clustering
         {
             _clusterState = clusterState;
             _clusterMembers = clusterMembers;
+
+            HConsole.Configure(hoptions => hoptions.Set(this, x => x.SetPrefix("MSGING")));
         }
 
         /// <summary>
@@ -51,8 +53,7 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, null, -1, default, cancellation.Token).CfAwait();
+            return await SendAsyncInternal(message, null, -1, default, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -70,8 +71,7 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, null, -1, memberId, cancellation.Token).CfAwait();
+            return await SendAsyncInternal(message, null, -1, memberId, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -86,8 +86,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
 
-            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, memberConnection, -1, default, cancellation.Token).CfAwait();
+            return await SendAsyncInternal(message, memberConnection, -1, default, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -103,8 +102,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
 
-            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken);
-            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellation.Token).CfAwait();
+            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -209,20 +207,21 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            using var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection, cancellationToken) :
-                                   targetPartitionId >= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId, cancellationToken) :
-                                   targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId, cancellationToken) :
-                                   new Invocation(message, _clusterState.Options.Messaging, cancellationToken);
+            using var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
+                                   targetPartitionId >= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
+                                   targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
+                                   new Invocation(message, _clusterState.Options.Messaging);
 
-            return await SendAsyncInternal(invocation).CfAwait();
+            return await SendAsyncInternal(invocation, cancellationToken).CfAwait();
         }
 
         /// <summary>
         /// Sends an invocation request message.
         /// </summary>
         /// <param name="invocation">The invocation.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation)
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
         {
             // yield now, so the caller gets a task that can bubble up to user's code
             // immediately without waiting for more synchronous operations to take place
@@ -251,7 +250,7 @@ namespace Hazelcast.Clustering
 
                     // else, wait for retrying
                     // this will throw if it cannot retry
-                    await invocation.WaitRetryAsync(() => _clusterState.GetNextCorrelationId()).CfAwait();
+                    await invocation.WaitRetryAsync(() => _clusterState.GetNextCorrelationId(), cancellationToken).CfAwait();
 
                     HConsole.WriteLine(this, "Retrying...");
                 }
@@ -291,7 +290,7 @@ namespace Hazelcast.Clustering
                 return connection;
 
             // fail
-            throw new ClientOfflineException(_clusterState.ClientState);
+            throw _clusterState.ThrowClientOfflineException();
         }
     }
 }

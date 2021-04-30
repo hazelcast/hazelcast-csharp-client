@@ -103,18 +103,18 @@ namespace Hazelcast.Tests.Clustering
             });
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
-            HConsole.WriteLine(this, "Get dictionary");
+            HConsole.WriteLine(this, "Get map");
 
-            var dictionary = await client.GetMapAsync<string, string>("name");
+            var map = await client.GetMapAsync<string, string>("name");
             var count = 0;
 
             var clusterEvents = client.Cluster.Events;
             Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(0)); // no client subscription yet
-            Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1)); // but the cluster events subscription
+            Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1)); // but the cluster views subscription
 
             HConsole.WriteLine(this, "Subscribe");
 
-            var sid = await dictionary.SubscribeAsync(events => events
+            var sid = await map.SubscribeAsync(events => events
                 .EntryAdded((sender, args) => Interlocked.Increment(ref count))
             );
 
@@ -124,13 +124,13 @@ namespace Hazelcast.Tests.Clustering
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(3)); // 2 more correlated
-                Assert.That(subscription.Count, Is.EqualTo(2)); // has 2 members
+                Assert.That(subscription.Count, Is.EqualTo(2)); // 2 members
                 Assert.That(subscription.Active);
             }, 4000, 200);
 
             HConsole.WriteLine(this, "Set");
 
-            await dictionary.SetAsync("key", "value");
+            await map.SetAsync("key", "value");
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.That(count, Is.EqualTo(1)); // event triggered
@@ -138,18 +138,18 @@ namespace Hazelcast.Tests.Clustering
 
             HConsole.WriteLine(this, "Unsubscribe");
 
-            var unsubscribed = await dictionary.UnsubscribeAsync(sid);
+            var unsubscribed = await map.UnsubscribeAsync(sid);
             Assert.That(unsubscribed);
 
             // we have a 4 sec delay before the collect task actually collects
 
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(subscription.Active, Is.False);
-                Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(0)); // is gone
-                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1)); // are gone
-                Assert.That(subscription.Count, Is.EqualTo(1)); // 1 remains
-                Assert.That(clusterEvents.GhostSubscriptions.Count, Is.EqualTo(1)); // is ghost
+                Assert.That(subscription.Active, Is.False, "active");
+                Assert.That(clusterEvents.Subscriptions.Count, Is.EqualTo(0), "count.1"); // is gone
+                Assert.That(clusterEvents.CorrelatedSubscriptions.Count, Is.EqualTo(1), "count.2"); // are gone
+                Assert.That(subscription.Count, Is.EqualTo(1), "count.3"); // 1 remains
+                Assert.That(clusterEvents.CollectSubscriptions.Count, Is.EqualTo(1), "count.4"); // is ghost
             }, 4000, 200);
 
             // get a key that targets server 1 - the one that's going to send the event
@@ -157,14 +157,14 @@ namespace Hazelcast.Tests.Clustering
 
             HConsole.WriteLine(this, "Set key=" + key);
 
-            await dictionary.SetAsync(key, "value");
+            await map.SetAsync(key, "value");
             await Task.Delay(100);
             Assert.That(count, Is.EqualTo(1)); // no event
 
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.That(subscription.Count, Is.EqualTo(0)); // 0 remains
-                Assert.That(clusterEvents.GhostSubscriptions.Count, Is.EqualTo(0)); // is gone
+                Assert.That(clusterEvents.CollectSubscriptions.Count, Is.EqualTo(0)); // is gone
             }, 8000, 200);
         }
 

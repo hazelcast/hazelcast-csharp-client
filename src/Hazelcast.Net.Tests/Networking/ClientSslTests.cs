@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Exceptions;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -52,7 +53,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task TestSSLEnabled_validateName_invalidName()
         {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
                 await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                     true,
@@ -108,7 +109,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task TestSSLEnabled_self_signed_remote_cert()
         {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
                 await using var client = await StartClientAsync(Resources.Cluster_Ssl,
                     true,

@@ -63,8 +63,7 @@ namespace Hazelcast
         /// <returns>The options.</returns>
         public HazelcastOptions AddSubscriber(Action<HazelcastClientEventHandlers> events)
         {
-            Subscribers.Add(new HazelcastClientEventSubscriber((hazelcastClient, cancellationToken)
-                => hazelcastClient.SubscribeAsync(events)));
+            Subscribers.Add(new HazelcastClientEventSubscriber(events));
             return this;
         }
 

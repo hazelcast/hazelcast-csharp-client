@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Clustering;
 using Hazelcast.Events;
 using Hazelcast.Models;
 using Hazelcast.Networking;

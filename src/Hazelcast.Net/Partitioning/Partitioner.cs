@@ -24,6 +24,11 @@ namespace Hazelcast.Partitioning
         private readonly object _partitionsLock = new object();
         private PartitionTable _partitions;
 
+        public Partitioner()
+        {
+            HConsole.Configure(options => options.Set(this, x=> x.SetPrefix("PART")));
+        }
+
         /// <summary>
         /// Gets the number of partitions.
         /// </summary>
@@ -109,16 +114,16 @@ namespace Hazelcast.Partitioning
         }
 
         /// <summary>
-        /// Notifies the partitioner of the partitions count.
+        /// Sets or verifies the partition count.
         /// </summary>
-        /// <param name="count">The partitions count.</param>
+        /// <param name="count">The partition count.</param>
         /// <remarks>
         /// <para>The specified <paramref name="count"/> must be either the first one,
         /// i.e. the partitioner does not know of partitions yet, or it must be equal
         /// to the known partitions count. Otherwise, a <see cref="InvalidOperationException"/>
         /// is thrown.</para>
         /// </remarks>
-        public void NotifyPartitionsCount(int count)
+        public void SetOrVerifyPartitionCount(int count)
         {
             lock (_partitionsLock)
             {

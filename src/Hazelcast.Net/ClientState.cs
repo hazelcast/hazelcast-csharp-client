@@ -19,8 +19,13 @@ namespace Hazelcast
     /// </summary>
     public enum ClientState
     {
+        // NOTE:
+        // the original ClientState for a new client is the default value,
+        // i.e. zero. we don't make it ClientState.Unknown because we don't
+        // want it to be publicly visible, as this is a purely internal state
+
         /// <summary>
-        /// The client is new and starting.
+        /// The client is starting.
         /// </summary>
         /// <remarks>
         /// <para>The client will transition to <see cref="Started"/> when it has started.</para>
@@ -60,6 +65,9 @@ namespace Hazelcast
         /// The client is shutting down.
         /// </summary>
         /// <remarks>
+        /// <para>This state is reached only when the client is properly requested to shut
+        /// down. If the client ends up being disconnected, for instance due to a network
+        /// problem, and cannot reconnect, it will directly transition to <see cref="Shutdown"/>.</para>
         /// <para>The client will transition to <see cref="Shutdown"/> once shutdown is complete.</para>
         /// </remarks>
         ShuttingDown,

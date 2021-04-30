@@ -199,10 +199,11 @@ namespace Hazelcast.Testing.TestServer
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
-        private void SocketShutdown(SocketConnectionBase connection)
+        private ValueTask SocketShutdown(SocketConnectionBase connection)
         {
             HConsole.WriteLine(this, "Removing connection " + connection.Id);
             _connections.TryRemove(connection.Id, out _);
+            return default;
         }
 
         /// <inheritdoc />

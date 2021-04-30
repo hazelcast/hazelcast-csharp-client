@@ -22,6 +22,10 @@ namespace Hazelcast.Models
     /// <summary>
     /// Represents a member of a cluster.
     /// </summary>
+    /// <remarks>
+    /// <para>This class implements <see cref="IEquatable{MemberInfo}"/> and two instances are considered
+    /// equal if their <see cref="Id"/> are identical (the other fields are not considered for equality).</para>
+    /// </remarks>
     public class MemberInfo : IEquatable<MemberInfo>
     {
         /// <summary>

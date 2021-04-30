@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Clustering;
+
 namespace Hazelcast.Events
 {
     /// <summary>
@@ -22,16 +24,22 @@ namespace Hazelcast.Events
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectionOpenedEventArgs"/> class.
         /// </summary>
-        /// <param name="isFirst">Whether the connection is the first one.</param>
-        public ConnectionOpenedEventArgs(bool isFirst)
+        /// <param name="connection">The connection that was opened.</param>
+        /// <param name="isNewCluster">Whether the connection is the first connection to a new cluster.</param>
+        public ConnectionOpenedEventArgs(MemberConnection connection, bool isNewCluster)
         {
-            IsFirst = isFirst;
+            Connection = connection;
+            IsNewCluster = isNewCluster;
         }
 
         /// <summary>
-        /// Whether the connection is the first one.
+        /// Gets the connection that was opened.
         /// </summary>
-        /// <returns><c>true</c> if the connection is the first one; otherwise <c>false</c>.</returns>
-        public bool IsFirst { get; }
+        public MemberConnection Connection { get; }
+
+        /// <summary>
+        /// Whether the connection is the first connection to a new cluster.
+        /// </summary>
+        public bool IsNewCluster { get; }
     }
 }
