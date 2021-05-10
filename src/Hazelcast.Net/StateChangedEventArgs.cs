@@ -17,9 +17,7 @@ namespace Hazelcast
     /// <summary>
     /// Represents event data for the state changed event.
     /// </summary>
-#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public class StateChangedEventArgs
-#pragma warning restore CA1711 
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="StateChangedEventArgs"/> class.

@@ -28,9 +28,7 @@ namespace Hazelcast.DistributedObjects
     /// will not scale by adding more members to the cluster.
     /// </para>
     /// </remarks>
-#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - that *is* a queue
     public interface IHQueue<T> : IHCollection<T>
-#pragma warning restore CA1711
     {
         // setting
 

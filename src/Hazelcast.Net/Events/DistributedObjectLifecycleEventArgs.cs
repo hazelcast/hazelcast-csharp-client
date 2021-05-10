@@ -19,9 +19,7 @@ namespace Hazelcast.Events
     /// <summary>
     /// Provides a base class for cluster object lifecycle events data.
     /// </summary>
-#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public abstract class DistributedObjectLifecycleEventArgs
-#pragma warning restore CA1711
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedObjectLifecycleEventArgs"/> class.

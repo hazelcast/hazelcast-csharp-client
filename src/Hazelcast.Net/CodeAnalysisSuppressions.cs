@@ -276,6 +276,17 @@ using System.Diagnostics.CodeAnalysis;
     Target = "~T:Hazelcast.IHazelcastClientEventHandler",
     Justification = Analysis.Justification.CA1711_EventHandler)]
 
+// nothing we can do about these
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.IHCollection`1",
+    Justification = Analysis.Justification.CA1711_Reserved)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.IHQueue`1",
+    Justification = Analysis.Justification.CA1711_Reserved)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.DistributedObjects.IHTxQueue`1",
+    Justification = Analysis.Justification.CA1711_Reserved)]
+
 #endregion
 
 // ReSharper disable once CheckNamespace
@@ -299,6 +310,7 @@ internal static class Analysis
         // ReSharper disable InconsistentNaming
         public const string CA1711_EventArgs = "Our event args should inherit from System.EventArgs but this is a breaking change";
         public const string CA1711_EventHandler = "Our event handlers cannot be true event-handler delegates.";
+        public const string CA1711_Reserved = "We have to use some names that are reserved.";
         // ReSharper restore InconsistentNaming
     }
 }

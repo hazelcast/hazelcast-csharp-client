@@ -24,9 +24,7 @@ namespace Hazelcast.DistributedObjects
     /// <typeparam name="TKey">The type of the keys.</typeparam>
     /// <typeparam name="TValue">The type of the values.</typeparam>
     /// <typeparam name="TSender">The type of the sender.</typeparam>
-#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public interface IMapEntryEventHandler<TKey, TValue, in TSender> : IMapEventHandlerBase
-#pragma warning restore CA1711
     {
         /// <summary>
         /// Handles an event.

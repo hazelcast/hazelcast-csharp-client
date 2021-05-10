@@ -17,8 +17,6 @@ namespace Hazelcast
     /// <summary>
     /// Defines a Hazelcast client event handler.
     /// </summary>
-#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public interface IHazelcastClientEventHandler
-#pragma warning restore CA1711
     { }
 }

@@ -49,7 +49,7 @@ namespace Hazelcast.Serialization
 
         public IClassDefinition LookupClassDefinition(IData data)
         {
-            if (!data.IsPortable)throw new ArgumentException("Data is not Portable.", nameof(data));
+            if (!data.IsPortable) throw new ArgumentException("Data is not Portable.", nameof(data));
 
             using var input = _serializationService.CreateObjectDataInput(data);
 

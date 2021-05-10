@@ -27,8 +27,11 @@ namespace System
         public static int IndexOf(this string s, char c, StringComparison comparison)
             => s.IndexOf(c);
 
-        public static string Replace(this string s, string o, string r, StringComparison comparison)
+        public static string Replace(this string s, string o, string r, StringComparison comparisonType)
             => s.Replace(o, r);
+
+        public static bool Contains(this string s, string value, StringComparison comparisonType)
+            => s.Contains(value);
 
 #pragma warning restore CA1801
 #pragma warning restore IDE0060

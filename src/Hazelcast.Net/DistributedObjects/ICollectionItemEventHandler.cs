@@ -22,9 +22,7 @@ namespace Hazelcast.DistributedObjects
     /// Specifies a collection item event handler.
     /// </summary>
     /// <typeparam name="T">The collection items type.</typeparam>
-#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - here it is correct
     public interface ICollectionItemEventHandler<T>
-#pragma warning restore CA1711
     {
         /// <summary>
         /// Gets the handled event type.
