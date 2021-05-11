@@ -13,10 +13,7 @@
 // limitations under the License.
 
 using System.Reflection;
-
-#if NETSTANDARD2_1
 using System;
-#endif
 
 namespace Hazelcast.Core
 {
@@ -42,11 +39,7 @@ namespace Hazelcast.Core
                 if (attribute != null)
                 {
                     var version = attribute.InformationalVersion;
-#if NETSTANDARD2_1
                     var pos = version.IndexOf('+', StringComparison.OrdinalIgnoreCase);
-#else
-                    var pos = version.IndexOf('+');
-#endif
                     if (pos > 0 && version.Length > pos + 7)
                         version = version.Substring(0, pos + 7);
                     _clientVersion = version;

@@ -213,6 +213,27 @@ namespace Hazelcast.Clustering
             }
         }
 
+        private void LogDiffs(MemberTable table, Dictionary<MemberInfo, int> diff)
+        {
+            var msg = new StringBuilder();
+            msg.Append("Members [");
+            msg.Append(table.Count);
+            msg.AppendLine("] {");
+            foreach (var member in table.Members)
+            {
+                msg.Append("    ");
+                msg.Append(member.Address);
+                msg.Append(" - ");
+                msg.Append(member.Id);
+                if (diff.TryGetValue(member, out var d) && d == 2)
+                    msg.Append(" - new");
+                msg.AppendLine();
+            }
+            msg.Append('}');
+
+            _logger.LogInformation(msg.ToString());
+        }
+
         /// <summary>
         /// Set the members.
         /// </summary>
@@ -257,25 +278,7 @@ namespace Hazelcast.Clustering
 
             // log, if the members have changed (one of them at least is not 3=unchanged)
             if (_logger.IsEnabled(LogLevel.Information) && diff.Any(d => d.Value != 3))
-            {
-                var msg = new StringBuilder();
-                msg.Append("Members [");
-                msg.Append(table.Count);
-                msg.AppendLine("] {");
-                foreach (var member in table.Members)
-                {
-                    msg.Append("    ");
-                    msg.Append(member.Address);
-                    msg.Append(" - ");
-                    msg.Append(member.Id);
-                    if (diff.TryGetValue(member, out var d) && d == 2)
-                        msg.Append(" - new");
-                    msg.AppendLine();
-                }
-                msg.Append('}');
-
-                _logger.LogInformation(msg.ToString());
-            }
+                LogDiffs(table, diff);
 
             // process changes, gather events
             var added = new List<MemberInfo>();

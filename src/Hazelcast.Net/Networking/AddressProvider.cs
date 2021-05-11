@@ -74,12 +74,7 @@ namespace Hazelcast.Networking
         /// <returns>All addresses.</returns>
         public IEnumerable<NetworkAddress> GetAddresses()
         {
-            if (_privateToPublic == null)
-            {
-                _privateToPublic = _createMap();
-                if (_privateToPublic == null)
-                    throw new HazelcastException("Failed to obtain an address map.");
-            }
+            _privateToPublic ??= _createMap() ?? throw new HazelcastException("Failed to obtain an address map.");
             return _privateToPublic.Keys;
         }
 
@@ -96,9 +91,7 @@ namespace Hazelcast.Networking
             var fresh = false;
             if (_privateToPublic == null)
             {
-                _privateToPublic = _createMap();
-                if (_privateToPublic == null)
-                    throw new HazelcastException("Failed to obtain an address map.");
+                _privateToPublic = _createMap() ?? throw new HazelcastException("Failed to obtain an address map.");
 
                 fresh = true;
             }
