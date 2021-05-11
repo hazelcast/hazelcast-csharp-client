@@ -9,6 +9,7 @@
     DEFINES
     - HZ_CONSOLE enables the Hazelcast troubleshooting console
         do *not* ship a release with HZ_CONSOLE defined!
+    - HZ_CONSOLE_PUBLIC publicizes the HConsole
     - CODE_ANALYSIS enables NDepend code analysis
     - HZ_OPTIMIZE_ASYNC enables async/await optimizations
   -->
