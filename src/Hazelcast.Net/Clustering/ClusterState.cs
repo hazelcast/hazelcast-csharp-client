@@ -47,6 +47,8 @@ namespace Hazelcast.Clustering
             LoggerFactory = loggerFactory;
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
+
+            HConsole.Configure(x=> x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
         }
 
         #region Events
@@ -141,6 +143,7 @@ namespace Hazelcast.Clustering
                     return;
 
                 ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
                 _stateChangeQueue.Add(newState);
             }
         }
@@ -159,6 +162,7 @@ namespace Hazelcast.Clustering
                     return false;
 
                 ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
                 _stateChangeQueue.Add(newState);
                 return true;
             }
@@ -178,6 +182,7 @@ namespace Hazelcast.Clustering
                     return false;
 
                 ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
                 _stateChangeQueue.Add(newState);
                 return true;
             }
@@ -198,6 +203,7 @@ namespace Hazelcast.Clustering
                     return;
 
                 ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
                 wait = _stateChangeQueue.AddAndWait(newState);
             }
 
@@ -221,6 +227,7 @@ namespace Hazelcast.Clustering
                     return false;
 
                 ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
                 wait = _stateChangeQueue.AddAndWait(newState);
             }
 
@@ -392,10 +399,6 @@ namespace Hazelcast.Clustering
         public long GetNextCorrelationId() => CorrelationIdSequence.GetNext();
 
         /// <summary>
-        /// Gets the connection identifier sequence.
-        /// </summary>
-        public ISequence<int> ConnectionIdSequence { get; } = new Int32Sequence();
-
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {

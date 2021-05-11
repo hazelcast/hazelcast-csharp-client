@@ -49,7 +49,7 @@ namespace Hazelcast.Clustering
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnectionQueue>();
 
-            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x => x.SetPrefix("MBRQ")));
+            HConsole.Configure(x => x.Configure<MemberConnectionQueue>().SetPrefix("MBRQ"));
         }
 
         /// <summary>

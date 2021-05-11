@@ -50,7 +50,7 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="prefixLength">An optional prefix length.</param>
-        protected SocketConnectionBase(int id, int prefixLength = 0)
+        protected SocketConnectionBase(Guid id, int prefixLength = 0)
         {
             Id = id;
 
@@ -60,7 +60,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets the unique identifier of the socket.
         /// </summary>
-        public int Id { get; }
+        public Guid Id { get; }
 
         /// <summary>
         /// Gets or sets the function that handles message bytes.
@@ -231,7 +231,9 @@ namespace Hazelcast.Networking
             _streamReadCancellationTokenSource.Cancel();
 
             // ensure everything is down by awaiting the other task
-            await (task == _pipeReading ? _pipeWriting : _pipeReading).CfAwait();
+            // FIXME why could this be null ?!
+            var otherTask = task == _pipeReading ? _pipeWriting : _pipeReading;
+            if (otherTask != null) await otherTask.CfAwait();
 
             // kill socket and stream
             try

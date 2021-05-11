@@ -30,6 +30,7 @@ namespace Hazelcast.Clustering
         private readonly TimeSpan _timeout;
 
         private readonly TerminateConnections _terminateConnections;
+        private readonly ClusterState _clusterState;
         private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
@@ -43,12 +44,12 @@ namespace Hazelcast.Clustering
 
         public Heartbeat(ClusterState clusterState, ClusterMessaging clusterMessaging, HeartbeatOptions options, TerminateConnections terminateConnections)
         {
-            if (clusterState == null) throw new ArgumentNullException(nameof(clusterState));
+            _clusterState = clusterState ?? throw new ArgumentNullException(nameof(clusterState));
             _clusterMessaging = clusterMessaging ?? throw new ArgumentNullException(nameof(clusterMessaging));
             _terminateConnections = terminateConnections;
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>();
+            _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>(); // FIXME with client ID?
             _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
             _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
 
@@ -61,7 +62,7 @@ namespace Hazelcast.Clustering
                 _timeout = timeout;
             }
 
-            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("HB")));
+            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT")); // FIXME with client ID?
 
             _cancel = new CancellationTokenSource();
             _heartbeating = BeatAsync(_cancel.Token);
@@ -165,7 +166,7 @@ namespace Hazelcast.Clustering
             var readElapsed = now - connection.LastReadTime;
             var writeElapsed = now - connection.LastWriteTime;
 
-            HConsole.WriteLine(this, $"Heartbeat on {connection.Id.ToShortString()}, " +
+            HConsole.WriteLine(this, $"Heartbeat {_clusterState.ClientName} on {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {connection.Address}, " +
                                      $"written {(int)writeElapsed.TotalSeconds}s ago, " +
                                      $"read {(int)readElapsed.TotalSeconds}s ago");
 

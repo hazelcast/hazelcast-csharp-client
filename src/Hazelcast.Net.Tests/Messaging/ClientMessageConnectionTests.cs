@@ -34,7 +34,7 @@ namespace Hazelcast.Tests.Messaging
         public void ArgumentExceptions()
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(1, endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
             var c = new ClientMessageConnection(s, new NullLoggerFactory());
 
             Assert.ThrowsAsync<ArgumentNullException>(async () => _ = await c.SendAsync(null));
@@ -44,7 +44,7 @@ namespace Hazelcast.Tests.Messaging
         public async Task OnReceiveMessage()
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(1, endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
             var c = new ClientMessageConnection(s, new NullLoggerFactory()) { OnReceiveMessage = OnReceiveMessageNotImplemented };
 
             Assert.That(c.OnReceiveMessage, Is.Not.Null);
@@ -66,7 +66,7 @@ namespace Hazelcast.Tests.Messaging
         public void HandleFragments()
         {
             var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(1, endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
             var c = new ClientMessageConnection(s, new NullLoggerFactory());
 
             ClientMessage recvd = null;
@@ -151,7 +151,7 @@ namespace Hazelcast.Tests.Messaging
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
             await server.StartAsync();
 
-            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 
@@ -170,7 +170,7 @@ namespace Hazelcast.Tests.Messaging
         [Test]
         public async Task SendTrue()
         {
-            var socket = new TestSocketConnection(0);
+            var socket = new TestSocketConnection(Guid.NewGuid());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
 
             // cannot send a message with no frames
@@ -209,7 +209,7 @@ namespace Hazelcast.Tests.Messaging
         [Test]
         public async Task SendFalse()
         {
-            var socket = new TestSocketConnection(0);
+            var socket = new TestSocketConnection(Guid.NewGuid());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
 
             // send a message with frames
@@ -252,7 +252,7 @@ namespace Hazelcast.Tests.Messaging
         [Test]
         public async Task SendExceptions()
         {
-            var socket = new TestSocketConnection(0);
+            var socket = new TestSocketConnection(Guid.NewGuid());
             socket.Count = int.MaxValue;
 
             var message = new ClientMessage(new Frame(new byte[16]));
@@ -307,7 +307,7 @@ namespace Hazelcast.Tests.Messaging
 
         private class TestSocketConnection : SocketConnectionBase
         {
-            public TestSocketConnection(int id, int prefixLength = 0)
+            public TestSocketConnection(Guid id, int prefixLength = 0)
                 : base(id, prefixLength)
             { }
 

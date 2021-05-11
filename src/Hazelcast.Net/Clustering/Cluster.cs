@@ -73,7 +73,7 @@ namespace Hazelcast.Clustering
             // wire components
             WireComponents();
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(2).SetPrefix("CLUSTER")));
+            HConsole.Configure(x => x.Configure<Cluster>().SetIndent(2).SetPrefix("CLUSTER"));
         }
 
         private void WireComponents()

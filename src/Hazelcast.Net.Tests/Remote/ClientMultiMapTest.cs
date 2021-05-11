@@ -95,12 +95,12 @@ namespace Hazelcast.Tests.Remote
         private IDisposable HConsoleForTest()
 
             => HConsole.Capture(options => options
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET").SetLevel(0))
-                .Set<ClientMessageConnection>(x => x.Quiet())
-                .Set<AsyncContext>(x => x.Quiet())
-                .Set<Partitioner>(x => x.SetLevel(1)));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET").SetLevel(0)
+                .Configure<ClientMessageConnection>().SetMinLevel()
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure<Partitioner>().SetLevel(1));
 
         [Test]
         public async Task TestListener()

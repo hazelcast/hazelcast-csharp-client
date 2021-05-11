@@ -43,9 +43,9 @@ namespace Hazelcast.Tests.Networking
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET"));
 
         [Test]
         public async Task Exceptions()
@@ -53,7 +53,7 @@ namespace Hazelcast.Tests.Networking
             var endpoint = NetworkAddress.Parse("127.0.0.1:5701").IPEndPoint;
             var options = new NetworkingOptions();
 
-            await using var connection = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory(), 3);
+            await using var connection = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory(), 3);
 
             // OnReceiveMessageBytes is missing
             Assert.ThrowsAsync<InvalidOperationException>(async () => await connection.ConnectAsync(default));
@@ -65,7 +65,7 @@ namespace Hazelcast.Tests.Networking
             // OnReceivePrefixBytes is missing
             Assert.ThrowsAsync<InvalidOperationException>(async () => await connection.ConnectAsync(default));
 
-            await using var connection2 = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            await using var connection2 = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory())
             {
                 OnReceiveMessageBytes = (x, y) => true
             };
@@ -89,7 +89,7 @@ namespace Hazelcast.Tests.Networking
             Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, bool> onReceiveMessageBytes
                 = (x, y) => true;
 
-            await using var socket = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory())
             {
                 OnReceiveMessageBytes = onReceiveMessageBytes
             };
@@ -133,7 +133,7 @@ namespace Hazelcast.Tests.Networking
 
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
-            await using var socket = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory())
             {
                 OnReceiveMessageBytes = (x, y) => true
             };
@@ -156,7 +156,7 @@ namespace Hazelcast.Tests.Networking
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
             await server.StartAsync();
 
-            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 
@@ -482,7 +482,7 @@ namespace Hazelcast.Tests.Networking
             private readonly Stream _stream;
 
             public TestSocketConnection(Stream stream, int prefixLength = 0)
-                : base(0, prefixLength)
+                : base(Guid.NewGuid(), prefixLength)
             {
                 _stream = stream;
             }

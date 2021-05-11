@@ -31,7 +31,7 @@ namespace Hazelcast.Testing.TestServer
     internal class Server : IAsyncDisposable
     {
         private readonly object _openLock = new object();
-        private readonly ConcurrentDictionary<int, ServerSocketConnection> _connections = new ConcurrentDictionary<int, ServerSocketConnection>();
+        private readonly ConcurrentDictionary<Guid, ServerSocketConnection> _connections = new ConcurrentDictionary<Guid, ServerSocketConnection>();
         private readonly Func<Server, ClientMessageConnection, ClientMessage, ValueTask> _handler;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IPEndPoint _endpoint;
@@ -61,8 +61,7 @@ namespace Hazelcast.Testing.TestServer
             ClusterId = Guid.NewGuid();
             MemberId = Guid.NewGuid();
 
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(20).SetPrefix("SERVER".Dot(_hcname))));
+            HConsole.Configure(x => x.Configure(this).SetIndent(20).SetPrefix("SERVER".Dot(_hcname)));
         }
 
         /// <summary>
@@ -157,8 +156,7 @@ namespace Hazelcast.Testing.TestServer
                 if (!_open) throw new InvalidOperationException("Cannot accept connections (closed).");
 
                 var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-                HConsole.Configure(x => x
-                    .Set(messageConnection, xx => xx.SetIndent(28).SetPrefix("MSG.SERVER".Dot(_hcname))));
+                HConsole.Configure(x => x.Configure(messageConnection).SetIndent(28).SetPrefix("SVR.MSG".Dot(_hcname)));
                 serverConnection.OnShutdown = SocketShutdown;
                 serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
                 serverConnection.Accept();

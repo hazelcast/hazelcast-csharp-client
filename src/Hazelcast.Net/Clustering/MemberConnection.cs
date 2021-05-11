@@ -49,7 +49,6 @@ namespace Hazelcast.Clustering
         private readonly MessagingOptions _messagingOptions;
         private readonly NetworkingOptions _networkingOptions;
         private readonly SslOptions _sslOptions;
-        private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
@@ -73,27 +72,20 @@ namespace Hazelcast.Clustering
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="networkingOptions">Networking options.</param>
         /// <param name="sslOptions">SSL options.</param>
-        /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        /// <remarks>
-        /// <para>The <paramref name="connectionIdSequence"/> parameter can be used to supply a
-        /// sequence of unique connection identifiers. This can be convenient for tests, where
-        /// using unique identifiers across all clients can simplify debugging.</para>
-        /// </remarks>
-        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
-            _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("CLIENT")));
+            HConsole.Configure(x => x.Configure<MemberConnection>().SetIndent(4).SetPrefix("MBR.CONN"));
         }
 
         #region Events
@@ -182,13 +174,13 @@ namespace Hazelcast.Clustering
             // MessageConnection is just a wrapper around a true SocketConnection, and
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _networkingOptions, _sslOptions, _loggerFactory)
+            _socketConnection = new ClientSocketConnection(Id, Address.IPEndPoint, _networkingOptions, _sslOptions, _loggerFactory)
                 { OnShutdown = OnSocketShutdown };
 
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory)
                 { OnReceiveMessage = ReceiveMessage };
 
-            HConsole.Configure(x => x.Set(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]")));
+            HConsole.Configure(x => x.Configure(_messageConnection).SetIndent(8).SetPrefix($"CLT.MSG [{Id.ToShortString()}]"));
 
             AuthenticationResult result;
             try
@@ -253,16 +245,16 @@ namespace Hazelcast.Clustering
             
             if (message.IsEvent)
             {
-                HConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
-                                         HConsole.Lines(this, 1, message.Dump()));
+                HConsole.WriteLine(this, $"Receive event {Id.ToShortString()}:{message.CorrelationId}" +
+                                         HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
                 ReceiveEvent(message); // should not throw
                 return;
             }
 
             if (message.IsBackupEvent)
             {
-                HConsole.WriteLine(this, $"Receive backup event [{message.CorrelationId}]" +
-                                         HConsole.Lines(this, 1, message.Dump()));
+                HConsole.WriteLine(this, $"Receive backup event {Id.ToShortString()}:{message.CorrelationId}" +
+                                         HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
 
                 // backup events are not supported
                 _logger.LogWarning("Ignoring unsupported backup event.");
@@ -270,16 +262,16 @@ namespace Hazelcast.Clustering
             }
 
             // message has to be a response
-            HConsole.WriteLine(this, $"Receive response [{message.CorrelationId}]" +
-                                     HConsole.Lines(this, 1, message.Dump()));
+            HConsole.WriteLine(this, $"Receive response {Id.ToShortString()}:{message.CorrelationId} from {MemberId.ToShortString()} at {Address}" +
+                                     HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
 
             // find the corresponding invocation
             // and remove invocation
             if (!_invocations.TryRemove(message.CorrelationId, out var invocation))
             {
                 // orphan messages are ignored (but logged)
-                _logger.LogWarning($"Received message for unknown invocation [{message.CorrelationId}].");
-                HConsole.WriteLine(this, $"Unknown invocation [{message.CorrelationId}]");
+                _logger.LogWarning($"Received message for unknown invocation {Id.ToShortString()}:{message.CorrelationId}.");
+                HConsole.WriteLine(this, $"Unknown invocation {Id.ToShortString()}:{message.CorrelationId}");
                 return;
             }
 
@@ -295,7 +287,7 @@ namespace Hazelcast.Clustering
         {
             try
             {
-                HConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
+                HConsole.WriteLine(this, $"Raise event {Id.ToShortString()}:{message.CorrelationId}");
                 _receivedEvent(message);
             }
             catch (Exception e)
@@ -303,7 +295,7 @@ namespace Hazelcast.Clustering
                 // _onReceiveEventMessage should just queue the event and not fail - if it fails
                 // then some nasty internal error is happening - log, at least, make some noise
 
-                _logger.LogWarning(e, $"Failed to raise event [{message.CorrelationId}].");
+                _logger.LogWarning(e, $"Failed to raise event {Id.ToShortString()}:{message.CorrelationId}.");
             }
         }
 
@@ -320,14 +312,14 @@ namespace Hazelcast.Clustering
                 exception = e;
             }
 
-            HConsole.WriteLine(this, $"Fail invocation [{message.CorrelationId}] with exception.");
+            HConsole.WriteLine(this, $"Fail invocation {Id.ToShortString()}:{message.CorrelationId}");
             invocation.TrySetException(exception);
         }
 
         // ReceiveMessage -> response message
         private void ReceiveResponse(Invocation invocation, ClientMessage message)
         {
-            HConsole.WriteLine(this, $"Complete invocation [{message.CorrelationId}] with response.");
+            HConsole.WriteLine(this, $"Complete invocation {Id.ToShortString()}:{message.CorrelationId}");
 
             // returns immediately, releases the invocation task
             invocation.TrySetResult(message);
@@ -387,8 +379,8 @@ namespace Hazelcast.Clustering
                 _invocations[invocation.CorrelationId] = invocation;
             }
 
-            HConsole.WriteLine(this, $"Send message [{invocation.CorrelationId}]" +
-                                     HConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
+            HConsole.WriteLine(this, $"Send message {Id.ToShortString()}:{invocation.CorrelationId} to {MemberId.ToShortString()} at {Address}" +
+                                     HConsole.Lines(this, 1, invocation.RequestMessage.Dump(HConsole.Level(this))));
 
             // actually send the message
             bool success;
@@ -430,12 +422,12 @@ namespace Hazelcast.Clustering
                 using var reg = cancellationToken.Register(invocation.TrySetCanceled);
 
                 var response = await invocation.Task.CfAwait();
-                HConsole.WriteLine(this, "Received response.");
+                HConsole.WriteLine(this, "Received response");
                 return response;
             }
             catch (Exception e)
             {
-                HConsole.WriteLine(this, $"Failed ({e}).");
+                HConsole.WriteLine(this, $"Failed ({e})");
                 _invocations.TryRemove(invocation.CorrelationId, out _);
                 throw;
             }

@@ -32,8 +32,8 @@ namespace Hazelcast.Testing.Logging
         {
             _options = options ?? new TestingLoggerOptions();
 
-#if HZ_CONSOLE && HZ_INTERNALS
-            HConsole.Configure(consoleOptions => consoleOptions.Set(this, x => x.SetPrefix("LOG")));
+#if HZ_CONSOLE
+            HConsole.Configure(x => x.Configure<HConsoleLoggerProvider>().SetPrefix("LOG"));
 #endif
         }
 
@@ -45,7 +45,7 @@ namespace Hazelcast.Testing.Logging
 
         public void WriteLog(LogMessageEntry entry)
         {
-#if HZ_CONSOLE && HZ_INTERNALS
+#if HZ_CONSOLE
             HConsole.WriteLine(this, $"{entry.TimeStamp}{entry.LevelString}{entry.Message.TrimEnd('\r', '\n')}");
 #endif
         }

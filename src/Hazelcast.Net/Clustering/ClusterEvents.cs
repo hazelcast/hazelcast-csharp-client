@@ -98,7 +98,7 @@ namespace Hazelcast.Clustering
                 PartitionLost = args => _partitionLost.AwaitEach(args)
             };
 
-            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("EVENTS")));
+            HConsole.Configure(x => x.Configure<ClusterEvents>().SetPrefix("CLUST.EVTS"));
         }
 
         /// <summary>
@@ -537,7 +537,7 @@ namespace Hazelcast.Clustering
         private async Task<bool> SubscribeToClusterViewsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
-            HConsole.WriteLine(this, "Subscribe to cluster views");
+            HConsole.TraceLine(this, "subscribe");
 
             // handles the event
             ValueTask HandleEventAsync(ClientMessage message, object _)

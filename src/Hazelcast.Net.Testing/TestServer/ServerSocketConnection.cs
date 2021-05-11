@@ -37,14 +37,13 @@ namespace Hazelcast.Testing.TestServer
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="socket">The underlying network socket.</param>
         /// <param name="hcname">An HConsole name complement.</param>
-        public ServerSocketConnection(int id, Socket socket, string hcname)
+        public ServerSocketConnection(Guid id, Socket socket, string hcname)
             : base(id)
         {
             _acceptingSocket = socket ?? throw new ArgumentNullException(nameof(socket));
 
-            var prefix = "CONN.SERVER".Dot(hcname);
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(32).SetPrefix($"{prefix} [{id}]")));
+            var prefix = "SVR.CONN".Dot(hcname);
+            HConsole.Configure(x => x.Configure(this).SetIndent(32).SetPrefix($"{prefix} [{id}]"));
         }
 
         /// <summary>
@@ -52,7 +51,7 @@ namespace Hazelcast.Testing.TestServer
         /// </summary>
         /// <param name="id">The unique identifier of the connection.</param>
         /// <param name="socket">The underlying network socket.</param>
-        public ServerSocketConnection(int id, Socket socket)
+        public ServerSocketConnection(Guid id, Socket socket)
             : this(id, socket, string.Empty)
         { }
 

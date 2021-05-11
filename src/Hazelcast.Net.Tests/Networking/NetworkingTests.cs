@@ -159,7 +159,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
+            HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -241,7 +241,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
+            HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -293,10 +293,10 @@ namespace Hazelcast.Tests.Networking
 
             using var _ = HConsole.Capture(consoleOptions => consoleOptions
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<AsyncContext>(x => x.Quiet())
-                .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
             HConsole.WriteLine(this, "Begin");
 
@@ -355,7 +355,7 @@ namespace Hazelcast.Tests.Networking
 
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
+            HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -409,7 +409,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11000");
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
+            HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -450,7 +450,7 @@ namespace Hazelcast.Tests.Networking
         {
             // this test expects a server
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(0).SetPrefix("TEST")));
+            HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Cluster?");

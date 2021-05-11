@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Extensions.Logging;
 #if HZ_CONSOLE
 using System.Globalization;
 #endif
@@ -123,6 +124,11 @@ namespace Hazelcast.Core
         /// Configures.
         /// </summary>
         /// <param name="configure">An action to configure the options.</param>
+        /// <remarks>
+        /// <para>We HAVE to have this method wrapping an Action so that we can mark it Conditional. If
+        /// we were to implement direct fluent configuration eg HConsole.Configure().SetLevel(...) that
+        /// top-level Configure method could not be marked Conditional because it returns a value.</para>
+        /// </remarks>
         [Conditional("HZ_CONSOLE")]
         public static void Configure(Action<HConsoleOptions> configure)
         {
@@ -195,7 +201,7 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.Get(source);
+            var config = Options.GetOptions(source);
             if (config.Ignore(level)) return;
             lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + text);
 #endif
@@ -212,7 +218,7 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.Get(source);
+            var config = Options.GetOptions(source);
             if (config.Ignore(level)) return;
             lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + text + "\n" + Environment.StackTrace);
 #endif
@@ -244,7 +250,7 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.Get(source);
+            var config = Options.GetOptions(source);
             if (config.Ignore(level)) return;
             lock (TextBuilderLock) TextBuilder.AppendFormat(CultureInfo.InvariantCulture, config.FormattedPrefix + format + Environment.NewLine, args);
 #endif
@@ -274,7 +280,7 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.Get(source);
+            var config = Options.GetOptions(source);
             if (config.Ignore(level)) return;
             lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + o);
 #endif
@@ -291,13 +297,29 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (source == null) throw new ArgumentNullException(nameof(source));
-            var info = Options.Get(source);
+            var info = Options.GetOptions(source);
             if (info.Ignore(level)) return "";
             var prefix = new string(' ', info.FormattedPrefix.Length);
             text = "\n" + text;
             return text.Replace("\n", "\n" + prefix, StringComparison.Ordinal);
 #else
             return "";
+#endif
+        }
+
+        /// <summary>
+        /// Gets the level of a source object.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        /// <returns>The level for the source object.</returns>
+        public static int Level(object source)
+        {
+#if HZ_CONSOLE
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var info = Options.GetOptions(source);
+            return info.Level;
+#else
+            return 0;
 #endif
         }
     }

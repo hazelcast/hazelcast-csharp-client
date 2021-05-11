@@ -37,50 +37,50 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ConfigureToString()
         {
-            HConsole.Configure(x => x.Set<object>(xx => xx
+            HConsole.Configure(x => x.Configure<object>()
                 .SetIndent(4)
-                .SetLevel(3)));
+                .SetLevel(3));
 
             var o = new object();
 
-            HConsole.Configure(x => x.Set(o, xx => xx
+            HConsole.Configure(x => x.Configure(o)
                 .SetPrefix("XX")
-                .SetLevel(4)));
+                .SetLevel(4));
 
-            Assert.That(HConsole.Options.Get(o).ToString(), Is.EqualTo("indent = 4, prefix = \"XX\", level = 4"));
+            Assert.That(HConsole.Options.GetOptions(o).ToString(), Is.EqualTo("indent = 4, prefix = \"XX\", level = 4"));
         }
 
         [Test]
         public void Configure()
         {
-            HConsole.Configure(x => x.Set<object>(xx => xx
+            HConsole.Configure(x => x.Configure<object>()
                 .SetIndent(4)
                 .SetPrefix("XX")
-                .SetLevel(3)));
+                .SetLevel(3));
 
-            var config = HConsole.Options.Get(new object());
+            var config = HConsole.Options.GetOptions(new object());
 
             Assert.That(config.Prefix, Is.EqualTo("XX"));
             Assert.That(config.Indent, Is.EqualTo(4));
             Assert.That(config.Level, Is.EqualTo(3));
 
-            HConsole.Configure(x => x.Set(xx => xx
+            HConsole.Configure(x => x.Configure()
                 .SetIndent(33)
                 .SetPrefix("YY")
-                .SetLevel(44)));
+                .SetLevel(44));
 
-            config = HConsole.Options.Get(new object());
+            config = HConsole.Options.GetOptions(new object());
 
             Assert.That(config.Prefix, Is.EqualTo("YY"));
             Assert.That(config.Indent, Is.EqualTo(33));
             Assert.That(config.Level, Is.EqualTo(44));
 
-            HConsole.Configure(x => x.Set<object>(xx => xx
+            HConsole.Configure(x => x.Configure<object>()
                 .ClearIndent()
                 .ClearPrefix()
-                .ClearLevel()));
+                .ClearLevel());
 
-            config = HConsole.Options.Get(new object());
+            config = HConsole.Options.GetOptions(new object());
 
             Assert.That(config.Prefix, Is.Null);
             Assert.That(config.Indent, Is.EqualTo(0));
@@ -90,12 +90,12 @@ namespace Hazelcast.Tests.Core
 
             var o = new object();
 
-            HConsole.Configure(x => x.Set(o, xx => xx
+            HConsole.Configure(x => x.Configure(o)
                 .SetIndent(4)
                 .SetPrefix("XX")
-                .SetLevel(3)));
+                .SetLevel(3));
 
-            config = HConsole.Options.Get(o);
+            config = HConsole.Options.GetOptions(o);
 
             Assert.That(config.Prefix, Is.EqualTo("XX"));
             Assert.That(config.Indent, Is.EqualTo(4));
@@ -103,35 +103,35 @@ namespace Hazelcast.Tests.Core
 
             HConsole.Configure(x => x.Clear(o));
 
-            config = HConsole.Options.Get(o);
+            config = HConsole.Options.GetOptions(o);
 
             Assert.That(config.Prefix, Is.Null);
             Assert.That(config.Indent, Is.EqualTo(0));
             Assert.That(config.Level, Is.EqualTo(-1));
 
             HConsole.Reset();
-            config = HConsole.Options.Get(new object());
+            config = HConsole.Options.GetOptions(new object());
 
             Assert.That(config.Prefix, Is.Null);
             Assert.That(config.Indent, Is.EqualTo(0));
             Assert.That(config.Level, Is.EqualTo(-1));
 
-            HConsole.Configure(x => x.Set(xx => xx.Verbose()));
-            config = HConsole.Options.Get(new object());
+            HConsole.Configure(x => x.Configure().SetMaxLevel());
+            config = HConsole.Options.GetOptions(new object());
             Assert.That(config.Level, Is.EqualTo(int.MaxValue));
 
-            HConsole.Configure(x => x.Set(xx => xx.Quiet()));
-            config = HConsole.Options.Get(new object());
+            HConsole.Configure(x => x.Configure().SetMinLevel());
+            config = HConsole.Options.GetOptions(new object());
             Assert.That(config.Level, Is.EqualTo(-1));
         }
 
         [Test]
         public void MergeConfiguration()
         {
-            var config1 = new HConsoleTargetOptions()
+            var config1 = new HConsoleTargetOptions(null)
                 .SetIndent(3);
 
-            var config2 = new HConsoleTargetOptions()
+            var config2 = new HConsoleTargetOptions(null)
                 .SetPrefix("XX");
 
             var merged = config1.Merge(config2);
@@ -151,10 +151,6 @@ namespace Hazelcast.Tests.Core
             Assert.Throws<ArgumentNullException>(() => HConsole.WriteLine(null, 0, "{0}", 0));
             Assert.Throws<ArgumentNullException>(() => HConsole.WriteLine(null, 0, 1));
 
-            Assert.Throws<ArgumentNullException>(() => HConsole.Configure(null));
-            Assert.Throws<ArgumentNullException>(() => HConsole.Configure(x => x.Set(new object(), null)));
-            Assert.Throws<ArgumentNullException>(() => HConsole.Configure(x => x.Set<object>(null)));
-
             Assert.Throws<ArgumentNullException>(() => HConsole.Lines(null, 0, ""));
         }
 
@@ -162,7 +158,7 @@ namespace Hazelcast.Tests.Core
         public void Lines()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
+            HConsole.Configure(x => x.Configure(o).SetLevel(0));
 
             const string source = @"aaa
 bbb
@@ -175,7 +171,7 @@ ccc";
        bbb
        ccc".ToLf()));
 
-            HConsole.Configure(x => x.Set<object>(xx => xx.SetPrefix("XX")));
+            HConsole.Configure(x => x.Configure<object>().SetPrefix("XX"));
 
             Assert.That(HConsole.Lines(o, 0, source).ToLf(), Is.EqualTo($@"
          aaa
@@ -186,10 +182,10 @@ ccc";
         [Test]
         public void WritesWithPrefix()
         {
-            HConsole.Configure(x => x.Set<object>(xx => xx.SetPrefix("XX")));
+            HConsole.Configure(x => x.Configure<object>().SetPrefix("XX"));
 
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
+            HConsole.Configure(x => x.Configure(o).SetLevel(0));
 
             HConsole.WriteLine(o, "text0");
 
@@ -200,7 +196,7 @@ ccc";
         public void WritesOverloads()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
+            HConsole.Configure(x => x.Configure(o).SetLevel(0));
 
             HConsole.WriteLine(o, "text0");
             HConsole.WriteLine(o, 0, "text1");
@@ -237,7 +233,7 @@ ccc";
         public void WritesLevelZeroIfConfigured()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(0)));
+            HConsole.Configure(x => x.Configure(o).SetLevel(0));
 
             HConsole.WriteLine(o, "text0"); // default level is 0
             HConsole.WriteLine(o, 1, "text1");
@@ -249,7 +245,7 @@ ccc";
         public void WritesOtherLevelsIfConfigured()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(1)));
+            HConsole.Configure(x => x.Configure(o).SetLevel(1));
 
             HConsole.WriteLine(o, "text0"); // default level is 0
             HConsole.WriteLine(o, 1, "text1");
@@ -261,7 +257,7 @@ ccc";
         public void CanResetConfiguration()
         {
             var o = new object();
-            HConsole.Configure(x => x.Set(o, xx => xx.SetLevel(1)));
+            HConsole.Configure(x => x.Configure(o).SetLevel(1));
 
             HConsole.WriteLine(o, 1, "text1");
 
@@ -285,7 +281,7 @@ ccc";
             HConsole.WriteAndClear();
             Assert.That(HConsole.Text.Length, Is.Zero);
 
-            HConsole.Configure(x => x.Set(xx => xx.Verbose()));
+            HConsole.Configure(x => x.Configure().SetMaxLevel());
             HConsole.WriteLine(this, "meh");
             Assert.That(HConsole.Text.Length, Is.GreaterThan(0));
 
