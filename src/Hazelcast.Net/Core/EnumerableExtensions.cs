@@ -30,7 +30,7 @@ namespace Hazelcast.Core
         /// <param name="source">The original enumerable.</param>
         /// <returns>The original enumerable items, in random order.</returns>
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
-            => source.OrderBy(x => RandomProvider.Random.Next());
+            => source.OrderBy(x => RandomProvider.Next());
 
         /// <summary>
         /// Combine multiple <see cref="IEnumerable{T}"/> instances.

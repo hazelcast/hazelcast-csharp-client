@@ -22,7 +22,7 @@ namespace Hazelcast.Query
     /// </summary>
     public class PredicateBuilder
     {
-        protected readonly string _name;
+        private readonly string _name;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PredicateBuilder"/> class.

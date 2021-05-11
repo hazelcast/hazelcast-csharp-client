@@ -36,7 +36,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         {
             var members = Members;
             if (members == null || members.Count == 0) return default;
-            return members[RandomProvider.Random.Next(members.Count)];
+            return members[RandomProvider.Next(members.Count)];
         }
     }
 }

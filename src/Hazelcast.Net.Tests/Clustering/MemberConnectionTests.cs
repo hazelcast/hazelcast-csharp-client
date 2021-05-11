@@ -105,8 +105,6 @@ namespace Hazelcast.Tests.Clustering
             // send async without a timeout uses the timeout in messagingOptions.RetryTimeoutSeconds
             // in order to determine whether to retry again and again
 
-            var token = new CancellationToken();
-
             var message = ClientPingServerCodec.EncodeRequest();
 
             // SendAsync prepares the message

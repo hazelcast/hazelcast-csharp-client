@@ -238,7 +238,7 @@ namespace Hazelcast.Core
         {
             if (timeoutMilliseconds < 0)
             {
-                await task;
+                await task.ConfigureAwait(false);
                 return;
             }
 
@@ -277,7 +277,7 @@ namespace Hazelcast.Core
         {
             if (timeoutMilliseconds < 0)
             {
-                return await task;
+                return await task.ConfigureAwait(false);
             }
 
             using var delayCancel = new CancellationTokenSource();
@@ -317,8 +317,10 @@ namespace Hazelcast.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ObserveException([NotNull] this Task task)
 #pragma warning disable CS4014 // Because this call is not awaited...
+#pragma warning disable CA2012 // Use ValueTasks correctly - no we don't
             => ObserveExceptionInternal(task);
 #pragma warning restore CS4014
+#pragma warning restore CA2012
 
         // this indirect method will end up inlined, and exists only to
         // prevent CS4014 to pop on the code calling ObserveException

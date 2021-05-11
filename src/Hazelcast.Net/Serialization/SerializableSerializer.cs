@@ -17,6 +17,17 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Hazelcast.Serialization
 {
+    // note
+    //
+    // "The BinaryFormatter type is dangerous and is not recommended for data processing. Applications
+    // should stop using BinaryFormatter as soon as possible, even if they believe the data they're
+    // processing to be trustworthy. BinaryFormatter is insecure and can't be made secure."
+    //
+    // see: https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2300
+    // see: https://docs.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide
+    //
+    // TODO: replace BinaryFormatter with something else (breaking?)
+
     /// <summary>
     /// Serialize using default .NET serialization
     /// </summary>
@@ -28,7 +39,11 @@ namespace Hazelcast.Serialization
         {
             var formatter = new BinaryFormatter();
             using var stream = new MemoryStream(input.ReadByteArray());
+#pragma warning disable CA2300 // Do not use insecure deserializer BinaryFormatter - see note above
+#pragma warning disable CA2301
             return formatter.Deserialize(stream);
+#pragma warning restore CA2300
+#pragma warning restore CA2301
         }
 
         public override void Write(IObjectDataOutput output, object obj)

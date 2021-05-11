@@ -17,7 +17,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Authentication;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using ExpectedObjects;
 using Hazelcast.Clustering;
@@ -41,9 +40,8 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void BuildExceptions()
         {
-            Action<IConfigurationBuilder> setup = null;
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(setup));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(setup, null, "key"));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>) null));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, "key"));
         }
 
         [Test]
@@ -104,7 +102,7 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
-        public async Task HazelcastOptionsRoot()
+        public void HazelcastOptionsRoot()
         {
             var options = ReadResource(Resources.HazelcastOptions);
 
@@ -183,8 +181,15 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
             Console.WriteLine(sslOptions.ToString());
 
+#if NETCOREAPP
+#pragma warning disable CS0618 // Type or member is obsolete
+#endif
+            // testing obsolete Ssl2, Default protocols
             Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Ssl2);
             Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Default);
+#if NETCOREAPP
+#pragma warning restore CS0618
+#endif
 
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Hazelcast.Clustering;
 using Hazelcast.Models;
 
 namespace Hazelcast.Events

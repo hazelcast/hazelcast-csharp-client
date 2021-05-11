@@ -38,7 +38,9 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
             foreach (var item in collection)
             {
+#pragma warning disable CA1508 // Avoid dead conditional code - false positive, yes it can be null
                 if (item == null)
+#pragma warning restore CA1508
                 {
                     clientMessage.Append(Frame.CreateNull());
                 }

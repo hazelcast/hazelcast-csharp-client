@@ -35,6 +35,7 @@ namespace Hazelcast.Core
         private static readonly object GlobalLock = new object();
         private static readonly ThreadLocal<Random> ThreadRandom = new ThreadLocal<Random>(NewRandom);
 
+
         /// <summary>
         /// Creates a new random for a thread.
         /// </summary>
@@ -43,7 +44,9 @@ namespace Hazelcast.Core
         {
             // use GlobalRandom to get a random seed, using GlobalLock
             // because the Random class is not thread safe
+#pragma warning disable CA5394 // Do not use insecure randomness
             lock (GlobalLock) return new Random(GlobalRandom.Next());
+#pragma warning restore CA5394
         }
 
         /// <summary>
@@ -55,5 +58,56 @@ namespace Hazelcast.Core
         /// retrieve it each time it is required.</para>
         /// </remarks>
         public static Random Random => ThreadRandom.Value;
+
+        /// <summary>
+        /// Returns a non-negative random integer number (thread-safe, not appropriate for security purposes).
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is greater than or equal to 0 and less than <see cref="int.MaxValue"/>.</returns>
+        /// <remarks>
+        /// <para>Using this method will not trigger a CA5394 "Do not use insecure randomness" warning,
+        /// yet this method should NOT be used for anything related to security.</para>
+        /// </remarks>
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next() => Random.Next();
+#pragma warning restore CA5394
+
+        /// <summary>
+        /// Returns a non-negative random integer number that is less than the specified maximum (thread-safe, not appropriate for security purposes).
+        /// </summary>
+        /// <param name="maxValue">The exclusive upper bound of the random number to be generated.</param>
+        /// <returns>A 32-bit signed integer that is greater than or equal to 0 and less than <paramref name="maxValue"/>.</returns>
+        /// <remarks>
+        /// <para>Using this method will not trigger a CA5394 "Do not use insecure randomness" warning,
+        /// yet this method should NOT be used for anything related to security.</para>
+        /// </remarks>
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next(int maxValue) => Random.Next(maxValue);
+#pragma warning restore CA5394
+
+        /// <summary>
+        /// Returns a non-negative random integer number that is within the specified range (thread-safe, not appropriate for security purposes).
+        /// </summary>
+        /// <param name="minValue">The non-negative, inclusive lower bound of the random number to be generated.</param>
+        /// <param name="maxValue">The exclusive upper bound of the random number to be generated.</param>
+        /// <returns>A 32-bit signed integer that is greater than or equal to <paramref name="minValue"/> and less than <paramref name="maxValue"/>.</returns>
+        /// <remarks>
+        /// <para>Using this method will not trigger a CA5394 "Do not use insecure randomness" warning,
+        /// yet this method should NOT be used for anything related to security.</para>
+        /// </remarks>
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next(int minValue, int maxValue) => Random.Next(minValue, maxValue);
+#pragma warning restore CA5394
+
+        /// <summary>
+        /// Returns a random floating-point number that is greater than or equal to 0.0, and less than 1.0 (thread-safe, not appropriate for security purposes).
+        /// </summary>
+        /// <returns>A double-precision floating-point number that is greater than or equal to 0.0, and less than 1.0.</returns>
+        /// <remarks>
+        /// <para>Using this method will not trigger a CA5394 "Do not use insecure randomness" warning,
+        /// yet this method should NOT be used for anything related to security.</para>
+        /// </remarks>
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static double NextDouble() => Random.NextDouble();
+#pragma warning restore CA5394
     }
 }

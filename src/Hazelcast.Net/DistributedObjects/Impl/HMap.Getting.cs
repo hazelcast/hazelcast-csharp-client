@@ -370,7 +370,14 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
-            => predicate as PagingPredicate ?? (predicate as PartitionPredicate)?.Target as PagingPredicate;
+        {
+            return predicate switch
+            {
+                PagingPredicate paging => paging,
+                PartitionPredicate partition => partition.Target as PagingPredicate,
+                _ => null
+            };
+        }
 
         public async IAsyncEnumerator<KeyValuePair<TKey, TValue>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
