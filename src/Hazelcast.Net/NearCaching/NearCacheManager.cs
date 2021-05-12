@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
+using Hazelcast.Metrics;
 using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -31,7 +32,7 @@ namespace Hazelcast.NearCaching
     // this is 'above' the cluster, not part of it, but it uses the cluster
     // = can have a ref to the cluster?
 
-    internal class NearCacheManager : IAsyncEnumerable<NearCache>, IAsyncDisposable
+    internal class NearCacheManager : IAsyncEnumerable<NearCache>, IAsyncDisposable, IMetricAsyncSource
     {
         private readonly ILogger _logger;
 
@@ -256,6 +257,14 @@ namespace Hazelcast.NearCaching
         public async IAsyncEnumerator<NearCache> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
         {
             await foreach (var entry in _caches) yield return entry.Value;
+        }
+
+        /// <inheritdoc />
+        public async IAsyncEnumerable<Metric> PublishMetrics()
+        {
+            await foreach (var cache in this)
+                foreach (var metric in cache.Statistics.PublishMetrics())
+                    yield return metric;
         }
 
         /// <inheritdoc />
