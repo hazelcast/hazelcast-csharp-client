@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering
         public TerminateConnections(ILoggerFactory loggerFactory)
         {
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
-            _logger = loggerFactory.CreateLogger<MemberConnectionQueue>();
+            _logger = loggerFactory.CreateLogger<TerminateConnections>();
 
             // start
             _terminating = TerminateAsync(_cancel.Token);
@@ -88,8 +88,6 @@ namespace Hazelcast.Clustering
             _cancel.Cancel();
             await _terminating.CfAwaitCanceled();
             _cancel.Dispose();
-
-            await _connections.DisposeAsync().CfAwait();
         }
     }
 }

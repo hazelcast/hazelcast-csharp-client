@@ -84,9 +84,9 @@ namespace Hazelcast.Tests.Networking
             options.Cloud.DiscoveryToken = "*****";
             Assert.That(options.Cloud.Enabled, Is.True);
 
-            options.Cloud.UrlBase = null;
+            options.Cloud.Url = null;
             Assert.Throws<ArgumentNullException>(() => _ = new AddressProvider(options, loggerFactory));
-            options.Cloud.UrlBase = new Uri("http://xxxxx");
+            options.Cloud.Url = new Uri("http://xxxxx");
 
             options.Addresses.Add("192.0.0.1:5701");
             Assert.Throws<ConfigurationException>(() => _ = new AddressProvider(options, loggerFactory));

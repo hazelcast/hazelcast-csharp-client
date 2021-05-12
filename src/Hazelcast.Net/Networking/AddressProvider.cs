@@ -18,6 +18,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Hazelcast.Configuration;
+using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Networking
@@ -52,7 +53,7 @@ namespace Hazelcast.Networking
 
                 // initialize cloud discovery
                 var token = cloudConfiguration.DiscoveryToken;
-                var urlBase = cloudConfiguration.UrlBase;
+                var urlBase = cloudConfiguration.Url;
                 var connectionTimeoutMilliseconds = networkingOptions.ConnectionTimeoutMilliseconds;
                 connectionTimeoutMilliseconds = connectionTimeoutMilliseconds == 0 ? int.MaxValue : connectionTimeoutMilliseconds;
                 var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, networkingOptions.DefaultPort, loggerFactory);
@@ -73,7 +74,8 @@ namespace Hazelcast.Networking
         /// <returns>All addresses.</returns>
         public IEnumerable<NetworkAddress> GetAddresses()
         {
-            return (_privateToPublic ??= _createMap()).Keys;
+            _privateToPublic ??= _createMap() ?? throw new HazelcastException("Failed to obtain an address map.");
+            return _privateToPublic.Keys;
         }
 
         /// <summary>
@@ -89,7 +91,8 @@ namespace Hazelcast.Networking
             var fresh = false;
             if (_privateToPublic == null)
             {
-                _privateToPublic = _createMap();
+                _privateToPublic = _createMap() ?? throw new HazelcastException("Failed to obtain an address map.");
+
                 fresh = true;
             }
 
@@ -101,6 +104,9 @@ namespace Hazelcast.Networking
             // TODO: throttle?
             if (fresh) return null;
             _privateToPublic = _createMap();
+
+            if (_privateToPublic == null)
+                throw new HazelcastException("Failed to obtain an address map.");
 
             return _privateToPublic.TryGetValue(address, out publicAddress) ? publicAddress : null;
         }

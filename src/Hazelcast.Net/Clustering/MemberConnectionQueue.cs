@@ -209,13 +209,13 @@ namespace Hazelcast.Clustering
         }
 
         /// <inheritdoc />
-        public async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             // note: DisposeAsync should not throw (CA1065)
 
             lock (_mutex)
             {
-                if (_disposed) return;
+                if (_disposed) return default;
                 _disposed = true;
             }
 
@@ -231,7 +231,7 @@ namespace Hazelcast.Clustering
             _resume.Dispose();
             _enumerate.Dispose();
 
-            await _members.DisposeAsync().CfAwait();
+            return default;
         }
     }
 }
