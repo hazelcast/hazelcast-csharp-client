@@ -459,20 +459,18 @@ namespace Hazelcast.Clustering
                 _active = false;
             }
 
-            if (!active) // immutable since _disposed is true
-                return; // ConnectAsync will deal with the situation
-
-            // if we were connected, we need to trigger the closed event
-            // and we might have pending invocations that we need to fail
-            
             try
             {
-                await _closed.AwaitEach(this).CfAwait(); // may throw, never knows
+                // if we were connected, we need to trigger the closed event
+                if (active) await _closed.AwaitEach(this).CfAwait(); // may throw, never knows
             }
             catch (Exception e)
             {
                 _logger.LogWarning(e, "Caught an exception while raising Closed.");
             }
+
+            // if if we were not yet active / connected, we might have ONE invocation
+            // pending: the authentication one - it is important to abort it too
 
             // capture all invocations, _disposed is true so no new invocation can be
             // accepted, and if one invocation completes, TrySetException will just do
@@ -480,6 +478,9 @@ namespace Hazelcast.Clustering
             var invocations = _invocations.Values;
             foreach (var invocation in invocations)
                 invocation.TrySetException(new TargetDisconnectedException()); // does not throw
+
+            // ConnectAsync would deal with the situation
+            if (!active) return;
 
             // then kill our inner connection
             await DisposeInnerConnectionAsync().CfAwait();
