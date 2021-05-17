@@ -69,8 +69,8 @@ namespace Hazelcast.Clustering
                 _timeout = timeout;
             }
 
-            _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout", 
-                _period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture), 
+            _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout",
+                _period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture),
                 _timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture));
 
             HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT")); // FIXME with client ID?
@@ -142,7 +142,7 @@ namespace Hazelcast.Clustering
 
             var now = DateTime.Now; // now, or utcNow, but *must* be same as what is used in socket connection base!
             const int maxTasks = 4; // max 4 at a time TODO: consider making it an option?
-            
+
             // run for each member
             var tasks = new List<Task>();
 
@@ -150,7 +150,7 @@ namespace Hazelcast.Clustering
             List<MemberConnection> connections;
             lock (_mutex) connections = new List<MemberConnection>(_connections);
             using var connectionsEnumerator = connections.Where(x => x.Active).GetEnumerator();
-            
+
             void StartCurrent()
             {
                 var connection = connectionsEnumerator.Current;

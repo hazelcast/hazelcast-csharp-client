@@ -99,7 +99,7 @@ namespace Hazelcast.Tests.Clustering
 
             // so far, so good
             // now, try something that will timeout
-            // 
+            //
             //
             // send async without a timeout uses the timeout in messagingOptions.RetryTimeoutSeconds
             // in order to determine whether to retry again and again

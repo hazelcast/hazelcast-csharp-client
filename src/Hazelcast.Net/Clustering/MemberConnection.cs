@@ -218,7 +218,7 @@ namespace Hazelcast.Clustering
             ClusterId = result.ClusterId;
             ConnectTime = DateTimeOffset.Now;
             Principal = result.Principal;
-            
+
             bool disposed;
             lock (_mutex)
             {
@@ -254,7 +254,7 @@ namespace Hazelcast.Clustering
         private void ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
             // proceed, regardless of _active, because why not?
-            
+
             if (message.IsEvent)
             {
                 HConsole.WriteLine(this, $"Receive event {Id.ToShortString()}:{message.CorrelationId}" +
@@ -414,10 +414,10 @@ namespace Hazelcast.Clustering
             {
                 _invocations.TryRemove(invocation.CorrelationId, out _);
                 HConsole.WriteLine(this, "Failed to send a message.");
-                
-                if (!_active) 
+
+                if (!_active)
                     throw new TargetDisconnectedException();
-                
+
                 // TODO: we need a better exception
                 throw new TargetUnreachableException(captured);
             }

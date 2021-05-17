@@ -26,7 +26,7 @@ namespace Hazelcast.Clustering
     internal class MemberTable
     {
         private readonly Dictionary<Guid, MemberInfo> _members;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberTable"/> class.
         /// </summary>

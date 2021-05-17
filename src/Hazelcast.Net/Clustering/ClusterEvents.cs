@@ -172,11 +172,11 @@ namespace Hazelcast.Clustering
         //   - remove from server
         //     - fails because the connection is not active anymore = consider it a success
         //     - fails for any other reason = queue the member subscription for collection
-        //  
+        //
         // note: meanwhile, if a connection is
         // - added: it will not see the subscription, or see it de-activated
         // - removed: removing from server will be considered a success
-        //    
+        //
         //
         // when a connection is removed
         // - (mutex): capture _subscriptions subscriptions, remove the connection from _connections
@@ -292,7 +292,7 @@ namespace Hazelcast.Clustering
         private async Task AddSubscriptionsAsync(MemberConnection connection, IReadOnlyCollection<ClusterSubscription> subscriptions, CancellationToken cancellationToken)
         {
             // this is a background task and therefore should never throw!
-            
+
             foreach (var subscription in subscriptions)
             {
                 if (cancellationToken.IsCancellationRequested) return;
@@ -412,7 +412,7 @@ namespace Hazelcast.Clustering
         }
 
         #endregion
-        
+
         #region Cluster Views
 
         /// <summary>
@@ -427,7 +427,7 @@ namespace Hazelcast.Clustering
         private void ClearClusterViewsConnection(MemberConnection connection)
         {
             // note: we do not "unsubscribe" - if we come here, the connection is gone
-            
+
             lock (_clusterViewsMutex)
             {
                 // if the specified client is *not* the cluster events client, ignore
@@ -484,7 +484,7 @@ namespace Hazelcast.Clustering
             async ValueTask<MemberConnection> WaitRandomConnection2(CancellationToken token)
             {
                 MemberConnection c = null;
-                while (!token.IsCancellationRequested && 
+                while (!token.IsCancellationRequested &&
                        ((c = _clusterMembers.GetRandomConnection()) == null || !c.Active))
                 {
                     lock (_mutex) _connectionOpened = new TaskCompletionSource<object>();
@@ -813,7 +813,7 @@ namespace Hazelcast.Clustering
                 _connections.Remove(connection);
                 subscriptions = _subscriptions.Values.ToList();
             }
-            
+
             // just clear subscriptions,
             // cannot unsubscribes from the server since the client is not connected anymore
             ClearMemberSubscriptions(subscriptions, connection);
@@ -876,7 +876,7 @@ namespace Hazelcast.Clustering
                 _subscribeTasks = null;
             }
             await Task.WhenAll(tasks).CfAwait();
-                
+
             _cancel.Dispose();
 
             // connection is going down

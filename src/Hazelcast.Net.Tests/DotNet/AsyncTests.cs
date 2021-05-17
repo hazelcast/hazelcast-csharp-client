@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.DotNet
                 // thus forcing the await on that task to actually await asynchronously
                 await control.WaitAsync().CfAwait();
                 await Task.Delay(2000).CfAwait();
-                
+
                 steps.Add("task.complete");
                 taskCompletionSource.SetResult(42);
                 steps.Add("task.continue");
@@ -59,7 +59,7 @@ namespace Hazelcast.Tests.DotNet
                 // keep running for a while - on the same thread!
                 //await Task.Delay(200).CfAwait();
                 Thread.Sleep(200);
-                
+
                 steps.Add("task.end");
             });
 
@@ -71,9 +71,9 @@ namespace Hazelcast.Tests.DotNet
             // keep running for a while - on the same thread!
             //await Task.Delay(200).CfAwait();
             Thread.Sleep(200);
-            
+
             steps.Add("main.continue");
-            
+
             await Task.Yield();
             await task.CfAwait();
 
@@ -96,10 +96,10 @@ namespace Hazelcast.Tests.DotNet
                 steps.AssertOrder("task.continue", "main.resume"); // main.resume after task.continue since different thread
             else
                 steps.AssertOrder("main.resume", "task.continue"); // main.resume before task.continue since same thread
-            
+
             steps.AssertOrder("main.resume", "main.end");
         }
-        
+
         [Test]
         public async Task CompletionSourceTest()
         {
@@ -331,7 +331,7 @@ namespace Hazelcast.Tests.DotNet
 
                 return -1;
             }
-            
+
             public void AssertSameThread(string step1, string step2)
             {
                 var thread1 = GetThreadId(step1);
@@ -345,7 +345,7 @@ namespace Hazelcast.Tests.DotNet
                 var thread2 = GetThreadId(step2);
                 Assert.That(thread1, Is.Not.EqualTo(thread2), () => $"{step1} thread {thread1} == {step2} thread {thread2}");
             }
-            
+
             public void AssertOrder(string step1, string step2)
             {
                 var index1 = GetIndex(step1);

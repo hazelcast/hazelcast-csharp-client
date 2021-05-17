@@ -72,36 +72,36 @@ namespace Hazelcast
             // wire components
             WireComponents();
         }
-        
+
         private void WireComponents()
         {
             // assigning multi-cast handlers *must* use +=
 
             // when an object is created/destroyed, trigger the user-level events
-            Cluster.Events.ObjectCreated 
+            Cluster.Events.ObjectCreated
                 += Trigger<DistributedObjectCreatedEventHandler, DistributedObjectCreatedEventArgs>;
-            
-            Cluster.Events.ObjectDestroyed 
+
+            Cluster.Events.ObjectDestroyed
                 += Trigger<DistributedObjectDestroyedEventHandler, DistributedObjectDestroyedEventArgs>;
 
             // when client/cluster state changes, trigger user-level events
-            Cluster.State.StateChanged 
+            Cluster.State.StateChanged
                 += state => Trigger<StateChangedEventHandler, StateChangedEventArgs>(new StateChangedEventArgs(state));
 
             // when partitions are updated, trigger the user-level event
-            Cluster.Events.PartitionsUpdated 
+            Cluster.Events.PartitionsUpdated
                 += Trigger<PartitionsUpdatedEventHandler>;
 
             // when a partition is lost, trigger the user-level event
-            Cluster.Events.PartitionLost 
+            Cluster.Events.PartitionLost
                 += Trigger<PartitionLostEventHandler, PartitionLostEventArgs>;
 
             // when members are updated, trigger the user-level event
-            Cluster.Events.MembersUpdated 
+            Cluster.Events.MembersUpdated
                 += Trigger<MembersUpdatedEventHandler, MembersUpdatedEventArgs>;
 
             // when a connection is closed, trigger the user-level event
-            Cluster.Connections.ConnectionClosed 
+            Cluster.Connections.ConnectionClosed
                 += conn => Trigger<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(new ConnectionClosedEventArgs(conn));
 
             // when a connection is opened, DistributedObjects.OnConnectionOpened checks

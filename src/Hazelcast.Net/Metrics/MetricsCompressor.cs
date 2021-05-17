@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ namespace Hazelcast.Metrics
 
         // output streams for the blob containing the strings
         private MemoryStream _stringsBuffer;
-        private ZlibStream _stringsCompressStream; 
+        private ZlibStream _stringsCompressStream;
         private DataOutputStream _stringsOutput;
 
         // output streams for the blob containing the metrics
@@ -185,7 +185,7 @@ namespace Hazelcast.Metrics
             // "excluded targets" are not supported, hence always masked
             mask |= DescriptorMask.ExcludedTargets;
 
-            if (_lastDescriptor == null) 
+            if (_lastDescriptor == null)
                 return mask;
 
             if (descriptor.Prefix == _lastDescriptor.Prefix)
@@ -218,7 +218,7 @@ namespace Hazelcast.Metrics
             if (s == null)
                 return -1;
 
-            if (_strings.TryGetValue(s, out var id)) 
+            if (_strings.TryGetValue(s, out var id))
                 return id;
 
             id = _strings.Count;

@@ -207,7 +207,7 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public IEnumerator<MemberSubscription> GetEnumerator()
             // .Values captures values and can then be safely enumerated
-            => _memberSubscriptions.Values.GetEnumerator(); 
+            => _memberSubscriptions.Values.GetEnumerator();
 
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
