@@ -23,6 +23,7 @@ using Hazelcast.Metrics;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
+using Hazelcast.Testing.Configuration;
 using Hazelcast.Testing.Logging;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
@@ -241,15 +242,9 @@ namespace Hazelcast.Tests.Cloud
 
             => HConsole.Capture(options => options
                 .ClearAll()
-
-                //.Set<AsyncContext>(x => x.Quiet())
-                //.Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET"))
-
-                //.Set<MetricsCompressor>(x => x.Verbose())
-                
-                .Set<HConsoleLoggerProvider>(x => x.SetPrefix("LOG").Verbose())
-                .Set(x => x.Quiet().EnableTimeStamp(origin: DateTime.Now))
-                .Set(this, x => x.Verbose().SetPrefix("TEST"))
+                .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel()
+                .Configure().SetMinLevel().EnableTimeStamp(origin: DateTime.Now)
+                .Configure(this).SetMaxLevel().SetPrefix("TEST")
             );
     }
 
