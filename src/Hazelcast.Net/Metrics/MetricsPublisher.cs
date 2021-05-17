@@ -120,7 +120,7 @@ namespace Hazelcast.Metrics
                 if (cancellationToken.IsCancellationRequested) return;
 
                 // non-cancelable
-                _logger.LogDebug("Send stats:\n    " + text.Replace(",", ",\n    "));
+                _logger.LogDebug("Send stats:\n    " + text.Replace(",", ",\n    ", StringComparison.OrdinalIgnoreCase));
                 await SendMetricsAsync(timestamp, text, bytes).CfAwait();
             }
             catch (Exception e)

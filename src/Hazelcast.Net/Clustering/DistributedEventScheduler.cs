@@ -234,7 +234,7 @@ namespace Hazelcast.Clustering
             lock (_mutex)
             {
                 _disposed = true;
-                tasks = _queues.Values.Select(x => x.Task).ToArray();
+                tasks = _queues.Values.Select(x => x.Task).Where(x => x != null).ToArray();
             }
 
             await Task.WhenAll(tasks).CfAwait();
