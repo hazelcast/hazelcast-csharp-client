@@ -72,7 +72,7 @@ namespace Hazelcast.Clustering
         public Action ShutdownRequested
         {
             get => _shutdownRequested;
-            set 
+            set
             {
                 ThrowIfPropertiesAreReadOnly();
                 _shutdownRequested = value;
@@ -125,7 +125,7 @@ namespace Hazelcast.Clustering
         // NOTE: the initial ClientState is the default value, i.e. zero
         // we don't make it ClientState.Unknown because we don't want it
         // to be publicly visible, as this is a purely internal state
-        
+
         /// <summary>
         /// Gets the client state.
         /// </summary>
@@ -158,7 +158,7 @@ namespace Hazelcast.Clustering
         {
             lock (_mutex)
             {
-                if (ClientState != expectedState) 
+                if (ClientState != expectedState)
                     return false;
 
                 ClientState = newState;
@@ -309,7 +309,7 @@ namespace Hazelcast.Clustering
             try { state  = await wait.Task.CfAwait(); } catch {  state = 0; }
 
             reg.Dispose();
- 
+
             return state == ClientState.Connected;
         }
 
@@ -330,7 +330,7 @@ namespace Hazelcast.Clustering
                                 ClientState == ClientState.Started ||
                                 ClientState == ClientState.Connected ||
                                 ClientState == ClientState.Disconnected;
-        
+
         /// <summary>
         /// Throws a <see cref="ClientOfflineException"/> if the cluster is not active.
         /// </summary>

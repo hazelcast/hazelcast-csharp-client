@@ -74,7 +74,7 @@ namespace Hazelcast.Clustering
                 _connectMembers = ConnectMembers(_cancel.Token);
 
             _clusterState.StateChanged += OnStateChanged;
-            
+
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
         }
 
@@ -216,7 +216,7 @@ namespace Hazelcast.Clustering
             if (state != ClientState.Disconnected) return default;
 
             // and still disconnected - if the cluster is down or shutting down, give up
-            if (_clusterState.ClientState != ClientState.Disconnected) 
+            if (_clusterState.ClientState != ClientState.Disconnected)
             {
                 _logger.LogInformation("Disconnected (shutting down)");
                 return default;
@@ -375,7 +375,7 @@ namespace Hazelcast.Clustering
             // in any case, remove ourselves
             _reconnect = null;
         }
-        
+
         /// <summary>
         /// Gets the cluster addresses.
         /// </summary>
@@ -547,7 +547,7 @@ namespace Hazelcast.Clustering
         private async Task<Attempt<MemberConnection>> EnsureConnectionAsync(MemberInfo member, CancellationToken cancellationToken)
         {
             HConsole.WriteLine(this, $"Ensure {_clusterState.ClientName} is connected to {member.Id.ToShortString()} at {member.Address}");
-            
+
             // if we already have a client for that address, return the client
             // if it is active, or fail if it is not - cannot open yet another
             // client to that same address, we'll have to wait for the inactive
@@ -575,7 +575,7 @@ namespace Hazelcast.Clustering
 
 #pragma warning disable CA2000 // Dispose objects before losing scope - CA2000 does not understand CfAwait :(
                 return await ConnectAsync(member.Address, cancellationToken).CfAwait();
-#pragma warning restore CA2000 
+#pragma warning restore CA2000
             }
             catch (Exception e)
             {
@@ -607,7 +607,7 @@ namespace Hazelcast.Clustering
             await connection.DisposeAsync().CfAwait();
             throw new OperationCanceledException();
         }
-        
+
         /// <summary>
                  /// Opens a connection to an address.
                  /// </summary>
@@ -640,11 +640,11 @@ namespace Hazelcast.Clustering
             // report
             _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}"+
                                    " on connection {LocalAddress} -> {RemoteAddress} ({ConnectionId})" +
-                                   " to member {MemberId}" + 
+                                   " to member {MemberId}" +
                                    " of cluster '{ClusterName}' ({ClusterId}) running version {HazelcastServerVersion}.",
                 _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.Version,
                 connection.LocalEndPoint, result.MemberAddress, connection.Id.ToShortString(),
-                result.MemberId.ToShortString(), 
+                result.MemberId.ToShortString(),
                 _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);
 
             // notify partitioner
@@ -708,7 +708,7 @@ namespace Hazelcast.Clustering
             if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
             if (!connection.Active) await ThrowDisconnected(connection).CfAwait();
             if (!accepted) await ThrowRejected(connection).CfAwait();
-            
+
             // NOTE: connections are opened either by 'connect first' or by 'connect members' and
             // both ensure that one connection is opened after another - not concurrently - thus
             // making sure that there is no race condition here and the ConnectionOpened for the
@@ -717,7 +717,7 @@ namespace Hazelcast.Clustering
 
             // connection is opened
             await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
-            
+
             lock (_mutex)
             {
                 // there is always a completion, but we have to TryRemove from concurrent dictionaries

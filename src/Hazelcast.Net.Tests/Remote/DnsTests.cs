@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.Remote
             }, 4000, 500);
 
             await Task.Delay(1000);
-            
+
             // dns has been used
             Assert.That(altDns.Count, Is.GreaterThan(0));
 
@@ -97,7 +97,7 @@ namespace Hazelcast.Tests.Remote
             public IPAddress[] GetHostAddresses(string hostNameOrAddress)
             {
                 Count++;
-                
+
                 HConsole.TraceLine(this, $"GetHostAddresses {hostNameOrAddress} {Count}/{_failAt}");
 
                 if (Count == _failAt)

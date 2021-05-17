@@ -44,7 +44,7 @@ namespace Hazelcast.Events
         /// Gets the removed members.
         /// </summary>
         public IReadOnlyCollection<MemberInfo> RemovedMembers { get; }
-        
+
         /// <summary>
         /// Gets the complete, updated list of members.
         /// </summary>

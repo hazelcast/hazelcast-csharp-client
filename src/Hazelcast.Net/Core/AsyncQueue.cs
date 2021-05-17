@@ -143,7 +143,7 @@ namespace Hazelcast.Core
         // ---- IAsyncEnumerable ----
 
         /// <inheritdoc />
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) 
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
             => new AsyncEnumerator(this, cancellationToken);
 
         // ---- IAsyncEnumerator ----

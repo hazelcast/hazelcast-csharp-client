@@ -44,7 +44,7 @@ namespace Hazelcast.Testing
                         action();
                         break;
                     }
-                    catch (Exception e) 
+                    catch (Exception e)
                     {
                         // catch both AssertionException thrown by NUnit assertions,
                         // and exceptions thrown by the executing code

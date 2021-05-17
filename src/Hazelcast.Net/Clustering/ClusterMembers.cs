@@ -100,7 +100,7 @@ namespace Hazelcast.Clustering
                     _terminateConnections.Add(connection); // kill.kill.kill
                     return;
                 }
-                
+
                 // add the connection
                 _connections[connection.MemberId] = connection;
 
@@ -142,7 +142,7 @@ namespace Hazelcast.Clustering
             lock (_mutex)
             {
                 var contains = _connections.ContainsKey(connection.MemberId);
-                
+
                 // ignore unknown connection that were not added in the first place,
                 // or that have been replaced
                 if (!contains || _connections[connection.MemberId].Id != connection.Id)
@@ -293,16 +293,16 @@ namespace Hazelcast.Clustering
 
                         // dequeue the member
                         _memberConnectionQueue?.Remove(member.Id);
-                        
+
                         break;
 
                     case 2: // new but not old = added
                         HConsole.WriteLine(this, $"Added member {member.Id} at {member.Address}");
                         added.Add(member);
-                        
+
                         // queue the member for connection
                         _memberConnectionQueue?.Add(member);
-                        
+
                         break;
 
                     case 3: // old and new = no change
@@ -450,13 +450,13 @@ namespace Hazelcast.Clustering
                     // if the load balancer does not have members, break
                     if (memberId == Guid.Empty)
                         break;
-                    
+
                     // we cannot guarantee that the connection we'll return will not correspond to
                     // a member... that is not a member by the time it is used... but at least we
                     // can make sure it *still* is a member now
                     if (!_members.ContainsMember(memberId))
                         continue;
-                    
+
                     lock (_mutex)
                     {
                         if (_connections.TryGetValue(memberId, out connection))
@@ -516,8 +516,8 @@ namespace Hazelcast.Clustering
         /// <returns>Information about the specified member, or <c>null</c> if no member with the specified identifier was found.</returns>
         public MemberInfo GetMember(Guid memberId)
         {
-            return _members.TryGetMember(memberId, out var memberInfo) 
-                ? memberInfo 
+            return _members.TryGetMember(memberId, out var memberInfo)
+                ? memberInfo
                 : null;
         }
 

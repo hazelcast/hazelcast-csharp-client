@@ -289,7 +289,7 @@ namespace Hazelcast.Tests.Configuration
         public void Clone()
         {
             var options = ReadResource(Resources.HazelcastOptions);
-            
+
             // TODO: find a way to ensure that *everything* is non-default
 
             options.Networking.Addresses.Add("127.0.0.1:11001");

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -247,7 +247,7 @@ namespace Hazelcast.Serialization
                 var o = serializer.Read(input);
                 if (o is T ot) return ot;
 
-                if (o is null) 
+                if (o is null)
                 {
                     if (CanBeNull<T>()) return default;
                     throw new SerializationException($"Deserialized null value cannot be of value type {typeof(T)}.");

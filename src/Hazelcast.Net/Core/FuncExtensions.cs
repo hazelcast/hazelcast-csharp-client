@@ -36,7 +36,7 @@ namespace Hazelcast.Core
         // however, for tasks, what we really want is to run and await each entry in
         // sequence, and that cannot be done by simply invoking the delegate, we have
         // to get the invocation list and handle the calls
-        
+
         /// <summary>
         /// Awaits each entries of an async function delegate.
         /// </summary>

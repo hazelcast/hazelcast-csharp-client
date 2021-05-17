@@ -40,7 +40,7 @@ namespace Hazelcast.Core
 #if HZ_CONSOLE_PUBLIC
     public
 #else
-    internal 
+    internal
 #endif
     static class HConsole
     {
