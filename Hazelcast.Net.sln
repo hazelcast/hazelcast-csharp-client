@@ -14,6 +14,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD4710D4-ECC2-452E-A7C6-0320AFAFF124}"
 	ProjectSection(SolutionItems) = preProject
 		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Build.targets = src\Directory.Build.targets
 		hz.ps1 = hz.ps1
 		hz.sh = hz.sh
 		LICENSE = LICENSE
@@ -35,7 +36,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Win32", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.DocAsCode", "src\Hazelcast.Net.DocAsCode\Hazelcast.Net.DocAsCode.csproj", "{FE505BEF-9319-4F93-A9D2-16CB721DBE44}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExpectedObjects", "src\ExpectedObjects\\ExpectedObjects.csproj", "{41E2D542-B498-47F8-89BB-1F737CB0FF15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExpectedObjects", "src\ExpectedObjects\ExpectedObjects.csproj", "{41E2D542-B498-47F8-89BB-1F737CB0FF15}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{8A808CEB-FE9C-4B6D-85A4-B79DFBE43E97}"
 EndProject
@@ -96,8 +97,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{25300DF5-472C-4D9B-898A-820577F2F9C7} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
-		{D974DFA3-D12C-4D97-9886-43A94FDA79D1} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
 		{41E2D542-B498-47F8-89BB-1F737CB0FF15} = {8A808CEB-FE9C-4B6D-85A4-B79DFBE43E97}
+		{D974DFA3-D12C-4D97-9886-43A94FDA79D1} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}

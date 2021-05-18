@@ -31,8 +31,10 @@ param (
     $enterprise = $false,
 
     # The Hazelcast default server version.
+    # Stick with -SNAPSHOT so we always test against the latest snapshot by default,
+    # otherwise we end up testing against test JARs with obsolete SSL certs, etc.
     [string]
-    $server = "4.0",
+    $server = "4.0-SNAPSHOT",
 
     # Target framework(s).
     [Alias("f")]
@@ -169,6 +171,10 @@ if ($psVersion -lt $minVersion) {
     }
 
     Die "Unsupported PowerShell version: $($psVersion.Major).$($psVersion.Minor)"
+}
+
+function isAtLeastPs($version) {
+  return ($psVersion -ge [System.Version]::Parse($version))
 }
 
 # determine platform
@@ -342,9 +348,9 @@ $hzVsPreview = $false # whether to look for previews of VS
 
 # determine java code repositories for tests
 $mvnOssSnapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots"
-$mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot/"
+$mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
 $mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
-$mvnEntReleaseRepo = "https://repository.hazelcast.com/release/"
+$mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
 
 if ($server.Contains("SNAPSHOT")) {
     $mvnOssRepo = $mvnOssSnapshotRepo
@@ -418,7 +424,7 @@ $enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
 if (($doTests -or $doRc) -and $enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
 
     if (test-path "$buildDir/enterprise.key") {
-        $enterpriseKey = (gc "$buildDir/enterprise.key")[0].Trim()
+        $enterpriseKey = @(gc "$buildDir/enterprise.key")[0].Trim()
         $env:HAZELCAST_ENTERPRISE_KEY = $enterpriseKey
     }
     else {
@@ -511,19 +517,29 @@ function invokeWebRequest($url, $dest) {
     # use basic parsing only. This parameter is included for backwards compatibility only 
     # and any use of it has no effect on the operation of the cmdlet."
     #
-    $args.UseBasicParsing = $true # PS 5 requires this
+    if (-not (isAtLeastPs("6.0.0"))) {
+        $args.UseBasicParsing = $true
+    }
 
     $pp = $progressPreference
     $progressPreference = 'SilentlyContinue'
 
-    # PowerShell 7+ has -skipHttpErrorCheck parameter but not everyone will have it
-    # so, try... catch is required
+    if (isAtLeastPs("7.0.0")) {
+        $args.SkipHttpErrorCheck = $true
+    }
+    
     try {
-        return invoke-webRequest @args
+        $r = invoke-webRequest @args
+        if ($r -ne $null) { 
+            if ($r.StatusCode -ne 200) {
+                Write-Output "--> $($r.StatusCode) $($r.StatusDescription)"
+            }
+            return $r 
+        }
+        return @{ StatusCode = 999; StatusDescription = "Error" }
     }
     catch [System.Net.WebException] {
-        $response = $_.Exception.Response
-        Die "Failed to GET $url : $($response.StatusCode) $($response.StatusDescription)"
+        return @{ StatusCode = 999; StatusDescription = "Error" }
     }
     finally {
         $progressPreference = $pp
@@ -556,6 +572,45 @@ function ensureNuGet() {
     }
 }
 
+#
+function fixServerVersion($version) {
+    
+    $version = $script:hzVersion
+
+    if (-not ($version.EndsWith("-SNAPSHOT"))) {
+        return;
+    }
+        
+    $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$version/maven-metadata.xml"
+    $response = invokeWebRequest $url
+    if ($response.StatusCode -eq 200) {
+        return;
+    }
+    
+    Write-Host "Server $version is not available"
+    
+    $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
+    $response2 = invokeWebRequest $url2
+    if ($response2.StatusCode -ne 200) {
+        Die "Error: could not download metadata"
+    }
+    
+    $metadata = [xml] $response2.Content
+    $version = $version.SubString(0, $version.Length - "-SNAPSHOT".Length)
+    $nodes = $metadata.SelectNodes("//version [starts-with(., '$version')]")
+    
+    if ($nodes.Count -lt 1) {
+        Die "Error: could not find a proper server version"
+    }
+    
+    $version2 = $nodes[0].innerText
+    
+    Write-Host "Found server $version2, updating"
+    $script:hzVersion = $version2
+    
+    Write-Host ""
+}
+
 # get a Maven artifact
 function getMvn($repoUrl, $group, $artifact, $jversion, $classifier, $dest) {
 
@@ -563,13 +618,16 @@ function getMvn($repoUrl, $group, $artifact, $jversion, $classifier, $dest) {
         $url = "$repoUrl/$group/$artifact/$jversion/maven-metadata.xml"
         $response = invokeWebRequest $url
         if ($response.StatusCode -ne 200) {
-            Die "GET $url : $($response.StatusCode) $($response.StatusDescription)"
+            Die "Failed to download $url ($($response.StatusCode))"
         }
 
         $metadata = [xml] $response.Content
         $xpath = "//snapshotVersion [extension='jar'"
         if (![System.String]::IsNullOrWhiteSpace($classifier)) {
             $xpath += " and classifier='$classifier'"
+        }
+        else {
+            $xpath += " and not(classifier)"
         }
         $xpath += "]"
         $jarVersion = "-" + $metadata.SelectNodes($xpath)[0].value
@@ -585,7 +643,7 @@ function getMvn($repoUrl, $group, $artifact, $jversion, $classifier, $dest) {
     $url += ".jar"
     $response = invokeWebRequest $url $dest
     if ($response.StatusCode -ne 200) {
-        Die "GET $url : $($response.StatusCode) $($response.StatusDescription)"
+        Die "Failed to download $url ($($response.StatusCode))"
     }
 }
 
@@ -666,6 +724,10 @@ foreach ($x in (git submodule status))
     }
 }
 
+# make sure we have a correct server version (and maybe fix it)
+# this is so we can specify 4.0-SNAPSHOT and get 4.0.x-SNAPSHOT
+fixServerVersion
+
 Write-Output "Version"
 $s = $version
 if ($isPreRelease) { $s += ", pre-release" }
@@ -725,7 +787,7 @@ if ($doNuget) {
 
 if ($doRc) {
     Write-Output "Remote Controller"
-    Write-Output "  Server version : $server"
+    Write-Output "  Server version : $hzVersion"
     Write-Output "  RC Version     : $hzRCVersion"
     Write-Output "  Enterprise     : $enterprise"
     Write-Output "  Logging to     : $tmpDir/rc"
@@ -734,7 +796,7 @@ if ($doRc) {
 
 if ($doServer) {
     Write-Output "Server"
-    Write-Output "  Server version : $server"
+    Write-Output "  Server version : $hzVersion"
     Write-Output "  Enterprise     : $enterprise"
     Write-Output "  Configuration  : $serverConfig"
     Write-Output "  Logging to     : $tmpDir/server"
@@ -826,11 +888,13 @@ if ($isWindows) {
 
 function getSdk($sdks, $v) {
     # trust dotnet to return the sdks ordered by version, so last is the highest version
-    return ($sdks `
+    $sdk = $sdks `
         | select-string -pattern "^$v" `
         | foreach-object { $_.ToString().Split(' ')[0] } `
         | select-string -notMatch -pattern "-" `
-        | select -last 1).ToString()
+        | select -last 1
+    if ($sdk -eq $null) { return "n/a" }
+    return $sdk.ToString()
 }
 
 # ensure we have dotnet for build and tests
@@ -863,8 +927,9 @@ if ($doBuild -or -$doTests) {
   #      Write-Host "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
   #      Die "Could not find dotnet SDK version 5.0.200+"
   #}
+  $v60 = getSdk $sdks "6.0"
 
-  Write-Host "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50"
+  Write-Host "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
 }
 
 # use NuGet to ensure we have the required packages for building and testing
@@ -1283,9 +1348,8 @@ function StopRemoteController() {
     # stop the remote controller
     Write-Output ""
     if ($script:remoteController -and $script:remoteController.Id -and -not $script:remoteController.HasExited) {
-        Write-Output "Stopping remote controller..."
-        Stop-Process -Force -Id $script:remoteController.Id
-        #$script:remoteController.Kill($true)
+        Write-Output "Stopping remote controller (pid=$($script:remoteController.Id))..."
+        $script:remoteController.Kill($true) # entire tree
 	}
     else {
         Write-Output "Remote controller is not running."
@@ -1297,9 +1361,8 @@ function StopServer() {
     # stop the server
     Write-Output ""
     if ($script:serverProcess -and $script:serverProcess.Id -and -not $script:serverProcess.HasExited) {
-        Write-Output "Stopping server..."
-        Stop-Process -Force -Id $script:serverProcess.Id
-        #$script:server.Kill($true)
+        Write-Output "Stopping server (pid=$($script:serverProcess.Id))..."
+        $script:serverProcess.Kill($true) # entire tree
 	}
     else {
         Write-Output "Server is not running."

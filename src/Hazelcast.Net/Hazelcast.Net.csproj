@@ -49,7 +49,7 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <!-- specify the remote name, in case git config contains multiple remotes -->
-    <GitRepositoryRemoteName>hazelcast</GitRepositoryRemoteName>
+    <!-- GitRepositoryRemoteName moved to Directory.Build.props -->
 
     <!-- embed source files that are not trakced by git -->
     <!-- building generates some *.AssemblyInfo.cs files that we want to embed -->

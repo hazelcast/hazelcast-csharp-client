@@ -30,7 +30,7 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <!-- specify the remote name, in case git config contains multiple remotes -->
-    <GitRepositoryRemoteName>hazelcast</GitRepositoryRemoteName>
+    <!-- GitRepositoryRemoteName moved to Directory.Build.props -->
 
     <!-- build symbol package (snupkg) to distribute the PDB containing Source Link -->
     <IncludeSymbols>true</IncludeSymbols>
