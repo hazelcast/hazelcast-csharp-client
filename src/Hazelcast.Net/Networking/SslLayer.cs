@@ -15,7 +15,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Security;
+using System.Reflection;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -26,8 +29,27 @@ namespace Hazelcast.Networking
 {
     internal class SslLayer
     {
+        private static readonly bool IsSslProtocolsNoneSupported = DetermineSslProtocolsNoneSupport();
+
         private readonly SslOptions _options;
         private readonly ILogger _logger;
+
+        static SslLayer()
+        {
+            HConsole.Configure(consoleOptions => consoleOptions.Configure<SslLayer>().SetPrefix("SSL"));
+        }
+
+        private static bool DetermineSslProtocolsNoneSupport()
+        {
+            // see source code for System.Net.Security.SslState, this is how the SslState determines
+            // whether SslProtocols.None is accepted, and throws if it is not supported - we need this
+            // because it is supported with framework 4.7+ but not 4.6.2.
+            //
+            // https://referencesource.microsoft.com/#System/net/System/Net/SecureProtocols/_SslState.cs,5d0d274f6285d5dd
+
+            var p = typeof(ServicePointManager).GetProperty("DisableSystemDefaultTlsVersions", BindingFlags.Static | BindingFlags.NonPublic);
+            return p == null || ! (bool) p.GetValue(null);
+        }
 
         public SslLayer(SslOptions options, ILoggerFactory loggerFactory)
         {
@@ -47,9 +69,37 @@ namespace Hazelcast.Networking
 
             var targetHost = _options.CertificateName ?? ""; // TODO: uh?!
 
+            // _options.Protocol is 'None' by default
+            //
+            // as per https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
+            //
+            //  "We recommend that you do not specify the TLS version. Configure your code to let the OS decide on the TLS
+            //  version. When your app lets the OS choose the TLS version, it automatically takes advantage of new protocols
+            //  added in the future, such as TLS 1.3 + the OS blocks protocols that are discovered not to be secure."
+            //
+            //  "SslStream, using .NET Framework 4.7 and later versions, defaults to the OS choosing the best security
+            //  protocol and version. To get the default OS best choice, if possible, don't use the method overloads of
+            //  SslStream that take an explicit SslProtocols parameter. Otherwise, pass SslProtocols.None."
+            //
+            // AuthenticateAsClientAsync:
+            //
+            //  "Starting with .NET Framework 4.7, this method authenticates using None, which allows the operating system
+            //  to choose the best protocol to use, and to block protocols that are not secure. In .NET Framework 4.6 (and
+            //  .NET Framework 4.5 with the latest security patches installed), the allowed TLS/SSL protocols versions are
+            //  1.2, 1.1, and 1.0 (unless you disable strong cryptography by editing the Windows Registry)."
+
+            var protocol = _options.Protocol;
+            if (!IsSslProtocolsNoneSupported && protocol == SslProtocols.None)
+            {
+                _logger.LogInformation("Configured protocol 'None' is not supported, falling back to 'Tls12'.");
+#pragma warning disable CA5398 // Avoid hardcoded SslProtocols values
+                protocol = SslProtocols.Tls12;
+#pragma warning restore CA5398
+            }
+
             try
             {
-                await sslStream.AuthenticateAsClientAsync(targetHost, clientCertificates, _options.Protocol, _options.CheckCertificateRevocation).CfAwait();
+                await sslStream.AuthenticateAsClientAsync(targetHost, clientCertificates, protocol, _options.CheckCertificateRevocation).CfAwait();
             }
             catch (Exception e)
             {
