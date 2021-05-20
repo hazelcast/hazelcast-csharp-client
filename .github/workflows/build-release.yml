@@ -1,0 +1,77 @@
+#
+# Workflow: Build Release
+#
+# on: pushes to any release/* branch
+# build and archive the NuGet packages (but does not release anything)
+
+name: Build Release
+on: 
+  push:
+    branches:
+      - 'release/*' # where * is expected to be a release version eg 2.1.4
+
+jobs:
+  build-test:
+    name: Build Release
+    runs-on: ubuntu-latest
+    steps:
+
+      # ubuntu-latest does not have proper git installed so we have to install it, but
+      # github image requires sudo (no password) whereas act image does not even have sudo
+      - name: Install Git
+        run: |
+          if [ "$(command -v sudo)" == "" ]; then apt-get update && apt-get install --yes git; else sudo apt-get update && sudo apt-get install --yes git; fi
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # configure Git so that we can commit the new version
+      - name: Configure Git
+        run: |
+          git config user.email "github-actions@hazelcast.com"
+          git config user.name "GitHub Actions"
+
+      # gihub.ref is 'refs/heads/release/2.1.4' => need to trim the 'refs/heads/release/' part and there is
+      # no workflow-level syntax to do this, so rely on a specific step to do it
+      - name: Determine version
+        env:
+          HAZELCAST_REF: ${{ github.ref }}
+        run: echo "HAZELCAST_VERSION=${HAZELCAST_REF#refs/heads/release/}" >> $GITHUB_ENV
+            
+      # obtain the snk file required to sign assemblies
+      # the snk is avail as secrets.HZ_SNK as a Base64 string
+      - name: Obtain assembly signature key
+        run: echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk && ls -l ./build/hazelcast.snk
+
+      # build signed, versioned and reproducible assemblies
+      - name: Build
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -sign -repro -version ${{ env.HAZELCAST_VERSION  }} -localRestore setver,build
+
+      # clear
+      - name: Clear assembly signature key
+        if: success() || failure() # always
+        run: rm ./build/hazelcast.snk
+
+      # package
+      - name: Pack NuGet packages
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -noRestore -localRestore nupack
+
+      # list artefacts (NuGet packages)
+      - name: List artefacts
+        run: ls ./temp/output
+
+      # upload 
+      - name: Archive artefacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: NuGet-Packages
+          path: './temp/output/Hazelcast.Net.*pkg'

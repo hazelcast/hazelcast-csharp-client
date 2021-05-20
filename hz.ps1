@@ -86,7 +86,11 @@ param (
 
     [alias("nr")]
     [switch]
-    $noRestore, # don't restore NuGet packages (assume they are there already)
+    $noRestore, # don't restore NuGet global packages (assume they are there already)
+
+    [alias("lr")]
+    [switch]
+    $localRestore, # restore NuGet packages locally
 
     [alias("d")]
     [string]
@@ -116,7 +120,7 @@ function Die($message) {
     [Console]::Error.WriteLine($message)
     [Console]::ResetColor()
     [Console]::Error.WriteLine()
-    Exit
+    Exit 1
 }
 
 # say hello
@@ -230,7 +234,7 @@ foreach ($t in $commands) {
             Write-Output ""
             Write-Output "  tests : runs the tests"
             Write-Output ""
-            Write-Output "  nuget : builds the NuGet package(s)"
+            Write-Output "  nupack : packs the NuGet package(s)"
             Write-Output ""
             Write-Output "  nupush : pushes the NuGet package(s)"
             Write-Output "        Pushing the NuGet packages requires a NuGet API key, which must be supplied via the"
@@ -306,7 +310,7 @@ foreach ($t in $commands) {
         "pubdocs"     { $doDocsRelease = $true }
         "srvdocs"     { $doDocsServe = $true }
         "tests"       { $doTests = $true }
-        "nuget"       { $doNuget = $true }
+        "nupack"       { $doNupack = $true }
         "nupush"      { $doNupush = $true }
         "rc"          { $doRc = $true }
         "server"      { $doServer = $true }
@@ -341,10 +345,6 @@ if (-not [System.String]::IsNullOrWhiteSpace($version)) {
 $hzVersion = $server
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
-$hzLocalBuild = $false # $true to skip downloading dependencies
-$hzToolsCache = 12 #days
-$hzVsMajor = 16 # force VS major version, default to 16 (VS2019) for now
-$hzVsPreview = $false # whether to look for previews of VS
 
 # determine java code repositories for tests
 $mvnOssSnapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots"
@@ -376,6 +376,13 @@ if ([string]::IsNullOrWhiteSpace($serverConfig)) {
     $serverConfig = "$buildDir/hazelcast-$hzVersion.xml"
 }
 
+# nuget packages
+$nugetPackages = "$userHome/.nuget"
+if ($localRestore) {
+    $nugetPackages = "$slnRoot/.nuget"
+    if (-not (Test-Path $nugetPackages)) { mkdir $nugetPackages }
+}
+
 # validate commands / platform
 if ($doDocs -and -not $isWindows) {
     Write-Output "DocFX is not supported on '$platform', cannot build documentation."
@@ -387,9 +394,9 @@ if ($doDocsRelease -and -not $isWindows) {
 }
 
 # get current version
-$propsXml = [xml] (gc "$srcDir/Directory.Build.props")
-$currentVersionPrefix = $propsXml.project.propertygroup.versionprefix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
-$currentVersionSuffix = $propsXml.project.propertygroup.versionsuffix | where { -not [System.String]::IsNullOrWhiteSpace($_) }
+$propsXml = [xml] (Get-Content "$srcDir/Directory.Build.props")
+$currentVersionPrefix = $propsXml.project.propertygroup.versionprefix | Where-Object { -not [System.String]::IsNullOrWhiteSpace($_) }
+$currentVersionSuffix = $propsXml.project.propertygroup.versionsuffix | Where-Object { -not [System.String]::IsNullOrWhiteSpace($_) }
 $currentVersion = $currentVersionPrefix.Trim()
 if (-not [System.String]::IsNullOrWhiteSpace($currentVersionSuffix)) {
     $currentVersion += "-$($currentVersionSuffix.Trim())"
@@ -471,21 +478,21 @@ $coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing;-:ExpectedObje
 # set server version (to filter tests)
 $env:HAZELCAST_SERVER_VERSION=$server.TrimEnd("-SNAPSHOT")
 
-# finds latest version of a NuGet package in the ~/.nuget cache
+# finds latest version of a NuGet package in the NuGet cache
 function findLatestVersion($path) {
     if ([System.IO.Directory]::Exists($path)) {
-        $v = gci $path | `
+        $v = Get-ChildItem $path | `
             foreach-object { [Version]::Parse($_.Name) } | `
-                sort -descending | `
-                select -first 1
+                Sort-Object -descending | `
+                Select-Object -first 1
     }
     else {
         $l = [System.IO.Path]::GetDirectoryname($path).Length
         $l = $path.Length - $l
-        $v = gci "$path.*" | `
+        $v = Get-ChildItem "$path.*" | `
                 foreach-object { [Version]::Parse($_.Name.SubString($l)) } | `
-                    sort -descending | `
-                    select -first 1
+                    Sort-Object -descending | `
+                    Select-Object -first 1
     }
     return $v
 }
@@ -493,7 +500,7 @@ function findLatestVersion($path) {
 # ensures that a command exists in the path
 function ensureCommand($command) {
     $r = get-command $command 2>&1
-    if ($r.Name -eq $null) {
+    if ($nul -eq $r.Name) {
         Die "Command '$command' is missing."
     }
     else {
@@ -530,7 +537,7 @@ function invokeWebRequest($url, $dest) {
     
     try {
         $r = invoke-webRequest @args
-        if ($r -ne $null) { 
+        if ($null -ne $r) { 
             if ($r.StatusCode -ne 200) {
                 Write-Output "--> $($r.StatusCode) $($r.StatusDescription)"
             }
@@ -543,32 +550,6 @@ function invokeWebRequest($url, $dest) {
     }
     finally {
         $progressPreference = $pp
-    }
-}
-
-# ensure we have NuGet
-function ensureNuGet() {
-    if (-not $hzLocalBuild)
-    {
-        $source = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-        if ((test-path $nuget) -and ((ls $nuget).CreationTime -lt [DateTime]::Now.AddDays(-$hzToolsCache)))
-        {
-            Remove-Item $nuget -force -errorAction SilentlyContinue > $null
-        }
-        if (-not (test-path $nuget))
-        {
-            Write-Output "Download NuGet..."
-            $response = invokeWebRequest $source $nuget
-            if ($response.StatusCode -ne 200) { Die "Failed to download NuGet." }
-            Write-Output "  -> $nuget"
-        }
-        else {
-            Write-Output "Detected NuGet at '$nuget'"
-        }
-    }
-    elseif (-not (test-path $nuget))
-    {
-        Die "Failed to locate NuGet.exe."
     }
 }
 
@@ -587,7 +568,7 @@ function fixServerVersion($version) {
         return;
     }
     
-    Write-Host "Server $version is not available"
+    Write-Output "Server $version is not available"
     
     $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
     $response2 = invokeWebRequest $url2
@@ -605,10 +586,10 @@ function fixServerVersion($version) {
     
     $version2 = $nodes[0].innerText
     
-    Write-Host "Found server $version2, updating"
+    Write-Output "Found server $version2, updating"
     $script:hzVersion = $version2
     
-    Write-Host ""
+    Write-Output ""
 }
 
 # get a Maven artifact
@@ -651,7 +632,7 @@ function getMvn($repoUrl, $group, $artifact, $jversion, $classifier, $dest) {
 function ensureDocFx() {
     $v = $docfxVersion
     Write-Output "  v$v"
-    $dir = "$userHome/.nuget/packages/docfx.console/$v"
+    $dir = "$nugetPackages/docfx.console/$v"
     $docfx = "$dir/tools/docfx.exe"
 
     Write-Output ""
@@ -664,7 +645,7 @@ function ensureDocFx() {
 function ensureMemberPage() {
     $v = $memberpageVersion
     Write-Output "  v$v"
-    $dir = "$userHome/.nuget/packages/memberpage/$v"
+    $dir = "$nugetPackages/memberpage/$v"
 
     Write-Output ""
     Write-Output "Detected DocFX MemberPage at $dir"
@@ -707,11 +688,8 @@ function clrSrc($file) {
     set-content $file $txt -noNewLine
 }
 
-# ensure we have git
+# ensure we have git, and validate git submodules
 ensureCommand "git"
-Write-Output ""
-
-# validate git submodules
 foreach ($x in (git submodule status))
 {
     if ($x.StartsWith("-"))
@@ -723,6 +701,8 @@ foreach ($x in (git submodule status))
         exit
     }
 }
+Write-Output "Found required Git submodules"
+Write-Output ""
 
 # make sure we have a correct server version (and maybe fix it)
 # this is so we can specify 4.0-SNAPSHOT and get 4.0.x-SNAPSHOT
@@ -777,7 +757,7 @@ if ($doTests -and $cover) {
     Write-Output ""
 }
 
-if ($doNuget) {
+if ($doNupack) {
     Write-Output "Nuget Package"
     Write-Output "  Configuration  : $configuration"
     Write-Output "  Version        : $version"
@@ -880,67 +860,69 @@ if ($doClean) {
 if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
 if (-not (test-path $outDir)) { mkdir $outDir >$null }
 
-# ensure we have NuGet
-if ($isWindows) {
-    $nuget = "$tmpDir/nuget.exe"
-    ensureNuGet
-}
-
 function getSdk($sdks, $v) {
+
     # trust dotnet to return the sdks ordered by version, so last is the highest version
+    # exclude versions containing "-" ie anything pre-release FIXME why?
     $sdk = $sdks `
-        | select-string -pattern "^$v" `
-        | foreach-object { $_.ToString().Split(' ')[0] } `
-        | select-string -notMatch -pattern "-" `
-        | select -last 1
-    if ($sdk -eq $null) { return "n/a" }
-    return $sdk.ToString()
+        | Select-String -pattern "^$v" `
+        | Foreach-Object { $_.ToString().Split(' ')[0] } `
+        | Select-String -notMatch -pattern "-" `
+        | Select-Object -last 1
+
+    if ($null -eq $sdk) { return "n/a" } 
+    else { return $sdk.ToString() }
 }
 
-# ensure we have dotnet for build and tests
-if ($doBuild -or -$doTests) {
-  ensureCommand "dotnet"
-  $dotnetVersion = (&dotnet --version)
-  Write-Host "  Version $dotnetVersion"
-  $sdks = (&dotnet --list-sdks)
+function ensureDotnet() {
 
-  $v21 = getSdk $sdks "2.1"
-  if ($v21 -eq $null) {
-        Write-Host ""
-        Write-Host "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
+    ensureCommand "dotnet"
+
+    $dotnetVersion = (&dotnet --version)
+    Write-Output "  Version $dotnetVersion"
+
+    $sdks = (&dotnet --list-sdks)
+    
+    $v21 = getSdk $sdks "2.1"
+    if ($null -eq $v21) {
+        Write-Output ""
+        Write-Output "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 2.1.x"
-  }
-  $v31 = getSdk $sdks "3.1"
-  if ($v31 -eq $null) {
-        Write-Host ""
-        Write-Host "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
+    }
+    $v31 = getSdk $sdks "3.1"
+    if ($null -eq $v31) {
+        Write-Output ""
+        Write-Output "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 3.1.x"
-  }
-  $v50 = getSdk $sdks "5.0"
-  #if ($v50 -eq $null) {
-  #      Write-Host ""
-  #      Write-Host "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-  #      Die "Could not find dotnet SDK version 5.0.x"
-  #}
-  #if ($v50 -lt "5.0.200") {
-  #      Write-Host ""
-  #      Write-Host "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-  #      Die "Could not find dotnet SDK version 5.0.200+"
-  #}
-  $v60 = getSdk $sdks "6.0"
-
-  Write-Host "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
+    }
+    $v50 = getSdk $sdks "5.0"
+    if ($null -eq $v50) {
+        Write-Output ""
+        Write-Output "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
+        Die "Could not find dotnet SDK version 5.0.x"
+    }
+    if ($v50 -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
+        Write-Output ""
+        Write-Output "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
+        Die "Could not find dotnet SDK version 5.0.200+"
+    }
+    $v60 = getSdk $sdks "6.0" # 6.0 is not required
+    
+    Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
 }
+
+# ensure we have dotnet (always)
+ensureDotnet
 
 # use NuGet to ensure we have the required packages for building and testing
 if ($noRestore) {
     Write-Output ""
-    Write-Output "Skip NuGet packages restore (assume we have them already)"
+    Write-Output "Skip global NuGet packages restore (assume we have them already)"
 }
 else {
     Write-Output ""
-    Write-Output "Restore NuGet packages..."
-    dotnet restore "$buildDir/build.proj"
+    Write-Output "Restore global NuGet packages..."
+    dotnet restore "$buildDir/build.proj" --packages $nugetPackages
 }
 
 # get the required packages version (as specified in build.proj)
@@ -950,7 +932,6 @@ $buildLibs.PSObject.Properties.Name | Foreach-Object {
     $p = $_.Split('/')
     $name = $p[0].ToLower()
     $pversion = $p[1]
-    if ($name -eq "vswhere") { $vswhereVersion = $pversion }
     if ($name -eq "nunit.consolerunner") { $nunitVersion = $pversion }
     if ($name -eq "jetbrains.dotcover.commandlinetools") { $dotcoverVersion = $pversion }
     if ($name -eq "docfx.console") { $docfxVersion = $pversion }
@@ -1075,6 +1056,79 @@ if ($doCodecs) {
     Write-Output ""
 }
 
+function Get-TopologicalSort {
+  param(
+      [Parameter(Mandatory = $true, Position = 0)]
+      [hashtable] $edgeList
+  )
+
+  # Make sure we can use HashSet
+  Add-Type -AssemblyName System.Core
+
+  # Clone it so as to not alter original
+  #$currentEdgeList = [hashtable] (Get-ClonedObject $edgeList)
+  $currentEdgeList = $edgeList
+
+  # algorithm from http://en.wikipedia.org/wiki/Topological_sorting#Algorithms
+  $topologicallySortedElements = New-Object System.Collections.ArrayList
+  $setOfAllNodesWithNoIncomingEdges = New-Object System.Collections.Queue
+
+  $fasterEdgeList = @{}
+
+  # Keep track of all nodes in case they put it in as an edge destination but not source
+  $allNodes = New-Object -TypeName System.Collections.Generic.HashSet[object] -ArgumentList (,[object[]] $currentEdgeList.Keys)
+
+  foreach($currentNode in $currentEdgeList.Keys) {
+      $currentDestinationNodes = [array] $currentEdgeList[$currentNode]
+      if($currentDestinationNodes.Length -eq 0) {
+          $setOfAllNodesWithNoIncomingEdges.Enqueue($currentNode)
+      }
+
+      foreach($currentDestinationNode in $currentDestinationNodes) {
+          if(!$allNodes.Contains($currentDestinationNode)) {
+              [void] $allNodes.Add($currentDestinationNode)
+          }
+      }
+
+      # Take this time to convert them to a HashSet for faster operation
+      $currentDestinationNodes = New-Object -TypeName System.Collections.Generic.HashSet[object] -ArgumentList (,[object[]] $currentDestinationNodes )
+      [void] $fasterEdgeList.Add($currentNode, $currentDestinationNodes)        
+  }
+
+  # Now let's reconcile by adding empty dependencies for source nodes they didn't tell us about
+  foreach($currentNode in $allNodes) {
+      if(!$currentEdgeList.ContainsKey($currentNode)) {
+          [void] $currentEdgeList.Add($currentNode, (New-Object -TypeName System.Collections.Generic.HashSet[object]))
+          $setOfAllNodesWithNoIncomingEdges.Enqueue($currentNode)
+      }
+  }
+
+  $currentEdgeList = $fasterEdgeList
+
+  while($setOfAllNodesWithNoIncomingEdges.Count -gt 0) {        
+      $currentNode = $setOfAllNodesWithNoIncomingEdges.Dequeue()
+      [void] $currentEdgeList.Remove($currentNode)
+      [void] $topologicallySortedElements.Add($currentNode)
+
+      foreach($currentEdgeSourceNode in $currentEdgeList.Keys) {
+          $currentNodeDestinations = $currentEdgeList[$currentEdgeSourceNode]
+          if($currentNodeDestinations.Contains($currentNode)) {
+              [void] $currentNodeDestinations.Remove($currentNode)
+
+              if($currentNodeDestinations.Count -eq 0) {
+                  [void] $setOfAllNodesWithNoIncomingEdges.Enqueue($currentEdgeSourceNode)
+              }                
+          }
+      }
+  }
+
+  if($currentEdgeList.Count -gt 0) {
+      throw "Graph has at least one cycle!"
+  }
+
+  return $topologicallySortedElements
+}
+
 # build the solution
 # on Windows, build with MsBuild - else use dotnet
 if ($doBuild) {
@@ -1084,49 +1138,78 @@ if ($doBuild) {
     if (![string]::IsNullOrWhiteSpace($defineConstants)) {
         $defineConstants = $defineConstants.Replace(";", "%3B") # escape ';'
     }
+    
+    Write-Output ""
+    Write-Output "Resolve projects dependencies..."
+    $projs = Get-ChildItem -path $srcDir -recurse -depth 1 -include *.csproj
+    $t = @{}
+    $sc = [System.IO.Path]::DirectorySeparatorChar
+    $projs | Foreach-Object {
+        $proj = $_
+        
+        # exclude
+        if (!$isWindows -and $proj.BaseName -eq "Hazelcast.Net.DocAsCode") { return } # continue
+        
+        $x = [xml] (Get-Content $proj); 
+        $n = $x.SelectNodes("//ProjectReference/@Include");
+        $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
+        if ($t[$k] -eq $null) { $t[$k] = @() }
+
+        $n | Foreach-Object {
+            $dep = $_.Value
+            $d = $dep.SubString("../".Length).Replace("\", $sc).Replace("/", $sc)
+            Write-Output "  $k -> $d"
+            $t[$k] += $d
+        }
+    }
+    
+    Write-Output ""
+    Write-Output "Reorder projects..."
+    $projs = Get-TopologicalSort $t
+    $projs | Foreach-Object {
+       Write-Output "  $_ "
+    }
 
     Write-Output ""
-    Write-Output "Build solution..."
+    Write-Output "Build projets..."
     $buildArgs = @(
-        "$slnRoot/Hazelcast.Net.sln", `
-        "-c", "$configuration"
+        "-c", "$configuration",
+        "--packages", $nugetPackages
         # "-f", "$framework"
     )
 
     if ($reproducible) {
-        $buildArgs += "/p:ContinuousIntegrationBuild=true"
+        $buildArgs += "-p:ContinuousIntegrationBuild=true"
     }
 
     if ($sign) {
-        $buildArgs += "/p:ASSEMBLY_SIGNING=true"
-        $buildArgs += "/p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
-        
-        if (![string]::IsNullOrWhiteSpace($defineConstants)) {
-            $defineConstants += ";"
-        }
-        $defineConstants += "ASSEMBLY_SIGNING"
+        $buildArgs += "-p:ASSEMBLY_SIGNING=true"
+        $buildArgs += "-p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
     }
 
     if (![string]::IsNullOrWhiteSpace($defineConstants)) {
-        $buildArgs += "/p:DefineUserConstants=`"$defineConstants`""
+        $buildArgs += "-p:DefineUserConstants=`"$defineConstants`""
     }
 
     if ($hasVersion) {
-        $buildArgs += "/p:AssemblyVersion=$versionPrefix"
-        $buildArgs += "/p:FileVersion=$versionPrefix"
-        $buildArgs += "/p:VersionPrefix=$versionPrefix"
-        $buildArgs += "/p:VersionSuffix=$versionSuffix"
+        $buildArgs += "-p:AssemblyVersion=$versionPrefix"
+        $buildArgs += "-p:FileVersion=$versionPrefix"
+        $buildArgs += "-p:VersionPrefix=$versionPrefix"
+        $buildArgs += "-p:VersionSuffix=$versionSuffix"
     }
-
-    Write-Output ""
-    Write-Output "> dotnet build $buildArgs"
-    Write-Output ""
-    dotnet build $buildArgs
-
-    # if it failed, we can stop here
-    if ($LASTEXITCODE) {
-        Die "Build failed, aborting."
+    
+    $projs | foreach {
+        Write-Output ""
+        Write-Output "> dotnet build "$srcDir\$_" $buildArgs"
+        dotnet build "$srcDir\$_" $buildArgs
+        
+        # if it failed, we can stop here
+        if ($LASTEXITCODE) {
+            Die "Build failed, aborting."
+        }
     }
+    
+    Write-Output ""
 }
 
 # build documentation
@@ -1145,7 +1228,7 @@ if ($doDocs) {
     }
 
     # prepare templates
-    $template = "default,$userHome/.nuget/packages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
+    $template = "default,$nugetPackages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
 
     # clear plugins
     if (test-path "$docDir/templates/hz/Plugins") {
@@ -1249,8 +1332,8 @@ if ($doDocsRelease) {
     &git -C "$pages" add -A
     &git -C "$pages" commit -m "$docMessage"
 
-    Write-Host "Doc release is ready, but NOT pushed."
-    Write-Host "Review $pages commit and push."
+    Write-Output "Doc release is ready, but NOT pushed."
+    Write-Output "Review $pages commit and push."
 }
 
 function getJavaKerberosArgs() {
@@ -1373,7 +1456,7 @@ function CollectTestResults($fwk, $file) {
     $script:testResults = $script:testResults + $file
 }
 
-function RunDotNetCoreTests($f) {
+function RunTests($f) {
 
     # run .NET Core unit tests
     # note:
@@ -1386,6 +1469,17 @@ function RunDotNetCoreTests($f) {
     #    --logger:"nunit;LogFilePath=$tmpDir/tests/results/tests-$f.xml"
     # instead: http://blog.prokrams.com/2019/12/16/nunit3-filter-dotnet/
     #
+
+    #
+    $dotnetArgs = @(
+        "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj",
+        "-c", "$configuration",
+        "--no-restore", "--no-build",
+        "-f", "$f",
+        "-v", "normal",
+        "--logger", "trx;LogFileName=results-$f.trx",
+        "--results-directory", "$tmpDir/tests/results"
+    )
 
     # see https://docs.nunit.org/articles/vs-test-adapter/Tips-And-Tricks.html
     # for available options and names here
@@ -1405,39 +1499,33 @@ function RunDotNetCoreTests($f) {
         }
 
         $dotCoverArgs = @(
-            "test",
-            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj",
-            "-c", "$configuration",
-            "--no-restore",
-            "-f", "$f",
-            "-v", "normal",
-
             "--dotCoverFilters=$coverageFilter",
             "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
             "--dotCoverOutput=$coveragePath/index.html",
             "--dotCoverReportType=HTML",
             "--dotCoverLogFile=$tmpDir/tests/cover/cover-$f.log",
-            "--dotCoverSourcesSearchPaths=$srcDir",
-            "--"
-        ) + $nunitArgs
+            "--dotCoverSourcesSearchPaths=$srcDir"
+        )
 
-        Write-Output "exec: dotnet dotcover $dotCoverArgs"
+        $testArgs = @( "test" )
+        $testArgs += $dotnetArgs
+        $testArgs += $dotCoverArgs
+        $testArgs += @( "--" )
+        $testArgs += $nunitArgs
+
+        Write-Output "> dotnet dotcover $testArgs"
         pushd "$srcDir/Hazelcast.Net.Tests"
-        &dotnet dotcover $dotCoverArgs
+        &dotnet dotcover $testArgs
         popd
     }
     else {
-        $dotnetArgs = @(
-            "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj",
-            "-c", "$configuration",
-            "--no-restore",
-            "-f", "$f",
-            "-v", "normal",
-            "--"
-        ) + $nunitArgs
+        $testArgs = @()
+        $testArgs += $dotnetArgs
+        $testArgs += @( "--" )
+        $testArgs += $nunitArgs
 
-        Write-Output "exec: dotnet $dotnetArgs"
-        &dotnet test $dotnetArgs
+        Write-Output "> dotnet test $testArgs"
+        &dotnet test $testArgs
     }
 
     # NUnit adapter does not support configuring the file name, move
@@ -1447,64 +1535,6 @@ function RunDotNetCoreTests($f) {
     elseif (test-path "$tmpDir/tests/results/results-$f.xml") {
         rm "$tmpDir/tests/results/results-$f.xml"
     }
-    CollectTestResults $f "$tmpDir/tests/results/results-$f.xml"
-}
-
-function RunDotNetFrameworkTests($f) {
-
-    # run .NET Framework unit tests
-    $testDLL="$srcDir/Hazelcast.Net.Tests/bin/${configuration}/${f}/Hazelcast.Net.Tests.dll"
-
-    switch ($f) {
-        "net462" { $nuf = "net-4.6.2" }
-        default { Die "Framework '$f' not supported here." }
-    }
-
-    $v = $nunitVersion
-    $nunit = "$userHome/.nuget/packages/nunit.consolerunner/$v/tools/nunit3-console.exe"
-    $nunitArgs = @(
-        "`"${testDLL}`"",
-        "--labels=Before",
-        "--result=`"$tmpDir/tests/results/results-$f.xml`"",
-        "--framework=$nuf",
-        "--test-name-format=`"$($testName.Replace("<FRAMEWORK>", $f))`""
-    )
-
-    if ($testFilter -ne "") { $nunitArgs += @("--where=`"$($testFilter.Replace("<FRAMEWORK>", $f))`"") }
-
-    if ($cover) {
-
-        $coveragePath = "$tmpDir/tests/cover/cover-$f"
-        if (!(test-path $coveragePath)) {
-            mkdir $coveragePath > $null
-        }
-
-        $v = $dotcoverVersion
-        $dotCover = "$userHome/.nuget/packages/jetbrains.dotcover.commandlinetools/$v/tools/dotCover.exe"
-
-        # note: separate attributes filters with ';'
-        $dotCoverArgs = @(
-            "cover",
-            "--Filters=$coverageFilter",
-            "--AttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
-            "--TargetWorkingDir=.",
-            "--Output=$coveragePath/index.html",
-            "--ReportType=HTML",
-            "--TargetExecutable=${nunit}",
-            "--LogFile=$tmpDir/tests/cover/cover-$f.log",
-            "--SourcesSearchPaths=$srcDir",
-            "--"
-        ) + $nunitArgs
-
-        Write-Output "exec: $dotCover $dotCoverArgs"
-        &$dotCover $dotCoverArgs
-
-    } else {
-
-        Write-Output "exec: $nunit $nunitArgs"
-        &$nunit $nunitArgs
-    }
-
     CollectTestResults $f "$tmpDir/tests/results/results-$f.xml"
 }
 
@@ -1534,6 +1564,8 @@ if ($doTests) {
     # run tests
     $testResults = @()
 
+    rm "$tmpDir\tests\results\results-*" >$null 2>&1
+
     try {
         StartRemoteController
 
@@ -1542,14 +1574,7 @@ if ($doTests) {
         foreach ($framework in $frameworks) {
             Write-Output ""
             Write-Output "Run tests for $framework..."
-            if ($framework -eq "net462") {
-                # must run tests with .NET Framework for Framework tests
-                RunDotNetFrameworkTests $framework
-            }
-            else {
-                # anything else can run with 'dotnet test'
-                RunDotNetCoreTests $framework
-            }
+            RunTests $framework
         }
     }
     finally {
@@ -1595,6 +1620,10 @@ if ($doTests) {
                 "  $($fwk.PadRight(16)) :  FAILED (no test report)."
         }
     }
+    
+    if (!$testsSuccess) {
+        Die "Some tests have failed"
+    }
 }
 
 if ($doRc) {
@@ -1634,10 +1663,10 @@ if ($doDocsServe) {
     &$docfx serve "$tmpDir\docfx.out"
 }
 
-if ($doNuget -and -not $testsSuccess) {
+if ($doNupack -and -not $testsSuccess) {
     Write-Output ""
     Write-Output "Tests failed, skipping building NuGet packages..."
-    $doNuget = $false
+    $doNupack = $false
 }
 
 function packNuget($name)
@@ -1663,9 +1692,9 @@ function packNuget($name)
     &dotnet pack $packArgs
 }
 
-if ($doNuget) {
+if ($doNupack) {
     Write-Output ""
-    Write-Output "Build NuGet packages..."
+    Write-Output "Pack NuGet packages..."
 
     # creates the nupkg (which contains dll)
     # creates the snupkg (which contains pdb with source code reference)
@@ -1673,6 +1702,8 @@ if ($doNuget) {
 
     packNuGet("Hazelcast.Net")
     packNuGet("Hazelcast.Net.Win32")
+
+    Get-ChildItem "$tmpDir\output" | Foreach-Object { Write-Output "  $_" }
 }
 
 if ($doNupush -and -not $testsSuccess) {
@@ -1685,8 +1716,8 @@ if ($doNupush) {
     Write-Output ""
     Write-Output "Push NuGet packages..."
 
-    &$nuget push "$tmpDir\output\Hazelcast.Net.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
-    &$nuget push "$tmpDir\output\Hazelcast.Net.Win32.$version.nupkg" -ApiKey $nugetApiKey -Source "https://api.nuget.org/v3/index.json"
+    &dotnet nuget push "$tmpDir\output\Hazelcast.Net.$version.nupkg" --api_key $nugetApiKey --source "https://api.nuget.org/v3/index.json"
+    &dotnet nuget push "$tmpDir\output\Hazelcast.Net.Win32.$version.nupkg" --api-key $nugetApiKey --source "https://api.nuget.org/v3/index.json"
 }
 
 Write-Output ""

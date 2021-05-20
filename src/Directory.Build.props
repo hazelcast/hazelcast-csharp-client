@@ -21,6 +21,13 @@
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   -->
 
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
+    <DefineAssemblySigning>;ASSEMBLY_SIGNING</DefineAssemblySigning>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'==''">
+    <DefineAssemblySigning></DefineAssemblySigning>
+  </PropertyGroup>
+
   <!--
     DEFINES
     - HZ_CONSOLE enables the Hazelcast troubleshooting console
@@ -29,11 +36,11 @@
     - CODE_ANALYSIS enables NDepend code analysis
     - HZ_OPTIMIZE_ASYNC enables async/await optimizations
   -->
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>HZ_CONSOLE,CODE_ANALYSIS;$(DefineUserConstants)</DefineConstants>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>HZ_CONSOLE;CODE_ANALYSIS;TRACE$(DefineAssemblySigning);$(DefineUserConstants)</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineUserConstants)</DefineConstants>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DefineConstants>$(DefineAssemblySigning);$(DefineUserConstants)</DefineConstants>
   </PropertyGroup>
 
   <!-- misc project options -->

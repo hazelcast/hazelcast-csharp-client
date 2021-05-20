@@ -19,10 +19,6 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants)</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net.DependencyInjection\Hazelcast.Net.DependencyInjection.csproj" />
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />

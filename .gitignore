@@ -4,6 +4,8 @@ bin/
 /temp/
 /local/
 /.idea/
+/.nuget/
+/.github/secrets
 
 *.user
 *.suo
@@ -28,3 +30,4 @@ build/enterprise.key
 build/hazelcast-*.xml
 
 /_ReSharper.Caches
+.github/secrets

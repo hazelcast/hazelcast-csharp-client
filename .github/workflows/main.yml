@@ -1,0 +1,81 @@
+name: OnPush
+#on: push
+on: workflow_dispatch
+
+# consider the structure
+# this is a WORKFLOW
+# it runs on PUSH
+# and it executes JOBS that appear as boxes on GitHub
+# and each JOB is a sequence of STEPS
+#
+# one job runs on one machine... and maintains a filesystem between actions
+# so do we want one unique job, or several jobs?
+
+jobs:
+  build-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+
+      # ubuntu-latest does not have proper git (?) install it
+      # but, github image requires sudo (no password) whereas act image does not even have sudo
+      - name: Install Git
+        run: |
+           if [ "$(command -v sudo)" == "" ]; then apt-get update && apt-get install --yes git; else sudo apt-get update && sudo apt-get install --yes git; fi
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # NuGet: 
+      # - specify -localRestore everywhere we run the hz action, in order to
+      #   restore NuGet packages to ./.nuget, not ~/.nuget, so that these restored
+      #   packages are persisted between hz action runs and do not need to be
+      #   restored many times
+      # - specify -noRestore for all hz action but the first (build) one, to skip
+      #   restoring packages that we know have been restored by the build
+
+      # build
+      - name: Build
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -localRestore build # -repro -sign require build/hazelcast.snk file
+
+      # test
+      - name: Test
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -noRestore -localRestore tests
+
+      # report
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: NUnit Tests
+          path: temp/tests/results/results-*.xml
+          reporter: dotnet-trx
+          list-tests: all #failed
+          fail-on-error: true
+
+      # package
+      - name: Pack NuGet packages
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -noRestore -localRestore nupack
+
+      # should we clean before running?
+      # -sign requires build/hazelcast.snk file
+      # tests: build,tests
+      # release: -version 4.0.2 -sign -repro setver,tagver,build,nuget,builddocs,...
+      # publish: nupush
+      # this one is for local tests with act
+      #ARGS: ${{ env.HZ_ARGS }}
+
+      # list artefacts (NuGet packages)
+      - name: List Artefacts
+        run: ls temp/output
