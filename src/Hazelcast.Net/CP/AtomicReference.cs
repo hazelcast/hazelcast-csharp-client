@@ -8,6 +8,9 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.CP
 {
+    /// <summary>
+    /// Provides the <see cref="IAtomicReference{T}"/> implementation.
+    /// </summary>
     internal class AtomicReference<T>: CPDistributedObjectBase, IAtomicReference<T>
     {
         /// <summary>

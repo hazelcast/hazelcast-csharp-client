@@ -2,6 +2,9 @@
 
 namespace Hazelcast.CP
 {
+    /// <summary>
+    /// Defines a redundant and highly-available distributed atomic reference.
+    /// </summary>
     public interface IAtomicReference<T>: ICPDistributedObject
     {
         /// <summary>
