@@ -66,7 +66,7 @@ namespace Hazelcast.Clustering
             _clusterMembers = clusterMembers;
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterConnections>();
-            _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService);
+            _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService, _clusterState.LoggerFactory);
             _addressProvider = new AddressProvider(_clusterState.Options.Networking, _clusterState.LoggerFactory);
             _connectRetryStrategy = new RetryStrategy("connect to cluster", _clusterState.Options.Networking.ConnectionRetry, _clusterState.LoggerFactory);
 
@@ -443,6 +443,7 @@ namespace Hazelcast.Clustering
                         tried.Add(address);
 
                         HConsole.WriteLine(this, $"Try to connect {_clusterState.ClientName} to server at {address}");
+                        _logger.LogDebug("Try to connect {ClientName} to cluster {ClusterName} server at {MemberAddress}", _clusterState.ClientName, _clusterState.ClusterName, address);
                         var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
                         if (attempt)
                         {
@@ -457,6 +458,8 @@ namespace Hazelcast.Clustering
                         {
                             exceptions ??= new List<Exception>();
                             exceptions.Add(attempt.Exception);
+
+                            _logger.LogDebug(attempt.Exception, "Connection attempt has thrown.");
                         }
                     }
                 }
@@ -468,6 +471,8 @@ namespace Hazelcast.Clustering
 
                     exceptions ??= new List<Exception>();
                     exceptions.Add(e);
+
+                    _logger.LogDebug(e, "Connection attempt has thrown.");
 
                     // TODO: it's the actual DNS that should retry!
                 }
