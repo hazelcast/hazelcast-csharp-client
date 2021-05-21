@@ -25,13 +25,15 @@ namespace Hazelcast.Examples
         /// Sets the logger factory
         /// </summary>
         /// <param name="builder">The options builder.</param>
+        /// <param name="hazelcastLogLevel">The Hazelcast log level.</param>
         /// <returns>The options builder.</returns>
-        public static HazelcastOptionsBuilder WithConsoleLogger(this HazelcastOptionsBuilder builder)
+        public static HazelcastOptionsBuilder WithConsoleLogger(this HazelcastOptionsBuilder builder, LogLevel hazelcastLogLevel = LogLevel.None)
         {
             return builder
-                .With("Logging:LogLevel:Default", "Debug")
+                .With("Logging:LogLevel:Default", "None")
                 .With("Logging:LogLevel:System", "Information")
-                .With("Logging:LogLevel:System", "Information")
+                .With("Logging:LogLevel:Microsoft", "Information")
+                .With("Logging:LogLevel:Hazelcast", hazelcastLogLevel.ToString())
                 .With((configuration, o) =>
                 {
                     // configure logging factory and add the console provider

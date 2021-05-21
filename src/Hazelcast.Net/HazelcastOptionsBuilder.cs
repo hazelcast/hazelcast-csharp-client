@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Configuration;
+using Hazelcast.Configuration.Binding;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Configuration;
 
@@ -152,6 +153,15 @@ namespace Hazelcast
             _setups.Add(setup);
             return this;
         }
+
+        /// <summary>
+        /// Binds an additional options instance.
+        /// </summary>
+        /// <param name="key">The key for the instance.</param>
+        /// <param name="instance">The instance.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder Bind(string key, object instance)
+            => With((configuration, _) => configuration.HzBind(key, instance));
 
         private void Configure(IConfiguration configuration, HazelcastOptions options)
         {

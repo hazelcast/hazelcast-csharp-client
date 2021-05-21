@@ -73,7 +73,7 @@ namespace Hazelcast.Tests.Clustering
             await server.StartAsync();
 
             var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
-            var authenticator = new Authenticator(options.Authentication, serializationService);
+            var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
             ISequence<long> correlationIdSequence = new Int64Sequence();
 
