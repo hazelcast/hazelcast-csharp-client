@@ -3,23 +3,10 @@
 #
 
 name: Test PR
-#on: push
-on: workflow_dispatch
-
-# consider the structure
-# this is a WORKFLOW
-# it runs on PUSH
-# and it executes JOBS that appear as boxes on GitHub
-# and each JOB is a sequence of STEPS
-#
-# one job runs on one machine... and maintains a filesystem between actions
-# so do we want one unique job, or several jobs? and, is the filesystem
-# preserved accross the WORKFLOW or the JOB?
-#
-# on: push release/*, build-release
-# on: push release/* tag v*, publish-release (which should test the release first?)
-# on: pull_request, test-pr
-
+on:
+  pull_request:
+    branches:
+      - 'temp/*' # this is temporary
 
 jobs:
   test-pr:
@@ -40,14 +27,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
-
-      # NuGet: 
-      # - specify -localRestore everywhere we run the hz action, in order to
-      #   restore NuGet packages to ./.nuget, not ~/.nuget, so that these restored
-      #   packages are persisted between hz action runs and do not need to be
-      #   restored many times
-      # - specify -noRestore for all hz action but the first (build) one, to skip
-      #   restoring packages that we know have been restored by the build
 
       # build
       - name: Build
@@ -72,14 +51,3 @@ jobs:
           list-tests: all #failed
           fail-on-error: true
 
-      # push docs
-      - name: Publish docs
-        run: git -C temp/docs/ push
-
-      # push to nuget
-      - name: Publish packages
-        uses: ./.github/actions/hz
-        env:
-          NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
-        with:
-          ARGS: -noRestore -localRestore nupush
