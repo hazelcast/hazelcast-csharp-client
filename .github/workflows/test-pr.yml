@@ -1,0 +1,56 @@
+#
+# Workflow: Test PR
+#
+# on pull_request, build solution and test
+
+name: Test PR
+on: pull_request
+
+jobs:
+
+  # build and test the PR
+  test-pr:
+    name: Test PR
+    runs-on: ubuntu-latest
+    steps:
+
+      # ubuntu-latest does not have proper git installed so we have to install it, but
+      # github image requires sudo (no password) whereas act image does not even have sudo
+      - name: Install Git
+        run: |
+          if [ "$(command -v sudo)" == "" ]; then apt-get update && apt-get install --yes git; else sudo apt-get update && sudo apt-get install --yes git; fi
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # build
+      - name: Build
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -localRestore build
+
+      # test
+      - name: Test
+        uses: ./.github/actions/hz
+        env:
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+        with:
+          ARGS: -noRestore -localRestore -enterprise tests
+
+      # report
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Test Results
+          path: temp/tests/results/results-*.trx
+          reporter: dotnet-trx
+          list-suites: failed #all
+          list-tests: failed #all
+          fail-on-error: false #true
+

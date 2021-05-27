@@ -1,4 +1,8 @@
-name: OnPush
+#
+# Workflow: Temp
+#
+
+name: Temp
 #on: push
 on: workflow_dispatch
 
@@ -9,23 +13,29 @@ on: workflow_dispatch
 # and each JOB is a sequence of STEPS
 #
 # one job runs on one machine... and maintains a filesystem between actions
-# so do we want one unique job, or several jobs?
+# so do we want one unique job, or several jobs? and, is the filesystem
+# preserved accross the WORKFLOW or the JOB?
+#
+# on: push release/*, build-release
+# on: push release/* tag v*, publish-release (which should test the release first?)
+# on: pull_request, test-pr
+
 
 jobs:
-  build-test:
-    name: Build & Test
+  test-pr:
+    name: Test PR
     runs-on: ubuntu-latest
     steps:
 
-      # ubuntu-latest does not have proper git (?) install it
-      # but, github image requires sudo (no password) whereas act image does not even have sudo
+      # ubuntu-latest does not have proper git installed so we have to install it, but
+      # github image requires sudo (no password) whereas act image does not even have sudo
       - name: Install Git
         run: |
-           if [ "$(command -v sudo)" == "" ]; then apt-get update && apt-get install --yes git; else sudo apt-get update && sudo apt-get install --yes git; fi
+          if [ "$(command -v sudo)" == "" ]; then apt-get update && apt-get install --yes git; else sudo apt-get update && sudo apt-get install --yes git; fi
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +53,7 @@ jobs:
       - name: Build
         uses: ./.github/actions/hz
         with:
-          ARGS: -localRestore build # -repro -sign require build/hazelcast.snk file
+          ARGS: -localRestore build
 
       # test
       - name: Test
@@ -57,25 +67,19 @@ jobs:
         if: success() || failure()
         with:
           name: NUnit Tests
-          path: temp/tests/results/results-*.xml
+          path: temp/tests/results/results-*.trx
           reporter: dotnet-trx
           list-tests: all #failed
           fail-on-error: true
 
-      # package
-      - name: Pack NuGet packages
+      # push docs
+      - name: Publish docs
+        run: git -C temp/docs/ push
+
+      # push to nuget
+      - name: Publish packages
         uses: ./.github/actions/hz
+        env:
+          NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
         with:
-          ARGS: -noRestore -localRestore nupack
-
-      # should we clean before running?
-      # -sign requires build/hazelcast.snk file
-      # tests: build,tests
-      # release: -version 4.0.2 -sign -repro setver,tagver,build,nuget,builddocs,...
-      # publish: nupush
-      # this one is for local tests with act
-      #ARGS: ${{ env.HZ_ARGS }}
-
-      # list artefacts (NuGet packages)
-      - name: List Artefacts
-        run: ls temp/output
+          ARGS: -noRestore -localRestore nupush

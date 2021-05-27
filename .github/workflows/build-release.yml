@@ -1,18 +1,34 @@
 #
 # Workflow: Build Release
 #
-# on: pushes to any release/* branch
-# build and archive the NuGet packages (but does not release anything)
+# on push to any release/* branch, build solution, test, build and archive NuGet packages, archive test coverage
+# if pushed with tag v*, publish the corresponding release to NuGet
 
-name: Build Release
-on: 
+
+name: Build Release Branch
+on:
+
+  # build release branch on push to release/* branch
+  # where * is expected to be a release version eg 2.1.4
   push:
     branches:
-      - 'release/*' # where * is expected to be a release version eg 2.1.4
+      - 'release/*'
+
+  # manually build release branch, optionally release when version matches the branch
+  workflow_dispatch:
+    branches:
+      - 'release/*'
+    inputs:
+      version:
+        description: Copy version (eg "2.1.4") to trigger release. CAREFUL!
+        required: false
+        default: ""
 
 jobs:
-  build-test:
-    name: Build Release
+
+  # build and test the release
+  build:
+    name: Build Release Branch
     runs-on: ubuntu-latest
     steps:
 
@@ -36,28 +52,68 @@ jobs:
           git config user.email "github-actions@hazelcast.com"
           git config user.name "GitHub Actions"
 
-      # gihub.ref is 'refs/heads/release/2.1.4' => need to trim the 'refs/heads/release/' part and there is
-      # no workflow-level syntax to do this, so rely on a specific step to do it
+      # gihub.ref is 'refs/heads/release/2.1.4' => need to trim the 'refs/heads/release/' part
+      # there is no workflow-level syntax to do this, so rely on a specific 'run' step to do it
       - name: Determine version
         env:
           HAZELCAST_REF: ${{ github.ref }}
-        run: echo "HAZELCAST_VERSION=${HAZELCAST_REF#refs/heads/release/}" >> $GITHUB_ENV
-            
+        run: |
+          HAZELCAST_VERSION=${HAZELCAST_REF#refs/heads/release/}
+          echo "HAZELCAST_VERSION=$HAZELCAST_VERSION" >> $GITHUB_ENV
+          unset HAZELCAST_RELEASE
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            if [ "$HAZELCAST_VERSION" == "${{ github.event.inputs.version }}" ]; then 
+              HAZELCAST_RELEASE="RELEASE"; 
+            else
+              echo "::error::Input \"${{ github.event.inputs.version }}\" does not match expected version \"$HAZELCAST_VERSION\""
+            fi
+          fi
+          echo "HAZELCAST_RELEASE=$HAZELCAST_RELEASE" >> $GITHUB_ENV
+
+      # version the code
+      # note: setver does nothing if the version is already the current version
+      - name: Version the code
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -version ${{ env.HAZELCAST_VERSION  }} -localRestore setver
+
       # obtain the snk file required to sign assemblies
       # the snk is avail as secrets.HZ_SNK as a Base64 string
       - name: Obtain assembly signature key
-        run: echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk && ls -l ./build/hazelcast.snk
+        run: |
+          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk && ls -l ./build/hazelcast.snk
 
-      # build signed, versioned and reproducible assemblies
+      # build signed and reproducible assemblies + docs
       - name: Build
         uses: ./.github/actions/hz
         with:
-          ARGS: -sign -repro -version ${{ env.HAZELCAST_VERSION  }} -localRestore setver,build
+          ARGS: -noRestore -localRestore -sign -repro  build,docs,pubdocs
 
       # clear
       - name: Clear assembly signature key
         if: success() || failure() # always
-        run: rm ./build/hazelcast.snk
+        run: |
+          if [ -f ./build/hazelcast.snk]; then rm ./build/hazelcast.snk; fi
+
+      # test (with coverage)
+      - name: Test
+        uses: ./.github/actions/hz
+        env:
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+        with:
+          ARGS: -noRestore -localRestore -cover -enterprise tests
+
+      # report
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Test Results
+          path: temp/tests/results/results-*.trx
+          reporter: dotnet-trx
+          list-suites: failed #all
+          list-tests: failed #all
+          fail-on-error: false #true
 
       # package
       - name: Pack NuGet packages
@@ -65,13 +121,61 @@ jobs:
         with:
           ARGS: -noRestore -localRestore nupack
 
-      # list artefacts (NuGet packages)
-      - name: List artefacts
-        run: ls ./temp/output
+      # upload test coverage artifact
+      - name: Archive test coverage artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test-Coverage
+          path: './temp/tests/cover/' # entire directory
 
-      # upload 
-      - name: Archive artefacts
+      # upload nuget artifact
+      - name: Archive NuGet Packages artifact
         uses: actions/upload-artifact@v2
         with:
           name: NuGet-Packages
           path: './temp/output/Hazelcast.Net.*pkg'
+
+      # tag the release
+      - name: Tag the release
+        if:  env.HAZELCAST_RELEASE == 'RELEASE'
+        uses: ./.github/actions/hz
+        with:
+          ARGS: -noRestore -localRestore tagver
+
+      # TODO
+      # push the changes to the release branch
+      # delete the release branch? merge it back?
+      # publish the NuGet packages
+      # build and publish the docs
+      #
+      # doing all this in a second job is pointless since it's a parallel task
+      # OTOH we could try to build/test all frameworks in parallel? meh.
+
+      # push to nuget
+      #- name: Push packages to NuGet
+      #  uses: ./.github/actions/hz
+      #  env:
+      #    NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
+      #  with:
+      #    ARGS: -noRestore -localRestore nupush        
+
+  #publish:
+  #  name: Publish Release
+  #  runs-on: ubuntu-latest
+  #  if: github.ref == 'refs/heads/release' + github.event.inputs.version
+  #  needs: build
+  #  steps:
+  #    - run: echo 'publish?'
+
+      # todo: push docs
+      # todo: close the release branch, etc?
+
+      # this is another job = fetch the nuget package from artifacts!
+      #
+      # push to nuget
+      #- name: Publish packages
+      #  uses: ./.github/actions/hz
+      #  env:
+      #    NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
+      #  with:
+      #    ARGS: -noRestore -localRestore nupush

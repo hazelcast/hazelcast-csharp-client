@@ -51,6 +51,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\build-release.yml = .github\workflows\build-release.yml
 		.github\workflows\main.yml = .github\workflows\main.yml
+		.github\workflows\test-pr.yml = .github\workflows\test-pr.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions_hz", "actions_hz", "{3F5A45AC-5925-4D36-8D91-D5BA82FC7129}"

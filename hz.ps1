@@ -994,33 +994,38 @@ if ($doTests -or $doRc -or $doServer) {
 }
 
 # manage the version
-if ($isNewVersion -and $doSetVersion)
+if ($doSetVersion)
 {
-    Write-Output "Version: new version, update props and commit"
+    if ($isNewVersion) {
+        Write-Output "Set version: commit version change"
 
-    $text = [System.IO.File]::ReadAllText("$srcDir/Directory.Build.props")
+        $text = [System.IO.File]::ReadAllText("$srcDir/Directory.Build.props")
 
-    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
-        "\<AssemblyVersion\>.*\</AssemblyVersion\>",
-        "<AssemblyVersion>$versionPrefix</AssemblyVersion>")
+        $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+            "\<AssemblyVersion\>.*\</AssemblyVersion\>",
+            "<AssemblyVersion>$versionPrefix</AssemblyVersion>")
 
-    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
-        "\<FileVersion\>.*\</FileVersion\>",
-        "<FileVersion>$versionPrefix</FileVersion>")
+        $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+            "\<FileVersion\>.*\</FileVersion\>",
+            "<FileVersion>$versionPrefix</FileVersion>")
 
-    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
-        "\<VersionPrefix\>.*\</VersionPrefix\>",
-        "<VersionPrefix>$versionPrefix</VersionPrefix>")
+        $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+            "\<VersionPrefix\>.*\</VersionPrefix\>",
+            "<VersionPrefix>$versionPrefix</VersionPrefix>")
 
-    $text = [System.Text.RegularExpressions.Regex]::Replace($text,
-        "\<VersionSuffix\>.*\</VersionSuffix\>",
-        "<VersionSuffix>$versionSuffix</VersionSuffix>")
+        $text = [System.Text.RegularExpressions.Regex]::Replace($text,
+            "\<VersionSuffix\>.*\</VersionSuffix\>",
+            "<VersionSuffix>$versionSuffix</VersionSuffix>")
 
-    $utf8bom = New-Object System.Text.UTF8Encoding $true
-    [System.IO.File]::WriteAllText("$srcDir/Directory.Build.props", $text, $utf8bom)
+        $utf8bom = New-Object System.Text.UTF8Encoding $true
+        [System.IO.File]::WriteAllText("$srcDir/Directory.Build.props", $text, $utf8bom)
 
-    git add "$srcDir/Directory.Build.props"
-    git commit -m "Version $version"
+        git add "$srcDir/Directory.Build.props"
+        git commit -m "Version $version"
+    }
+    else {
+        Write-Output "Set version: no change"
+    }
 }
 
 if ($doTagVersion)
