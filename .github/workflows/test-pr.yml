@@ -45,9 +45,9 @@ jobs:
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
-          name: NUnit Tests
+          name: Test Results
           path: temp/tests/results/results-*.trx
           reporter: dotnet-trx
-          list-tests: all #failed
-          fail-on-error: true
+          list-tests: failed #all
+          fail-on-error: false #true
 
