@@ -48,6 +48,7 @@ jobs:
           name: Test Results
           path: temp/tests/results/results-*.trx
           reporter: dotnet-trx
+          list-suites: failed #all
           list-tests: failed #all
           fail-on-error: false #true
 
