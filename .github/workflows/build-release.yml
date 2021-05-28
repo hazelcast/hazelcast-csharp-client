@@ -5,6 +5,7 @@
 # if pushed with tag v*, publish the corresponding release to NuGet
 
 
+
 name: Build Release Branch
 on:
 
@@ -24,20 +25,64 @@ on:
         required: false
         default: ""
 
+
+
 jobs:
 
   # build and test the release
-  build:
-    name: Build Release Branch
-    runs-on: ubuntu-latest
+  build-release:
+    name: Build Release Branch (${{ matrix.os }})
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:: [ ubuntu-latest, windows-latest ]
+
     steps:
-
-      # ubuntu-latest does not have proper git installed so we have to install it, but
-      # github image requires sudo (no password) whereas act image does not even have sudo
-      - name: Install Git
+      
+      - name: Install Utilities
+        if: matrix.os == ubuntu-latest
+        shell: bash
         run: |
-          if [ "$(command -v sudo)" == "" ]; then apt-get update && apt-get install --yes git; else sudo apt-get update && sudo apt-get install --yes git; fi
+          sudo apt-get update 
+          # ubuntu-latest does not have proper git installed so we have to install it
+          sudo apt-get install --yes --no-install-recommends \
+            git
+          # we need various misc stuff
+          sudo apt-get install --yes --no-install-recommends \
+            wget \
+            curl \
+            apt-transport-https \
+            software-properties-common
+          # we need pwsh
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt-get install -y powershell
 
+      # Install .NET
+      - name: Install .NET 2.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '2.1.x'
+      - name: Install .NET 3.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Install .NET 5.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+
+      # Install Java
+      - name: Install JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+          
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
@@ -46,8 +91,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
 
-      # configure Git so that we can commit the new version
+      # configure Git so that we can commit
       - name: Configure Git
+        shell: bash
         run: |
           git config user.email "github-actions@hazelcast.com"
           git config user.name "GitHub Actions"
@@ -57,9 +103,17 @@ jobs:
       - name: Determine version
         env:
           HAZELCAST_REF: ${{ github.ref }}
+        shell: bash
         run: |
           HAZELCAST_VERSION=${HAZELCAST_REF#refs/heads/release/}
           echo "HAZELCAST_VERSION=$HAZELCAST_VERSION" >> $GITHUB_ENV
+          echo "HAZELCAST_VERSION=$HAZELCAST_VERSION"
+
+      # determine whether to publish the release
+      - name: Determine whether to publish the release
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
           unset HAZELCAST_RELEASE
           if [ "${{ github.event.inputs.version }}" != "" ]; then
             if [ "$HAZELCAST_VERSION" == "${{ github.event.inputs.version }}" ]; then 
@@ -69,113 +123,110 @@ jobs:
             fi
           fi
           echo "HAZELCAST_RELEASE=$HAZELCAST_RELEASE" >> $GITHUB_ENV
+          echo "HAZELCAST_RELEASE=$HAZELCAST_RELEASE"
 
       # version the code
       # note: setver does nothing if the version is already the current version
       - name: Version the code
-        uses: ./.github/actions/hz
-        with:
-          ARGS: -version ${{ env.HAZELCAST_VERSION  }} -localRestore setver
+        shell: pwsh
+        run: ./hz.ps1 -version ${{ env.HAZELCAST_VERSION  }} -localRestore setver
 
       # obtain the snk file required to sign assemblies
       # the snk is avail as secrets.HZ_SNK as a Base64 string
       - name: Obtain assembly signature key
+        shell: bash
         run: |
-          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk && ls -l ./build/hazelcast.snk
+          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk 
+          ls -l ./build/hazelcast.snk
 
-      # build signed and reproducible assemblies + docs
+      # build signed and reproducible assemblies + docs (skipped on Linux)
       - name: Build
-        uses: ./.github/actions/hz
-        with:
-          ARGS: -noRestore -localRestore -sign -repro  build,docs,pubdocs
+        shell: pwsh
+        run: ./hz.ps1 -localRestore -sign -repro build,docs,pubdocs
 
-      # clear
+      # clear the snk file
       - name: Clear assembly signature key
         if: success() || failure() # always
+        shell: bash
         run: |
-          if [ -f ./build/hazelcast.snk]; then rm ./build/hazelcast.snk; fi
+          if [ -f ./build/hazelcast.snk ]; then rm ./build/hazelcast.snk; fi
 
       # test (with coverage)
       - name: Test
-        uses: ./.github/actions/hz
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
-        with:
-          ARGS: -noRestore -localRestore -cover -enterprise tests
+        shell: pwsh
+        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise tests
 
       # report
       - name: Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
         with:
-          name: Test Results
+          name: Test Results (${{ matrix.os }})
           path: temp/tests/results/results-*.trx
           reporter: dotnet-trx
           list-suites: failed #all
           list-tests: failed #all
           fail-on-error: false #true
 
-      # package
-      - name: Pack NuGet packages
-        uses: ./.github/actions/hz
-        with:
-          ARGS: -noRestore -localRestore nupack
-
       # upload test coverage artifact
       - name: Archive test coverage artifact
         uses: actions/upload-artifact@v2
         with:
-          name: Test-Coverage
+          name: Test-Coverage (${{ matrix.os }})
           path: './temp/tests/cover/' # entire directory
 
-      # upload nuget artifact
-      - name: Archive NuGet Packages artifact
+      # create nuget packages
+      - name: Pack NuGet packages
+        shell: pwsh
+        run: ./hz.ps1 -noRestore -localRestore nupack
+
+      # upload nuget packages
+      - name: Archive NuGet packages artifact
         uses: actions/upload-artifact@v2
         with:
-          name: NuGet-Packages
+          name: NuGet-Packages (${{ matrix.os }})
           path: './temp/output/Hazelcast.Net.*pkg'
 
-      # tag the release
-      - name: Tag the release
-        if:  env.HAZELCAST_RELEASE == 'RELEASE'
-        uses: ./.github/actions/hz
-        with:
-          ARGS: -noRestore -localRestore tagver
+
+
+  # 
+  publish-release:
+    name: Publish Release Branch
+    runs-on: ubuntu-latest
+    needs: build-release
+    steps:
+      - name: NotSure
+        run: echo "NotSure"
+
+      # this should happen on Windows
+      # but only if Linux is successful = a third job?
+      # and then... we need to (1) download nuget packages, what about documentation?
+
+      ## tag the release
+      #- name: Tag the release
+      #  if: success() && env.HAZELCAST_RELEASE == 'RELEASE'
+      #  shell: pwsh
+      #  run: ./hz.ps1 -noRestore -localRestore tagver
+
+      ## publish nuget packages
+      #- name: Publish NuGet packages
+      #  if: success() && env.HAZELCAST_RELEASE == 'RELEASE'
+      #  shell: pwsh
+      #  env:
+      #    NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
+      #  run: ./hz.ps1 -noRestore -localRestore nupush
+
+      ## publish documentation
+      #- name: Publish documentation
+      #  if: success() && env.HAZELCAST_RELEASE == 'RELEASE'
+      #  run: git -C ./temp/gh-pages push origin gh-pages
 
       # TODO
-      # push the changes to the release branch
-      # delete the release branch? merge it back?
-      # publish the NuGet packages
-      # build and publish the docs
-      #
-      # doing all this in a second job is pointless since it's a parallel task
-      # OTOH we could try to build/test all frameworks in parallel? meh.
+      # the final release should be done on Windows else we won't have documentation!
+      # need to figure out the GitHub token so we can push back to the repo
+      # what becomes of the release branch?
 
-      # push to nuget
-      #- name: Push packages to NuGet
-      #  uses: ./.github/actions/hz
-      #  env:
-      #    NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
-      #  with:
-      #    ARGS: -noRestore -localRestore nupush        
 
-  #publish:
-  #  name: Publish Release
-  #  runs-on: ubuntu-latest
-  #  if: github.ref == 'refs/heads/release' + github.event.inputs.version
-  #  needs: build
-  #  steps:
-  #    - run: echo 'publish?'
-
-      # todo: push docs
-      # todo: close the release branch, etc?
-
-      # this is another job = fetch the nuget package from artifacts!
-      #
-      # push to nuget
-      #- name: Publish packages
-      #  uses: ./.github/actions/hz
-      #  env:
-      #    NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
-      #  with:
-      #    ARGS: -noRestore -localRestore nupush
+    

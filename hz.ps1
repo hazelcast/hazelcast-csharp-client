@@ -107,11 +107,13 @@ param (
     [string]
     $serverConfig,
 
-    # Commands.
-    [Parameter(ValueFromRemainingArguments, Position=0)]
+    # Commands and Args
     [string[]]
+    [Parameter(ValueFromRemainingArguments, Position=0)]
     $commands = @( "help" )
 )
+
+$commands, $commandsArgs = $commands
 
 # die - PowerShell display of errors is a pain
 function Die($message) {
@@ -123,18 +125,12 @@ function Die($message) {
     Exit 1
 }
 
-# say hello
-Write-Output "Hazelcast .NET Command Line"
-
-# process commands
-# command can come as a string[1] containing "a b c", or containing "a, b, c",
-# or as a real string[n] ... PowerShell can be weird at times ;(
-if ($commands.Length -eq 1 -and $commands[0].Contains(',')) {
-    $commands[0] = $commands[0].Replace(",", " ")
-}
-if ($commands.Length -eq 1 -and $commands[0].Contains(' ')) {
-    $commands = $commands[0].Split(" ", [StringSplitOptions]::RemoveEmptyEntries)
-}
+# PowerShell errors can *also* be a pain
+# see https://stackoverflow.com/questions/10666035
+# see https://stackoverflow.com/questions/10666101
+# don't die as soon as a command reports an error, we will take care of it!
+# (and, GitHub actions tend to end up running with 'Stop' by default)
+$ErrorActionPreference='Continue'
 
 # process define constants - it's a mess
 # see https://github.com/dotnet/sdk/issues/9562
@@ -157,23 +153,16 @@ $env:FrameworkPathOverride=""
 #            4.0                             8.1          2012 R2
 #            5.0                             10
 #            5.1                             10AU         2016
+# and then, we have PowerShell 6.0+ aka 'Core' which is not integrated
+# and there are some annoying differences, so we are requiring 6.2+
 $psVersion = (get-host | select-object Version).Version
-$minVersion = [System.Version]::Parse("5.1.0.0")
+$minVersion = [System.Version]::Parse("6.2.0.0")
 if ($psVersion -lt $minVersion) {
     Write-Output ""
     Write-Output "This script requires at least version $($minVersion.Major).$($minVersion.Minor) of PowerShell, but you seem to be running version $($psVersion.Major).$($psVersion.Minor)."
-
-    try {
-        $x = (pwsh --version)
-        Write-Output "However we have detected the 'pwsh' command in your PATH, which provides $x."
-        Write-Output "Maybe you invoked PowerShell with the old 'powershell' command? Please use 'pwsh' instead."
-    }
-    catch {
-        Write-Output "We recommend you install the most recent stable version available for download at:"
-        Write-Output "https://github.com/PowerShell/PowerShell/releases"
-        Write-Output "Please note that this version will need to be invoked with 'pwsh' not 'powershell'."
-    }
-
+    Write-Output "We recommend you install the most recent stable version available for download at:"
+    Write-Output "https://github.com/PowerShell/PowerShell/releases"
+    Write-Output "Please note that this version will need to be invoked with 'pwsh' not 'powershell'."
     Die "Unsupported PowerShell version: $($psVersion.Major).$($psVersion.Minor)"
 }
 
@@ -188,8 +177,9 @@ if ($isWindows) { $platform = "windows" }
 if ($isMacOS) { $platform = "macOS" }
 if (-not $isWindows -and $platform -eq "windows") { $isWindows = $true }
 
-# report
-Write-Output "PS $psVersion on $platform"
+# say hello
+Write-Output "Hazelcast .NET Command Line"
+Write-Output "PowerShell $psVersion on $platform"
 Write-Output ""
 
 # validate commands and define actions ($doXxx)
@@ -201,9 +191,6 @@ foreach ($t in $commands) {
 
     switch ($t.Trim().ToLower()) {
         "help" {
-            Write-Output "Hazelcast .NET Command Line"
-            Write-Output "PowerShell $psVersion"
-            Write-Output ""
             Write-Output "usage hz.[ps1|sh] [<options>] [<commands>]"
             Write-Output ""
             Write-Output "When no command is specified, the script displays this documentation."
@@ -515,19 +502,6 @@ function invokeWebRequest($url, $dest) {
         $args.PassThru = $true
     }
     
-    # "Indicates that the cmdlet uses the response object for HTML content without Document
-    # Object Model (DOM) parsing. This parameter is required when Internet Explorer is not
-    # installed on the computers, such as on a Server Core installation of a Windows Server
-    # operating system."
-    #
-    # "This parameter has been deprecated. Beginning with PowerShell 6.0.0, all Web requests
-    # use basic parsing only. This parameter is included for backwards compatibility only 
-    # and any use of it has no effect on the operation of the cmdlet."
-    #
-    if (-not (isAtLeastPs("6.0.0"))) {
-        $args.UseBasicParsing = $true
-    }
-
     $pp = $progressPreference
     $progressPreference = 'SilentlyContinue'
 
@@ -965,16 +939,37 @@ if ($doTests -or $doRc -or $doServer) {
     ensureCommand $java
 
     # sad java
-    $v = & java -version 2>&1
-    $v = $v[0].ToString()
-    $p0 = $v.IndexOf('"')
-    $p1 = $v.LastIndexOf('"')
-    $v = $v.SubString($p0+1,$p1-$p0-1)
+    try {
+        # FIXME THIS RUNS
+        $javaVersion = &java -version 2>&1
+        # FIXME THIS DOES NOT RUN + ERROR = openjdk version "11.0.11" 2021-04-20
+        $javaVersion = $javaVersion[0].ToString()
+        Write-Output "  Version: $javaVersion"
+    }
+    catch {
+        Write-Output "ERROR: $_"
+        Write-Output $_.ErrorDetails
+        Write-Output $_.Exception.GetType()
+        Write-Output $_.Exception
+        Die "Failed to get Java version"
+    }
+    if ($javaVersion.StartsWith("openjdk ")) {
+        if ($javaVersion -match "\`"([0-9]+\.[0-9]+\.[0-9]+)`"") {
+            $javaVersion = $matches[1]
+        }
+        else {
+            Die "Fail to parse Java version."
+        }
+    }
+    else {
+        $p0 = $javaVersion.IndexOf('"')
+        $p1 = $javaVersion.LastIndexOf('"')
+        $javaVersion = $javaVersion.SubString($p0+1,$p1-$p0-1)
+    }
 
-    Write-Output ""
-    Write-Output "Detected Java v$v"
+    Write-Output "  Version: $javaVersion"
 
-    if (-not $v.StartsWith("1.8")) {
+    if (-not $javaVersion.StartsWith("1.8")) {
         # starting with Java 9 ... weird things can happen
         $javaFix = @( "-Dcom.google.inject.internal.cglib.\$experimental_asm7=true",  "--add-opens java.base/java.lang=ALL-UNNAMED" )
 
