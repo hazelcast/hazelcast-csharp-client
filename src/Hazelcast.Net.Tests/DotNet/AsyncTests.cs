@@ -38,6 +38,7 @@ namespace Hazelcast.Tests.DotNet
         {
             var steps = new Steps();
             var control = new SemaphoreSlim(0);
+            var control2 = new SemaphoreSlim(0);
 
             steps.Add("main.start");
 
@@ -49,8 +50,10 @@ namespace Hazelcast.Tests.DotNet
 
                 // some delay to ensure we do not SetResult before awaiting the task completion source,
                 // thus forcing the await on that task to actually await asynchronously
-                await control.WaitAsync().CfAwait();
-                await Task.Delay(2000).CfAwait();
+                //await control.WaitAsync().CfAwait();
+                control.Wait();
+                //await Task.Delay(2000).CfAwait();
+                Thread.Sleep(2000);
 
                 steps.Add("task.complete");
                 taskCompletionSource.SetResult(42);
@@ -81,6 +84,9 @@ namespace Hazelcast.Tests.DotNet
 
             Console.WriteLine(steps);
 
+            // FIXME why does it *have* to be "not same thread"? this test can fail on some occasions
+            // task.complete thread 18 == main.resume thread 18 -- for runAsync = true
+
             // task.complete and task.continue always run on same thread
             // task.complete and main.wait always run on different threads
             steps.AssertSameThread("task.complete", "task.continue");
@@ -92,9 +98,11 @@ namespace Hazelcast.Tests.DotNet
             else
                 steps.AssertSameThread("task.complete", "main.resume"); // run on same thread
 
-            if (runAsync)
-                steps.AssertOrder("task.continue", "main.resume"); // main.resume after task.continue since different thread
-            else
+            // FIXME if async, order here is not specified!
+            //if (runAsync)
+            //    steps.AssertOrder("task.continue", "main.resume"); // main.resume after task.continue since different thread
+            //else
+            if (!runAsync)
                 steps.AssertOrder("main.resume", "task.continue"); // main.resume before task.continue since same thread
 
             steps.AssertOrder("main.resume", "main.end");

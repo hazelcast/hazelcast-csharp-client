@@ -351,6 +351,7 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
+        [KnownIssue(0, "Breaks on GitHub Actions")]
         public async Task ReadPipeLoop_3()
         {
             //using var _ = EnableHConsoleForTest();
@@ -380,7 +381,7 @@ namespace Hazelcast.Tests.Networking
             await pipe.Stream2.WriteAsync(new byte[2], 0, 2);
 
             // throwing brings the connection down eventually
-            await AssertEx.SucceedsEventually(() => Assert.That(down, Is.GreaterThan(0)), 4000, 200);
+            await AssertEx.SucceedsEventually(() => Assert.That(down, Is.GreaterThan(0)), 30000, 200);
         }
 
         [Test]

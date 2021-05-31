@@ -2,16 +2,16 @@
 
 POWERSHELL=pwsh
 if ! type $POWERSHELL >/dev/null 2>&1; then
-  POWERSHELL=powershell
-fi
-if ! type $POWERSHELL >/dev/null 2>&1; then
   POWERSHELL=""
 fi
 if [ -z $POWERSHELL ]; then
-  echo "Could not find a 'powershell' or 'pwsh' command."
+  echo "Could not find a 'pwsh' command."
   echo "Please make sure that Powershell is installed."
   exit 1
 fi
+
+$POWERSHELL ./hz.ps1 $@
+exit
 
 # put quotes around args that contain whitespaces,
 # this black magic thing works in bash on Windows and Linux,

@@ -227,6 +227,8 @@ namespace Hazelcast.Tests.Core
             var d = new ConcurrentAsyncDictionary<string, ValueItem<string>>();
 
             var ev = new ManualResetEventSlim();
+            var t1 = new SemaphoreSlim(0);
+            var t2 = new SemaphoreSlim(0);
 
             var created = 0;
             var exception = 0;
@@ -244,7 +246,9 @@ namespace Hazelcast.Tests.Core
             {
                 try
                 {
-                    var added = await d.TryAddAsync("key", CreateValueItem);
+                    var t = d.TryAddAsync("key", CreateValueItem);
+                    t1.Release(); // task is running
+                    var added = await t;
                     if (added)
                         Assert.Fail("Expected an exception.");
                 }
@@ -259,7 +263,9 @@ namespace Hazelcast.Tests.Core
             {
                 try
                 {
-                    var added = await d.TryAddAsync("key", CreateValueItem);
+                    var t = d.TryAddAsync("key", CreateValueItem);
+                    t2.Release(); // task is running
+                    var added = await t;
                     if (added)
                         Assert.Fail("Expected an exception.");
                 }
@@ -270,8 +276,12 @@ namespace Hazelcast.Tests.Core
                 }
             });
 
+            // ensure both tasks are running
+            await t1.WaitAsync();
+            await t2.WaitAsync();
             await Task.Delay(200);
-            Assert.That(created, Is.EqualTo(1));
+
+            Assert.That(created, Is.EqualTo(1), "bad created count before ev");
 
             ev.Set();
 
@@ -279,8 +289,8 @@ namespace Hazelcast.Tests.Core
             // the other one received nothing because it did not add anything
 
             await Task.WhenAll(task1, task2);
-            Assert.That(created, Is.EqualTo(1));
-            Assert.That(exception, Is.EqualTo(1));
+            Assert.That(created, Is.EqualTo(1), "bad created count after ev");
+            Assert.That(exception, Is.EqualTo(1), "bad exception count after ev");
         }
 
         [Test]

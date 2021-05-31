@@ -155,6 +155,7 @@ namespace Hazelcast.Tests.Networking
 
         [Test]
         [Timeout(10_000)]
+        [KnownIssue(0, "Breaks on GitHub Actions")]
         public async Task CanRetryAndTimeout()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");

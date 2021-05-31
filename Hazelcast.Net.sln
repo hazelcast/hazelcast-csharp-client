@@ -30,6 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{25300DF5
 		src\Directory.Build.targets = src\Directory.Build.targets
 		hz.ps1 = hz.ps1
 		hz.sh = hz.sh
+		build\utils.ps1 = build\utils.ps1
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Win32", "src\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj", "{7E3B8518-73DB-471A-B624-B2FD6D8CCB61}"

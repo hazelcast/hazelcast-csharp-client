@@ -14,11 +14,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DocAsCode.Build.Common" Version="2.56.5" />
-    <PackageReference Include="Microsoft.DocAsCode.Build.ConceptualDocuments" Version="2.56.5" />
-    <PackageReference Include="Microsoft.DocAsCode.Build.ManagedReference" Version="2.56.5" />
-    <PackageReference Include="Microsoft.DocAsCode.Common" Version="2.56.5" />
-    <PackageReference Include="Microsoft.DocAsCode.DataContracts.ManagedReference" Version="2.56.5" />
+    <PackageReference Include="Microsoft.DocAsCode.Build.Common" Version="2.57.2" />
+    <PackageReference Include="Microsoft.DocAsCode.Build.ConceptualDocuments" Version="2.57.2" />
+    <PackageReference Include="Microsoft.DocAsCode.Build.ManagedReference" Version="2.57.2" />
+    <PackageReference Include="Microsoft.DocAsCode.Common" Version="2.57.2" />
+    <PackageReference Include="Microsoft.DocAsCode.DataContracts.ManagedReference" Version="2.57.2" />
 
     <!--
       beware! do not update this dependency until DocFX says it's OK
