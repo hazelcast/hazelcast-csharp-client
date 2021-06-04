@@ -18,16 +18,7 @@ exit
 # though I would have a hard time explaining why exactly.
 
 c=()
-for i in "$@"
-do
-	if [[ "$OS" == "Windows_NT" ]] && [[ "$i" =~ " " ]] && [[ "$POWERSHELL" == "powershell" ]];
-	then
-    	c+=("\"$i\"")
-	else
-		c+=("$i")
-	fi
-done
-
+for i in "$@"; do c+=("$i"); done
 $POWERSHELL ./hz.ps1 "${c[@]}"
 
 #eof

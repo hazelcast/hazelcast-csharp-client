@@ -73,11 +73,18 @@ function Validate-Platform {
 
 # write usage
 function Write-Usage ( $params, $actions ) {
-    Write-Output "usage hz.[ps1|sh] [<options>] [<commands>]"
     Write-Output ""
-    Write-Output "  When no command is specified, the script displays this documentation."
+    Write-Output "usage hz.[ps1|sh] [<options>] [<commands>] [<commargs>] [--% <rawargs>]"
     Write-Output ""
-    Write-Output "  <commands> is a csv list of:"
+    Write-Output "  <options>    arguments for commands (see available options below)."
+    Write-Output "  <commands>   CSV list of commands (see available commands below) to be executed by the script."
+    Write-Output "               Note that not all commands can be combined together."
+    Write-Output "  <commargs>   additional arguments for commands that support them."
+    Write-Output "  <rawargs>    arguments that are not interpreted by the script, but passed raw to commands that"
+    Write-Output "               support them, such as 'run-example'."
+    Write-Output ""
+    Write-Output "  Commands:"
+    Write-Output ""
 
     $actions | `
         foreach-object {
@@ -93,7 +100,7 @@ function Write-Usage ( $params, $actions ) {
         format-table -autosize -property name,infos -hideTableHeaders -wrap
 
     Write-Output ""
-    Write-Output "<options> are:"
+    Write-Output "  Options:"
 
     $params | `
         foreach-object { 
@@ -120,7 +127,7 @@ function Write-Usage ( $params, $actions ) {
 function Parse-Commands ( $commands, $actions ) {
 
     # create do
-    $do = @{}
+    $do = new-object Collections.Specialized.OrderedDictionary
     $actions | foreach-object {
         $do[$_.name] = $false
     }
@@ -144,6 +151,9 @@ function Parse-Commands ( $commands, $actions ) {
         return $do
     }
 
+    $uniq = $null
+    $count = 0
+
     # else handle Commands
     $commands | foreach-object {
 
@@ -155,7 +165,23 @@ function Parse-Commands ( $commands, $actions ) {
             return
         }
 
+        if ($command.uniq) {
+
+            if ($count -ne 0) { 
+
+                $do = "Command '$($command.name)' cannot be mixed with other commands." 
+                return
+            }
+            $uniq = $command.name
+        }
+        elseif ($uniq -ne $null) { 
+        
+            $do = "Command '$uniq' cannot be mixed with other commands."
+            return
+        }
+
         $do[$command.name] = $true
+        $count += 1
     }
 
     return $do
@@ -216,8 +242,8 @@ function Parse-Args ( $argx, $params ) {
     }
     
     # enter raw block?
-    # note: "--" is handled by pwsh
-    if ($arg -eq "-") {
+    # must use pwsh's own --% syntax
+    if ($arg -eq "--%") {
       $justRaw = $true
       $canBeCommand = $false
       return # continue foreach-object

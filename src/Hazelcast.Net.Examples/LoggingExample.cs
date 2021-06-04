@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples
@@ -20,6 +19,10 @@ namespace Hazelcast.Examples
     // ReSharper disable once UnusedMember.Global
     public class LoggingExample
     {
+        // run this example with
+        // ./hz.ps1 run-example Logging 
+        // ./hz.ps1 run-example Logging --% --Logging:LogLevel:Hazelcast.Examples.LoggingExample.A=Debug
+
         public static void Main(string[] args)
         {
             var options = new HazelcastOptionsBuilder()
@@ -32,7 +35,7 @@ namespace Hazelcast.Examples
 
             var loggerA = loggerFactory.CreateLogger<A>();
 
-            // default level is Debug - everything shows
+            // default level is None - nothing shows
             loggerA.LogDebug("debug.a");
             loggerA.LogInformation("info.a");
             loggerA.LogWarning("warning.a");
