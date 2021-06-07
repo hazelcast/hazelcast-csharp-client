@@ -355,16 +355,25 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
 function ensure-enterprise-key {
 
     $enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
-    if ($options.enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
+    if ($options.enterprise) {
+        if ([System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
 
-        if (test-path "$buildDir/enterprise.key") {
-            $enterpriseKey = @(get-content "$buildDir/enterprise.key")[0].Trim()
-            $env:HAZELCAST_ENTERPRISE_KEY = $enterpriseKey
+            if (test-path "$buildDir/enterprise.key") {
+                Write-Output ""
+                Write-Output "Found enterprise key in build/enterprise.key file."
+                $enterpriseKey = @(get-content "$buildDir/enterprise.key")[0].Trim()
+                $env:HAZELCAST_ENTERPRISE_KEY = $enterpriseKey
+            }
+            else {
+                Die "Enterprise features require an enterprise key, either in`n- HAZELCAST_ENTERPRISE_KEY environment variable, or`n- $buildDir/enterprise.key file."
+            }
         }
         else {
-            Die "Enterprise features require an enterprise key, either in`n- HAZELCAST_ENTERPRISE_KEY environment variable, or`n- $buildDir/enterprise.key file."
+            Write-Output ""
+            Write-Output "Found enterprise key in HAZELCAST_ENTERPRISE_KEY environment variable."
         }
     }
+    $script:enterpriseKey = $enterpriseKey
 }
 
 # ensure we have the nuget api key for pushing
@@ -916,7 +925,7 @@ function hz-build {
     }
     
     Write-Output ""
-    Write-Output "Reorder projects..."
+    Write-Output "Order projects..."
     $projs = Get-TopologicalSort $t
     $projs | Foreach-Object {
        Write-Output "  $_ "
@@ -1137,7 +1146,7 @@ function start-remote-controller() {
 
     # start the remote controller
     $args = @(
-        "-Dhazelcast.enterprise.license.key=$enterpriseKey",
+        "-Dhazelcast.enterprise.license.key=$script:enterpriseKey",
         "-cp", "$($script:options.classpath)",
         "com.hazelcast.remotecontroller.Main"
     )
@@ -1321,7 +1330,7 @@ function run-tests ( $f ) {
         rm "$tmpDir/tests/results/results-$f.xml"
     }
 
-    $script:testResults = $script:testResults + "$tmpDir/tests/results/results-$f.xml"
+    $script:testResults += "$tmpDir/tests/results/results-$f.xml"
 }
 
 # runs tests
@@ -1360,7 +1369,7 @@ function hz-test {
 
 
     # run tests
-    $testResults = @()
+    $script:testResults = @()
 
     rm "$tmpDir\tests\results\results-*" >$null 2>&1
 
@@ -1384,7 +1393,7 @@ function hz-test {
     Write-Output ""
     Write-Output "Summary:"
 
-    foreach ($testResult in $testResults) {
+    foreach ($testResult in $script:testResults) {
 
         $fwk = [System.IO.Path]::GetFileNameWithoutExtension($testResult).TrimStart("result-")
 
