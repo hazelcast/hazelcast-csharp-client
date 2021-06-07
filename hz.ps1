@@ -112,6 +112,10 @@ $params = @(
     @{ name = "serverConfig";    type = [string];  default = $null;
        parm = "<path>";
        desc = "the server configuration xml file"
+    },
+    @{ name = "accept-risks";    type = [switch];  default = $false; 
+       desc = "accepts risks associated with certain commands";
+       note = "Commands such as trigger-release or publish-docs will not run unless this param is set. This is a safety to prevent triggering them by accident."
     }
 )
 
@@ -153,6 +157,10 @@ $actions = @(
     @{ name = "git-docs"; 
        desc = "prepares the documentation release Git commit";
        note = "The commit still needs to be pushed to GitHub pages."
+    },
+    @{ name = "publish-docs";
+       desc = "pushes the documentation releast Git commit to GitHub";
+       note = "The commits needs to be prepared with git-doc."
     },
     @{ name = "pack-nuget"; 
        desc = "packs the NuGet packages"
@@ -355,16 +363,25 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
 function ensure-enterprise-key {
 
     $enterpriseKey = $env:HAZELCAST_ENTERPRISE_KEY
-    if ($options.enterprise -and [System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
+    if ($options.enterprise) {
+        if ([System.String]::IsNullOrWhiteSpace($enterpriseKey)) {
 
-        if (test-path "$buildDir/enterprise.key") {
-            $enterpriseKey = @(get-content "$buildDir/enterprise.key")[0].Trim()
-            $env:HAZELCAST_ENTERPRISE_KEY = $enterpriseKey
+            if (test-path "$buildDir/enterprise.key") {
+                Write-Output ""
+                Write-Output "Found enterprise key in build/enterprise.key file."
+                $enterpriseKey = @(get-content "$buildDir/enterprise.key")[0].Trim()
+                $env:HAZELCAST_ENTERPRISE_KEY = $enterpriseKey
+            }
+            else {
+                Die "Enterprise features require an enterprise key, either in`n- HAZELCAST_ENTERPRISE_KEY environment variable, or`n- $buildDir/enterprise.key file."
+            }
         }
         else {
-            Die "Enterprise features require an enterprise key, either in`n- HAZELCAST_ENTERPRISE_KEY environment variable, or`n- $buildDir/enterprise.key file."
+            Write-Output ""
+            Write-Output "Found enterprise key in HAZELCAST_ENTERPRISE_KEY environment variable."
         }
     }
+    $script:enterpriseKey = $enterpriseKey
 }
 
 # ensure we have the nuget api key for pushing
@@ -837,6 +854,10 @@ function hz-tag-release {
 # triggers the release
 function hz-trigger-release {
 
+    if (-not $options.'accept-risks') {
+        Die "Cannot trigger a release if you do not accept the risks (see -accept-risks option)."
+    }
+
     Write-Output "Version: trigger v$($options.version) release"
 
     $remote = Get-HazelcastRemote
@@ -916,7 +937,7 @@ function hz-build {
     }
     
     Write-Output ""
-    Write-Output "Reorder projects..."
+    Write-Output "Order projects..."
     $projs = Get-TopologicalSort $t
     $projs | Foreach-Object {
        Write-Output "  $_ "
@@ -1012,7 +1033,7 @@ function hz-build-docs-on-windows {
     Write-Output "Docs: Generate metadata..."
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
     if ($LASTEXITCODE) { Die "Error." }
-    if (-not (test-path "$docDir/obj/$docDstDir/api/toc.yml")) { Die "Error: failed to generate metadata" }
+    if (-not (test-path "$docDir/obj/dev/api/toc.yml")) { Die "Error: failed to generate metadata" }
     Write-Output "Docs: Build..."
     &$docfx build "$docDir/docfx.json" --template $template
     if ($LASTEXITCODE) { Die "Error." }
@@ -1117,6 +1138,30 @@ function hz-git-docs {
     }
 }
 
+# publishes the documentation (on Windows)
+function hz-publish-docs-on-windows {
+
+    Write-Output "Release Documentation"
+    Write-Output "  Source         : $tmpdir/docfx.out"
+    Write-Output "  Pages repo     : $tmpdir/gh-pages"
+
+    git -C $tmpdir/gh-pages push origin gh-pages
+}
+
+# pushes the documentation
+# but only on Windows
+function hz-publish-docs {
+    if ($isWindows) {
+        if (-not $options.'accept-risks') {
+            Die "Cannot publish docs if you do not accept the risks (see -accept-risks option)."
+        }
+        hz-publish-docs-on-windows
+    }
+    else {
+        Write-Output "Docs: publishing is not supported on non-Windows platforms"
+    }
+}
+
 # gets extra arguments for Java for Kerberos
 function get-java-kerberos-args() {
     return @(
@@ -1137,7 +1182,7 @@ function start-remote-controller() {
 
     # start the remote controller
     $args = @(
-        "-Dhazelcast.enterprise.license.key=$enterpriseKey",
+        "-Dhazelcast.enterprise.license.key=$script:enterpriseKey",
         "-cp", "$($script:options.classpath)",
         "com.hazelcast.remotecontroller.Main"
     )
@@ -1321,11 +1366,18 @@ function run-tests ( $f ) {
         rm "$tmpDir/tests/results/results-$f.xml"
     }
 
-    $script:testResults = $script:testResults + "$tmpDir/tests/results/results-$f.xml"
+    $script:testResults += "$tmpDir/tests/results/results-$f.xml"
 }
 
 # runs tests
 function hz-test {
+
+    # support filtering tests via a build/test.filter File
+    # this is not documented / supported and is just so that we can push test-PRs that do not run all tests,
+    # exclusively when testing our PR and CI system
+    if ([string]::IsNullOrWhiteSpace($options.testFilter) -and [string]::IsNullOrWhiteSpace($options.test) -and (test-path "$buildDir/test.filter")) {
+        $options.testFilter = (get-content "$buildDir/test.filter" -first 1)
+    }
 
     # determine tests categories
     if(!($options.enterprise)) {
@@ -1360,7 +1412,7 @@ function hz-test {
 
 
     # run tests
-    $testResults = @()
+    $script:testResults = @()
 
     rm "$tmpDir\tests\results\results-*" >$null 2>&1
 
@@ -1384,7 +1436,7 @@ function hz-test {
     Write-Output ""
     Write-Output "Summary:"
 
-    foreach ($testResult in $testResults) {
+    foreach ($testResult in $script:testResults) {
 
         $fwk = [System.IO.Path]::GetFileNameWithoutExtension($testResult).TrimStart("result-")
 
@@ -1627,6 +1679,8 @@ if ($do.'push-nuget') { need dotnet-minimal nuget-api-key }
 if ($do.'run-remote-controller') { need java jars server-version enterprise-key }
 if ($do.'run-server') { need java jars server-version enterprise-key }
 if ($do.'build-docs') { need git build-proj docfx }
+if ($do.'publish-docs') { need git }
+if ($do.'serve-docs') { need build-proj docfx }
 if ($do.'generate-codecs') { need git python }
 
 # ensure needs are satisfied

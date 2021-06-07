@@ -2,7 +2,7 @@
 # Workflow: Build Release
 #
 
-name: Build Release Branch
+name: Build Release
 on:
 
   # build release branch on push to release/* branch
@@ -120,7 +120,7 @@ jobs:
   # build and test the release
   build-release:
 
-    name: Build Release Branch (${{ matrix.os }})
+    name: Build Release (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
     needs: analyze
@@ -132,6 +132,7 @@ jobs:
 
     steps:
       
+      # Install Linux utilities
       - name: Install utilities (Linux only)
         if: matrix.os == 'ubuntu-latest'
         shell: bash
@@ -154,7 +155,7 @@ jobs:
           sudo add-apt-repository universe
           sudo apt-get install -y powershell
 
-      # Install .NET
+      # Install .NET (complete)
       - name: Install .NET 2.1.x
         uses: actions/setup-dotnet@v1
         with:
@@ -250,14 +251,14 @@ jobs:
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
         shell: pwsh
-        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise -test HazelcastTests.Succeed test
+        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test
 
       # report
       # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
       # It's not possible to specify under which workflow test report should belong if more
       # workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
-      # your test report will appear in an unexpected place in GitHub UI." -- so, when we
-      # trigger a manual run on the same SHA without pushing, 
+      # your test report will appear in an unexpected place in GitHub UI." -- so, better not
+      # trigger multiple builds on the same SHA
       - name: Report
         uses: dorny/test-reporter@v1
         if: (success() || failure()) && steps.build.conclusion == 'success'
@@ -265,9 +266,9 @@ jobs:
           name: Test Results (${{ matrix.os }})
           path: temp/tests/results/results-*.trx
           reporter: dotnet-trx
-          list-suites: failed #all
-          list-tests: failed #all
-          fail-on-error: false #true
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
 
       # upload test coverage artifact
       - name: Archive test coverage artifact
@@ -308,10 +309,9 @@ jobs:
 
   # publish the release
   # if the build and tests were successful
-  # TODO: and, if we do want to release?!
   publish-release:
 
-    name: Publish Release Branch
+    name: Publish Release
     runs-on: ubuntu-latest
 
     needs: [ analyze, build-release ]
@@ -360,19 +360,6 @@ jobs:
         run: |
           git config user.email "github-actions@hazelcast.com"
           git config user.name "GitHub Actions (Build Release)"
-
-      ## tag the release
-      #- name: Tag the release
-      #  shell: pwsh
-      #  run: |
-      #    ./hz.ps1 -localRestore tag-version
-
-      ## push & close the branch
-      #- name: Push tag & close branch
-      #  shell: bash
-      #  run: |
-      #    echo DRY   git push origin --tags
-      #    echo DRY   git push origin :release/${{ needs.build-release.outputs.release }}
 
       # prepare for artifacts
       - name: Prepare for artifacts

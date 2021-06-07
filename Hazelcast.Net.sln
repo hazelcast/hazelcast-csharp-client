@@ -47,15 +47,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{D974DFA3-D12
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{0C348BC9-F8B2-4AEE-A32C-6E68CDD120C1}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows.txt = .github\workflows.txt
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{B5D6257C-DD75-4E7E-A779-EC9152AA6B28}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-branch.yml = .github\workflows\build-branch.yml
+		.github\workflows\build-pr.yml = .github\workflows\build-pr.yml
 		.github\workflows\build-release.yml = .github\workflows\build-release.yml
-		.github\workflows\main.yml = .github\workflows\main.yml
-		.github\workflows\test-pr.yml = .github\workflows\test-pr.yml
+		.github\workflows\report-pr.yml = .github\workflows\report-pr.yml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions_hz", "actions_hz", "{3F5A45AC-5925-4D36-8D91-D5BA82FC7129}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hz", "hz", "{EC9DC3B3-C54D-4055-A553-63E757DF3E39}"
 	ProjectSection(SolutionItems) = preProject
 		.github\actions\hz\action.yml = .github\actions\hz\action.yml
 		.github\actions\hz\Dockerfile = .github\actions\hz\Dockerfile
@@ -118,7 +124,8 @@ Global
 		{D974DFA3-D12C-4D97-9886-43A94FDA79D1} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
 		{0C348BC9-F8B2-4AEE-A32C-6E68CDD120C1} = {FD4710D4-ECC2-452E-A7C6-0320AFAFF124}
 		{B5D6257C-DD75-4E7E-A779-EC9152AA6B28} = {0C348BC9-F8B2-4AEE-A32C-6E68CDD120C1}
-		{3F5A45AC-5925-4D36-8D91-D5BA82FC7129} = {0C348BC9-F8B2-4AEE-A32C-6E68CDD120C1}
+		{48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA} = {0C348BC9-F8B2-4AEE-A32C-6E68CDD120C1}
+		{EC9DC3B3-C54D-4055-A553-63E757DF3E39} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}
