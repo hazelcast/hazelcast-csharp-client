@@ -1,0 +1,71 @@
+#
+# Workflow: Report PR
+#
+
+# beware! for workflow_run workflow to run, it must exist on the master or default branch!
+
+name: Report PR
+on:
+  workflow_run:
+    workflows: [ "Build PR" ]
+    types:
+      - completed
+
+jobs:
+
+  report-pr:
+
+    name: Report PR (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    if: >
+      ${{ github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+
+      - name: Prepare
+        shell: bash
+        run: |
+          mkdir ./tests-results
+          echo ${{ github.event.workflow_run.conclusion }}
+
+      - name: Download tests results (${{ matrix.os }})
+        # cannot use download action because we get artifacts from another run
+        uses: actions/github-script@v3.1.0
+        with:
+          script: |
+            var artifacts = await github.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{ github.event.workflow_run.id }},
+            });
+            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "Test-Results (windows-latest)"
+            })[0];
+            var download = await github.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            var fs = require('fs');
+            fs.writeFileSync('${{ github.workspace }}/test-results/test-results.zip', Buffer.from(download.data));
+
+      - name: Unzip test results
+        run: unzip test-results/test-results.zip
+
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: (success() || failure()) && steps.build.conclusion == 'success'
+        with:
+          name: Test Results (${{ matrix.os }})
+          path: tests-results/results-*.trx
+          reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
+
