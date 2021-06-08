@@ -53,14 +53,14 @@ jobs:
                archive_format: 'zip',
             });
             var fs = require('fs');
-            fs.writeFileSync('${{ github.workspace }}/tests-results/tests-results.zip', Buffer.from(download.data));
+            var path = '${{ github.workspace }}'.replace('\\', '/');
+            fs.writeFileSync(path + '/tests-results/tests-results.zip', Buffer.from(download.data));
 
       - name: Unzip test results
         run: unzip test-results/tests-results.zip
 
       - name: Report
         uses: dorny/test-reporter@v1
-        if: (success() || failure()) && steps.build.conclusion == 'success'
         with:
           name: Test Results (${{ matrix.os }})
           path: tests-results/results-*.trx
