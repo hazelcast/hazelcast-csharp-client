@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IPagingPredicate Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IPagingPredicate Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.57.2.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Query.IPagingPredicate">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_Query_IPagingPredicate" data-uid="Hazelcast.Query.IPagingPredicate" class="text-break">IPagingPredicate Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.Query.html">Hazelcast.Query</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Defines a paging predicate.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IPagingPredicate : IPredicate</code></pre>
+  </div>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Query_IPagingPredicate_Page" data-uid="Hazelcast.Query.IPagingPredicate.Page" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Query.IPagingPredicate.Page.html#Hazelcast_Query_IPagingPredicate_Page">Page</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets or sets the current page index</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Query_IPagingPredicate_PageSize" data-uid="Hazelcast.Query.IPagingPredicate.PageSize" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Query.IPagingPredicate.PageSize.html#Hazelcast_Query_IPagingPredicate_PageSize">PageSize</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the page size of each iteration.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Query_IPagingPredicate_NextPage" data-uid="Hazelcast.Query.IPagingPredicate.NextPage" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Query.IPagingPredicate.NextPage.html#Hazelcast_Query_IPagingPredicate_NextPage">NextPage()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Moves to the next page.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Query_IPagingPredicate_PreviousPage" data-uid="Hazelcast.Query.IPagingPredicate.PreviousPage" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Query.IPagingPredicate.PreviousPage.html#Hazelcast_Query_IPagingPredicate_PreviousPage">PreviousPage()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Moves to the previous page.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Query_IPagingPredicate_Reset" data-uid="Hazelcast.Query.IPagingPredicate.Reset" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Query.IPagingPredicate.Reset.html#Hazelcast_Query_IPagingPredicate_Reset">Reset()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Resets the predicate for re-use.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

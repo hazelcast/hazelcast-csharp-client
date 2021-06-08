@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Aggregators Class
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Aggregators Class
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.57.2.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Aggregation.Aggregators">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_Aggregation_Aggregators" data-uid="Hazelcast.Aggregation.Aggregators" class="text-break">Aggregators Class
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.Aggregation.html">Hazelcast.Aggregation</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Creates <a class="xref" href="Hazelcast.Aggregation.IAggregator-1.html">IAggregator&lt;TResult&gt;</a> instances.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static class Aggregators</code></pre>
+  </div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object">Object</a></div>
+    <div class="level1"><span class="xref">Aggregators</span></div>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.equals#System_Object_Equals_System_Object_">Object.Equals(Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.equals#System_Object_Equals_System_Object_System_Object_">Object.Equals(Object, Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.gethashcode#System_Object_GetHashCode">Object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.gettype#System_Object_GetType">Object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.memberwiseclone#System_Object_MemberwiseClone">Object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.referenceequals#System_Object_ReferenceEquals_System_Object_System_Object_">Object.ReferenceEquals(Object, Object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.object.tostring#System_Object_ToString">Object.ToString()</a>
+    </div>
+  </div>
+  <h5 id="Hazelcast_Aggregation_Aggregators_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Min/Max/Average aggregators are type specific, so an IntegerAvg() aggregator expects all elements to be integers.
+There is no conversion executed while accumulating, so if there is any other type met an exception will be thrown.
+<br>
+In order to operate on a generic Number type use the <a class="xref" href="Hazelcast.Aggregation.Aggregators.FixedPointSum.html#Hazelcast_Aggregation_Aggregators_FixedPointSum_System_String_">FixedPointSum(String)</a>,
+<a class="xref" href="Hazelcast.Aggregation.Aggregators.FloatingPointSum.html#Hazelcast_Aggregation_Aggregators_FloatingPointSum_System_String_">FloatingPointSum(String)</a> and <a class="xref" href="Hazelcast.Aggregation.Aggregators.NumberAvg.html#Hazelcast_Aggregation_Aggregators_NumberAvg_System_String_">NumberAvg(String)</a> aggregators.
+All of them will convert the given number to either Long or Double during the accumulation phase.
+It will result in a lot of allocations since each number has to be converted, but it enables the user
+to operate on the whole family of numbers. It is especially useful if the numbers given to the aggregators
+may not be of one type only.
+<br>
+The attributePath given in the factory method allows the aggregator to operate on the value extracted by navigating
+to the given attributePath on each object that has been returned from a query.
+The attribute path may be simple, e.g. &quot;name&quot;, or nested &quot;address.city&quot;.
+<br>
+If an aggregator does not accept null values pass a predicate to the aggregate call that will filter them out.
+<br>
+If the input value or the extracted value is a collection it won&apos;t be &quot;unfolded&quot; - so for example
+count aggregation on &quot;person.postalCodes&quot; will return 1 for each input object and not the size of the collection.
+In order to calculate the size of the collection use the [any] operator, e.g. &quot;person.postalCodes[any]&quot;.</p>
+</div>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_BigIntegerSum" data-uid="Hazelcast.Aggregation.Aggregators.BigIntegerSum" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.BigIntegerSum.html#Hazelcast_Aggregation_Aggregators_BigIntegerSum">BigIntegerSum()</a>
+        </td>
+        <td class="markdown level1 summary"><p>An aggregator that calculates the sum of the input values.
+Does NOT accept null input values.
+Accepts only BigInteger input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_BigIntegerSum_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.BigIntegerSum(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.BigIntegerSum.html#Hazelcast_Aggregation_Aggregators_BigIntegerSum_System_String_">BigIntegerSum(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the sum of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts only BigInteger input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_Count" data-uid="Hazelcast.Aggregation.Aggregators.Count" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.Count.html#Hazelcast_Aggregation_Aggregators_Count">Count()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Counts input values (accepts nulls).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_Count_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.Count(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.Count.html#Hazelcast_Aggregation_Aggregators_Count_System_String_">Count(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Counts input values (accepts nulls).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_DoubleAvg" data-uid="Hazelcast.Aggregation.Aggregators.DoubleAvg" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.DoubleAvg.html#Hazelcast_Aggregation_Aggregators_DoubleAvg">DoubleAvg()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Averages <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.double">Double</a> input values (does not accept nulls).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_DoubleAvg_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.DoubleAvg(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.DoubleAvg.html#Hazelcast_Aggregation_Aggregators_DoubleAvg_System_String_">DoubleAvg(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Averages <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.double">Double</a> input values (does not accept nulls).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_DoubleSum" data-uid="Hazelcast.Aggregation.Aggregators.DoubleSum" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.DoubleSum.html#Hazelcast_Aggregation_Aggregators_DoubleSum">DoubleSum()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the sum of the input values.
+Does NOT accept null input values.
+Accepts only double input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_DoubleSum_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.DoubleSum(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.DoubleSum.html#Hazelcast_Aggregation_Aggregators_DoubleSum_System_String_">DoubleSum(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>An aggregator that calculates the sum of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts only double input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_FixedPointSum" data-uid="Hazelcast.Aggregation.Aggregators.FixedPointSum" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.FixedPointSum.html#Hazelcast_Aggregation_Aggregators_FixedPointSum">FixedPointSum()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the sum of the input values.
+Does NOT accept null input values.
+Accepts float or double input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_FixedPointSum_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.FixedPointSum(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.FixedPointSum.html#Hazelcast_Aggregation_Aggregators_FixedPointSum_System_String_">FixedPointSum(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>An aggregator that calculates the sum of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts float or double input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_FloatingPointSum" data-uid="Hazelcast.Aggregation.Aggregators.FloatingPointSum" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.FloatingPointSum.html#Hazelcast_Aggregation_Aggregators_FloatingPointSum">FloatingPointSum()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the sum of the input values.
+Does NOT accept null input values.
+Accepts float or double input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_FloatingPointSum_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.FloatingPointSum(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.FloatingPointSum.html#Hazelcast_Aggregation_Aggregators_FloatingPointSum_System_String_">FloatingPointSum(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>An aggregator that calculates the sum of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts float or double input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_IntegerAvg" data-uid="Hazelcast.Aggregation.Aggregators.IntegerAvg" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.IntegerAvg.html#Hazelcast_Aggregation_Aggregators_IntegerAvg">IntegerAvg()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the average of the input values.
+Does NOT accept null input values.
+Accepts only int input values</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_IntegerAvg_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.IntegerAvg(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.IntegerAvg.html#Hazelcast_Aggregation_Aggregators_IntegerAvg_System_String_">IntegerAvg(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the average of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts only int input values</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_IntegerSum" data-uid="Hazelcast.Aggregation.Aggregators.IntegerSum" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.IntegerSum.html#Hazelcast_Aggregation_Aggregators_IntegerSum">IntegerSum()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the sum of the input values.
+Does NOT accept null input values.
+Accepts only int input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_IntegerSum_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.IntegerSum(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.IntegerSum.html#Hazelcast_Aggregation_Aggregators_IntegerSum_System_String_">IntegerSum(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>An aggregator that calculates the sum of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts only int input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_LongAvg" data-uid="Hazelcast.Aggregation.Aggregators.LongAvg" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.LongAvg.html#Hazelcast_Aggregation_Aggregators_LongAvg">LongAvg()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the average of the input values.
+Does NOT accept null input values.
+Accepts only long input values</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_LongAvg_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.LongAvg(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.LongAvg.html#Hazelcast_Aggregation_Aggregators_LongAvg_System_String_">LongAvg(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the average of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts only long input values</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_LongSum" data-uid="Hazelcast.Aggregation.Aggregators.LongSum" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.LongSum.html#Hazelcast_Aggregation_Aggregators_LongSum">LongSum()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the sum of the input values.
+Does NOT accept null input values.
+Accepts only long input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_LongSum_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.LongSum(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.LongSum.html#Hazelcast_Aggregation_Aggregators_LongSum_System_String_">LongSum(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>An aggregator that calculates the sum of the input values extracted from the given attributePath.
+Does NOT accept null input values nor null extracted values.
+Accepts only long input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_Max__1" data-uid="Hazelcast.Aggregation.Aggregators.Max``1" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.Max.html#Hazelcast_Aggregation_Aggregators_Max__1">Max&lt;TResult&gt;()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the max of the input values.
+Accepts null input values</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_Max__1_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.Max``1(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.Max.html#Hazelcast_Aggregation_Aggregators_Max__1_System_String_">Max&lt;TResult&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the max of the input values extracted from the given attributePath.
+Accepts null input values and null extracted values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_Min__1" data-uid="Hazelcast.Aggregation.Aggregators.Min``1" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.Min.html#Hazelcast_Aggregation_Aggregators_Min__1">Min&lt;TResult&gt;()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the min of the input values.
+Accepts null input values</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_Min__1_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.Min``1(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.Min.html#Hazelcast_Aggregation_Aggregators_Min__1_System_String_">Min&lt;TResult&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the min of the input values extracted from the given attributePath.
+Accepts null input values and null extracted values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_NumberAvg" data-uid="Hazelcast.Aggregation.Aggregators.NumberAvg" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.NumberAvg.html#Hazelcast_Aggregation_Aggregators_NumberAvg">NumberAvg()</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the average of the input values.
+Does NOT accept null input values.
+Accepts float or double input values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Aggregation_Aggregators_NumberAvg_System_String_" data-uid="Hazelcast.Aggregation.Aggregators.NumberAvg(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Aggregation.Aggregators.NumberAvg.html#Hazelcast_Aggregation_Aggregators_NumberAvg_System_String_">NumberAvg(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>an aggregator that calculates the average of the input values.
+Does NOT accept null input values nor null extracted values.
+Accepts float or double input values.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IMapEntryStats&lt;TKey, TValue&gt; Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IMapEntryStats&lt;TKey, TValue&gt; Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.57.2.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Models.IMapEntryStats`2">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_Models_IMapEntryStats_2" data-uid="Hazelcast.Models.IMapEntryStats`2" class="text-break">IMapEntryStats&lt;TKey, TValue&gt; Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.Models.html">Hazelcast.Models</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents statistics for an entry in an <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a>.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IMapEntryStats&lt;out TKey, out TValue&gt;</code></pre>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TKey</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TValue</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_Cost" data-uid="Hazelcast.Models.IMapEntryStats`2.Cost" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.Cost.html#Hazelcast_Models_IMapEntryStats_2_Cost">Cost</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the cost in bytes of the entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_CreationTime" data-uid="Hazelcast.Models.IMapEntryStats`2.CreationTime" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.CreationTime.html#Hazelcast_Models_IMapEntryStats_2_CreationTime">CreationTime</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the creation epoch time of the entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_ExpirationTime" data-uid="Hazelcast.Models.IMapEntryStats`2.ExpirationTime" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.ExpirationTime.html#Hazelcast_Models_IMapEntryStats_2_ExpirationTime">ExpirationTime</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the expiration epoch time of the entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_Hits" data-uid="Hazelcast.Models.IMapEntryStats`2.Hits" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.Hits.html#Hazelcast_Models_IMapEntryStats_2_Hits">Hits</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets number of hits of the entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_Key" data-uid="Hazelcast.Models.IMapEntryStats`2.Key" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.Key.html#Hazelcast_Models_IMapEntryStats_2_Key">Key</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the key of the entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_LastAccessTime" data-uid="Hazelcast.Models.IMapEntryStats`2.LastAccessTime" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.LastAccessTime.html#Hazelcast_Models_IMapEntryStats_2_LastAccessTime">LastAccessTime</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the last access epoch time to the entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_LastStoredTime" data-uid="Hazelcast.Models.IMapEntryStats`2.LastStoredTime" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.LastStoredTime.html#Hazelcast_Models_IMapEntryStats_2_LastStoredTime">LastStoredTime</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the last epoch time the value was flushed to MapStore.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_LastUpdateTime" data-uid="Hazelcast.Models.IMapEntryStats`2.LastUpdateTime" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.LastUpdateTime.html#Hazelcast_Models_IMapEntryStats_2_LastUpdateTime">LastUpdateTime</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the last epoch time the value was updated.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_Value" data-uid="Hazelcast.Models.IMapEntryStats`2.Value" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.Value.html#Hazelcast_Models_IMapEntryStats_2_Value">Value</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the value of the entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Models_IMapEntryStats_2_Version" data-uid="Hazelcast.Models.IMapEntryStats`2.Version" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Models.IMapEntryStats-2.Version.html#Hazelcast_Models_IMapEntryStats_2_Version">Version</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the version of the entry.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

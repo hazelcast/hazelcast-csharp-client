@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IHazelcastClient Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IHazelcastClient Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.57.2.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
+                <span>Hazelcast .NET</span>
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.IHazelcastClient">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_IHazelcastClient" data-uid="Hazelcast.IHazelcastClient" class="text-break">IHazelcastClient Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.html">Hazelcast</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents the Hazelcast client.</p>
+</div>
+  <div class="markdown level0 conceptual"><p>The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created
+by a <a class="xref" href="Hazelcast.HazelcastClientFactory.html">HazelcastClientFactory</a>. Before it can be used, it needs to be opened via the
+@Hazelcast.IHazelcastClient.OpenAsync* method. After it has been used, it needs to be disposed 
+in order to properly release its resources. For example:</p>
+<pre><code class="lang-csharp">var options = HazelcastOptions.Build();
+var factory = new HazelcastClientFactory(options);
+var client = factory.CreateClient();
+await client.OpenAsync();
+// ... use the client ...
+await client.DisposeAsync();
+</code></pre><p>See <a href="../doc/hazelcastClient.md">Hazelcast Client</a> in the general documentation for more details.</p>
+</div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IHazelcastClient : IAsyncDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#System_IAsyncDisposable_DisposeAsync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+  </div>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_ClusterName" data-uid="Hazelcast.IHazelcastClient.ClusterName" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.ClusterName.html#Hazelcast_IHazelcastClient_ClusterName">ClusterName</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the name of the cluster.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_CPSubsystem" data-uid="Hazelcast.IHazelcastClient.CPSubsystem" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.CPSubsystem.html#Hazelcast_IHazelcastClient_CPSubsystem">CPSubsystem</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the CP subsystem.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_Id" data-uid="Hazelcast.IHazelcastClient.Id" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.Id.html#Hazelcast_IHazelcastClient_Id">Id</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the unique identifier of this client.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_IsActive" data-uid="Hazelcast.IHazelcastClient.IsActive" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.IsActive.html#Hazelcast_IHazelcastClient_IsActive">IsActive</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether the client is active.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_IsConnected" data-uid="Hazelcast.IHazelcastClient.IsConnected" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.IsConnected.html#Hazelcast_IHazelcastClient_IsConnected">IsConnected</a>
+        </td>
+        <td class="markdown level1 summary"><p>Whether the client is connected.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_Members" data-uid="Hazelcast.IHazelcastClient.Members" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.Members.html#Hazelcast_IHazelcastClient_Members">Members</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets a snapshot of the members this client is currently connected to.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_Name" data-uid="Hazelcast.IHazelcastClient.Name" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.Name.html#Hazelcast_IHazelcastClient_Name">Name</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets the name of this client.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_BeginTransactionAsync" data-uid="Hazelcast.IHazelcastClient.BeginTransactionAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.BeginTransactionAsync.html#Hazelcast_IHazelcastClient_BeginTransactionAsync">BeginTransactionAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Begins a new transaction.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_BeginTransactionAsync_Hazelcast_Transactions_TransactionOptions_" data-uid="Hazelcast.IHazelcastClient.BeginTransactionAsync(Hazelcast.Transactions.TransactionOptions)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.BeginTransactionAsync.html#Hazelcast_IHazelcastClient_BeginTransactionAsync_Hazelcast_Transactions_TransactionOptions_">BeginTransactionAsync(TransactionOptions)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Begins a new transaction.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_DestroyAsync_Hazelcast_DistributedObjects_IDistributedObject_" data-uid="Hazelcast.IHazelcastClient.DestroyAsync(Hazelcast.DistributedObjects.IDistributedObject)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.DestroyAsync.html#Hazelcast_IHazelcastClient_DestroyAsync_Hazelcast_DistributedObjects_IDistributedObject_">DestroyAsync(IDistributedObject)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Destroys a distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetListAsync__1_System_String_" data-uid="Hazelcast.IHazelcastClient.GetListAsync``1(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetListAsync.html#Hazelcast_IHazelcastClient_GetListAsync__1_System_String_">GetListAsync&lt;T&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHList-1.html">IHList&lt;T&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetMapAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetMapAsync``2(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetMapAsync.html#Hazelcast_IHazelcastClient_GetMapAsync__2_System_String_">GetMapAsync&lt;TKey, TValue&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.html">IHMap&lt;TKey, TValue&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetMultiMapAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetMultiMapAsync``2(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetMultiMapAsync.html#Hazelcast_IHazelcastClient_GetMultiMapAsync__2_System_String_">GetMultiMapAsync&lt;TKey, TValue&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHMultiMap-2.html">IHMultiMap&lt;TKey, TValue&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetQueueAsync__1_System_String_" data-uid="Hazelcast.IHazelcastClient.GetQueueAsync``1(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetQueueAsync.html#Hazelcast_IHazelcastClient_GetQueueAsync__1_System_String_">GetQueueAsync&lt;T&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHQueue-1.html">IHQueue&lt;T&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetReplicatedMapAsync__2_System_String_" data-uid="Hazelcast.IHazelcastClient.GetReplicatedMapAsync``2(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetReplicatedMapAsync.html#Hazelcast_IHazelcastClient_GetReplicatedMapAsync__2_System_String_">GetReplicatedMapAsync&lt;TKey, TValue&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHReplicatedMap-2.html">IHReplicatedMap&lt;TKey, TValue&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetRingBufferAsync__1_System_String_" data-uid="Hazelcast.IHazelcastClient.GetRingBufferAsync``1(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetRingBufferAsync.html#Hazelcast_IHazelcastClient_GetRingBufferAsync__1_System_String_">GetRingBufferAsync&lt;T&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.html">IHRingBuffer&lt;TItem&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetSetAsync__1_System_String_" data-uid="Hazelcast.IHazelcastClient.GetSetAsync``1(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetSetAsync.html#Hazelcast_IHazelcastClient_GetSetAsync__1_System_String_">GetSetAsync&lt;T&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHSet-1.html">IHSet&lt;T&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_GetTopicAsync__1_System_String_" data-uid="Hazelcast.IHazelcastClient.GetTopicAsync``1(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.GetTopicAsync.html#Hazelcast_IHazelcastClient_GetTopicAsync__1_System_String_">GetTopicAsync&lt;T&gt;(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an <a class="xref" href="Hazelcast.DistributedObjects.IHTopic-1.html">IHTopic&lt;T&gt;</a> distributed object.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_SubscribeAsync_System_Action_Hazelcast_HazelcastClientEventHandlers__" data-uid="Hazelcast.IHazelcastClient.SubscribeAsync(System.Action{Hazelcast.HazelcastClientEventHandlers})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.SubscribeAsync.html#Hazelcast_IHazelcastClient_SubscribeAsync_System_Action_Hazelcast_HazelcastClientEventHandlers__">SubscribeAsync(Action&lt;HazelcastClientEventHandlers&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_IHazelcastClient_UnsubscribeAsync_System_Guid_" data-uid="Hazelcast.IHazelcastClient.UnsubscribeAsync(System.Guid)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.IHazelcastClient.UnsubscribeAsync.html#Hazelcast_IHazelcastClient_UnsubscribeAsync_System_Guid_">UnsubscribeAsync(Guid)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Unsubscribe from events.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
