@@ -4,6 +4,8 @@ bin/
 /temp/
 /local/
 /.idea/
+/.nuget/
+/.github/secrets
 
 *.user
 *.suo

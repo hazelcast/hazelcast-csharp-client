@@ -1,43 +1,35 @@
 #
 # Workflow: Build Release
 #
-# on push to any release/* branch, build solution, test, build and archive NuGet packages, archive test coverage
-# if pushed with tag v*, publish the corresponding release to NuGet
 
+# this is a placeholder workflow in the master branch
+# actual workflow is in the 4.0.z branch for now
+# but we need workflow_dispatch workflows do be defined in master
 
-
-name: Build Release Branch
+name: Build Release
 on:
 
-  # build release branch on push to release/* branch
-  # where * is expected to be a release version eg 2.1.4
   push:
     branches:
       - 'release/*'
+    tags:
+      - 'v*'
 
-  # manually build release branch, optionally release when version matches the branch
-  workflow_dispatch:
-    branches:
-      - 'release/*'
-    inputs:
-      version:
-        description: Copy version (eg "2.1.4") to trigger release. CAREFUL!
-        required: false
-        default: ""
-
-
+  #workflow_dispatch:
+  #  branches:
+  #    - 'release/*'
+  #  inputs:
+  #    version:
+  #      description: Copy version (eg "2.1.4") to trigger release. CAREFUL!
+  #      required: false
+  #      default: ""
 
 jobs:
 
-  # build and test the release
   build-release:
-    name: Build Release Branch
-
+    name: Build Release
     runs-on: ubuntu-latest
-
     steps:
-      
       - name: Do Nothing
         shell: bash
-        run: |
-          echo "Doing Nothing"
+        run: echo "Doing Nothing"

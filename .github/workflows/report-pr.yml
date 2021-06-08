@@ -1,0 +1,78 @@
+#
+# Workflow: Report PR
+#
+
+# beware! for workflow_run workflow to run, it must exist on the master or default branch!
+
+name: Report PR
+on:
+  workflow_run:
+    workflows: [ "Build PR" ]
+    types:
+      - completed
+
+jobs:
+
+  report-pr:
+
+    name: Report PR (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    if: >
+      ${{ github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+
+      - name: Prepare
+        shell: bash
+        run: |
+          echo "Build PR conclusion: ${{ github.event.workflow_run.conclusion }}"
+          mkdir ./tests-results
+          git init # ensure we have a dummy repo, reporter wants it
+
+        # cannot use download action because we get artifacts from another run
+        # must fix the github.workspace outside of JS because in JS it's too late
+      - name: Download tests results (${{ matrix.os }})
+        uses: actions/github-script@v4
+        with:
+          script: |
+            var artifacts = await github.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{ github.event.workflow_run.id }},
+            });
+            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "Test-Results (windows-latest)"
+            })[0];
+            var download = await github.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            var fs = require('fs');
+            // fix github workspace, wants linux-style path
+            //var ghws = '${{ github.workspace }}';
+            var ghws = process.env.GITHUB_WORKSPACE; //.replace(/\\/g, '/').replace(/([a-z])\:\//i, '/mnt/$1/');
+            fs.writeFileSync(ghws + '/tests-results/tests-results.zip', Buffer.from(download.data));
+
+      - name: Unzip test results
+        run: unzip tests-results/tests-results.zip -d tests-results
+
+      - name: List test results
+        run: ls ./tests-results
+
+      - name: Report
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test Results (${{ matrix.os }})
+          path: ./tests-results/results-*.trx
+          reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
+
