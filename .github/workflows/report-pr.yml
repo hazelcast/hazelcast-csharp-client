@@ -53,10 +53,10 @@ jobs:
                archive_format: 'zip',
             });
             var fs = require('fs');
-            fs.writeFileSync('${{ github.workspace }}/test-results/test-results.zip', Buffer.from(download.data));
+            fs.writeFileSync('${{ github.workspace }}/tests-results/tests-results.zip', Buffer.from(download.data));
 
       - name: Unzip test results
-        run: unzip test-results/test-results.zip
+        run: unzip test-results/tests-results.zip
 
       - name: Report
         uses: dorny/test-reporter@v1
