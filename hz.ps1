@@ -1372,6 +1372,12 @@ function run-tests ( $f ) {
 # runs tests
 function hz-test {
 
+    # support filtering tests via a build/test.filter File
+    # this is not documented / supported and is just so that we can push test-PRs that do not run all tests
+    if ([string]::IsNullOrWhiteSpace($options.testFilter) -and [string]::IsNullOrWhiteSpace($options.test) -and (test-path "$buildDir/test.filter")) {
+        $options.testFilter = (get-content "$buildDir/test.filter" -first 1)
+    }
+
     # determine tests categories
     if(!($options.enterprise)) {
         if (-not [System.String]::IsNullOrWhiteSpace($options.testFilter)) { $options.testFilter += " && " } else { $options.testFilter = "" }
