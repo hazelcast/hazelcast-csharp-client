@@ -440,3 +440,13 @@ function invoke-web-request($url, $dest) {
         $progressPreference = $pp
     }
 }
+
+function get-commarg ( $name ) {
+    $commarg = $null
+    $options.commargs | foreach-object {
+        if ($_.StartsWith("$name=")) {
+            $commarg = $_.SubString("$name=".Length).Trim("`"").Trim("`'").Trim()
+        }
+    }
+    return $commarg
+}

@@ -4,7 +4,7 @@ GITHUB ACTIONS WORKFLOWS
 build-branch
 ------------
 
-  on push to any branch,
+  on push to any branch, except release/* or a tag
   - builds and runs tests both on ubuntu and windows
   - publishes tests results
 

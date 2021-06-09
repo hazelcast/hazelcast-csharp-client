@@ -188,7 +188,8 @@ $actions = @(
     @{ name = "run-example"; alias = "ex";
        uniq = $true;
        desc = "runs an example";
-       note = "The example name must be passed as first command arg e.g. ./hz.ps1 run-example Logging. Extra raw parameters can be passed to the example."}
+       note = "The example name must be passed as first command arg e.g. ./hz.ps1 run-example Logging. Extra raw parameters can be passed to the example."
+    }
 
     # failed-tests?!
 )
@@ -339,11 +340,11 @@ $isPreRelease = -not [System.String]::IsNullOrWhiteSpace($versionSuffix)
 # get doc destination according to version
 if ($isPreRelease) {
     $docDstDir = "dev"
-    $docMessage = "Update dev documentation ($version)"
+    $docMessage = "Update dev documentation ($($options.version))"
 }
 else {
     $docDstDir = $versionPrefix
-    $docMessage = "Version $version documentation"
+    $docMessage = "Version $($options.version) documentation"
 }
 
 # determine framework(s)
@@ -731,6 +732,10 @@ function hz-clean {
         Write-Output "  $docDir\templates\hz\Plugins"
         remove-item "$docDir\templates\hz\Plugins" -force -recurse
     }
+    if (test-path "$tmpDir\gh-pages") {
+        Write-Output "  $tmpDir\gh-pages"
+        remove-item "$tmpDir\gh-pages" -force -recurse
+    }
 
     Write-Output ""
 }
@@ -1107,6 +1112,15 @@ function hz-git-docs-on-windows {
     &git -C "$pages" remote set-url origin https://github.com/hazelcast/hazelcast-csharp-client.git
     &git -C "$pages" fetch origin gh-pages
     &git -C "$pages" checkout gh-pages
+
+    $gitEmail = get-commarg "git-docs.user.email"
+    $gitName = get-commarg "git-docs.user.name"
+
+    if (-not [string]::IsNullOrWhiteSpace($gitEmail) -and -not [string]::IsNullOrWhiteSpace($gitName)) {
+        Write-Output "Update git user to `"$gitName <$gitEmail>`""
+        &git -C "$pages" config user.email $gitEmail
+        &git -C "$pages" config user.name $gitName
+    }
 
     if (test-path "$pages/$docDstDir") {
         remove-item -recurse -force "$pages/$docDstDir"
@@ -1704,7 +1718,10 @@ if ($isNewVersion) { $s += " (new, was $currentVersion)" }
 Write-Output "Client version $($options.version)$s"
 
 # this goes first
-if ($do.'clean') { hz-clean }
+if ($do.'clean') {
+    hz-clean 
+    $do.'clean' = $false
+}
 
 # then always prepare directories
 if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }

@@ -30,12 +30,14 @@ jobs:
       - name: Prepare
         shell: bash
         run: |
+          echo "Build PR conclusion: ${{ github.event.workflow_run.conclusion }}"
           mkdir ./tests-results
-          echo ${{ github.event.workflow_run.conclusion }}
+          git init # ensure we have a dummy repo, reporter wants it
 
-      - name: Download tests results (${{ matrix.os }})
         # cannot use download action because we get artifacts from another run
-        uses: actions/github-script@v3.1.0
+        # must fix the github.workspace outside of JS because in JS it's too late
+      - name: Download tests results (${{ matrix.os }})
+        uses: actions/github-script@v4
         with:
           script: |
             var artifacts = await github.actions.listWorkflowRunArtifacts({
@@ -53,17 +55,22 @@ jobs:
                archive_format: 'zip',
             });
             var fs = require('fs');
-            fs.writeFileSync('${{ github.workspace }}/test-results/test-results.zip', Buffer.from(download.data));
+            // fix github workspace, wants linux-style path
+            //var ghws = '${{ github.workspace }}';
+            var ghws = process.env.GITHUB_WORKSPACE; //.replace(/\\/g, '/').replace(/([a-z])\:\//i, '/mnt/$1/');
+            fs.writeFileSync(ghws + '/tests-results/tests-results.zip', Buffer.from(download.data));
 
       - name: Unzip test results
-        run: unzip test-results/test-results.zip
+        run: unzip tests-results/tests-results.zip -d tests-results
+
+      - name: List test results
+        run: ls ./tests-results
 
       - name: Report
         uses: dorny/test-reporter@v1
-        if: (success() || failure()) && steps.build.conclusion == 'success'
         with:
           name: Test Results (${{ matrix.os }})
-          path: tests-results/results-*.trx
+          path: ./tests-results/results-*.trx
           reporter: dotnet-trx
           list-suites: failed
           list-tests: failed

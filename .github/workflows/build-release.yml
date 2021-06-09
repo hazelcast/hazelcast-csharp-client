@@ -169,18 +169,6 @@ jobs:
         with:
           dotnet-version: '5.0.x'
 
-      ## Install .NET Framework stuff for docfx
-      #- name: Install .NET Framework MSBUILD
-      #  if: matrix.os == 'windows-latest'
-      #  uses: microsoft/setup-msbuild@v1.0.2
-      #  with:
-      #    vs-version: '[15.0,16.0)'
-
-      ## Install .NET Framework stuff for docfx
-      #- name: Install .NET Framework NUGET
-      #  if: matrix.os == 'windows-latest'
-      #  uses: nuget/setup-nuget@v1
-
       # Install Java
       - name: Install JDK
         uses: actions/setup-java@v2
@@ -218,25 +206,11 @@ jobs:
           echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk 
           ls -l ./build/hazelcast.snk
 
-      # debug
-      # THIS kills the build
-      #- name: DEBUG
-      #  if: matrix.os == 'windows-latest'
-      #  shell: bash
-      #  env:
-      #    MSBuildSDKsPath: 'C:\Users\runneradmin\AppData\Local\Microsoft\dotnet\5.0.300\Sdks'
-      #  run: 
-      #      echo "MSBuildSDKsPath=$MSBuildSDKsPath"
-      #      echo "MSBuildSDKsPath=$MSBuildSDKsPath" >> $GITHUB_ENV
-      #
-      # OK, dotnet installs 2019 (16.x) but docfx can only find 2017 (15.x)
-      # and, 15.x is not installed - can we somehow cheat docfx?
-
       # build signed and reproducible assemblies + docs (skipped on Linux)
       - name: Build
         id: build
         shell: pwsh
-        run: ./hz.ps1 -localRestore -sign -repro build #,docs,pubdocs
+        run: ./hz.ps1 -localRestore -sign -repro build,build-docs
 
       # clear the snk file
       - name: Clear assembly signature key
@@ -289,21 +263,25 @@ jobs:
           name: NuGet-Packages (${{ matrix.os }})
           path: './temp/output/Hazelcast.Net.*pkg'
 
-      ## create docs patch
-      #- name: Create docs patch
-      #  if: matrix.os == 'windows-latest'
-      #  shell: bash
-      #  run: |
-      #    mkdir ./temp/gh-pages-patches
-      #    git -C ./temp/gh-pages format-patch -1 -o ./temp/gh-pages-patches
+      # git the docs, create the patch
+      - name: Create docs patch
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
+          mkdir ./temp/gh-pages-patches >$null 2>&1
+          echo "Create git patch"
+          git -C ./temp/gh-pages format-patch -1 -o ../gh-pages-patches
+          echo "Patch files:"
+          ls ./temp/gh-pages-patches/
 
-      ## archive docs patch
-      #- name: Archive docs patch artifact
-      #  if: matrix.os == 'windows-latest'
-      #  uses: actions/upload-artifact@v2
-      #  with:
-      #    name: Docs-Patch (${{ matrix.os }})
-      #    path: './temp/gh-pages-patches/'
+      # archive docs patch
+      - name: Archive docs patch artifact
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: Docs-Patch
+          path: './temp/gh-pages-patches/*.patch'
 
 
 
@@ -376,20 +354,21 @@ jobs:
           name: NuGet-Packages (windows-latest)
           path: ./temp/output
 
-      ## download docs patch artifact
-      #- name: Download docs patch artifact
-      #  uses: actions/download-artifact@v2
-      #  with:
-      #    name: Docs-Patch (windows-latest)
-      #    path: ./temp/gh-pages-patches
+      # download docs patch artifact
+      - name: Download docs patch artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Docs-Patch
+          path: ./temp/gh-pages-patches
 
       # verify downloads
       - name: Verify downloads
         shell: bash
         run: |
-          pwd
+          echo "packages:"
           ls ./temp/output
-          #ls ./temp/gh-pages-patches
+          echo "docs patch:"
+          ls ./temp/gh-pages-patches
 
       # publish nuget package
       - name: Publish NuGet packages
@@ -399,18 +378,17 @@ jobs:
         run: |
           ./hz.ps1 -noRestore -localRestore push-nuget
 
-      ## publish documentation
-      #- name: Publish Documentation
-      #  shell: bash
-      #  run: |
-      #    git clone . ./temp/gh-pages
-      #    git -C ./temp/gh-pages config user.email "github-actions@hazelcast.com"
-      #    git -C ./temp/gh-pages config user.name "GitHub Actions (Build Release)"
-      #    git -C ./temp/gh-pages remote set-url origin https://github.com/hazelcast/hazelcast-csharp-client.git
-      #    git -C ./temp/gh-pages fetch origin gh-pages
-      #    git -C ./temp/gh-pages checkout gh-pages
-      #    git -C ./temp/gh-pages am ./temp/patches/*.patch
-      #    echo DRY   git -C ./temp/gh-pages push origin gh-pages
+      # publish documentation
+      - name: Publish Documentation
+        shell: bash
+        run: |
+          mkdir ./temp/gh-pages
+          git -C ./temp/gh-pages init
+          git -C ./temp/gh-pages remote add origin https://github.com/hazelcast/hazelcast-csharp-client.git
+          git -C ./temp/gh-pages fetch origin gh-pages
+          git -C ./temp/gh-pages checkout gh-pages
+          cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          git -C ./temp/gh-pages push origin gh-pages
 
       # trash the release branch
       - name: Close release branch

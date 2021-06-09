@@ -10,9 +10,6 @@ if [ -z $POWERSHELL ]; then
   exit 1
 fi
 
-$POWERSHELL ./hz.ps1 $@
-exit
-
 # put quotes around args that contain whitespaces,
 # this black magic thing works in bash on Windows and Linux,
 # though I would have a hard time explaining why exactly.
