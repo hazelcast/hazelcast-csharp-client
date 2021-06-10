@@ -25,6 +25,7 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Examples.SoakTests
 {
     // ./hz.ps1 run-example ~Soak1 --%
+    // ./hx.exe ~Soak1
     //   --hazelcast:examples:soak1:ThreadCount=1             (valid integer)
     //   --hazelcast:examples:soak1:Duration="HH:MM:SS"       (valid timespan)
     //   --hazelcast:networking:addresses:0=127.0.0.1:5701

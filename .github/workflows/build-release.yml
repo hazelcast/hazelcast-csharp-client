@@ -265,6 +265,20 @@ jobs:
           name: NuGet-Packages (${{ matrix.os }})
           path: './temp/output/Hazelcast.Net.*pkg'
 
+      # publish examples (inc. soak tests) (windows only so we have framework too)
+      - name: Publish examples
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ./hz.ps1 -noRestore -localRestore publish-examples
+
+      # archive examples (windows only)
+      - name: Archive examples artifact
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: Examples
+          path: './temp/publish/examples-*'        
+
       # git the docs, create the patch
       - name: Create docs patch
         if: matrix.os == 'windows-latest'

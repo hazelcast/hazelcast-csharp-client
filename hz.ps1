@@ -189,6 +189,12 @@ $actions = @(
        uniq = $true;
        desc = "runs an example";
        note = "The example name must be passed as first command arg e.g. ./hz.ps1 run-example Logging. Extra raw parameters can be passed to the example."
+    },
+    @{
+        name = "publish-examples";
+        uniq = $true;
+        desc = "publishes examples";
+        note = "Publishes examples into temp/publish"
     }
 
     # failed-tests?!
@@ -1648,6 +1654,32 @@ function hz-run-example {
         Die "usage: hz run-example [~]<example> --% <args>"
     }
     &$hx $options.commargs
+}
+
+# publish examples
+function hz-publish-examples {
+
+        Write-Output ""
+        Write-Output "Publish examples..."
+
+        if (test-path "$tmpDir/publish") {
+            remove-item "$tmpDir/publish" -Force -Recurse
+        }
+
+        mkdir "$tmpDir/publish" >$null 2>&1
+
+        foreach ($framework in $frameworks) {
+            Write-Output ""
+            Write-Output "Publish examples for $framework..."
+            $publishArgs = @(
+                "$srcDir/Hazelcast.Net.Examples",
+                "-c", "$($options.configuration)",
+                "-f", "$framework",
+                "-o", "$tmpDir/publish/examples-$framework",
+                "--no-restore", "--no-build", "--packages", $nugetPackages
+            )
+            dotnet publish $publishArgs
+        }
 }
 
 # ########
