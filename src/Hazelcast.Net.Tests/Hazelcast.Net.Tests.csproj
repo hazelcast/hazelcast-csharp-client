@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <!-- BEWARE, version must align with build/build.proj! -->
-    <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2020.2.3" />
+    <DotNetCliToolReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" />
   </ItemGroup>
 
   <ItemGroup>

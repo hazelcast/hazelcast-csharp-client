@@ -1,0 +1,58 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask
+    TaskName="GetGitRepositoryRemoteName"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >
+    <ParameterGroup>
+      <GitRepositoryRemoteUrl ParameterType="System.String" />
+      <GitRepositoryRemoteName ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <!--<Reference Include="" />-->
+      <Using Namespace="System"/>
+      <Using Namespace="System.Diagnostics"/>
+      <Code Type="Fragment" Language="cs">
+<![CDATA[
+
+try
+{
+    var startInfo = new ProcessStartInfo("git", "remote -v");
+
+    startInfo.RedirectStandardError = startInfo.RedirectStandardInput = startInfo.RedirectStandardOutput = true;
+    startInfo.UseShellExecute = false;
+    startInfo.CreateNoWindow = true;
+    //startInfo.WorkingDirectory = workingDirectory;
+
+    var proc = new Process { StartInfo = startInfo };
+    proc.Start();
+
+    var name = "";
+
+    proc.OutputDataReceived += delegate (object sender, DataReceivedEventArgs e)
+    {
+        if (e.Data is string && e.Data.Length > 0 && e.Data.Contains(GitRepositoryRemoteUrl))
+          name = e.Data.Substring(0, e.Data.IndexOf("\t"));
+    };
+    proc.ErrorDataReceived += delegate (object sender, DataReceivedEventArgs e)
+    {
+        // ... ignore ...
+    };
+
+    proc.BeginOutputReadLine();
+    proc.BeginErrorReadLine();
+    proc.WaitForExit();
+
+    GitRepositoryRemoteName = name;
+}
+catch
+{
+    GitRepositoryRemoteName = "";
+}
+
+]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project>

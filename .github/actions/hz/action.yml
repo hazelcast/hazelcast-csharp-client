@@ -1,0 +1,17 @@
+name: "Hazelcast .NET Client Actions"
+description: "Actions for the Hazelcast .NET Client"
+author: "stephane.gay@hazelcast.com"
+
+inputs:
+  ARGS:
+    description: "hz command arguments"
+    required: false
+    default: build
+
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
+branding:
+  icon: "mic"
+  color: "purple"

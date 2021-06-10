@@ -20,10 +20,12 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.Models;
+using Hazelcast.Events;
+using Hazelcast.Metrics;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
+using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast
 {
@@ -38,6 +40,7 @@ namespace Hazelcast
 
         private readonly DistributedObjectFactory _distributedOjects;
         private readonly NearCacheManager _nearCacheManager;
+        private readonly MetricsPublisher _metricsPublisher;
 
         private int _disposed;
 
@@ -59,57 +62,57 @@ namespace Hazelcast
             _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
 
-            // wire events - clean
+            if (options.Metrics.Enabled)
+            {
+                _metricsPublisher = new MetricsPublisher(cluster, options.Metrics, loggerFactory);
+                _metricsPublisher.AddSource(new ClientMetricSource(cluster, loggerFactory));
+                _metricsPublisher.AddSource(_nearCacheManager);
+            }
 
-            // NOTE: each event that is a Func<..., ValueTask> *must* be invoked
-            // through the special FuncExtensions.AwaitEach() method, see notes in
-            // FuncExtensions.cs
+            // wire components
+            WireComponents();
+        }
 
-            // when an object is created/destroyed, OnObject... triggers the user-level events
-            cluster.ClusterEvents.ObjectCreated = OnObjectCreated;
-            cluster.ClusterEvents.ObjectDestroyed = OnObjectDestroyed;
+        private void WireComponents()
+        {
+            // assigning multi-cast handlers *must* use +=
 
-            // when client/cluster state changes, OnStateChanged triggers user-level events
-            cluster.State.StateChanged += OnStateChanged;
+            // when an object is created/destroyed, trigger the user-level events
+            Cluster.Events.ObjectCreated
+                += Trigger<DistributedObjectCreatedEventHandler, DistributedObjectCreatedEventArgs>;
 
-            // when partitions are updated, OnPartitionUpdated triggers the user-level event
-            cluster.Events.PartitionsUpdated += OnPartitionsUpdated;
+            Cluster.Events.ObjectDestroyed
+                += Trigger<DistributedObjectDestroyedEventHandler, DistributedObjectDestroyedEventArgs>;
 
-            // when a partition is lost, OnPartitionLost triggers the user-level event
-            cluster.ClusterEvents.PartitionLost = OnPartitionLost;
+            // when client/cluster state changes, trigger user-level events
+            Cluster.State.StateChanged
+                += state => Trigger<StateChangedEventHandler, StateChangedEventArgs>(new StateChangedEventArgs(state));
 
-            // when members are updated, Connections.OnMembersUpdated queues the added
-            // members so that a connection is opened to each of them.
-            cluster.Events.MembersUpdated += cluster.Connections.OnMembersUpdated;
+            // when partitions are updated, trigger the user-level event
+            Cluster.Events.PartitionsUpdated
+                += Trigger<PartitionsUpdatedEventHandler>;
 
-            // when members are updated, OnMembersUpdated triggers the user-level event
-            cluster.Events.MembersUpdated += OnMembersUpdated;
+            // when a partition is lost, trigger the user-level event
+            Cluster.Events.PartitionLost
+                += Trigger<PartitionLostEventHandler, PartitionLostEventArgs>;
 
-            // when a connection is created, Events.OnConnectionCreated wires the connection
-            // ReceivedEvent event to Events.OnReceivedEvent, in order to handle events
-            cluster.Connections.ConnectionCreated += cluster.Events.OnConnectionCreated;
+            // when members are updated, trigger the user-level event
+            Cluster.Events.MembersUpdated
+                += Trigger<MembersUpdatedEventHandler, MembersUpdatedEventArgs>;
 
-            // when connecting to a new cluster, DistributedObjects.OnConnectingToNewCluster
-            // re-creates all the known distributed object so far on the new cluster
-            cluster.Connections.ConnectionOpened += _distributedOjects.OnConnectionOpened;
+            // when a connection is closed, trigger the user-level event
+            Cluster.Connections.ConnectionClosed
+                += conn => Trigger<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(new ConnectionClosedEventArgs(conn));
 
-            // when a connection is added, OnConnectionOpened triggers the user-level event
-            // and, if it is the first connection, subscribes to events according to the
-            // subscribers defined in options.
-            cluster.Connections.ConnectionOpened += OnConnectionOpened;
+            // when a connection is opened, DistributedObjects.OnConnectionOpened checks
+            // whether it is the first connection to a new cluster, and then re-creates
+            // all the known distributed object so far on the new cluster.
+            Cluster.Connections.ConnectionOpened
+                += _distributedOjects.OnConnectionOpened;
 
-            // when a connection is opened, Events.OnConnectionOpened ensures that the
-            // cluster connection (handling member/partition views) is set, and installs
-            // subscriptions on this new connection.
-            cluster.Connections.ConnectionOpened += cluster.Events.OnConnectionOpened;
-
-            // when a connection is closed, client.OnConnectionClosed triggers the user-level event
-            cluster.Connections.ConnectionClosed += OnConnectionClosed;
-
-            // when a connection is closed, Events.OnConnectionClosed clears subscriptions
-            // (cannot unsubscribe since the connection is closed) and ensures that the
-            // cluster connection (handling member/partition views) is set.
-            cluster.Connections.ConnectionClosed += cluster.Events.OnConnectionClosed;
+            // when a connection is opened, trigger the user-level event.
+            Cluster.Connections.ConnectionOpened
+                += (conn, isFirstEver, isFirst, isNewCluster) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));
         }
 
         /// <summary>
@@ -127,7 +130,7 @@ namespace Hazelcast
         public string ClusterName => Cluster.Name;
 
         /// <inheritdoc />
-        public IReadOnlyCollection<MemberInfo> Members => Cluster.Members.SnapshotMembers().ToList();
+        public IReadOnlyCollection<MemberInfo> Members => Cluster.Members.GetMembers().ToList();
 
         /// <inheritdoc />
         public bool IsActive => Cluster.IsActive;
@@ -145,19 +148,22 @@ namespace Hazelcast
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the client is connected.</returns>
-        public
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var task = Cluster.ConnectAsync(cancellationToken);
+            // before anything else, run all subscribers - we don't have connections yet
+            // but that does not matter, the subscriptions will be registered (for server-side
+            // events) and added when possible - for local (client) events such as 'member
+            // updated'... no server interaction is required
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
+            // subscribe
+            foreach (var subscriber in _options.Subscribers)
+            {
+                // NOTE: consider storing the id for later removal?
+                var subscriptionId = await SubscribeAsync(subscriber.Build).CfAwait();
+            }
+
+            // connect the cluster
+            await Cluster.ConnectAsync(cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />
@@ -168,6 +174,15 @@ namespace Hazelcast
 
             // order is important, must dispose the cluster last, as it will tear down
             // connections that may be required by other things being disposed
+
+            try
+            {
+                if (_metricsPublisher != null) await _metricsPublisher.DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Caught exception while disposing the metrics publisher.");
+            }
 
             try
             {

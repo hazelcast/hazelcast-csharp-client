@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,23 +47,18 @@ namespace Hazelcast.Serialization
             return GetClassDefContext(factoryId).Lookup(classId, version);
         }
 
-        /// <exception cref="System.IO.IOException" />
         public IClassDefinition LookupClassDefinition(IData data)
         {
-            if (!data.IsPortable)
-            {
-                throw new ArgumentException("Data is not Portable!");
-            }
-            var @in = _serializationService.CreateObjectDataInput(data);
-            var factoryId = @in.ReadInt();
-            var classId = @in.ReadInt();
-            var version = @in.ReadInt();
-            var classDefinition = LookupClassDefinition(factoryId, classId, version);
-            if (classDefinition == null)
-            {
-                classDefinition = ReadClassDefinition(@in, factoryId, classId, version);
-            }
-            return classDefinition;
+            if (!data.IsPortable) throw new ArgumentException("Data is not Portable.", nameof(data));
+
+            using var input = _serializationService.CreateObjectDataInput(data);
+
+            var factoryId = input.ReadInt();
+            var classId = input.ReadInt();
+            var version = input.ReadInt();
+
+            return LookupClassDefinition(factoryId, classId, version) ??
+                   ReadClassDefinition(input, factoryId, classId, version);
         }
 
         public IClassDefinition RegisterClassDefinition(IClassDefinition cd)

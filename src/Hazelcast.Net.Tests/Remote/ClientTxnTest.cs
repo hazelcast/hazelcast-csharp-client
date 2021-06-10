@@ -17,7 +17,9 @@ using System.Threading.Tasks;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Transactions;
+using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -91,9 +93,14 @@ namespace Hazelcast.Tests.Remote
                 await context.CommitAsync();
             });
 
-            // java: TransactionImpl.checkTimeout() throws TransactionException,
-            // not TransactionTimedOutException - go figure
-            Assert.That(e.Error, Is.EqualTo(RemoteError.Transaction));
-		}
+            // prior to 4.2, java TransactionImpl.checkTimeout() throws TransactionException
+            // starting with 4.2, java TransactionImpl.checkTimeout() throws TransactionTimedOutException
+            var serverVersion = ServerVersion.GetVersion();
+            var expectedError = serverVersion < new NuGetVersion(4, 2, 0)
+                ? RemoteError.Transaction
+                : RemoteError.TransactionTimedOut;
+
+            Assert.That(e.Error, Is.EqualTo(expectedError));
+        }
     }
 }

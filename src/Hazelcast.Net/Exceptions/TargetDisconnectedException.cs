@@ -22,7 +22,7 @@ namespace Hazelcast.Exceptions
     /// Represents the exception that is thrown when the target of an invocation disconnects.
     /// </summary>
     [Serializable]
-    public sealed class TargetDisconnectedException : HazelcastException
+    public sealed class TargetDisconnectedException : TargetUnreachableException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationException"/> class.
@@ -32,7 +32,7 @@ namespace Hazelcast.Exceptions
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with a specified error message.
+        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         public TargetDisconnectedException(string message)
@@ -40,7 +40,7 @@ namespace Hazelcast.Exceptions
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with a reference to
+        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
@@ -50,7 +50,7 @@ namespace Hazelcast.Exceptions
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with a specified error message
+        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
@@ -61,7 +61,7 @@ namespace Hazelcast.Exceptions
         { }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationException"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="TargetDisconnectedException"/> class with serialized data.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
         /// about the exception being thrown.</param>

@@ -28,7 +28,7 @@ namespace Hazelcast.Events
         /// <param name="addedMembers">Added members.</param>
         /// <param name="removedMembers">Removed members.</param>
         /// <param name="members">All members.</param>
-        public MembersUpdatedEventArgs(IReadOnlyCollection<MemberInfo> addedMembers, IReadOnlyCollection<MemberInfo> removedMembers, IReadOnlyCollection<MemberInfo> members)
+        internal MembersUpdatedEventArgs(IReadOnlyCollection<MemberInfo> addedMembers, IReadOnlyCollection<MemberInfo> removedMembers, IReadOnlyCollection<MemberInfo> members)
         {
             AddedMembers = addedMembers;
             RemovedMembers = removedMembers;

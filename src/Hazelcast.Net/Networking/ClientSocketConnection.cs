@@ -46,7 +46,7 @@ namespace Hazelcast.Networking
         /// <param name="sslOptions">SSL options.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         /// <param name="prefixLength">An optional prefix length.</param>
-        public ClientSocketConnection(int id, IPEndPoint endpoint, NetworkingOptions options, SslOptions sslOptions, ILoggerFactory loggerFactory, int prefixLength = 0)
+        public ClientSocketConnection(Guid id, IPEndPoint endpoint, NetworkingOptions options, SslOptions sslOptions, ILoggerFactory loggerFactory, int prefixLength = 0)
             : base(id, prefixLength)
         {
             _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
@@ -54,8 +54,7 @@ namespace Hazelcast.Networking
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(16).SetPrefix($"CONN.CLIENT [{id}]")));
+            HConsole.Configure(x => x.Configure(this).SetIndent(16).SetPrefix($"CLT.CONN [{id.ToShortString()}]"));
         }
 
         /// <summary>
@@ -84,7 +83,7 @@ namespace Hazelcast.Networking
                 : new LingerOption(false, 1);
 
             // connect to server
-            HConsole.WriteLine(this, "Connect to server");
+            HConsole.WriteLine(this, $"Connect to server at {_endpoint}");
             await socket.ConnectAsync(_endpoint, _options.ConnectionTimeoutMilliseconds, cancellationToken).CfAwait();
             HConsole.WriteLine(this, "Connected to server");
 
@@ -100,7 +99,7 @@ namespace Hazelcast.Networking
             // wire the pipe
             OpenPipe(socket, stream);
 
-            HConsole.WriteLine(this, "Opened");
+            if (IsActive) HConsole.WriteLine(this, "Opened");
         }
     }
 }

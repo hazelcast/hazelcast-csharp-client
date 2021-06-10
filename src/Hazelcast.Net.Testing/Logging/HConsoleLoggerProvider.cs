@@ -18,6 +18,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.Logging
 {
+    /// <summary>
+    /// Represents a logger provider that logs to <see cref="HConsole"/>.
+    /// </summary>
     public class HConsoleLoggerProvider : ITestingLoggerProvider
     {
         private readonly ConcurrentDictionary<string, ILogger> _loggers = new ConcurrentDictionary<string, ILogger>();
@@ -28,6 +31,10 @@ namespace Hazelcast.Testing.Logging
         public HConsoleLoggerProvider(TestingLoggerOptions options = null)
         {
             _options = options ?? new TestingLoggerOptions();
+
+#if HZ_CONSOLE
+            HConsole.Configure(x => x.Configure<HConsoleLoggerProvider>().SetPrefix("LOG"));
+#endif
         }
 
         public ILogger CreateLogger(string categoryName)
@@ -38,7 +45,9 @@ namespace Hazelcast.Testing.Logging
 
         public void WriteLog(LogMessageEntry entry)
         {
-            HConsole.WriteLine(this, $"{entry.TimeStamp}{entry.LevelString}{entry.Message}");
+#if HZ_CONSOLE
+            HConsole.WriteLine(this, $"{entry.TimeStamp}{entry.LevelString}{entry.Message.TrimEnd('\r', '\n')}");
+#endif
         }
 
         public void Dispose()

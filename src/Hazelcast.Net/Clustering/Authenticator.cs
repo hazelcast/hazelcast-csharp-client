@@ -23,6 +23,7 @@ using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Security;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
@@ -34,16 +35,18 @@ namespace Hazelcast.Clustering
         private static string _clientVersion; // static cache (immutable value)
         private readonly AuthenticationOptions _options;
         private readonly SerializationService _serializationService;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Authenticator"/> class.
         /// </summary>
-        public Authenticator(AuthenticationOptions options, SerializationService serializationService)
+        public Authenticator(AuthenticationOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory))).CreateLogger<Authenticator>();
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("AUTH")));
+            HConsole.Configure(x => x.Configure<Authenticator>().SetIndent(4).SetPrefix("AUTH"));
         }
 
         /// <summary>
@@ -65,6 +68,8 @@ namespace Hazelcast.Clustering
             var credentialsFactory = _options.CredentialsFactory.Service;
             using var temp = credentialsFactory != null ? null : new DefaultCredentialsFactory();
             credentialsFactory ??= temp;
+
+            _logger.LogDebug("Authenticate with {CredentialsFactoryType}", credentialsFactory.GetType().Name);
 
             var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
             if (result != null) return result;
@@ -127,7 +132,7 @@ namespace Hazelcast.Clustering
             cancellationToken.ThrowIfCancellationRequested();
 
             HConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var responseMessage = await client.SendAsync(requestMessage).CfAwait();
             HConsole.WriteLine(this, "Rcvd auth response");
             var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
             HConsole.WriteLine(this, "Auth response is: " + (AuthenticationStatus) response.Status);
@@ -135,7 +140,7 @@ namespace Hazelcast.Clustering
             return (AuthenticationStatus) response.Status switch
             {
                 AuthenticationStatus.Authenticated
-                    => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion),
+                    => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion, credentials.Name),
 
                 AuthenticationStatus.CredentialsFailed
                     => null, // could want to retry

@@ -44,8 +44,10 @@ namespace Hazelcast.Testing
                         action();
                         break;
                     }
-                    catch (AssertionException e)
+                    catch (Exception e)
                     {
+                        // catch both AssertionException thrown by NUnit assertions,
+                        // and exceptions thrown by the executing code
                         caught = e;
                     }
                 }
@@ -78,8 +80,10 @@ namespace Hazelcast.Testing
                         await action().CfAwait();
                         break;
                     }
-                    catch (AssertionException e)
+                    catch (Exception e)
                     {
+                        // catch both AssertionException thrown by NUnit assertions,
+                        // and exceptions thrown by the executing code
                         caught = e;
                     }
                 }

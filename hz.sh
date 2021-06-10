@@ -2,13 +2,10 @@
 
 POWERSHELL=pwsh
 if ! type $POWERSHELL >/dev/null 2>&1; then
-  POWERSHELL=powershell
-fi
-if ! type $POWERSHELL >/dev/null 2>&1; then
   POWERSHELL=""
 fi
 if [ -z $POWERSHELL ]; then
-  echo "Could not find a 'powershell' or 'pwsh' command."
+  echo "Could not find a 'pwsh' command."
   echo "Please make sure that Powershell is installed."
   exit 1
 fi
@@ -18,16 +15,7 @@ fi
 # though I would have a hard time explaining why exactly.
 
 c=()
-for i in "$@"
-do
-	if [[ "$OS" == "Windows_NT" ]] && [[ "$i" =~ " " ]] && [[ "$POWERSHELL" == "powershell" ]];
-	then
-    	c+=("\"$i\"")
-	else
-		c+=("$i")
-	fi
-done
-
+for i in "$@"; do c+=("$i"); done
 $POWERSHELL ./hz.ps1 "${c[@]}"
 
 #eof

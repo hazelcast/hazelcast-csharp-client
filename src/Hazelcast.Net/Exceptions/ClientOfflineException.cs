@@ -24,7 +24,7 @@ namespace Hazelcast.Exceptions
     /// <remarks>
     /// <para>The <see cref="State"/> property provides the <see cref="ClientState"/> of the client
     /// at the time the exception was thrown. The client may be either not connected at all, in which
-    /// case retrying an operation will not succeed. Or, it may be  temporarily disconnected and trying
+    /// case retrying an operation will not succeed. Or, it may be temporarily disconnected and trying
     /// to reconnect, in which case retrying an operation may eventually succeed.</para>
     /// </remarks>
     [Serializable]
@@ -57,7 +57,7 @@ namespace Hazelcast.Exceptions
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         [ExcludeFromCodeCoverage]
-        private ClientOfflineException(string message)
+        public ClientOfflineException(string message)
             : base(message)
         {
             State = 0; // unknown
@@ -80,7 +80,7 @@ namespace Hazelcast.Exceptions
         /// </summary>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         [ExcludeFromCodeCoverage]
-        private ClientOfflineException(Exception innerException)
+        public ClientOfflineException(Exception innerException)
             : base(ExceptionMessages.ClientNotConnectedException, innerException)
         {
             State = 0; // unknown
@@ -105,7 +105,7 @@ namespace Hazelcast.Exceptions
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
         [ExcludeFromCodeCoverage]
-        private ClientOfflineException(string message, Exception innerException)
+        public ClientOfflineException(string message, Exception innerException)
             : base(message, innerException)
         {
             State = 0; // unknown

@@ -61,7 +61,7 @@ namespace Hazelcast.NearCaching
             Options = nearCacheOptions ?? throw new ArgumentNullException(nameof(nearCacheOptions));
 
             _entries = new ConcurrentAsyncDictionary<IData, NearCacheEntry>();
-            Statistics = new NearCacheStatistics();
+            Statistics = new NearCacheStatistics(name);
 
             _lastExpire = Clock.Never;
 

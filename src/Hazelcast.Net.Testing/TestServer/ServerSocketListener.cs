@@ -50,8 +50,7 @@ namespace Hazelcast.Testing.TestServer
             _endpoint = endpoint;
             _hcname = hcname;
 
-            HConsole.Configure(x => x
-                .Set(this, xx => xx.SetIndent(24).SetPrefix("LISTENER".Dot(hcname))));
+            HConsole.Configure(x => x.Configure(this).SetIndent(24).SetPrefix("LISTENER".Dot(hcname)));
         }
 
         /// <summary>
@@ -236,7 +235,7 @@ namespace Hazelcast.Testing.TestServer
             try
             {
                 // we now have a connection
-                _serverConnection = new ServerSocketConnection(_connectionIdSequence.GetNext(), handler, _hcname);
+                _serverConnection = new ServerSocketConnection(Guid.NewGuid(), handler, _hcname);
                 _onAcceptConnection(_serverConnection);
             }
             catch (Exception e)

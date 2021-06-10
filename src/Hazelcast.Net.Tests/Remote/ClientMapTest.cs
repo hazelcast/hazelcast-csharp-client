@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,9 @@ using Hazelcast.Exceptions;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Tests.TestObjects;
+using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -598,7 +600,14 @@ namespace Hazelcast.Tests.Remote
 
             var entryStats = await dictionary.GetEntryViewAsync("item1");
 
-            Assert.AreEqual(0, entryStats.Hits);
+            // prior to 4.2, hits is zero
+            // starting with 4.2, hits is -1
+            var serverVersion = ServerVersion.GetVersion();
+            var expectedHits = serverVersion < new NuGetVersion(4, 2, 0)
+                ? 0
+                : -1;
+
+            Assert.AreEqual(expectedHits, entryStats.Hits);
 
             Assert.AreEqual("item1", entryStats.Key);
             Assert.AreEqual("value1", entryStats.Value);
@@ -1143,7 +1152,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.AreEqual(0, await dictionary.GetSizeAsync());
-            await dictionary.PutTransientAsync("key1", "value1", TimeSpan.FromMilliseconds(100));
+            await dictionary.PutTransientAsync("key1", "value1", TimeSpan.FromMilliseconds(1000));
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
 
             await AssertEx.SucceedsEventually(async () =>
@@ -1158,7 +1167,7 @@ namespace Hazelcast.Tests.Remote
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
-            await dictionary.SetAsync("key1", "value1", TimeSpan.FromMilliseconds(100));
+            await dictionary.SetAsync("key1", "value1", TimeSpan.FromMilliseconds(1000));
             Assert.IsNotNull(await dictionary.GetAsync("key1"));
 
             await AssertEx.SucceedsEventually(async () =>
@@ -1248,7 +1257,7 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
             await dictionary.SetAsync("key1", "value2");
             Assert.AreEqual("value2", await dictionary.GetAsync("key1"));
-            await dictionary.SetAsync("key1", "value3", TimeSpan.FromMilliseconds(100));
+            await dictionary.SetAsync("key1", "value3", TimeSpan.FromMilliseconds(1000));
             Assert.AreEqual("value3", await dictionary.GetAsync("key1"));
 
             await AssertEx.SucceedsEventually(async () =>

@@ -42,10 +42,10 @@ namespace Hazelcast.Tests.Clustering
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<AsyncContext>(x => x.Quiet())
-                .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
         [Test]
         public async Task Test()
@@ -73,14 +73,13 @@ namespace Hazelcast.Tests.Clustering
             await server.StartAsync();
 
             var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
-            var authenticator = new Authenticator(options.Authentication, serializationService);
+            var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
-            ISequence<int> connectionIdSequence = new Int32Sequence();
             ISequence<long> correlationIdSequence = new Int64Sequence();
 
             var memberConnection = new MemberConnection(address, authenticator,
                 options.Messaging, options.Networking, options.Networking.Ssl,
-                connectionIdSequence, correlationIdSequence,
+                correlationIdSequence,
                 loggerFactory);
 
             var memberConnectionHasClosed = false;
@@ -100,12 +99,10 @@ namespace Hazelcast.Tests.Clustering
 
             // so far, so good
             // now, try something that will timeout
-            // 
+            //
             //
             // send async without a timeout uses the timeout in messagingOptions.RetryTimeoutSeconds
             // in order to determine whether to retry again and again
-
-            var token = new CancellationToken();
 
             var message = ClientPingServerCodec.EncodeRequest();
 
@@ -114,7 +111,7 @@ namespace Hazelcast.Tests.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // SendAsync then creates the invocation
-            var invocation = new Invocation(message, options.Messaging, token);
+            var invocation = new Invocation(message, options.Messaging);
 
             // don't send: server does not answer to pings, and we would wait forever
 
@@ -128,6 +125,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
                 {
+                    // ReSharper disable once MethodSupportsCancellation
                     await invocation.WaitRetryAsync(correlationIdSequence.GetNext);
                 });
             }, 4000, 200);

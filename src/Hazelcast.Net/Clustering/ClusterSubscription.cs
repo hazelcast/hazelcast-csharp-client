@@ -27,8 +27,8 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ClusterSubscription : IEnumerable<MemberSubscription>
     {
-        private readonly object _activeLock = new object();
-        private readonly ConcurrentDictionary<MemberConnection, MemberSubscription> _clientSubscriptions = new ConcurrentDictionary<MemberConnection, MemberSubscription>();
+        private readonly object _mutex = new object();
+        private readonly ConcurrentDictionary<MemberConnection, MemberSubscription> _memberSubscriptions = new ConcurrentDictionary<MemberConnection, MemberSubscription>();
         private readonly Func<ClientMessage, object, Guid> _subscribeResponseReader;
         private readonly Func<Guid, object, ClientMessage> _unsubscribeRequestFactory;
         private readonly Func<ClientMessage, object, bool> _unsubscribeResponseReader;
@@ -119,7 +119,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         public void Deactivate()
         {
-            lock (_activeLock)
+            lock (_mutex)
             {
                 _active = false;
                 DeactivateTime = DateTime.Now;
@@ -132,41 +132,47 @@ namespace Hazelcast.Clustering
         public DateTime DeactivateTime { get; private set; }
 
         /// <summary>
-        /// Tries to add a client subscription.
+        /// Reads a subscription response.
         /// </summary>
-        /// <param name="message">The subscription response message.</param>
-        /// <param name="client">The client.</param>
-        /// <returns>Whether the client subscription was added, and its server identifier.</returns>
-        public (bool, Guid) TryAddClientSubscription(ClientMessage message, MemberConnection client)
+        /// <param name="message">The response message.</param>
+        /// <param name="connection">The connection.</param>
+        /// <returns>The corresponding member subscription.</returns>
+        public MemberSubscription ReadSubscriptionResponse(ClientMessage message, MemberConnection connection)
         {
             var serverSubscriptionId = _subscribeResponseReader(message, State);
-
-            bool active;
-            lock (_activeLock)
-            {
-                active = _active;
-                if (active)
-                    _clientSubscriptions[client] = new MemberSubscription(this, serverSubscriptionId, message.CorrelationId, client);
-            }
-
-            return (active, serverSubscriptionId);
+            return new MemberSubscription(this, serverSubscriptionId, message.CorrelationId, connection);
         }
 
         /// <summary>
-        /// Removes a client subscription.
+        /// Tries to add a member subscription.
         /// </summary>
-        /// <param name="client">The client.</param>
-        /// <param name="memberSubscription">The client subscription.</param>
-        /// <returns>Whether a client subscription was removed.</returns>
-        public bool TryRemove(MemberConnection client, out MemberSubscription memberSubscription)
-            => _clientSubscriptions.TryRemove(client, out memberSubscription);
+        /// <param name="subscription">The member subscription.</param>
+        /// <returns>Whether the member subscription was added.</returns>
+        public bool TryAddMemberSubscription(MemberSubscription subscription)
+        {
+            lock (_mutex)
+            {
+                if (_active)
+                    _memberSubscriptions[subscription.Connection] = subscription;
+                return _active;
+            }
+        }
 
         /// <summary>
-        /// Removes a client subscription.
+        /// Removes a member subscription.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="memberSubscription">The client subscription.</param>
+        /// <returns>Whether the member subscription was removed.</returns>
+        public bool TryRemove(MemberConnection connection, out MemberSubscription memberSubscription)
+            => _memberSubscriptions.TryRemove(connection, out memberSubscription);
+
+        /// <summary>
+        /// Removes a member subscription.
         /// </summary>
         /// <param name="memberSubscription">The client subscription.</param>
         public void Remove(MemberSubscription memberSubscription)
-            => _clientSubscriptions.TryRemove(memberSubscription.Connection, out _);
+            => _memberSubscriptions.TryRemove(memberSubscription.Connection, out _);
 
         /// <summary>
         /// Creates an unsubscribe request message.
@@ -196,11 +202,12 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the number of member subscriptions.
         /// </summary>
-        public int Count => _clientSubscriptions.Count;
+        public int Count => _memberSubscriptions.Count;
 
         /// <inheritdoc />
         public IEnumerator<MemberSubscription> GetEnumerator()
-            => _clientSubscriptions.Values.GetEnumerator();
+            // .Values captures values and can then be safely enumerated
+            => _memberSubscriptions.Values.GetEnumerator();
 
         /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()

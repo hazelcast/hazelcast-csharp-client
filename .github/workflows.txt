@@ -1,0 +1,74 @@
+GITHUB ACTIONS WORKFLOWS
+
+
+build-branch
+------------
+
+  on push to any branch, except release/* or a tag
+  - builds and runs tests both on ubuntu and windows
+  - publishes tests results
+
+  note:
+  - on forks, enterprise tests are skipped as we cannot share the enterprise key
+  - however, contrary to PRs, if the fork is owned by a member of the HZ org,
+    the enterprise key is shared
+
+
+build-pr
+--------
+
+  on PR,
+  - builds and runs tests both on ubuntu and windows
+  - uploads tests results as artifact
+
+  notes:
+  - unless the PR branch itself is a repo branch (not a fork branch) the run does not 
+    have permission to publish the tests results, even if the fork is owned by a
+    member of the HZ org
+  - therefore, this workflow does not publish the tests results, but uploads them as
+    artifact - and report-pr will trigger and publishes them
+
+    "With the exception of GITHUB_TOKEN, secrets are not passed to the runner when a 
+    workflow is triggered from a forked repository." - even for org members
+
+
+report-pr
+---------
+
+  on build-pr success,
+  - downloads tests results artifact
+  - publishes tests results 
+
+  notes:
+  - because the tests results are published with the original PR SHA, they become
+    attached to the build-pr run just as with build-branch runs
+  - also, one can navigate from the PR to the results
+
+  
+build-release
+-------------
+
+  on push to a release/* branch, or a v* tag,
+  - builds and runs tests both on ubuntu and windows, including enterprise tests
+  - publishes tests results
+  - runs tests coverage and uploads the results as an artifact
+  - builds signed and reproducible assemblies and NuGet packages
+  - uploads the NuGet packages as an artifact
+  - builds the documentation and uploads the patch as an artifact
+
+  on a v* tag,
+  - publishes the NuGet packages to NuGet
+  - publishes the documentation to GitHub pages
+  - deletes the release/* branch
+
+
+NOTES
+-----
+
+  for testing these workflows, one may want to create a PR that does not run all tests,
+  as that takes time - there is an undocumented "feature" of the hz.ps1 script: if a
+  build/test.filter file exists, its first line will be added to tests filters, so for
+  instance
+    name =~ /HazelcastTests/
+  will restrict the tests to only 3-4 tests that are sure to pass - BEWARE this is for
+  experimenting only, do not ever ever merge this test.filter file!

@@ -5,6 +5,14 @@
     <RootNamespace>Hazelcast</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Description>Open-source Win32 / Kerberos extensions for Hazelcast, the open-source in-memory distributed computing platform.</Description>
+    <PackageProjectUrl>https://hazelcast.github.io/hazelcast-csharp-client/</PackageProjectUrl>
+    <PackageTags>hazelcast cache clustering scalabilty distributed caching win32 kerberos</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageIcon>nuget-logo.png</PackageIcon>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
@@ -13,12 +21,42 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- repository -->
+    <RepositoryType>Git</RepositoryType>
+    <RepositoryUrl>https://github.com/hazelcast/hazelcast-csharp-client</RepositoryUrl>
+
+    <!-- repository url can be published to nuspec -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <!-- specify the remote name, in case git config contains multiple remotes -->
+    <!-- GitRepositoryRemoteName moved to Directory.Build.props -->
+
+    <!-- build symbol package (snupkg) to distribute the PDB containing Source Link -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- embed source files that are not trakced by git -->
+    <!-- building generates some *.AssemblyInfo.cs files that we want to embed -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- ContinuousIntegrationBuild is set via a dotnet pack option -->
+  </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\nuget-logo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -127,18 +127,17 @@ namespace Hazelcast.DistributedObjects
         /// <remarks>
         /// <para>This is used when connecting to a new cluster.</para>
         /// </remarks>
-        public async ValueTask CreateAllAsync(CancellationToken cancellationToken)
+        public async ValueTask CreateAllAsync(MemberConnection connection)
         {
             await foreach (var (key, _) in _objects)
             {
-                // if the cluster goes down, we want to stop everything
-                // but each invocation is non-cancellable
-                cancellationToken.ThrowIfCancellationRequested();
+                // if the connection goes down, stop
+                if (!connection.Active) return;
 
                 try
                 {
                     var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
-                    await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+                    await _cluster.Messaging.SendToMemberAsync(requestMessage, connection).CfAwait();
                 }
                 catch (Exception e)
                 {
@@ -174,9 +173,14 @@ namespace Hazelcast.DistributedObjects
 
             var ob = (DistributedObjectBase) o; // we *know* all our objects inherit from the base object
             await ob.DestroyingAsync().CfAwait();
+            await DestroyAsync(o.ServiceName, o.Name, cancellationToken).CfAwait();
+        }
 
+        // internal for tests only
+        internal async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken = default)
+        {
             // regardless of whether the object was known locally, destroy on server
-            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(o.Name, o.ServiceName);
+            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
             var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CfAwait();
             _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
         }
@@ -184,14 +188,25 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Handles a connection to a new cluster.
         /// </summary>
-        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirst, bool isNewCluster)
+#pragma warning disable IDE0060 // Remove unused parameters
+#pragma warning disable CA1801 // Review unused parameters
+        // unused parameters are required, this is an event handler
+        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+#pragma warning restore CA1801
+#pragma warning restore IDE0060
         {
             if (!isNewCluster) return default;
 
             // when connecting to a new cluster, re-create the distributed objects there
-            // FIXME should these handlers be cancellable?
-            // FIXME should these handlers be allowed to throw?
-            return CreateAllAsync(default);
+            // this *may* take, but we cannot really use a new cluster before everything
+            // has been set up correctly (so we cannot really run this in a background task).
+            //
+            // if this is a new cluster, then this is a "first" connection and there are
+            // no other connections yet. we should be able to run CreateAllAsync on the
+            // connection, else something is wrong - CreateAllAsync stops if the connection
+            // becomes non-active (and does not throw)
+
+            return CreateAllAsync(connection);
         }
 
         /// <inheritdoc />

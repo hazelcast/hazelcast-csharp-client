@@ -16,6 +16,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -27,8 +28,9 @@ namespace Hazelcast.Clustering
         // generates unique cluster identifiers
         private static readonly ISequence<int> ClusterIdSequence = new Int32Sequence();
 
-        private readonly ILogger _logger;
+        private readonly TerminateConnections _terminateConnections;
         private readonly Heartbeat _heartbeat;
+
         private volatile int _disposed; // disposed flag
 
         /// <summary>
@@ -37,16 +39,11 @@ namespace Hazelcast.Clustering
         /// <param name="options">The cluster configuration.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Cluster(
-            IClusterOptions options,
-            SerializationService serializationService,
-            ILoggerFactory loggerFactory)
+        public Cluster(IClusterOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
             if (loggerFactory is null) throw new ArgumentNullException(nameof(loggerFactory));
-
-            _logger = loggerFactory.CreateLogger<Cluster>();
 
             var clientName = string.IsNullOrWhiteSpace(options.ClientName)
                 ? options.ClientNamePrefix + ClusterIdSequence.GetNext()
@@ -55,22 +52,47 @@ namespace Hazelcast.Clustering
             var clusterName = string.IsNullOrWhiteSpace(options.ClusterName) ? "dev" : options.ClusterName;
 
             State = new ClusterState(options, clusterName, clientName, new Partitioner(), loggerFactory);
+            State.ShutdownRequested += () =>
+            {
+                // yes, we are starting a fire-and-forget task
+                // but, DisposeAsync should never throw
+                // yet we add a CfAwaitNoThrow() for more safety
+                DisposeAsync().CfAwaitNoThrow();
+            };
 
-            Members = new ClusterMembers(State);
+            // create components
+            _terminateConnections = new TerminateConnections(loggerFactory);
+            Members = new ClusterMembers(State, _terminateConnections);
             Messaging = new ClusterMessaging(State, Members);
-            Events = new ClusterEvents(State, Messaging, Members);
-            ClusterEvents = new ClusterClusterEvents(State, Members, Events);
+            Events = new ClusterEvents(State, Messaging, _terminateConnections, Members);
             Connections = new ClusterConnections(State, Members, serializationService);
+            _heartbeat = new Heartbeat(State, Messaging, options.Heartbeat, _terminateConnections);
 
-            _heartbeat = new Heartbeat(State, Members, Messaging, options.Heartbeat, loggerFactory);
+            // wire components
+            WireComponents();
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(2).SetPrefix("CLUSTER")));
+            HConsole.Configure(x => x.Configure<Cluster>().SetIndent(2).SetPrefix("CLUSTER"));
         }
 
-        // throws if this instance has been disposed
-        private void ThrowIfDisposed()
+        private void WireComponents()
         {
-            if (_disposed > 0) throw new ObjectDisposedException(nameof(Cluster));
+            // beware! assigning multicast handlers *must* use +=
+
+            // wire members
+            Connections.ConnectionOpened += (conn, isFirstEver, isFirst, isNewCluster) => { Members.AddConnection(conn, isNewCluster); return default; };
+            Connections.ConnectionClosed += conn => { Members.RemoveConnectionAsync(conn); return default; };
+
+            // wire events
+            // connection created = wire connection.ReceivedEvent -> Events.OnReceivedEvent in order to handle events
+            // connection opened = install subscriptions on new connection + ensure there is a cluster views connection
+            // connection closed = clears subscriptions + ensure there is a cluster views connection
+            Connections.ConnectionCreated += Events.OnConnectionCreated;
+            Connections.ConnectionOpened += Events.OnConnectionOpened;
+            Connections.ConnectionClosed += Events.OnConnectionClosed;
+
+            // wire heartbeat
+            Connections.ConnectionOpened += (conn, isFirstEver, isFirst, isNewCluster) => { _heartbeat.AddConnection(conn); return default; };
+            Connections.ConnectionClosed += conn => { _heartbeat.RemoveConnection(conn); return default; };
         }
 
         /// <summary>
@@ -114,11 +136,6 @@ namespace Hazelcast.Clustering
         public ClusterMembers Members { get; }
 
         /// <summary>
-        /// Gets the cluster-level events management service.
-        /// </summary>
-        public ClusterClusterEvents ClusterEvents { get; }
-
-        /// <summary>
         /// Gets the cluster events service.
         /// </summary>
         public ClusterEvents Events { get; }
@@ -157,11 +174,15 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the cluster is connected.</returns>
-        public Task ConnectAsync(CancellationToken cancellationToken)
+        public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            ThrowIfDisposed();
+            // change state to Starting if it is zero aka New
+            var changed = await State.ChangeStateAndWait(ClientState.Starting, 0 /* ClientState.New */).CfAwait();
+            if (!changed)
+                throw new ConnectionException("Failed to connected (aborted).");
 
-            return Connections.ConnectAsync(cancellationToken);
+            // connect
+            await Connections.ConnectAsync(cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />
@@ -171,39 +192,65 @@ namespace Hazelcast.Clustering
                 return;
 
             // disposing the cluster terminates all operations
+            HConsole.WriteLine(this, "Shutting down");
 
-            // change the state - the final NotConnected state will
-            // be set by Connections when the last one goes down, and
-            // the cluster is not active anymore
-            State.NotifyState(ClientState.ShuttingDown);
+            // notify we are shutting down - the user may have things to do that
+            // require talking to the cluster, so we *wait* for the corresponding
+            // event handlers to run before proceeding
+            await State.ChangeStateAndWait(ClientState.ShuttingDown).CfAwait();
 
-            // we don't need heartbeat anymore
+            // at that point,
+            // - the state is 'ShuttingDown'
+            // - all user code handling the state change event has run
+            // - it is still possible to talk to the cluster
+
+            // the user *should* have shut their own operations down, and if they
+            // still try to talk to the cluster, we cannot guarantee anything
+
+            // stop terminating connections, heart-beating
+            HConsole.WriteLine(this, "Dispose TerminateConnections");
+            await _terminateConnections.DisposeAsync().CfAwait();
+            HConsole.WriteLine(this, "Dispose Heartbeat");
             await _heartbeat.DisposeAsync().CfAwait();
+
+            // these elements below *will* talk to the cluster when shutting down,
+            // as they will want to unsubscribe in order to shutdown as nicely
+            // as possible
 
             // ClusterMessaging has nothing to dispose
 
             // ClusterEvents need to shutdown
             // - the events scheduler (always running)
-            // - the task that ensures FIXME DOCUMENT
+            // - the task that ensures there is a cluster events connection (if it's running)
             // - the task that deals with ghost subscriptions (if it's running)
+            // - the two ObjectLifeCycle and PartitionLost subscriptions
+            HConsole.WriteLine(this, "Dispose Events");
             await Events.DisposeAsync().CfAwait();
 
-            // ClusterClusterEvents need to shutdown
-            // - the two ObjectLifeCycle and PartitionLost subscriptions
-            await ClusterEvents.DisposeAsync().CfAwait();
+            // for all it matters, we are now down - the final state change to
+            // 'Shutdown' will be performed by Connections when the last connection
+            // goes down
 
             // now it's time to dispose the connections, ie close all of them
             // and shutdown
             // - the reconnect task (if it's running)
             // - the task that connects members (always running)
+            HConsole.WriteLine(this, "Dispose Connections");
             await Connections.DisposeAsync().CfAwait();
 
+            // connections are gone, we are down
+            HConsole.WriteLine(this, "Connections disposed, down");
+            await State.ChangeStateAndWait(ClientState.Shutdown).CfAwait();
+
             // at that point we can get rid of members
+            HConsole.WriteLine(this, "Dispose Members");
             await Members.DisposeAsync().CfAwait();
 
             // and finally, of the state itself
             // which will shutdown
             // - the state changed queue (always running)
+            //   (after it has been drained, so last 'Shutdown' even is processed)
+            HConsole.WriteLine(this, "Dispose State");
             await State.DisposeAsync().CfAwait();
         }
     }

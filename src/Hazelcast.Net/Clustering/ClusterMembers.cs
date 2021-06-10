@@ -15,14 +15,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Core;
 using Hazelcast.Events;
-using Hazelcast.Exceptions;
 using Hazelcast.Models;
-using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
@@ -31,15 +31,16 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ClusterMembers : IAsyncDisposable
     {
+        private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
+        private readonly ILogger _logger;
         private readonly ILoadBalancer _loadBalancer;
 
-        private MemberTable _memberTable;
-        private Guid _clusterId;
+        private readonly TerminateConnections _terminateConnections;
+        private readonly MemberConnectionQueue _memberConnectionQueue;
 
-        // flag + semaphore to wait for the first "members view" event
-        private volatile int _firstMembersViewed;
-        private SemaphoreSlim _firstMembersView = new SemaphoreSlim(0, 1);
+        private MemberTable _members;
+        private bool _connected;
 
         // flag + semaphore to wait for the first "partitions view" event
         //private volatile int _firstPartitionsViewed;
@@ -53,134 +54,255 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="ClusterMembers"/> class.
         /// </summary>
         /// <param name="clusterState">The cluster state.</param>
-        public ClusterMembers(ClusterState clusterState)
+        /// <param name="terminateConnections">The terminate connections task.</param>
+        public ClusterMembers(ClusterState clusterState, TerminateConnections terminateConnections)
         {
+            HConsole.Configure(x => x.Configure<ClusterMembers>().SetPrefix("CLUST.MBRS"));
+
             _clusterState = clusterState;
+            _terminateConnections = terminateConnections;
             _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
+
+            _logger = _clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
+
+            _members = new MemberTable();
+
+            // members to connect
+            if (clusterState.IsSmartRouting) _memberConnectionQueue = new MemberConnectionQueue(clusterState.LoggerFactory);
         }
 
-        /// <summary>
-        /// Gets this <see cref="ClusterMembers"/> lock object.
-        /// </summary>
-        public object Mutex { get; } = new object();
 
         #region Event Handlers
 
         /// <summary>
-        /// (thread-unsafe) Notifies that a connection has been opened.
+        /// Adds a connection.
         /// </summary>
         /// <param name="connection">The connection.</param>
-        /// <returns><c>true</c> if the connection is the first one to be established; otherwise <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>This method is not thread-safe; the caller has to lock the
-        /// <see cref="Mutex"/> object to ensure thread-safety.</para>
-        /// </remarks>
-        public bool NotifyConnectionOpened(MemberConnection connection)
+        /// <param name="isNewCluster">Whether the connection is the first connection to a new cluster.</param>
+        public void AddConnection(MemberConnection connection, bool isNewCluster)
         {
-            var isFirst = _connections.Count == 0;
+            // accept every connection, regardless of whether there is a known corresponding member,
+            // since the first connection is going to come before we get the first members view.
 
-#if NETSTANDARD2_0
-            var contains = _connections.ContainsKey(connection.MemberId);
-            _connections[connection.MemberId] = connection;
-            if (contains)
-#else
-            if (!_connections.TryAdd(connection.MemberId, connection))
-#endif
-                throw new HazelcastException("Failed to add a connection (duplicate memberId).");
+            lock (_mutex)
+            {
+                // don't add the connection if it is not active - if it *is* active, it still
+                // could turn not-active anytime, but thanks to _mutex that will only happen
+                // after the connection has been added
+                if (!connection.Active) return;
 
-            if (_clusterId == default)
-            {
-                _clusterId = connection.ClusterId; // first cluster
-            }
-            else if (_clusterId != connection.ClusterId)
-            {
-                // see TcpClientConnectionManager java class handleSuccessfulAuth method
-                // does not even consider the cluster identifier when !isFirst
-                if (isFirst)
+                var contains = _connections.ContainsKey(connection.MemberId);
+
+                if (contains)
                 {
-                    _clusterId = connection.ClusterId; // new cluster
-                    _memberTable = new MemberTable();
+                    // we cannot accept this connection, it's a duplicate (internal error?)
+                    _logger.LogWarning($"Cannot accept connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, a connection to that member already exists.");
+                    _terminateConnections.Add(connection); // kill.kill.kill
+                    return;
+                }
+
+                // add the connection
+                _connections[connection.MemberId] = connection;
+
+                if (isNewCluster)
+                {
+                    // reset members
+                    // this is safe because... isNewCluster means that this is the very first connection and there are
+                    // no other connections yet and therefore we should not receive events and therefore no one
+                    // should invoke SetMembers.
+                    // TODO: what if and "old" membersUpdated event is processed?
+                    _members = new MemberTable();
+                }
+
+                // if this is a true member connection
+                if (_members.ContainsMember(connection.MemberId))
+                {
+                    // if this is the first connection to an actual member, change state & trigger event
+                    if (!_connected)
+                    {
+                        // change Started | Disconnected -> Connected, ignore otherwise, it could be ShuttingDown or Shutdown
+                        _logger.LogDebug($"Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, now connected.");
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        _connected = true;
+                    }
+                    else
+                    {
+                        _logger.LogDebug($"Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a connection.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        public void RemoveConnectionAsync(MemberConnection connection)
+        {
+            lock (_mutex)
+            {
+                var contains = _connections.ContainsKey(connection.MemberId);
+
+                // ignore unknown connection that were not added in the first place,
+                // or that have been replaced
+                if (!contains || _connections[connection.MemberId].Id != connection.Id)
+                    return;
+
+                // remove the connection and check whether we are potentially disconnecting
+                // ie whether we were connected, and either we don't have connections any more, or no member
+                // is connected (has a matching connection)
+                _connections.Remove(connection.MemberId);
+                var disconnecting = _connected && (_connections.Count == 0 || _members.Members.All(x => !_connections.ContainsKey(x.Id)));
+
+                // if we are not disconnecting, we can return - we are done
+                if (!disconnecting)
+                {
+                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.");
+
+                    // if we are connected,
+                    // and the disconnected member is still a member, queue it for reconnection
+                    if (_connected && _members.TryGetMember(connection.MemberId, out var member))
+                        _memberConnectionQueue?.Add(member);
+                    return;
                 }
             }
 
-            return isFirst;
+            // otherwise, we might be disconnecting
+
+            // but, the connection queue was running and might have added a new connection
+            // we *need* a stable state in order to figure out whether we are disconnecting or not,
+            // and if we are, we *need* to drain the queue (stop connecting more members) - and
+            // the only way to achieve this is to suspend the queue
+            _memberConnectionQueue?.Suspend();
+
+            // note: multiple connections can close an once = multiple calls can reach this point
+
+            var drain = false;
+            try
+            {
+                lock (_mutex) // but we deal with calls one by one
+                {
+                    if (_connected) // and only disconnect once
+                    {
+                        // if we have connections, and at least one member is connected (has a matching connection),
+                        // then the queue has added a new connection indeed and we are finally not disconnecting - we
+                        // can return - we are done
+                        if (_connections.Count > 0 && _members.Members.Any(x => _connections.ContainsKey(x.Id)))
+                        {
+                            // if the disconnected member is still a member, queue it for reconnection
+                            if (_members.TryGetMember(connection.MemberId, out var member))
+                                _memberConnectionQueue?.Add(member);
+                            _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.");
+                            return;
+                        }
+
+                        // otherwise, we're really disconnecting: flip _connected, and change the state
+                        _connected = false;
+                        _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, disconnecting.");
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+
+                        // and drain the queue: stop connecting members, we need to fully reconnect
+                        drain = true;
+                    }
+                }
+            }
+            finally
+            {
+                // don't forget to resume the queue
+                _memberConnectionQueue?.Resume(drain);
+            }
         }
 
-        /// <summary>
-        /// (thread-unsafe) Notifies that a connection has been closed.
-        /// </summary>
-        /// <param name="connection">The connection.</param>
-        /// <returns><c>true</c> if the connection was the last one; otherwise <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>This method is not thread-safe; the caller has to lock the
-        /// <see cref="Mutex"/> object to ensure thread-safety.</para>
-        /// </remarks>
-        public bool NotifyConnectionClosed(MemberConnection connection)
+        private void LogDiffs(MemberTable table, Dictionary<MemberInfo, int> diff)
         {
-            var removed = _connections.ContainsKey(connection.MemberId);
-            if (removed) _connections.Remove(connection.MemberId);
-            var wasLast = removed && _connections.Count == 0;
-            return wasLast;
+            var msg = new StringBuilder();
+            msg.Append("Members [");
+            msg.Append(table.Count);
+            msg.AppendLine("] {");
+            foreach (var member in table.Members)
+            {
+                msg.Append("    ");
+                msg.Append(member.Address);
+                msg.Append(" - ");
+                msg.Append(member.Id);
+                if (diff.TryGetValue(member, out var d) && d == 2)
+                    msg.Append(" - new");
+                msg.AppendLine();
+            }
+            msg.Append('}');
+
+            _logger.LogInformation(msg.ToString());
         }
 
         /// <summary>
-        /// Notifies of a 'members view' event.
+        /// Set the members.
         /// </summary>
         /// <param name="version">The version.</param>
         /// <param name="members">The members.</param>
-        public async ValueTask<MembersUpdatedEventArgs> NotifyMembersView(int version, ICollection<MemberInfo> members)
+        /// <returns>The corresponding event arguments, if members were updated; otherwise <c>null</c>.</returns>
+        public MembersUpdatedEventArgs SetMembers(int version, ICollection<MemberInfo> members)
         {
-            // FIXME could we process two of these at a time?
+            // skip old sets
+            if (version < _members.Version)
+                return null;
 
-            // get a new table
+            // replace the table
+            var previous = _members;
             var table = new MemberTable(version, members);
+            lock (_mutex) _members = table;
+
+            // notify the load balancer of the new list of members
+            // (the load balancer can always return a member that is not a member
+            // anymore, see note in GetMember)
+            _loadBalancer.SetMembers(members.Select(x => x.Id));
 
             // compute changes
             // count 1 for old members, 2 for new members, and then the result is
-            // that 1=removed, 2=added, 3=unchanged
+            // 1=removed, 2=added, 3=unchanged
             // MemberInfo overrides GetHashCode and can be used as a key here
             var diff = new Dictionary<MemberInfo, int>();
-            if (_memberTable == null)
+            if (previous == null)
             {
-                foreach (var m in table.Members.Values)
+                foreach (var m in members)
                     diff[m] = 2;
             }
             else
             {
-                foreach (var m in _memberTable.Members.Values)
+                foreach (var m in previous.Members)
                     diff[m] = 1;
-                foreach (var m in table.Members.Values)
+
+                foreach (var m in members)
                     if (diff.ContainsKey(m)) diff[m] += 2;
                     else diff[m] = 2;
             }
 
-            // replace the table
-            _memberTable = table;
-
-            // notify the load balancer of the new list of members
-            _loadBalancer.NotifyMembers(members.Select(x => x.Id));
-
-            // signal once
-            if (Interlocked.CompareExchange(ref _firstMembersViewed, 1, 0) == 0)
-                _firstMembersView.Release();
+            // log, if the members have changed (one of them at least is not 3=unchanged)
+            if (_logger.IsEnabled(LogLevel.Information) && diff.Any(d => d.Value != 3))
+                LogDiffs(table, diff);
 
             // process changes, gather events
             var added = new List<MemberInfo>();
             var removed = new List<MemberInfo>();
-            foreach (var (member, status) in diff)
+            foreach (var (member, status) in diff) // all members, old and new
             {
                 switch (status)
                 {
                     case 1: // old but not new = removed
-                        HConsole.WriteLine(this, $"Removed member {member.Id}");
+                        HConsole.WriteLine(this, $"Removed member {member.Id} at {member.Address}");
                         removed.Add(member);
-                        if (_connections.TryGetValue(member.Id, out var client))
-                            await client.TerminateAsync().CfAwait(); // TODO: consider dying in the background?
+
+                        // dequeue the member
+                        _memberConnectionQueue?.Remove(member.Id);
+
                         break;
 
                     case 2: // new but not old = added
-                        HConsole.WriteLine(this, $"Added member {member.Id}");
+                        HConsole.WriteLine(this, $"Added member {member.Id} at {member.Address}");
                         added.Add(member);
+
+                        // queue the member for connection
+                        _memberConnectionQueue?.Add(member);
+
                         break;
 
                     case 3: // old and new = no change
@@ -191,20 +313,106 @@ namespace Hazelcast.Clustering
                 }
             }
 
-            return new MembersUpdatedEventArgs(added, removed, table.Members.Values);
+            var maybeDisconnected = false;
+            lock (_mutex)
+            {
+                // removed members need to have their connection removed and terminated
+                foreach (var member in removed)
+                {
+                    if (_connections.TryGetValue(member.Id, out var c))
+                    {
+                        _connections.Remove(member.Id);
+                        _terminateConnections.Add(c);
+                    }
+                }
+
+                var isAnyMemberConnected = _members.Members.Any(x => _connections.ContainsKey(x.Id));
+
+                if (!_connected)
+                {
+                    if (isAnyMemberConnected)
+                    {
+                        // if we were not connected and now one member happens to be connected then we are now connected
+                        // we hold the mutex so nothing bad can happen
+                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, now connected.");
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        _connected = true;
+                    }
+                    else
+                    {
+                        // remain disconnected
+                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none is connected, remain disconnected.");
+                    }
+                }
+                else
+                {
+                    if (isAnyMemberConnected)
+                    {
+                        // remain connected
+                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.");
+                    }
+                    else
+                    {
+                        // we probably are disconnected now
+                        // but the connection queue is running and might have re-added a member
+                        maybeDisconnected = true;
+                    }
+                }
+            }
+
+            // release _mutex, suspend the queue
+            if (maybeDisconnected)
+            {
+                _memberConnectionQueue?.Suspend();
+                var disconnected = false;
+                try
+                {
+                    lock (_mutex)
+                    {
+                        var isAnyMemberConnected = _members.Members.Any(x => _connections.ContainsKey(x.Id));
+                        if (!isAnyMemberConnected)
+                        {
+                            // no more connected member, we are now disconnected
+                            _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none connected, disconnecting.");
+                            _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+                            _connected = false;
+                            disconnected = true;
+                        }
+                        else
+                        {
+                            _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.");
+                        }
+                    }
+                }
+                finally
+                {
+                    _memberConnectionQueue?.Resume(disconnected);
+                }
+            }
+
+            return new MembersUpdatedEventArgs(added, removed, members.ToList());
         }
 
         #endregion
 
+
         /// <summary>
-        /// Gets the known members addresses.
+        /// Enumerates the members to connect.
         /// </summary>
-        public IEnumerable<NetworkAddress> GetAddresses()
+        public IAsyncEnumerable<(MemberInfo, CancellationToken)> MembersToConnect
+            => _memberConnectionQueue;
+
+        /// <summary>
+        /// Reports that a member failed to connect.
+        /// </summary>
+        /// <param name="member">The member that failed to connect.</param>
+        public void FailedToConnect(MemberInfo member)
         {
-            var members = _memberTable?.Members;
-            return members == null
-                ? Enumerable.Empty<NetworkAddress>()
-                : members.Values.Select(x => x.Address);
+            lock (_mutex)
+            {
+                if (_members.ContainsMember(member.Id))
+                    _memberConnectionQueue.Add(member);
+            }
         }
 
 
@@ -212,6 +420,7 @@ namespace Hazelcast.Clustering
         /// Gets a connection to a random member.
         /// </summary>
         /// <returns>A random client connection if available; otherwise <c>null</c>.</returns>
+        /// <para>The connection should be active, but there is no guarantee it will not become immediately inactive.</para>
         public MemberConnection GetRandomConnection()
         {
             MemberConnection connection;
@@ -229,13 +438,26 @@ namespace Hazelcast.Clustering
             {
                 // "smart" mode
 
-                // limit the number of tries to the amount of known members
+                // limit the number of tries to the amount of known members, but
+                // it is ok to try more than once, order to return a connection
+                // that has a reasonable chance of being usable
                 var count = _loadBalancer.Count;
 
                 for (var i = 0; i < count; i++)
                 {
                     var memberId = _loadBalancer.GetMember();
-                    lock (Mutex)
+
+                    // if the load balancer does not have members, break
+                    if (memberId == Guid.Empty)
+                        break;
+
+                    // we cannot guarantee that the connection we'll return will not correspond to
+                    // a member... that is not a member by the time it is used... but at least we
+                    // can make sure it *still* is a member now
+                    if (!_members.ContainsMember(memberId))
+                        continue;
+
+                    lock (_mutex)
                     {
                         if (_connections.TryGetValue(memberId, out connection))
                             return connection;
@@ -245,10 +467,22 @@ namespace Hazelcast.Clustering
 
             // either "smart" mode but the load balancer did not return a member,
             // or "uni-socket" mode where there should only be once connection
-            lock (Mutex) connection = _connections.Values.FirstOrDefault();
+            lock (_mutex) connection = _connections.Values.FirstOrDefault();
 
             // may be null
             return connection;
+        }
+
+        /// <summary>
+        /// Gets the oldest active connection.
+        /// </summary>
+        /// <returns>The oldest active connection, or <c>null</c> if no connection is active.</returns>
+        public MemberConnection GetOldestConnection()
+        {
+            return _connections.Values
+                .Where(x => x.Active)
+                .OrderBy(x => x.ConnectTime)
+                .FirstOrDefault();
         }
 
         /// <summary>
@@ -257,94 +491,41 @@ namespace Hazelcast.Clustering
         /// <param name="memberId">The identifier of the member.</param>
         /// <param name="connection">The connection.</param>
         /// <returns><c>true</c> if a connection to the specified member was found; otherwise <c>false</c>.</returns>
+        /// <para>The connection should be active, but there is no guarantee it will not become immediately inactive.</para>
         public bool TryGetConnection(Guid memberId, out MemberConnection connection)
         {
-            lock (Mutex) return _connections.TryGetValue(memberId, out connection);
+            lock (_mutex) return _connections.TryGetValue(memberId, out connection);
         }
 
         /// <summary>
-        /// Waits for a random connection to be available and return it.
+        /// Gets information about each member.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A random client connection.</returns>
-        /// <remarks>
-        /// <para>Tries to get a client connection for as long as <paramref name="cancellationToken"/> is not canceled.</para>
-        /// </remarks>
-        public async ValueTask<MemberConnection> WaitRandomConnection(CancellationToken cancellationToken = default)
+        /// <param name="liteOnly">Whether to only return lite members.</param>
+        /// <returns>The current members.</returns>
+        public IEnumerable<MemberInfo> GetMembers(bool liteOnly = false)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                // this is just basically retrieving a random client
-                var clientConnection = GetRandomConnection();
-                if (clientConnection != null) return clientConnection;
-
-                // no need to try again if the client is down
-                _clusterState.ThrowIfCancelled(); // FIXME better?!
-
-                // no clients => wait for clients
-                // this *may* throw
-                await Task.Delay(_clusterState.Options.WaitForConnectionMilliseconds, cancellationToken).CfAwait();
-            }
-
-            // this *will* throw
-            cancellationToken.ThrowIfCancellationRequested();
-            return default;
-        }
-
-        /// <summary>
-        /// Gets a snapshot of the current connections.
-        /// </summary>
-        /// <param name="activeOnly">Whether to return active connections only.</param>
-        /// <returns>A snapshot of the current client connections.</returns>
-        public List<MemberConnection> SnapshotConnections(bool activeOnly)
-        {
-            IEnumerable<MemberConnection> connections;
-            lock (Mutex) connections = _connections.Values;
-            if (activeOnly) connections = connections.Where(x => x.Active);
-            return connections.ToList();
-        }
-
-        /// <summary>
-        /// Gets a snapshot of the current members.
-        /// </summary>
-        /// <returns>A snapshot of the current members.</returns>
-        public IEnumerable<MemberInfo> SnapshotMembers()
-        {
-            var memberTable = _memberTable;
-            return memberTable?.Members.Values ?? Enumerable.Empty<MemberInfo>();
+            IEnumerable<MemberInfo> members = _members.Members;
+            if (liteOnly) members = members.Where(x => x.IsLiteMember);
+            return members;
         }
 
         /// <summary>
         /// Gets information about a member.
         /// </summary>
         /// <param name="memberId">The identifier of the member.</param>
-        /// <returns>Information about the specified member, or null if no member with the specified identifier was found.</returns>
+        /// <returns>Information about the specified member, or <c>null</c> if no member with the specified identifier was found.</returns>
         public MemberInfo GetMember(Guid memberId)
         {
-            return _memberTable.Members.TryGetValue(memberId, out var memberInfo) ? memberInfo : null;
-        }
-
-        /// <summary>
-        /// Gets the lite members.
-        /// </summary>
-        public IEnumerable<MemberInfo> LiteMembers => _memberTable.Members.Values.Where(x => x.IsLiteMember);
-
-        /// <summary>
-        /// Waits for the first member view event.
-        /// </summary>
-        /// <returns>A task that will complete when the first member view event has been received.</returns>
-        public async ValueTask WaitForMembersAsync(CancellationToken cancellationToken)
-        {
-            await _firstMembersView.WaitAsync(cancellationToken).CfAwait();
-            _firstMembersView.Dispose();
-            _firstMembersView = null;
+            return _members.TryGetMember(memberId, out var memberInfo)
+                ? memberInfo
+                : null;
         }
 
 
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            _firstMembersView?.Dispose();
+            await _memberConnectionQueue.DisposeAsync().CfAwait();
         }
     }
 }

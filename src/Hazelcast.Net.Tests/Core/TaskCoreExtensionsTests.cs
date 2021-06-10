@@ -129,7 +129,7 @@ namespace Hazelcast.Tests.Core
             // give time for the exception to be thrown
             await Task.Delay(1000, CancellationToken.None);
         }
-        
+
         // ---- utilities ----
 
         // starts an unobserved task that cancels
@@ -286,7 +286,7 @@ namespace Hazelcast.Tests.Core
 
             // the task is faulted, and has thrown an exception!
             Assert.That(e.Task.IsFaulted);
-            
+
             // the exception has been observed, thus not leaking here.
         }
 
@@ -372,7 +372,7 @@ namespace Hazelcast.Tests.Core
             // exception was the operation canceled exception we expected
             // it has been observed (since we caught it) so nothing leaks
         }
-        
+
         // ----
 
         [Test]

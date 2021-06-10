@@ -26,12 +26,12 @@ namespace Hazelcast.Tests.Messaging
         [Test]
         public void DumpMessage()
         {
-            Assert.Throws<ArgumentNullException>(() => _ = ((ClientMessage) null).Dump());
+            Assert.Throws<ArgumentNullException>(() => _ = ((ClientMessage) null).Dump(0));
 
             // exception
             var m = new ClientMessage(new Frame(new byte[64]));
             m.MessageType = 0;
-            var s = m.Dump();
+            var s = m.Dump(int.MaxValue);
 
 #if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"EXCEPTION
@@ -48,7 +48,7 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             m.Flags |= ClientMessageFlags.Unfragmented;
             m.PartitionId = 55;
             m.OperationName = "operation";
-            s = m.Dump();
+            s = m.Dump(int.MaxValue);
 
 #if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"REQUEST [0]
@@ -66,7 +66,7 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             m.Append(new Frame(new byte[64]));
             m.MessageType = MapAddEntryListenerCodec.ResponseMessageType;
             m.Flags |= ClientMessageFlags.Unfragmented;
-            s = m.Dump();
+            s = m.Dump(int.MaxValue);
 
 #if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"RESPONSE [0]
@@ -83,7 +83,7 @@ FRAME {Frame: 70 bytes, Final (0x00002000)}".ToLf()));
             m = new ClientMessage(new Frame(new byte[64]));
             m.MessageType = 0x011902; // MapAddEntryListenerCodec.EventEntryMessageType;
             m.Flags |= ClientMessageFlags.Event;
-            s = m.Dump();
+            s = m.Dump(int.MaxValue);
 
 #if DEBUG
             Assert.That(s.ToLf(), Is.EqualTo(@"EVENT [0]

@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,7 +98,9 @@ namespace Hazelcast.Serialization
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
         }
 
+#pragma warning disable CA1822 // Mark members as static - might not remain constant forever
         public byte GetVersion() => SerializerVersion;
+#pragma warning restore CA1822
 
         public virtual IPortableContext GetPortableContext() => _portableContext;
 
@@ -112,7 +114,7 @@ namespace Hazelcast.Serialization
             return CreateObjectDataOutput();
         }
 
-        private void ReturnDataOutput(ObjectDataOutput output)
+        private static void ReturnDataOutput(ObjectDataOutput output)
         {
             //TODO pooling
             output.Dispose();
@@ -124,7 +126,7 @@ namespace Hazelcast.Serialization
             return new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
         }
 
-        private void ReturnDataInput(ObjectDataInput input)
+        private static void ReturnDataInput(ObjectDataInput input)
         {
             //TODO pooling
             input.Dispose();
@@ -215,6 +217,22 @@ namespace Hazelcast.Serialization
             }
         }
 
+        private static bool CanBeNull<T>()
+        {
+            var typeOfT = typeof(T);
+
+            var isValueType = typeOfT.IsValueType;
+            if (!isValueType) return true;
+
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false positive, https://github.com/dotnet/roslyn-analyzers/issues/4763
+            var isNullableType = typeOfT.IsNullableType();
+#pragma warning restore CA1508
+            if (isNullableType) return true;
+
+            return false;
+        }
+
         public T ReadObject<T>(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
@@ -227,15 +245,14 @@ namespace Hazelcast.Serialization
                     ThrowMissingSerializer(typeId);
 
                 var o = serializer.Read(input);
+                if (o is T ot) return ot;
+
                 if (o is null)
                 {
-                    var typeOfT = typeof(T);
-                    if (typeOfT.IsValueType && !typeOfT.IsNullableType())
-                        throw new SerializationException($"Deserialized null value cannot be of value type {typeof(T)}.");
-                    return default;
+                    if (CanBeNull<T>()) return default;
+                    throw new SerializationException($"Deserialized null value cannot be of value type {typeof(T)}.");
                 }
 
-                if (o is T ot) return ot;
                 throw new InvalidCastException($"Deserialized object is of type {o.GetType()}, not {typeof(T)}.");
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
@@ -552,8 +569,22 @@ namespace Hazelcast.Serialization
                 throw new ArgumentException("Given data is not Portable! -> " + data.TypeId);
             }
 
-            var input = CreateObjectDataInput(data);
-            return _portableSerializer.CreateReader(input);
+            ObjectDataInput input = null;
+            IPortableReader reader;
+            try
+            {
+                input = CreateObjectDataInput(data);
+                reader = _portableSerializer.CreateReader(input);
+                input = null;
+            }
+            finally
+            {
+#pragma warning disable CA1508 // Avoid dead conditional code - false positive
+                input?.Dispose();
+#pragma warning restore CA1508
+            }
+
+            return reader;
         }
 
         public virtual void Dispose()
@@ -567,6 +598,13 @@ namespace Hazelcast.Serialization
             _idMap.Clear();
             Interlocked.Exchange(ref _global, null);
             _constantTypesMap.Clear();
+
+            _portableSerializer.Dispose();
+
+            _nullSerializerAdapter.Dispose();
+            _portableSerializerAdapter.Dispose();
+            _dataSerializerAdapter.Dispose();
+            _serializableSerializerAdapter.Dispose();
         }
 
         protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)

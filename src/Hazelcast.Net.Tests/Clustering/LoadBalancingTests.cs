@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(lb.GetMember(), Is.EqualTo(memberId));
 
             // no effect
-            lb.NotifyMembers(new[] { Guid.NewGuid() });
+            lb.SetMembers(new[] { Guid.NewGuid() });
 
             Assert.That(lb.Count, Is.EqualTo(1));
             for (var i = 0; i < 4; i++)
@@ -55,9 +55,9 @@ namespace Hazelcast.Tests.Clustering
             var lb = new RandomLoadBalancer();
 
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
 
-            lb.NotifyMembers(memberIds);
+            lb.SetMembers(memberIds);
             Assert.That(lb.Count, Is.EqualTo(3));
 
             var seen = Guid.Empty;
@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Clustering
 
             memberIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
 
-            lb.NotifyMembers(memberIds);
+            lb.SetMembers(memberIds);
             Assert.That(lb.Count, Is.EqualTo(2));
 
             for (var i = 0; i < 10; i++)
@@ -84,9 +84,9 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(memberIds, Does.Contain(memberId));
             }
 
-            lb.NotifyMembers(new Guid[0]);
+            lb.SetMembers(new Guid[0]);
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
         }
 
         [Test]
@@ -96,9 +96,9 @@ namespace Hazelcast.Tests.Clustering
             var lb = new RoundRobinLoadBalancer();
 
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
 
-            lb.NotifyMembers(memberIds);
+            lb.SetMembers(memberIds);
             Assert.That(lb.Count, Is.EqualTo(3));
 
             Assert.That(lb.GetMember(), Is.EqualTo(memberIds[1]));
@@ -110,7 +110,7 @@ namespace Hazelcast.Tests.Clustering
 
             memberIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
 
-            lb.NotifyMembers(memberIds);
+            lb.SetMembers(memberIds);
             Assert.That(lb.Count, Is.EqualTo(2));
 
             Assert.That(lb.GetMember(), Is.EqualTo(memberIds[1]));
@@ -118,15 +118,15 @@ namespace Hazelcast.Tests.Clustering
             Assert.That(lb.GetMember(), Is.EqualTo(memberIds[1]));
             Assert.That(lb.GetMember(), Is.EqualTo(memberIds[0]));
 
-            lb.NotifyMembers(new Guid[0]);
+            lb.SetMembers(new Guid[0]);
             Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.Throws<InvalidOperationException>(() => lb.GetMember());
+            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
         }
 
         [Test]
         public void ArgumentExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => new RoundRobinLoadBalancer().NotifyMembers(null));
+            Assert.Throws<ArgumentNullException>(() => new RoundRobinLoadBalancer().SetMembers(null));
         }
     }
 }

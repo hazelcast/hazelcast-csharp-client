@@ -25,7 +25,10 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Gets the members.
         /// </summary>
+        // TODO: this should be a ReadOnlyCollection<Guid> (breaking)
+#pragma warning disable CA1002 // Do not expose generic lists
         protected List<Guid> Members { get; private set; }
+#pragma warning restore CA1002
 
         /// <inheritdoc />
         public virtual int Count => Members?.Count ?? 0;
@@ -34,7 +37,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         public abstract Guid GetMember();
 
         /// <inheritdoc />
-        public virtual void NotifyMembers(IEnumerable<Guid> memberIds)
+        public virtual void SetMembers(IEnumerable<Guid> memberIds)
         {
             if (memberIds == null) throw new ArgumentNullException(nameof(memberIds));
 
@@ -44,19 +47,6 @@ namespace Hazelcast.Clustering.LoadBalancing
                 if (distinct.Add(memberId))
                     members.Add(memberId);
             Members = members; // atomic reference
-        }
-
-        /// <summary>
-        /// Gets a non-empty (else throws) snapshot of members.
-        /// </summary>
-        protected List<Guid> GetMembersNonEmptySnapshot()
-        {
-            var members = Members; // capture
-
-            if ((members?.Count ?? 0) == 0)
-                throw new InvalidOperationException("The load balancer does not have members.");
-
-            return members;
         }
     }
 }

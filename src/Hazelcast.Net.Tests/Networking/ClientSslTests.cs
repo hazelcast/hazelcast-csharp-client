@@ -14,6 +14,9 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Networking;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -21,6 +24,7 @@ namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
     [Category("enterprise")]
+    [Timeout(30_000)]
     public class ClientSslTests : ClientSslTestBase
     {
         [Test]
@@ -52,7 +56,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task TestSSLEnabled_validateName_invalidName()
         {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
                 await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                     true,
@@ -82,6 +86,18 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task TestSSLEnabled_DoNotValidateChain_DoNotValidateName_invalidName()
         {
+            // note: if we let the test timeout (via the [Timeout] attribute) then HConsole
+            // does not log => timeout the StartClientAsync within the test so that the
+            // test fails properly, and HConsole can log.
+
+            using var _ = HConsole.Capture(consoleOptions => consoleOptions
+                .ClearAll()
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET")
+            );
+
             await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
                 true,
                 false,
@@ -89,7 +105,7 @@ namespace Hazelcast.Tests.Networking
                 null,
                 "Invalid Cert Name",
                 null,
-                null);
+                null).AsTask().CfAwait(TimeSpan.FromSeconds(20));
         }
 
         [Test]
@@ -108,7 +124,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task TestSSLEnabled_self_signed_remote_cert()
         {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
                 await using var client = await StartClientAsync(Resources.Cluster_Ssl,
                     true,

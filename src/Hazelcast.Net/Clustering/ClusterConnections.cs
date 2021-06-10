@@ -15,25 +15,23 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Events;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
+using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast.Clustering
 {
     internal class ClusterConnections : IAsyncDisposable
     {
-        private static string _clientVersion;
-
-        // we don't need an address locker now, but we may in the future
-        //private readonly AddressLocker _addressLocker = new AddressLocker();
-        private readonly SemaphoreSlim _onClosedMutex = new SemaphoreSlim(1);
+        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+        private readonly object _mutex = new object();
 
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
@@ -42,17 +40,20 @@ namespace Hazelcast.Clustering
         private readonly IRetryStrategy _connectRetryStrategy;
         private readonly ILogger _logger;
 
-        // address -> connection, used for fast querying of connections by network address
-        private readonly ConcurrentDictionary<NetworkAddress, MemberConnection> _addressConnections = new ConcurrentDictionary<NetworkAddress, MemberConnection>();
+        // address -> connection
+        // TODO: consider we are duplicating this with members?
+        private readonly ConcurrentDictionary<Guid, MemberConnection> _connections = new ConcurrentDictionary<Guid, MemberConnection>();
 
-        private readonly bool _smartRouting;
-        private readonly ConnectAddresses _connectAddresses;
+        // connection -> completion
+        private readonly ConcurrentDictionary<MemberConnection, TaskCompletionSource<object>> _completions = new ConcurrentDictionary<MemberConnection, TaskCompletionSource<object>>();
 
         private Action<MemberConnection> _connectionCreated;
-        private Func<MemberConnection, bool, bool, ValueTask> _connectionOpened;
-        private Func<MemberConnection, bool, ValueTask> _connectionClosed;
+        private Func<MemberConnection, bool, bool, bool, ValueTask> _connectionOpened;
+        private Func<MemberConnection, ValueTask> _connectionClosed;
         private BackgroundTask _reconnect;
-        private Guid _clusterId; // the server-side identifier of the cluster
+        private Guid _clusterId;
+
+        private readonly Task _connectMembers;
 
         private volatile int _disposed; // disposed flag
 
@@ -65,18 +66,69 @@ namespace Hazelcast.Clustering
             _clusterMembers = clusterMembers;
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterConnections>();
-            _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService);
+            _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService, _clusterState.LoggerFactory);
             _addressProvider = new AddressProvider(_clusterState.Options.Networking, _clusterState.LoggerFactory);
             _connectRetryStrategy = new RetryStrategy("connect to cluster", _clusterState.Options.Networking.ConnectionRetry, _clusterState.LoggerFactory);
 
             if (_clusterState.IsSmartRouting)
+                _connectMembers = ConnectMembers(_cancel.Token);
+
+            _clusterState.StateChanged += OnStateChanged;
+
+            HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
+        }
+
+        #region Connect Members
+
+        private async Task<(bool, bool, Exception)> EnsureConnectionInternalAsync(MemberInfo member, CancellationToken token, CancellationToken cancellationToken)
+        {
+            Exception exception = null;
+            var wasCanceled = false;
+
+            using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token);
+
+            try
             {
-                _smartRouting = true;
-                _connectAddresses = new ConnectAddresses(GetOrConnectAsync, _clusterState.LoggerFactory);
+                var attempt = await EnsureConnectionAsync(member, source.Token).CfAwait();
+                if (attempt) return (true, false, null);
+            }
+            catch (OperationCanceledException)
+            {
+                wasCanceled = true;
+            }
+            catch (Exception e)
+            {
+                exception = e;
             }
 
-            HConsole.Configure(options => options.Set(this, x => x.SetPrefix("CCNX")));
+            return (false, wasCanceled, exception);
         }
+
+        // background task that connect members
+        private async Task ConnectMembers(CancellationToken cancellationToken)
+        {
+            await foreach(var (member, token) in _clusterMembers.MembersToConnect.WithCancellation(cancellationToken))
+            {
+                HConsole.WriteLine(this, $"Ensure a connection for member {member.Id.ToShortString()} (at {member.Address})");
+
+                var (ensured, wasCanceled, exception) = await EnsureConnectionInternalAsync(member, token, cancellationToken).CfAwait();
+                if (ensured) continue;
+
+                if (_disposed > 0)
+                {
+                    _logger.LogWarning($"Could not connect to member at {member.Address}: shutting down.");
+                }
+                else
+                {
+                    var details = wasCanceled ? "canceled" : "failed";
+                    _logger.LogWarning(exception, $"Could not connect to member at {member.Address}: {details}.");
+
+                    _clusterMembers.FailedToConnect(member);
+                }
+            }
+        }
+
+        #endregion
 
         #region Events
 
@@ -101,7 +153,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when a connection is opened.
         /// </summary>
-        public Func<MemberConnection, bool, bool, ValueTask> ConnectionOpened
+        public Func<MemberConnection, bool, bool, bool, ValueTask> ConnectionOpened
         {
             get => _connectionOpened;
             set
@@ -111,13 +163,13 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async ValueTask RaiseConnectionOpened(MemberConnection connection, bool isFirst, bool isNewCluster)
+        private async ValueTask RaiseConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
         {
             if (_connectionOpened == null) return;
 
             try
             {
-                await _connectionOpened.AwaitEach(connection, isFirst, isNewCluster).CfAwait();
+                await _connectionOpened.AwaitEach(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
             }
             catch (Exception e)
             {
@@ -128,7 +180,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets or sets an action that will be executed when a connection is closed.
         /// </summary>
-        public Func<MemberConnection, bool, ValueTask> ConnectionClosed
+        public Func<MemberConnection, ValueTask> ConnectionClosed
         {
             get => _connectionClosed;
             set
@@ -138,13 +190,13 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private async ValueTask RaiseConnectionClosed(MemberConnection connection, bool wasLast)
+        private async ValueTask RaiseConnectionClosed(MemberConnection connection)
         {
             if (_connectionClosed == null) return;
 
             try
             {
-                await _connectionClosed.AwaitEach(connection, wasLast).CfAwait();
+                await _connectionClosed.AwaitEach(connection).CfAwait();
             }
             catch (Exception e)
             {
@@ -156,15 +208,49 @@ namespace Hazelcast.Clustering
 
         #region Event Handlers
 
-        /// <summary>
-        /// Handles members being updated.
-        /// </summary>
-        /// <param name="args">The event arguments.</param>
-        public ValueTask OnMembersUpdated(MembersUpdatedEventArgs args)
+        private ValueTask OnStateChanged(ClientState state)
         {
-            // add new members to the connect queue
-            foreach (var addedMember in args.AddedMembers)
-                _connectAddresses.Add(addedMember.Address);
+            _logger.LogDebug($"State changed: {state}");
+
+            // only if disconnected
+            if (state != ClientState.Disconnected) return default;
+
+            // and still disconnected - if the cluster is down or shutting down, give up
+            if (_clusterState.ClientState != ClientState.Disconnected)
+            {
+                _logger.LogInformation("Disconnected (shutting down)");
+                return default;
+            }
+
+            // the cluster is disconnected, but not down
+            _logger.LogInformation("Disconnected (reconnect mode == {ReconnectMode} => {ReconnectAction})",
+                _clusterState.Options.Networking.ReconnectMode,
+                _clusterState.Options.Networking.ReconnectMode switch
+                {
+                    ReconnectMode.DoNotReconnect => "shut down",
+                    ReconnectMode.ReconnectSync => "reconnect synchronously",
+                    ReconnectMode.ReconnectAsync => "reconnect asynchronously",
+                    _ => "meh?"
+                });
+
+            // what we do next depends on options
+            switch (_clusterState.Options.Networking.ReconnectMode)
+            {
+                case ReconnectMode.DoNotReconnect:
+                    // DoNotReconnect = the cluster shuts down
+                    _clusterState.RequestShutdown();
+                    break;
+
+                case ReconnectMode.ReconnectSync:
+                case ReconnectMode.ReconnectAsync:
+                    // Reconnect Sync or Async = the cluster reconnects via a background task
+                    // operations will either block or fail
+                    _reconnect = BackgroundTask.Run(ReconnectAsync);
+                    break;
+
+                default:
+                    throw new NotSupportedException();
+            }
 
             return default;
         }
@@ -175,110 +261,28 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         private async ValueTask OnConnectionClosed(MemberConnection connection)
         {
-            // handle them one at a time
-            await _onClosedMutex.WaitAsync().CfAwait();
-            try
+            TaskCompletionSource<object> connectCompletion;
+            lock (_mutex)
             {
-                // not a connection anymore
-                // if it was not a connection yet, we can return
-                lock (_addressConnections)
-                    if (!_addressConnections.TryRemove(connection.Address, out _))
-                        return;
+                // if the connection was not added yet, ignore
+                if (!_connections.TryRemove(connection.MemberId, out _))
+                    return;
 
-                // pause connecting members, so we can figure out whether that one was
-                // the last remaining connection, in a reliable way
-                if (_smartRouting)
-                    await _connectAddresses.PauseAsync().CfAwait();
-
-                // --- thread safety ---
-                // connectAddresses is paused, and we have _onClosedMutex
-                // which means that no other connection can be added/removed at that point
-
-                bool wasLast;
-                lock (_clusterMembers.Mutex)
-                {
-                    // atomically register the new connection and change the state
-                    // ie, the connection becomes unavailable and the state changes
-
-                    wasLast = _clusterMembers.NotifyConnectionClosed(connection);
-                    if (wasLast)
-                        _clusterState.NotifyState(ClientState.Disconnected);
-                }
-
-                // report that the connection has been closed
-                await RaiseConnectionClosed(connection, wasLast).CfAwait(); // does not throw
-
-                if (!wasLast) // then we must be smart routing
-                {
-                    // queue the member so it is reconnected, if it is still a member
-                    var member = _clusterMembers.GetMember(connection.MemberId);
-                    if (member != null) _connectAddresses.Add(member.Address);
-                }
-
-                // resume, drain queue if that was the last connection
-                if (_smartRouting)
-                {
-                    _connectAddresses.Resume(wasLast);
-                }
-
-                // if there are remaining connections, we can still talk to the cluster
-                if (wasLast) return;
-            }
-            finally
-            {
-                _onClosedMutex.Release();
+                // else get its 'connect' completion source
+                _completions.TryGetValue(connection, out connectCompletion);
             }
 
-            // otherwise, we have lost the last connection
-
-            // --- thread safety ---
-            // although we have released _onClosedMutex, connectAddresses' queue is
-            // empty and there are no connections left, which means that no other
-            // connection can be added/removed at that point
-
-            if (!_clusterState.IsActive || _disposed == 1)
+            // if still connecting... wait until done, because we cannot
+            // eg trigger the 'closed' event before or while the 'opened'
+            // triggers
+            if (connectCompletion != null)
             {
-                // the cluster is down
-                _logger.LogInformation("Disconnected (down)");
-                await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
-                return;
+                await connectCompletion.Task.CfAwait();
+                _completions.TryRemove(connection, out _);
             }
 
-            // the cluster is now disconnected, but not down
-            _logger.LogInformation("Disconnected (reconnect mode: {ReconnectMode}, {ReconnectAction})",
-                _clusterState.Options.Networking.ReconnectMode,
-                _clusterState.Options.Networking.ReconnectMode switch
-                {
-                    ReconnectMode.DoNotReconnect => "remain disconnected",
-                    ReconnectMode.ReconnectSync => "not supported -> trying to reconnect asynchronously",
-                    ReconnectMode.ReconnectAsync => "trying to reconnect asynchronously",
-                    _ => "Meh?"
-                });
-
-
-            // what we do next depends on options
-            switch (_clusterState.Options.Networking.ReconnectMode)
-            {
-                case ReconnectMode.DoNotReconnect:
-                    // DoNotReconnect = the cluster remains unconnected
-                    await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
-                    break;
-
-                case ReconnectMode.ReconnectSync: // TODO: implement ReconnectSync?
-                    // ReconnectSync = the cluster reconnects
-                    // operations are blocked (?) until the cluster is reconnected
-                    // was never supported by the CSharp client
-                    //_clusterState.OperationsShouldWaitIfReconnecting = true;
-
-                case ReconnectMode.ReconnectAsync:
-                    // ReconnectAsync = the cluster reconnects via a background task
-                    // operations can still be performed but will fail
-                    _reconnect = BackgroundTask.Run(ReconnectAsync);
-                    break;
-
-                default:
-                    throw new NotSupportedException();
-            }
+            // proceed: raise 'closed'
+            await RaiseConnectionClosed(connection).CfAwait(); // does not throw
         }
 
         #endregion
@@ -290,31 +294,42 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when connected.</returns>
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
-            // FIXME cancellations?
-            using var cancellation = _clusterState.GetLinkedCancellation(cancellationToken, false);
+            using var cancellation = _cancel.LinkedWith(cancellationToken);
             cancellationToken = cancellation.Token;
 
             // properties cannot be changed once connected
             _clusterState.SetPropertiesReadOnly();
 
-            await _clusterState.TransitionAsync(ClientState.Started).CfAwait();
+            // we have started, and are now trying to connect
+            if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting).CfAwait())
+                throw new ConnectionException("Failed to connect (aborted).");
 
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                HConsole.WriteLine(this, $"{_clusterState.ClientName} connecting");
+
                 // establishes the first connection, throws if it fails
                 await ConnectFirstAsync(cancellationToken).CfAwait();
 
-                // wait for the members table
-                await _clusterMembers.WaitForMembersAsync(cancellationToken).CfAwait();
+                // once the first connection is established, we should use it to subscribe
+                // to the cluster views event, and then we should receive a members view,
+                // which in turn should change the state to Connected - unless something
+                // goes wrong
+                var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
 
-                // and now we have been connected (rejoice)
-                // though nothing guarantees we still are, or will remain for long
-                // but OnConnectionClosed will deal with it
+                HConsole.WriteLine(this, $"{_clusterState.ClientName} connected");
+
+                if (!connected)
+                    throw new ConnectionException("Failed to connect.");
+
+                // we have been connected (rejoice) - of course, nothing guarantees that it
+                // will last, but then OnConnectionClosed will deal with it
             }
             catch
             {
-                // we *have* retried and failed
-                await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
+                // we *have* retried and failed, shutdown & throw
+                _clusterState.RequestShutdown();
                 throw;
             }
         }
@@ -331,20 +346,29 @@ namespace Hazelcast.Clustering
                 // establishes the first connection, throws if it fails
                 await ConnectFirstAsync(cancellationToken).CfAwait();
 
-                // FIXME reconnect, shall we wait for the first member view event?
-                // else we are just hoping that we haven't switched to a new
-                // cluster and that this connection matches a member?
+                // once the first connection is established, we should use it to subscribe
+                // to the cluster views event, and then we should receive a members view,
+                // which in turn should change the state to Connected - unless something
+                // goes wrong
+                var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
 
-                // and now we have been re-connected (rejoice)
-                // though nothing guarantees we still are, or will remain for long
-                // but OnConnectionClosed will deal with it
+                if (!connected)
+                {
+                    // we are a background task and cannot throw!
+                    _logger.LogError("Failed to reconnect.");
+                }
+                else
+                {
+                    _logger.LogDebug("Reconnected");
+                }
+
+                // we have been reconnected (rejoice) - of course, nothing guarantees that it
+                // will last, but then OnConnectionClosed will deal with it
             }
             catch (Exception e)
             {
-                // we *have* retried and failed
-                await _clusterState.TransitionAsync(ClientState.Shutdown).CfAwait();
-
-                // we are a background task and cannot throw!
+                // we *have* retried and failed, shutdown, and log (we are a background task!)
+                _clusterState.RequestShutdown();
                 _logger.LogError(e, "Failed to reconnect.");
             }
 
@@ -378,7 +402,7 @@ namespace Hazelcast.Clustering
             }
 
             // get known members' addresses
-            var addresses = _clusterMembers.GetAddresses();
+            var addresses = _clusterMembers.GetMembers().Select(x => x.Address);
             foreach (var address in Distinct(addresses, distinct, shuffle))
                 yield return address;
 
@@ -408,28 +432,49 @@ namespace Hazelcast.Clustering
 
             do
             {
-                // try each address (unique by the IPEndPoint)
-                foreach (var address in GetClusterAddresses())
+                try
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
-
-                    tried.Add(address);
-
-                    HConsole.WriteLine(this, $"Try to connect to address {address}");
-                    var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
-                    if (attempt)
+                    // try each address (unique by the IPEndPoint)
+                    foreach (var address in GetClusterAddresses())
                     {
-                        HConsole.WriteLine(this, $"Connected to connect to address {address}");
-                        return; // successful exit, a first connection has been opened
-                    }
-                    HConsole.WriteLine(this, $"Failed to connect to address {address}");
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
 
-                    if (attempt.HasException) // else gather exceptions
-                    {
-                        exceptions ??= new List<Exception>();
-                        exceptions.Add(attempt.Exception);
+                        tried.Add(address);
+
+                        HConsole.WriteLine(this, $"Try to connect {_clusterState.ClientName} to server at {address}");
+                        _logger.LogDebug("Try to connect {ClientName} to cluster {ClusterName} server at {MemberAddress}", _clusterState.ClientName, _clusterState.ClusterName, address);
+                        var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
+                        if (attempt)
+                        {
+                            var connection = attempt.Value;
+                            HConsole.WriteLine(this, $"Connected {_clusterState.ClientName} via {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {address}");
+                            return; // successful exit, a first connection has been opened
+                        }
+
+                        HConsole.WriteLine(this, $"Failed to connect to address {address}");
+
+                        if (attempt.HasException) // else gather exceptions
+                        {
+                            exceptions ??= new List<Exception>();
+                            exceptions.Add(attempt.Exception);
+
+                            _logger.LogDebug(attempt.Exception, "Connection attempt has thrown.");
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    // the GetClusterAddresses() enumerator itself can throw, if a configured
+                    // address is invalid or cannot be resolved via DNS... a DNS problem may
+                    // be transient: better retry
+
+                    exceptions ??= new List<Exception>();
+                    exceptions.Add(e);
+
+                    _logger.LogDebug(e, "Connection attempt has thrown.");
+
+                    // TODO: it's the actual DNS that should retry!
                 }
 
                 try
@@ -458,9 +503,10 @@ namespace Hazelcast.Clustering
                     $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
 
             // other exception
-            throw new InvalidOperationException($"Unable to connect to the cluster \"{_clusterState.ClusterName}\". " +
+            throw new ConnectionException($"Unable to connect to the cluster \"{_clusterState.ClusterName}\". " +
                 $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
         }
+
 
         /// <summary>
         /// Opens a first connection to an address (no other connections).
@@ -480,7 +526,12 @@ namespace Hazelcast.Clustering
             try
             {
                 // this may throw
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                // "The allocating method does not have dispose ownership; that is, the responsibility
+                // to dispose the object is transferred to another object or wrapper that's created
+                // in the method and returned to the caller." - here: the Attempt<>.
                 return await ConnectAsync(address, cancellationToken).CfAwait();
+#pragma warning restore CA2000
             }
             catch (Exception e)
             {
@@ -491,42 +542,44 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Gets or opens a connection to an address.
+        /// Ensures that a connection exists to a member.
         /// </summary>
-        /// <param name="address">The address.</param>
+        /// <param name="member">The member.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>The connection, if successful.</returns>
         /// <remarks>
         /// <para>This method does not throw.</para>
         /// </remarks>
-        private async Task<Attempt<MemberConnection>> GetOrConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
+        private async Task<Attempt<MemberConnection>> EnsureConnectionAsync(MemberInfo member, CancellationToken cancellationToken)
         {
+            HConsole.WriteLine(this, $"Ensure {_clusterState.ClientName} is connected to {member.Id.ToShortString()} at {member.Address}");
+
             // if we already have a client for that address, return the client
             // if it is active, or fail if it is not - cannot open yet another
-            // client to that same address.
-            if (_addressConnections.TryGetValue(address, out var clientConnection))
-                return Attempt.If(clientConnection.Active, clientConnection);
+            // client to that same address, we'll have to wait for the inactive
+            // connection to be removed.
+            if (_connections.TryGetValue(member.Id, out var connection))
+            {
+                var active = connection.Active;
+                HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from {_clusterState.ClientName} to {member.Id.ToShortString()} at {connection.Address}");
+                return Attempt.If(active, connection);
+            }
 
-            // lock the address - can only connect once at a time per address
-            // but! this is adding connections from ConnectAddresses which is sequential,
-            // so nothing else can connect
-            //using var locked = _addressLocker.LockAsync(address);
+            // ConnectMembers invokes EnsureConnectionAsync sequentially, and is suspended
+            // whenever we need to connect the very first address, therefore each address
+            // can only be connected once at a time = no need for locks here
 
             // exit now if canceled
             if (cancellationToken.IsCancellationRequested)
                 return Attempt.Fail<MemberConnection>();
 
-            // test again - maybe the address has been reconnected while we waited for the lock
-            // but! if nothing else can connect, this is pointless
-            //if (_addressConnections.TryGetValue(address, out clientConnection))
-            //    return Attempt.If(clientConnection.Active, clientConnection);
-
-            // else actually connect
             try
             {
+                // else actually connect
                 // this may throw
-#pragma warning disable CA2000 // Dispose objects before losing scope - returned
-                return await ConnectAsync(address, cancellationToken).CfAwait();
+                HConsole.WriteLine(this, $"{_clusterState.ClientName} not connected to {member.Id.ToShortString()} at {member.Address}, connecting");
+
+#pragma warning disable CA2000 // Dispose objects before losing scope - CA2000 does not understand CfAwait :(
+                return await ConnectAsync(member.Address, cancellationToken).CfAwait();
 #pragma warning restore CA2000
             }
             catch (Exception e)
@@ -536,141 +589,145 @@ namespace Hazelcast.Clustering
             }
         }
 
-        private static string ClientVersion
+        private static async ValueTask ThrowDisconnected(MemberConnection connection)
         {
-            get
-            {
-                if (_clientVersion != null) return _clientVersion;
+            // disposing the connection *will* run OnConnectionClosed which will
+            // remove the connection from all the places it needs to be removed from
+            await connection.DisposeAsync().CfAwait();
+            throw new TargetDisconnectedException();
+        }
 
-                var assembly = Assembly.GetExecutingAssembly();
-                var attribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-                if (attribute != null)
-                {
-                    var version = attribute.InformationalVersion;
-                    var pos = version.IndexOf('+');
-                    if (pos > 0 && version.Length > pos + 7)
-                        version = version.Substring(0, pos + 7);
-                    _clientVersion = version;
-                }
-                else
-                {
-                    var v = assembly.GetCustomAttribute<AssemblyVersionAttribute>();
-                    _clientVersion = v != null ? v.Version : "?";
-                }
+        private static async ValueTask ThrowRejected(MemberConnection connection)
+        {
+            // disposing the connection *will* run OnConnectionClosed which will
+            // remove the connection from all the places it needs to be removed from
+            await connection.DisposeAsync().CfAwait();
+            throw new ConnectionException("Connection was not accepted.");
+        }
 
-                return _clientVersion;
-            }
+        private static async ValueTask ThrowCanceled(MemberConnection connection)
+        {
+            // disposing the connection *will* run OnConnectionClosed which will
+            // remove the connection from all the places it needs to be removed from
+            await connection.DisposeAsync().CfAwait();
+            throw new OperationCanceledException();
         }
 
         /// <summary>
-        /// Opens a connection to an address.
-        /// </summary>
-        /// <param name="address">The address.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
+                 /// Opens a connection to an address.
+                 /// </summary>
+                 /// <param name="address">The address.</param>
+                 /// <param name="cancellationToken">A cancellation token.</param>
+                 /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
         private async Task<MemberConnection> ConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // map private address to public address
             address = _addressProvider.Map(address);
 
             // create the connection to the member
-            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.ConnectionIdSequence, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
             {
                 Closed = OnConnectionClosed
             };
 
             RaiseConnectionCreated(connection);
 
+            if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
+
+            // note: soon as ConnectAsync returns, the connection can close anytime - this is handled by
+            // adding the connection to _connections within _connectionsMutex + managing a connection
+            // completions that ensures that either neither Opened nor Closed trigger, or both trigger
+            // and in the right order, Closed after Opened has completed
+
             // connect to the server (may throw and that is ok here)
-            // note: soon as this returns, the connection can close anytime
             var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
 
-            // fail fast
-            if (cancellationToken.IsCancellationRequested)
-            {
-                await connection.DisposeAsync().CfAwait(); // does not throw
-                cancellationToken.ThrowIfCancellationRequested(); // throws
-            }
+            // report
+            _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}"+
+                                   " on connection {LocalAddress} -> {RemoteAddress} ({ConnectionId})" +
+                                   " to member {MemberId}" +
+                                   " of cluster '{ClusterName}' ({ClusterId}) running version {HazelcastServerVersion}.",
+                _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.Version,
+                connection.LocalEndPoint, result.MemberAddress, connection.Id.ToShortString(),
+                result.MemberId.ToShortString(),
+                _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);
 
             // notify partitioner
             try
             {
-                _clusterState.Partitioner.NotifyPartitionsCount(result.PartitionCount);
+                _clusterState.Partitioner.SetOrVerifyPartitionCount(result.PartitionCount);
             }
             catch (Exception e)
             {
                 await connection.DisposeAsync().CfAwait(); // does not throw
                 throw new ConnectionException("Failed to open a connection because " +
-                                              "the partitions count announced by the member in invalid.", e);
+                                              "the partitions count announced by the member is invalid.", e);
             }
 
-            // report
-            _logger.LogInformation("Auth. client '{ClientName}' ({ClientId}) version {ClientVersion}"+
-                                   " connection {ConnectionId} {LocalAddress} -> {RemoteAddress}" +
-                                   " cluster '{ClusterName}' version {HazelcastServerVersion} member {MemberId}.",
-                _clusterState.ClientName,
-                _clusterState.ClientId.ToShortString(),
-                ClientVersion,
-                connection.Id.ToShortString(),
-                connection.LocalEndPoint,
-                result.MemberAddress,
-                _clusterState.ClusterName,
-                result.ServerVersion,
-                result.MemberId.ToShortString());
+            if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
+            if (!connection.Active) await ThrowDisconnected(connection).CfAwait();
+
+            // isFirst: this is the first connection (but maybe after we've been disconnected)
+            // isFirstEver: this is the first connection, ever
+            // isNewCluster: when isFirst, this is also a new cluster (either because isFirstEver, or because of a cluster id change)
+            var isFirst = false;
+            var isFirstEver = false;
+            var isNewCluster = false;
+            var accepted = false;
 
             // register the connection
-            lock (_addressConnections)
+            lock (_mutex)
             {
-                // TODO: ensure this is safe + we should terminate the connection
-                if (_disposed == 1)
-                    throw new ConnectionException("Connections are going down.");
-
-                _addressConnections[address] = connection;
-                if (!connection.Active)
+                if (_disposed == 0)
                 {
-                    _addressConnections.TryRemove(address, out _);
-                    throw new ConnectionException("Connection closed immediately.");
+                    isFirst = _connections.IsEmpty;
+                    isFirstEver = isFirst && _clusterId == default;
+                    accepted = true;
+
+                    // ok to connect to a different cluster only if this is the very first connection
+                    isNewCluster = _clusterId != connection.ClusterId;
+                    if (isNewCluster)
+                    {
+                        if (!_connections.IsEmpty)
+                        {
+                            _logger.LogWarning($"Cannot accept a connection to cluster {connection.ClusterId} which is not the current cluster ({_clusterId}).");
+                            accepted = false;
+                        }
+                        else
+                        {
+                            _clusterId = connection.ClusterId;
+                        }
+                    }
+                }
+
+                // finally, add the connection
+                if (accepted)
+                {
+                    _connections[connection.MemberId] = connection;
+                    _completions[connection] = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
                 }
             }
 
-            // from now on, if the connection closes, it will be taken care of by
-            // OnConnectionClosed - and since that one pauses and waits for connections,
-            // the code below will all execute *before* OnConnectionClosed handles
-            // this connection
+            // these Throw methods dispose the connection, which will then be removed from _connections
+            // we are safe
+            if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
+            if (!connection.Active) await ThrowDisconnected(connection).CfAwait();
+            if (!accepted) await ThrowRejected(connection).CfAwait();
 
-            // FIXME but if anything below throws, we have a failure yet we have the connection?
-
-            bool isFirst, isNewCluster;
-            lock (_clusterMembers.Mutex)
-            {
-                // atomically register the new connection and change the state
-                // ie, the connection becomes available and the state changes
-
-                isFirst = _clusterMembers.NotifyConnectionOpened(connection);
-                if (isFirst)
-                    _clusterState.NotifyState(ClientState.Connected);
-            }
-
-            isNewCluster = false;
-
-            if (_clusterId == default)
-            {
-                _clusterId = connection.ClusterId; // first cluster
-            }
-            else if (_clusterId != connection.ClusterId)
-            {
-                // see TcpClientConnectionManager java class handleSuccessfulAuth method
-                // does not even consider the cluster identifier when !isFirst
-                if (isFirst)
-                {
-                    _logger.LogWarning("Switching from current cluster {CurrentClusterId} to new cluster {NewClusterId}.", _clusterId, connection.ClusterId);
-                    _clusterId = connection.ClusterId; // new cluster
-                    isNewCluster = true;
-                }
-            }
+            // NOTE: connections are opened either by 'connect first' or by 'connect members' and
+            // both ensure that one connection is opened after another - not concurrently - thus
+            // making sure that there is no race condition here and the ConnectionOpened for the
+            // isFirst connection will indeed trigger before any other connection is created - think
+            // about it if adding support for parallel connections!
 
             // connection is opened
-            await RaiseConnectionOpened(connection, isFirst, isNewCluster).CfAwait();
+            await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+
+            lock (_mutex)
+            {
+                // there is always a completion, but we have to TryRemove from concurrent dictionaries
+                if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
+            }
 
             return connection;
         }
@@ -681,22 +738,27 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
                 return;
 
-            // stop and dispose the background task that connects members
-            if (_clusterState.IsSmartRouting)
-                await _connectAddresses.DisposeAsync().CfAwait(); // does not throw
+            HConsole.WriteLine(this, "Terminate ConnectMembers");
+            // be sure to properly terminate _connectMembers, even though, because the
+            // MemberConnectionQueue has been disposed already, the task should have
+            // ended by now
+            _cancel.Cancel();
+            if (_connectMembers != null)
+                await _connectMembers.CfAwaitCanceled();
+            _cancel.Dispose();
 
             // stop and dispose the reconnect task if it's running
+            HConsole.WriteLine(this, "Terminate Reconnect");
             var reconnect = _reconnect;
             if (reconnect != null)
                 await reconnect.CompletedOrCancelAsync(true).CfAwait();
 
-            // trash all connections
+            // trash all remaining connections
+            HConsole.WriteLine(this, "Tear down Connections");
             ICollection<MemberConnection> connections;
-            lock (_addressConnections) connections = _addressConnections.Values;
-            foreach (var x in connections)
-                await x.TerminateAsync().CfAwait();
-
-            _onClosedMutex.Dispose();
+            lock (_mutex) connections = _connections.Values;
+            foreach (var connection in connections)
+                await connection.DisposeAsync().CfAwait();
         }
     }
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -28,9 +29,10 @@ namespace Hazelcast.Clustering
     internal class ClusterState : IAsyncDisposable
     {
         private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
-        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1); // general lock
+        private readonly object _mutex = new object();
         private readonly StateChangeQueue _stateChangeQueue;
 
+        private Action _shutdownRequested;
         private volatile bool _readonlyProperties;
 
         /// <summary>
@@ -45,6 +47,8 @@ namespace Hazelcast.Clustering
             LoggerFactory = loggerFactory;
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
+
+            HConsole.Configure(x=> x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
         }
 
         #region Events
@@ -59,6 +63,19 @@ namespace Hazelcast.Clustering
             {
                 ThrowIfPropertiesAreReadOnly();
                 _stateChangeQueue.StateChanged = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// <summary>
+        /// Triggers when shutdown is requested.
+        /// </summary>
+        public Action ShutdownRequested
+        {
+            get => _shutdownRequested;
+            set
+            {
+                ThrowIfPropertiesAreReadOnly();
+                _shutdownRequested = value;
             }
         }
 
@@ -105,55 +122,195 @@ namespace Hazelcast.Clustering
 
         #region ClientState
 
+        // NOTE: the initial ClientState is the default value, i.e. zero
+        // we don't make it ClientState.Unknown because we don't want it
+        // to be publicly visible, as this is a purely internal state
+
         /// <summary>
         /// Gets the client state.
         /// </summary>
-        public ClientState ClientState { get; private set; } = ClientState.Starting;
+        public ClientState ClientState { get; private set; }
 
         /// <summary>
-        /// (thread-unsafe) Immediately transitions to a new client state,
-        /// and pushes the corresponding <see cref="StateChanged"/> event to the queue.
+        /// Changes the state, and pushes the change to the events queue.
         /// </summary>
         /// <param name="newState">The new state.</param>
-        /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
-        /// <remarks>
-        /// <para>This method is not thread-safe; the caller has to lock the
-        /// cluster state's <see cref="Mutex"/> to ensure thread-safety.</para>
-        /// </remarks>
-        public void NotifyState(ClientState newState)
+        public void ChangeState(ClientState newState)
         {
-            lock (_lock) // fixme state lock
+            lock (_mutex)
             {
-                if (ClientState != newState)
-                {
-                    // queue will trigger events sequentially, in order, and in the background
-                    ClientState = newState;
-                    _stateChangeQueue.Add(newState);
-                }
+                if (ClientState == newState)
+                    return;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
+                _stateChangeQueue.Add(newState);
             }
         }
 
         /// <summary>
-        /// Transitions to a new client state.
+        /// Changes the state if it is as expected, and pushes the change to the events queue.
         /// </summary>
         /// <param name="newState">The new state.</param>
-        /// <returns>A task that will complete once the cluster has transitioned to the new state.</returns>
-        /// <exception cref="InvalidOperationException">The current state was not the expected state.</exception>
-        public async ValueTask TransitionAsync(ClientState newState)
+        /// <param name="expectedState">The expected state.</param>
+        /// <returns><c>true</c> if the state was as expected, and thus changed; otherwise <c>false</c>.</returns>
+        public bool ChangeState(ClientState newState, ClientState expectedState)
         {
-            await _lock.WaitAsync(CancellationToken.None).CfAwait();
-
-            try
+            lock (_mutex)
             {
+                if (ClientState != expectedState)
+                    return false;
+
                 ClientState = newState;
-
-                // queue will trigger events sequentially, in order, and in the background
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
                 _stateChangeQueue.Add(newState);
+                return true;
             }
-            finally
+        }
+
+        /// <summary>
+        /// Changes the state if it is as expected, and pushes the change to the events queue.
+        /// </summary>
+        /// <param name="newState">The new state.</param>
+        /// <param name="expectedStates">The expected states.</param>
+        /// <returns><c>true</c> if the state was as expected, and thus changed; otherwise <c>false</c>.</returns>
+        public bool ChangeState(ClientState newState, params ClientState[] expectedStates)
+        {
+            lock (_mutex)
             {
-                _lock.Release();
+                if (!expectedStates.Contains(ClientState))
+                    return false;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
+                _stateChangeQueue.Add(newState);
+                return true;
             }
+        }
+
+        /// <summary>
+        /// Changes the state if it is as expected, and pushes the change to the events queue,
+        /// then waits for the event to be handled.
+        /// </summary>
+        /// <param name="newState">The new state.</param>
+        /// <returns>A task that will complete when the state change event has been handled.</returns>
+        public async Task ChangeStateAndWait(ClientState newState)
+        {
+            Task wait;
+            lock (_mutex)
+            {
+                if (ClientState == newState)
+                    return;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
+                wait = _stateChangeQueue.AddAndWait(newState);
+            }
+
+            await wait.CfAwait();
+        }
+
+        /// <summary>
+        /// Changes the state if it is as expected, and pushes the change to the events queue,
+        /// then waits for the event to be handled.
+        /// </summary>
+        /// <param name="newState">The new state.</param>
+        /// <param name="expectedState">The expected state.</param>
+        /// <returns><c>true</c> if the state was as expected, and thus changed, and the corresponding
+        /// event has been handled; otherwise (not changed) <c>false</c>.</returns>
+        public async Task<bool> ChangeStateAndWait(ClientState newState, ClientState expectedState)
+        {
+            Task wait;
+            lock (_mutex)
+            {
+                if (ClientState != expectedState)
+                    return false;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
+                wait = _stateChangeQueue.AddAndWait(newState);
+            }
+
+            await wait.CfAwait();
+            return true;
+        }
+
+        /// <summary>
+        /// Changes the state if it is as expected, and pushes the change to the events queue,
+        /// then waits for the event to be handled.
+        /// </summary>
+        /// <param name="newState">The new state.</param>
+        /// <param name="expectedStates">The expected states.</param>
+        /// <returns><c>true</c> if the state was as expected, and thus changed, and the corresponding
+        /// event has been handled; otherwise (not changed) <c>false</c>.</returns>
+        public async Task<bool> ChangeStateAndWait(ClientState newState, params ClientState[] expectedStates)
+        {
+            Task wait;
+            lock (_mutex)
+            {
+                if (!expectedStates.Contains(ClientState))
+                    return false;
+
+                ClientState = newState;
+                wait = _stateChangeQueue.AddAndWait(newState);
+            }
+
+            await wait.CfAwait();
+            return true;
+        }
+
+        /// <summary>
+        /// Waits until connected, or it becomes impossible to connect.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns><c>true</c> if connected; otherwise <c>false</c> meaning it has become impossible to connect.</returns>
+        public ValueTask<bool> WaitForConnectedAsync(CancellationToken cancellationToken)
+        {
+            lock (_mutex)
+            {
+                // already connected
+                if (ClientState == ClientState.Connected) return new ValueTask<bool>(true);
+
+                // never going to be connected
+                if (ClientState != ClientState.Started && ClientState != ClientState.Disconnected) return new ValueTask<bool>(false);
+            }
+
+            return WaitForConnectedAsync2(cancellationToken);
+        }
+
+        private async ValueTask<bool> WaitForConnectedAsync2(CancellationToken cancellationToken)
+        {
+            TaskCompletionSource<ClientState> wait;
+            CancellationTokenRegistration reg;
+
+            lock (_mutex)
+            {
+                // already connected
+                if (ClientState == ClientState.Connected) return true;
+
+                // never going to be connected
+                if (ClientState != ClientState.Started && ClientState != ClientState.Disconnected) return false;
+
+                // must wait
+                wait = new TaskCompletionSource<ClientState>();
+                reg = cancellationToken.Register(() => wait.TrySetCanceled());
+                _stateChangeQueue.StateChanged += x =>
+                {
+                    // either connected, or never going to be connected
+                    if (x != ClientState.Started && x != ClientState.Disconnected)
+                        wait.TrySetResult(x);
+
+                    // keep waiting
+                    return default;
+                };
+            }
+
+            ClientState state;
+            try { state  = await wait.Task.CfAwait(); } catch {  state = 0; }
+
+            reg.Dispose();
+
+            return state == ClientState.Connected;
         }
 
         /// <summary>
@@ -185,27 +342,24 @@ namespace Hazelcast.Clustering
 
         #endregion
 
-        #region Lock
-
-        /// <summary>
-        /// Gets the state mutex.
-        /// </summary>
-        public object Mutex { get; } = new object();
-
-        #endregion
-
-
-        /// <summary>
-        /// Gets the cluster general <see cref="CancellationToken"/>.
-        /// </summary>
-        public CancellationToken CancellationToken => _clusterCancellation.Token;
-
-        /// <summary>
-        /// Cancels the cluster general <see cref="CancellationToken"/>.
-        /// </summary>
-        public void CancelOperations()
+        public Exception ThrowClientOfflineException()
         {
-            _clusterCancellation.Cancel();
+            // due to a race condition between ClusterMembers potentially removing all its connections,
+            // and ClusterConnections figuring we are now disconnected and changing the state, the state
+            // here could still be ClientState.Connected - fix it.
+
+            var clientState = ClientState;
+            if (clientState == ClientState.Connected) clientState = ClientState.Disconnected;
+            return new ClientOfflineException(clientState);
+
+        }
+
+        /// <summary>
+        /// Requests that the client shuts down.
+        /// </summary>
+        public void RequestShutdown()
+        {
+            _shutdownRequested?.Invoke();
         }
 
         /// <summary>
@@ -245,60 +399,11 @@ namespace Hazelcast.Clustering
         public long GetNextCorrelationId() => CorrelationIdSequence.GetNext();
 
         /// <summary>
-        /// Gets the connection identifier sequence.
-        /// </summary>
-        public ISequence<int> ConnectionIdSequence { get; } = new Int32Sequence();
-
-        /// <summary>
-        /// Throws a <see cref="ClientOfflineException"/> if the cluster operations have been canceled.
-        /// </summary>
-        public void ThrowIfCancelled()
-        {
-            if (_clusterCancellation.IsCancellationRequested) throw new ClientOfflineException(ClientState);
-        }
-
-        /// <summary>
-        /// Gets a <see cref="CancellationTokenSource"/> obtained by linking the cluster general
-        /// cancellation with the supplied <paramref name="cancellationToken"/>.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <param name="throwIfNotActive">Whether to throw immediately if the cluster is not connected.</param>
-        /// <returns>A new <see cref="CancellationTokenSource"/>obtained by linking the cluster general
-        /// cancellation with the supplied <paramref name="cancellationToken"/>.</returns>
-        /// <remarks>
-        /// <para>The called must ensure that the returned <see cref="CancellationTokenSource"/> is
-        /// eventually disposed.</para>
-        /// </remarks>
-        public CancellationTokenSource GetLinkedCancellation(CancellationToken cancellationToken, bool throwIfNotActive = true)
-        {
-            // fail fast
-            if (throwIfNotActive) ThrowIfNotActive();
-
-            // note: that is a bad idea - what we return will be disposed, and we certainly do not
-            // want the main _clusterCancellation to be disposed! plus, LinkedWith invoked with
-            // a default CancellationToken will lead to practically doing nothing anyways
-            //
-            // succeed fast
-            //if (cancellationToken == default) return _clusterCancellation;
-
-            // still, there is a race condition - a chance that the _clusterCancellation
-            // is gone by the time we use it = handle the situation here
-            try
-            {
-                return _clusterCancellation.LinkedWith(cancellationToken);
-            }
-            catch
-            {
-                throw new ClientOfflineException(ClientState);
-            }
-        }
-
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
             await _stateChangeQueue.DisposeAsync().CfAwait();
             _clusterCancellation.Dispose();
-            _lock.Dispose();
         }
     }
 }

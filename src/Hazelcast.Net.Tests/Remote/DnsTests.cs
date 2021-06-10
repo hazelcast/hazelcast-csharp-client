@@ -30,19 +30,34 @@ namespace Hazelcast.Tests.Remote
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<AsyncContext>(x => x.Quiet())
-                .Set<SocketConnectionBase>(x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
         [Test]
         public async Task SingleFailureAtAddressResolutionShouldNotBlowUpClient()
         {
             using var _ = HConsoleForTest();
+            HConsole.WriteLine(this, "Begin");
 
-            using var altDns = HDns.Override(new AltDns(2));
+            // the alt DNS will throw on the Nth invocation of GetHostAddresses
+            // the original test threw at '2' and that was when getting an address to connect to
+            // the original code & test was not resilient to failures in other places, either
+            //
+            // 1: getting an address to connect to
+            // 2: decoding the auth response (fatal)
+            // 3: decoding the members view event (fatal)
+            // ...
+            var altDns = new AltDns(1);
+            using var dnsOverride = HDns.Override(altDns);
 
-            await using var client = await CreateAndStartClientAsync();
+            await using var client = await CreateAndStartClientAsync(options =>
+            {
+                // make sure to use a hostname, not 127.0.0.1, to use the DNS
+                options.Networking.Addresses.Clear();
+                options.Networking.Addresses.Add("localhost:5701");
+            });
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -53,6 +68,9 @@ namespace Hazelcast.Tests.Remote
 
             await Task.Delay(1000);
 
+            // dns has been used
+            Assert.That(altDns.Count, Is.GreaterThan(0));
+
             // client is still active and connected
             Assert.That(client.IsActive);
             Assert.That(client.IsConnected);
@@ -61,12 +79,14 @@ namespace Hazelcast.Tests.Remote
         private class AltDns : IDns
         {
             private readonly int _failAt;
-            private int _count;
 
             public AltDns(int failAt)
             {
                 _failAt = failAt;
+                HConsole.Configure(x => x.Configure(this).SetPrefix("ADNS"));
             }
+
+            public int Count { get; private set; }
 
             public string GetHostName() => Dns.GetHostName();
 
@@ -76,7 +96,11 @@ namespace Hazelcast.Tests.Remote
 
             public IPAddress[] GetHostAddresses(string hostNameOrAddress)
             {
-                if (++_count == _failAt)
+                Count++;
+
+                HConsole.TraceLine(this, $"GetHostAddresses {hostNameOrAddress} {Count}/{_failAt}");
+
+                if (Count == _failAt)
                     throw new SocketException((int)SocketError.HostNotFound);
 
                 return Dns.GetHostAddresses(hostNameOrAddress);

@@ -43,14 +43,12 @@ namespace Hazelcast.Clustering
     {
         internal static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //"CP2";
 
-        private readonly ConcurrentDictionary<long, Invocation> _invocations
-            = new ConcurrentDictionary<long, Invocation>();
+        private readonly ConcurrentDictionary<long, Invocation> _invocations = new ConcurrentDictionary<long, Invocation>();
 
         private readonly Authenticator _authenticator;
         private readonly MessagingOptions _messagingOptions;
         private readonly NetworkingOptions _networkingOptions;
         private readonly SslOptions _sslOptions;
-        private readonly ISequence<int> _connectionIdSequence;
         private readonly ISequence<long> _correlationIdSequence;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
@@ -59,13 +57,12 @@ namespace Hazelcast.Clustering
         private Action<ClientMessage> _receivedEvent;
         private Func<MemberConnection, ValueTask> _closed;
 
-#pragma warning disable CA2213 // Disposable fields should be disposed - is owned by _messageConnection, which is disposed
         private ClientSocketConnection _socketConnection;
-#pragma warning restore CA2213 // Disposable fields should be disposed
         private ClientMessageConnection _messageConnection;
-        private volatile int _disposed;
 
-        private BackgroundTask _bgTask;
+        private readonly object _mutex = new object();
+        private volatile bool _disposed;
+        private volatile bool _active;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnection"/> class.
@@ -75,33 +72,26 @@ namespace Hazelcast.Clustering
         /// <param name="messagingOptions">Messaging options.</param>
         /// <param name="networkingOptions">Networking options.</param>
         /// <param name="sslOptions">SSL options.</param>
-        /// <param name="connectionIdSequence">A sequence of unique connection identifiers.</param>
         /// <param name="correlationIdSequence">A sequence of unique correlation identifiers.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        /// <remarks>
-        /// <para>The <paramref name="connectionIdSequence"/> parameter can be used to supply a
-        /// sequence of unique connection identifiers. This can be convenient for tests, where
-        /// using unique identifiers across all clients can simplify debugging.</para>
-        /// </remarks>
-        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<int> connectionIdSequence, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
+        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
             _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
-            _connectionIdSequence = connectionIdSequence ?? throw new ArgumentNullException(nameof(connectionIdSequence));
             _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
 
-            HConsole.Configure(x => x.Set(this, config => config.SetIndent(4).SetPrefix("CLIENT")));
+            HConsole.Configure(x => x.Configure<MemberConnection>().SetIndent(4).SetPrefix("MBR.CONN"));
         }
 
         #region Events
 
         /// <summary>
-        /// Gets or sets an action that will be executed when the connection receives a message.
+        /// Gets or sets an action that will be executed when the connection receives an event message.
         /// </summary>
         public Action<ClientMessage> ReceivedEvent
         {
@@ -131,14 +121,14 @@ namespace Hazelcast.Clustering
         #endregion
 
         /// <summary>
-        /// Gets the unique identifier of this client.
+        /// Gets the unique identifier of this connection.
         /// </summary>
         public Guid Id { get; } = Guid.NewGuid();
 
         /// <summary>
-        /// Whether the client is active.
+        /// Whether the connection is active.
         /// </summary>
-        public bool Active => _disposed == 0;
+        public bool Active => _active;
 
         /// <summary>
         /// Gets the unique identifier of the cluster member that this connection is connected to.
@@ -161,6 +151,16 @@ namespace Hazelcast.Clustering
         public IPEndPoint LocalEndPoint => _socketConnection.LocalEndPoint;
 
         /// <summary>
+        /// Gets the authentication principal.
+        /// </summary>
+        public string Principal { get; private set; }
+
+        /// <summary>
+        /// Gets the date and time when the connection was established.
+        /// </summary>
+        public DateTimeOffset ConnectTime { get; private set; }
+
+        /// <summary>
         /// Gets the date and time when bytes where last read by the client.
         /// </summary>
         public DateTime LastReadTime => _socketConnection?.LastReadTime ?? DateTime.MinValue;
@@ -169,29 +169,6 @@ namespace Hazelcast.Clustering
         /// Gets the date and time when bytes where last written by the client.
         /// </summary>
         public DateTime LastWriteTime => _socketConnection?.LastWriteTime ?? DateTime.MinValue;
-
-        /// <summary>
-        /// Adds an invocation.
-        /// </summary>
-        /// <param name="invocation">The invocation.</param>
-        private void AddInvocation(Invocation invocation)
-            => _invocations[invocation.CorrelationId] = invocation;
-
-        /// <summary>
-        /// Removes an invocation.
-        /// </summary>
-        /// <param name="invocation">The invocation.</param>
-        private void RemoveInvocation(Invocation invocation)
-            => _invocations.TryRemove(invocation.CorrelationId, out _);
-
-        /// <summary>
-        /// Tries to remove an invocation.
-        /// </summary>
-        /// <param name="correlationId">The correlation identifier.</param>
-        /// <param name="invocation">The invocation.</param>
-        /// <returns>Whether an invocation with the specified correlation identifier was removed.</returns>
-        private bool TryRemoveInvocation(long correlationId, out Invocation invocation)
-            => _invocations.TryRemove(correlationId, out invocation);
 
         /// <summary>
         /// Connects the client to the server.
@@ -207,13 +184,13 @@ namespace Hazelcast.Clustering
             // MessageConnection is just a wrapper around a true SocketConnection, and
             // the SocketConnection must be open *after* everything has been wired
 
-            _socketConnection = new ClientSocketConnection(_connectionIdSequence.GetNext(), Address.IPEndPoint, _networkingOptions, _sslOptions, _loggerFactory)
+            _socketConnection = new ClientSocketConnection(Id, Address.IPEndPoint, _networkingOptions, _sslOptions, _loggerFactory)
                 { OnShutdown = OnSocketShutdown };
 
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory)
                 { OnReceiveMessage = ReceiveMessage };
 
-            HConsole.Configure(x => x.Set(_messageConnection, config => config.SetIndent(12).SetPrefix($"MSG.CLIENT [{_socketConnection.Id}]")));
+            HConsole.Configure(x => x.Configure(_messageConnection).SetIndent(8).SetPrefix($"CLT.MSG [{Id.ToShortString()}]"));
 
             AuthenticationResult result;
             try
@@ -223,23 +200,37 @@ namespace Hazelcast.Clustering
 
                 // send protocol bytes
                 var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CfAwait();
-                if (!sent) throw new InvalidOperationException("Failed to send protocol bytes.");
+                if (!sent) throw new ConnectionException("Failed to send protocol bytes.");
 
-                // authenticate (does not return null)
+                // authenticate (does not return null, throws if it fails to authenticate)
                 result = await _authenticator
                     .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, cancellationToken)
                     .CfAwait();
             }
             catch
             {
-                await _socketConnection.DisposeAsync().CfAwaitNoThrow();
-                _socketConnection = null;
-                _messageConnection = null;
+                lock (_mutex) _disposed = true;
+                await DisposeInnerConnectionAsync().CfAwait();
                 throw;
             }
 
             MemberId = result.MemberId;
             ClusterId = result.ClusterId;
+            ConnectTime = DateTimeOffset.Now;
+            Principal = result.Principal;
+
+            bool disposed;
+            lock (_mutex)
+            {
+                disposed = _disposed;
+                _active = !_disposed;
+            }
+
+            if (disposed)
+            {
+                await DisposeInnerConnectionAsync().CfAwait();
+                throw new ConnectionException("Failed to connect.");
+            }
 
             return result;
         }
@@ -249,9 +240,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
-        private void OnSocketShutdown(SocketConnectionBase connection)
+        private async ValueTask OnSocketShutdown(SocketConnectionBase connection)
         {
-            Terminate();
+            await DisposeAsync().CfAwait();
         }
 
         /// <summary>
@@ -262,45 +253,39 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the message has been handled.</returns>
         private void ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
         {
+            // proceed, regardless of _active, because why not?
+
             if (message.IsEvent)
             {
-                HConsole.WriteLine(this, $"Receive event [{message.CorrelationId}]" +
-                                         HConsole.Lines(this, 1, message.Dump()));
+                HConsole.WriteLine(this, $"Receive event {Id.ToShortString()}:{message.CorrelationId}" +
+                                         HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
                 ReceiveEvent(message); // should not throw
                 return;
             }
 
             if (message.IsBackupEvent)
             {
-                HConsole.WriteLine(this, $"Receive backup event [{message.CorrelationId}]" +
-                                         HConsole.Lines(this, 1, message.Dump()));
+                HConsole.WriteLine(this, $"Receive backup event {Id.ToShortString()}:{message.CorrelationId}" +
+                                         HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
 
                 // backup events are not supported
-                //throw new NotSupportedException("Backup events are not supported here.");
                 _logger.LogWarning("Ignoring unsupported backup event.");
                 return;
             }
 
             // message has to be a response
-            HConsole.WriteLine(this, $"Receive response [{message.CorrelationId}]" +
-                                     HConsole.Lines(this, 1, message.Dump()));
+            HConsole.WriteLine(this, $"Receive response {Id.ToShortString()}:{message.CorrelationId} from {MemberId.ToShortString()} at {Address}" +
+                                     HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
 
             // find the corresponding invocation
             // and remove invocation
-#pragma warning disable CA2000 // Dispose objects before losing scope - invocations are disposed by ClusterMessaging
-            if (!TryRemoveInvocation(message.CorrelationId, out var invocation))
-#pragma warning restore CA2000
+            if (!_invocations.TryRemove(message.CorrelationId, out var invocation))
             {
                 // orphan messages are ignored (but logged)
-                _logger.LogWarning($"Received message for unknown invocation [{message.CorrelationId}].");
-                HConsole.WriteLine(this, $"Unknown invocation [{message.CorrelationId}]");
+                _logger.LogWarning($"Received message for unknown invocation {Id.ToShortString()}:{message.CorrelationId}.");
+                HConsole.WriteLine(this, $"Unknown invocation {Id.ToShortString()}:{message.CorrelationId}");
                 return;
             }
-
-            // TODO: threading and scheduling?
-            // the code here, and whatever will happen when completion.SetResult(message) runs,
-            // ie. the continuations on the completion tasks (unless configure-await?) runs on
-            // the same thread and blocks the networking layer
 
             // receive exception or message
             if (message.IsException)
@@ -309,11 +294,12 @@ namespace Hazelcast.Clustering
                 ReceiveResponse(invocation, message); // should not throw
         }
 
+        // ReceiveMessage -> event message
         private void ReceiveEvent(ClientMessage message)
         {
             try
             {
-                HConsole.WriteLine(this, $"Raise event [{message.CorrelationId}].");
+                HConsole.WriteLine(this, $"Raise event {Id.ToShortString()}:{message.CorrelationId}");
                 _receivedEvent(message);
             }
             catch (Exception e)
@@ -321,14 +307,13 @@ namespace Hazelcast.Clustering
                 // _onReceiveEventMessage should just queue the event and not fail - if it fails
                 // then some nasty internal error is happening - log, at least, make some noise
 
-                _logger.LogWarning(e, $"Failed to raise event [{message.CorrelationId}].");
+                _logger.LogWarning(e, $"Failed to raise event {Id.ToShortString()}:{message.CorrelationId}.");
             }
         }
 
+        // ReceiveMessage -> exception message
         private void ReceiveException(Invocation invocation, ClientMessage message)
         {
-            // try to be as safe as possible here
-
             Exception exception;
             try
             {
@@ -339,51 +324,28 @@ namespace Hazelcast.Clustering
                 exception = e;
             }
 
-            try
-            {
-                HConsole.WriteLine(this, $"Fail invocation [{message.CorrelationId}].");
-                invocation.TrySetException(exception);
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, $"Failed to fail invocation [{message.CorrelationId}].");
-                HConsole.WriteLine(this, $"Failed to fail invocation [{message.CorrelationId}].");
-            }
-
+            HConsole.WriteLine(this, $"Fail invocation {Id.ToShortString()}:{message.CorrelationId}");
+            invocation.TrySetException(exception);
         }
 
+        // ReceiveMessage -> response message
         private void ReceiveResponse(Invocation invocation, ClientMessage message)
         {
-            try
-            {
-                HConsole.WriteLine(this, $"Complete invocation [{message.CorrelationId}].");
+            HConsole.WriteLine(this, $"Complete invocation {Id.ToShortString()}:{message.CorrelationId}");
 
-                // returns immediately, releases the invocation task
-                invocation.TrySetResult(message);
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, $"Failed to complete invocation [{message.CorrelationId}].");
-                HConsole.WriteLine(this, $"Failed to complete invocation [{message.CorrelationId}].");
-
-                try
-                {
-                    invocation.TrySetException(e);
-                }
-                catch { /* nothing much we can do */ }
-            }
+            // returns immediately, releases the invocation task
+            invocation.TrySetResult(message);
         }
 
         /// <summary>
         /// Sends a message.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         /// <remarks>
         /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
         /// </remarks>
-        public async Task<ClientMessage> SendAsync(ClientMessage message, CancellationToken cancellationToken)
+        public async Task<ClientMessage> SendAsync(ClientMessage message)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
@@ -393,8 +355,9 @@ namespace Hazelcast.Clustering
             message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
 
             // create the invocation
-            using var invocation = new Invocation(message, _messagingOptions, this, cancellationToken);
+            var invocation = new Invocation(message, _messagingOptions, this);
 
+            // and send
             return await SendAsync(invocation).CfAwait();
         }
 
@@ -408,125 +371,78 @@ namespace Hazelcast.Clustering
             // this cannot be canceled, it will wait for a response forever, until either the
             // server responds, or the connection is closed, or something happens - but there
             // is no timeout
-            return await SendAsyncInternal(invocation, CancellationToken.None);
+            return await SendAsyncInternal(invocation, CancellationToken.None).CfAwait();
         }
-
-        // TaskEx.RunWithTimeout invokes SendAsyncInternal with a cancellation token composed
-        // of the original invocation token and the timeout source - and that composed token
-        // will cancel if either the original token cancels, or the timeout is reached.
-        //
-        // Internally, if the invocation monitors its own cancellation token and, if it cancels,
-        // the invocation.Task is canceled too. But that is not the timeout token.
 
         private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
         {
             if (invocation == null) throw new ArgumentNullException(nameof(invocation));
 
-            // adds the invocation, it will be removed when receiving the response (or timeout or...)
-            AddInvocation(invocation);
+            // _active     false ----> true ----> false
+            // _disposed   false            ----> true
+            //             ^--------------^
+            //               here, ok to send messages, either active, or connecting
 
-            HConsole.WriteLine(this, $"Send message [{invocation.CorrelationId}]" +
-                                     HConsole.Lines(this, 1, invocation.RequestMessage.Dump()));
+            // adds the invocation, so that it can be completed as soon as the response is received
+            // it will be removed when receiving the response (or error or timeout or...)
+            lock (_mutex)
+            {
+                if (_disposed) throw new TargetDisconnectedException();
+                _invocations[invocation.CorrelationId] = invocation;
+            }
+
+            HConsole.WriteLine(this, $"Send message {Id.ToShortString()}:{invocation.CorrelationId} to {MemberId.ToShortString()} at {Address}" +
+                                     HConsole.Lines(this, 1, invocation.RequestMessage.Dump(HConsole.Level(this))));
 
             // actually send the message
-            var success = false;
-            var active = true;
+            bool success;
+            Exception captured = null;
             try
             {
                 success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
             }
-            catch
+            catch (Exception e)
             {
-                RemoveInvocation(invocation);
-                active = Active;
-                if (active) throw;
-
-                // not active anymore: ignore this exception, throw a disconnected exception below
-            }
-
-            if (!Active || !active)
-            {
-                // if the client is not active anymore, the invocation *may* have been failed
-                // already, but there is a race condition here (what-if the client disposed
-                // right before the invocation was added?) and so we'd better take care of the
-                // situation here
-                // if the client disposes later on, we now *know* that the invocation is in
-                // the list and will be taken care of
-                RemoveInvocation(invocation);
-                throw new TargetDisconnectedException();
+                HConsole.WriteLine(this, "Exception while sending: " + e);
+                captured = e;
+                _invocations.TryRemove(invocation.CorrelationId, out _);
+                if (_active) throw; // if not active, better throw a disconnected exception below
+                success = false;
             }
 
             if (!success)
             {
-                RemoveInvocation(invocation);
+                _invocations.TryRemove(invocation.CorrelationId, out _);
                 HConsole.WriteLine(this, "Failed to send a message.");
-                throw new InvalidOperationException("Failed to send a message.");
+
+                if (!_active)
+                    throw new TargetDisconnectedException();
+
+                // TODO: we need a better exception
+                throw new TargetUnreachableException(captured);
             }
 
+            // now wait for the response
             HConsole.WriteLine(this, "Wait for response...");
 
-            // and then wait for the response
             try
             {
-                // we also need to monitor the composite token in case it cancels because
-                // of a timeout (in which case the invocation's own token won't necessarily
-                // cancel) and cancel the invocation Task accordingly, else the 'await'
-                // below might never return.
+                // propagate the cancellationToken to the invocation
+#if NETSTANDARD2_1
+                await
+#endif
                 using var reg = cancellationToken.Register(invocation.TrySetCanceled);
 
                 var response = await invocation.Task.CfAwait();
-                HConsole.WriteLine(this, "Received response.");
+                HConsole.WriteLine(this, "Received response");
                 return response;
             }
             catch (Exception e)
             {
-                HConsole.WriteLine(this, $"Failed ({e}).");
-                RemoveInvocation(invocation);
+                HConsole.WriteLine(this, $"Failed ({e})");
+                _invocations.TryRemove(invocation.CorrelationId, out _);
                 throw;
             }
-        }
-
-        /// <summary>
-        /// Starts a background task attached to the connection.
-        /// </summary>
-        /// <param name="task">The task factory.</param>
-        /// <remarks>
-        /// <para>Currently, only one background task at a time is supported, and this is *not*
-        /// thread-safe so it's up to the caller to handle thread-safety.</para>
-        /// </remarks>
-        internal void StartBackgroundTask(Func<CancellationToken, Task> task)
-        {
-            _bgTask = BackgroundTask.Run(async token =>
-            {
-                try
-                {
-                    await task(token).CfAwait();
-                    _bgTask = null; // self-remove
-                }
-                catch
-                {
-                    _logger.LogWarning("Background task failed, terminate the connection.");
-                    _bgTask = null; // self-remove *before* disposing else catch-22
-                    await TerminateAsync().CfAwait(); // terminate the connection
-                }
-            });
-        }
-
-        /// <summary>
-        /// Terminates.
-        /// </summary>
-        public void Terminate()
-        {
-            Task.Run(TerminateAsync);
-        }
-
-        /// <summary>
-        /// Terminates.
-        /// </summary>
-        /// <returns>A task that will complete when the client connection has terminated.</returns>
-        public async ValueTask TerminateAsync()
-        {
-            await DisposeAsync().CfAwait(); // does not throw
         }
 
         /// <inheritdoc />
@@ -534,61 +450,58 @@ namespace Hazelcast.Clustering
         {
             // note: DisposeAsync should not throw (CA1065)
 
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
-                return;
+            bool active;
+            lock (_mutex)
+            {
+                if (_disposed) return;
+                _disposed = true;
+                active = _active;
+                _active = false;
+            }
 
-            if (ClusterId == default)
-            {
-                // the connection was never fully opened
-                await DisposeTransientAsync().CfAwait(); // does not throw
-            }
-            else
-            {
-                // the connection was fully opened
-                await DisposeOpenedAsync().CfAwait(); // does not throw
-            }
-        }
-
-        // disposes a connection that was never fully opened
-        private async ValueTask DisposeTransientAsync()
-        {
-            if (_messageConnection != null)
-            {
-                // also disposes the socket connection
-                await _messageConnection.DisposeAsync().CfAwait(); // does not throw
-            }
-            else if (_socketConnection != null)
-            {
-                await _socketConnection.DisposeAsync().CfAwait(); // does not throw
-            }
-        }
-
-        // disposes a connection that was fully opened
-        private async ValueTask DisposeOpenedAsync()
-        {
-            // raise event
             try
             {
-                await _closed(this).CfAwait(); // assume it may throw
+                // if we were connected, we need to trigger the closed event
+                if (active) await _closed.AwaitEach(this).CfAwait(); // may throw, never knows
             }
             catch (Exception e)
             {
                 _logger.LogWarning(e, "Caught an exception while raising Closed.");
             }
 
-            // stop the background task
-            var bgTask = _bgTask;
-            if (bgTask != null)
-            {
-                await bgTask.CompletedOrCancelAsync(true).CfAwait(); // does not throw
-            }
+            // if if we were not yet active / connected, we might have ONE invocation
+            // pending: the authentication one - it is important to abort it too
 
-            // also disposes the socket connection
-            await _messageConnection.DisposeAsync().CfAwait(); // does not throw
-
-            // shutdown all pending operations
-            foreach (var invocation in _invocations.Values)
+            // capture all invocations, _disposed is true so no new invocation can be
+            // accepted, and if one invocation completes, TrySetException will just do
+            // nothing
+            var invocations = _invocations.Values;
+            foreach (var invocation in invocations)
                 invocation.TrySetException(new TargetDisconnectedException()); // does not throw
+
+            // ConnectAsync would deal with the situation
+            if (!active) return;
+
+            // then kill our inner connection
+            await DisposeInnerConnectionAsync().CfAwait();
+
+            _logger.LogDebug($"Connection {Id.ToShortString()} closed and disposed.");
+
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - DisposeAsync too!
+            GC.SuppressFinalize(this);
+#pragma warning restore CA1816
+        }
+
+        private async Task DisposeInnerConnectionAsync()
+        {
+            // tear down inner connections
+            if (_messageConnection != null) // also disposes the socket connection
+                await _messageConnection.DisposeAsync().CfAwait(); // does not throw
+            else if (_socketConnection != null)
+                await _socketConnection.DisposeAsync().CfAwait(); // does not throw
+
+            _messageConnection = null;
+            _socketConnection = null;
         }
     }
 }

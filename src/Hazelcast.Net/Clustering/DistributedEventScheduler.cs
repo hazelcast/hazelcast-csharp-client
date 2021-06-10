@@ -27,6 +27,13 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Schedules distributed events.
     /// </summary>
+    /// <remarks>
+    /// <para>Events related to a partition id (where eventMessage.PartitionId > 0) run sequentially
+    /// on a queue specific to that partition. Other events (where eventMessage.PartitionId == 0) all
+    /// run sequentially on their own queue.</para>
+    /// <para>Handlers exceptions are caught and logged, unless captured via the <see cref="HandlerError"/>
+    /// event and marked as handled. In any case, handlers exceptions cannot break the scheduler.</para>
+    /// </remarks>
     internal class DistributedEventScheduler : IAsyncDisposable
     {
         private readonly SimpleObjectPool<Queue> _pool;
@@ -35,6 +42,11 @@ namespace Hazelcast.Clustering
         private readonly ILogger _logger;
         private int _exceptionCount, _unhandledExceptionCount;
         private volatile bool _disposed;
+
+        static DistributedEventScheduler()
+        {
+            HConsole.Configure(x => x.Configure<DistributedEventScheduler>().SetPrefix("EVTS.SCHED"));
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedEventScheduler"/> class.
@@ -49,12 +61,14 @@ namespace Hazelcast.Clustering
             // TODO: how many queues should we retain?
             const int size = 10;
             _pool = new SimpleObjectPool<Queue>(() => new Queue(), size);
+
+            HConsole.Configure(x => x.Configure<DistributedEventScheduler>().SetPrefix("EVENTS"));
         }
 
         /// <summary>
         /// Triggers when an event handler throws an exception.
         /// </summary>
-        public event EventHandler<DistributedEventExceptionEventArgs> OnError;
+        public event EventHandler<DistributedEventExceptionEventArgs> HandlerError;
 
         /// <summary>
         /// Gets the total count of exceptions thrown by event handlers.
@@ -63,7 +77,7 @@ namespace Hazelcast.Clustering
 
         /// <summary>
         /// Gets the count of exceptions throw by event handlers, that
-        /// were not handled by a <see cref="OnError"/>.
+        /// were not handled by a <see cref="HandlerError"/>.
         /// </summary>
         public int UnhandledExceptionCount => _unhandledExceptionCount;
 
@@ -125,10 +139,17 @@ namespace Hazelcast.Clustering
 
             lock (_mutex)
             {
-                if (_disposed) return false;
+                if (_disposed)
+                {
+                    HConsole.WriteLine(this, $"Discard event, correlation:{eventMessage.CorrelationId}");
+                    return false;
+                }
+
+                HConsole.WriteLine(this, $"Enqueue event, correlation:{eventMessage.CorrelationId} queue:{partitionId}");
 
                 if (!_queues.TryGetValue(partitionId, out queue))
                 {
+                    HConsole.WriteLine(this, $"Create queue:{partitionId}");
                     queue = _queues[partitionId] = _pool.Get();
                     start = true;
                 }
@@ -145,7 +166,12 @@ namespace Hazelcast.Clustering
 
         private async Task Handle(int partitionId, Queue queue)
         {
-            while (true)
+            // using (!_disposed) condition here instead of (true) means
+            // that on shutdown queued events will be dropped - otherwise,
+            // we could have a ton of events to process and shutting down
+            // would take time - TODO: is this the right decision?
+
+            while (!_disposed)
             {
                 if (!queue.TryDequeue(out var eventData))
                 {
@@ -153,6 +179,7 @@ namespace Hazelcast.Clustering
                     {
                         if (!queue.TryDequeue(out eventData))
                         {
+                            HConsole.WriteLine(this, $"Release queue:{partitionId}");
                             _queues.Remove(partitionId);
                             queue.Task = null;
                             _pool.Return(queue);
@@ -161,7 +188,7 @@ namespace Hazelcast.Clustering
                     }
                 }
 
-                await Handle(eventData); // does not throw
+                await Handle(eventData).CfAwait(); // does not throw
             }
         }
 
@@ -169,7 +196,7 @@ namespace Hazelcast.Clustering
         {
             try
             {
-                HConsole.WriteLine(this, "Execute event handler");
+                HConsole.WriteLine(this, $"Handle event, correlation:{eventData.Message.CorrelationId} queue:{eventData.PartitionId}");
                 await eventData.Subscription.HandleAsync(eventData.Message).CfAwait();
             }
             catch (Exception e)
@@ -182,7 +209,7 @@ namespace Hazelcast.Clustering
 
                 try
                 {
-                    OnError?.Invoke(this, args);
+                    HandlerError?.Invoke(this, args);
                 }
                 catch (Exception ee)
                 {
@@ -207,7 +234,7 @@ namespace Hazelcast.Clustering
             lock (_mutex)
             {
                 _disposed = true;
-                tasks = _queues.Values.Select(x => x.Task).ToArray();
+                tasks = _queues.Values.Select(x => x.Task).Where(x => x != null).ToArray();
             }
 
             await Task.WhenAll(tasks).CfAwait();

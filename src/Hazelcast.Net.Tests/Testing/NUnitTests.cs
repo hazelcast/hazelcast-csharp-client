@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Testing
 
             // value should be equal to 1 within 1s, testing every .1s
             // beware! must pass a function, not 'value' else it captures the value!
-            Assert.That(() => value, Is.EqualTo(1).After(1_000, 100));
+            Assert.That(() => value, Is.EqualTo(1).After(2_000, 100));
 
             // value will not be equal to 2 within .1s
             Assert.Throws<AssertionException>(() =>

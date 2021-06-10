@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ namespace Hazelcast.Transactions
     {
         private int _durability = 1;
 
+#pragma warning disable CA1008 // Enums should have zero value - no, "default" is not a valid value
         public enum TransactionType
+#pragma warning restore CA1008
         {
             /// <summary>
             /// Commits the transaction in two distinct phases.

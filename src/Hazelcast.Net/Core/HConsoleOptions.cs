@@ -13,91 +13,150 @@
 // limitations under the License.
 
 using System;
+
+#if HZ_CONSOLE
 using System.Collections.Generic;
+#else
+// ReSharper disable UnusedTypeParameter
+#pragma warning disable CA1801 // Review unused parameters
+#pragma warning disable CA1822 // Mark members as static
+#endif
 
 namespace Hazelcast.Core
 {
     /// <summary>
     /// Represents the options for the console.
     /// </summary>
-    internal class HConsoleOptions
+#if HZ_CONSOLE_PUBLIC
+    public
+#else
+    internal
+#endif
+    class HConsoleOptions
     {
 #if HZ_CONSOLE
         private readonly Dictionary<object, HConsoleTargetOptions> _targetConfigs = new Dictionary<object, HConsoleTargetOptions>();
         private readonly Dictionary<Type, HConsoleTargetOptions> _typeConfigs = new Dictionary<Type, HConsoleTargetOptions>();
 #endif
 
-        // Set methods are not conditional (since they have a non-void return type)
+        // Configure methods are not conditional (since they have a non-void return type)
         // but that does not matter because they will be invoked from within the
         // HConsole.Configure() method, which *is* conditional, so they won't be
         // compiled either when HZ_CONSOLE is not defined.
 
-        /// <summary>
-        /// Sets the default options (ie for <c>object</c>).
-        /// </summary>
-        /// <param name="configure">An action to configure the options.</param>
-        /// <returns>The console options.</returns>
-        public HConsoleOptions Set(Action<HConsoleTargetOptions> configure) => Set<object>(configure);
+        #region Configure
 
         /// <summary>
-        /// Sets the options for a specific object.
+        /// Configures default options.
         /// </summary>
-        /// <param name="target">The object.</param>
-        /// <param name="configure">An action to configure the options.</param>
-        /// <returns>The console options.</returns>
-        public HConsoleOptions Set(object target, Action<HConsoleTargetOptions> configure)
+        /// <returns>The default options to configure.</returns>
+        public HConsoleTargetOptions Configure()
+#if HZ_CONSOLE
+            => Configure<object>();
+#else
+            => default;
+#endif
+
+        /// <summary>
+        /// Configures options for a source type.
+        /// </summary>
+        /// <typeparam name="TSource">The source type.</typeparam>
+        /// <returns>The options for the source type.</returns>
+        public HConsoleTargetOptions Configure<TSource>()
+#if HZ_CONSOLE
+            => Configure(typeof (TSource));
+#else
+            => default;
+#endif
+
+        /// <summary>
+        /// Configures options for a source type.
+        /// </summary>
+        /// <param name="sourceType">The source type.</param>
+        /// <returns>The options for the source type.</returns>
+        public HConsoleTargetOptions Configure(Type sourceType)
         {
 #if HZ_CONSOLE
-            if (target == null) throw new ArgumentNullException(nameof(target));
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            if (!_targetConfigs.TryGetValue(target, out var info))
-                info = _targetConfigs[target] = new HConsoleTargetOptions();
-            configure(info);
+            if (!_typeConfigs.TryGetValue(sourceType ?? throw new ArgumentNullException(nameof(sourceType)), out var info))
+                info = _typeConfigs[sourceType] = new HConsoleTargetOptions(this);
+            return info;
+#else
+            return default;
 #endif
-            return this;
         }
 
         /// <summary>
-        /// Sets the options for an object type.
+        /// Configures options for a source type.
         /// </summary>
-        /// <param name="type">The type of the object.</param>
-        /// <param name="configure">An action to configure the options.</param>
-        /// <returns>The console options.</returns>
-        public HConsoleOptions Set(Type type, Action<HConsoleTargetOptions> configure)
+        /// <param name="sourceTypeName">The name of the source type.</param>
+        /// <returns>The options for the source type.</returns>
+        public HConsoleTargetOptions Configure(string sourceTypeName)
+#if HZ_CONSOLE
+            => Configure(Type.GetType(sourceTypeName) ?? throw new ArgumentException($"Could not find type {sourceTypeName}.", nameof(sourceTypeName)));
+#else
+            => default;
+#endif
+
+        /// <summary>
+        /// Configures options for a source object.
+        /// </summary>
+        /// <param name="source">The source object.</param>
+        /// <returns>The options for the source object.</returns>
+        public HConsoleTargetOptions Configure(object source)
         {
 #if HZ_CONSOLE
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            if (!_typeConfigs.TryGetValue(type, out var info))
-                info = _typeConfigs[type] = new HConsoleTargetOptions();
-            configure(info);
+            if (!_targetConfigs.TryGetValue(source ?? throw new ArgumentNullException(nameof(source)), out var info))
+                info = _targetConfigs[source] = new HConsoleTargetOptions(this);
+            return info;
+#else
+            return default;
 #endif
-            return this;
         }
 
         /// <summary>
-        /// Sets the options for an object type.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <param name="configure">An action to configure the options.</param>
-        /// <returns>The console options.</returns>
-        public HConsoleOptions Set<TObject>(Action<HConsoleTargetOptions> configure)
-        {
-#if HZ_CONSOLE
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            var type = typeof(TObject);
-            if (!_typeConfigs.TryGetValue(type, out var info))
-                info = _typeConfigs[type] = new HConsoleTargetOptions();
-            configure(info);
-#endif
-            return this;
-        }
-
-        /// <summary>
-        /// Clears the default options (ie for object).
+        /// Clears the default options.
         /// </summary>
         /// <returns>The console options.</returns>
         public HConsoleOptions Clear() => Clear<object>();
+
+        /// <summary>
+        /// Clears the options for a source type.
+        /// </summary>
+        /// <typeparam name="TSource">The source type.</typeparam>
+        /// <returns>The options.</returns>
+        public HConsoleOptions Clear<TSource>()
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(typeof(TSource));
+#endif
+            return this;
+        }
+
+        /// <summary>
+        /// Clears the options for a source type.
+        /// </summary>
+        /// <param name="sourceType">The source type.</param>
+        /// <returns>The options.</returns>
+        public HConsoleOptions Clear(Type sourceType)
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(sourceType ?? throw new ArgumentNullException(nameof(sourceType)));
+#endif
+            return this;
+        }
+
+        /// <summary>
+        /// Clears the options for a source type.
+        /// </summary>
+        /// <param name="sourceTypeName">The name of the source type.</param>
+        /// <returns>The options.</returns>
+        public HConsoleOptions Clear(string sourceTypeName)
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(Type.GetType(sourceTypeName) ?? throw new ArgumentException($"Could not find type {sourceTypeName}.", nameof(sourceTypeName)));
+#endif
+            return this;
+        }
 
         /// <summary>
         /// Clears the options for a specific object.
@@ -107,43 +166,15 @@ namespace Hazelcast.Core
         public HConsoleOptions Clear(object target)
         {
 #if HZ_CONSOLE
-            if (target == null) throw new ArgumentNullException(nameof(target));
-            _targetConfigs.Remove(target);
+            _targetConfigs.Remove(target ?? throw new ArgumentNullException(nameof(target)));
 #endif
             return this;
         }
 
         /// <summary>
-        /// Clears the options for an object type.
+        /// Clears all options.
         /// </summary>
-        /// <param name="type">The type of the object.</param>
-        /// <returns>The console options.</returns>
-        public HConsoleOptions Clear(Type type)
-        {
-#if HZ_CONSOLE
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            _typeConfigs.Remove(type);
-#endif
-            return this;
-        }
-
-        /// <summary>
-        /// Clears the options for an object type.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <returns>The console options.</returns>
-        public HConsoleOptions Clear<TObject>()
-        {
-#if HZ_CONSOLE
-            _typeConfigs.Remove(typeof (TObject));
-#endif
-            return this;
-        }
-
-        /// <summary>
-        /// Clears the options entirely.
-        /// </summary>
-        /// <returns>The console options.</returns>
+        /// <returns>The options.</returns>
         public HConsoleOptions ClearAll()
         {
 #if HZ_CONSOLE
@@ -153,20 +184,22 @@ namespace Hazelcast.Core
             return this;
         }
 
+        #endregion
+
 #if HZ_CONSOLE
         /// <summary>
-        /// Gets the options for an object.
+        /// Gets the options for a source object.
         /// </summary>
-        /// <param name="target">The object.</param>
-        /// <returns>The complete options that apply to the specified object.</returns>
-        public HConsoleTargetOptions Get(object target)
+        /// <param name="source">The source object.</param>
+        /// <returns>The complete options that apply to the specified source object.</returns>
+        public HConsoleTargetOptions GetOptions(object source)
         {
-            if (_targetConfigs.TryGetValue(target, out var config))
+            if (_targetConfigs.TryGetValue(source, out var config))
                 config = config.Clone();
             else
-                config = new HConsoleTargetOptions();
+                config = new HConsoleTargetOptions(this);
 
-            var type = target.GetType();
+            var type = source.GetType();
             while (type != null && !config.IsComplete)
             {
                 if (_typeConfigs.TryGetValue(type, out var c)) config = config.Merge(c);
@@ -174,7 +207,7 @@ namespace Hazelcast.Core
             }
 
             if (!config.IsComplete)
-                config = config.Merge(HConsoleTargetOptions.Default);
+                config = config.Complete();
 
             return config;
         }

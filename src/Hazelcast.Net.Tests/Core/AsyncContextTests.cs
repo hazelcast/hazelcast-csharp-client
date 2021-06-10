@@ -133,7 +133,7 @@ namespace Hazelcast.Tests.Core
 
             long cx;
             using (AsyncContext.New())
-            { 
+            {
                 cx = await AsyncContextWhenAsyncSub("c1").ContinueWith(async x =>
                 {
                     c1 = x.Result;

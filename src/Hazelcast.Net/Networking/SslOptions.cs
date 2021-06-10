@@ -23,7 +23,8 @@ namespace Hazelcast.Networking
     /// </summary>
     public class SslOptions
     {
-        private SslProtocols _sslProtocol = SslProtocols.Tls12;
+        // default is none, to let the system select the best option
+        private SslProtocols _sslProtocol = SslProtocols.None;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SslOptions"/> class.
@@ -94,19 +95,21 @@ namespace Hazelcast.Networking
             get => _sslProtocol;
             set
             {
-                // this would be nicer with a switch expression but dotCover (as of 2020.2.3) does no cover them
-                switch (value)
+#pragma warning disable IDE0072
+                // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+                _sslProtocol = value switch
                 {
-#pragma warning disable CA5397 // Do not use deprecated SslProtocols values - TODO: consider removing them?
-                    case SslProtocols.Tls:
-                    case SslProtocols.Tls11:
+                    SslProtocols.None => value,
+#pragma warning disable CA5397 // Do not use deprecated SslProtocols values - but, we still support them
+                    SslProtocols.Tls => value,
+                    SslProtocols.Tls11 => value,
 #pragma warning restore CA5397
-                    case SslProtocols.Tls12:
-                        _sslProtocol = value;
-                        break;
-                    default:
-                        throw new ConfigurationException("Invalid value. Value must be Tls, Tls11 or Tls12.");
-                }
+#pragma warning disable CA5398 // Avoid hardcoded SslProtocols values - well, here, yes
+                    SslProtocols.Tls12 => value,
+#pragma warning restore CA5398
+                    _ => throw new ConfigurationException("Invalid value. Value must be None, Tls, Tls11 or Tls12.")
+                };
+#pragma warning restore IDE0072
             }
         }
 

@@ -2,19 +2,20 @@
 # Workflow: Build Release
 #
 
-# this is a placeholder workflow in the master branch
-# actual workflow is in the 4.0.z branch for now
-# but we need workflow_dispatch workflows do be defined in master
-
 name: Build Release
 on:
 
+  # build release branch on push to release/* branch
+  # where * is expected to be a release version eg 2.1.4
+  # trigger on push to release/<version> branch or push of v<version> tag on that branch
+  # when pushing a tagged commit, only one event triggers, for the tag
   push:
     branches:
       - 'release/*'
     tags:
       - 'v*'
 
+  ## manually build release branch, optionally release when version matches the branch
   #workflow_dispatch:
   #  branches:
   #    - 'release/*'
@@ -26,10 +27,371 @@ on:
 
 jobs:
 
-  build-release:
-    name: Build Release
+  # verify what has been pushed and determine what to do
+  analyze:
+
+    name: Analyze
     runs-on: ubuntu-latest
+
+    outputs:
+      todo: ${{ steps.analyze.outputs.todo}}
+      version: ${{ steps.analyze.outputs.version}}
+
     steps:
-      - name: Do Nothing
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Analyze
+        id: analyze
         shell: bash
-        run: echo "Doing Nothing"
+        run: |
+          set +e # don't die whenever a command returns non-zero $?
+
+          echo "Triggered by ${{ github.ref }} at ${{ github.sha }}"
+          HZREF="${{ github.ref }}"
+          HZBRANCH=${HZREF#refs/heads/}
+          
+          if [ "$HZBRANCH" != "$HZREF" ]; then # it is a branch push
+            HZVERSION=${HZBRANCH#release/}
+            if [ "$HZVERSION" != "$HZBRANCH" ]; then # it is a release branch push
+                echo "Triggered by commit in version $HZVERSION release branch $HZBRANCH"
+                git fetch origin refs/tags/v$HZVERSION:refs/tags/v$HZVERSION >/dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                    echo "Tag v$HZVERSION does not exist, proceed"
+                    # set step/job output
+                    echo "::set-output name=todo::build"
+                    echo "::set-output name=version::$HZVERSION"
+                else
+                    HZTAGSHA=$(git rev-parse v$HZVERSION >/dev/null 2>&1)
+                    if [ "$HZTAGSHA" != "${{ github.sha }}" ]; then
+                        echo "::error::Tag v$HZVERSION exists, but on another commit ($HZTAGSHA)"
+                        exit 1
+                    else
+                        echo "Tag v$HZVERSION exists on this commit, nothing to do"
+                        # set step/job output
+                        echo "::set-output name=todo::nothing"
+                        echo "::set-output name=version::$HZVERSION"
+                    fi
+                fi
+            else
+                echo "::error::Triggered by commit in non-release branch $HZBRANCH"
+                exit 1
+            fi
+            exit 0
+          fi
+
+          HZTAG=${HZREF#refs/tags/}
+          if [ "$HZTAG" != "$HZREF" ]; then
+            HZVERSION=${HZTAG#v}
+            if [ "$HZVERSION" != "$HZTAG" ]; then # it is a version tag
+                echo "Triggered by version tag $HZTAG"
+                git fetch origin refs/heads/release/$HZVERSION:refs/heads/release/$HZVERSION >/dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                    echo "::error::Branch release/$HZVERSION does not exist"
+                    exit 1
+                else
+                    HZBRANCHSHA=$(git rev-parse release/$HZVERSION >/dev/null 2>&1)
+                    HZPARENTSHA=$(git rev-parse $HZTAG^1 >/dev/null 2>&1)
+                    if [ "$HZBRANCHSHA" != "$HZPARENTSHA" ]; then
+                      echo "::error::Tag parent is not HEAD of release/$HZVERSION but $HZPARENTSHA"
+                      exit 1
+                    else
+                        echo "Tag parent is HEAD of release/$HZVERSION, proceed"
+                        # set step/job output
+                        echo "::set-output name=todo::release"
+                        echo "::set-output name=version::$HZVERSION"
+                    fi
+                fi
+            else
+                echo "::error::Triggered by non-version tag $HZTAG"
+                exit 1
+            fi
+            exit 0
+          fi
+
+          echo "::error::I am confused"
+          exit 1
+
+
+
+  # build and test the release
+  build-release:
+
+    name: Build Release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    needs: analyze
+    if: needs.analyze.outputs.todo != 'nothing'
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+      
+      # Install Linux utilities
+      - name: Install utilities (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update 
+          # ubuntu-latest does not have proper git installed so we have to install it
+          sudo apt-get install --yes --no-install-recommends \
+            git
+          # we need various misc stuff
+          sudo apt-get install --yes --no-install-recommends \
+            wget \
+            curl \
+            apt-transport-https \
+            software-properties-common
+          # we need pwsh
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt-get install -y powershell
+
+      # Install .NET (complete)
+      - name: Install .NET 2.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '2.1.x'
+      - name: Install .NET 3.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Install .NET 5.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+
+      # Install Java
+      - name: Install JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+          
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # configure Git so that we can commit
+      - name: Configure repository
+        shell: bash
+        run: |
+          git config user.email "github-actions@hazelcast.com"
+          git config user.name "GitHub Actions"
+          dotnet --version
+
+      # verify the code version
+      - name: Verify the code version
+        shell: pwsh
+        run: ./hz.ps1 -version ${{ needs.analyze.outputs.version }} -localRestore verify-version
+
+      # obtain the snk file required to sign assemblies
+      # the snk is avail as secrets.HZ_SNK as a Base64 string
+      - name: Obtain assembly signature key
+        id: getsnk
+        shell: bash
+        run: |
+          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk 
+          ls -l ./build/hazelcast.snk
+
+      # build signed and reproducible assemblies + docs (skipped on Linux)
+      - name: Build
+        id: build
+        shell: pwsh
+        run: ./hz.ps1 -localRestore -sign -repro build,build-docs
+
+      # clear the snk file
+      - name: Clear assembly signature key
+        if: (success() || failure()) && steps.getsnk.conclusion == 'success'
+        shell: bash
+        run: |
+          if [ -f ./build/hazelcast.snk ]; then rm ./build/hazelcast.snk; fi
+
+      # test (with coverage)
+      - name: Test
+        id: test
+        env:
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+        shell: pwsh
+        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test
+
+      # report
+      # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
+      # It's not possible to specify under which workflow test report should belong if more
+      # workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
+      # your test report will appear in an unexpected place in GitHub UI." -- so, better not
+      # trigger multiple builds on the same SHA
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: (success() || failure()) && steps.build.conclusion == 'success'
+        with:
+          name: Test Results (${{ matrix.os }})
+          path: temp/tests/results/results-*.trx
+          reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
+
+      # upload test coverage artifact
+      - name: Archive test coverage artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test-Coverage (${{ matrix.os }})
+          path: './temp/tests/cover/' # entire directory
+
+      # create nuget packages
+      - name: Pack NuGet packages
+        shell: pwsh
+        run: ./hz.ps1 -noRestore -localRestore pack-nuget
+
+      # upload nuget packages
+      - name: Archive NuGet packages artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: NuGet-Packages (${{ matrix.os }})
+          path: './temp/output/Hazelcast.Net.*pkg'
+
+      # git the docs, create the patch
+      - name: Create docs patch
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
+          mkdir ./temp/gh-pages-patches >$null 2>&1
+          echo "Create git patch"
+          git -C ./temp/gh-pages format-patch -1 -o ../gh-pages-patches
+          echo "Patch files:"
+          ls ./temp/gh-pages-patches/
+
+      # archive docs patch
+      - name: Archive docs patch artifact
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: Docs-Patch
+          path: './temp/gh-pages-patches/*.patch'
+
+
+
+  # publish the release
+  # if the build and tests were successful
+  publish-release:
+
+    name: Publish Release
+    runs-on: ubuntu-latest
+
+    needs: [ analyze, build-release ]
+    if: needs.analyze.outputs.todo == 'release'
+
+    steps:
+
+      - name: Install Utilities (Linux only)
+        shell: bash
+        run: |
+          sudo apt-get update 
+          # ubuntu-latest does not have proper git installed so we have to install it
+          sudo apt-get install --yes --no-install-recommends \
+            git
+          # we need various misc stuff
+          sudo apt-get install --yes --no-install-recommends \
+            wget \
+            curl \
+            apt-transport-https \
+            software-properties-common
+          # we need pwsh
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt-get install -y powershell
+
+      # Install .NET (minimal, for pushing to NuGet)
+      - name: Install .NET 5.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # configure Git so that we can commit
+      - name: Configure repository
+        shell: bash
+        run: |
+          git config user.email "github-actions@hazelcast.com"
+          git config user.name "GitHub Actions (Build Release)"
+
+      # prepare for artifacts
+      - name: Prepare for artifacts
+        shell: bash
+        run: |
+          mkdir ./temp
+          mkdir ./temp/output
+          mkdir ./temp/gh-pages-patches
+
+      # download nuget packages
+      - name: Download NuGet packages artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: NuGet-Packages (windows-latest)
+          path: ./temp/output
+
+      # download docs patch artifact
+      - name: Download docs patch artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Docs-Patch
+          path: ./temp/gh-pages-patches
+
+      # verify downloads
+      - name: Verify downloads
+        shell: bash
+        run: |
+          echo "packages:"
+          ls ./temp/output
+          echo "docs patch:"
+          ls ./temp/gh-pages-patches
+
+      # publish nuget package
+      - name: Publish NuGet packages
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
+        run: |
+          ./hz.ps1 -noRestore -localRestore push-nuget
+
+      # publish documentation
+      - name: Publish Documentation
+        shell: bash
+        run: |
+          mkdir ./temp/gh-pages
+          git -C ./temp/gh-pages init
+          git -C ./temp/gh-pages remote add origin https://github.com/hazelcast/hazelcast-csharp-client.git
+          git -C ./temp/gh-pages fetch origin gh-pages
+          git -C ./temp/gh-pages checkout gh-pages
+          cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          git -C ./temp/gh-pages push origin gh-pages
+
+      # trash the release branch
+      - name: Close release branch
+        shell: bash
+        run: |
+          git push origin :release/${{ needs.analyze.outputs.version }}

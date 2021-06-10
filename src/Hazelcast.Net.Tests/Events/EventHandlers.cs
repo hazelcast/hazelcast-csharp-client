@@ -85,11 +85,11 @@ namespace Hazelcast.Tests.Events
                 eventSender = sender;
                 eventArgs = args;
                 count++;
-                return new ValueTask();
+                return default;
             });
 
             var client = Mock.Of<IHazelcastClient>();
-            var args = new ConnectionOpenedEventArgs(true);
+            var args = new ConnectionOpenedEventArgs(null, false);
             await handler.HandleAsync(client, args);
 
             Assert.That(count, Is.EqualTo(1));

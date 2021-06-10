@@ -67,7 +67,9 @@ namespace Hazelcast.Clustering
         public RetryStrategy(string action, int initialBackOffMilliseconds, int maxBackOffMilliseconds, double multiplier, long timeoutMilliseconds, double jitter, ILoggerFactory loggerFactory)
         {
             if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(action));
+#pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just lower-casing for display
             _action = action.ToLowerInvariant();
+#pragma warning restore CA1308
             _initialBackOffMilliseconds = initialBackOffMilliseconds;
             _maxBackOffMilliseconds = maxBackOffMilliseconds;
             _multiplier = multiplier;
@@ -90,14 +92,14 @@ namespace Hazelcast.Clustering
 
             if (_timeoutMilliseconds > 0 && elapsed > _timeoutMilliseconds)
             {
-                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {_timeoutMilliseconds} ms, giving up.");
+                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, timeout ({_timeoutMilliseconds}ms).");
                 return false;
             }
 
-            var delay = (int) (_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.Random.NextDouble())));
-            delay = Math.Min(delay, (int) (_timeoutMilliseconds - elapsed));
+            var delay = (int) (_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
+            delay = Math.Min(delay, Math.Max(0, (int) (_timeoutMilliseconds - elapsed)));
 
-            _logger.LogDebug($"Unable to {_action} after {_attempts} attempts and {elapsed} ms, retrying in {delay} ms");
+            _logger.LogDebug($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, will retry in {delay}ms");
 
             try
             {
@@ -105,12 +107,12 @@ namespace Hazelcast.Clustering
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {_timeoutMilliseconds} ms, was cancelled.");
+                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, cancelled.");
                 return false;
             }
             catch (Exception)
             {
-                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {_timeoutMilliseconds} ms, error.");
+                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, error.");
                 return false;
             }
 

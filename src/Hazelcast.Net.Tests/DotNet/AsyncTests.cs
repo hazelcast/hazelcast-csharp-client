@@ -38,6 +38,7 @@ namespace Hazelcast.Tests.DotNet
         {
             var steps = new Steps();
             var control = new SemaphoreSlim(0);
+            var control2 = new SemaphoreSlim(0);
 
             steps.Add("main.start");
 
@@ -49,9 +50,11 @@ namespace Hazelcast.Tests.DotNet
 
                 // some delay to ensure we do not SetResult before awaiting the task completion source,
                 // thus forcing the await on that task to actually await asynchronously
-                await control.WaitAsync().CfAwait();
-                await Task.Delay(2000).CfAwait();
-                
+                //await control.WaitAsync().CfAwait();
+                control.Wait();
+                //await Task.Delay(2000).CfAwait();
+                Thread.Sleep(2000);
+
                 steps.Add("task.complete");
                 taskCompletionSource.SetResult(42);
                 steps.Add("task.continue");
@@ -59,7 +62,7 @@ namespace Hazelcast.Tests.DotNet
                 // keep running for a while - on the same thread!
                 //await Task.Delay(200).CfAwait();
                 Thread.Sleep(200);
-                
+
                 steps.Add("task.end");
             });
 
@@ -71,15 +74,18 @@ namespace Hazelcast.Tests.DotNet
             // keep running for a while - on the same thread!
             //await Task.Delay(200).CfAwait();
             Thread.Sleep(200);
-            
+
             steps.Add("main.continue");
-            
+
             await Task.Yield();
             await task.CfAwait();
 
             steps.Add("main.end");
 
             Console.WriteLine(steps);
+
+            // FIXME why does it *have* to be "not same thread"? this test can fail on some occasions
+            // task.complete thread 18 == main.resume thread 18 -- for runAsync = true
 
             // task.complete and task.continue always run on same thread
             // task.complete and main.wait always run on different threads
@@ -92,14 +98,16 @@ namespace Hazelcast.Tests.DotNet
             else
                 steps.AssertSameThread("task.complete", "main.resume"); // run on same thread
 
-            if (runAsync)
-                steps.AssertOrder("task.continue", "main.resume"); // main.resume after task.continue since different thread
-            else
+            // FIXME if async, order here is not specified!
+            //if (runAsync)
+            //    steps.AssertOrder("task.continue", "main.resume"); // main.resume after task.continue since different thread
+            //else
+            if (!runAsync)
                 steps.AssertOrder("main.resume", "task.continue"); // main.resume before task.continue since same thread
-            
+
             steps.AssertOrder("main.resume", "main.end");
         }
-        
+
         [Test]
         public async Task CompletionSourceTest()
         {
@@ -331,7 +339,7 @@ namespace Hazelcast.Tests.DotNet
 
                 return -1;
             }
-            
+
             public void AssertSameThread(string step1, string step2)
             {
                 var thread1 = GetThreadId(step1);
@@ -345,7 +353,7 @@ namespace Hazelcast.Tests.DotNet
                 var thread2 = GetThreadId(step2);
                 Assert.That(thread1, Is.Not.EqualTo(thread2), () => $"{step1} thread {thread1} == {step2} thread {thread2}");
             }
-            
+
             public void AssertOrder(string step1, string step2)
             {
                 var index1 = GetIndex(step1);
@@ -619,7 +627,6 @@ namespace Hazelcast.Tests.DotNet
             {
                 _id = _idSequence++;
             }
-
             public int Id => _id;
 
             public static bool HasCurrent => _current.Value != null;
@@ -715,6 +722,43 @@ namespace Hazelcast.Tests.DotNet
             await Task.Yield();
             await sem.WaitAsync().ConfigureAwait(false);
             return AsyncThing.Current.Id;
+        }
+
+        [Test]
+        public void DisposeCancellationSourceTest()
+        {
+            var cancel = new CancellationTokenSource();
+            var token = cancel.Token;
+            token.ThrowIfCancellationRequested();
+
+            cancel.Cancel();
+            Assert.Throws<OperationCanceledException>(() => token.ThrowIfCancellationRequested());
+
+            // can dispose the source and still use the token
+            cancel.Dispose();
+            Assert.Throws<OperationCanceledException>(() => token.ThrowIfCancellationRequested());
+
+            cancel = new CancellationTokenSource();
+            token = cancel.Token;
+
+            // can dispose the source and still use the token
+            cancel.Dispose();
+            token.ThrowIfCancellationRequested();
+
+            var cancel1 = new CancellationTokenSource();
+            var cancel2 = new CancellationTokenSource();
+            var token2 = cancel2.Token;
+
+            cancel = cancel1.LinkedWith(token2);
+            token = cancel.Token;
+
+            // can dispose the source that was linked, and still use the token
+            cancel1.Dispose();
+
+            token.ThrowIfCancellationRequested();
+
+            cancel2.Cancel();
+            Assert.Throws<OperationCanceledException>(() => token.ThrowIfCancellationRequested());
         }
     }
 }

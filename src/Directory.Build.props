@@ -1,22 +1,46 @@
 ﻿<Project>
 
+  <!-- import our targets (once) -->
+  <PropertyGroup><HazelcastTargets>true</HazelcastTargets></PropertyGroup>
+  <Import Project="Directory.Build.targets" Condition="'$(HazelcastTargets)' == ''"/>
+
+  <PropertyGroup>
+    <GitRepositoryRemoteName></GitRepositoryRemoteName>
+  </PropertyGroup>
+
+  <!-- populate GitRepositoryRemoteName (does not have to be 'origin') -->
+  <Target Name="GetGitRepositoryRemoteName" BeforeTargets="BeforeBuild" Condition="'$(GitRepositoryRemoteName)'==''">
+    <GetGitRepositoryRemoteName GitRepositoryRemoteUrl="https://github.com/hazelcast/hazelcast-csharp-client.git">
+      <Output TaskParameter="GitRepositoryRemoteName" PropertyName="GitRepositoryRemoteName" />
+    </GetGitRepositoryRemoteName>
+    <!--<Message Importance="High" Text="GitRepositoryRemoteName='$(GitRepositoryRemoteName)'" />-->
+  </Target>
+
   <!--
     note that project files that define constants must do so as
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   -->
 
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
+    <DefineAssemblySigning>;ASSEMBLY_SIGNING</DefineAssemblySigning>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'==''">
+    <DefineAssemblySigning></DefineAssemblySigning>
+  </PropertyGroup>
+
   <!--
     DEFINES
     - HZ_CONSOLE enables the Hazelcast troubleshooting console
         do *not* ship a release with HZ_CONSOLE defined!
+    - HZ_CONSOLE_PUBLIC publicizes the HConsole
     - CODE_ANALYSIS enables NDepend code analysis
     - HZ_OPTIMIZE_ASYNC enables async/await optimizations
   -->
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>HZ_CONSOLE,CODE_ANALYSIS;$(DefineUserConstants)</DefineConstants>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>HZ_CONSOLE;CODE_ANALYSIS;TRACE$(DefineAssemblySigning);$(DefineUserConstants)</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineUserConstants)</DefineConstants>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DefineConstants>$(DefineAssemblySigning);$(DefineUserConstants)</DefineConstants>
   </PropertyGroup>
 
   <!-- misc project options -->
@@ -40,9 +64,9 @@
     <Version>4.0.0-alpha.2</Version>
     -->
 
-    <AssemblyVersion>4.0.1</AssemblyVersion>
-    <FileVersion>4.0.1</FileVersion>
-    <VersionPrefix>4.0.1</VersionPrefix>
+    <AssemblyVersion>4.0.2</AssemblyVersion>
+    <FileVersion>4.0.2</FileVersion>
+    <VersionPrefix>4.0.2</VersionPrefix>
     <VersionSuffix></VersionSuffix>
 
     <Authors>Hazelcast, Inc.</Authors>

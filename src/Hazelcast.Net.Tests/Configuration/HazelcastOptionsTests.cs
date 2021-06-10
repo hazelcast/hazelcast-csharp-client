@@ -17,7 +17,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Authentication;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using ExpectedObjects;
 using Hazelcast.Clustering;
@@ -41,9 +40,8 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void BuildExceptions()
         {
-            Action<IConfigurationBuilder> setup = null;
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(setup));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(setup, null, "key"));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>) null));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, "key"));
         }
 
         [Test]
@@ -104,7 +102,7 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
-        public async Task HazelcastOptionsRoot()
+        public void HazelcastOptionsRoot()
         {
             var options = ReadResource(Resources.HazelcastOptions);
 
@@ -120,7 +118,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsInstanceOf<HazelcastClientEventSubscriber>(subscriber);
 
             TestSubscriber.Ctored = false;
-            await subscriber.SubscribeAsync(null, CancellationToken.None);
+            subscriber.Build(null);
             Assert.IsTrue(TestSubscriber.Ctored);
 
             var loadBalancer = options.LoadBalancer.Service;
@@ -183,15 +181,22 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
             Console.WriteLine(sslOptions.ToString());
 
+#if NETCOREAPP
+#pragma warning disable CS0618 // Type or member is obsolete
+#endif
+            // testing obsolete Ssl2, Default protocols
             Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Ssl2);
             Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Default);
+#if NETCOREAPP
+#pragma warning restore CS0618
+#endif
 
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);
             Assert.AreEqual("token", cloudOptions.DiscoveryToken);
 
             // constant
-            Assert.AreEqual(new Uri("https://coordinator.hazelcast.cloud/"), cloudOptions.UrlBase);
+            Assert.AreEqual(new Uri("https://coordinator.hazelcast.cloud/"), cloudOptions.Url);
 
             var socketOptions = options.Socket;
             Assert.AreEqual(1000, socketOptions.BufferSizeKiB);
@@ -284,7 +289,7 @@ namespace Hazelcast.Tests.Configuration
         public void Clone()
         {
             var options = ReadResource(Resources.HazelcastOptions);
-            
+
             // TODO: find a way to ensure that *everything* is non-default
 
             options.Networking.Addresses.Add("127.0.0.1:11001");
@@ -325,10 +330,9 @@ namespace Hazelcast.Tests.Configuration
         {
             public static bool Ctored { get; set; }
 
-            public Task SubscribeAsync(IHazelcastClient client, CancellationToken cancellationToken)
+            public void Build(HazelcastClientEventHandlers events)
             {
                 Ctored = true;
-                return Task.CompletedTask;
             }
         }
         public class TestCredentialsFactory : ICredentialsFactory

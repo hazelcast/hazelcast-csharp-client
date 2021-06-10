@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ namespace Hazelcast.Query
     /// </summary>
     public class PredicateBuilder
     {
-        protected readonly string _name;
+        private readonly string _name;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PredicateBuilder"/> class.

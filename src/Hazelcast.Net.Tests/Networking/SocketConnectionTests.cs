@@ -43,9 +43,9 @@ namespace Hazelcast.Tests.Networking
 
             => HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.Verbose())
-                .Set(this, x => x.SetPrefix("TEST"))
-                .Set<SocketConnectionBase>(x => x.SetIndent(8).SetPrefix("SOCKET")));
+                .Configure().SetMaxLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET"));
 
         [Test]
         public async Task Exceptions()
@@ -53,7 +53,7 @@ namespace Hazelcast.Tests.Networking
             var endpoint = NetworkAddress.Parse("127.0.0.1:5701").IPEndPoint;
             var options = new NetworkingOptions();
 
-            await using var connection = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory(), 3);
+            await using var connection = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory(), 3);
 
             // OnReceiveMessageBytes is missing
             Assert.ThrowsAsync<InvalidOperationException>(async () => await connection.ConnectAsync(default));
@@ -65,7 +65,7 @@ namespace Hazelcast.Tests.Networking
             // OnReceivePrefixBytes is missing
             Assert.ThrowsAsync<InvalidOperationException>(async () => await connection.ConnectAsync(default));
 
-            await using var connection2 = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            await using var connection2 = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory())
             {
                 OnReceiveMessageBytes = (x, y) => true
             };
@@ -74,7 +74,7 @@ namespace Hazelcast.Tests.Networking
 
             Assert.Throws<InvalidOperationException>(() => connection2.OnReceiveMessageBytes = (x, y) => true);
             Assert.Throws<InvalidOperationException>(() => connection2.OnReceivePrefixBytes = (x, y) => new ValueTask());
-            Assert.Throws<InvalidOperationException>(() => connection2.OnShutdown = x => { });
+            Assert.Throws<InvalidOperationException>(() => connection2.OnShutdown = x => default);
         }
 
         [Test]
@@ -89,7 +89,7 @@ namespace Hazelcast.Tests.Networking
             Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, bool> onReceiveMessageBytes
                 = (x, y) => true;
 
-            await using var socket = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory())
             {
                 OnReceiveMessageBytes = onReceiveMessageBytes
             };
@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Networking
             socket.OnReceivePrefixBytes = onReceivePrefixBytes;
             Assert.That(socket.OnReceivePrefixBytes, Is.SameAs(onReceivePrefixBytes));
 
-            Action<SocketConnectionBase> onShutdown = (s) => { };
+            Func<SocketConnectionBase, ValueTask> onShutdown = s => default;
             socket.OnShutdown = onShutdown;
             Assert.That(socket.OnShutdown, Is.SameAs(onShutdown));
 
@@ -133,7 +133,7 @@ namespace Hazelcast.Tests.Networking
 
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
-            await using var socket = new ClientSocketConnection(0, endpoint, options, new SslOptions(), new NullLoggerFactory())
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), endpoint, options, new SslOptions(), new NullLoggerFactory())
             {
                 OnReceiveMessageBytes = (x, y) => true
             };
@@ -156,7 +156,7 @@ namespace Hazelcast.Tests.Networking
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
             await server.StartAsync();
 
-            await using var socket = new ClientSocketConnection(0, address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
             var m = new ClientMessageConnection(socket, new NullLoggerFactory());
             await socket.ConnectAsync(default);
 
@@ -227,7 +227,11 @@ namespace Hazelcast.Tests.Networking
             s = new TestSocketConnection(new StreamWrapper(pipe.Stream1) { OnRead = StreamWrapper.Throw })
             {
                 OnReceiveMessageBytes = (s, r) => false,
-                OnShutdown = s => down++
+                OnShutdown = s =>
+                {
+                    down++;
+                    return default;
+                }
             };
             await s.ConnectAsync();
 
@@ -295,7 +299,11 @@ namespace Hazelcast.Tests.Networking
                     return false;
                 },
                 OnReceivePrefixBytes = (s, r) => throw new Exception("bang"),
-                OnShutdown = s => down++
+                OnShutdown = s =>
+                {
+                    down++;
+                    return default;
+                }
             };
 
             HConsole.WriteLine(this, "Connect socket.");
@@ -320,13 +328,16 @@ namespace Hazelcast.Tests.Networking
             //using var _ = EnableHConsoleForTest();
 
             var pipe = new MemoryPipe();
-            var count = 0L;
             var down = 0;
 
             var s = new TestSocketConnection(pipe.Stream1)
             {
                 OnReceiveMessageBytes = (s, r) => throw new Exception("bang"),
-                OnShutdown = s => down++
+                OnShutdown = s =>
+                {
+                    down++;
+                    return default;
+                }
             };
 
             HConsole.WriteLine(this, "Connect socket.");
@@ -340,12 +351,12 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
+        [KnownIssue(0, "Breaks on GitHub Actions")]
         public async Task ReadPipeLoop_3()
         {
             //using var _ = EnableHConsoleForTest();
 
             var pipe = new MemoryPipe();
-            var count = 0L;
             var down = 0;
 
             TestSocketConnection s = null;
@@ -356,7 +367,11 @@ namespace Hazelcast.Tests.Networking
                     s.Pipe.Writer.Complete();
                     return false;
                 },
-                OnShutdown = sc => down++
+                OnShutdown = sc =>
+                {
+                    down++;
+                    return default;
+                }
             };
 
             HConsole.WriteLine(this, "Connect socket.");
@@ -366,7 +381,7 @@ namespace Hazelcast.Tests.Networking
             await pipe.Stream2.WriteAsync(new byte[2], 0, 2);
 
             // throwing brings the connection down eventually
-            await AssertEx.SucceedsEventually(() => Assert.That(down, Is.GreaterThan(0)), 4000, 200);
+            await AssertEx.SucceedsEventually(() => Assert.That(down, Is.GreaterThan(0)), 30000, 200);
         }
 
         [Test]
@@ -468,7 +483,7 @@ namespace Hazelcast.Tests.Networking
             private readonly Stream _stream;
 
             public TestSocketConnection(Stream stream, int prefixLength = 0)
-                : base(0, prefixLength)
+                : base(Guid.NewGuid(), prefixLength)
             {
                 _stream = stream;
             }

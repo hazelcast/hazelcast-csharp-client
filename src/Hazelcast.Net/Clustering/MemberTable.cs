@@ -25,11 +25,13 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class MemberTable
     {
+        private readonly Dictionary<Guid, MemberInfo> _members;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberTable"/> class.
         /// </summary>
         public MemberTable()
-            : this(0, new Dictionary<Guid, MemberInfo>())
+            : this(-1, new Dictionary<Guid, MemberInfo>())
         { }
 
         /// <summary>
@@ -40,7 +42,7 @@ namespace Hazelcast.Clustering
         public MemberTable(int version, Dictionary<Guid, MemberInfo> members)
         {
             Version = version;
-            Members = members;
+            _members = members;
         }
 
         /// <summary>
@@ -60,12 +62,27 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the number of members in the table.
         /// </summary>
-        public int Count => Members.Count;
+        public int Count => _members.Count;
 
         /// <summary>
         /// Gets the members.
         /// </summary>
-        public Dictionary<Guid, MemberInfo> Members { get; }
+        public IReadOnlyCollection<MemberInfo> Members => _members.Values;
+
+        /// <summary>
+        /// Determines whether the table contains a member.
+        /// </summary>
+        /// <param name="memberId">The unique identifier of the member.</param>
+        /// <returns><c>true</c> if the table contains the member; otherwise <c>false</c>.</returns>
+        public bool ContainsMember(Guid memberId) => _members.ContainsKey(memberId);
+
+        /// <summary>
+        /// Tries to get the member associated with the specified identifier.
+        /// </summary>
+        /// <param name="memberId">The unique identifier of the member.</param>
+        /// <param name="member">The member.</param>
+        /// <returns><c>true</c> if the table contains the member; otherwise <c>false</c>.</returns>
+        public bool TryGetMember(Guid memberId, out MemberInfo member) => _members.TryGetValue(memberId, out member);
 
         /// <inheritdoc />
         public override string ToString()
@@ -74,7 +91,7 @@ namespace Hazelcast.Clustering
             text.Append("MemberTable (");
             text.Append(Count);
             text.Append(" members: ");
-            text.Append(string.Join(", ", Members.Values));
+            text.Append(string.Join(", ", Members));
             text.Append(')');
             return text.ToString();
         }

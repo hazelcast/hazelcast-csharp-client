@@ -134,8 +134,7 @@ namespace Hazelcast.Clustering
         /// <returns>The security options.</returns>
         public AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
         {
-            var credentials = new UsernamePasswordCredentials { Name = username, Password = password };
-            CredentialsFactory.Creator = () => new StaticCredentialsFactory(credentials);
+            CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory(username, password);
             return this;
         }
 

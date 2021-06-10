@@ -6,11 +6,12 @@ For extra details, including all code comments, you may want to browse the [sour
 
 # Current version
 
-* **[4.0.1](4.0.1/api/index.html)**
+* **[4.0.2](4.0.2/api/index.html)**
 * <!--DEVDOC_API-->
 
 ### Previous versions
 
+* [4.0.1](4.0.1/api/index.html)
 * [4.0.0](4.0.0/api/index.html)
 * [3.12.3](3.12.3/index.html)
 * [3.12.2](3.12.2/index.html)

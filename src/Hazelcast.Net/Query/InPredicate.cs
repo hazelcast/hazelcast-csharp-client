@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,10 @@ namespace Hazelcast.Query
         public InPredicate(string attributeName, params object[] values)
         {
             _attributeName = attributeName;
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
             _values = values ?? throw new ArgumentNullException(nameof(values));
+#pragma warning restore CA1508 // Avoid dead conditional code
         }
 
         public void ReadData(IObjectDataInput input)

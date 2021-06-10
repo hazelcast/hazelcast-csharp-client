@@ -18,11 +18,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.Logging
 {
+    /// <summary>
+    /// Implements an <see cref="ILogger"/> for testing.
+    /// </summary>
     public class TestingLogger : ILogger
     {
-        private static readonly string _loglevelPadding = ": ";
-        private static readonly string _messagePadding;
-        private static readonly string _newLineWithMessagePadding;
+        private const string LoglevelPadding = ": ";
+        private static readonly string MessagePadding;
+        private static readonly string NewLineMessagePadding;
 
         private readonly ITestingLoggerProvider _provider;
         private readonly string _name;
@@ -33,8 +36,8 @@ namespace Hazelcast.Testing.Logging
         static TestingLogger()
         {
             var logLevelString = GetLogLevelString(LogLevel.Information);
-            _messagePadding = new string(' ', logLevelString.Length + _loglevelPadding.Length);
-            _newLineWithMessagePadding = Environment.NewLine + _messagePadding;
+            MessagePadding = new string(' ', logLevelString.Length + LoglevelPadding.Length);
+            NewLineMessagePadding = Environment.NewLine + MessagePadding;
         }
 
         public TestingLogger(ITestingLoggerProvider provider, string name)
@@ -86,8 +89,9 @@ namespace Hazelcast.Testing.Logging
             //       Request received
 
             var logLevelString = GetLogLevelString(logLevel);
+
             // category and event id
-            logBuilder.Append(_loglevelPadding);
+            logBuilder.Append(LoglevelPadding);
             logBuilder.Append(logName);
             logBuilder.Append("[");
             logBuilder.Append(eventId);
@@ -99,11 +103,11 @@ namespace Hazelcast.Testing.Logging
             if (!string.IsNullOrEmpty(message))
             {
                 // message
-                logBuilder.Append(_messagePadding);
+                logBuilder.Append(MessagePadding);
 
                 var len = logBuilder.Length;
                 logBuilder.AppendLine(message);
-                logBuilder.Replace(Environment.NewLine, _newLineWithMessagePadding, len, message.Length);
+                logBuilder.Replace(Environment.NewLine, NewLineMessagePadding, len, message.Length);
             }
 
             // Example:
@@ -115,26 +119,11 @@ namespace Hazelcast.Testing.Logging
                 logBuilder.AppendLine(exception.ToString());
             }
 
-            //var timestampFormat = Options.TimestampFormat;
-
             return new LogMessageEntry
             {
-                //TimeStamp = DateTime.Now.ToString(Options.TimestampFormat),
                 Message = logBuilder.ToString(),
                 LevelString = logLevelString
             };
-
-            /*
-            return new LogMessageEntry(
-                message: logBuilder.ToString(),
-                timeStamp: timestampFormat != null ? DateTime.Now.ToString(timestampFormat) : null,
-                levelString: logLevelString,
-                levelBackground: logLevelColors.Background,
-                levelForeground: logLevelColors.Foreground,
-                messageColor: DefaultConsoleColor,
-                logAsError: logLevel >= Options.LogToStandardErrorThreshold
-            );
-            */
         }
 
         private void GetScopeInformation(StringBuilder stringBuilder, bool multiLine)
@@ -150,7 +139,7 @@ namespace Hazelcast.Testing.Logging
                     var padd = paddAt == builder.Length;
                     if (padd)
                     {
-                        builder.Append(_messagePadding);
+                        builder.Append(MessagePadding);
                         builder.Append("=> ");
                     }
                     else
@@ -169,23 +158,17 @@ namespace Hazelcast.Testing.Logging
 
         private static string GetLogLevelString(LogLevel logLevel)
         {
-            switch (logLevel)
+            return logLevel switch
             {
-                case LogLevel.Trace:
-                    return "trce";
-                case LogLevel.Debug:
-                    return "dbug";
-                case LogLevel.Information:
-                    return "info";
-                case LogLevel.Warning:
-                    return "warn";
-                case LogLevel.Error:
-                    return "fail";
-                case LogLevel.Critical:
-                    return "crit";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(logLevel));
-            }
+                LogLevel.Trace => "trce",
+                LogLevel.Debug => "dbug",
+                LogLevel.Information => "info",
+                LogLevel.Warning => "warn",
+                LogLevel.Error => "fail",
+                LogLevel.Critical => "crit",
+                LogLevel.None => "----",
+                _ => throw new ArgumentOutOfRangeException(nameof(logLevel))
+            };
         }
     }
 }

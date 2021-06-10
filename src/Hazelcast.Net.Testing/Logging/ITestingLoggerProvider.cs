@@ -16,6 +16,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Testing.Logging
 {
+    /// <summary>
+    /// Defines a logger provider for the <see cref="TestingLogger"/>.
+    /// </summary>
     public interface ITestingLoggerProvider : ILoggerProvider, ISupportExternalScope
     {
         bool IsEnabled(LogLevel logLevel);

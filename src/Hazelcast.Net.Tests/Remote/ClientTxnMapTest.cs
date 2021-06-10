@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -135,7 +135,7 @@ namespace Hazelcast.Tests.Remote
 
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            var ttlMillis = 100;
+            var ttlMillis = 1000;
             Assert.That(await txDictionary.PutAsync("key1", "value1", TimeSpan.FromMilliseconds(ttlMillis)), Is.Null);
             Assert.That(await txDictionary.GetAsync("key1"), Is.EqualTo("value1"));
 

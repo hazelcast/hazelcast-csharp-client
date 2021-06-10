@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 
 namespace Hazelcast.Security.Win32
 {
-    public abstract class Credential
+    internal abstract class Credential
     {
         protected const int SEC_WINNT_AUTH_IDENTITY_VERSION_2 = 0x201;
 

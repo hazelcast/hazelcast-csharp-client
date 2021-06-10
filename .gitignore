@@ -30,3 +30,4 @@ build/enterprise.key
 build/hazelcast-*.xml
 
 /_ReSharper.Caches
+.github/secrets

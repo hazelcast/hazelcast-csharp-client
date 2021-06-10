@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if DEBUG
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+#endif
 
 namespace Hazelcast.Messaging
 {
@@ -67,7 +69,11 @@ namespace Hazelcast.Messaging
         }
 #endif
 
+#if !DEBUG
+#pragma warning disable CA1801 // Review unused parameters - not going to use type if !DEBUG
+#endif
         public static string GetMessageTypeName(int type)
+#pragma warning restore CA1801
         {
 #if DEBUG
             return MessageNames.TryGetValue(type, out var name) ? name : "(unknown)";

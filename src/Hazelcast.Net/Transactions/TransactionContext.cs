@@ -29,11 +29,15 @@ namespace Hazelcast.Transactions
         private readonly Cluster _cluster;
         private readonly TransactionOptions _options;
         private readonly DistributedObjectFactory _distributedObjectFactory;
+        private readonly object _inTransactionMutex = new object();
 
         private long _threadId; // the "threadId", i.e. async context, which owns the transaction
-        private long _startTime; // the start time of the transaction
-        private MemberConnection _connection; // the client supporting the transaction
+        //private long _startTime; // the start time of the transaction
         private bool _completed; // whether the transaction has been completed
+
+#pragma warning disable CA2213 // Disposable fields should be disposed - well, no
+        private MemberConnection _connection; // the client supporting the transaction
+#pragma warning restore CA2213
 
         // TODO transactions need some TLC
         // how is two-phases commit supposed to work? is it all server-side (and then, why
@@ -78,22 +82,6 @@ namespace Hazelcast.Transactions
         private static long ContextId => AsyncContext.Current.Id;
 
         /// <summary>
-        /// Gets or sets a value indicating whether the current asynchronous context is in a transaction.
-        /// </summary>
-        private static bool InTransaction
-        {
-            // this is used to prevent an asynchronous context from being in multiple (thus nested) transactions,
-            // it was implemented, before async, via a [ThreadStatic] boolean (when everything was bound to
-            // threads) which cannot be appropriate anymore.
-            // therefore an InTransaction property has been added to the async context - this may be considered
-            // a confusion of concerns, and maybe a separate AsyncLocal would be more 'pure', but this is
-            // simple enough.
-
-            get => AsyncContext.Current.InTransaction;
-            set => AsyncContext.Current.InTransaction = value;
-        }
-
-        /// <summary>
         /// Begins the transaction.
         /// </summary>
         public async Task BeginAsync()
@@ -101,15 +89,23 @@ namespace Hazelcast.Transactions
             if (State != TransactionState.None)
                 throw new InvalidOperationException("The transaction context is already involved in a transaction.");
 
-            if (InTransaction)
-                throw new InvalidOperationException("Nested transactions are not supported.");
+            var asyncContext = AsyncContext.Current;
+            lock (_inTransactionMutex)
+            {
+                // this is used to prevent an asynchronous context from being in multiple (thus nested) transactions,
+                // it was implemented, before async, via a [ThreadStatic] boolean (when everything was bound to
+                // threads) which cannot be appropriate anymore. instead we move it to the async context.
 
-            // TODO: think about race conditions?
-            _connection = await _cluster.Members.WaitRandomConnection().CfAwait();
-            InTransaction = true;
+                if (asyncContext.InTransaction)
+                    throw new InvalidOperationException("Nested transactions are not supported.");
+                asyncContext.InTransaction = true;
+            }
+
+            _connection = _cluster.Members.GetRandomConnection();
+            if (_connection == null) throw _cluster.State.ThrowClientOfflineException();
 
             _threadId = ContextId;
-            _startTime = Clock.Milliseconds;
+            //_startTime = Clock.Milliseconds;
 
             HConsole.WriteLine(this, $"Begin transaction on context #{ContextId}");
 
@@ -125,9 +121,9 @@ namespace Hazelcast.Transactions
             }
             catch
             {
-                InTransaction = false;
+                lock (_inTransactionMutex) asyncContext.InTransaction = false;
                 _threadId = 0;
-                _startTime = 0;
+                //_startTime = 0;
                 TransactionId = default;
                 State = TransactionState.None;
                 throw;
@@ -162,7 +158,7 @@ namespace Hazelcast.Transactions
             }
             finally
             {
-                InTransaction = false;
+                lock (_inTransactionMutex) AsyncContext.Current.InTransaction = false;
             }
         }
 
@@ -200,7 +196,7 @@ namespace Hazelcast.Transactions
             }
             finally
             {
-                InTransaction = false;
+                lock (_inTransactionMutex) AsyncContext.Current.InTransaction = false;
             }
         }
 
@@ -221,7 +217,9 @@ namespace Hazelcast.Transactions
             { /* ignore */ } // TODO: log?
 
             // if still in a transaction, either commit or rollback
-            if (InTransaction)
+            bool inTransaction;
+            lock (_inTransactionMutex) inTransaction = AsyncContext.Current.InTransaction;
+            if (inTransaction)
             {
                 // may throw
                 await (_completed ? CommitAsync() : RollbackAsync()).CfAwait();

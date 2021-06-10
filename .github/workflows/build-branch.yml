@@ -1,0 +1,125 @@
+#
+# Workflow: Build Branch
+#
+
+name: Build Branch
+on: 
+  push:
+    branches-ignore:
+      - 'release/*'
+    tags-ignore:
+      - '*'
+
+jobs:
+
+  # build and test the branch
+  build-branch:
+
+    name: Build Branch (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+
+      # Install Linux utilities
+      - name: Install utilities (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update 
+          # ubuntu-latest does not have proper git installed so we have to install it
+          sudo apt-get install --yes --no-install-recommends \
+            git
+          # we need various misc stuff
+          sudo apt-get install --yes --no-install-recommends \
+            wget \
+            curl \
+            apt-transport-https \
+            software-properties-common
+          # we need pwsh
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt-get install -y powershell
+
+      # Install .NET (complete)
+      - name: Install .NET 2.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '2.1.x'
+      - name: Install .NET 3.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Install .NET 5.0.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+
+      ## Install .NET Framework stuff for docfx
+      #- name: Install .NET Framework MSBUILD
+      #  if: matrix.os == 'windows-latest'
+      #  uses: microsoft/setup-msbuild@v1.0.2
+      #  with:
+      #    vs-version: '[15.0,16.0)'
+
+      ## Install .NET Framework stuff for docfx
+      #- name: Install .NET Framework NUGET
+      #  if: matrix.os == 'windows-latest'
+      #  uses: nuget/setup-nuget@v1
+
+      # Install Java
+      - name: Install JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+          
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # build
+      - name: Build
+        id: build
+        shell: pwsh
+        run: ./hz.ps1 -localRestore build #,docs,pubdocs
+
+      # test
+      # -enterprise only if the key is available, we do not share it outside of the HZ org
+      - name: Test
+        id: test
+        env:
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+        shell: pwsh
+        run: |
+          $a = @( "test", "-noRestore", "-localRestore" )
+          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
+          ./hz.ps1 @a
+
+      # report
+      # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
+      # It's not possible to specify under which workflow test report should belong if more
+      # workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
+      # your test report will appear in an unexpected place in GitHub UI." -- so, better not
+      # trigger multiple builds on the same SHA
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: (success() || failure()) && steps.build.conclusion == 'success'
+        with:
+          name: Test Results (${{ matrix.os }})
+          path: temp/tests/results/results-*.trx
+          reporter: dotnet-trx
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: false
+

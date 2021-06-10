@@ -25,7 +25,7 @@ using System.Runtime.InteropServices;
 
 namespace Hazelcast.Security.Win32
 {
-    public class SspiContext : IDisposable
+    internal class SspiContext : IDisposable
     {
         private readonly string spn;
 
