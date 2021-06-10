@@ -1728,6 +1728,7 @@ if ($do.'build-docs') { need git build-proj docfx }
 if ($do.'publish-docs') { need git }
 if ($do.'serve-docs') { need build-proj docfx }
 if ($do.'generate-codecs') { need git python }
+if ($do.'publish-examples') { need dotnet-complete }
 
 # ensure needs are satisfied
 $needs.Keys | foreach-object {
