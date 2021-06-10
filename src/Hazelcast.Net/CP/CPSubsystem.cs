@@ -71,7 +71,7 @@ namespace Hazelcast.CP
         public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name)
         {
             var (groupName, objectName) = ParseName(name);
-            var groupId = await GetGroupIdAsync(groupName, objectName).CfAwait();
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
             return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
         }
