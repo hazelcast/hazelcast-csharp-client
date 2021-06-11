@@ -229,13 +229,13 @@ jobs:
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test
 
-      # report
+      # report tests results
       # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
       # It's not possible to specify under which workflow test report should belong if more
       # workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
       # your test report will appear in an unexpected place in GitHub UI." -- so, better not
       # trigger multiple builds on the same SHA
-      - name: Report
+      - name: Report tests results
         uses: dorny/test-reporter@v1
         if: (success() || failure()) && steps.build.conclusion == 'success'
         with:
@@ -245,6 +245,14 @@ jobs:
           list-suites: failed
           list-tests: failed
           fail-on-error: false
+
+      # report tests coverage
+      # same note as above
+      - name: Report tests coverage
+        uses: zpqrtbnk/gh-actions/dotcover-report@master
+        with:
+          name: Test Coverage (${{ matrix.os }})
+          path: temp/tests/cover
 
       # upload test coverage artifact
       - name: Archive test coverage artifact

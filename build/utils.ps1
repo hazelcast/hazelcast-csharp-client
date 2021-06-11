@@ -91,6 +91,10 @@ function Write-Usage ( $params, $actions ) {
             $action = $_
             $name = "    $($action.name)"
             $infos = $action.desc
+            if ($action.alias -ne $null) {
+                $alias = [string]::Join(", ", ($action.alias.Replace(" ", "").Split(',')))
+                $infos = "$infos (alias: $alias)" 
+            }
             if ($action.note -ne $null) {
                 $infos = "$infos`n$($action.note)"
             }
