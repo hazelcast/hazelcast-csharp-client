@@ -6,6 +6,7 @@ bin/
 /.idea/
 /.nuget/
 /.github/secrets
+/.github/actions/**/node_modules
 
 *.user
 *.suo

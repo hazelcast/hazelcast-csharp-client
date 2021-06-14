@@ -1201,6 +1201,17 @@ function hz-cover-to-docs {
     }
 }
 
+# copy test coverage to doc
+# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
+function hz-cover-to-docs {
+    if ($isWindows) {
+        hz-cover-to-docs-on-windows
+    }
+    else {
+        Write-Output "Docs: cover-to-docs is not supported on non-Windows platforms"
+    }
+}
+
 # gits the documentation (on Windows)
 function hz-git-docs-on-windows {
 

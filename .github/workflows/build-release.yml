@@ -249,7 +249,7 @@ jobs:
       # report tests coverage
       # same note as above
       - name: Report tests coverage
-        uses: zpqrtbnk/gh-actions/dotcover-report@master
+        uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage (${{ matrix.os }})
           path: temp/tests/cover
@@ -378,16 +378,28 @@ jobs:
           echo "docs patch:"
           ls ./temp/gh-pages-patches
 
+      # checkout documentation
+      - name: Checkout documentation
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: gh-pages
+          path: ./temp/gh-pages
+
+      # configure Git so that we can commit
+      - name: Configure documentation repository
+        shell: bash
+        run: |
+          git -C ./temp/gh-pages config user.email "github-actions@hazelcast.com"
+          git -C ./temp/gh-pages config user.name "GitHub Actions (Build Release)"
+
       # publish documentation
       - name: Publish Documentation
         shell: bash
         run: |
-          mkdir ./temp/gh-pages
-          git -C ./temp/gh-pages init
-          git -C ./temp/gh-pages remote add origin https://github.com/hazelcast/hazelcast-csharp-client.git
-          git -C ./temp/gh-pages fetch origin gh-pages
-          git -C ./temp/gh-pages checkout gh-pages
+          echo "Apply patch"
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 
 
@@ -485,16 +497,28 @@ jobs:
         run: |
           ./hz.ps1 -noRestore -localRestore push-nuget
 
+      # checkout documentation
+      - name: Checkout documentation
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: gh-pages
+          path: ./temp/gh-pages
+
+      # configure Git so that we can commit
+      - name: Configure documentation repository
+        shell: bash
+        run: |
+          git -C ./temp/gh-pages config user.email "github-actions@hazelcast.com"
+          git -C ./temp/gh-pages config user.name "GitHub Actions (Build Release)"
+
       # publish documentation
       - name: Publish Documentation
         shell: bash
         run: |
-          mkdir ./temp/gh-pages
-          git -C ./temp/gh-pages init
-          git -C ./temp/gh-pages remote add origin https://github.com/hazelcast/hazelcast-csharp-client.git
-          git -C ./temp/gh-pages fetch origin gh-pages
-          git -C ./temp/gh-pages checkout gh-pages
+          echo "Apply patch"
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 
       # trash the release branch

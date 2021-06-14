@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "@actions/core": "^1.4.0",
+    "@actions/github": "^5.0.0"
+  },
+  "name": "dotcover-report",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "ncc build index.js -o dist"
+  },
+  "keywords": [],
+  "author": "Hazelcast",
+  "license": "MIT",
+  "description": "Reports dotCover output."
+}
