@@ -36,8 +36,8 @@ jobs:
     if: github.repository == 'hazelcast/hazelcast-csharp-client'
 
     outputs:
-      todo: ${{ steps.analyze.outputs.todo}}
-      version: ${{ steps.analyze.outputs.version}}
+      todo: ${{ steps.analyze.outputs.todo}} # 'build' when pushing to release/2.1.4, 'release' when pushing v2.1.4 tag, otherwise 'nothing'
+      version: ${{ steps.analyze.outputs.version}} # 2.1.4 or 2.1.4-preview.1 - matches the branch/tag and the code
 
     steps:
 
@@ -227,7 +227,7 @@ jobs:
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
         shell: pwsh
-        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test
+        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test,cover-to-docs
 
       # report tests results
       # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
@@ -253,6 +253,7 @@ jobs:
         with:
           name: Test Coverage (${{ matrix.os }})
           path: temp/tests/cover
+          version: ${{ needs.analyze.outputs.version }}
 
       # upload test coverage artifact
       - name: Archive test coverage artifact
@@ -306,6 +307,88 @@ jobs:
         with:
           name: Docs-Patch
           path: './temp/gh-pages-patches/*.patch'
+
+
+
+  # publish the work-in-progress release
+  publish-wip:
+
+    name: Publish Work-In-Progress
+    runs-on: ubuntu-latest
+
+    needs: [ analyze, build-release ]
+    if: needs.analyze.outputs.todo == 'build'
+
+    steps:
+
+      - name: Install Utilities (Linux only)
+        shell: bash
+        run: |
+          sudo apt-get update 
+          # ubuntu-latest does not have proper git installed so we have to install it
+          sudo apt-get install --yes --no-install-recommends \
+            git
+          # we need various misc stuff
+          sudo apt-get install --yes --no-install-recommends \
+            wget \
+            curl \
+            apt-transport-https \
+            software-properties-common
+          # we need pwsh
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt-get install -y powershell
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # configure Git so that we can commit
+      - name: Configure repository
+        shell: bash
+        run: |
+          git config user.email "github-actions@hazelcast.com"
+          git config user.name "GitHub Actions (Build Release)"
+
+      # prepare for artifacts
+      - name: Prepare for artifacts
+        shell: bash
+        run: |
+          mkdir ./temp
+          mkdir ./temp/gh-pages-patches
+
+      # download docs patch artifact
+      - name: Download docs patch artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Docs-Patch
+          path: ./temp/gh-pages-patches
+
+      # verify downloads
+      - name: Verify downloads
+        shell: bash
+        run: |
+          echo "docs patch:"
+          ls ./temp/gh-pages-patches
+
+      # publish documentation
+      - name: Publish Documentation
+        shell: bash
+        run: |
+          mkdir ./temp/gh-pages
+          git -C ./temp/gh-pages init
+          git -C ./temp/gh-pages remote add origin https://github.com/hazelcast/hazelcast-csharp-client.git
+          git -C ./temp/gh-pages fetch origin gh-pages
+          git -C ./temp/gh-pages checkout gh-pages
+          cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          git -C ./temp/gh-pages push origin gh-pages
 
 
 

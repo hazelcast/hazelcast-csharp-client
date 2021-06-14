@@ -22,4 +22,5 @@
 # [Contributing](contrib.md)
 ## [Sources](contrib-sources.md)
 ## [Building](contrib-build.md)
+## [Tests Coverage Report](../cover/index.html)
 ## [FAQ](contrib-faq.md)
